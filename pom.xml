@@ -1,0 +1,160 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.mobicents.servlet.sip</groupId>
+  <artifactId>restcomm</artifactId>
+  <version>1.0.0.ALPHA</version>
+  <packaging>war</packaging>
+  <name>RestComm</name>
+  <description>A Mobicents Restful Communications Framework</description>
+  
+  <properties>
+    <log4j.version>1.2.16</log4j.version>
+    <commons-configuration.version>1.7</commons-configuration.version>
+    <jsr309api.version>1.0</jsr309api.version>
+    <jsr309impl.version>2.0.0.BETA5</jsr309impl.version>
+    <javamail.version>1.4</javamail.version>
+    <servletapi.version>2.5</servletapi.version>
+    <sipservletapi.version>1.1.12</sipservletapi.version>
+    <staxapi.version>1.0.1</staxapi.version>
+    <staximpl.version>1.2.0</staximpl.version>
+    <httpclient.version>4.1.1</httpclient.version>
+    <arquillian.version>1.0.0.Alpha4</arquillian.version>
+    <junit.version>4.8.2</junit.version>
+  </properties>
+  
+  <dependencies>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>${log4j.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>commons-configuration</groupId>
+      <artifactId>commons-configuration</artifactId>
+      <version>${commons-configuration.version}</version>
+    </dependency>
+    
+    <dependency>
+		<groupId>org.mobicents.external.jsr309</groupId>
+		<artifactId>mscontrol</artifactId>
+		<version>${jsr309api.version}</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.mobicents.jsr309</groupId>
+		<artifactId>mobicents-jsr309-impl</artifactId>
+		<version>${jsr309impl.version}</version>
+	</dependency>
+	
+	<dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>${javamail.version}</version>
+    </dependency>
+    
+    <dependency>
+		<groupId>javax.servlet</groupId>
+		<artifactId>servlet-api</artifactId>
+		<version>${servletapi.version}</version>
+		<scope>provided</scope>
+	</dependency>
+
+	<dependency>
+		<groupId>org.mobicents.servlet.sip</groupId>
+		<artifactId>sip-servlets-spec</artifactId>
+		<version>${sipservletapi.version}</version>
+		<scope>provided</scope>
+	</dependency>
+  
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax-api</artifactId>
+      <version>${staxapi.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax</artifactId>
+      <version>${staximpl.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.arquillian</groupId>
+      <artifactId>arquillian-junit</artifactId>
+      <version>${arquillian.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.arquillian.container</groupId>
+      <artifactId>arquillian-jbossas-remote-6</artifactId>
+      <version>${arquillian.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  
+<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<compilerArguments>
+						<g />
+					</compilerArguments>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>						
+		</plugins>		
+	</build>
+
+  <repositories>
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Maven Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Maven Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+</project>
