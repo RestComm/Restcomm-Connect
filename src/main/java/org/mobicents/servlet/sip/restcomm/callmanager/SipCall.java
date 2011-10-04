@@ -163,7 +163,7 @@ public final class SipCall extends Call implements EventListener<SignalEvent>,
 	possibleStates.add(IN_PROGRESS);
 	assertState(possibleStates);
     try {
-      group = media.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+      group = media.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR_SIGNALGENERATOR);
       group.addListener(this);
       group.joinInitiate(Direction.DUPLEX, connection, null);
     } catch(final MsControlException exception) {

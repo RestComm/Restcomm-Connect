@@ -1,0 +1,14 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<chapter id="Introduction_to_the_RestComm">
+  <title>Introduction to the &SHORT_PLATFORM_NAME;</title>
+  <para>&SHORT_PLATFORM_NAME; is a Communications Platform to rapidly build voice and text messaging applications, using your existing web development skills.</para>
+  <para>It's a complete turnkey Telco 2.0 SaaS solution ready to deploy in your cloud based on the <ulink url="www.twilio.com">Twilio</ulink> simple and effective APIs and 100% Open Source built on the next generation Cloud Communications platform &PLATFORM_NAME;.</para>    
+    <formalpara id="RestComm_Container_Support">
+      <title>Container Support</title>
+      <para>&SHORT_PLATFORM_NAME; supports &PLATFORM_NAME; Sip Servlets (JBoss AS5 - Tomcat 6.x - Tomcat 7.x)</para>
+    </formalpara>    
+</chapter>

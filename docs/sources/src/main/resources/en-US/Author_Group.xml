@@ -1,0 +1,18 @@
+﻿<?xml version='1.0'?>
+<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<authorgroup
+	id="sps-Author_Group">
+	<author>
+		<firstname>Jean</firstname>
+		<surname>Deruelle</surname>
+		<email>jean.deruelle@gmail.com</email>
+	</author>
+	<author>
+		<firstname>Thomas</firstname>
+		<surname>Quintana</surname>
+		<email>quitana.thomas@gmail.com</email>
+	</author>
+</authorgroup>

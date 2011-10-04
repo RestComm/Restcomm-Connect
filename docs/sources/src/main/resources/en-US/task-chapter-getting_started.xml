@@ -1,0 +1,273 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: ittsss --><chapter id="Getting_Started_with_CTF">
+  <title>Getting started with CTF</title>
+  <para>In order to get started with CTF, the only thing you have to do is to define few maven dependencies in your project and register the CTF listener in the sip.xml or web.xml or your application.</para>
+  <para>First dependency is Weld, the CDI reference implementation by JBoss and more specific the weld-servlet module.</para>
+  <programlisting language="Xml" role="XML">
+       <![CDATA[
+       <dependency>
+			<groupId>org.jboss.weld.servlet</groupId>
+			<artifactId>weld-servlet</artifactId>
+			<version>1.1.2.Final</version>
+		</dependency>
+		]]>
+</programlisting>
+<para>Second is the framework itself:</para>
+<programlisting language="Xml" role="XML">
+	<![CDATA[
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.ctf</groupId>
+			<artifactId>ctf-core</artifactId>
+			<version>]]>&CTF_VERSION;<![CDATA[</version>
+		</dependency>
+		]]>
+</programlisting>
+<note><para>Make sure you use the JBoss public maven repository:
+<programlisting>
+	<![CDATA[
+				<repository>
+                        <id>jboss-public-repository-group</id>
+                        <name>JBoss Public Maven Repository Group</name>
+                        <url>https://repository.jboss.org/nexus/content/groups/public</url>
+                        <layout>default</layout>
+                        <releases>
+                                <enabled>true</enabled>
+                                <updatePolicy>never</updatePolicy>
+                        </releases>
+                        <snapshots>
+                                <enabled>true</enabled>
+                                <updatePolicy>never</updatePolicy>
+                        </snapshots>
+                </repository>	
+		]]>
+</programlisting>
+</para></note>
+
+<para>The CTF listener that you have to register in your application is:</para>
+<programlisting>
+	<![CDATA[
+	<listener>
+		<listener-class>
+				org.mobicents.servlet.sip.ctf.environment.servlet.SipServletsListener
+		</listener-class>
+	</listener>
+		]]>
+</programlisting>
+
+<para>To get the source code along with the examples:</para>
+<itemizedlist>
+       	<listitem>
+          <para>checkout project from svn repository: svn co https://mobicents.googlecode.com/svn/trunk/frameworks/sip-servlets/cdi-telco-framework</para>
+        </listitem>
+	<listitem>
+          <para>In the folder core/ctf-core/ you will find the project responsible to bootstrap the framework, in order to build it: mvn clean compile install</para>
+        </listitem>
+        <listitem>
+          <para>In the folder core/ctf-core-extension/ you will find the Sip Servlets extensions to CDI, such as CTF annotations, in order to build it: mvn clean compile install</para>
+        </listitem>            
+    <listitem>
+      <para>In the folder examples/ you will find the examples of the framework, build according to the notes of every example. The examples contain the following:
+		<itemizedlist>
+			<listitem> <para>click2call-servlet3.0-cdi . The Click2Call application with asynchronous processing of request feature and CTF. Deploy to MSS 2.x Tomcat 7.0.8 only</para> </listitem>
+			<listitem> <para>click2call-servlet25-cdi. The Click2Call application with CTF. Deploy to Servlet 2.5 container such as MSS 1.x Tomcat 6.0.29. The example can be deployed to JBoss AS5 also, build using : mvn clean compile package -Pjboss5</para> </listitem>
+			<listitem> <para>SipRegistration.
+				<itemizedlist>
+					<listitem> <para> SipRegistarClient - SIP registration example for java servlets 3.0. Deploy to MSS 2.x Tomcat 7.0.8 only.</para> </listitem>
+					<listitem> <para>SipRegistarClient25 - SIP registration example for java servlets 2.5. Deploy to MSS 1.x Tomcat 6.0.29. The example can be deployed to JBoss AS5 also, build using : mvn clean compile package -Pjboss5 </para> </listitem>
+				</itemizedlist>
+			</para> </listitem>
+		</itemizedlist>
+		</para>
+    </listitem>            
+    </itemizedlist> 
+
+<para>To build issue mvn clean compile package for each project and deploy accordingly</para>
+
+<note><para>For JBoss AS5 special maven dependency needed for MSS 1.x JBoss AS5 version for the JBoss Weld dependency, that will be:
+<programlisting>
+	<![CDATA[
+		<dependency>
+			<groupId>org.jboss.weld.servlet</groupId>
+			<artifactId>weld-servlet</artifactId>
+			<scope>runtime</scope>
+			<classifier>jboss5</classifier>
+			<version>1.1.2.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.ctf</groupId>
+			<artifactId>ctf-core</artifactId>
+			<version>]]>&CTF_VERSION;<![CDATA[</version>
+			<classifier>jboss5</classifier>
+		</dependency> </note>
+		]]>
+</programlisting>
+</para></note>
+
+<para>CTF have been tested and verified working in the following MSS containers:</para>
+<itemizedlist>
+	<listitem> <para>MSS 1.6 JBoss AS5</para> </listitem>
+	<listitem> <para>MSS 1.6 Tomcat 6.0.29</para> </listitem>
+	<listitem> <para>MSS 2.0-Branch Tomcat 7.0.8</para> </listitem>
+</itemizedlist>
+
+<itemizedlist>
+<title>Summary of CTF dependencies to use</title>
+<listitem> <para>MSS 1.x on Tomcat 6.x
+	<itemizedlist>
+		<listitem> <para>CDI</para>
+			<programlisting >
+			<![CDATA[
+			<dependency>
+				<groupId>org.jboss.weld.servlet</groupId>
+				<artifactId>weld-servlet</artifactId>
+				<version>1.1.2.Final</version>
+			</dependency> 
+			]]></programlisting>
+		</listitem>
+		<listitem> <para>CTF</para>
+			<programlisting>
+			<![CDATA[ 
+			<dependency>
+				<groupId>org.mobicents.servlet.sip.ctf</groupId>
+				<artifactId>ctf-core</artifactId>
+				<version>]]>&CTF_VERSION;<![CDATA[</version>
+			</dependency>
+		]]></programlisting>
+		</listitem>
+	</itemizedlist>
+</para> </listitem>
+<listitem> <para>MSS 1.x on JBoss AS5
+	<itemizedlist>
+		<listitem><para>CDI</para>
+			<programlisting>
+			<![CDATA[
+			<dependency>
+				<groupId>org.jboss.weld.servlet</groupId>
+				<artifactId>weld-servlet</artifactId>
+				<scope>runtime</scope>
+				<classifier>jboss5</classifier>
+				<version>1.1.2.Final</version>
+			</dependency>	
+			]]></programlisting>
+		</listitem>
+		<listitem><para>CTF</para>
+			<programlisting>
+			<![CDATA[	
+			<dependency>
+				<groupId>org.mobicents.servlet.sip.ctf</groupId>
+				<artifactId>ctf-core</artifactId>
+				<version>]]>&CTF_VERSION;<![CDATA[</version>
+				<classifier>jboss5</classifier>
+			</dependency>
+			]]></programlisting>
+		</listitem>
+	</itemizedlist>
+</para> </listitem>
+<listitem> <para>MSS 2.x on Tomcat 7.x
+	<itemizedlist>
+		<listitem><para>CDI</para>
+			<programlisting>
+			<![CDATA[
+			<dependency>
+				<groupId>org.jboss.weld.servlet</groupId>
+				<artifactId>weld-servlet</artifactId>
+				<version>1.1.2.Final</version>
+			</dependency>	
+			]]></programlisting>
+		</listitem>
+		<listitem><para>CTF</para>
+			<programlisting>
+			<![CDATA[	
+			<dependency>
+				<groupId>org.mobicents.servlet.sip.ctf</groupId>
+				<artifactId>ctf-core</artifactId>
+				<version>]]>&CTF_VERSION;<![CDATA[</version>
+			</dependency>
+			]]></programlisting>
+		</listitem>
+	</itemizedlist>
+</para> </listitem>
+</itemizedlist>
+<!--
+<table id="tab-CTF_dependencies" frame='all'>
+      <title>Summary of CTF dependencies to use</title>
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1'/>
+        <colspec colname='c2'/>
+        <colspec colename='c3'/>
+      <thead>
+        <row>
+          <entry align="center">MSS</entry>
+          <entry align="center">CDI</entry>
+          <entry align="center">CTF</entry>
+        </row>
+      </thead>
+      <tbody>
+        <row>
+          <entry>MSS 1.x on Tomcat 6.x</entry>
+          <entry><programlisting language="Xml" role="XML" >
+			<![CDATA[
+			<dependency>
+			<groupId>org.jboss.weld.servlet</groupId>
+			<artifactId>weld-servlet</artifactId>
+			<version>1.1.0.Final</version>
+			</dependency> 
+			]]></programlisting></entry>
+		<entry><programlisting language="Xml" role="XML">
+			<![CDATA[ 
+			<dependency>
+			<groupId>org.mobicents.servlet.sip.weld</groupId>
+			<artifactId>sip-servlets-weld</artifactId>
+			<version>]]>&CTF_VERSION;<![CDATA[</version>
+			</dependency>
+		]]></programlisting></entry>
+        </row>
+        <row>
+          <entry>MSS 1.x on JBoss AS5</entry>
+          <entry><programlisting language="Xml" role="XML">
+			<![CDATA[
+			<dependency>
+			<groupId>org.jboss.weld.servlet</groupId>
+			<artifactId>weld-servlet</artifactId>
+			<scope>runtime</scope>
+			<classifier>jboss5</classifier>
+			<version>1.1.0.Final</version>
+			</dependency>	
+			]]></programlisting></entry>
+          <entry><programlisting language="Xml" role="XML">
+			<![CDATA[	
+			<dependency>
+			<groupId>org.mobicents.servlet.sip.weld</groupId>
+			<artifactId>sip-servlets-weld-jboss5</artifactId>
+			<version>]]>&CTF_VERSION;<![CDATA[</version>
+			</dependency>
+			]]></programlisting></entry>
+        </row>
+        <row>
+          <entry>MSS 2.x on Tomcat 7.x</entry>
+          <entry><programlisting language="Xml" role="XML">
+			<![CDATA[	
+			<dependency>
+			<groupId>org.jboss.weld.servlet</groupId>
+			<artifactId>weld-servlet</artifactId>
+			<version>1.1.0.Final</version>
+			</dependency>
+			]]></programlisting></entry>
+			<entry><programlisting language="Xml" role="XML">
+			<![CDATA[ 	
+			<dependency>
+			<groupId>org.mobicents.servlet.sip.weld</groupId>
+			<artifactId>sip-servlets-weld</artifactId>
+			<version>]]>&CTF_VERSION;<![CDATA[</version>
+			</dependency>
+			]]></programlisting></entry>						
+        </row>
+      </tbody>
+    </tgroup>
+    </table>
+-->
+</chapter>

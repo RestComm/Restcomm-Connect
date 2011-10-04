@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: ittsss --><chapter id="Conclusion_RestComm">
+  <title>Conclusion</title>
+  <para>CTF provides an extensive set of features and advantages to the developer but we believe there are improvements to be done. Developers hold a vital role for the further improvement of the framework.</para>
+<para>Please give it a try and provide early feedback !</para>
+<para>This is a perfect time to offer any ideas for or contribute Telco modules/extensions that you would find useful in your applications.</para>
+<para>Leave us your comments on the discussion started at mobicents google group </para>
+</chapter>
