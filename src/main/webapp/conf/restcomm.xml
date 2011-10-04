@@ -40,7 +40,7 @@
       <application name="RestComm Demo Application">
         <endpoint>1234</endpoint>
         <request-method>POST</request-method>
-        <uri>http://localhost:8080/restcomm-1.0.0.ALPHA/demo/hello-world.xml</uri>
+        <uri>http://localhost:8080/restcomm/demo/hello-world.xml</uri>
       </application>
     </applications>
     <!--
@@ -134,7 +134,7 @@
       /home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm-1.0.0.ALPHA.war/recordings
     </recordings-location>
     <recordings-uri>
-      http://localhost:8080/restcomm-1.0.0.ALPHA/recordings
+      http://localhost:8080/restcomm/recordings
     </recordings-uri>
   </recorder-settings>
 </restcomm>
