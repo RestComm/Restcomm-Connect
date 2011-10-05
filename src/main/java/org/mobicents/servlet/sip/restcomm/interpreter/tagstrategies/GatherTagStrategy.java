@@ -263,8 +263,6 @@ public final class GatherTagStrategy extends TwiMLTagStrategy {
       final EventType type = event.getType();
       if(type.equals(SignalDetectorEventType.DONE_DETECTING)) {
         buffer = event.getDigits();
-      } else if(type.equals(SignalDetectorEventType.SIGNAL_DETECTED)) {
-        // Waiting for Media Server support.
       }
       synchronized(sleeper) {
         sleeper.notify();

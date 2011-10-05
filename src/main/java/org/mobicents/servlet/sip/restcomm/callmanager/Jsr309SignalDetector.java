@@ -38,7 +38,7 @@ public final class Jsr309SignalDetector extends SignalDetector implements MediaE
     assertState(IDLE);
     detector.addListener(this);
     try {
-      detector.receiveSignals(getNumberOfDigits(), null, null, null);
+      detector.receiveSignals(1, null, null, null);
 	  setState(DETECTING);
 	} catch(final MsControlException exception) {
 	  setState(FAILED);
