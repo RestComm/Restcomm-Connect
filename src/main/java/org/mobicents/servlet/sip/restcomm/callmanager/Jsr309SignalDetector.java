@@ -16,10 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
-import javax.media.mscontrol.EventType;
 import javax.media.mscontrol.MediaEventListener;
 import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.Parameters;
 
 import org.apache.log4j.Logger;
 
@@ -40,11 +38,7 @@ public final class Jsr309SignalDetector extends SignalDetector implements MediaE
     assertState(IDLE);
     detector.addListener(this);
     try {
-      final Parameters options = detector.getMediaSession().createParameters();
-      options.put(javax.media.mscontrol.mediagroup.signals.SignalDetector.BUFFERING, false);
-      options.put(javax.media.mscontrol.mediagroup.signals.SignalDetector.ENABLED_EVENTS,
-          new EventType[] {javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent.SIGNAL_DETECTED});
-      detector.receiveSignals(getNumberOfDigits(), null, null, options);
+      detector.receiveSignals(getNumberOfDigits(), null, null, null);
 	  setState(DETECTING);
 	} catch(final MsControlException exception) {
 	  setState(FAILED);
@@ -55,16 +49,12 @@ public final class Jsr309SignalDetector extends SignalDetector implements MediaE
 
   public void onEvent(final javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent event) {
     detector.removeListener(this);
-    setState(IDLE);
+    logger.info(event.getEventType());
     if(event.isSuccessful()) {
       if(event.getEventType() == javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED) {
         final SignalDetectorEvent done = new SignalDetectorEvent(this, SignalDetectorEventType.DONE_DETECTING);
         done.setDigits(event.getSignalString());
         fire(done);
-      } else if(event.getEventType() == javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent.SIGNAL_DETECTED) {
-    	final SignalDetectorEvent signal = new SignalDetectorEvent(this, SignalDetectorEventType.SIGNAL_DETECTED);
-    	signal.setDigits(event.getSignalBuffer()[0].toString());
-        fire(signal);
       }
     }
   }
