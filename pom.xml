@@ -110,20 +110,21 @@
     </dependency>
   </dependencies>
   
-<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<compilerArguments>
-						<g />
-					</compilerArguments>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>						
-		</plugins>		
-	</build>
+  <build>
+    <finalName>restcomm</finalName>
+	  <plugins>
+	    <plugin>
+		  <artifactId>maven-compiler-plugin</artifactId>
+		  <configuration>
+			<compilerArguments>
+			  <g />
+			</compilerArguments>
+			<source>1.6</source>
+			<target>1.6</target>
+		  </configuration>
+		</plugin>						
+	  </plugins>		
+  </build>
 
   <repositories>
     <repository>
