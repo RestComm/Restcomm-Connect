@@ -11,7 +11,7 @@
     <log4j.version>1.2.16</log4j.version>
     <commons-configuration.version>1.7</commons-configuration.version>
     <jsr309api.version>1.0</jsr309api.version>
-    <jsr309impl.version>2.0.0.BETA5</jsr309impl.version>
+    <jsr309impl.version>2.0.0.BETA4</jsr309impl.version>
     <javamail.version>1.4</javamail.version>
     <servletapi.version>2.5</servletapi.version>
     <sipservletapi.version>1.1.12</sipservletapi.version>

@@ -1,17 +1,15 @@
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
-import java.util.Iterator;
 import java.util.Properties;
 
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
 import javax.media.mscontrol.spi.DriverManager;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
-import org.mobicents.javax.media.mscontrol.spi.DriverImpl;
+import org.mobicents.jsr309.mgcp.MgcpStackFactory;
 import org.mobicents.servlet.sip.restcomm.Configurable;
 
 public final class Jsr309MediaServerManager implements Configurable {
@@ -20,6 +18,7 @@ public final class Jsr309MediaServerManager implements Configurable {
     private static final Jsr309MediaServerManager INSTANCE = new Jsr309MediaServerManager();
   }
   private static final String CONFIGURATION_PREFIX = "media-server-manager.mgcp-stack";
+  private Properties mgcpStackProperties;
   private Jsr309MediaServer server;
   
   private Jsr309MediaServerManager() {
@@ -29,15 +28,15 @@ public final class Jsr309MediaServerManager implements Configurable {
   
   private MsControlFactory createMsControlFactory(final String stackName, final String stackAddress, final String stackPort,
       final String remoteAddress, final String remotePort) {
-    final Properties configuration = new Properties();
-    configuration.put("mgcp.stack.name", stackName);
-    configuration.put("mgcp.bind.address", stackAddress);
-    configuration.put("mgcp.local.port", stackPort);
-    configuration.put("mgcp.server.address", remoteAddress);
-    configuration.put("mgcp.server.port", remotePort);
+    mgcpStackProperties = new Properties();
+    mgcpStackProperties.put("mgcp.stack.name", stackName);
+    mgcpStackProperties.put("mgcp.stack.ip", stackAddress);
+    mgcpStackProperties.put("mgcp.stack.port", stackPort);
+    mgcpStackProperties.put("mgcp.stack.peer.ip", remoteAddress);
+    mgcpStackProperties.put("mgcp.stack.peer.port", remotePort);
     MsControlFactory factory = null;
     try {
-	  factory = new DriverImpl().getFactory(configuration);
+	  factory = DriverManager.getDrivers().next().getFactory(mgcpStackProperties);
 	} catch(final MsControlException exception) {
 	  logger.error(exception);
 	}
@@ -74,12 +73,6 @@ public final class Jsr309MediaServerManager implements Configurable {
   
   public void shutdown() {
 	// Clean up after MGCP stack.
-    Iterator<Driver> drivers = DriverManager.getDrivers();
-    while (drivers.hasNext()) {
-      Driver driver = drivers.next();
-	  DriverManager.deregisterDriver(driver);
-	  DriverImpl impl = (DriverImpl) driver;
-	  impl.shutdown();
-	} 
+	MgcpStackFactory.getInstance().clearMgcpStackProvider(mgcpStackProperties);
   }
 }
