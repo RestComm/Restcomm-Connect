@@ -16,7 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml;
 
+import org.mobicents.servlet.sip.restcomm.ObjectInstantiationException;
+
 public interface TagFactory {
-  public Attribute getAttributeInstance(String name) throws AttributeInstantiationException, UnsupportedAttributeException;
-  public Tag getTagInstance(String name) throws TagInstantiationException, UnsupportedTagException;
+  public Attribute getAttributeInstance(String name) throws ObjectInstantiationException;
+  public Tag getTagInstance(String name) throws ObjectInstantiationException;
 }

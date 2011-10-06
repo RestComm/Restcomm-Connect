@@ -24,6 +24,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.mobicents.servlet.sip.restcomm.ObjectInstantiationException;
+
 public final class XmlResourceBuilder {
   private final TagFactory factory;
   
@@ -39,13 +41,11 @@ public final class XmlResourceBuilder {
       return parse(xmlStreamReader);
     } catch(final XMLStreamException exception) {
       throw new XmlResourceBuilderException(exception);
-    } catch(final TagInstantiationException exception) {
+    } catch(final ObjectInstantiationException exception) {
       throw new XmlResourceBuilderException(exception);
 	} catch(final UnsupportedTagException exception) {
 	  throw new XmlResourceBuilderException(exception);
-	} catch(final AttributeInstantiationException exception) {
-	  throw new XmlResourceBuilderException(exception);
-    } catch(final UnsupportedAttributeException exception) {
+	} catch(final UnsupportedAttributeException exception) {
 	  throw new XmlResourceBuilderException(exception);
 	}
   }
@@ -60,7 +60,7 @@ public final class XmlResourceBuilder {
   }
   
   private void doStartElement(final XMLStreamReader xmlStreamReader, final Stack<Tag> tagStack)
-      throws TagInstantiationException, UnsupportedTagException, UnsupportedAttributeException, AttributeInstantiationException {
+      throws ObjectInstantiationException, UnsupportedTagException, UnsupportedAttributeException {
     final String tagName = xmlStreamReader.getLocalName();
     final Tag tag = factory.getTagInstance(tagName);
     // Process the current element's attributes.
@@ -94,8 +94,8 @@ public final class XmlResourceBuilder {
     }
   }
   
-  private XmlResource parse(final XMLStreamReader xmlStreamReader) throws XMLStreamException, TagInstantiationException,
-      UnsupportedTagException, UnsupportedAttributeException, XmlResourceBuilderException, AttributeInstantiationException {
+  private XmlResource parse(final XMLStreamReader xmlStreamReader) throws XMLStreamException, ObjectInstantiationException,
+      UnsupportedTagException, UnsupportedAttributeException, XmlResourceBuilderException {
     final Stack<Tag> tagStack = new Stack<Tag>();
     Tag tag = null;
     while(xmlStreamReader.hasNext()) {

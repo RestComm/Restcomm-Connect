@@ -19,13 +19,10 @@ package org.mobicents.servlet.sip.restcomm.xml.twiml;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mobicents.servlet.sip.restcomm.ObjectInstantiationException;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.AttributeInstantiationException;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
-import org.mobicents.servlet.sip.restcomm.xml.TagInstantiationException;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
 
 public final class TwiMLTagFactory implements TagFactory {
   private static final Map<String, Class<? extends Attribute>> ATTRIBUTES;
@@ -83,35 +80,35 @@ public final class TwiMLTagFactory implements TagFactory {
     super();
   }
 
-  public Attribute getAttributeInstance(final String name) throws AttributeInstantiationException, UnsupportedAttributeException {
+  public Attribute getAttributeInstance(final String name) throws ObjectInstantiationException {
 	if(name == null) {
 	  throw new NullPointerException("Can not instantiate an attribute named null");
 	} else if(!ATTRIBUTES.containsKey(name)) {
-	  throw new UnsupportedAttributeException("The attribute named " + name +
+	  throw new ObjectInstantiationException("The attribute named " + name +
 	      " can not be instantiated because it is not a supported RestComm attribute.");
 	} else {
 	  try {
 	    return ATTRIBUTES.get(name).newInstance();
 	  } catch(final InstantiationException exception) {
-		throw new AttributeInstantiationException(exception);
+		throw new ObjectInstantiationException(exception);
 	  } catch(final IllegalAccessException exception) {
-		throw new AttributeInstantiationException(exception);
+		throw new ObjectInstantiationException(exception);
 	  }
 	}
   }
 
-  public Tag getTagInstance(final String name) throws TagInstantiationException, UnsupportedTagException {
+  public Tag getTagInstance(final String name) throws ObjectInstantiationException {
 	if(name == null) {
       throw new NullPointerException("Can not instantiate a tag with a null name.");
 	} else if(!TAGS.containsKey(name)) {
-      throw new UnsupportedTagException("The <" + name + "> tag can not be instantiated because it is not a supported RestComm tag.");
+      throw new ObjectInstantiationException("The <" + name + "> tag can not be instantiated because it is not a supported RestComm tag.");
 	} else {
 	  try {
 		return TAGS.get(name).newInstance();
 	  } catch(final InstantiationException exception) {
-		throw new TagInstantiationException(exception);
+		throw new ObjectInstantiationException(exception);
 	  } catch(final IllegalAccessException exception) {
-		throw new TagInstantiationException(exception);
+		throw new ObjectInstantiationException(exception);
 	  }
 	}
   }
