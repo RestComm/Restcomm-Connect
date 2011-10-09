@@ -16,58 +16,50 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.events.EventListener;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalDetectorEvent;
+import org.mobicents.servlet.sip.restcomm.callmanager.events.PlayerEvent;
 import org.mobicents.servlet.sip.restcomm.fsm.FSM;
 import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-public abstract class SignalDetector extends FSM {
-  // Signal detector states.
+public abstract class MediaPlayer extends FSM {
+  // Player states.
   public static final State IDLE = new State("idle");
-  public static final State DETECTING = new State("detecting");
+  public static final State PLAYING = new State("playing");
   public static final State FAILED = new State("failed");
   static {
-    IDLE.addTransition(DETECTING);
+    IDLE.addTransition(PLAYING);
     IDLE.addTransition(FAILED);
-    DETECTING.addTransition(IDLE);
-    DETECTING.addTransition(FAILED);
+    PLAYING.addTransition(IDLE);
+    PLAYING.addTransition(FAILED);
   }
   
-  private int numberOfDigits;
-  private final List<EventListener<SignalDetectorEvent>> listeners;
+  private final List<EventListener<PlayerEvent>> listeners;
   
-  public SignalDetector() {
+  public MediaPlayer() {
     super(IDLE);
     addState(IDLE);
-    addState(DETECTING);
+    addState(PLAYING);
     addState(FAILED);
-    this.listeners = new ArrayList<EventListener<SignalDetectorEvent>>();
+    this.listeners = new ArrayList<EventListener<PlayerEvent>>();
   }
   
-  public synchronized void addListener(final EventListener<SignalDetectorEvent> listener) {
+  public synchronized void addListener(final EventListener<PlayerEvent> listener) {
     listeners.add(listener);
   }
   
-  public synchronized void removeListener(final EventListener<SignalDetectorEvent> listener) {
+  public synchronized void removeListener(final EventListener<PlayerEvent> listener) {
     listeners.remove(listener);
   }
   
-  protected synchronized void fire(final SignalDetectorEvent event) {
-    for(final EventListener<SignalDetectorEvent> listener : listeners) {
+  protected synchronized void fire(final PlayerEvent event) {
+    for(final EventListener<PlayerEvent> listener : listeners) {
       listener.onEvent(event);
     }
   }
   
-  public int getNumberOfDigits() {
-    return numberOfDigits;
-  }
-  
-  public void setNumberOfDigits(final int numberOfDigits) {
-    this.numberOfDigits = numberOfDigits;
-  }
-  
-  public abstract void detect();
+  public abstract void play(URI uri);
 }

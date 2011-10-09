@@ -24,7 +24,7 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.Environment;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.Recorder;
+import org.mobicents.servlet.sip.restcomm.callmanager.MediaRecorder;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -56,7 +56,7 @@ public final class RecordTagStrategy extends TwiMLTagStrategy {
 	// Record some media.
 	final int maxLength = Integer.parseInt(tag.getAttribute(MaxLength.NAME).getValue()) * ONE_SECOND;
 	final URI path = URI.create(environment.getRecordingsPath() + "/" + UUID.randomUUID().toString() + ".wav");
-	final Recorder recorder = call.getRecorder();
+	final MediaRecorder recorder = call.getRecorder();
 	recorder.record(path);
 	synchronized(this) {
 	  try {

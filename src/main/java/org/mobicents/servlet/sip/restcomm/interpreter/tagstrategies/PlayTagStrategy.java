@@ -19,7 +19,7 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 import java.net.URI;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.Player;
+import org.mobicents.servlet.sip.restcomm.callmanager.MediaPlayer;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.EventListener;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.EventType;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.PlayerEvent;
@@ -48,7 +48,7 @@ public final class PlayTagStrategy extends TwiMLTagStrategy {
     if(text != null) {
       final URI uri = URI.create(text);
       final int loop = Integer.parseInt(tag.getAttribute(Loop.NAME).getValue());
-      final Player player = call.getPlayer();
+      final MediaPlayer player = call.getPlayer();
       player.addListener(listener);
       for(int counter = 1; counter <= loop; counter++) {
         player.play(uri);

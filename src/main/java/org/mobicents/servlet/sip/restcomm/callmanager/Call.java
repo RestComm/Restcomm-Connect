@@ -26,10 +26,10 @@ public interface Call {
   public String getDirection();
   public String getId();
   public String getOriginator();
-  public Player getPlayer();
+  public MediaPlayer getPlayer();
   public String getRecipient();
-  public Recorder getRecorder();
-  public SignalDetector getSignalDetector();
+  public MediaRecorder getRecorder();
+  public DtmfDetector getSignalDetector();
   public SpeechSynthesizer getSpeechSynthesizer();
   public String getStatus();
   public void hangup();

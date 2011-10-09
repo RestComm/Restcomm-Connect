@@ -17,6 +17,5 @@
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
 public interface Conference {
-  public void addCall(Call call);
-  public void removeCall(Call call);
+  public String getName();
 }

@@ -24,12 +24,12 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalDetectorEvent;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalDetectorEventType;
 
-public final class Jsr309SignalDetector extends SignalDetector implements MediaEventListener<javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent> {
-  private static final Logger logger = Logger.getLogger(Jsr309SignalDetector.class);
+public final class Jsr309DtmfDetector extends DtmfDetector implements MediaEventListener<javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent> {
+  private static final Logger logger = Logger.getLogger(Jsr309DtmfDetector.class);
   
   private final javax.media.mscontrol.mediagroup.signals.SignalDetector detector;
   
-  public Jsr309SignalDetector(final javax.media.mscontrol.mediagroup.signals.SignalDetector detector) {
+  public Jsr309DtmfDetector(final javax.media.mscontrol.mediagroup.signals.SignalDetector detector) {
     super();
     this.detector = detector;
   }

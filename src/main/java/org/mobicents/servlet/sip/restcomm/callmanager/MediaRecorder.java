@@ -25,7 +25,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.events.RecorderEvent;
 import org.mobicents.servlet.sip.restcomm.fsm.FSM;
 import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-public abstract class Recorder extends FSM {
+public abstract class MediaRecorder extends FSM {
   // Recorder states.
   public static final State IDLE = new State("idle");
   public static final State RECORDING = new State("recording");
@@ -39,7 +39,7 @@ public abstract class Recorder extends FSM {
   
   private final List<EventListener<RecorderEvent>> listeners;
   
-  public Recorder() {
+  public MediaRecorder() {
     super(IDLE);
     addState(IDLE);
     addState(RECORDING);

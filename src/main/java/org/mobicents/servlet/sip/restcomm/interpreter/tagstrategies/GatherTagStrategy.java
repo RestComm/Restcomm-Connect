@@ -23,8 +23,8 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.Player;
-import org.mobicents.servlet.sip.restcomm.callmanager.SignalDetector;
+import org.mobicents.servlet.sip.restcomm.callmanager.MediaPlayer;
+import org.mobicents.servlet.sip.restcomm.callmanager.DtmfDetector;
 import org.mobicents.servlet.sip.restcomm.callmanager.SpeechSynthesizer;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.EventListener;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.EventType;
@@ -91,7 +91,7 @@ public final class GatherTagStrategy extends TwiMLTagStrategy {
     // final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
     final int numberOfDigits = Integer.parseInt(tag.getAttribute(NumDigits.NAME).getValue());
     // final long timeout = Integer.parseInt(tag.getAttribute(Timeout.NAME).getValue()) * ONE_SECOND;
-    final SignalDetector detector = call.getSignalDetector();
+    final DtmfDetector detector = call.getSignalDetector();
     detector.setNumberOfDigits(numberOfDigits);
     // Start gathering digits.
     detector.addListener(detectorListener);
@@ -151,7 +151,7 @@ public final class GatherTagStrategy extends TwiMLTagStrategy {
       final Call call = context.getCall();
       final URI uri = URI.create(text);
       final int loop = Integer.parseInt(tag.getAttribute(Loop.NAME).getValue());
-      final Player player = call.getPlayer();
+      final MediaPlayer player = call.getPlayer();
       player.addListener(playerListener);
       for(int counter = 1; counter <= loop; counter++) {
         player.play(uri);

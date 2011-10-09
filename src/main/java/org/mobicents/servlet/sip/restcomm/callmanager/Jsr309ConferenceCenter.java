@@ -41,10 +41,10 @@ public final class Jsr309ConferenceCenter implements ConferenceCenter {
       return conferences.get(name);
     } else {
       try {
-        final Conference conference = new Jsr309Conference(factory);
+        final Conference conference = new Jsr309Conference(null);
         conferences.put(name, conference);
         return conference;
-      } catch(final MsControlException exception) {
+      } catch(final Exception exception) {
         logger.error(exception);
         throw new ConferenceCenterException(exception);
       }

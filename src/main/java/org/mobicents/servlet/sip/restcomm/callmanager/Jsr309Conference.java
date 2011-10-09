@@ -16,47 +16,21 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.media.mscontrol.MediaSession;
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.mixer.MediaMixer;
-import javax.media.mscontrol.resource.enums.ParameterEnum;
-
 
 public final class Jsr309Conference implements Conference {
-  private static final int MAX_PARTICIPANTS = 40;
-  private final Map<String, Call> calls;
-  private final MediaSession media;
   private final MediaMixer mixer;
   
-  public Jsr309Conference(final MsControlFactory factory) throws MsControlException {
+  public Jsr309Conference(final MediaMixer mixer) {
     super();
-    calls = new HashMap<String, Call>();
-    media = factory.createMediaSession();
-    final Parameters parameters = media.createParameters();
-    parameters.put(ParameterEnum.MAX_PORTS, MAX_PARTICIPANTS);
-    mixer = media.createMediaMixer(MediaMixer.AUDIO, parameters);
-  }
-  
-  public synchronized void addCall(final Call call) {
-	final String id = call.getId();
-    if(!calls.containsKey(id)) {
-      calls.put(id, call);
-    }
+    this.mixer = mixer;
   }
   
   public MediaMixer getMixer() {
     return mixer;
   }
-  
-  public synchronized void removeCall(final Call call) {
-	final String id = call.getId();
-    if(calls.containsKey(id)) {
-      calls.remove(id);
-    }
+
+  @Override public String getName() {
+    return null;
   }
 }

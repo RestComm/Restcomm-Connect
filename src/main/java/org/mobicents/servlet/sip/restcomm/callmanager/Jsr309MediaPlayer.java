@@ -27,12 +27,12 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.PlayerEvent;
 import org.mobicents.servlet.sip.restcomm.callmanager.events.PlayerEventType;
 
-public final class Jsr309Player extends Player implements MediaEventListener<javax.media.mscontrol.mediagroup.PlayerEvent> {
-  private static final Logger logger = Logger.getLogger(Jsr309Player.class);
+public final class Jsr309MediaPlayer extends MediaPlayer implements MediaEventListener<javax.media.mscontrol.mediagroup.PlayerEvent> {
+  private static final Logger logger = Logger.getLogger(Jsr309MediaPlayer.class);
   
   private final javax.media.mscontrol.mediagroup.Player player;
   
-  public Jsr309Player(final javax.media.mscontrol.mediagroup.Player player) {
+  public Jsr309MediaPlayer(final javax.media.mscontrol.mediagroup.Player player) {
     super();
     this.player = player;
   }

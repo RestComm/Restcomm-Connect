@@ -71,9 +71,9 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
   private MediaSession session;
   private MediaGroup media;
   private NetworkConnection connection;
-  private Jsr309Player player;
-  private Jsr309Recorder recorder;
-  private Jsr309SignalDetector detector;
+  private Jsr309MediaPlayer player;
+  private Jsr309MediaRecorder recorder;
+  private Jsr309DtmfDetector detector;
   private Jsr309SpeechSynthesizer synthesizer;
   private String direction;
   private volatile boolean bridged;
@@ -135,7 +135,14 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
   }
   
   @Override public synchronized void bridge(final Call call) throws CallException {
-    bridged = true;
+    assertState(IN_PROGRESS);
+    final SipCall sipCall = (SipCall)call;
+    try {
+      sipCall.connection.join(Direction.DUPLEX, connection);
+      bridged = true;
+    } catch(final MsControlException exception) {
+      throw new CallException(exception);
+    }
   }
   
   private void cleanup() {
@@ -148,9 +155,9 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     try {
       media = session.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
       media.join(Direction.DUPLEX, connection);
-      player = new Jsr309Player(media.getPlayer());
-      recorder = new Jsr309Recorder(media.getRecorder());
-      detector = new Jsr309SignalDetector(media.getSignalDetector());
+      player = new Jsr309MediaPlayer(media.getPlayer());
+      recorder = new Jsr309MediaRecorder(media.getRecorder());
+      detector = new Jsr309DtmfDetector(media.getSignalDetector());
       synthesizer = new Jsr309SpeechSynthesizer(media.getPlayer());
       connected = true;
     } catch(final MsControlException exception) {
@@ -234,7 +241,7 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     return from.getUser();
   }
   
-  @Override public org.mobicents.servlet.sip.restcomm.callmanager.Player getPlayer() {
+  @Override public MediaPlayer getPlayer() {
     return player;
   }
   
@@ -243,11 +250,11 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     return to.getUser();
   }
   
-  @Override public org.mobicents.servlet.sip.restcomm.callmanager.Recorder getRecorder() {
+  @Override public MediaRecorder getRecorder() {
     return recorder;
   }
   
-  @Override public org.mobicents.servlet.sip.restcomm.callmanager.SignalDetector getSignalDetector() {
+  @Override public DtmfDetector getSignalDetector() {
     return detector;
   }
   
@@ -277,13 +284,25 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     return joined;
   }
   
-  @Override public synchronized void join(final Conference conference) {
-    joined = true;
+  @Override public synchronized void join(final Conference conference) throws CallException {
+	final Jsr309Conference jsr309Conference = (Jsr309Conference)conference;
+	try {
+	  jsr309Conference.getMixer().join(Direction.DUPLEX, connection);
+	  joined = true;
+	} catch(final MsControlException exception) {
+	  throw new CallException(exception);
+	}
   }
   
   @Override public synchronized void leave(final Conference conference) throws CallException {
     if(joined) {
-      
+	  final Jsr309Conference jsr309Conference = (Jsr309Conference)conference;
+	  try {
+	    jsr309Conference.getMixer().unjoin(connection);
+	    joined = false;
+	  } catch(final MsControlException exception) {
+	    throw new CallException(exception);
+	  }
     }
   }
   
@@ -401,9 +420,15 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     }
   }
   
-  @Override public void unbridge(final Call call) {
+  @Override public void unbridge(final Call call) throws CallException {
     if(bridged) {
-      
+      final SipCall sipCall = (SipCall)call;
+      try {
+        sipCall.connection.unjoin(connection);
+        bridged = false;
+      } catch(final MsControlException exception) {
+        throw new CallException(exception);
+      }
     }
   }
 }

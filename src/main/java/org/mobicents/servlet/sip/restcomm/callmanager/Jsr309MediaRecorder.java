@@ -22,12 +22,12 @@ import javax.media.mscontrol.MsControlException;
 
 import org.apache.log4j.Logger;
 
-public final class Jsr309Recorder extends Recorder {
-  private static final Logger LOGGER = Logger.getLogger(Jsr309Recorder.class);
+public final class Jsr309MediaRecorder extends MediaRecorder {
+  private static final Logger LOGGER = Logger.getLogger(Jsr309MediaRecorder.class);
   
   private final javax.media.mscontrol.mediagroup.Recorder recorder;
   
-  public Jsr309Recorder(final javax.media.mscontrol.mediagroup.Recorder recorder) {
+  public Jsr309MediaRecorder(final javax.media.mscontrol.mediagroup.Recorder recorder) {
     super();
     this.recorder = recorder;
   }
