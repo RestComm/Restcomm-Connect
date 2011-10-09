@@ -32,7 +32,7 @@ public final class RejectTagStrategy extends TwiMLTagStrategy {
       final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
     final String reason = tag.getAttribute(Reason.NAME).getValue();
-    if(call.getState().equals(Call.RINGING)) {
+    if(call.getStatus().equals("ringing")) {
       if(reason.equals(Reason.REJECTED)) {
         answer(call);
         /* Fix Me: This should answer the call play a not-in-service message and hangup. */

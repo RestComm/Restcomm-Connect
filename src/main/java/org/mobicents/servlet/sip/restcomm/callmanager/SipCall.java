@@ -23,15 +23,8 @@ import java.util.List;
 import javax.media.mscontrol.MediaEventListener;
 import javax.media.mscontrol.MediaSession;
 import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.join.JoinEvent;
-import javax.media.mscontrol.join.JoinEventListener;
 import javax.media.mscontrol.join.Joinable.Direction;
 import javax.media.mscontrol.mediagroup.MediaGroup;
-import javax.media.mscontrol.mediagroup.Player;
-import javax.media.mscontrol.mediagroup.Recorder;
-import javax.media.mscontrol.mediagroup.signals.SignalDetector;
-import javax.media.mscontrol.mixer.MediaMixer;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.networkconnection.SdpPortManager;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
@@ -42,130 +35,124 @@ import javax.servlet.sip.SipURI;
 
 import org.apache.log4j.Logger;
 
-import org.mobicents.servlet.sip.restcomm.callmanager.events.CallEvent;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.CallEventType;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.EventListener;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalEvent;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalEventType;
+import org.mobicents.servlet.sip.restcomm.fsm.FSM;
 import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-public final class SipCall extends Call implements EventListener<SignalEvent>,
-    JoinEventListener, MediaEventListener<SdpPortManagerEvent> {
+public final class SipCall extends FSM implements Call, MediaEventListener<SdpPortManagerEvent> {
   // Logger.
   private static final Logger logger = Logger.getLogger(SipCall.class);
-  
+  //Call Directions.
+  public static final String INBOUND = "inbound";
+  public static final String OUTBOUND_DIAL = "outbound-dial";
+  // Call states.
+  public static final State IDLE = new State("idle");
+  public static final State QUEUED = new State("queued");
+  public static final State RINGING = new State("ringing");
+  public static final State IN_PROGRESS = new State("in-progress");
+  public static final State COMPLETED = new State("completed");
+  public static final State BUSY = new State("busy");
+  public static final State FAILED = new State("failed");
+  public static final State NO_ANSWER = new State("no-answer");
+  public static final State CANCELLED = new State("cancelled");
+  static {
+    IDLE.addTransition(RINGING);
+    IDLE.addTransition(QUEUED);
+    RINGING.addTransition(IN_PROGRESS);
+    RINGING.addTransition(FAILED);
+    RINGING.addTransition(CANCELLED);
+    IN_PROGRESS.addTransition(COMPLETED);
+    IN_PROGRESS.addTransition(FAILED);
+  }
+ 
+  protected List<CallEventListener> listeners;
+
   private final CallManager manager;
-  private final SipServletRequest request;
-  private final SipSession session;
-  private MediaSession media;
+  private final SipServletRequest invite;
+  private MediaSession session;
+  private MediaGroup media;
   private NetworkConnection connection;
-  private MediaGroup group;
-  private Player player;
-  private Recorder recorder;
-  private SignalDetector detector;
+  private Jsr309Player player;
+  private Jsr309Recorder recorder;
+  private Jsr309SignalDetector detector;
+  private Jsr309SpeechSynthesizer synthesizer;
   private String direction;
+  private volatile boolean bridged;
+  private volatile boolean connected;
+  private volatile boolean joined;
   
-  public SipCall(final SipServletRequest request, final CallManager manager) {
-    super();
+  public SipCall(final SipServletRequest request, final MediaSession session, final CallManager manager) {
+	// Initialize the state machine.
+    super(IDLE);
+    addState(IDLE);
+    addState(QUEUED);
+    addState(RINGING);
+    addState(IN_PROGRESS);
+    addState(COMPLETED);
+    addState(BUSY);
+    addState(FAILED);
+    addState(NO_ANSWER);
+    addState(CANCELLED);
+    // Finish initialization.
+    this.listeners = new ArrayList<CallEventListener>();
     this.manager = manager;
-    this.request = request;
-    this.session = request.getSession();
-    final Jsr309MediaServerManager mediaServerManager = Jsr309MediaServerManager.getInstance();
-    final Jsr309MediaServer mediaServer = mediaServerManager.getMediaServer();
-    try {
-      final MsControlFactory msControlFactory = mediaServer.getMsControlFactory();
-	  this.media = msControlFactory.createMediaSession();
-	} catch(final MsControlException exception) {
-	  logger.error(exception);
-	}
+    this.invite = request;
+    this.session = session;
+    this.bridged = false;
+    this.connected = false;
+    this.joined = false;
   }
   
-  private void alert() {
-	assertState(IDLE);
-	direction = INBOUND;
-    setState(RINGING);
+  public synchronized void addListener(final CallEventListener listener) {
+    listeners.add(listener);
   }
   
-  @Override public void answer() throws CallException {
+  public synchronized void removeListener(final CallEventListener listener) {
+    listeners.remove(listener);
+  }
+  
+  @Override public synchronized void answer() throws CallException {
     assertState(RINGING);
     try {
-      connection = media.createNetworkConnection(NetworkConnection.BASIC);
+      connection = session.createNetworkConnection(NetworkConnection.BASIC);
       final SdpPortManager sdp = connection.getSdpPortManager();
       sdp.addListener(this);
-      final byte[] offer = request.getRawContent();
+      final byte[] offer = invite.getRawContent();
       sdp.processSdpOffer(offer);
+      // Wait 30 seconds for the call to be established.
+      wait(30 * 1000);
+      // Make sure nothing went wrong.
+      if(!getState().equals(IN_PROGRESS)) {
+    	final StringBuilder buffer = new StringBuilder();
+    	buffer.append("The call to recipient ").append(getRecipient())
+    	    .append(" from sender ").append(getOriginator())
+    	    .append(" could not be completed.");
+        throw new CallException(buffer.toString());
+      }
     } catch(final Exception exception) {
       fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
       throw new CallException(exception);
     }
   }
   
-  private void answered() {
-    assertState(QUEUED);
-    setState(IN_PROGRESS);
-    fire(new CallEvent(this, CallEventType.IN_CALL));
-  }
-  
-  @Override public void bridge(final Call call) throws CallException {
-	if(call.getState().equals(IN_PROGRESS)) {
-	  assertState(IN_PROGRESS);
-	} else {
-	  throw new IllegalStateException("Cannot bridge to a call in a " + call.getState() + " state.");
-	}
-	// Bridge the calls.
-	final SipCall sipCall = (SipCall)call;
-    try {
-	  this.connection.join(Direction.DUPLEX, sipCall.connection);
-	} catch(final MsControlException exception) {
-	  throw new CallException(exception);
-	}
-  }
-  
-  private void bye(final SignalEvent event) throws CallException {
-	assertState(IN_PROGRESS);
-    final SipServletRequest request = event.getRequest();
-    final SipServletResponse response = request.createResponse(SipServletResponse.SC_OK);
-    try {
-      response.send();
-      setState(COMPLETED);
-    } catch(final IOException exception) {
-      cleanup();
-      fire(new CallEvent(this, CallEventType.HANGUP));
-      throw new CallException(exception);
-    }
-    cleanup();
-    fire(new CallEvent(this, CallEventType.HANGUP));
-  }
-  
-  private void cancel(final SignalEvent event) throws CallException {
-    assertState(RINGING);
-    final SipServletRequest request = event.getRequest();
-    final SipServletResponse response = request.createResponse(SipServletResponse.SC_OK);
-    try {
-      response.send();
-      setState(CANCELLED);
-    } catch(final IOException exception) {
-      cleanup();
-      throw new CallException(exception);
-    }
-    cleanup();
+  @Override public synchronized void bridge(final Call call) throws CallException {
+    bridged = true;
   }
   
   private void cleanup() {
-    media.release();
-    session.invalidate();
+    session.release();
+    invite.getSession().invalidate();
   }
   
-  @Override public void connect() throws CallException {
-	final List<State> possibleStates = new ArrayList<State>();
-	possibleStates.add(RINGING);
-	possibleStates.add(QUEUED);
-	possibleStates.add(IN_PROGRESS);
-	assertState(possibleStates);
+  @Override public synchronized void connect() throws CallException {
+	assertState(IN_PROGRESS);
     try {
-      group = media.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
-      group.addListener(this);
-      group.joinInitiate(Direction.DUPLEX, connection, null);
+      media = session.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+      media.join(Direction.DUPLEX, connection);
+      player = new Jsr309Player(media.getPlayer());
+      recorder = new Jsr309Recorder(media.getRecorder());
+      detector = new Jsr309SignalDetector(media.getSignalDetector());
+      synthesizer = new Jsr309SpeechSynthesizer(media.getPlayer());
+      connected = true;
     } catch(final MsControlException exception) {
       terminate();
       setState(FAILED);
@@ -173,16 +160,26 @@ public final class SipCall extends Call implements EventListener<SignalEvent>,
     }
   }
   
-  @Override public void dial() throws CallException {
+  @Override public synchronized void dial() throws CallException {
     assertState(IDLE);
     direction = OUTBOUND_DIAL;
     setState(QUEUED);
     try {
-	  connection = media.createNetworkConnection(NetworkConnection.BASIC);
+	  connection = session.createNetworkConnection(NetworkConnection.BASIC);
       final SdpPortManager sdp = connection.getSdpPortManager();
       final byte[] offer = sdp.getMediaServerSessionDescription();
-      request.setContent(offer, "application/sdp");
-      request.send();
+      invite.setContent(offer, "application/sdp");
+      invite.send();
+      // Wait 30 seconds for the call to be established.
+      wait(30 * 1000);
+      // Make sure nothing went wrong.
+      if(!getState().equals(IN_PROGRESS)) {
+    	final StringBuilder buffer = new StringBuilder();
+    	buffer.append("The call to recipient ").append(getRecipient())
+    	    .append(" from sender ").append(getOriginator())
+    	    .append(" could not be completed.");
+        throw new CallException(buffer.toString());
+      }
 	} catch(final Exception exception) {
 	  setState(FAILED);
 	  cleanup();
@@ -190,10 +187,29 @@ public final class SipCall extends Call implements EventListener<SignalEvent>,
 	}
   }
   
+  @Override public synchronized void disconnect() throws CallException {
+  	if(connected) {
+  	  try {
+  	    media.unjoin(connection);
+  	    media.release();
+  	    media = null;
+  	    player = null;
+  	    recorder = null;
+  	    detector = null;
+  	    synthesizer = null;
+  	    connected = false;
+  	  } catch(final MsControlException exception) {
+  		setState(FAILED);
+  		terminate();
+  	    throw new CallException(exception);
+  	  }
+  	}
+  }
+  
   private void fail(int code) {
-    final SipServletResponse response = request.createResponse(code);
+    final SipServletResponse fail = invite.createResponse(code);
     try {
-      response.send();
+      fail.send();
     } catch(final IOException exception) {
       logger.error(exception);
     }
@@ -210,33 +226,33 @@ public final class SipCall extends Call implements EventListener<SignalEvent>,
   }
 
   @Override public String getId() {
-    return session.getId();
+    return invite.getSession().getId();
   }
   
   @Override public String getOriginator() {
-	final SipURI from = (SipURI)request.getFrom().getURI();
+	final SipURI from = (SipURI)invite.getFrom().getURI();
     return from.getUser();
   }
   
   @Override public org.mobicents.servlet.sip.restcomm.callmanager.Player getPlayer() {
-    return new Jsr309Player(player);
+    return player;
   }
   
   @Override public String getRecipient() {
-    final SipURI to = (SipURI)request.getTo().getURI();
+    final SipURI to = (SipURI)invite.getTo().getURI();
     return to.getUser();
   }
   
   @Override public org.mobicents.servlet.sip.restcomm.callmanager.Recorder getRecorder() {
-    return new Jsr309Recorder(recorder);
+    return recorder;
   }
   
   @Override public org.mobicents.servlet.sip.restcomm.callmanager.SignalDetector getSignalDetector() {
-    return new Jsr309SignalDetector(detector);
+    return detector;
   }
   
   @Override public SpeechSynthesizer getSpeechSynthesizer() {
-    return new Jsr309SpeechSynthesizer(player);
+    return synthesizer;
   }
   
   @Override public String getStatus() {
@@ -249,61 +265,35 @@ public final class SipCall extends Call implements EventListener<SignalEvent>,
 	setState(COMPLETED);
   }
   
-  @Override public void join(final Conference conference) {
-    final Jsr309Conference sipConference = (Jsr309Conference)conference;
-    final MediaMixer mixer = sipConference.getMixer();
+  @Override public boolean isBridged() {
+    return bridged;
   }
   
-  public void onEvent(final SignalEvent event) {
-	try {
-	  if(event.getType().equals(SignalEventType.ALERT)) {
-	    alert();
-	  } else if(event.getType().equals(SignalEventType.ANSWERED)) {
-		answered();
-	  } else if(event.getType().equals(SignalEventType.BYE)) {
-	    bye(event);
-	  } else if(event.getType().equals(SignalEventType.CANCEL)) {
-	    cancel(event);
-	  } else if(event.getType().equals(SignalEventType.CONNECTED)) {
-	    connect();
-	  } else if(event.getType().equals(SignalEventType.FAILED)) {
-	    
-	  }
-	} catch(final CallException exception) {
-	  logger.error(exception);
-	}
+  @Override public boolean isConnected() {
+    return connected;
   }
   
-  public void onEvent(final JoinEvent event) {
-    if(event.isSuccessful()) {
-      if(event.getEventType().equals(JoinEvent.JOINED)) {
-        try {
-           player = group.getPlayer();
-           recorder = group.getRecorder();
-           detector = group.getSignalDetector();
-           setState(IN_PROGRESS);
-           // Fire an answered event.
-           fire(new CallEvent(this, CallEventType.IN_CALL));
-        } catch(final MsControlException exception) {
-          terminate();
-          setState(FAILED);
-          logger.error(exception);
-        }
-      }
-    } else {
-      terminate();
-      setState(FAILED);
-      logger.error(event.getErrorText());
+  @Override public boolean isInConference() {
+    return joined;
+  }
+  
+  @Override public synchronized void join(final Conference conference) {
+    joined = true;
+  }
+  
+  @Override public synchronized void leave(final Conference conference) throws CallException {
+    if(joined) {
+      
     }
   }
   
   public void onEvent(final SdpPortManagerEvent event) {
     if(event.isSuccessful()) {
-      final SipServletResponse response = request.createResponse(SipServletResponse.SC_OK);
+      final SipServletResponse ok = invite.createResponse(SipServletResponse.SC_OK);
       try {
         final byte[] answer = event.getMediaServerSdp();
-        response.setContent(answer, "application/sdp");
-        response.send();
+        ok.setContent(answer, "application/sdp");
+        ok.send();
       } catch(final IOException exception) {
         setState(FAILED);
         cleanup();
@@ -321,11 +311,11 @@ public final class SipCall extends Call implements EventListener<SignalEvent>,
     }
   }
   
-  @Override public void reject() {
+  @Override public synchronized void reject() {
     assertState(RINGING);
-    final SipServletResponse response = request.createResponse(SipServletResponse.SC_BUSY_HERE);
+    final SipServletResponse busy = invite.createResponse(SipServletResponse.SC_BUSY_HERE);
     try {
-      response.send();
+      busy.send();
     } catch(final IOException exception) {
       logger.error(exception);
     }
@@ -333,16 +323,87 @@ public final class SipCall extends Call implements EventListener<SignalEvent>,
   }
   
   private void terminate() {
-    final SipServletRequest request = session.createRequest("BYE");
+	final SipSession sipSession = invite.getSession();
+    final SipServletRequest bye = sipSession.createRequest("BYE");
     try {
-      request.send();
+      bye.send();
     } catch(final IOException exception) {
       logger.error(exception);
     }
     cleanup();
   }
+
+  public void alert(final SipServletRequest request) throws CallException {
+    assertState(IDLE);
+	direction = INBOUND;
+	final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
+	try {
+	  ringing.send();
+	  setState(RINGING);
+	} catch(final IOException exception) {
+	  setState(FAILED);
+	  throw new CallException(exception);
+	}
+  }
+
+  public void answered(final SipServletResponse response) throws CallException {
+    assertState(QUEUED);
+    final SipServletRequest ack = response.createAck();
+    try {
+      ack.send();
+      setState(IN_PROGRESS);
+      synchronized(this) {
+        notify();
+      }
+    } catch(final IOException exception) {
+      setState(FAILED);
+      cleanup();
+      throw new CallException(exception);
+    }
+  }
+
+  public void bye(final SipServletRequest request) throws CallException {
+    assertState(IN_PROGRESS);
+    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+    try {
+      ok.send();
+      setState(COMPLETED);
+      synchronized(this) {
+        for(final CallEventListener listener : listeners) {
+          listener.hangup(this);
+        }
+      }
+    } catch(final IOException exception) {
+      cleanup();
+      throw new CallException(exception);
+    }
+    cleanup();
+  }
+
+  public void cancel(final SipServletRequest request) throws CallException {
+    assertState(RINGING);
+    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+    try {
+      ok.send();
+      setState(CANCELLED);
+    } catch(final IOException exception) {
+      cleanup();
+      throw new CallException(exception);
+    }
+    cleanup();
+  }
+
+  public void connected() throws CallException {
+	assertState(RINGING);
+	setState(IN_PROGRESS);
+    synchronized(this) {
+      notify();
+    }
+  }
   
-  @Override public void unjoin(Conference conference) {
-    
+  @Override public void unbridge(final Call call) {
+    if(bridged) {
+      
+    }
   }
 }

@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.media.mscontrol.MediaSession;
+import javax.media.mscontrol.MsControlFactory;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.sip.SipApplicationSession;
@@ -29,8 +31,6 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalEvent;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalEventType;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
 
@@ -38,6 +38,7 @@ public final class SipCallManager extends SipServlet implements CallManager {
   private static final long serialVersionUID = 1L;
   // Thread pool for executing interpreters.
   private static final ExecutorService executor = Executors.newCachedThreadPool();
+  private static MsControlFactory msControlFactory;
   private static SipFactory sipFactory;
   
   public SipCallManager() {
@@ -55,58 +56,58 @@ public final class SipCallManager extends SipServlet implements CallManager {
 	  // Create new SIP request.
 	  final SipApplicationSession application = sipFactory.createApplicationSession();
 	  final SipServletRequest request = sipFactory.createRequest(application, "INVITE", fromAddress, toAddress);
-	  final SipCall call = new SipCall(request, this);
+	  final MediaSession session = msControlFactory.createMediaSession();
+	  final SipCall call = new SipCall(request, session, this);
 	  // Bind the call to the SIP session.
-	  final SipSession session = request.getSession();
-	  session.setAttribute("CALL", call);
+	  request.getSession().setAttribute("CALL", call);
 	  return call;
 	} catch(final Exception exception) {
 	  throw new CallManagerException(exception);
 	}
   }
   
-  private SignalEvent createEvent(final SipServletRequest request, final SignalEventType type) {
-    final SignalEvent event = new SignalEvent(this, type);
-    event.setRequest(request);
-    return event;
-  }
-  
   @Override protected final void doAck(final SipServletRequest request) throws ServletException, IOException {
     final SipSession session = request.getSession();
     final SipCall call = (SipCall)session.getAttribute("CALL");
-    // Dispatch signal event.
-    final SignalEvent event = createEvent(request, SignalEventType.CONNECTED);
-    call.onEvent(event);
+    try {
+      call.connected();
+    } catch(final CallException exception) {
+      throw new ServletException(exception);
+    }
   }
   
   @Override protected final void doBye(final SipServletRequest request) throws ServletException, IOException {
     final SipSession session = request.getSession();
     final SipCall call = (SipCall)session.getAttribute("CALL");
-    // Dispatch signal event.
-    final SignalEvent event = createEvent(request, SignalEventType.BYE);
-    call.onEvent(event);
+    try {
+      call.bye(request);
+    } catch(final CallException exception) {
+      throw new ServletException(exception);
+    }
   }
 
   @Override protected final void doCancel(final SipServletRequest request) throws ServletException, IOException {
     final SipSession session = request.getSession();
     final SipCall call = (SipCall)session.getAttribute("CALL");
-    // Dispatch signal event.
-    final SignalEvent event = createEvent(request, SignalEventType.CANCEL);
-    call.onEvent(event);
+    try {
+      call.cancel(request);
+    } catch(final CallException exception) {
+      throw new ServletException(exception);
+    }
   }
 
   @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {
 	try {
-	  final SipServletResponse response = request.createResponse(SipServletResponse.SC_RINGING);
-	  response.send();
       // Create a call.
-	  final SipCall call = new SipCall(request, this);
+	  final MediaSession session = msControlFactory.createMediaSession();
+	  final SipCall call = new SipCall(request, session, this);
 	  // Bind the call to the SIP session.
-	  final SipSession session = request.getSession();
-	  session.setAttribute("CALL", call);
-	  // Dispatch signal event.
-	  final SignalEvent event = createEvent(request, SignalEventType.ALERT);
-	  call.onEvent(event);
+	  request.getSession().setAttribute("CALL", call);
+	  try {
+	    call.alert(request);
+	  } catch(final CallException exception) {
+	    throw new ServletException(exception);
+	  }
 	  // Hand the call to the interpreter for processing.
 	  final TwiMLInterpreterContext context = new TwiMLInterpreterContext(call);
 	  final TwiMLInterpreter interpreter = new TwiMLInterpreter(context);
@@ -124,9 +125,11 @@ public final class SipCallManager extends SipServlet implements CallManager {
 	  final SipServletRequest ack = response.createAck();
 	  ack.send();
 	  final SipCall call = (SipCall)session.getAttribute("CALL");
-	  // Dispatch signal event.
-	  final SignalEvent event = createEvent(request, SignalEventType.ANSWERED);
-	  call.onEvent(event);
+	  try {
+	    call.answered(response);
+	  } catch(final CallException exception) {
+	    throw new ServletException(exception);
+	  }
 	}
   }
 
@@ -136,6 +139,9 @@ public final class SipCallManager extends SipServlet implements CallManager {
   }
 
   @Override public final void init(final ServletConfig config) throws ServletException {
+    final Jsr309MediaServerManager mediaServerManager = Jsr309MediaServerManager.getInstance();
+    final Jsr309MediaServer mediaServer = mediaServerManager.getMediaServer();
+    msControlFactory = mediaServer.getMsControlFactory();
 	sipFactory = (SipFactory)config.getServletContext().getAttribute(SIP_FACTORY);
   }
 }

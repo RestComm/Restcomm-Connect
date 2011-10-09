@@ -33,11 +33,47 @@ public class State {
     transitions.add(state);
   }
   
+  @Override public boolean equals(final Object object) {
+	if(this == object) {
+	  return true;
+	}
+	if(object == null) {
+	  return false;
+	}
+	if(getClass() != object.getClass()) {
+	  return false;
+	}
+	final State other = (State)object;
+	if(name == null) {
+	  if(other.name != null) {
+		return false;
+	  }
+	} else if(!name.equals(other.name)) {
+		return false;
+	}
+	if(transitions == null) {
+	  if(other.transitions != null) {
+		return false;
+	  }
+	} else if(!transitions.equals(other.transitions)) {
+	  return false;
+	}
+	return true;
+  }
+  
   public String getName() {
     return name;
   }
   
   public Set<State> getTransitions() {
     return transitions;
+  }
+  
+  @Override public int hashCode() {
+	final int prime = 5;
+	int result = 1;
+	result = prime * result + ((name == null) ? 0 : name.hashCode());
+	result = prime * result + ((transitions == null) ? 0 : transitions.hashCode());
+	return result;
   }
 }

@@ -45,7 +45,6 @@ public final class Jsr309Conference implements Conference {
   public synchronized void addCall(final Call call) {
 	final String id = call.getId();
     if(!calls.containsKey(id)) {
-      call.join(this);
       calls.put(id, call);
     }
   }
@@ -57,7 +56,6 @@ public final class Jsr309Conference implements Conference {
   public synchronized void removeCall(final Call call) {
 	final String id = call.getId();
     if(calls.containsKey(id)) {
-      call.unjoin(this);
       calls.remove(id);
     }
   }
