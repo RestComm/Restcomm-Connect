@@ -40,7 +40,7 @@ import org.mobicents.servlet.sip.restcomm.fsm.State;
 
 public final class SipCall extends FSM implements Call, MediaEventListener<SdpPortManagerEvent> {
   // Logger.
-  private static final Logger logger = Logger.getLogger(SipCall.class);
+  private static final Logger LOGGER = Logger.getLogger(SipCall.class);
   //Call Directions.
   public static final String INBOUND = "inbound";
   public static final String OUTBOUND_DIAL = "outbound-dial";
@@ -68,14 +68,14 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
 
   private final CallManager manager;
   private final SipServletRequest invite;
-  private MediaSession session;
+  private final MediaSession session;
   private MediaGroup media;
   private NetworkConnection connection;
-  private Jsr309MediaPlayer player;
-  private Jsr309MediaRecorder recorder;
-  private Jsr309DtmfDetector detector;
-  private Jsr309SpeechSynthesizer synthesizer;
-  private String direction;
+  private volatile Jsr309MediaPlayer player;
+  private volatile Jsr309MediaRecorder recorder;
+  private volatile Jsr309DtmfDetector detector;
+  private volatile Jsr309SpeechSynthesizer synthesizer;
+  private volatile String direction;
   private volatile boolean bridged;
   private volatile boolean connected;
   private volatile boolean joined;
@@ -93,21 +93,31 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     addState(NO_ANSWER);
     addState(CANCELLED);
     // Finish initialization.
-    this.listeners = new ArrayList<CallEventListener>();
     this.manager = manager;
     this.invite = request;
     this.session = session;
     this.bridged = false;
     this.connected = false;
     this.joined = false;
+    this.listeners = new ArrayList<CallEventListener>();
   }
   
   public synchronized void addListener(final CallEventListener listener) {
     listeners.add(listener);
   }
   
-  public synchronized void removeListener(final CallEventListener listener) {
-    listeners.remove(listener);
+  public synchronized void alert(final SipServletRequest request) throws CallException {
+    assertState(IDLE);
+	direction = INBOUND;
+	final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
+	try {
+	  ringing.send();
+	  setState(RINGING);
+	} catch(final IOException exception) {
+	  setState(FAILED);
+	  cleanup();
+	  throw new CallException(exception);
+	}
   }
   
   @Override public synchronized void answer() throws CallException {
@@ -134,6 +144,19 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     }
   }
   
+  public synchronized void answered(final SipServletResponse response) throws CallException {
+    assertState(QUEUED);
+    final SipServletRequest ack = response.createAck();
+    try {
+      ack.send();
+      setState(IN_PROGRESS);
+      notify();
+    } catch(final IOException exception) {
+      fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
+      throw new CallException(exception);
+    }
+  }
+  
   @Override public synchronized void bridge(final Call call) throws CallException {
     assertState(IN_PROGRESS);
     final SipCall sipCall = (SipCall)call;
@@ -141,8 +164,39 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
       sipCall.connection.join(Direction.DUPLEX, connection);
       bridged = true;
     } catch(final MsControlException exception) {
+      setState(FAILED);
+      terminate();
       throw new CallException(exception);
     }
+  }
+  
+  public synchronized void bye(final SipServletRequest request) throws CallException {
+    assertState(IN_PROGRESS);
+    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+    try {
+      ok.send();
+      setState(COMPLETED);
+      for(final CallEventListener listener : listeners) {
+        listener.hangup(this);
+      }
+    } catch(final IOException exception) {
+      cleanup();
+      throw new CallException(exception);
+    }
+    cleanup();
+  }
+  
+  public synchronized void cancel(final SipServletRequest request) throws CallException {
+    assertState(RINGING);
+    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+    try {
+      ok.send();
+      setState(CANCELLED);
+    } catch(final IOException exception) {
+      cleanup();
+      throw new CallException(exception);
+    }
+    cleanup();
   }
   
   private void cleanup() {
@@ -161,8 +215,8 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
       synthesizer = new Jsr309SpeechSynthesizer(media.getPlayer());
       connected = true;
     } catch(final MsControlException exception) {
-      terminate();
       setState(FAILED);
+      terminate();
       throw new CallException(exception);
     }
   }
@@ -213,14 +267,20 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
   	}
   }
   
+  public synchronized void established() throws CallException {
+	assertState(RINGING);
+	setState(IN_PROGRESS);
+    notify();
+  }
+  
   private void fail(int code) {
+    setState(FAILED);
     final SipServletResponse fail = invite.createResponse(code);
     try {
       fail.send();
     } catch(final IOException exception) {
-      logger.error(exception);
+      LOGGER.error(exception);
     }
-    setState(FAILED);
     cleanup();
   }
   
@@ -266,7 +326,7 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     return getState().getName();
   }
 
-  @Override public void hangup() {
+  @Override public synchronized void hangup() {
     assertState(IN_PROGRESS);
     terminate();
 	setState(COMPLETED);
@@ -289,7 +349,9 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
 	try {
 	  jsr309Conference.getMixer().join(Direction.DUPLEX, connection);
 	  joined = true;
-	} catch(final MsControlException exception) {
+	} catch(final Exception exception) {
+	  setState(FAILED);
+	  terminate();
 	  throw new CallException(exception);
 	}
   }
@@ -300,7 +362,9 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
 	  try {
 	    jsr309Conference.getMixer().unjoin(connection);
 	    joined = false;
-	  } catch(final MsControlException exception) {
+	  } catch(final Exception exception) {
+	    setState(FAILED);
+	    terminate();
 	    throw new CallException(exception);
 	  }
     }
@@ -314,12 +378,10 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
         ok.setContent(answer, "application/sdp");
         ok.send();
       } catch(final IOException exception) {
-        setState(FAILED);
-        cleanup();
-        logger.error(exception);
+    	fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
+        LOGGER.error(exception);
       }
     } else {
-      logger.error(event.getErrorText());
       if(event.getError().equals(SdpPortManagerEvent.SDP_NOT_ACCEPTABLE)) {
         fail(SipServletResponse.SC_NOT_ACCEPTABLE_HERE);
       } else if(event.getError().equals(SdpPortManagerEvent.RESOURCE_UNAVAILABLE)) {
@@ -327,6 +389,7 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
       } else {
         fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
       }
+      LOGGER.error(event.getErrorText());
     }
   }
   
@@ -336,9 +399,13 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     try {
       busy.send();
     } catch(final IOException exception) {
-      logger.error(exception);
+      LOGGER.error(exception);
     }
     cleanup();
+  }
+  
+  public synchronized void removeListener(final CallEventListener listener) {
+    listeners.remove(listener);
   }
   
   private void terminate() {
@@ -347,86 +414,20 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     try {
       bye.send();
     } catch(final IOException exception) {
-      logger.error(exception);
+      LOGGER.error(exception);
     }
     cleanup();
-  }
-
-  public void alert(final SipServletRequest request) throws CallException {
-    assertState(IDLE);
-	direction = INBOUND;
-	final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
-	try {
-	  ringing.send();
-	  setState(RINGING);
-	} catch(final IOException exception) {
-	  setState(FAILED);
-	  throw new CallException(exception);
-	}
-  }
-
-  public void answered(final SipServletResponse response) throws CallException {
-    assertState(QUEUED);
-    final SipServletRequest ack = response.createAck();
-    try {
-      ack.send();
-      setState(IN_PROGRESS);
-      synchronized(this) {
-        notify();
-      }
-    } catch(final IOException exception) {
-      setState(FAILED);
-      cleanup();
-      throw new CallException(exception);
-    }
-  }
-
-  public void bye(final SipServletRequest request) throws CallException {
-    assertState(IN_PROGRESS);
-    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
-    try {
-      ok.send();
-      setState(COMPLETED);
-      synchronized(this) {
-        for(final CallEventListener listener : listeners) {
-          listener.hangup(this);
-        }
-      }
-    } catch(final IOException exception) {
-      cleanup();
-      throw new CallException(exception);
-    }
-    cleanup();
-  }
-
-  public void cancel(final SipServletRequest request) throws CallException {
-    assertState(RINGING);
-    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
-    try {
-      ok.send();
-      setState(CANCELLED);
-    } catch(final IOException exception) {
-      cleanup();
-      throw new CallException(exception);
-    }
-    cleanup();
-  }
-
-  public void connected() throws CallException {
-	assertState(RINGING);
-	setState(IN_PROGRESS);
-    synchronized(this) {
-      notify();
-    }
   }
   
-  @Override public void unbridge(final Call call) throws CallException {
+  @Override public synchronized void unbridge(final Call call) throws CallException {
     if(bridged) {
       final SipCall sipCall = (SipCall)call;
       try {
         sipCall.connection.unjoin(connection);
         bridged = false;
       } catch(final MsControlException exception) {
+        setState(FAILED);
+        terminate();
         throw new CallException(exception);
       }
     }

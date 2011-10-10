@@ -1,18 +1,19 @@
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm-docs</artifactId>
 		<version>1.0.0.ALPHA</version>
 	</parent>
-	
+
 	<artifactId>restcomm-docs-jdocbook-jbcp</artifactId>
-	
+
 	<modelVersion>4.0.0</modelVersion>
-		
+
 	<packaging>jdocbook</packaging>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -26,7 +27,7 @@
 							<goal>unpack</goal>
 						</goals>
 						<configuration>
-							<artifactItems>								
+							<artifactItems>
 								<artifactItem>
 									<groupId>${pom.groupId}</groupId>
 									<artifactId>restcomm-docs-sources-jbcp</artifactId>
@@ -35,7 +36,7 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.build.directory}/docbook/resources</outputDirectory>
 								</artifactItem>
-							</artifactItems>							
+							</artifactItems>
 						</configuration>
 					</execution>
 				</executions>
@@ -58,7 +59,7 @@
 						<type>jdocbook-style</type>
 					</dependency>
 				</dependencies>
-				<configuration>					
+				<configuration>
 					<sourceDocumentName>RestComm_User_Guide.xml</sourceDocumentName>
 					<sourceDirectory>${project.build.directory}/docbook/resources</sourceDirectory>
 					<imageResource>
@@ -86,11 +87,12 @@
 					</formats>
 					<options>
 						<xincludeSupported>true</xincludeSupported>
-						<!-- needed for uri-resolvers; can be ommitted if using 'current' uri scheme -->
+						<!-- needed for uri-resolvers; can be ommitted if using 'current' uri 
+							scheme -->
 						<!-- could also locate the docbook dependency and inspect its version... -->
-						<docbookVersion>1.72.0</docbookVersion>					
-					</options>		
-				</configuration>			
+						<docbookVersion>1.72.0</docbookVersion>
+					</options>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -3,8 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
 %BOOK_ENTITIES;
 ]>
-<authorgroup
-	id="sps-Author_Group">
+<authorgroup id="sps-Author_Group">
 	<author>
 		<firstname>Jean</firstname>
 		<surname>Deruelle</surname>

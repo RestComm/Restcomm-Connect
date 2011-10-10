@@ -16,21 +16,79 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.media.mscontrol.MediaSession;
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.mixer.MediaMixer;
+import javax.media.mscontrol.resource.enums.ParameterEnum;
 
 public final class Jsr309Conference implements Conference {
-  private final MediaMixer mixer;
+  private static final int MAX_PARTICIPANTS = 40;
+  private final String name;
+  private final MediaSession session;
+  private volatile MediaMixer mixer;
+  private final Map<String, Call> calls;
   
-  public Jsr309Conference(final MediaMixer mixer) {
+  public Jsr309Conference(final String name, final MediaSession session) {
     super();
-    this.mixer = mixer;
+    this.name = name;
+    this.session = session;
+    this.calls = new HashMap<String, Call>();
   }
   
-  public MediaMixer getMixer() {
-    return mixer;
+  public synchronized void addCall(final Call call) throws ConferenceException {
+    try {
+	  call.join(this);
+      calls.put(call.getId(), call);
+    } catch(final CallException exception) {
+      throw new ConferenceException(exception);
+    }
+  }
+  
+  public MediaMixer getMixer() throws ConferenceException {
+	if(mixer != null) {
+	  return mixer;
+	} else {
+	  synchronized(this) {
+		if(mixer == null) {
+	      try {
+	        final Parameters parameters = session.createParameters();
+            parameters.put(ParameterEnum.MAX_PORTS, MAX_PARTICIPANTS);
+            mixer = session.createMediaMixer(MediaMixer.AUDIO, parameters);
+	      } catch(final MsControlException exception) {
+	        throw new ConferenceException(exception);
+	      }
+		}
+	  }
+	  return mixer;
+	}
   }
 
   @Override public String getName() {
-    return null;
+    return name;
+  }
+  
+  public synchronized void removeCall(final Call call) throws ConferenceException {
+    try {
+      call.leave(this);
+      calls.remove(call.getId());
+    } catch(final CallException exception) {
+      throw new ConferenceException(exception);
+    }
+  }
+  
+  public synchronized void shutdown() {
+	final Collection<Call> attendees = calls.values();
+	for(final Call attendee : attendees) {
+	  try {
+	    attendee.leave(this);
+	  } catch(final CallException ignored) { }
+	}
+    mixer.release();
+    session.release();
   }
 }

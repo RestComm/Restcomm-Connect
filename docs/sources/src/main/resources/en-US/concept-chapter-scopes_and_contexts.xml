@@ -3,7 +3,8 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
 %BOOK_ENTITIES;
 ]>
-<!-- chapter id nickname: ittsss --><chapter id="Scopes_and_Contexts_RestComm">
-  <title>Scopes and Contexts of the RestComm</title>
-  <para></para>
+<!-- chapter id nickname: ittsss -->
+<chapter id="Scopes_and_Contexts_RestComm">
+	<title>Scopes and Contexts of the RestComm</title>
+	<para></para>
 </chapter>

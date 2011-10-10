@@ -70,7 +70,7 @@ public final class SipCallManager extends SipServlet implements CallManager {
     final SipSession session = request.getSession();
     final SipCall call = (SipCall)session.getAttribute("CALL");
     try {
-      call.connected();
+      call.established();
     } catch(final CallException exception) {
       throw new ServletException(exception);
     }

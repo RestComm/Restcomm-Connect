@@ -1,14 +1,15 @@
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm-docs</artifactId>
 	<version>1.0.0.ALPHA</version>
 
 	<packaging>pom</packaging>
-	
+
 	<modules>
 		<module>sources</module>
 	</modules>
@@ -36,10 +37,10 @@
 			</modules>
 		</profile>
 		<profile>
-			<id>mobicents</id>			
+			<id>mobicents</id>
 			<modules>
 				<module>sources-mobicents</module>
-				<module>jdocbook-mobicents</module>				
+				<module>jdocbook-mobicents</module>
 			</modules>
 		</profile>
 		<profile>
@@ -50,38 +51,38 @@
 			</modules>
 		</profile>
 	</profiles>
-        <!-- repositories -->
+	<!-- repositories -->
 	<repositories>
 		<repository>
-		  <id>jboss-public-repository-group</id>
-		  <name>JBoss Public Maven Repository Group</name>
-		  <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-		  <layout>default</layout>
-		  <releases>
-		    <enabled>true</enabled>
-		    <updatePolicy>never</updatePolicy>
-		  </releases>
-		  <snapshots>
-		    <enabled>true</enabled>
-		    <updatePolicy>never</updatePolicy>
-		  </snapshots>
-		</repository>				
+			<id>jboss-public-repository-group</id>
+			<name>JBoss Public Maven Repository Group</name>
+			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
 	</repositories>
-<pluginRepositories>
-    <pluginRepository>
-      <id>jboss-public-repository-group</id>
-      <name>JBoss Public Maven Repository Group</name>
-      <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-      <layout>default</layout>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>jboss-public-repository-group</id>
+			<name>JBoss Public Maven Repository Group</name>
+			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 
 </project>

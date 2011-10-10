@@ -16,22 +16,22 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
-public final class ConferenceCenterException extends Exception {
+public final class ConferenceException extends Exception {
   private static final long serialVersionUID = 1L;
 
-  public ConferenceCenterException() {
+  public ConferenceException() {
     super();
   }
 
-  public ConferenceCenterException(final String message) {
+  public ConferenceException(final String message) {
     super(message);
   }
 
-  public ConferenceCenterException(final Throwable cause) {
+  public ConferenceException(final Throwable cause) {
     super(cause);
   }
 
-  public ConferenceCenterException(final String message, final Throwable cause) {
+  public ConferenceException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

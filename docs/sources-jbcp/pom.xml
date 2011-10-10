@@ -1,16 +1,17 @@
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm-docs</artifactId>
 		<version>1.0.0.ALPHA</version>
 	</parent>
-	
+
 	<artifactId>restcomm-docs-sources-jbcp</artifactId>
-			
+
 	<properties>
 		<platform.name>JBoss Communications</platform.name>
 		<short.platform.name>JBCP RestComm</short.platform.name>
@@ -20,14 +21,14 @@
 		<author.email.jean>jean.deruelle (at) gmail.com</author.email.jean>
 		<author.email.georges>quintan.thomas (at) gmail.com</author.email.georges>
 	</properties>
-	
+
 	<build>
 		<resources>
 			<resource>
-        		<directory>${basedir}/src/main/resources</directory>
-        		<filtering>true</filtering>
-      		</resource>
-      	</resources>
+				<directory>${basedir}/src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -49,7 +50,7 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${basedir}/src/main/resources</outputDirectory>
 								</artifactItem>
-							</artifactItems>							
+							</artifactItems>
 						</configuration>
 					</execution>
 				</executions>
@@ -57,19 +58,19 @@
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
-<execution>
-               <phase>install</phase>
-               <goals>
-                 <goal>run</goal>
-               </goals>
-               <configuration>
-                 <tasks>
-                   <copy file="mkbk" todir="src/main/resources/" />
-			<copy file="Makefile" todir="src/main/resources/" />
-      <copy file="publican.cfg" todir="src/main/resources/" />
-                 </tasks>
-               </configuration>
-             </execution>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<copy file="mkbk" todir="src/main/resources/" />
+								<copy file="Makefile" todir="src/main/resources/" />
+								<copy file="publican.cfg" todir="src/main/resources/" />
+							</tasks>
+						</configuration>
+					</execution>
 
 					<execution>
 						<id>clean-resources</id>
@@ -89,5 +90,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	
+
 </project>

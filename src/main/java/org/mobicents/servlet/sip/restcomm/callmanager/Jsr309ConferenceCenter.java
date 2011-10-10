@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MediaSession;
 import javax.media.mscontrol.MsControlFactory;
 
 import org.apache.log4j.Logger;
@@ -36,17 +36,18 @@ public final class Jsr309ConferenceCenter implements ConferenceCenter {
     this.factory = factory;
   }
   
-  public synchronized Conference getConference(final String name) throws ConferenceCenterException {
+  public synchronized Conference getConference(final String name) throws ConferenceException {
     if(conferences.containsKey(name)) {
       return conferences.get(name);
     } else {
       try {
-        final Conference conference = new Jsr309Conference(null);
+    	final MediaSession session = factory.createMediaSession();
+        final Conference conference = new Jsr309Conference(name, session);
         conferences.put(name, conference);
         return conference;
       } catch(final Exception exception) {
         logger.error(exception);
-        throw new ConferenceCenterException(exception);
+        throw new ConferenceException(exception);
       }
     }
   }
@@ -57,7 +58,15 @@ public final class Jsr309ConferenceCenter implements ConferenceCenter {
   
   public synchronized void removeConference(final String name) {
     if(conferences.containsKey(name)) {
-      conferences.remove(name);
+      final Jsr309Conference conference = (Jsr309Conference)conferences.remove(name);
+      conference.shutdown();
+    }
+  }
+  
+  public synchronized void shutdown() {
+    final Set<String> names = getConferenceNames();
+    for(final String name : names) {
+      removeConference(name);
     }
   }
 }

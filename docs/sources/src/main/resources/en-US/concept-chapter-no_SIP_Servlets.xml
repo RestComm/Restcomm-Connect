@@ -3,30 +3,42 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
 %BOOK_ENTITIES;
 ]>
-<!-- chapter id nickname: ittsss --><chapter id="SIP_Servlets_with_no_Servlets_RestComm">
-  <title>SipServlets benefits with no Servlets</title>
-  <para>So CTF goes on step further to eliminate the Servlets layer from the SipServlet development. What that means is that the developer wont need to extend SipServlet anymore.</para>
-<para>Pure Sip Servlets 1.1 specification programming model:</para>
-<programlisting language="Java" role="JAVA">
+<!-- chapter id nickname: ittsss -->
+<chapter id="SIP_Servlets_with_no_Servlets_RestComm">
+	<title>SipServlets benefits with no Servlets</title>
+	<para>So CTF goes on step further to eliminate the Servlets layer from
+		the SipServlet development. What that means is that the developer wont
+		need to extend SipServlet anymore.</para>
+	<para>Pure Sip Servlets 1.1 specification programming model:</para>
+	<programlisting language="Java" role="JAVA">
        <![CDATA[
 public class MySipMessagesHandlerClass extends SipServlet {
 	//override SipServlet methods to handle incoming SIP Messages
 }
 ]]>
 </programlisting>
-<para>CTF programming model:</para>
-<programlisting language="Java" role="JAVA">
+	<para>CTF programming model:</para>
+	<programlisting language="Java" role="JAVA">
        <![CDATA[
 public class MySipMessagesHandlerClass {
 	//make use of annotations to specify which incoming SIP Messages your business is interested to handle
 }
 ]]>
 </programlisting>
- <note>
-      <para>CTF applications still need to define the <literal>app-name</literal> either through sip.xml or a package-info.java and of course to define the appropriate dar configuration so that the application can handle incoming SIP Messages.</para>
- </note>
-<para>During bootstrap CTF will register a sip servlet that main’s responsibility will be to propagate SIP request and responses in the form of CDI events. Therefore the developer will be able to do the following:</para>
-<programlisting language="Java" role="JAVA">
+	<note>
+		<para>
+			CTF applications still need to define the
+			<literal>app-name</literal>
+			either through sip.xml or a package-info.java and of course to define
+			the appropriate dar configuration so that the application can handle
+			incoming SIP Messages.
+		</para>
+	</note>
+	<para>During bootstrap CTF will register a sip servlet that main’s
+		responsibility will be to propagate SIP request and responses in the
+		form of CDI events. Therefore the developer will be able to do the
+		following:</para>
+	<programlisting language="Java" role="JAVA">
        <![CDATA[
 	public class MySipMessagesHandlerClass {
 		public void handleRegister(@Observes @Register SipServletRequest req)
@@ -61,112 +73,158 @@ public class MySipMessagesHandlerClass {
 	}
 ]]>
 </programlisting>
-<para>In the above code snippet you will notice the CDI component doesn't need to extend SipServlet anymore and just need to specify 2 annotations <literal>@Observes</literal> and <literal>@Register</literal> to tell the framework that it is interested in REGISTER SIP Messages. This provide you with type safety, auto completion feature in the IDE and let you handle SIP Messages in any component be it from your application or from a third party <literal>CTF-enabled</literal> library or module included in your application.</para>
-<note> <para>
-Future release will have a priority or weight mechanism so that 2 components interested in SIP REGISTER requests by example won't be able to process them at the same time or sequentially (except if the first one didn't make the message committed) and we still allow components composition from differents 3rd party modules.
-</para> </note>
-<para>CTF will propagate the following SIP request methods:</para>
-   <table id="tab-CTF_SIP_Request_Observers" frame='all'>
-      <title>CTF SIP Request Methods and Annotations</title>
-        <tgroup cols='2' align='left' colsep='1' rowsep='1'>
-        <colspec colname='c1'/>
-        <colspec colname='c2'/>
-      <thead>
-        <row>
-          <entry align="center">SIP Request</entry>
-          <entry align="center">CTF Observer</entry>
-        </row>
-      </thead>
-      <tbody>
-        <row>
-          <entry>BYE</entry><entry>@Observes @Bye</entry>
-        </row>
-        <row>
-         <entry>ACK</entry><entry>@Observes @Ack</entry>
-        </row>
-        <row>
-          <entry>CANCEL</entry><entry>@Observes @Cancel</entry>
-        </row>
-	<row>
-          <entry>INFO</entry><entry>@Observes @Info</entry>
-        </row>
-	<row>
-          <entry>INVITE</entry><entry>@Observes @Invite</entry>
-        </row>
-        <row>
-          <entry>MESSAGE</entry><entry>@Observes @Message</entry>
-        </row>
-        <row>
-          <entry>NOTIFY</entry><entry>@Observes @Notify</entry>
-        </row>
-	<row>
-          <entry>OPTIONS</entry><entry>@Observes @Options</entry>
-        </row>
-        <row>
-          <entry>PRACK</entry><entry>@Observes @Prack</entry>
-        </row>
-        <row>
-          <entry>PUBLISH</entry><entry>@Observes @Publish</entry>
-        </row>
-        <row>
-          <entry>REFER</entry><entry>@Observes @Refer</entry>
-        </row>
-        <row>
-          <entry>REGISTER</entry><entry>@Observes @Register</entry>
-        </row>
-        <row>
-          <entry>SUBSCRIBE</entry><entry>@Observes @Subscribe</entry>
-        </row>
-        <row>
-          <entry>UPDATE</entry><entry>@Observes @Update</entry>
-        </row>
-      </tbody>
-    </tgroup>
-    </table>
-<para>To make use any of the CTF propagated request events, register the equivalent observer along with the SipServletRequest, that is:</para>
-<programlisting language="Java" role="JAVA">
+	<para>
+		In the above code snippet you will notice the CDI component doesn't
+		need to extend SipServlet anymore and just need to specify 2
+		annotations
+		<literal>@Observes</literal>
+		and
+		<literal>@Register</literal>
+		to tell the framework that it is interested in REGISTER SIP Messages.
+		This provide you with type safety, auto completion feature in the IDE
+		and let you handle SIP Messages in any component be it from your
+		application or from a third party
+		<literal>CTF-enabled</literal>
+		library or module included in your application.
+	</para>
+	<note>
+		<para>
+			Future release will have a priority or weight mechanism so that 2
+			components interested in SIP REGISTER requests by example won't be
+			able to process them at the same time or sequentially (except if the
+			first one didn't make the message committed) and we still allow
+			components composition from differents 3rd party modules.
+		</para>
+	</note>
+	<para>CTF will propagate the following SIP request methods:</para>
+	<table id="tab-CTF_SIP_Request_Observers" frame='all'>
+		<title>CTF SIP Request Methods and Annotations</title>
+		<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">SIP Request</entry>
+					<entry align="center">CTF Observer</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>BYE</entry>
+					<entry>@Observes @Bye</entry>
+				</row>
+				<row>
+					<entry>ACK</entry>
+					<entry>@Observes @Ack</entry>
+				</row>
+				<row>
+					<entry>CANCEL</entry>
+					<entry>@Observes @Cancel</entry>
+				</row>
+				<row>
+					<entry>INFO</entry>
+					<entry>@Observes @Info</entry>
+				</row>
+				<row>
+					<entry>INVITE</entry>
+					<entry>@Observes @Invite</entry>
+				</row>
+				<row>
+					<entry>MESSAGE</entry>
+					<entry>@Observes @Message</entry>
+				</row>
+				<row>
+					<entry>NOTIFY</entry>
+					<entry>@Observes @Notify</entry>
+				</row>
+				<row>
+					<entry>OPTIONS</entry>
+					<entry>@Observes @Options</entry>
+				</row>
+				<row>
+					<entry>PRACK</entry>
+					<entry>@Observes @Prack</entry>
+				</row>
+				<row>
+					<entry>PUBLISH</entry>
+					<entry>@Observes @Publish</entry>
+				</row>
+				<row>
+					<entry>REFER</entry>
+					<entry>@Observes @Refer</entry>
+				</row>
+				<row>
+					<entry>REGISTER</entry>
+					<entry>@Observes @Register</entry>
+				</row>
+				<row>
+					<entry>SUBSCRIBE</entry>
+					<entry>@Observes @Subscribe</entry>
+				</row>
+				<row>
+					<entry>UPDATE</entry>
+					<entry>@Observes @Update</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	</table>
+	<para>To make use any of the CTF propagated request events, register
+		the equivalent observer along with the SipServletRequest, that is:
+	</para>
+	<programlisting language="Java" role="JAVA">
        <![CDATA[
 public void handleUpdate (@Observes @Update SipServletRequest req){
 }]]>
 </programlisting>
-<para>and the following SIP responses:</para>
-   <table id="tab-CTF_SIP_Response_Observers" frame='all'>
-      <title>CTF SIP Responses and Annotations</title>
-        <tgroup cols='2' align='left' colsep='1' rowsep='1'>
-        <colspec colname='c1'/>
-        <colspec colname='c2'/>
-      <thead>
-        <row>
-          <entry align="center">SIP Response</entry>
-          <entry align="center">CTF Observer</entry>
-        </row>
-      </thead>
-      <tbody>
-        <row>
-          <entry>SuccessResponse</entry><entry>@Observes @SuccessResponse</entry>
-        </row>
-        <row>
-          <entry>ErrorResponse</entry><entry>@Observes @ErrorResponse</entry>
-        </row>
-        <row>
-          <entry>RedirectResponse</entry><entry>@Observes @RedirectResponse</entry>
-        </row>
-	<row>
-          <entry>ProvisionalResponse</entry><entry>@Observes @ProvisionalResponse</entry>
-        </row>
-	<row>
-          <entry>BranchResponse</entry><entry>@Observes @BranchResponse</entry>
-        </row>
-      </tbody>
-    </tgroup>
-    </table>
-<para>To make use any of the CTF propagated response events, register the equivalent observer along with the SipServletResponse, that is:</para>
-<programlisting language="Java" role="JAVA">
+	<para>and the following SIP responses:</para>
+	<table id="tab-CTF_SIP_Response_Observers" frame='all'>
+		<title>CTF SIP Responses and Annotations</title>
+		<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">SIP Response</entry>
+					<entry align="center">CTF Observer</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>SuccessResponse</entry>
+					<entry>@Observes @SuccessResponse</entry>
+				</row>
+				<row>
+					<entry>ErrorResponse</entry>
+					<entry>@Observes @ErrorResponse</entry>
+				</row>
+				<row>
+					<entry>RedirectResponse</entry>
+					<entry>@Observes @RedirectResponse</entry>
+				</row>
+				<row>
+					<entry>ProvisionalResponse</entry>
+					<entry>@Observes @ProvisionalResponse</entry>
+				</row>
+				<row>
+					<entry>BranchResponse</entry>
+					<entry>@Observes @BranchResponse</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	</table>
+	<para>To make use any of the CTF propagated response events, register
+		the equivalent observer along with the SipServletResponse, that is:
+	</para>
+	<programlisting language="Java" role="JAVA">
        <![CDATA[
 public void handleErrorResponse (@Observes @ErrorResponse SipServletResponse resp) {
 }]]>
 </programlisting>
-<note> <para>
-As with all CDI observers, the name of the method is insignificant. The developer can choose any convenient method name as long as it uses the correct CTF Observer to receive the appropriate CTF event.
-</para> </note>
+	<note>
+		<para>
+			As with all CDI observers, the name of the method is insignificant. The
+			developer can choose any convenient method name as long as it uses
+			the correct CTF Observer to receive the appropriate CTF event.
+		</para>
+	</note>
 </chapter>
