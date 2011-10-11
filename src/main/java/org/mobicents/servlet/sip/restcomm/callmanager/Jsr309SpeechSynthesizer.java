@@ -30,9 +30,9 @@ import org.mobicents.servlet.sip.restcomm.fsm.State;
 
 public final class Jsr309SpeechSynthesizer extends FSM implements SpeechSynthesizer, MediaEventListener<PlayerEvent> {
   //Synthesizer states.
-  public static final State IDLE = new State("idle");
-  public static final State SPEAKING = new State("speaking");
-  public static final State FAILED = new State("failed");
+  private static final State IDLE = new State("idle");
+  private static final State SPEAKING = new State("speaking");
+  private static final State FAILED = new State("failed");
   static {
     IDLE.addTransition(SPEAKING);
     IDLE.addTransition(FAILED);

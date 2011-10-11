@@ -25,9 +25,9 @@ import org.mobicents.servlet.sip.restcomm.fsm.State;
 
 public final class Jsr309DtmfDetector extends FSM implements DtmfDetector, MediaEventListener<SignalDetectorEvent> {
   //Signal detector states.
-  public static final State IDLE = new State("idle");
-  public static final State DETECTING = new State("detecting");
-  public static final State FAILED = new State("failed");
+  private static final State IDLE = new State("idle");
+  private static final State DETECTING = new State("detecting");
+  private static final State FAILED = new State("failed");
   static {
     IDLE.addTransition(DETECTING);
     IDLE.addTransition(FAILED);

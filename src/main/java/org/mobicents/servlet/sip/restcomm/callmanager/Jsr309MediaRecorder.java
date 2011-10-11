@@ -26,9 +26,9 @@ import org.mobicents.servlet.sip.restcomm.fsm.State;
 
 public final class Jsr309MediaRecorder extends FSM implements MediaRecorder {
   //Recorder states.
-  public static final State IDLE = new State("idle");
-  public static final State RECORDING = new State("recording");
-  public static final State FAILED = new State("failed");
+  private static final State IDLE = new State("idle");
+  private static final State RECORDING = new State("recording");
+  private static final State FAILED = new State("failed");
   static {
     IDLE.addTransition(RECORDING);
     IDLE.addTransition(FAILED);

@@ -28,9 +28,9 @@ import org.mobicents.servlet.sip.restcomm.fsm.State;
 
 public final class Jsr309MediaPlayer extends FSM implements MediaPlayer, MediaEventListener<PlayerEvent> {
   //Player states.
-  public static final State IDLE = new State("idle");
-  public static final State PLAYING = new State("playing");
-  public static final State FAILED = new State("failed");
+  private static final State IDLE = new State("idle");
+  private static final State PLAYING = new State("playing");
+  private static final State FAILED = new State("failed");
   static {
     IDLE.addTransition(PLAYING);
     IDLE.addTransition(FAILED);

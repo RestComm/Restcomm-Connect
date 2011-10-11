@@ -63,7 +63,7 @@ public class FSM {
         this.state = state;
       } else {
         final StringBuilder buffer = new StringBuilder();
-        buffer.append("Can not transition from a ").append(this.state.getName())
+        buffer.append("Can not transition from a(n) ").append(this.state.getName())
             .append(" state to a ").append(state.getName()).append(" state.");
         throw new IllegalArgumentException(buffer.toString());
       }

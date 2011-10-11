@@ -41,21 +41,23 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
   // Logger.
   private static final Logger LOGGER = Logger.getLogger(SipCall.class);
   //Call Directions.
-  public static final String INBOUND = "inbound";
-  public static final String OUTBOUND_DIAL = "outbound-dial";
+  private static final String INBOUND = "inbound";
+  private static final String OUTBOUND_DIAL = "outbound-dial";
   // Call states.
-  public static final State IDLE = new State("idle");
-  public static final State QUEUED = new State("queued");
-  public static final State RINGING = new State("ringing");
-  public static final State IN_PROGRESS = new State("in-progress");
-  public static final State COMPLETED = new State("completed");
-  public static final State BUSY = new State("busy");
-  public static final State FAILED = new State("failed");
-  public static final State NO_ANSWER = new State("no-answer");
-  public static final State CANCELLED = new State("cancelled");
+  private static final State IDLE = new State("idle");
+  private static final State QUEUED = new State("queued");
+  private static final State RINGING = new State("ringing");
+  private static final State IN_PROGRESS = new State("in-progress");
+  private static final State COMPLETED = new State("completed");
+  private static final State BUSY = new State("busy");
+  private static final State FAILED = new State("failed");
+  private static final State NO_ANSWER = new State("no-answer");
+  private static final State CANCELLED = new State("cancelled");
   static {
     IDLE.addTransition(RINGING);
     IDLE.addTransition(QUEUED);
+    QUEUED.addTransition(IN_PROGRESS);
+    QUEUED.addTransition(FAILED);
     RINGING.addTransition(IN_PROGRESS);
     RINGING.addTransition(FAILED);
     RINGING.addTransition(CANCELLED);
