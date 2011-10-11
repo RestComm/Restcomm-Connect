@@ -63,6 +63,7 @@ public final class RecordTagStrategy extends TwiMLTagStrategy {
 	    wait(maxLength);
 	  }
 	} catch(final Exception exception) {
+	  interpreter.failed();
 	  throw new TagStrategyException(exception);
 	}
 	recorder.stop();
@@ -81,6 +82,7 @@ public final class RecordTagStrategy extends TwiMLTagStrategy {
     try {
 	  interpreter.loadResource(descriptor);
 	} catch(final InterpreterException exception) {
+	  interpreter.failed();
 	  throw new TagStrategyException(exception);
 	}
     interpreter.redirect();

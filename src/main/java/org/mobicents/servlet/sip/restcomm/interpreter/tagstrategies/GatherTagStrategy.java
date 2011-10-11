@@ -65,6 +65,7 @@ public final class GatherTagStrategy extends TwiMLTagStrategy {
         }
       }
     } catch(final MediaException exception) {
+      interpreter.failed();
       throw new TagStrategyException(exception);
     }
     
@@ -85,6 +86,7 @@ public final class GatherTagStrategy extends TwiMLTagStrategy {
       try {
 	    interpreter.loadResource(descriptor);
 	  } catch(final InterpreterException exception) {
+	    interpreter.failed();
 	    throw new TagStrategyException(exception);
 	  }
       interpreter.redirect();

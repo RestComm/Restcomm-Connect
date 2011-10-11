@@ -48,6 +48,7 @@ public final class RedirectTagStrategy extends TwiMLTagStrategy {
       try {
 	    interpreter.loadResource(descriptor);
 	  } catch(final InterpreterException exception) {
+		interpreter.failed();
 	    throw new TagStrategyException(exception);
 	  }
       interpreter.redirect();

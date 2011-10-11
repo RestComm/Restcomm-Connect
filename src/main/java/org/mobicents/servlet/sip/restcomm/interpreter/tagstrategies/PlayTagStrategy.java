@@ -41,8 +41,8 @@ public final class PlayTagStrategy extends TwiMLTagStrategy {
     // Play something.
     final String text = tag.getText();
     if(text != null) {
-      final URI uri = URI.create(text);
       final int loop = Integer.parseInt(tag.getAttribute(Loop.NAME).getValue());
+      final URI uri = URI.create(text);
       final MediaPlayer player = call.getPlayer();
       try {
         for(int counter = 1; counter <= loop; counter++) {

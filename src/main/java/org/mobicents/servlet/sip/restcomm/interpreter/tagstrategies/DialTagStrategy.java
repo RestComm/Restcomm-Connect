@@ -17,9 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
@@ -43,10 +41,10 @@ public final class DialTagStrategy extends TwiMLTagStrategy {
 	  final Call outboundCall = callManager.createCall(from, to);
 	  outboundCall.dial();
 	  call.bridge(outboundCall);
-	} catch(final CallManagerException exception) {
-	  
-	} catch(final CallException exception) {
-	  
+	  wait(40 * 1000);
+	} catch(final Exception exception) {
+	  interpreter.failed();
+	  throw new TagStrategyException(exception);
 	}
   }
 }

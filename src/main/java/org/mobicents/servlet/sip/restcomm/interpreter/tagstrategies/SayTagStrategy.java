@@ -36,7 +36,7 @@ public final class SayTagStrategy extends TwiMLTagStrategy  {
 	final Call call = context.getCall();
 	// Try to answer the call if it hasn't been done so already.
     answer(call);
-    // Setup the speech synthesizer and say something.
+    // Say something.
     final SpeechSynthesizer synthesizer = call.getSpeechSynthesizer();
     final String text = tag.getText();
     if(text != null) {

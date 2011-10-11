@@ -36,6 +36,7 @@ public final class PauseTagStrategy extends TwiMLTagStrategy {
       try {
         wait(length * ONE_SECOND);
       } catch(final InterruptedException exception) {
+    	interpreter.failed();
         throw new TagStrategyException(exception);
       }
     }

@@ -16,8 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 
-import org.apache.log4j.Logger;
-
 import org.mobicents.servlet.sip.restcomm.Environment;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -30,7 +28,7 @@ import org.mobicents.servlet.sip.restcomm.xml.twiml.From;
 import org.mobicents.servlet.sip.restcomm.xml.twiml.To;
 
 public final class SmsTagStrategy extends TwiMLTagStrategy {
-  private static final Logger LOGGER = Logger.getLogger(SmsTagStrategy.class);
+  private static final SmsAggregator smsAggregator = Environment.getInstance().getSmsAggregator();
 	  
   public SmsTagStrategy() {
     super();
@@ -54,12 +52,10 @@ public final class SmsTagStrategy extends TwiMLTagStrategy {
 	  if(attribute != null) {
 	    to = attribute.getValue();
 	  }
-	  final Environment environment = Environment.getInstance();
+	  // Send the text message.
 	  try {
-		final SmsAggregator aggregator = environment.getSmsAggregator();
-		aggregator.send(from, to, body);
+		smsAggregator.send(from, to, body);
 	  } catch(final Exception exception) {
-		LOGGER.error(exception);
 		interpreter.failed();
 	    throw new TagStrategyException(exception);
 	  }
