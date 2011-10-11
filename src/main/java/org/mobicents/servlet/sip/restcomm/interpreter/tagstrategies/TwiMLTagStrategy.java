@@ -33,6 +33,7 @@ public abstract class TwiMLTagStrategy implements TagStrategy {
     if(call.getStatus().equals("ringing")) {
       try {
         call.answer();
+        call.connect();
       } catch(final CallException exception) {
         throw new TagStrategyException(exception);
       }
