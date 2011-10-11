@@ -21,37 +21,47 @@ import java.net.URI;
 import java.net.URLEncoder;
 
 import javax.media.mscontrol.MediaEventListener;
-import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
 
-import org.apache.log4j.Logger;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SpeechSynthesizerEvent;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SpeechSynthesizerEventType;
+import org.mobicents.servlet.sip.restcomm.fsm.FSM;
+import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-public final class Jsr309SpeechSynthesizer extends SpeechSynthesizer implements MediaEventListener<PlayerEvent> {
-  // Logger.
-  private static final Logger logger = Logger.getLogger(Jsr309SpeechSynthesizer.class);
+public final class Jsr309SpeechSynthesizer extends FSM implements SpeechSynthesizer, MediaEventListener<PlayerEvent> {
+  //Synthesizer states.
+  public static final State IDLE = new State("idle");
+  public static final State SPEAKING = new State("speaking");
+  public static final State FAILED = new State("failed");
+  static {
+    IDLE.addTransition(SPEAKING);
+    IDLE.addTransition(FAILED);
+    SPEAKING.addTransition(IDLE);
+    SPEAKING.addTransition(FAILED);
+  }
+
   // JSR-309 player.
   private final Player player;
   
   public Jsr309SpeechSynthesizer(final Player player) {
-    super();
+    super(IDLE);
+    addState(IDLE);
+    addState(SPEAKING);
+    addState(FAILED);
     this.player = player;
   }
   
-  public void onEvent(final PlayerEvent event) {
+  @Override public synchronized void onEvent(final PlayerEvent event) {
     player.removeListener(this);
     setState(IDLE);
     if(event.isSuccessful()) {
       if(event.getEventType() == PlayerEvent.PLAY_COMPLETED) {
-        fire(new SpeechSynthesizerEvent(this, SpeechSynthesizerEventType.DONE_SPEAKING));
+        notify();
       }
     }
   }
   
-  @Override public void speak(final String text) {
+  @Override public synchronized void speak(final String text) throws MediaException {
     assertState(IDLE);
 	final Parameters options = player.getMediaSession().createParameters();
 	options.put(Player.BEHAVIOUR_IF_BUSY, Player.STOP_IF_BUSY);
@@ -59,10 +69,10 @@ public final class Jsr309SpeechSynthesizer extends SpeechSynthesizer implements 
 	try {
 	  player.play(createSpeechUri(text), null, options);
 	  setState(SPEAKING);
-	} catch(final MsControlException exception) {
+	  wait();
+	} catch(final Exception exception) {
 	  setState(FAILED);
-	  logger.error(exception);
-	  fire(new SpeechSynthesizerEvent(this, SpeechSynthesizerEventType.FAILED));
+	  throw new MediaException(exception);
 	}
   }
   

@@ -21,8 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
-import org.mobicents.servlet.sip.restcomm.Environment;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.MediaRecorder;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
@@ -31,6 +29,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceDescriptor;
+import org.mobicents.servlet.sip.restcomm.storage.Storage;
 import org.mobicents.servlet.sip.restcomm.util.UrlUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
@@ -39,7 +38,9 @@ import org.mobicents.servlet.sip.restcomm.xml.twiml.MaxLength;
 import org.mobicents.servlet.sip.restcomm.xml.twiml.Method;
 
 public final class RecordTagStrategy extends TwiMLTagStrategy {
-  private static final Logger LOGGER = Logger.getLogger(RecordTagStrategy.class);
+  private static final Storage STORAGE = null;
+  private static final String BASE_PATH = STORAGE.getPath() + "recordings/";
+  private static final String BASE_HTTP_URI = STORAGE.getHttpUri() + "recordings/";
   private static final int ONE_SECOND = 1000;
   
   public RecordTagStrategy() {
@@ -51,19 +52,18 @@ public final class RecordTagStrategy extends TwiMLTagStrategy {
     // Try to answer the call if it hasn't been done so already.
     final Call call = context.getCall();
 	answer(call);
-	// Get a reference to the environment.
-	final Environment environment = Environment.getInstance();
 	// Record some media.
 	final int maxLength = Integer.parseInt(tag.getAttribute(MaxLength.NAME).getValue()) * ONE_SECOND;
-	final URI path = URI.create(environment.getRecordingsPath() + "/" + UUID.randomUUID().toString() + ".wav");
+	final String name = UUID.randomUUID().toString();
+	final URI path = URI.create(BASE_PATH + name + ".wav");
 	final MediaRecorder recorder = call.getRecorder();
-	recorder.record(path);
-	synchronized(this) {
-	  try {
+	try {
+	  recorder.record(path);
+	  synchronized(this) {
 	    wait(maxLength);
-	  } catch(final InterruptedException exception) {
-	    LOGGER.error(exception);
 	  }
+	} catch(final Exception exception) {
+	  throw new TagStrategyException(exception);
 	}
 	recorder.stop();
 	// Do something with the recording.
@@ -76,7 +76,7 @@ public final class RecordTagStrategy extends TwiMLTagStrategy {
     } else {
       uri = base;
     }
-    final URI recordingUri = environment.getRecordingsUri();
+    final URI recordingUri = URI.create(BASE_HTTP_URI + name + ".wav");
     final ResourceDescriptor descriptor = getResourceDescriptor(uri, method, recordingUri, maxLength);
     try {
 	  interpreter.loadResource(descriptor);

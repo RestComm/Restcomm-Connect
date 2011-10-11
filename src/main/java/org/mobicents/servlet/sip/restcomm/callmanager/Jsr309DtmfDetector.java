@@ -17,44 +17,56 @@
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
 import javax.media.mscontrol.MediaEventListener;
-import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.mediagroup.signals.SignalDetector;
+import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 
-import org.apache.log4j.Logger;
+import org.mobicents.servlet.sip.restcomm.fsm.FSM;
+import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalDetectorEvent;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalDetectorEventType;
+public final class Jsr309DtmfDetector extends FSM implements DtmfDetector, MediaEventListener<SignalDetectorEvent> {
+  //Signal detector states.
+  public static final State IDLE = new State("idle");
+  public static final State DETECTING = new State("detecting");
+  public static final State FAILED = new State("failed");
+  static {
+    IDLE.addTransition(DETECTING);
+    IDLE.addTransition(FAILED);
+    DETECTING.addTransition(IDLE);
+    DETECTING.addTransition(FAILED);
+  }
 
-public final class Jsr309DtmfDetector extends DtmfDetector implements MediaEventListener<javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent> {
-  private static final Logger logger = Logger.getLogger(Jsr309DtmfDetector.class);
+  private final SignalDetector detector;
+  private String digit;
   
-  private final javax.media.mscontrol.mediagroup.signals.SignalDetector detector;
-  
-  public Jsr309DtmfDetector(final javax.media.mscontrol.mediagroup.signals.SignalDetector detector) {
-    super();
+  public Jsr309DtmfDetector(final SignalDetector detector) {
+    super(IDLE);
+    addState(IDLE);
+    addState(DETECTING);
+    addState(FAILED);
     this.detector = detector;
   }
 
-  @Override public void detect() {
+  @Override public synchronized String detect() throws MediaException {
     assertState(IDLE);
+    digit = null;
     detector.addListener(this);
     try {
       detector.receiveSignals(1, null, null, null);
 	  setState(DETECTING);
-	} catch(final MsControlException exception) {
+	  wait();
+	  return digit;
+	} catch(final Exception exception) {
 	  setState(FAILED);
-	  logger.error(exception);
-	  fire(new SignalDetectorEvent(this, SignalDetectorEventType.FAILED));
+	  throw new MediaException(exception);
 	}
   }
 
-  public void onEvent(final javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent event) {
+  public void onEvent(final SignalDetectorEvent event) {
     detector.removeListener(this);
-    logger.info(event.getEventType());
     if(event.isSuccessful()) {
-      if(event.getEventType() == javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED) {
-        final SignalDetectorEvent done = new SignalDetectorEvent(this, SignalDetectorEventType.DONE_DETECTING);
-        done.setDigits(event.getSignalString());
-        fire(done);
+      if(event.getEventType() == SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED) {
+    	digit = event.getSignalString();
+        notify();
       }
     }
   }

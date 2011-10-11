@@ -19,46 +19,56 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
 import java.net.URI;
 
 import javax.media.mscontrol.MediaEventListener;
-import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.Parameters;
+import javax.media.mscontrol.mediagroup.Player;
+import javax.media.mscontrol.mediagroup.PlayerEvent;
 
-import org.apache.log4j.Logger;
+import org.mobicents.servlet.sip.restcomm.fsm.FSM;
+import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-import org.mobicents.servlet.sip.restcomm.callmanager.events.PlayerEvent;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.PlayerEventType;
+public final class Jsr309MediaPlayer extends FSM implements MediaPlayer, MediaEventListener<PlayerEvent> {
+  //Player states.
+  public static final State IDLE = new State("idle");
+  public static final State PLAYING = new State("playing");
+  public static final State FAILED = new State("failed");
+  static {
+    IDLE.addTransition(PLAYING);
+    IDLE.addTransition(FAILED);
+    PLAYING.addTransition(IDLE);
+    PLAYING.addTransition(FAILED);
+  }
 
-public final class Jsr309MediaPlayer extends MediaPlayer implements MediaEventListener<javax.media.mscontrol.mediagroup.PlayerEvent> {
-  private static final Logger logger = Logger.getLogger(Jsr309MediaPlayer.class);
+  private final Player player;
   
-  private final javax.media.mscontrol.mediagroup.Player player;
-  
-  public Jsr309MediaPlayer(final javax.media.mscontrol.mediagroup.Player player) {
-    super();
+  public Jsr309MediaPlayer(final Player player) {
+    super(IDLE);
+    addState(IDLE);
+    addState(PLAYING);
+    addState(FAILED);
     this.player = player;
   }
   
-  @Override public void play(final URI uri) {
+  @Override public synchronized void play(final URI uri) throws MediaException {
     assertState(IDLE);
 	final Parameters options = player.getMediaSession().createParameters();
-	options.put(javax.media.mscontrol.mediagroup.Player.BEHAVIOUR_IF_BUSY,
-    javax.media.mscontrol.mediagroup.Player.STOP_IF_BUSY);
+	options.put(Player.BEHAVIOUR_IF_BUSY, Player.STOP_IF_BUSY);
 	player.addListener(this);
 	try {
 	  player.play(uri, null, options);
 	  setState(PLAYING);
-	} catch(final MsControlException exception) {
+	  wait();
+	} catch(final Exception exception) {
 	  setState(FAILED);
-	  logger.error(exception);
-	  fire(new PlayerEvent(this, PlayerEventType.FAILED));
+	  throw new MediaException(exception);
 	}
   }
 
-  public void onEvent(final javax.media.mscontrol.mediagroup.PlayerEvent event) {
+  @Override public synchronized void onEvent(final PlayerEvent event) {
     player.removeListener(this);
     setState(IDLE);
 	if(event.isSuccessful()) {
-      if(event.getEventType() == javax.media.mscontrol.mediagroup.PlayerEvent.PLAY_COMPLETED) {
-        fire(new PlayerEvent(this, PlayerEventType.DONE_PLAYING));
+      if(event.getEventType() == PlayerEvent.PLAY_COMPLETED) {
+        notify();
       }
     }
   }

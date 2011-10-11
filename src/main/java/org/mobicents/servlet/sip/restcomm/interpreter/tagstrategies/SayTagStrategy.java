@@ -17,25 +17,18 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.callmanager.MediaException;
 import org.mobicents.servlet.sip.restcomm.callmanager.SpeechSynthesizer;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.EventListener;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.EventType;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SpeechSynthesizerEvent;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SpeechSynthesizerEventType;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Language;
 import org.mobicents.servlet.sip.restcomm.xml.twiml.Loop;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Voice;
 
 public final class SayTagStrategy extends TwiMLTagStrategy  {
-  private final EventListener<SpeechSynthesizerEvent> listener;
   
   public SayTagStrategy() {
     super();
-    listener = new SpeechSynthesizerEventListener(this);
   }
   
   @Override public void execute(final TwiMLInterpreter interpreter,
@@ -47,42 +40,15 @@ public final class SayTagStrategy extends TwiMLTagStrategy  {
     final SpeechSynthesizer synthesizer = call.getSpeechSynthesizer();
     final String text = tag.getText();
     if(text != null) {
-      final String voice = tag.getAttribute(Voice.NAME).getValue();
-      final String language = tag.getAttribute(Language.NAME).getValue();
       final int loop = Integer.parseInt(tag.getAttribute(Loop.NAME).getValue());
-      synthesizer.setVoice(voice);
-      synthesizer.setLanguage(language);
-      synthesizer.addListener(listener);
-      for(int counter = 1; counter <= loop; counter++) {
-        synthesizer.speak(text);
-        synchronized(this) {
-          try {
-            wait();
-          } catch(final InterruptedException exception) {
-            throw new TagStrategyException(exception);
-          }
+      try {
+        for(int counter = 1; counter <= loop; counter++) {
+          synthesizer.speak(text);
         }
+      } catch(final MediaException exception) {
+        interpreter.failed();
+        throw new TagStrategyException(exception);
       }
-      synthesizer.removeListener(listener);
     }
-  }
-  
-  private final class SpeechSynthesizerEventListener implements EventListener<SpeechSynthesizerEvent> {
-	private final Object sleeper;
-	
-    private SpeechSynthesizerEventListener(final Object sleeper) {
-      super();
-      this.sleeper = sleeper;
-    }
-
-	public void onEvent(final SpeechSynthesizerEvent event) {
-	  // Handle the event.
-      final EventType type = event.getType();
-      if(type.equals(SpeechSynthesizerEventType.DONE_SPEAKING)) {
-        synchronized(sleeper) {
-          sleeper.notify();
-        }
-      }
-	}
   }
 }

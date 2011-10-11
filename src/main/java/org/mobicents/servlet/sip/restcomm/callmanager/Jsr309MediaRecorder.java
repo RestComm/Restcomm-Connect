@@ -19,27 +19,41 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
 import java.net.URI;
 
 import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.mediagroup.Recorder;
 
-import org.apache.log4j.Logger;
+import org.mobicents.servlet.sip.restcomm.fsm.FSM;
+import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-public final class Jsr309MediaRecorder extends MediaRecorder {
-  private static final Logger LOGGER = Logger.getLogger(Jsr309MediaRecorder.class);
+public final class Jsr309MediaRecorder extends FSM implements MediaRecorder {
+  //Recorder states.
+  public static final State IDLE = new State("idle");
+  public static final State RECORDING = new State("recording");
+  public static final State FAILED = new State("failed");
+  static {
+    IDLE.addTransition(RECORDING);
+    IDLE.addTransition(FAILED);
+    RECORDING.addTransition(IDLE);
+    RECORDING.addTransition(FAILED);
+  }
+
+  private final Recorder recorder;
   
-  private final javax.media.mscontrol.mediagroup.Recorder recorder;
-  
-  public Jsr309MediaRecorder(final javax.media.mscontrol.mediagroup.Recorder recorder) {
-    super();
+  public Jsr309MediaRecorder(final Recorder recorder) {
+    super(IDLE);
+    addState(IDLE);
+    addState(RECORDING);
+    addState(FAILED);
     this.recorder = recorder;
   }
 
-  @Override public void record(final URI destination) {
+  @Override public void record(final URI destination) throws MediaException {
     assertState(IDLE);
     try {
 	  recorder.record(destination, null, null);
 	  setState(RECORDING);
 	} catch(final MsControlException exception) {
 	  setState(FAILED);
-	  LOGGER.error(exception);
+	  throw new MediaException(exception);
 	}
   }
 

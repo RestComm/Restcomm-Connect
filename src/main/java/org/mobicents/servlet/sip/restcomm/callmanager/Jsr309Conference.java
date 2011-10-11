@@ -28,6 +28,7 @@ import javax.media.mscontrol.resource.enums.ParameterEnum;
 
 public final class Jsr309Conference implements Conference {
   private static final int MAX_PARTICIPANTS = 40;
+  
   private final String name;
   private final MediaSession session;
   private volatile MediaMixer mixer;

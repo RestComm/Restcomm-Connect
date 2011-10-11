@@ -28,12 +28,12 @@ import org.apache.log4j.Logger;
 public final class Jsr309ConferenceCenter implements ConferenceCenter {
   private static final Logger logger = Logger.getLogger(Jsr309ConferenceCenter.class);
   private final Map<String, Conference> conferences;
-  private final MsControlFactory factory;
+  private final Jsr309MediaServerManager mediaServerManager;
   
-  public Jsr309ConferenceCenter(final MsControlFactory factory) {
+  public Jsr309ConferenceCenter(final Jsr309MediaServerManager mediaServerManager) {
     super();
     this.conferences = new HashMap<String, Conference>();
-    this.factory = factory;
+    this.mediaServerManager = mediaServerManager;
   }
   
   public synchronized Conference getConference(final String name) throws ConferenceException {
@@ -41,7 +41,9 @@ public final class Jsr309ConferenceCenter implements ConferenceCenter {
       return conferences.get(name);
     } else {
       try {
-    	final MediaSession session = factory.createMediaSession();
+    	final Jsr309MediaServer mediaServer = mediaServerManager.getMediaServer();
+    	final MsControlFactory msControlFactory = mediaServer.getMsControlFactory();
+    	final MediaSession session = msControlFactory.createMediaSession();
         final Conference conference = new Jsr309Conference(name, session);
         conferences.put(name, conference);
         return conference;

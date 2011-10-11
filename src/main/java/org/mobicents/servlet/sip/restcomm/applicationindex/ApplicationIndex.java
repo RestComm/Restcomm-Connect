@@ -18,7 +18,8 @@ package org.mobicents.servlet.sip.restcomm.applicationindex;
 
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Configurable;
+import org.mobicents.servlet.sip.restcomm.LifeCycle;
 
-public interface ApplicationIndex extends Configurable {
+public interface ApplicationIndex extends Configurable, LifeCycle {
   public Application locate(String locator) throws ApplicationIndexException;
 }

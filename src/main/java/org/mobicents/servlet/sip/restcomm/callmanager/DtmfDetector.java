@@ -16,58 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.mobicents.servlet.sip.restcomm.callmanager.events.EventListener;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.SignalDetectorEvent;
-import org.mobicents.servlet.sip.restcomm.fsm.FSM;
-import org.mobicents.servlet.sip.restcomm.fsm.State;
-
-public abstract class DtmfDetector extends FSM {
-  // Signal detector states.
-  public static final State IDLE = new State("idle");
-  public static final State DETECTING = new State("detecting");
-  public static final State FAILED = new State("failed");
-  static {
-    IDLE.addTransition(DETECTING);
-    IDLE.addTransition(FAILED);
-    DETECTING.addTransition(IDLE);
-    DETECTING.addTransition(FAILED);
-  }
-  
-  private int numberOfDigits;
-  private final List<EventListener<SignalDetectorEvent>> listeners;
-  
-  public DtmfDetector() {
-    super(IDLE);
-    addState(IDLE);
-    addState(DETECTING);
-    addState(FAILED);
-    this.listeners = new ArrayList<EventListener<SignalDetectorEvent>>();
-  }
-  
-  public synchronized void addListener(final EventListener<SignalDetectorEvent> listener) {
-    listeners.add(listener);
-  }
-  
-  public synchronized void removeListener(final EventListener<SignalDetectorEvent> listener) {
-    listeners.remove(listener);
-  }
-  
-  protected synchronized void fire(final SignalDetectorEvent event) {
-    for(final EventListener<SignalDetectorEvent> listener : listeners) {
-      listener.onEvent(event);
-    }
-  }
-  
-  public int getNumberOfDigits() {
-    return numberOfDigits;
-  }
-  
-  public void setNumberOfDigits(final int numberOfDigits) {
-    this.numberOfDigits = numberOfDigits;
-  }
-  
-  public abstract void detect();
+public interface DtmfDetector {
+  public String detect() throws MediaException;
 }

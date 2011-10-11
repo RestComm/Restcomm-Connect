@@ -35,9 +35,4 @@
 		</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	<listener>
-		<listener-class>
-			org.mobicents.servlet.sip.restcomm.Bootstrap
-		</listener-class>
-	</listener>
 </sip-app>

@@ -18,12 +18,15 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.Configurable;
+import org.mobicents.servlet.sip.restcomm.LifeCycle;
 
-public final class SipGatewayManager implements Configurable {
+public final class SipGatewayManager implements Configurable, LifeCycle {
   private static final class SingletonHolder {
     private static final SipGatewayManager INSTANCE = new SipGatewayManager();
   }
   private static final String CONFIGURATION_PREFIX = "gateway-manager.gateway";
+  
+  private Configuration configuration;
   private SipGateway gateway;
   
   private SipGatewayManager() {
@@ -32,12 +35,7 @@ public final class SipGatewayManager implements Configurable {
   }
   
   @Override public void configure(final Configuration configuration) {
-	gateway = new SipGateway();
-    gateway.setName(configuration.getString(CONFIGURATION_PREFIX + "[@name]"));
-    gateway.setUser(configuration.getString(CONFIGURATION_PREFIX + ".user"));
-    gateway.setPassword(configuration.getString(CONFIGURATION_PREFIX + ".password"));
-    gateway.setRegister(configuration.getBoolean(CONFIGURATION_PREFIX + ".register"));
-    gateway.setProxy(configuration.getString(CONFIGURATION_PREFIX + ".proxy"));
+	this.configuration = configuration;
   }
   
   public SipGateway getGateway() {
@@ -46,5 +44,18 @@ public final class SipGatewayManager implements Configurable {
   
   public static SipGatewayManager getInstance() {
     return SingletonHolder.INSTANCE;
+  }
+
+  @Override public void initialize() throws RuntimeException {
+	gateway = new SipGateway();
+    gateway.setName(configuration.getString(CONFIGURATION_PREFIX + "[@name]"));
+    gateway.setUser(configuration.getString(CONFIGURATION_PREFIX + ".user"));
+    gateway.setPassword(configuration.getString(CONFIGURATION_PREFIX + ".password"));
+    gateway.setRegister(configuration.getBoolean(CONFIGURATION_PREFIX + ".register"));
+    gateway.setProxy(configuration.getString(CONFIGURATION_PREFIX + ".proxy"));
+  }
+
+  @Override public void shutdown() {
+    // Nothing to do.
   }
 }

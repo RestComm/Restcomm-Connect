@@ -10,18 +10,23 @@
 	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
-	<!-- An application index as the name implies is an index containing all 
-		the applications that will be executed by RestComm. Refer to the org.mobicents.servlet.sip.restcomm.ApplicationIndex 
-		interface for more information. The default application index is configured 
-		below by providing a list of applications that should be executed by RestComm. 
-		Each application MUST have a name and the following attributes: enpoint - 
-		The endpoint to which the application will bind. NOTE: This will usually 
-		be a DID in E.164 format. request-method - The HTTP method used to request 
-		the application's entry point. uri - The HTTP URI to the application's entry 
-		point. The application index may also contain an optional list of client 
-		mappings which can be used with the <Client> noun in RestComm applications. -->
-	<application-index
-		class="org.mobicents.servlet.sip.restcomm.applicationindex.XmlFileIndex">
+	<!-- An application index as the name implies is an index containing all the applications that will be executed by RestComm.
+		Refer to the org.mobicents.servlet.sip.restcomm.ApplicationIndex interface for more information.
+		
+		The default application index is configured below by providing a list of applications that should be executed by RestComm. 
+		Each application MUST have a name and the following attributes: 
+		
+		enpoint - The endpoint to which the application will bind.
+		          NOTE: This will usually be a DID in E.164 format.
+		          
+		request-method - The HTTP method used to request the application's entry point.
+		
+		uri - The HTTP URI to the application's entry point. 
+		
+		The application index may also contain an optional list of client mappings which can be used with the <Client> noun
+		in RestComm applications.
+	-->
+	<application-index class="org.mobicents.servlet.sip.restcomm.applicationindex.XmlFileIndex">
 		<applications>
 			<application name="RestComm Demo Application">
 				<endpoint>1234</endpoint>
@@ -29,20 +34,26 @@
 				<uri>http://localhost:8080/restcomm/demo/hello-world.xml</uri>
 			</application>
 		</applications>
-		<!-- <clients> <client name="John">+17778889999</client> </clients> -->
+		<!-- <clients> <client name="John">17778889999</client> </clients> -->
 	</application-index>
 
-	<!-- The gateway manager controls access to the gateways used to reach other 
-		networks like the PSTN. Refer to the org.mobicents.servlet.sip.restcomm.GatewayManager 
-		interface for more information. The default gateway manager is used to manage 
-		SIP gateways and is configured below by providing a SIP gateway that will 
-		be used by RestComm. The gateway MUST have a name and the following parameters: 
-		<user> - The user name to use for registration. <password> - The password 
-		to use for registration. <register> - A true/false value indicating if the 
-		service provider requires registration. NOTE: Registration is not currently 
-		supported. <proxy> - The FQDN or IP address to the SIP proxy. -->
-	<gateway-manager
-		class="org.mobicents.servlet.sip.restcomm.callmanager.SipGatewayManager">
+	<!-- The gateway manager controls access to the gateways used to reach other networks like the PSTN.
+		Refer to the org.mobicents.servlet.sip.restcomm.GatewayManager interface for more information.
+		
+		The default gateway manager is used to manage SIP gateways and is configured below by providing a
+		SIP gateway that will be used by RestComm. The gateway MUST have a name and the following parameters: 
+		
+		
+		<user> - The user name to use for registration.
+		
+		<password> - The password to use for registration.
+		
+		<register> - A true/false value indicating if the service provider requires registration.
+		             NOTE: Registration is not currently supported.
+		             
+		<proxy> - The FQDN or IP address to the SIP proxy.
+	-->
+	<gateway-manager class="org.mobicents.servlet.sip.restcomm.callmanager.SipGatewayManager">
 		<gateway name="provider">
 			<!-- <user>john</user> -->
 			<!-- <password>1234</password> -->
@@ -51,15 +62,21 @@
 		</gateway>
 	</gateway-manager>
 
-	<!-- The media server manager is responsible for managing the media servers 
-		in use by RestComm. Refer to the org.mobicents.servlet.sip.restcomm.MediaServerManager 
-		interface for more information. The default way to control media servers 
-		is using the MGCP stack. The MGCP stack MUST have a name and the following 
-		parameters: <stack-ip> - The local IP address for the MGCP stack. <stack-port> 
-		- The local port for the MGCP stack. <remote-ip> - The IP address for the 
-		media server. <remote-port> - The port for the media server. -->
-	<media-server-manager
-		class="org.mobicents.servlet.sip.restcomm.MediaServerManager.MgcpMediaServerManager">
+	<!-- The media server manager is responsible for managing the media servers in use by RestComm.
+		Refer to the org.mobicents.servlet.sip.restcomm.MediaServerManager interface for more information.
+		
+		The default way to control media servers is using the MGCP stack. The MGCP stack MUST have a name and
+		the following parameters:
+		
+		<stack-ip> - The local IP address for the MGCP stack.
+		
+		<stack-port> - The local port for the MGCP stack.
+		
+		<remote-ip> - The IP address for the media server.
+		
+		<remote-port> - The port for the media server.
+	-->
+	<media-server-manager class="org.mobicents.servlet.sip.restcomm.MediaServerManager.MgcpMediaServerManager">
 		<mgcp-stack name="mgcp-stack-1">
 			<stack-address>127.0.0.1</stack-address>
 			<stack-port>2727</stack-port>
@@ -68,31 +85,39 @@
 		</mgcp-stack>
 	</media-server-manager>
 
-	<!-- The SMS aggregator is responsible for the handling of SMS messages 
-		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator 
-		interface for more information. The default SMS aggregator uses public email-2-sms 
-		gateways to transmit text messages to the mobile networks. Please keep in 
-		mind that this is a free service and must not be abused so that it can remain 
-		available and FREE. <domain> - The domain from which emails are being sent. 
+	<!-- The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.
+		Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator interface for more information.
+		
+		The default SMS aggregator uses public email-2-sms gateways to transmit text messages to the
+		mobile networks. Please keep in  mind that this is a free service and must not be abused so that
+		it can remain available and FREE. 
+		
+		<domain> - The domain from which emails are being sent. 
+		
 		<smtp> - The SMTP mail server to use for sending emails to the SMS gateway. 
+		
 		<gateway> - The email-2-sms gateway. A list can be found @ http://en.wikipedia.org/wiki/List_of_SMS_gateways. 
-		Please pay attention to the format expected by the service providers. -->
-	<sms-aggregator
-		class="org.mobicents.servlet.sip.restcomm.sms.EmailToSmsAggregator">
+		
+		Please pay attention to the format expected by the service providers. 
+	-->
+	<sms-aggregator class="org.mobicents.servlet.sip.restcomm.sms.EmailToSmsAggregator">
 		<domain>mycompany.com</domain>
 		<smtp>mail.mycompany.com</smtp>
 		<gateway>tmomail.net</gateway>
 	</sms-aggregator>
 
-	<!-- Audio recorder settings. <recordings-location> - The location on the 
-		file system in which to store the audio recordings. <recordings-uri> - The 
-		HTTP URI to the recordings location. -->
-	<recorder-settings>
-		<recordings-location>
-			/home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm-1.0.0.ALPHA.war/recordings
-		</recordings-location>
-		<recordings-uri>
-			http://localhost:8080/restcomm/recordings
-		</recordings-uri>
-	</recorder-settings>
+	<!-- 
+		The Storage system is responsible for storing RestComm objects.
+		Refer to the org.mobicents.servlet.sip.restcomm.storage.Storage interface for more information.
+		
+		The default storage system uses the filesystem to store the RestComm objects.
+		
+		<location> - The location on the file system in which to store the audio recordings. 
+		
+		<uri> - The HTTP URI to the recordings location.
+    -->
+	<storage class="org.mobicents.servlet.sip.restcomm.storage.FileSystemStorage">
+		<path>/home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm-1.0.0.ALPHA.war/</path>
+		<uri>http://localhost:8080/restcomm/</uri>
+	</storage>
 </restcomm>

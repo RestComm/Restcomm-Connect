@@ -29,19 +29,21 @@ import org.mobicents.servlet.sip.restcomm.Application;
 public final class XmlFileIndex implements ApplicationIndex {
   private static final Logger LOGGER = Logger.getLogger(XmlFileIndex.class);
   private static final String CONFIGURATION_PREFIX = "applications.application";
+  
   private final Map<String, Application> applicationIndex;
+  private Configuration configuration;
   
   public XmlFileIndex() {
     super();
     applicationIndex = new HashMap<String, Application>();
   }
-  
-  public Application locate(final String locator) throws ApplicationIndexException {
-	return applicationIndex.get(locator);
-  }
 
   @Override public void configure(final Configuration configuration) {
-    // Get the number of applications to be loaded.
+    this.configuration = configuration;
+  }
+
+  @Override public void initialize() throws RuntimeException {
+	// Get the number of applications to be loaded.
     @SuppressWarnings("unchecked")
     final List<String> applications = (List<String>)configuration.getList(CONFIGURATION_PREFIX + "[@name]");
     final int numberOfApplications = applications.size();
@@ -54,6 +56,7 @@ public final class XmlFileIndex implements ApplicationIndex {
       if(LOGGER.isInfoEnabled()) {
         LOGGER.info("Loading RestComm Applications.");
       }
+      // Load the applications.
       for(int index = 0; index < numberOfApplications; index++) {
     	final Application application = new Application();
     	application.setName(configuration.getString(CONFIGURATION_PREFIX + "[@name]"));
@@ -66,5 +69,13 @@ public final class XmlFileIndex implements ApplicationIndex {
         }
       }
     }
+  }
+  
+  public Application locate(final String locator) throws ApplicationIndexException {
+	return applicationIndex.get(locator);
+  }
+
+  @Override public void shutdown() {
+    // Nothing to do here.
   }
 }

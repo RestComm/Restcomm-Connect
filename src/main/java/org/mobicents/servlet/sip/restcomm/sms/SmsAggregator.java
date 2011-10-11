@@ -17,7 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.sms;
 
 import org.mobicents.servlet.sip.restcomm.Configurable;
+import org.mobicents.servlet.sip.restcomm.LifeCycle;
 
-public interface SmsAggregator extends Configurable {
+public interface SmsAggregator extends Configurable, LifeCycle {
   public void send(String from, String to, String body) throws SmsAggregatorException;
 }

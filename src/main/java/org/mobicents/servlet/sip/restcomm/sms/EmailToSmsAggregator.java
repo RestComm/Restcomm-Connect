@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 
 public final class EmailToSmsAggregator implements SmsAggregator {
   private static final Logger LOGGER = Logger.getLogger(EmailToSmsAggregator.class);
+  
   private String domain;
   private String gateway;
   private String server;
@@ -44,6 +45,10 @@ public final class EmailToSmsAggregator implements SmsAggregator {
     server = configuration.getString("smtp");
   }
 
+  @Override public void initialize() throws RuntimeException {
+    // Nothing to do.
+  }
+  
   public void send(final String sender, final String recipient, final String body) throws SmsAggregatorException {
 	try {
       Properties properties = new Properties();
@@ -68,5 +73,9 @@ public final class EmailToSmsAggregator implements SmsAggregator {
     } catch(final MessagingException exception) {
 	  throw new SmsAggregatorException(exception);
 	}
+  }
+
+  @Override public void shutdown() {
+    // Nothing to do.
   }
 }

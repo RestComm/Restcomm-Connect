@@ -17,8 +17,6 @@
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.media.mscontrol.MediaEventListener;
 import javax.media.mscontrol.MediaSession;
@@ -28,6 +26,7 @@ import javax.media.mscontrol.mediagroup.MediaGroup;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.networkconnection.SdpPortManager;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
+
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -63,8 +62,6 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     IN_PROGRESS.addTransition(COMPLETED);
     IN_PROGRESS.addTransition(FAILED);
   }
- 
-  protected List<CallEventListener> listeners;
 
   private final CallManager manager;
   private final SipServletRequest invite;
@@ -99,11 +96,6 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     this.bridged = false;
     this.connected = false;
     this.joined = false;
-    this.listeners = new ArrayList<CallEventListener>();
-  }
-  
-  public synchronized void addListener(final CallEventListener listener) {
-    listeners.add(listener);
   }
   
   public synchronized void alert(final SipServletRequest request) throws CallException {
@@ -176,9 +168,6 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     try {
       ok.send();
       setState(COMPLETED);
-      for(final CallEventListener listener : listeners) {
-        listener.hangup(this);
-      }
     } catch(final IOException exception) {
       cleanup();
       throw new CallException(exception);
@@ -402,10 +391,6 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
       LOGGER.error(exception);
     }
     cleanup();
-  }
-  
-  public synchronized void removeListener(final CallEventListener listener) {
-    listeners.remove(listener);
   }
   
   private void terminate() {

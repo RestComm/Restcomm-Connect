@@ -17,50 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.callmanager.events.EventListener;
-import org.mobicents.servlet.sip.restcomm.callmanager.events.RecorderEvent;
-import org.mobicents.servlet.sip.restcomm.fsm.FSM;
-import org.mobicents.servlet.sip.restcomm.fsm.State;
-
-public abstract class MediaRecorder extends FSM {
-  // Recorder states.
-  public static final State IDLE = new State("idle");
-  public static final State RECORDING = new State("recording");
-  public static final State FAILED = new State("failed");
-  static {
-    IDLE.addTransition(RECORDING);
-    IDLE.addTransition(FAILED);
-    RECORDING.addTransition(IDLE);
-    RECORDING.addTransition(FAILED);
-  }
-  
-  private final List<EventListener<RecorderEvent>> listeners;
-  
-  public MediaRecorder() {
-    super(IDLE);
-    addState(IDLE);
-    addState(RECORDING);
-    addState(FAILED);
-    this.listeners = new ArrayList<EventListener<RecorderEvent>>();
-  }
-  
-  public synchronized void addListener(final EventListener<RecorderEvent> listener) {
-    listeners.add(listener);
-  }
-  
-  public synchronized void removeListener(final EventListener<RecorderEvent> listener) {
-    listeners.remove(listener);
-  }
-  
-  protected synchronized void fire(final RecorderEvent event) {
-    for(final EventListener<RecorderEvent> listener : listeners) {
-      listener.onEvent(event);
-    }
-  }
-  
-  public abstract void record(URI destination);
-  public abstract void stop();
+public interface MediaRecorder {
+  public void record(URI destination) throws MediaException;
+  public void stop();
 }

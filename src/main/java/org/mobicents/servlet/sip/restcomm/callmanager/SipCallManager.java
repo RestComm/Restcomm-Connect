@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import javax.media.mscontrol.MediaSession;
 import javax.media.mscontrol.MsControlFactory;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
@@ -31,14 +32,22 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.sip.restcomm.Environment;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
 
 public final class SipCallManager extends SipServlet implements CallManager {
   private static final long serialVersionUID = 1L;
+  private static final Logger LOGGER = Logger.getLogger(SipCallManager.class);
   // Thread pool for executing interpreters.
   private static final ExecutorService executor = Executors.newCachedThreadPool();
-  private static MsControlFactory msControlFactory;
+  
+  private static Environment environment;
+  private static Jsr309MediaServerManager mediaServerManager;
+  private static SipGatewayManager sipGatewayManager;
   private static SipFactory sipFactory;
   
   public SipCallManager() {
@@ -47,15 +56,16 @@ public final class SipCallManager extends SipServlet implements CallManager {
   
   public Call createCall(final String from, final String to) throws CallManagerException {
 	try {
-	  final SipGatewayManager sipGatewayManager = SipGatewayManager.getInstance();
 	  final SipGateway sipGateway = sipGatewayManager.getGateway();
 	  final String fromAddress = new StringBuilder().append("sip:").append(from).append("@")
 	      .append(sipGateway.getProxy()).toString();
 	  final String toAddress = new StringBuilder().append("sip:").append(to).append("@")
 	      .append(sipGateway.getProxy()).toString();
-	  // Create new SIP request.
+	  // Create new call.
 	  final SipApplicationSession application = sipFactory.createApplicationSession();
 	  final SipServletRequest request = sipFactory.createRequest(application, "INVITE", fromAddress, toAddress);
+	  final Jsr309MediaServer mediaServer = mediaServerManager.getMediaServer();
+	  final MsControlFactory msControlFactory = mediaServer.getMsControlFactory();
 	  final MediaSession session = msControlFactory.createMediaSession();
 	  final SipCall call = new SipCall(request, session, this);
 	  // Bind the call to the SIP session.
@@ -99,6 +109,8 @@ public final class SipCallManager extends SipServlet implements CallManager {
   @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {
 	try {
       // Create a call.
+	  final Jsr309MediaServer mediaServer = mediaServerManager.getMediaServer();
+	  final MsControlFactory msControlFactory = mediaServer.getMsControlFactory();
 	  final MediaSession session = msControlFactory.createMediaSession();
 	  final SipCall call = new SipCall(request, session, this);
 	  // Bind the call to the SIP session.
@@ -135,13 +147,41 @@ public final class SipCallManager extends SipServlet implements CallManager {
 
   @Override public final void destroy() {
 	// Clean up.
+	environment.shutdown();
+	mediaServerManager.shutdown();
 	executor.shutdownNow();
   }
 
   @Override public final void init(final ServletConfig config) throws ServletException {
-    final Jsr309MediaServerManager mediaServerManager = Jsr309MediaServerManager.getInstance();
-    final Jsr309MediaServer mediaServer = mediaServerManager.getMediaServer();
-    msControlFactory = mediaServer.getMsControlFactory();
+	final ServletContext context = config.getServletContext();
+    final String path = context.getRealPath("/conf/restcomm.xml");
+    if(LOGGER.isInfoEnabled()) {
+      LOGGER.info("loading configuration file located at " + path);
+    }
+    // Load configuration
+    XMLConfiguration configuration = null;
+    try {
+	  configuration = new XMLConfiguration(path);
+	} catch(final ConfigurationException exception) {
+      LOGGER.error("The RestComm environment could not be bootstrapped.", exception);
+	}
+    // Initialize the media server.
+    mediaServerManager = Jsr309MediaServerManager.getInstance();
+    mediaServerManager.configure(configuration);
+    mediaServerManager.initialize();
+    // Initialize the conference center.
+  	final Jsr309ConferenceCenter conferenceCenter = new Jsr309ConferenceCenter(mediaServerManager);
+    // Initialize the SIP gateway manager.
+ 	sipGatewayManager = SipGatewayManager.getInstance();
+ 	sipGatewayManager.configure(configuration);
+ 	sipGatewayManager.initialize();
+    // Initialize the SIP factory.
 	sipFactory = (SipFactory)config.getServletContext().getAttribute(SIP_FACTORY);
+	// Bootstrap the environment.
+ 	environment = Environment.getInstance();
+	environment.configure(configuration);
+	environment.initialize();
+	environment.setCallManager(this);
+	environment.setConferenceCenter(conferenceCenter);
   }
 }
