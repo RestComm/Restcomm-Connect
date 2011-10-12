@@ -45,18 +45,11 @@ public class State {
 	}
 	final State other = (State)object;
 	if(name == null) {
-	  if(other.name != null) {
+	  if(other.getName() != null) {
 		return false;
 	  }
-	} else if(!name.equals(other.name)) {
+	} else if(!name.equals(other.getName())) {
 		return false;
-	}
-	if(transitions == null) {
-	  if(other.transitions != null) {
-		return false;
-	  }
-	} else if(!transitions.equals(other.transitions)) {
-	  return false;
 	}
 	return true;
   }
@@ -73,7 +66,6 @@ public class State {
 	final int prime = 5;
 	int result = 1;
 	result = prime * result + ((name == null) ? 0 : name.hashCode());
-	result = prime * result + ((transitions == null) ? 0 : transitions.hashCode());
 	return result;
   }
 }
