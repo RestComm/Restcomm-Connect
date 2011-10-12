@@ -219,9 +219,8 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
     try {
 	  connection = session.createNetworkConnection(NetworkConnection.BASIC);
       final SdpPortManager sdp = connection.getSdpPortManager();
-      final byte[] offer = sdp.getMediaServerSessionDescription();
-      invite.setContent(offer, "application/sdp");
-      invite.send();
+      sdp.addListener(this);
+      sdp.generateSdpOffer();
       // Wait 30 seconds for the call to be established.
       wait(30 * 1000);
       // Make sure nothing went wrong.
@@ -363,14 +362,24 @@ public final class SipCall extends FSM implements Call, MediaEventListener<SdpPo
   
   public void onEvent(final SdpPortManagerEvent event) {
     if(event.isSuccessful()) {
-      final SipServletResponse ok = invite.createResponse(SipServletResponse.SC_OK);
-      try {
-        final byte[] answer = event.getMediaServerSdp();
-        ok.setContent(answer, "application/sdp");
-        ok.send();
-      } catch(final IOException exception) {
-    	fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
-        LOGGER.error(exception);
+      if(event.getEventType() == SdpPortManagerEvent.ANSWER_GENERATED) {
+        final SipServletResponse ok = invite.createResponse(SipServletResponse.SC_OK);
+        try {
+          final byte[] answer = event.getMediaServerSdp();
+          ok.setContent(answer, "application/sdp");
+          ok.send();
+        } catch(final IOException exception) {
+    	  fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
+          LOGGER.error(exception);
+        }
+      } else if(event.getEventType() == SdpPortManagerEvent.OFFER_GENERATED) {
+    	final byte[] offer = event.getMediaServerSdp();
+    	try {
+    	  invite.setContent(offer, "application/sdp");
+          invite.send();
+    	} catch(final Exception exception) {
+    	  LOGGER.error(exception);
+    	}
       }
     } else {
       if(event.getError().equals(SdpPortManagerEvent.SDP_NOT_ACCEPTABLE)) {

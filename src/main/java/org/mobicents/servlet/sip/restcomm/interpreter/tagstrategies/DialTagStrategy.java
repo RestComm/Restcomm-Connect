@@ -39,7 +39,11 @@ public final class DialTagStrategy extends TwiMLTagStrategy {
     final CallManager callManager = call.getCallManager();
     try {
 	  final Call outboundCall = callManager.createCall(from, to);
+	  System.out.println("Dialing out to " + to);
 	  outboundCall.dial();
+	  System.out.println("Disconnecting media.");
+	  call.disconnect();
+	  System.out.println("Bridging calls.");
 	  call.bridge(outboundCall);
 	  wait(40 * 1000);
 	} catch(final Exception exception) {

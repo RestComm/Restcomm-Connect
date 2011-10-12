@@ -19,6 +19,7 @@ package org.mobicents.servlet.sip.restcomm.interpreter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.DialTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.GatherTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.HangupTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.PauseTagStrategy;
@@ -28,6 +29,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.RedirectTagS
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.RejectTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.SayTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.SmsTagStrategy;
+import org.mobicents.servlet.sip.restcomm.xml.twiml.Dial;
 import org.mobicents.servlet.sip.restcomm.xml.twiml.Gather;
 import org.mobicents.servlet.sip.restcomm.xml.twiml.Hangup;
 import org.mobicents.servlet.sip.restcomm.xml.twiml.Pause;
@@ -47,6 +49,7 @@ public final class TwiMLTagStrategyFactory implements TagStrategyFactory {
     STRATEGIES.put(Gather.NAME, GatherTagStrategy.class);
     STRATEGIES.put(Record.NAME, RecordTagStrategy.class);
     STRATEGIES.put(Sms.NAME, SmsTagStrategy.class);
+    STRATEGIES.put(Dial.NAME, DialTagStrategy.class);
     STRATEGIES.put(Hangup.NAME, HangupTagStrategy.class);
     STRATEGIES.put(Redirect.NAME, RedirectTagStrategy.class);
     STRATEGIES.put(Reject.NAME, RejectTagStrategy.class);

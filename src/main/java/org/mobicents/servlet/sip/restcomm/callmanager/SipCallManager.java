@@ -61,14 +61,15 @@ public final class SipCallManager extends SipServlet implements CallManager {
 	      .append(sipGateway.getProxy()).toString();
 	  final String toAddress = new StringBuilder().append("sip:").append(to).append("@")
 	      .append(sipGateway.getProxy()).toString();
-	  // Create new call.
-	  final SipApplicationSession application = sipFactory.createApplicationSession();
-	  final SipServletRequest request = sipFactory.createRequest(application, "INVITE", fromAddress, toAddress);
+	  // Create new media session.
 	  final Jsr309MediaServer mediaServer = mediaServerManager.getMediaServer();
 	  final MsControlFactory msControlFactory = mediaServer.getMsControlFactory();
 	  final MediaSession session = msControlFactory.createMediaSession();
+	  // Create new SIP request.
+	  final SipApplicationSession application = sipFactory.createApplicationSession();
+	  final SipServletRequest request = sipFactory.createRequest(application, "INVITE", fromAddress, toAddress);
+	  // Create new call.
 	  final SipCall call = new SipCall(request, session, this);
-	  // Bind the call to the SIP session.
 	  request.getSession().setAttribute("CALL", call);
 	  return call;
 	} catch(final Exception exception) {
