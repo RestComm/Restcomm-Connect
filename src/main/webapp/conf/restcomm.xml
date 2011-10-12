@@ -112,12 +112,12 @@
 		
 		The default storage system uses the filesystem to store the RestComm objects.
 		
-		<location> - The location on the file system in which to store the audio recordings. 
+		<location> - The location on the file system to use for storage. 
 		
-		<uri> - The HTTP URI to the recordings location.
+		<uri> - The HTTP URI to the storage location.
     -->
 	<storage class="org.mobicents.servlet.sip.restcomm.storage.FileSystemStorage">
-		<path>/home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm-1.0.0.ALPHA.war/</path>
+		<path>/home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/</path>
 		<uri>http://localhost:8080/restcomm/</uri>
 	</storage>
 </restcomm>
