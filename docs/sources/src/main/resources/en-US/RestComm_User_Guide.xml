@@ -7,14 +7,13 @@
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="Book_Info.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="Preface.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Introduction.xml" />
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Advantages.xml" />
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Fundamentals.xml" />
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-no_SIP_Servlets.xml" />
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
-		href="concept-chapter-injectable_SIP_elements.xml" />
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Getting_Started.xml" />
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Configuration.xml" />
+	<!--<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Advantages.xml" />
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Fundamentals.xml" /> -->
 	<!--xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-scopes_and_contexts.xml"/ -->
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="task-chapter-getting_started.xml" />
+	<!--<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="task-chapter-getting_started.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="task-chapter-examples.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Conclusion.xml" />
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="Revision_History.xml" />
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="Revision_History.xml" />-->
 </book>

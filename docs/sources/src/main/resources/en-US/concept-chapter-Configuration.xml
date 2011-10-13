@@ -1,0 +1,186 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: ittsss -->
+<chapter>
+	<title>Configuration</title>
+	<para>In order to make RestComm easy to manage all of the configuration is done in only one file.
+		The file is located at <filename>PATH_TO_DEPLOYMENT_DIRECTORY/restcomm/conf/restcomm.xml</filename>
+		and is composed of the following sections:</para>
+	<table frame='all'>
+		<title>Configuration Sections</title>
+		<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Section</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>application-index</entry>
+					<entry>An index of RestComm applications to be executed.</entry>
+				</row>
+				<row>
+					<entry>gateway-manager</entry>
+					<entry>Manages access to SIP gateways.</entry>
+				</row>
+				<row>
+					<entry>media-server-manager</entry>
+					<entry>Manages access to media servers.</entry>
+				</row>
+				<row>
+					<entry>sms-aggregator</entry>
+					<entry>Manages SMS service providers.</entry>
+				</row>
+				<row>
+					<entry>storage</entry>
+					<entry>Manages storage on behalf of RestComm.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	</table>
+	<section>
+		<title>Application Index</title>
+		<para>An application index as the name implies is an index containing all the applications that will be executed by RestComm.
+			Refer to the org.mobicents.servlet.sip.restcomm.ApplicationIndex interface for more information on implementing a custom
+			Application Index.</para>
+			
+		<para>The default application index is configured below by providing a list of applications that should be executed by RestComm. 
+			Each application MUST have a name and the following attributes:</para>
+			
+		<para>enpoint - The endpoint to which the application will bind.</para>
+			
+		<para>request-method - The HTTP method used to request the application's entry point.</para>
+			
+		<para>uri - The HTTP URI to the application's entry point.</para> 
+			
+		<para>The application index may also contain an optional list of client mappings which can be used with the &lt;Client&gt;
+		    noun in RestComm applications.</para>
+		
+		<note>Endpoint will usually be a DID in E.164 format (ex. +14445556666)</note>
+		
+		<para>For example, to configure a RestComm application that listens on phone number +14445556666 and is fetched from
+			<uri>http://localhost:8080/restcomm/demo/hello-world.xml</uri> using the <constant>POST</constant> your configuration
+			file would look like the following:</para>
+		<programlisting role="XML">
+		    &lt;application-index class="org.mobicents.servlet.sip.restcomm.applicationindex.XmlFileIndex"&gt;
+		        &lt;applications&gt;
+			        &lt;application name="RestComm Demo Application"&gt;
+				        &lt;endpoint&gt;+14445556666&lt;/endpoint&gt;
+				        &lt;request-method&gt;POST&lt;/request-method&gt;
+				        &lt;uri&gt;http://localhost:8080/restcomm/demo/hello-world.xml&lt;/uri&gt;
+			        &lt;/application&gt;
+		        &lt;/applications&gt;
+	        &lt;/application-index&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Gateway Manager</title>
+		<para>The gateway manager controls access to the gateways used to reach other networks like the PSTN.</para>
+			
+		<para>The default gateway manager is used to manage SIP gateways and is configured below by providing a
+			SIP gateway that will be used by RestComm. The gateway MUST have a name and the following parameters:</para> 
+			
+		<para>user - The user name to use for registration.</para>
+				
+		<para>password - The password to use for registration.</para>
+					
+		<para>register - A true/false value indicating if the service provider requires registration.</para>
+						
+		<para>proxy - The FQDN or IP address to the SIP proxy.</para>
+		
+		<note>Registration is not currently supported.</note>
+		
+		<para>An example of configuring a SIP gateway follows:</para>
+		
+		<programlisting role="XML">
+			&lt;gateway-manager class="org.mobicents.servlet.sip.restcomm.callmanager.SipGatewayManager"&gt;
+		        &lt;gateway name="provider"&gt;
+			        &lt;user&gt;john&lt;/user&gt;
+			        &lt;password&gt;1234&lt;/password&gt;
+			        &lt;register&gt;false&lt;/register&gt;
+			        &lt;proxy&gt;sip.mycompany.com&lt;/proxy&gt;
+		        &lt;/gateway&gt;
+	        &lt;/gateway-manager&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Media Server Manager</title>
+		
+		<para>The media server manager is responsible for managing the media servers in use by RestComm.</para>
+		
+		<para>The default way to control media servers is using the MGCP stack. The MGCP stack MUST have a name and
+		the following parameters:</para>
+		
+		<para>stack-ip - The local IP address for the MGCP stack.</para>
+			
+		<para>stack-port - The local port for the MGCP stack.</para>
+				
+		<para>remote-ip - The IP address for the media server.</para>
+					
+		<para>remote-port - The port for the media server.</para>
+		
+		<para>An example of configuring a media gateway server on the local host follows:</para>
+		
+		<programlisting role="XML">
+			&lt;media-server-manager class="org.mobicents.servlet.sip.restcomm.MediaServerManager.MgcpMediaServerManager"&gt;
+		        &lt;mgcp-stack name="mgcp-stack-1"&gt;
+			        &lt;stack-address>127.0.0.1&lt;/stack-address&gt;
+			        &lt;stack-port>2727&lt;/stack-port&gt;
+			        &lt;remote-address>127.0.0.1&lt;/remote-address&gt;
+			        &lt;remote-port>2427&lt;/remote-port&gt;
+		        &lt;/mgcp-stack&gt;
+	        &lt;/media-server-manager&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>SMS Aggregator</title>
+		<para>The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.
+			Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator interface for more information
+			on implementing a custom SMS Aggregator.</para>
+		
+		<para>The default SMS aggregator uses public email-2-sms gateways to transmit text messages to the
+		mobile networks. Please keep in  mind that this is a free service and must not be abused so that
+		it can remain available and FREE.</para> 
+		
+		<para>domain - The domain from which emails are being sent.</para> 
+			
+		<para>smtp - The SMTP mail server to use for sending emails to the SMS gateway.</para> 
+				
+		<para>gateway - The email-2-sms gateway. A list can be found @ http://en.wikipedia.org/wiki/List_of_SMS_gateways.</para> 
+					
+		<para>Please pay attention to the format expected by the service providers.</para>
+		
+		<programlisting role="XML">
+			&lt;sms-aggregator class="org.mobicents.servlet.sip.restcomm.sms.EmailToSmsAggregator"&gt;
+		        &lt;domain&gt;mycompany.com&lt;/domain&gt;
+		        &lt;smtp&gt;mail.mycompany.com&lt;/smtp&gt;
+		        &lt;gateway&gt;tmomail.net&lt;/gateway&gt;
+	        &lt;/sms-aggregator&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Storage</title>
+		<para>The Storage system is responsible for storing RestComm objects.
+		Refer to the org.mobicents.servlet.sip.restcomm.storage.Storage interface for more information
+		on implementing a custom storage service.</para>
+		
+		<para>The default storage system uses the filesystem to store the RestComm objects.</para>
+		
+		<para>location - The location on the file system to use for storage.</para> 
+			
+		<para>uri - The HTTP URI to the storage location.</para>
+		
+		<programlisting role="XML">
+			&lt;storage class="org.mobicents.servlet.sip.restcomm.storage.FileSystemStorage"&gt;
+		        &lt;path&gt;/home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/&lt;/path&gt;
+		        &lt;uri&gt;http://localhost:8080/restcomm/&lt;/uri&gt;
+	        &lt;/storage&gt;
+		</programlisting>
+	</section>
+</chapter>

@@ -38,7 +38,6 @@
 	</application-index>
 
 	<!-- The gateway manager controls access to the gateways used to reach other networks like the PSTN.
-		Refer to the org.mobicents.servlet.sip.restcomm.GatewayManager interface for more information.
 		
 		The default gateway manager is used to manage SIP gateways and is configured below by providing a
 		SIP gateway that will be used by RestComm. The gateway MUST have a name and the following parameters: 
@@ -63,7 +62,6 @@
 	</gateway-manager>
 
 	<!-- The media server manager is responsible for managing the media servers in use by RestComm.
-		Refer to the org.mobicents.servlet.sip.restcomm.MediaServerManager interface for more information.
 		
 		The default way to control media servers is using the MGCP stack. The MGCP stack MUST have a name and
 		the following parameters:
