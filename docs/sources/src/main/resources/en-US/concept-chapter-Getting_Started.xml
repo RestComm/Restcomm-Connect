@@ -23,10 +23,10 @@
 		<note>RestComm requires a valid installation of Mobicents Sip Servlet Container and Mobicents Media Server</note>
 		<para>To deploy RestComm make sure to start the Mobicents Sip Servlet Container and the Mobicents Media Server.
 		    Then open up your favorite browser an navigate to the Mobicents Sip Servlet admin console. For example, if the
-		    Mobicents Sip Servlet container is running on the local host the URI would be <uri>http://127.0.0.1/admin-console</uri></para>
+		    Mobicents Sip Servlet container is running on the local host the URI would be <uri>http://127.0.0.1:8080/admin-console</uri></para>
 		<mediaobject>
 			<imageobject>
-				<imagedata fileref="images/screenshots/jboss-admin-console.png"/>
+				<imagedata fileref="images/jboss-admin-console.png"/>
 			</imageobject>
 		</mediaobject>
 	</section>
