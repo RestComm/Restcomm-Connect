@@ -4,9 +4,7 @@
 %BOOK_ENTITIES;
 ]>
 <chapter id="Introduction_to_the_RestComm">
-	<title>Introduction
-		to &SHORT_PLATFORM_NAME;
-	</title>
+	<title>Introduction to &SHORT_PLATFORM_NAME;</title>
 	<para>&SHORT_PLATFORM_NAME;
 		is a Communications Platform to rapidly build voice and text messaging
 		applications, using your existing web development skills.

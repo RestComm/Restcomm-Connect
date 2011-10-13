@@ -6,7 +6,20 @@
 <!-- chapter id nickname: ittsss -->
 <chapter>
 	<title>Getting started with RestComm</title>
+	<para>In this chapter we will build RestComm from source code, deploy it to
+	    the Mobicents Sip Servlet Container and run the demo application.</para>
 	<section>
 		<title>Building from source code</title>
+		<para>In this section we will download and build RestComm from the Git repository.</para>
+		<screen>
+			~]$ git clone https://code.google.com/p/restcomm/
+		    ~]$ cd restcomm
+		    ~]$ mvn package
+		</screen>
+		<para>The WAR file <filename>restcomm.war</filename> will be located in the <filename>target</filename> folder.</para>
+	</section>
+	<section>
+		<title>Deploying RestComm</title>
+		
 	</section>
 </chapter>
