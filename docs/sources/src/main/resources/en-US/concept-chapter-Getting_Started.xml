@@ -20,6 +20,6 @@
 	</section>
 	<section>
 		<title>Deploying RestComm</title>
-		
+		<note>RestComm requires a valid installation of Mobicents Sip Servlet Container and Mobicents Media Server</note>
 	</section>
 </chapter>
