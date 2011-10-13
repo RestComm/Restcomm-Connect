@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>	
+	<Say>Your Voice will be recorded now. You can start speaking.</Say>
+	<Record/>
+	<Hangup />
+</Response>

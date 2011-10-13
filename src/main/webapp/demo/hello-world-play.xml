@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>	
+	<Play loop="2">http://mobicents.googlecode.com/svn/trunk/servers/sip-servlets/sip-servlets-examples/media-jsr309-servlet/src/main/sipapp/audio/dtmf0.wav</Play>
+	<Hangup />
+</Response>
