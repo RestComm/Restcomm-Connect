@@ -29,5 +29,7 @@
 				<imagedata fileref="images/jboss-admin-console.png"/>
 			</imageobject>
 		</mediaobject>
+		<para>In order to deploy the <filename>restcomm.war</filename> file. On the menu to the left click on
+			<literal>Web Applications</literal></para>
 	</section>
 </chapter>

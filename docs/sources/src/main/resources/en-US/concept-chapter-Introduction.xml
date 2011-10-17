@@ -23,4 +23,84 @@
 			Sip Servlets (JBoss AS5 - Tomcat 6.x - Tomcat 7.x)
 		</para>
 	</formalpara>
+	<formalpara id="RestComm_Media_Server_Support">
+		<title>Media Server Support</title>
+		<para>&SHORT_PLATFORM_NAME;
+			supports Mobicents Media Server 2.0.0.GA
+		</para>
+	</formalpara>
+	<section>
+		<title>How it Works</title>
+		<para>In order to demonstrate how to use &SHORT_PLATFORM_NAME; we will create a new application that will
+		instruct &SHORT_PLATFORM_NAME; to answer a phone call, say "Hello World" and finally hangup the call.</para>
+		<formalpara id="RestComm_Application">
+			<title>RestComm Application</title>
+			<para>In order to continue we will define a RestComm Application as a set of XML documents that instruct
+				RestComm when handling phone calls. Applications are defined in the application repository and each
+				application has a name and the following properties:</para>
+			    <table>
+				   <title>Application Properties</title>
+				   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Name</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>enpoint</entry>
+							<entry>The endpoint or phone number to which the application will bind. (ex. +14445556666)</entry>
+						</row>
+						<row>
+							<entry>request-method </entry>
+							<entry>The HTTP method used to request the application's entry point.</entry>
+						</row>
+						<row>
+							<entry>uri</entry>
+							<entry>The HTTP URI to the application's entry point.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			    </table>
+		</formalpara>
+		<para>An application's entry point is defined as the first XML document that will be executed when a phone call to the
+			endpoint is received. In our demo application there will only be one XML document which is also our application's
+			entry point. Below is the XML document that &SHORT_PLATFORM_NAME; will fetch via the HTTP protocol to handle new
+		    incoming calls for our demonstration.</para>
+		<programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Say&gt;Hello World&lt;/Say&gt;
+	            &lt;Hangup /&gt;
+            &lt;/Response&gt;
+		</programlisting>
+		<note>A more thorough explantion of the &SHORT_PLATFORM_NAME; Markup Language is available in Chapter 4. &SHORT_PLATFORM_NAME;
+		    Markup Language</note>
+		<para>When a phone call is recieved and our application is triggered &SHORT_PLATFORM_NAME; executes our application as depicted below.</para>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/how-restcomm-works.png"/>
+			</imageobject>
+		</mediaobject>
+	</section>
+	<section>
+		<title>Architecture</title>
+		<para>In this section we will briefly explain the architecture for RestComm and how it all fits togther. RestComm has been designed
+		from the ground up to be extensible so that it can cover as many use cases as possible. Below is a domain model of the most important
+		concepts in the RestComm architecture.</para>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/architecture.png"/>
+			</imageobject>
+		</mediaobject>
+		<section id="RestComm_Media_Architecture_Environment">
+			<title>Environment</title>
+			<para>The environment object provides resources to RestComm that are necessary for RestComm to complete execute RestComm applications.
+			The environment object also decouples the interpreter from the resources that it uses. Every service provided by an environment resource
+			can be re-implemented by overriding the proper interfaces and configuring RestComm to use the new implementation allowing for easy integration
+			with existing infrastructures.</para>
+		</section>
+	</section>
 </chapter>
