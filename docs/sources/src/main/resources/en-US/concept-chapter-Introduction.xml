@@ -143,7 +143,8 @@
                 </section>
                 <section id="RestComm_Storage">
                         <title>Storage</title>
-                        <para></para>
+                        <para>The storage resource provides a place to store audio recordings and to cache downloaded audio files in order to avoid
+                        degredation of audio quality during play back.</para>
                 </section>
         </section>
 </chapter>
