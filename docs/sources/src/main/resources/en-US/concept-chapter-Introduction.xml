@@ -86,21 +86,64 @@
 		</mediaobject>
 	</section>
 	<section>
-		<title>Architecture</title>
-		<para>In this section we will briefly explain the architecture for RestComm and how it all fits togther. RestComm has been designed
-		from the ground up to be extensible so that it can cover as many use cases as possible. Below is a domain model of the most important
-		concepts in the RestComm architecture.</para>
-		<mediaobject>
-			<imageobject>
-				<imagedata fileref="images/architecture.png"/>
-			</imageobject>
-		</mediaobject>
-		<section id="RestComm_Media_Architecture_Environment">
-			<title>Environment</title>
-			<para>The environment object provides resources to RestComm that are necessary for RestComm to complete execute RestComm applications.
-			The environment object also decouples the interpreter from the resources that it uses. Every service provided by an environment resource
-			can be re-implemented by overriding the proper interfaces and configuring RestComm to use the new implementation allowing for easy integration
-			with existing infrastructures.</para>
-		</section>
-	</section>
+                <title>Architecture</title>
+                <para>In this section we will briefly explain the architecture for RestComm and how it all fits togther. RestComm has been designed
+                from the ground up to be extensible so that it can cover as many use cases as possible. Below is a domain model of the most important
+                concepts in the RestComm architecture.</para>
+                <mediaobject>
+                        <imageobject>
+                                <imagedata fileref="images/architecture.png"/>
+                        </imageobject>
+                </mediaobject>
+                <section id="RestComm_Media_Architecture_Environment">
+                        <title>Environment</title>
+                        <para>The environment provides resources to the interpreter that are necessary for execution of RestComm applications.
+                        Every service provided by an environment resource can be re-implemented by overriding the proper interfaces and
+                        configuring RestComm to use the new implementation. This allows for easy integration with existing software
+                        infrastructures.</para>
+                </section>
+                <section id="RestComm_Application_Repository">
+                        <title>Application Repository</title>
+                        <para>The application repository as the name implies acts as a repository where application definitions can be stored
+                        and retrieved. Each application definition is stored and retrieved based on the value of the application's end point.
+                        The default application repository loads applications that have been defined in the <filename>restcomm.xml</filename>
+                        file but other implementations can be provided that would for example, use a relational database or a NoSQL data store
+                        as the default application repository. In order to use a custom implementation override
+                        <literal>org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndex</literal>
+                        and in the <filename>restcomm.xml</filename> file edit the application-index class attribute to use the new implementation.
+                        </para>
+                </section>
+                <section id="RestComm_Call_Manager">
+                        <title>Call Manager</title>
+                        <para>The call manager is responsible for managing calls. When ever an incoming call reaches RestComm the entry point is
+                        at the call manager where the call is turned over to the interpreter for execution. The call manager also provides a
+                        reference to the conference center that the interpreter should use to interact with conference calls.</para>
+                        <formalpara id="RestComm_Call">
+                                <title>Call</title>
+                                <para>A call handles all of the signaling and media providing an easy abstraction to work with from inside the interpreter</para>
+                        </formalpara>
+                        <formalpara id="RestComm_ConferenceCenter">
+                                <title>Conference Center</title>
+                                <para>A conference center manages the life cycle of all the ongoing conferences that are accessible to the interpreter.</para>
+                        </formalpara>
+                        <formalpara id="RestComm_Conference">
+                                <title>Conference</title>
+                                <para>A conference manages the calls that have joined.</para>
+                        </formalpara>
+                </section>
+                <section id="RestComm_SMS_Aggregator">
+                        <title>SMS Aggregator</title>
+                        <para>Usually connecting directly in to tier-1 carriers in order to send SMS text messages is too expensive for most organizations
+                        so they use SMS aggregators to connect to the wireless networks. In order to provide a way to test outbound text messaging for free
+                        with RestComm the default SMS aggregator uses a free service provided by carriers called Email 2 SMS. The service is limited in that
+                        the text messages sent via this method have no priority or delivery guarantee and text messages can only be sent to one carrier
+                        network that is pre-configured in the <filename>restcomm.xml</filename> file. In order to use a custom implementation override
+                        <literal>org.mobicents.servlet.sip.restcomm.sms.SmsAggregator</literal>
+                        and in the <filename>restcomm.xml</filename> file edit the sms-aggregator class attribute to use the new implementation.</para>
+                </section>
+                <section id="RestComm_Storage">
+                        <title>Storage</title>
+                        <para></para>
+                </section>
+        </section>
 </chapter>
