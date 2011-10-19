@@ -130,6 +130,10 @@
                                 <title>Conference</title>
                                 <para>A conference manages the calls that have joined.</para>
                         </formalpara>
+                        <para>In order to use a custom implementation override all of the interfaces in the
+                        <literal>org.mobicents.servlet.sip.restcomm.callmanager</literal> package
+                        and in the <filename>restcomm.xml</filename> file edit the call-manager class attribute
+                        to use the new implementation.</para>
                 </section>
                 <section id="RestComm_SMS_Aggregator">
                         <title>SMS Aggregator</title>
@@ -144,7 +148,12 @@
                 <section id="RestComm_Storage">
                         <title>Storage</title>
                         <para>The storage resource provides a place to store audio recordings and to cache downloaded audio files in order to avoid
-                        degredation of audio quality during play back.</para>
+                        degredation of audio quality during play back.</para> 
+                        <note>All objects stored by the storage resource MUST be accessible via HTTP.</note> 
+                        <para>The default storage implementation uses the local file system as the storage
+                        location. In order to use a custom implementation override
+                        <literal>org.mobicents.servlet.sip.restcomm.storage.Storage</literal>
+                        and in the <filename>restcomm.xml</filename> file edit the storage class attribute to use the new implementation.</para>
                 </section>
         </section>
 </chapter>
