@@ -38,19 +38,12 @@
 		    ~]$ mvn package
 		</screen>
 		<para>The WAR file <filename>restcomm.war</filename> will be located in the <filename>target</filename> folder.</para>
-	</section>
-	<section>
-		<title>Deploying RestComm</title>
-		<note>RestComm requires a valid installation of Mobicents Sip Servlet Container and Mobicents Media Server</note>
-		<para>To deploy RestComm make sure to start the Mobicents Sip Servlet Container and the Mobicents Media Server.
-		    Then open up your favorite browser an navigate to the Mobicents Sip Servlet admin console. For example, if the
-		    Mobicents Sip Servlet container is running on the local host the URI would be <uri>http://127.0.0.1:8080/admin-console</uri></para>
-		<mediaobject>
-			<imageobject>
-				<imagedata fileref="images/jboss-admin-console.png"/>
-			</imageobject>
-		</mediaobject>
-		<para>In order to deploy the <filename>restcomm.war</filename> file. On the menu to the left click on
-			<literal>Web Applications</literal></para>
+		<formalpara>
+			<title>Deploying RestComm</title>
+			<para>To deploy RestComm make sure to start the Mobicents Sip Servlet Container and the Mobicents Media Server.
+		    	Then copy the <filename>restcomm.war</filename> file to the deployment directory which is usually located
+		    	at <filename>PARENT_FOLDER/mss-1.6.0/server/default/deploy/</filename>. Finally, open up your favorite
+		    	softphone and call sip:1234@127.0.0.1:5080</para>
+		</formalpara>
 	</section>
 </chapter>
