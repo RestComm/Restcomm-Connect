@@ -46,18 +46,38 @@
 	</table>
 	<section>
 		<title>Application Index</title>
-		<para>An application index as the name implies is an index containing all the applications that will be executed by RestComm.
-			Refer to the org.mobicents.servlet.sip.restcomm.ApplicationIndex interface for more information on implementing a custom
-			Application Index.</para>
+		<para>An application index as the name implies is an index containing all the applications that will be executed by RestComm.</para>
 			
 		<para>The default application index is configured below by providing a list of applications that should be executed by RestComm. 
-			Each application MUST have a name and the following attributes:</para>
+			Each application MUST have a name and the following properties:</para>
 			
-		<para>enpoint - The endpoint to which the application will bind.</para>
-			
-		<para>request-method - The HTTP method used to request the application's entry point.</para>
-			
-		<para>uri - The HTTP URI to the application's entry point.</para> 
+		<table frame='all'>
+			<title>Application Index Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>enpoint</entry>
+						<entry>The endpoint to which the application will bind.</entry>
+					</row>
+					<row>
+						<entry>request-method</entry>
+						<entry>The HTTP method used to request the application's entry point.</entry>
+					</row>
+					<row>
+						<entry>uri</entry>
+						<entry>The HTTP URI to the application's entry point.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
 			
 		<para>The application index may also contain an optional list of client mappings which can be used with the &lt;Client&gt;
 		    noun in RestComm applications.</para>
@@ -84,17 +104,39 @@
 		<para>The gateway manager controls access to the gateways used to reach other networks like the PSTN.</para>
 			
 		<para>The default gateway manager is used to manage SIP gateways and is configured below by providing a
-			SIP gateway that will be used by RestComm. The gateway MUST have a name and the following parameters:</para> 
-			
-		<para>user - The user name to use for registration.</para>
-				
-		<para>password - The password to use for registration.</para>
-					
-		<para>register - A true/false value indicating if the service provider requires registration.</para>
-						
-		<para>proxy - The FQDN or IP address to the SIP proxy.</para>
+			SIP gateway that will be used by RestComm. The gateway MUST have a name and the following properties:</para>
 		
-		<note>Registration is not currently supported.</note>
+		<table frame='all'>
+			<title>Gateway Manager Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>user</entry>
+						<entry>The user name to use for registration.</entry>
+					</row>
+					<row>
+						<entry>password</entry>
+						<entry>The password to use for registration.</entry>
+					</row>
+					<row>
+						<entry>register</entry>
+						<entry>A true/false value indicating if the service provider requires registration. (See road map for availability)</entry>
+					</row>
+					<row>
+						<entry>proxy</entry>
+						<entry>The FQDN or IP address to the SIP proxy.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
 		
 		<para>An example of configuring a SIP gateway follows:</para>
 		
@@ -115,15 +157,39 @@
 		<para>The media server manager is responsible for managing the media servers in use by RestComm.</para>
 		
 		<para>The default way to control media servers is using the MGCP stack. The MGCP stack MUST have a name and
-		the following parameters:</para>
+		the following properties:</para>
 		
-		<para>stack-ip - The local IP address for the MGCP stack.</para>
-			
-		<para>stack-port - The local port for the MGCP stack.</para>
-				
-		<para>remote-ip - The IP address for the media server.</para>
-					
-		<para>remote-port - The port for the media server.</para>
+		<table frame='all'>
+			<title>Media Server Manager Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>stack-ip</entry>
+						<entry>The local IP address for the MGCP stack.</entry>
+					</row>
+					<row>
+						<entry>stack-port</entry>
+						<entry>The local port for the MGCP stack.</entry>
+					</row>
+					<row>
+						<entry>remote-ip</entry>
+						<entry>The IP address for the media server.</entry>
+					</row>
+					<row>
+						<entry>remote-port</entry>
+						<entry>The port for the media server.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
 		
 		<para>An example of configuring a media gateway server on the local host follows:</para>
 		
@@ -140,20 +206,40 @@
 	</section>
 	<section>
 		<title>SMS Aggregator</title>
-		<para>The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.
-			Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator interface for more information
-			on implementing a custom SMS Aggregator.</para>
+		<para>The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.</para>
 		
 		<para>The default SMS aggregator uses public email-2-sms gateways to transmit text messages to the
 		mobile networks. Please keep in  mind that this is a free service and must not be abused so that
-		it can remain available and FREE.</para> 
+		it can remain available and FREE.</para>
 		
-		<para>domain - The domain from which emails are being sent.</para> 
-			
-		<para>smtp - The SMTP mail server to use for sending emails to the SMS gateway.</para> 
-				
-		<para>gateway - The email-2-sms gateway. A list can be found @ http://en.wikipedia.org/wiki/List_of_SMS_gateways.</para> 
-					
+		<table frame='all'>
+			<title>SMS Aggregator Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>domain</entry>
+						<entry>The domain from which emails are being sent.</entry>
+					</row>
+					<row>
+						<entry>smtp</entry>
+						<entry>The SMTP mail server to use for sending emails to the SMS gateway.</entry>
+					</row>
+					<row>
+						<entry>gateway</entry>
+						<entry>The email-2-sms gateway. A list can be found @ http://en.wikipedia.org/wiki/List_of_SMS_gateways.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		
 		<para>Please pay attention to the format expected by the service providers.</para>
 		
 		<programlisting role="XML">
@@ -166,15 +252,33 @@
 	</section>
 	<section>
 		<title>Storage</title>
-		<para>The Storage system is responsible for storing RestComm objects.
-		Refer to the org.mobicents.servlet.sip.restcomm.storage.Storage interface for more information
-		on implementing a custom storage service.</para>
+		<para>The Storage system is responsible for storing RestComm objects.</para>
 		
 		<para>The default storage system uses the filesystem to store the RestComm objects.</para>
 		
-		<para>location - The location on the file system to use for storage.</para> 
-			
-		<para>uri - The HTTP URI to the storage location.</para>
+		<table frame='all'>
+			<title>Storage Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>location</entry>
+						<entry>The location on the file system to use for storage.</entry>
+					</row>
+					<row>
+						<entry>uri</entry>
+						<entry>The HTTP URI to the storage location.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
 		
 		<programlisting role="XML">
 			&lt;storage class="org.mobicents.servlet.sip.restcomm.storage.FileSystemStorage"&gt;
