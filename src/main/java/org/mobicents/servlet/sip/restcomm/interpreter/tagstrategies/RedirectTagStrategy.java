@@ -37,7 +37,7 @@ public final class RedirectTagStrategy extends TwiMLTagStrategy {
     final Call call = context.getCall();
     // Try to answer the call if it hasn't been done so already.
     answer(call);
-    // Redirect the interpreter to the new TwiML resource.
+    // Redirect the interpreter to the new RCML resource.
     final String text = tag.getText();
     if(text != null) {
       final URI base = interpreter.getDescriptor().getUri();

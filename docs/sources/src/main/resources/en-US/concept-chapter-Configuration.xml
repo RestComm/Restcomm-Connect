@@ -128,7 +128,7 @@
 					</row>
 					<row>
 						<entry>register</entry>
-						<entry>A true/false value indicating if the service provider requires registration. (See road map for availability)</entry>
+						<entry>A true/false value indicating if the service provider requires registration. (See the road map for availability)</entry>
 					</row>
 					<row>
 						<entry>proxy</entry>

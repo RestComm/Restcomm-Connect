@@ -6,5 +6,524 @@
 <!-- chapter id nickname: ittsss -->
 <chapter>
 	<title>RestComm Markup Language</title>
-	<para></para>
+	<para>The RestComm Markup Language (RCML) is composed of a set of XML tags that can be used to instruct
+		RestComm on how to handle an on-going phone call.</para>
+	<section>
+		<title>Say</title>
+		<para>The &lt;Say&gt; verb is used to synthesize text to speech and play it to the remote party.</para>
+		<table>
+		   <title>Say Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>voice</entry>
+					<entry>man, woman</entry>
+					<entry>man</entry>
+				</row>
+				<row>
+					<entry>language</entry>
+					<entry>en, es, fr, de</entry>
+					<entry>en</entry>
+				</row>
+				<row>
+					<entry>loop</entry>
+					<entry>integer > 1</entry>
+					<entry>1</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>voice</title>
+	    	<para>The 'voice' attribute allows you to select the gender of the voice used to synthesize
+	    		the text to speech for playback.</para>
+	    </formalpara>
+	    <warning>
+	    	<title>Partial Support</title>
+	    	<para>The current version of RestComm only supports a 'voice' value of 'man' see the road map for
+	    		availability of 'woman'.</para>
+	    </warning>
+	    <formalpara>
+	    	<title>language</title>
+	    	<para>The 'language' attribute allows you pick a specific language for speech synthesis.
+	    		RestComm currently supports languages 'en' (English), 'es' (Spanish), 'fr' (French),
+	    		and 'de' (German).</para>
+	    </formalpara>
+	    <warning>
+	    	<title>Partial Support</title>
+	    	<para>The current version of RestComm only supports a 'language' value of 'en' see the road map for
+	    		availability of 'es', 'fr', 'de'.</para>
+	    </warning>
+	    <formalpara>
+	    	<title>loop</title>
+	    	<para>The 'loop' attribute specifies how many times you'd like the text repeated. Specifying '0' will
+	    		cause the the &lt;Say&gt; verb to loop until the call is hung up.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Say&gt; verb can not have any other verbs or nouns nested. Only text.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Say&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Say&gt;Hello World&lt;/Say&gt;
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Play</title>
+		<para>The &lt;Play&gt; verb is used to play an audio file to the remote party.</para>
+		<table>
+		   <title>Play Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>loop</entry>
+					<entry>integer > 1</entry>
+					<entry>1</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>loop</title>
+	    	<para>The 'loop' attribute specifies how many times you'd like the audio file to be repeated. Specifying '0' will
+	    		cause the the &lt;Play&gt; verb to loop until the call is hung up.</para>
+	    </formalpara>
+	    <table>
+		   <title>Supported Audio Formats</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">MIME type</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>audio/wav</entry>
+					<entry>wav format audio</entry>
+				</row>
+				<row>
+					<entry>audio/wave</entry>
+					<entry>wav format audio</entry>
+				</row>
+				<row>
+					<entry>audio/x-wav</entry>
+					<entry>wav format audio</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Play&gt; verb can not have any other verbs or nouns nested. Only a URL.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Play&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Play&gt;http://foobar.com/demo.wav&lt;/Play&gt;
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Gather</title>
+		<para>The &lt;Gather&gt; verb collects digits that a caller enters into his or her telephone keypad. When the caller
+			is done entering data, RestComm submits that data to the provided 'action' URL in an HTTP GET or POST request,
+			just like a web browser submits data from an HTML form. If no input is received before timeout, &lt;Gather&gt;
+			falls through to the next verb in the RestComm document. You may optionally nest &lt;Say&gt; and &lt;Play&gt;
+			verbs within a &lt;Gather&gt; verb while waiting for input. This allows you to read menu options to the caller
+			while letting her enter a menu selection at any time. After the first digit is received the audio will stop
+			playing.</para>
+		<table>
+		   <title>Gather Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>action</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>current document URL</entry>
+				</row>
+				<row>
+					<entry>method</entry>
+					<entry>GET, POST</entry>
+					<entry>POST</entry>
+				</row>
+				<row>
+					<entry>timeout</entry>
+					<entry>positive integer</entry>
+					<entry>5 seconds</entry>
+				</row>
+				<row>
+					<entry>finishOnKey</entry>
+					<entry>any digit, #, *</entry>
+					<entry>#</entry>
+				</row>
+				<row>
+					<entry>numDigits</entry>
+					<entry>integer >= 1</entry>
+					<entry>unlimited</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>action</title>
+	    	<para>The 'action' attribute takes an absolute or relative URL as a value. When the caller has finished
+	    		entering digits RestComm will make a GET or POST request to this URL including the parameters below.
+	    		If no 'action' is provided, RestComm will by default make a POST request to the current document's URL.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>Digits</entry>
+					<entry>The digits the caller pressed, excluding the finishOnKey digit.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>method</title>
+	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action' URL
+	    		via HTTP GET or POST.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>timeout</title>
+	    	<para>The 'timeout' attribute sets the limit in seconds that RestComm will wait for the caller to press another digit before
+	    		moving on and making a request to the 'action' URL. For example, if 'timeout' is '10', RestComm will wait ten seconds for
+	    		the caller to press another key before submitting the previously entered digits to the 'action' URL. RestComm waits until
+	    		completing the execution of all nested verbs before beginning the timeout period.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>finishOnKey</title>
+	    	<para>The 'finishOnKey' attribute lets you choose one value that submits the received data when entered. For example, if you
+	    		set 'finishOnKey' to '#' and the user enters '1234#', RestComm will immediately stop waiting for more input when the '#' is
+	    		received and will submit "Digits=1234" to the 'action' URL. Note that the 'finishOnKey' value is not sent. The allowed
+	    		values are the digits 0-9, '#' , '*' and the empty string (set 'finishOnKey' to ''). If the empty string is used,
+	    		&lt;Gather&gt; captures all input and no key will end the &lt;Gather&gt; when pressed. In this case RestComm will submit
+	    		the entered digits to the 'action' URL only after the timeout has been reached. The value can only be a single character.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>numDigits</title>
+	    	<para>The 'numDigits' attribute lets you set the number of digits you are expecting, and submits the data to the 'action' URL
+	    		once the caller enters that number of digits. For example, one might set 'numDigits' to '5' and ask the caller to enter
+	    		a 5 digit zip code. When the caller enters the fifth digit of '94117', RestComm will immediately submit the data to the
+	    		'action' URL.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>You can nest the following verbs within &lt;Gather&gt;: &lt;Say&gt;, &lt;Play&gt;, &lt;Pause&gt;</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Gather&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Gather/&gt;
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Record</title>
+		<para>The &lt;Record&gt; verb records the caller's voice and returns to you the URL of a file containing the audio recording.
+		You can optionally generate text transcriptions of recorded calls by setting the 'transcribe' attribute of the &lt;Record&gt;
+		verb to 'true'.</para>
+		<table>
+		   <title>Record Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>action</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>current document URL</entry>
+				</row>
+				<row>
+					<entry>method</entry>
+					<entry>GET, POST</entry>
+					<entry>POST</entry>
+				</row>
+				<row>
+					<entry>timeout</entry>
+					<entry>positive integer</entry>
+					<entry>5</entry>
+				</row>
+				<row>
+					<entry>finishOnKey</entry>
+					<entry>any digit, #, *</entry>
+					<entry>1234567890*#</entry>
+				</row>
+				<row>
+					<entry>maxLength</entry>
+					<entry>integer greater than 1</entry>
+					<entry>3600 (1 hour)</entry>
+				</row>
+				<row>
+					<entry>transcribe</entry>
+					<entry>true, false</entry>
+					<entry>false</entry>
+				</row>
+				<row>
+					<entry>transcribeCallback</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>none</entry>
+				</row>
+				<row>
+					<entry>playBeep</entry>
+					<entry>true, false</entry>
+					<entry>true</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>method</title>
+	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to
+	    		request the URL via HTTP GET or POST. </para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Record&gt; verb can not have any other verbs or nouns nested.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Record&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Sms</title>
+		<para></para>
+	</section>
+	<section>
+		<title>Dial</title>
+		<para></para>
+		<section>
+			<title>Number</title>
+			<para></para>
+		</section>
+		<section>
+			<title>Client</title>
+			<para></para>
+		</section>
+		<section>
+			<title>Conference</title>
+			<para></para>
+		</section>
+	</section>
+	<section>
+		<title>Hangup</title>
+		<para>The &lt;Hangup&gt; verb ends a call.</para>
+		<formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Hangup&gt; verb can not have any other verbs or nouns nested.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Hangup&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Hangup/&gt;
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Redirect</title>
+		<para>The &lt;Redirect&gt; verb transfers control of a call to the RCML at a different URL.
+			All verbs after &lt;Redirect&gt; are unreachable and ignored.</para>
+		<table>
+		   <title>Redirect Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>method</entry>
+					<entry>GET, POST</entry>
+					<entry>POST</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>method</title>
+	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to
+	    		request the URL via HTTP GET or POST. </para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Redirect&gt; verb can not have any other verbs or nouns nested.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Redirect&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Redirect&gt;http://foobar.com/instructions&lt;/Redirect&gt;
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Reject</title>
+		<para>The &lt;Reject&gt; verb rejects an incoming call to your RestComm endpoint. This is useful for blocking unwanted calls.
+			If the first verb in a RCML response is &lt;Reject&gt;, RestComm will not pick up the call. The call ends with a status of
+			'busy' or 'no-answer', depending on the verb's 'reason' attribute. Any verbs after &gt;Reject&lt; are unreachable and ignored.</para>
+		<table>
+		   <title>Reject Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>reason</entry>
+					<entry>rejected, busy</entry>
+					<entry>rejected</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>reason</title>
+	    	<para>The reason attribute takes the values "rejected" and "busy." This tells RestComm what message to play when
+	    		rejecting a call. Selecting "busy" will play a busy signal to the caller, while selecting "rejected" will
+	    		play a standard not-in-service response.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Reject&gt; verb can not have any other verbs or nouns nested.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Reject&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Redirect reason="busy"/&gt;
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
+		<title>Pause</title>
+		<para>The &lt;Pause&gt; verb waits silently for a specific number of seconds. If &lt;Pause&gt; is the first verb
+			in a RCML response, RestComm will wait the specified number of seconds before picking up the call.</para>
+		<table>
+		   <title>Pause Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>length</entry>
+					<entry>integer > 0</entry>
+					<entry>1 second</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>length</title>
+	    	<para>The 'length' attribute specifies how many seconds RestComm will wait silently before continuing on.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Pause&gt; verb can not have any other verbs or nouns nested.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Pause&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Pause length="5"/&gt;
+            &lt;/Response&gt;
+		</programlisting>
+	</section>
 </chapter>
