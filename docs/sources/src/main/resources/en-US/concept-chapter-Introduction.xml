@@ -31,12 +31,12 @@
 	</formalpara>
 	<section>
 		<title>How it Works</title>
-		<para>In order to demonstrate how to use &SHORT_PLATFORM_NAME; we will create a new application that will
+		<para>In order to demonstrate how &SHORT_PLATFORM_NAME; works we will create a new application that will
 		instruct &SHORT_PLATFORM_NAME; to answer a phone call, say "Hello World" and finally hangup the call.</para>
 		<formalpara id="RestComm_Application">
 			<title>RestComm Application</title>
-			<para>In order to continue we will define a RestComm Application as a set of XML documents that instruct
-				RestComm when handling phone calls. Applications are defined in the application repository and each
+			<para>Before moving forward we will define a RestComm Application as a set of XML documents that instruct
+				the RestComm platform when handling phone calls. Applications are defined in the application repository and each
 				application has a name and the following properties:</para>
 			    <table>
 				   <title>Application Properties</title>
@@ -76,8 +76,10 @@
 	            &lt;Hangup /&gt;
             &lt;/Response&gt;
 		</programlisting>
-		<note>A more thorough explantion of the &SHORT_PLATFORM_NAME; Markup Language is available in Chapter 4. &SHORT_PLATFORM_NAME;
-		    Markup Language</note>
+		<note>
+			<para>A more thorough explantion of the &SHORT_PLATFORM_NAME; Markup Language is available in Chapter 4. &SHORT_PLATFORM_NAME;
+		    Markup Language</para>
+		</note>
 		<para>When a phone call is recieved and our application is triggered &SHORT_PLATFORM_NAME; executes our application as depicted below.</para>
 		<mediaobject>
 			<imageobject>
@@ -89,7 +91,8 @@
                 <title>Architecture</title>
                 <para>In this section we will briefly explain the architecture for RestComm and how it all fits togther. RestComm has been designed
                 from the ground up to be extensible so that it can cover as many use cases as possible. Below is a domain model of the most important
-                concepts in the RestComm architecture.</para>
+                concepts in the RestComm architecture. Note: Please keep in mind that until RestComm reaches version 1.0.0.Final any or every part
+                of the system architecture may change.</para>
                 <mediaobject>
                         <imageobject>
                                 <imagedata fileref="images/architecture.png"/>
@@ -105,11 +108,11 @@
                 <section id="RestComm_Application_Repository">
                         <title>Application Repository</title>
                         <para>The application repository as the name implies acts as a repository where application definitions can be stored
-                        and retrieved. Each application definition is stored and retrieved based on the value of the application's end point.
-                        The default application repository loads applications that have been defined in the <filename>restcomm.xml</filename>
-                        file but other implementations can be provided that would for example, use a relational database or a NoSQL data store
-                        as the default application repository. In order to use a custom implementation override
-                        <literal>org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndex</literal>
+                        and retrieved. Each application definition is stored and retrieved based on the value of the application's end point
+                        Therefore, all end points MUST consist of unique values. The default application repository loads applications that
+                        have been defined in the <filename>restcomm.xml</filename> file but other implementations can be provided that would
+                        for example, use a relational database or a NoSQL data store as the default application repository. In order to use a
+                        custom implementation override <literal>org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndex</literal>
                         and in the <filename>restcomm.xml</filename> file edit the application-index class attribute to use the new implementation.
                         </para>
                 </section>
@@ -130,26 +133,24 @@
                                 <title>Conference</title>
                                 <para>A conference manages the calls that have joined.</para>
                         </formalpara>
-                        <para>In order to use a custom implementation override all of the interfaces in the
-                        <literal>org.mobicents.servlet.sip.restcomm.callmanager</literal> package
-                        and in the <filename>restcomm.xml</filename> file edit the call-manager class attribute
-                        to use the new implementation.</para>
                 </section>
                 <section id="RestComm_SMS_Aggregator">
                         <title>SMS Aggregator</title>
-                        <para>Usually connecting directly in to tier-1 carriers in order to send SMS text messages is too expensive for most organizations
-                        so they use SMS aggregators to connect to the wireless networks. In order to provide a way to test outbound text messaging for free
-                        with RestComm the default SMS aggregator uses a free service provided by carriers called Email 2 SMS. The service is limited in that
-                        the text messages sent via this method have no priority or delivery guarantee and text messages can only be sent to one carrier
-                        network that is pre-configured in the <filename>restcomm.xml</filename> file. In order to use a custom implementation override
-                        <literal>org.mobicents.servlet.sip.restcomm.sms.SmsAggregator</literal>
+                        <para>Usually connecting directly in to tier-1 carriers in order to send SMS text messages doesn't make sense for most organizations
+                        so they use SMS aggregators to connect to the wireless networks. Connecting to SMS aggregators is dependent on the aggregator of choice
+                        and how the organization exposes their services to the world. Therefore, RestComm will ship with a handful of default SMS aggregators
+                        but we welcome contributions which integrate aggregators not currently provided. In order to provide a way to test outbound text
+                        messaging for free with RestComm the default SMS aggregator uses a free service provided by carriers called Email 2 SMS.
+                        The service is limited in that the text messages sent via this method have no priority or delivery guarantee and text messages can
+                        only be sent to one carrier network that is pre-configured in the <filename>restcomm.xml</filename> file. In order to use a
+                        custom implementation override <literal>org.mobicents.servlet.sip.restcomm.sms.SmsAggregator</literal>
                         and in the <filename>restcomm.xml</filename> file edit the sms-aggregator class attribute to use the new implementation.</para>
                 </section>
                 <section id="RestComm_Storage">
                         <title>Storage</title>
                         <para>The storage resource provides a place to store audio recordings and to cache downloaded audio files in order to avoid
                         degredation of audio quality during play back.</para> 
-                        <note>All objects stored by the storage resource MUST be accessible via HTTP.</note> 
+                        <note><para>All objects stored by the storage resource MUST be accessible via HTTP.</para></note> 
                         <para>The default storage implementation uses the local file system as the storage
                         location. In order to use a custom implementation override
                         <literal>org.mobicents.servlet.sip.restcomm.storage.Storage</literal>

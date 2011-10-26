@@ -6,14 +6,16 @@
 <!-- chapter id nickname: ittsss -->
 <chapter>
 	<title>Getting started with RestComm</title>
-	<para>In this chapter we will build RestComm from source code, deploy it to
-	    the Mobicents Sip Servlet Container and run the demo application.</para>
+	<para>In this chapter we will go over the steps necessary to deploy and run RestComm on the localhost for development.</para>
 	<section>
-		<title>Using the binary distribution</title>
-		<para>The easiest way to get started with RestComm is to download and deploy the binary distribution
-		which includes Mobicents Sip Servlet Container + Mobicents Media Server + RestComm to your local machine.
-		In the next few steps we will attempt to do just that and we will start by downloading the
-		binary distribution that uses the JBoss AS and unzipping it to the working directory.</para>
+		<title>Using a binary distribution</title>
+		<para>The easiest way to get started with RestComm is to download and unzip a binary distribution
+		that includes Mobicents Sip Servlet Container + Mobicents Media Server + RestComm to your local machine.</para>
+		<formalpara>
+			<title>JBoss AS Binary Distribution</title>
+			<para>In the next few steps we will attempt to do just that and we will start by downloading the
+			binary distribution that uses the JBoss AS and unzipping it to the working directory.</para>
+		</formalpara>
 		<screen>
 			~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-jboss-1.0.0.ALPHA.zip
 			~]$ unzip restcomm-saas-jboss-1.0.0.ALPHA.zip
@@ -26,6 +28,10 @@
 			~]$ cd ../mobicents-media-server/bin/
 			~]$ ./run.sh &amp;
 		</screen>
+		<formalpara>
+			<title>Tomcat Binary Distribution</title>
+			<para></para>
+		</formalpara>
 		<para>After that open up your favorite softphone and call sip:1234@127.0.0.1:5080</para>
 		<para>Congratulations you have just executed your first RestComm Application!</para>
 	</section>

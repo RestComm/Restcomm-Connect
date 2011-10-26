@@ -274,9 +274,7 @@
 	</section>
 	<section>
 		<title>Record</title>
-		<para>The &lt;Record&gt; verb records the caller's voice and returns to you the URL of a file containing the audio recording.
-		You can optionally generate text transcriptions of recorded calls by setting the 'transcribe' attribute of the &lt;Record&gt;
-		verb to 'true'.</para>
+		<para>The &lt;Record&gt; verb records the caller's voice and returns to you the URL of a file containing the audio recording.</para>
 		<table>
 		   <title>Record Attributes</title>
 		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -335,9 +333,112 @@
 		</tgroup>
 	    </table>
 	    <formalpara>
+	    	<title>action</title>
+	    	<para>The 'action' attribute takes an absolute or relative URL as a value. When recording is finished
+	    	RestComm will make a GET or POST request to this URL including the parameters below. If no 'action' is
+	    	provided, &lt;Record&gt; will default to requesting the current document's URL. After making this request,
+	    	RestComm will continue the current call using the RCML received in your response. Any RCML verbs occuring
+	    	after a &lt;Record&gt; are unreachable. There is one exception: if RestComm receives an empty recording,
+	    	it will not make a request to the 'action' URL. The current call flow will continue with the next verb in
+	    	the current RCML document.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>RecordingUrl</entry>
+					<entry>The URL of the recorded audio.</entry>
+				</row>
+				<row>
+					<entry>RecordingDuration</entry>
+					<entry>The time duration of the recorded audio.</entry>
+				</row>
+				<row>
+					<entry>Digits</entry>
+					<entry>The digits the caller pressed, excluding the finishOnKey digit.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
 	    	<title>method</title>
 	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to
 	    		request the URL via HTTP GET or POST. </para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>timeout</title>
+	    	<para>The 'timeout' attribute tells RestComm to end the recording after a number of seconds of silence has passed.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>finishOnKey</title>
+	    	<para>The 'finishOnKey' attribute lets you choose a set of digits that end the recording when entered. For example, if you
+	    	set 'finishOnKey' to '#' and the caller presses '#', RestComm will immediately stop recording and submit 'RecordingUrl',
+	    	'RecordingDuration', and the '#' as parameters in a request to the 'action' URL. The allowed values are the digits 0-9, '#'
+	    	and '*'. The default is '1234567890*#' (i.e. any key will end the recording). Unlike &lt;Gather&gt;, you may specify more than
+	    	one character as a 'finishOnKey' value.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>maxLength</title>
+	    	<para>The 'maxLength' attribute lets you set the maximum length for the recording in seconds. If you set 'maxLength' to '30',
+	    	the recording will automatically end after 30 seconds of recorded time has elapsed.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>transcribe</title>
+	    	<para>The 'transcribe' attribute tells RestComm that you would like a text representation of the audio of the recording.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>transcribeCallback</title>
+	    	<para>The 'transcribeCallback' attribute is used in conjunction with the 'transcribe' attribute. It allows you to specify a URL
+	    	to which RestComm will make an asynchronous POST request when the transcription is complete. This is not a request for RCML
+	    	and the response will not change call flow, but the request will contain the standard RCML request parameters as well as
+	    	'TranscriptionStatus', 'TranscriptionText', 'TranscriptionUrl' and 'RecordingUrl'. If 'transcribeCallback' is specified,
+	    	then there is no need to specify 'transcribe=true'. It is implied. If you specify 'transcribe=true' without a 'transcribeCallback',
+	    	the completed transcription will be stored for you to retrieve later (see the REST API Transcriptions section), but RestComm will
+	    	not asynchronously notify your application.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>TranscriptionText</entry>
+					<entry>Contains the text of the transcription.</entry>
+				</row>
+				<row>
+					<entry>TranscriptionStatus</entry>
+					<entry>The status of the transcription attempt: either 'completed' or 'failed'.</entry>
+				</row>
+				<row>
+					<entry>TranscriptionUrl</entry>
+					<entry>The URL for the transcription's REST API resource.</entry>
+				</row>
+				<row>
+					<entry>RecordingUrl</entry>
+					<entry>The URL for the transcription's source recording resource.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>playBeep</title>
+	    	<para>The 'playBeep' attribute allows you to toggle between playing a sound before the start of a recording.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>Nesting</title>
@@ -349,28 +450,505 @@
 	    </formalpara>
 	    <programlisting role="XML">
 			&lt;Response&gt;
-	            
+	            &lt;Record maxLength="30"/&gt;
             &lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
 		<title>Sms</title>
-		<para></para>
+		<para>The &lt;Sms&gt; verb sends an SMS message to a phone number during a phone call.</para>
+		<table>
+		   <title>Sms Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>to</entry>
+					<entry>phone number</entry>
+					<entry>see below</entry>
+				</row>
+				<row>
+					<entry>from</entry>
+					<entry>phone number</entry>
+					<entry>see below</entry>
+				</row>
+				<row>
+					<entry>action</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>none</entry>
+				</row>
+				<row>
+					<entry>method</entry>
+					<entry>GET, POST</entry>
+					<entry>POST</entry>
+				</row>
+				<row>
+					<entry>statusCallback</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>none</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+		<formalpara>
+	    	<title>to</title>
+	    	<para>The 'to' attribute takes a valid phone number as a value. RestComm will send an SMS message to this number.
+	    	When sending an SMS during an incoming call, 'to' defaults to the caller. When sending an SMS during an outgoing call,
+	    	'to' defaults to the called party. The value of 'to' must be a valid phone number.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>from</title>
+	    	<para>The 'from' attribute takes a valid phone number as an argument. When sending an SMS during an incoming call, 'from'
+	    	defaults to the called party. When sending an SMS during an outgoing call, 'from' defaults to the calling party.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>action</title>
+	    	<para>The 'action' attribute takes a URL as an argument. After processing the &lt;Sms&gt; verb, RestComm will make a GET
+	    	or POST request to this URL with the form parameters 'SmsStatus' and 'SmsSid'. Using an 'action' URL, your application
+	    	can receive synchronous notification that the message was successfully enqueued. If you provide an 'action' URL, RestComm
+	    	will use the RCML received in your response to the 'action' URL request to continue the current call. Any RCML verbs
+	    	occuring after an &lt;Sms&gt; which specifies an 'action' attribute are unreachable. If no 'action' is provided, &lt;Sms&gt;
+	    	will finish and RestComm will move on to the next RCML verb in the document. If there is no next verb, RestComm will end the
+	    	phone call.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>SmsSid</entry>
+					<entry>The Sid for the Sms message.</entry>
+				</row>
+				<row>
+					<entry>SmsStatus</entry>
+					<entry>The current status of the Sms message. Either 'sent' or 'failed'.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>method</title>
+	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells Twilio whether to request the 'action' URL via HTTP GET
+	    	or POST. This attribute is modeled after the HTML form 'method' attribute.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>statusCallback</title>
+	    	<para>The 'statusCallback' attribute takes a URL as an argument. When the SMS message is actually sent, or if sending fails,
+	    	RestComm will make an asynchronous POST request to this URL with the parameters 'SmsStatus' and 'SmsSid'.
+	    	Note, 'statusCallback' always uses HTTP POST to request the given url.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>SmsSid</entry>
+					<entry>The Sid for the Sms message.</entry>
+				</row>
+				<row>
+					<entry>SmsStatus</entry>
+					<entry>The current status of the Sms message. Either 'sent' or 'failed'.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Sms&gt; verb can not have any other verbs or nouns nested.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Sms&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Sms to="3334445555"&gt;Hello World!&lt;/Sms&gt;
+            &lt;/Response&gt;
+		</programlisting>
 	</section>
 	<section>
 		<title>Dial</title>
-		<para></para>
+		<para>The &lt;Dial&gt; verb connects the current caller to another phone. If the called party picks up, the two parties are
+		connected and can communicate until one hangs up. If the called party does not pick up, if a busy signal is received, or if
+		the number doesn't exist, the dial verb will finish.</para>
+		<table>
+		   <title>Sms Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>action</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>no default for &lt;Dial&gt;</entry>
+				</row>
+				<row>
+					<entry>method</entry>
+					<entry>GET, POST</entry>
+					<entry>POST</entry>
+				</row>
+				<row>
+					<entry>timeout</entry>
+					<entry>positive integer</entry>
+					<entry>30 seconds</entry>
+				</row>
+				<row>
+					<entry>hangupOnStar</entry>
+					<entry>true, false</entry>
+					<entry>false</entry>
+				</row>
+				<row>
+					<entry>timeLimit</entry>
+					<entry>positive integer (seconds)</entry>
+					<entry>14400 seconds (4 hours)</entry>
+				</row>
+				<row>
+					<entry>callerId</entry>
+					<entry>a valid phone number, or client identifier if you are dialing a &lt;Client&gt;.</entry>
+					<entry>Caller's callerId</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>action</title>
+	    	<para>The 'action' attribute takes a URL as an argument. When the dialed call ends, RestComm will make a GET or POST
+	    	request to this URL including the parameters below. If you provide an 'action' URL, RestComm will continue the current
+	    	call after the dialed party has hung up, using the RCML received in your response to the 'action' URL request.
+	    	Any RCML verbs occuring after a &lt;Dial&gt; which specifies an 'action' attribute are unreachable. If no 'action'
+	    	is provided, &lt;Dial&gt; will finish and RestComm will move on to the next RCML verb in the document.
+	    	If there is no next verb, RestComm will end the phone call.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>DialCallStatus</entry>
+					<entry>The outcome of the &lt;Dial&gt; attempt. See the DialCallStatus section below for details.</entry>
+				</row>
+				<row>
+					<entry>DialCallSid</entry>
+					<entry>The call sid of the new call leg. This parameter is not sent after dialing a conference.</entry>
+				</row>
+				<row>
+					<entry>DialCallDuration</entry>
+					<entry>The duration in seconds of the dialed call. This parameter is not sent after dialing a conference.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <table>
+		   <title>DialCallStatus Values</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>completed</entry>
+					<entry>The called party answered the call and was connected to the caller.</entry>
+				</row>
+				<row>
+					<entry>busy</entry>
+					<entry>RestComm received a busy signal when trying to connect to the called party.</entry>
+				</row>
+				<row>
+					<entry>no-answer</entry>
+					<entry>The called party did not pick up before the timeout period passed.</entry>
+				</row>
+				<row>
+					<entry>failed</entry>
+					<entry>RestComm was unable to route to the given phone number. This is frequently caused by dialing a
+					properly formated but non-existent phone number.</entry>
+				</row>
+				<row>
+					<entry>canceled</entry>
+					<entry>The call was canceled via the REST API before it was answered.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>method</title>
+	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action'
+	    	URL via HTTP GET or POST. This attribute is modeled after the HTML form 'method' attribute.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>timeout</title>
+	    	<para>The 'timeout' attribute sets the limit in seconds that &lt;Dial&gt; waits for the called party to answer the call.
+	    	Basically, how long should RestComm let the call ring before giving up and reporting 'no-answer' as the 'DialCallStatus'.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>hangupOnStar</title>
+	    	<para>The 'hangupOnStar' attribute lets the calling party hang up on the called party by pressing the '*' key on his phone.
+	    	When two parties are connected using &lt;Dial&gt;, RestComm blocks execution of further verbs until the caller or called party
+	    	hangs up. This feature allows the calling party to hang up on the called party without having to hang up her phone and ending
+	    	her RCML processing session. When the caller presses '*' RestComm will hang up on the called party. If an 'action' URL was
+	    	provided, RestComm submits 'completed' as the 'DialCallStatus' to the URL and processes the response. If no 'action' was
+	    	provided RestComm will continue on to the next verb in the current RCML document.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>timelimit</title>
+	    	<para>The 'timeLimit' attribute sets the maximum duration of the &lt;Dial&gt; in seconds. For example, by setting a time
+	    	limit of 120 seconds &lt;Dial&gt; will hang up on the called party automatically two minutes into the phone call.
+	    	By default, there is a four hour time limit set on calls.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>callerId</title>
+	    	<para>The 'callerId' attribute lets you specify the caller ID that will appear to the called party when RestComm calls.
+	    	By default, when you put a &lt;Dial&gt; in your RCML response to RestComm's inbound call request, the caller ID that
+	    	the dialed party sees is the inbound caller's caller ID. For example, an inbound caller to your RestComm number has
+	    	the caller ID 1-415-123-4567. You tell RestComm to execute a &lt;Dial&gt; verb to 1-858-987-6543 to handle the inbound call.
+	    	The called party (1-858-987-6543) will see 1-415-123-4567 as the caller ID on the incoming call. If you are dialing to a
+	    	&lt;Client&gt;, you can set a client identifier as the callerId attribute. For instance, if you've set up a client for incoming
+	    	calls and you are dialing to it, you could set the callerId attribute to client:thomas.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>You can nest the following nouns within &lt;Dial&gt;: &lt;Number&gt;, &lt;Client&gt;, &lt;Conference&gt;</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Dial&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Dial&gt;1-444-555-666&lt;/Dial&gt;
+            &lt;/Response&gt;
+		</programlisting>
 		<section>
 			<title>Number</title>
-			<para></para>
+			<para>The &lt;Dial&gt; verb's &lt;Number&gt; noun specifies a phone number to dial. Using the noun's attributes you can specify
+			particular behaviors that RestComm should apply when dialing the number. You can use multiple &lt;Number&gt; nouns within a
+			&lt;Dial&gt; verb to simultaneously call all of them at once. The first call to pick up is connected to the current call and
+			the rest are hung up.</para>
+			<table>
+		   <title>Number Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>sendDigits</entry>
+					<entry>any digits</entry>
+					<entry>none</entry>
+				</row>
+				<row>
+					<entry>url</entry>
+					<entry>any url</entry>
+					<entry>none</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>sendDigits</title>
+	    	<para>The 'sendDigits' attribute tells RestComm to play DTMF tones when the call is answered.
+	    	This is useful when dialing a phone number and an extension. RestComm will dial the number, and
+	    	when the automated system picks up, send the DTMF tones to connect to the extension.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>url</title>
+	    	<para>The 'url' attribute allows you to specify a url for a RCML document that will run on the
+	    	called party's end, after he/she answers, but before the parties are connected. You can use this RCML
+	    	to privately play or say information to the called party, or provide a chance to decline the phone call
+	    	using &lt;Gather&gt; and &lt;Hangup&gt;. The current caller will continue to hear ringing while the
+	    	RCML document executes on the other end. RCML documents executed in this manner are not allowed to contain
+	    	the &lt;Dial&gt; verb.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Number&gt; noun see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+			&lt;Response&gt;
+	            &lt;Dial&gt;
+	                &lt;Number sendDigits="wwww1234"&gt;1-444-555-6666&lt;/Number&gt;
+	            &lt;/Dial&gt;
+            &lt;/Response&gt;
+		</programlisting>
 		</section>
 		<section>
 			<title>Client</title>
-			<para></para>
+			<para>The &lt;Dial&gt; verb's &lt;Client&gt; noun specifies a client identifier to dial. You can use multiple
+			&lt;Client&gt; nouns within a &lt;Dial&gt; verb to simultaneously attempt a connection with many clients at once. 
+			The first client to accept the incoming connection is connected to the call and the other connection attempts are canceled.
+			If you want to connect with multiple other clients simultaneously, read about the &lt;Conference&gt; noun.</para>
+			<formalpara>
+	    		<title>Examples</title>
+	    		<para>For an example of how to use the &lt;Client&gt; none see below.</para>
+	    	</formalpara>
+	    	<programlisting role="XML">
+				&lt;Response&gt;
+	            	&lt;Dial&gt;
+	                	&lt;Client&gt;thomas&lt;/Client&gt;
+	            	&lt;/Dial&gt;
+            	&lt;/Response&gt;
+			</programlisting>
 		</section>
 		<section>
 			<title>Conference</title>
-			<para></para>
+			<para>The &lt;Dial&gt; verb's &lt;Conference&gt; noun allows you to connect to a conference room. Much like how the
+				&lt;Number&gt; noun allows you to connect to another phone number, the &lt;Conference&gt; noun allows you to connect
+				to a named conference room and talk with the other callers who have also connected to that room. The name of the room
+				is up to you and is namespaced to your account.</para>
+				<table>
+		   			<title>Conference Attributes</title>
+		   			<tgroup cols='3' align='left' colsep='1' rowsep='1'>
+						<colspec colname='c1' />
+						<colspec colname='c2' />
+						<colspec colname='c3' />
+						<thead>
+							<row>
+								<entry align="center">Name</entry>
+								<entry align="center">Allowed Values</entry>
+								<entry align="center">Default Value</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>muted</entry>
+								<entry>true, false</entry>
+								<entry>false</entry>
+							</row>
+							<row>
+								<entry>beep</entry>
+								<entry>true, false</entry>
+								<entry>true</entry>
+							</row>
+							<row>
+								<entry>startConferenceOnEnter</entry>
+								<entry>true, false</entry>
+								<entry>true</entry>
+							</row>
+							<row>
+								<entry>endConferenceOnExit</entry>
+								<entry>true, false</entry>
+								<entry>false</entry>
+							</row>
+							<row>
+								<entry>waitUrl</entry>
+								<entry>RCML url, empty string</entry>
+								<entry>default RestComm hold music</entry>
+							</row>
+							<row>
+								<entry>waitMethod</entry>
+								<entry>GET or POST</entry>
+								<entry>POST</entry>
+							</row>
+							<row>
+								<entry>maxParticipants</entry>
+								<entry>positive integer &lt;= 40</entry>
+								<entry>40</entry>
+							</row>
+					</tbody>
+				</tgroup>
+	    	</table>
+	    	<formalpara>
+		    	<title>muted</title>
+		    	<para>The 'muted' attribute lets you specify whether a participant can speak on the conference.
+		    	If this attribute is set to 'true', the participant will only be able to listen to people on the conference.</para>
+		    </formalpara>
+		    <formalpara>
+		    	<title>beep</title>
+		    	<para>The 'beep' attribute lets you specify whether a notification beep is played to the conference when a participant
+		    	joins or leaves the conference.</para>
+		    </formalpara>
+		    <formalpara>
+		    	<title>startConferenceOnEnter</title>
+		    	<para>This attribute tells a conference to start when this participant joins the conference, if it is not already started.
+		    	This is true by default. If this is false and the participant joins a conference that has not started, they are muted and
+		    	hear background music until a participant joins where startConferenceOnEnter is true. This is useful for implementing
+		    	moderated conferences.</para>
+		    </formalpara>
+		    <formalpara>
+		    	<title>endConferenceOnExit</title>
+		    	<para>If a participant has this attribute set to 'true', then when that participant leaves, the conference ends and all
+		    	other participants drop out. This defaults to 'false'. This is useful for implementing moderated conferences that bridge
+		    	two calls and allow either call leg to continue executing RCML if the other hangs up.</para>
+		    </formalpara>
+		    <formalpara>
+		    	<title>waitUrl</title>
+		    	<para>The 'waitUrl' attribute lets you specify a URL for music that plays before the conference has started. The URL may
+		    	a WAV or a RCML document that uses &lt;Play&gt; or &lt;Say&gt; for content. This defaults to a selection of Creative
+		    	Commons licensed background music, but you can replace it with your own music and messages. If the 'waitUrl' responds with
+		    	RCML, RestComm will only process &lt;Play&gt;, &lt;Say&gt;, and &lt;Redirect&gt; verbs. If you do not wish anything to play
+		    	while waiting for the conference to start, specify the empty string (set 'waitUrl' to '').</para>
+		    </formalpara>
+		    <formalpara>
+		    	<title>waitMethod</title>
+		    	<para>This attribute indicates which HTTP method to use when requesting 'waitUrl'. It defaults to 'POST'. Be sure to use
+		    	'GET' if you are directly requesting static audio files such as WAV files so that RestComm properly caches the files.</para>
+		    </formalpara>
+		    <formalpara>
+		    	<title>maxParticipants</title>
+		    	<para>This attribute indicates the maximum number of participants you want to allow within a named conference room. The default
+		    	maximum number of participants is 40. The value must be a positive integer less than or equal to 40.</para>
+		    </formalpara>
+		    <formalpara>
+		    	<title>Examples</title>
+		    	<para>For an example of how to use the &lt;Conference&gt; noun see below.</para>
+		    </formalpara>
+		    <programlisting role="XML">
+				&lt;Response&gt;
+		            &lt;Conference&gt;1234&lt;/Conference&gt;
+	            &lt;/Response&gt;
+			</programlisting>
 		</section>
 	</section>
 	<section>
