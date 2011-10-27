@@ -13,15 +13,14 @@
 		that includes Mobicents Sip Servlet Container + Mobicents Media Server + RestComm to your local machine.</para>
 		<formalpara>
 			<title>JBoss AS Binary Distribution</title>
-			<para>In the next few steps we will attempt to do just that and we will start by downloading the
-			binary distribution that uses the JBoss AS and unzipping it to the working directory.</para>
+			<para>In the next few steps we will attempt to do just using a binary distribution based on the JBoss Application
+			Server. We will start by downloading the binary distribution and unzipping it to the working directory.</para>
 		</formalpara>
 		<screen>
 			~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-jboss-1.0.0.ALPHA.zip
 			~]$ unzip restcomm-saas-jboss-1.0.0.ALPHA.zip
 		</screen>
-		<para>That's it! Now in order to execute the infamous "Hello World" example we have to start the Mobicents Sip Servlet Container
-		and the Mobicents Media Server.</para>
+		<para>Okay now lets start the Mobicents Sip Servlet Container and the Mobicents Media Server.</para>
 		<screen>
 			~]$ cd restcomm-saas-jboss-1.0.0.ALPHA/bin
 			~]$ ./run.sh &amp;
@@ -30,8 +29,20 @@
 		</screen>
 		<formalpara>
 			<title>Tomcat Binary Distribution</title>
-			<para></para>
+			<para>For those of you who need a more light-weight container we will also cover using a Tomcat based distribution in the
+			following steps.</para>
 		</formalpara>
+		<screen>
+			~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-tomcat-1.0.0.ALPHA.zip
+			~]$ unzip restcomm-saas-tomcat-1.0.0.ALPHA.zip
+		</screen>
+		<para>Okay now lets start the Mobicents Sip Servlet Container and the Mobicents Media Server.</para>
+		<screen>
+			~]$ cd restcomm-saas-tomcat-1.0.0.ALPHA/bin
+			~]$ ./startup.sh
+			~]$ cd ../mobicents-media-server/bin/
+			~]$ ./run.sh &amp;
+		</screen>
 		<para>After that open up your favorite softphone and call sip:1234@127.0.0.1:5080</para>
 		<para>Congratulations you have just executed your first RestComm Application!</para>
 	</section>
@@ -47,8 +58,7 @@
 		<formalpara>
 			<title>Deploying RestComm</title>
 			<para>To deploy RestComm make sure to start the Mobicents Sip Servlet Container and the Mobicents Media Server.
-		    	Then copy the <filename>restcomm.war</filename> file to the deployment directory which is usually located
-		    	at <filename>PARENT_FOLDER/mss-1.6.0/server/default/deploy/</filename>. Finally, open up your favorite
+		    	Then copy the <filename>restcomm.war</filename> file to the deployment directory. Finally, open up your favorite
 		    	softphone and call sip:1234@127.0.0.1:5080</para>
 		</formalpara>
 	</section>

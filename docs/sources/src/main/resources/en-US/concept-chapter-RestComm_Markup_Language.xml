@@ -156,13 +156,12 @@
 	</section>
 	<section>
 		<title>Gather</title>
-		<para>The &lt;Gather&gt; verb collects digits that a caller enters into his or her telephone keypad. When the caller
-			is done entering data, RestComm submits that data to the provided 'action' URL in an HTTP GET or POST request,
-			just like a web browser submits data from an HTML form. If no input is received before timeout, &lt;Gather&gt;
-			falls through to the next verb in the RestComm document. You may optionally nest &lt;Say&gt; and &lt;Play&gt;
-			verbs within a &lt;Gather&gt; verb while waiting for input. This allows you to read menu options to the caller
-			while letting her enter a menu selection at any time. After the first digit is received the audio will stop
-			playing.</para>
+		<para>The &lt;Gather&gt; verb "gathers" digits that a caller enters into his or her telephone keypad. When the caller
+			is done entering digits, RestComm submits that digits to the provided 'action' URL in an HTTP GET or POST request.
+			If no input is received before timeout, &lt;Gather&gt; falls through to the next verb in the RestComm document.
+			You may optionally nest &lt;Say&gt;, &lt;Play&gt;, and &lt;Pause&gt; verbs within a &lt;Gather&gt; verb while
+			waiting for input. This allows you to read menu options to the caller while letting her enter a menu selection
+			at any time. After the first digit is received the audio will stop playing.</para>
 		<table>
 		   <title>Gather Attributes</title>
 		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -254,9 +253,7 @@
 	    <formalpara>
 	    	<title>numDigits</title>
 	    	<para>The 'numDigits' attribute lets you set the number of digits you are expecting, and submits the data to the 'action' URL
-	    		once the caller enters that number of digits. For example, one might set 'numDigits' to '5' and ask the caller to enter
-	    		a 5 digit zip code. When the caller enters the fifth digit of '94117', RestComm will immediately submit the data to the
-	    		'action' URL.</para>
+	    		once the caller enters that number of digits.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>Nesting</title>
@@ -383,13 +380,11 @@
 	    	<para>The 'finishOnKey' attribute lets you choose a set of digits that end the recording when entered. For example, if you
 	    	set 'finishOnKey' to '#' and the caller presses '#', RestComm will immediately stop recording and submit 'RecordingUrl',
 	    	'RecordingDuration', and the '#' as parameters in a request to the 'action' URL. The allowed values are the digits 0-9, '#'
-	    	and '*'. The default is '1234567890*#' (i.e. any key will end the recording). Unlike &lt;Gather&gt;, you may specify more than
-	    	one character as a 'finishOnKey' value.</para>
+	    	and '*'. Unlike &lt;Gather&gt;, you may specify more than one character as a 'finishOnKey' value.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>maxLength</title>
-	    	<para>The 'maxLength' attribute lets you set the maximum length for the recording in seconds. If you set 'maxLength' to '30',
-	    	the recording will automatically end after 30 seconds of recorded time has elapsed.</para>
+	    	<para>The 'maxLength' attribute lets you set the maximum length for the recording in seconds.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>transcribe</title>
@@ -501,14 +496,14 @@
 	    </table>
 		<formalpara>
 	    	<title>to</title>
-	    	<para>The 'to' attribute takes a valid phone number as a value. RestComm will send an SMS message to this number.
+	    	<para>The 'to' attribute takes a valid E.164 phone number as a value. RestComm will send an SMS message to this number.
 	    	When sending an SMS during an incoming call, 'to' defaults to the caller. When sending an SMS during an outgoing call,
 	    	'to' defaults to the called party. The value of 'to' must be a valid phone number.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>from</title>
-	    	<para>The 'from' attribute takes a valid phone number as an argument. When sending an SMS during an incoming call, 'from'
-	    	defaults to the called party. When sending an SMS during an outgoing call, 'from' defaults to the calling party.</para>
+	    	<para>The 'from' attribute takes a valid E.164 phone number as an argument. When sending an SMS during an incoming call,
+	    	'from' defaults to the called party. When sending an SMS during an outgoing call, 'from' defaults to the calling party.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>action</title>
@@ -545,7 +540,7 @@
 	    </table>
 	    <formalpara>
 	    	<title>method</title>
-	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells Twilio whether to request the 'action' URL via HTTP GET
+	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action' URL via HTTP GET
 	    	or POST. This attribute is modeled after the HTML form 'method' attribute.</para>
 	    </formalpara>
 	    <formalpara>
@@ -587,7 +582,7 @@
 	    </formalpara>
 	    <programlisting role="XML">
 			&lt;Response&gt;
-	            &lt;Sms to="3334445555"&gt;Hello World!&lt;/Sms&gt;
+	            &lt;Sms&gt;Hello World!&lt;/Sms&gt;
             &lt;/Response&gt;
 		</programlisting>
 	</section>
@@ -597,7 +592,7 @@
 		connected and can communicate until one hangs up. If the called party does not pick up, if a busy signal is received, or if
 		the number doesn't exist, the dial verb will finish.</para>
 		<table>
-		   <title>Sms Attributes</title>
+		   <title>Dial Attributes</title>
 		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
 			<colspec colname='c1' />
 			<colspec colname='c2' />
@@ -722,33 +717,23 @@
 	    </formalpara>
 	    <formalpara>
 	    	<title>timeout</title>
-	    	<para>The 'timeout' attribute sets the limit in seconds that &lt;Dial&gt; waits for the called party to answer the call.
-	    	Basically, how long should RestComm let the call ring before giving up and reporting 'no-answer' as the 'DialCallStatus'.</para>
+	    	<para>The 'timeout' attribute sets the limit in seconds that &lt;Dial&gt; waits for the called party to answer the call.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>hangupOnStar</title>
-	    	<para>The 'hangupOnStar' attribute lets the calling party hang up on the called party by pressing the '*' key on his phone.
-	    	When two parties are connected using &lt;Dial&gt;, RestComm blocks execution of further verbs until the caller or called party
-	    	hangs up. This feature allows the calling party to hang up on the called party without having to hang up her phone and ending
-	    	her RCML processing session. When the caller presses '*' RestComm will hang up on the called party. If an 'action' URL was
-	    	provided, RestComm submits 'completed' as the 'DialCallStatus' to the URL and processes the response. If no 'action' was
-	    	provided RestComm will continue on to the next verb in the current RCML document.</para>
+	    	<para>The 'hangupOnStar' attribute lets the calling party hang up on the called party by pressing the '*' key on his phone.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>timelimit</title>
-	    	<para>The 'timeLimit' attribute sets the maximum duration of the &lt;Dial&gt; in seconds. For example, by setting a time
-	    	limit of 120 seconds &lt;Dial&gt; will hang up on the called party automatically two minutes into the phone call.
-	    	By default, there is a four hour time limit set on calls.</para>
+	    	<para>The 'timeLimit' attribute sets the maximum duration of the &lt;Dial&gt; in seconds.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>callerId</title>
 	    	<para>The 'callerId' attribute lets you specify the caller ID that will appear to the called party when RestComm calls.
 	    	By default, when you put a &lt;Dial&gt; in your RCML response to RestComm's inbound call request, the caller ID that
-	    	the dialed party sees is the inbound caller's caller ID. For example, an inbound caller to your RestComm number has
-	    	the caller ID 1-415-123-4567. You tell RestComm to execute a &lt;Dial&gt; verb to 1-858-987-6543 to handle the inbound call.
-	    	The called party (1-858-987-6543) will see 1-415-123-4567 as the caller ID on the incoming call. If you are dialing to a
-	    	&lt;Client&gt;, you can set a client identifier as the callerId attribute. For instance, if you've set up a client for incoming
-	    	calls and you are dialing to it, you could set the callerId attribute to client:thomas.</para>
+	    	the dialed party sees is the inbound caller's caller ID. If you are dialing to a &lt;Client&gt;, you can set a client
+	    	identifier as the callerId attribute. For instance, if you've set up a client for incoming calls and you are dialing to
+	    	it, you could set the callerId attribute to client:thomas.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>Nesting</title>
@@ -765,8 +750,7 @@
 		</programlisting>
 		<section>
 			<title>Number</title>
-			<para>The &lt;Dial&gt; verb's &lt;Number&gt; noun specifies a phone number to dial. Using the noun's attributes you can specify
-			particular behaviors that RestComm should apply when dialing the number. You can use multiple &lt;Number&gt; nouns within a
+			<para>The &lt;Number&gt; noun specifies a phone number to dial. You can use multiple &lt;Number&gt; nouns within a
 			&lt;Dial&gt; verb to simultaneously call all of them at once. The first call to pick up is connected to the current call and
 			the rest are hung up.</para>
 			<table>
@@ -825,10 +809,9 @@
 		</section>
 		<section>
 			<title>Client</title>
-			<para>The &lt;Dial&gt; verb's &lt;Client&gt; noun specifies a client identifier to dial. You can use multiple
-			&lt;Client&gt; nouns within a &lt;Dial&gt; verb to simultaneously attempt a connection with many clients at once. 
-			The first client to accept the incoming connection is connected to the call and the other connection attempts are canceled.
-			If you want to connect with multiple other clients simultaneously, read about the &lt;Conference&gt; noun.</para>
+			<para>The &lt;Client&gt; noun specifies a client identifier to dial. You can use multiple &lt;Client&gt; nouns within
+			a &lt;Dial&gt; verb to simultaneously attempt a connection with many clients at once. The first client to accept the
+			incoming connection is connected to the call and the other connection attempts are canceled.</para>
 			<formalpara>
 	    		<title>Examples</title>
 	    		<para>For an example of how to use the &lt;Client&gt; none see below.</para>
@@ -843,10 +826,8 @@
 		</section>
 		<section>
 			<title>Conference</title>
-			<para>The &lt;Dial&gt; verb's &lt;Conference&gt; noun allows you to connect to a conference room. Much like how the
-				&lt;Number&gt; noun allows you to connect to another phone number, the &lt;Conference&gt; noun allows you to connect
-				to a named conference room and talk with the other callers who have also connected to that room. The name of the room
-				is up to you and is namespaced to your account.</para>
+			<para>The &lt;Conference&gt; noun allows you to connect to a named conference room and talk with the other callers
+			who have also connected to that room. The name of the room is up to you and is namespaced to your account.</para>
 				<table>
 		   			<title>Conference Attributes</title>
 		   			<tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -901,8 +882,8 @@
 	    	</table>
 	    	<formalpara>
 		    	<title>muted</title>
-		    	<para>The 'muted' attribute lets you specify whether a participant can speak on the conference.
-		    	If this attribute is set to 'true', the participant will only be able to listen to people on the conference.</para>
+		    	<para>The 'muted' attribute lets you specify whether a participant can speak in the conference.
+		    	If this attribute is set to 'true', the participant will only be able to listen to people in the conference.</para>
 		    </formalpara>
 		    <formalpara>
 		    	<title>beep</title>
@@ -912,20 +893,19 @@
 		    <formalpara>
 		    	<title>startConferenceOnEnter</title>
 		    	<para>This attribute tells a conference to start when this participant joins the conference, if it is not already started.
-		    	This is true by default. If this is false and the participant joins a conference that has not started, they are muted and
-		    	hear background music until a participant joins where startConferenceOnEnter is true. This is useful for implementing
-		    	moderated conferences.</para>
+		    	If this is false and the participant joins a conference that has not started, they are muted and hear background music
+		    	until a participant joins where startConferenceOnEnter is true. This is useful for implementing moderated conferences.</para>
 		    </formalpara>
 		    <formalpara>
 		    	<title>endConferenceOnExit</title>
 		    	<para>If a participant has this attribute set to 'true', then when that participant leaves, the conference ends and all
-		    	other participants drop out. This defaults to 'false'. This is useful for implementing moderated conferences that bridge
-		    	two calls and allow either call leg to continue executing RCML if the other hangs up.</para>
+		    	other participants drop out. This is useful for implementing moderated conferences that bridge two calls and allow either
+		    	call leg to continue executing RCML if the other hangs up.</para>
 		    </formalpara>
 		    <formalpara>
 		    	<title>waitUrl</title>
 		    	<para>The 'waitUrl' attribute lets you specify a URL for music that plays before the conference has started. The URL may
-		    	a WAV or a RCML document that uses &lt;Play&gt; or &lt;Say&gt; for content. This defaults to a selection of Creative
+		    	be a WAV or a RCML document that uses &lt;Play&gt; or &lt;Say&gt; for content. This defaults to a selection of Creative
 		    	Commons licensed background music, but you can replace it with your own music and messages. If the 'waitUrl' responds with
 		    	RCML, RestComm will only process &lt;Play&gt;, &lt;Say&gt;, and &lt;Redirect&gt; verbs. If you do not wish anything to play
 		    	while waiting for the conference to start, specify the empty string (set 'waitUrl' to '').</para>
@@ -938,7 +918,7 @@
 		    <formalpara>
 		    	<title>maxParticipants</title>
 		    	<para>This attribute indicates the maximum number of participants you want to allow within a named conference room. The default
-		    	maximum number of participants is 40. The value must be a positive integer less than or equal to 40.</para>
+		    	maximum number of participants is 100. The value must be a positive integer less than or equal to 100.</para>
 		    </formalpara>
 		    <formalpara>
 		    	<title>Examples</title>
@@ -1017,7 +997,7 @@
 		<title>Reject</title>
 		<para>The &lt;Reject&gt; verb rejects an incoming call to your RestComm endpoint. This is useful for blocking unwanted calls.
 			If the first verb in a RCML response is &lt;Reject&gt;, RestComm will not pick up the call. The call ends with a status of
-			'busy' or 'no-answer', depending on the verb's 'reason' attribute. Any verbs after &gt;Reject&lt; are unreachable and ignored.</para>
+			'busy' or 'no-answer', depending on the verb's 'reason' attribute. Any verbs after &lt;Reject&gt; are unreachable and ignored.</para>
 		<table>
 		   <title>Reject Attributes</title>
 		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>

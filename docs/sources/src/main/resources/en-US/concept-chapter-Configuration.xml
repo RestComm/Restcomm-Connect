@@ -30,8 +30,8 @@
 					<entry>Manages access to SIP gateways.</entry>
 				</row>
 				<row>
-					<entry>media-server-manager</entry>
-					<entry>Manages access to media servers.</entry>
+					<entry>media-server</entry>
+					<entry>Passes in the configuration parameters to the JSR-309 stack implementation.</entry>
 				</row>
 				<row>
 					<entry>sms-aggregator</entry>
@@ -46,10 +46,11 @@
 	</table>
 	<section>
 		<title>Application Index</title>
-		<para>An application index as the name implies is an index containing all the applications that will be executed by RestComm.</para>
+		<para>An application index as the name implies is an index containing all the applications descriptions that will be used
+		by RestComm to locate and execute applications.</para>
 			
-		<para>The default application index is configured below by providing a list of applications that should be executed by RestComm. 
-			Each application MUST have a name and the following properties:</para>
+		<para>The default application index is configured by providing a list of application descriptions that should be used
+		by RestComm. Each application description MUST have a name describing the application and the following properties:</para>
 			
 		<table frame='all'>
 			<title>Application Index Properties</title>
@@ -82,11 +83,11 @@
 		<para>The application index may also contain an optional list of client mappings which can be used with the &lt;Client&gt;
 		    noun in RestComm applications.</para>
 		
-		<note>Endpoint will usually be a DID in E.164 format (ex. +14445556666)</note>
+		<note><para>Endpoint will usually be a DID in E.164 format (ex. +14445556666)</para></note>
 		
 		<para>For example, to configure a RestComm application that listens on phone number +14445556666 and is fetched from
-			<uri>http://localhost:8080/restcomm/demo/hello-world.xml</uri> using the <constant>POST</constant> your configuration
-			file would look like the following:</para>
+			<uri>http://localhost:8080/restcomm/demo/hello-world.xml</uri> using a <constant>POST</constant> request your
+			configuration file would look like the following:</para>
 		<programlisting role="XML">
 		    &lt;application-index class="org.mobicents.servlet.sip.restcomm.applicationindex.XmlFileIndex"&gt;
 		        &lt;applications&gt;
@@ -103,8 +104,8 @@
 		<title>Gateway Manager</title>
 		<para>The gateway manager controls access to the gateways used to reach other networks like the PSTN.</para>
 			
-		<para>The default gateway manager is used to manage SIP gateways and is configured below by providing a
-			SIP gateway that will be used by RestComm. The gateway MUST have a name and the following properties:</para>
+		<para>The default gateway manager is used to manage SIP gateways and is configured by providing a list of
+			SIP gateways that will be used by RestComm. The gateways MUST have a descriptive name and the following properties:</para>
 		
 		<table frame='all'>
 			<title>Gateway Manager Properties</title>
@@ -152,12 +153,12 @@
 		</programlisting>
 	</section>
 	<section>
-		<title>Media Server Manager</title>
+		<title>Media Server</title>
 		
-		<para>The media server manager is responsible for managing the media servers in use by RestComm.</para>
+		<para>The media server is responsible for all the media services used by RestComm.</para>
 		
-		<para>The default way to control media servers is using the MGCP stack. The MGCP stack MUST have a name and
-		the following properties:</para>
+		<para>The ONLY way to control media servers is by using a JSR-309 implementation. The default JSR-309
+		implementation uses a MGCP stack and MUST have a name and the following properties:</para>
 		
 		<table frame='all'>
 			<title>Media Server Manager Properties</title>
@@ -191,18 +192,20 @@
 			</tgroup>
 		</table>
 		
-		<para>An example of configuring a media gateway server on the local host follows:</para>
+		<para>An example of configuring a media gateway on the local host follows:</para>
 		
 		<programlisting role="XML">
-			&lt;media-server-manager class="org.mobicents.servlet.sip.restcomm.MediaServerManager.MgcpMediaServerManager"&gt;
+			&lt;media-server class="org.mobicents.servlet.sip.restcomm.MediaServerManager.MgcpMediaServer"&gt;
 		        &lt;mgcp-stack name="mgcp-stack-1"&gt;
 			        &lt;stack-address>127.0.0.1&lt;/stack-address&gt;
 			        &lt;stack-port>2727&lt;/stack-port&gt;
 			        &lt;remote-address>127.0.0.1&lt;/remote-address&gt;
 			        &lt;remote-port>2427&lt;/remote-port&gt;
 		        &lt;/mgcp-stack&gt;
-	        &lt;/media-server-manager&gt;
+	        &lt;/media-server&gt;
 		</programlisting>
+		<note><para>In order to use a media server that is controlled by a protocol other than MGCP requires a custom
+		JSR-309 implementation</para></note>
 	</section>
 	<section>
 		<title>SMS Aggregator</title>
