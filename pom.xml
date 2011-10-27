@@ -19,6 +19,7 @@
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<httpclient.version>4.1.1</httpclient.version>
+		<axis.version>1.3</axis.version>
 		<arquillian.version>1.0.0.Alpha4</arquillian.version>
 		<junit.version>4.8.2</junit.version>
 	</properties>
@@ -87,6 +88,12 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>${httpclient.version}</version>
+		</dependency>
+		
+		<dependency>
+    		<groupId>axis</groupId>
+    		<artifactId>axis</artifactId>
+    		<version>${axis.version}</version>
 		</dependency>
 
 		<dependency>

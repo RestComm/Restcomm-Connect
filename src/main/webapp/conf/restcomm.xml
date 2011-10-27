@@ -103,6 +103,13 @@
 		<smtp>mail.mycompany.com</smtp>
 		<gateway>tmomail.net</gateway>
 	</sms-aggregator>
+	<!--
+	<sms-aggregator class="org.mobicents.servlet.sip.restcomm.sms.EsendexSmsAggregator">
+		<user></user>
+		<password></password>
+		<account></account>
+	</sms-aggregator>
+	-->
 
 	<!-- 
 		The Storage system is responsible for storing RestComm objects.
