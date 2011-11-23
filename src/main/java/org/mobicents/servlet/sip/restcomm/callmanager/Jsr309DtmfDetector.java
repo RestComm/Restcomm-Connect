@@ -63,9 +63,11 @@ public final class Jsr309DtmfDetector extends FSM implements DtmfDetector, Media
 
   public synchronized void onEvent(final SignalDetectorEvent event) {
     detector.removeListener(this);
+    System.out.println(event.getEventType());
     if(event.isSuccessful()) {
       if(event.getEventType() == SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED) {
     	digit = event.getSignalString();
+    	System.out.println(digit);
         notify();
       }
     }

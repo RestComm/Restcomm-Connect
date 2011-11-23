@@ -11,6 +11,9 @@
 	<properties>
 		<log4j.version>1.2.16</log4j.version>
 		<commons-configuration.version>1.7</commons-configuration.version>
+		<esl-client.version>0.9.2</esl-client.version>
+		<jain.mgcp.version>1.0</jain.mgcp.version>
+		<mobicents.mgcp.impl.version>2.0.0.GA</mobicents.mgcp.impl.version>
 		<jsr309api.version>1.0</jsr309api.version>
 		<jsr309impl.version>2.0.0.BETA4</jsr309impl.version>
 		<javamail.version>1.4</javamail.version>
@@ -36,6 +39,24 @@
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
 			<version>${commons-configuration.version}</version>
+		</dependency>
+		
+		<dependency>
+	        <groupId>org.freeswitch.esl.client</groupId>
+	        <artifactId>org.freeswitch.esl.client</artifactId>
+	        <version>${esl-client.version}</version>
+	    </dependency>
+	    
+	    <dependency>
+			<groupId>jain</groupId>
+			<artifactId>jain-mgcp-ri</artifactId>
+			<version>${jain.mgcp.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.mobicents.protocols.mgcp</groupId>
+			<artifactId>mgcp-impl</artifactId>
+			<version>${mobicents.mgcp.impl.version}</version>
 		</dependency>
 
 		<dependency>
