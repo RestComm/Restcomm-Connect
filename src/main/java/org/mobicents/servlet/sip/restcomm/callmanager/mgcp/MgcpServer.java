@@ -11,7 +11,9 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.RequestIdentifier;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
   private JainMgcpProvider mgcpProvider;
   private JainMgcpStack mgcpStack;
   
+  private Map<Integer, MgcpMediaSession> mediaSessions;
   private int mediaSessionCounter;
   private ReentrantLock mediaSessionCounterLock;
   
@@ -52,6 +55,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
   private Thread requestProcessingThread;
   private volatile boolean requestProcessingIsRunning;
   private List<JainMgcpListener> requestListeners;
+  private ReentrantLock requestListenersLock;
   private BlockingQueue<JainMgcpCommandEvent> requestQueue;
   private Thread responseProcessingThread;
   private volatile boolean responseProcessingIsRunning;
@@ -68,15 +72,37 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
   }
   
   public void addCommandEventListener(final JainMgcpListener listener) {
-	requestListeners.add(listener);
+    requestListenersLock.lock();
+    try {
+	  requestListeners.add(listener);
+    } finally {
+      requestListenersLock.unlock();
+    }
   }
   
   public MediaSession createMediaSession() {
-    return null;
+	int id;
+	mediaSessionCounterLock.lock();
+	try {
+	  mediaSessionCounter++;
+	  id = mediaSessionCounter;
+	  // Make sure the counter doesn't overflow.
+	  if(mediaSessionCounter == Integer.MAX_VALUE) {
+	    mediaSessionCounter = 0;
+	  }
+	} finally {
+	  mediaSessionCounterLock.unlock();
+	}
+	// Create a new media session
+	final MgcpMediaSession mediaSession = new MgcpMediaSession(this, id);
+	mediaSessions.put(id, mediaSession);
+    return mediaSession;
   }
   
   public void destroyMediaSession(final MediaSession mediaSession) {
-    
+	final MgcpMediaSession mgcpMediaSession = (MgcpMediaSession)mediaSession;
+	final int id = Integer.parseInt(mgcpMediaSession.getCallId().toString());
+    mediaSessions.remove(id);
   }
   
   public RequestIdentifier generateRequestIdentifier() {
@@ -133,6 +159,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
 	  throw new RuntimeException(exception);
 	}
 	// Finish initialization.
+	mediaSessions = new HashMap<Integer, MgcpMediaSession>();
 	mediaSessionCounter = 0;
 	mediaSessionCounterLock = new ReentrantLock();
 	requestIdCounter = 0;
@@ -140,6 +167,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
 	transactionIdCounter = 0;
 	transactionIdCounterLock = new ReentrantLock();
     requestListeners = Collections.synchronizedList(new LinkedList<JainMgcpListener>());
+    requestListenersLock = new ReentrantLock();
     requestQueue = new LinkedBlockingQueue<JainMgcpCommandEvent>();
     responseListeners = new ConcurrentHashMap<Integer, JainMgcpListener>();
     responseQueue = new LinkedBlockingQueue<JainMgcpResponseEvent>();
@@ -149,6 +177,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
   }
   
   private void initializeRequestProcessingThread() {
+	requestProcessingIsRunning = true;
     requestProcessingThread = new Thread(new Runnable() {
       public void run() {
         while(requestProcessingIsRunning) {
@@ -159,9 +188,14 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
           } catch(final InterruptedException ignored) { }
           // If the event is not null dispatch it to the listeners.
           if(event != null) {
-    	    for(final JainMgcpListener listener : requestListeners) {
-    	      listener.processMgcpCommandEvent(event);
-    	    }
+        	requestListenersLock.lock();
+        	try {
+    	      for(final JainMgcpListener listener : requestListeners) {
+    	        listener.processMgcpCommandEvent(event);
+    	      }
+        	} finally {
+        	  requestListenersLock.unlock();
+        	}
           }
         }
       }
@@ -171,6 +205,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
   }
   
   private void initializeResponseProcessingThread() {
+    responseProcessingIsRunning = true;
     responseProcessingThread = new Thread(new Runnable() {
       public void run() {
         while(responseProcessingIsRunning) {
@@ -202,7 +237,12 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
   }
   
   public void removeCommandEventListener(final JainMgcpListener listener) {
-    requestListeners.remove(listener);
+    requestListenersLock.lock();
+    try {
+      requestListeners.remove(listener);
+    } finally {
+      requestListenersLock.unlock();
+    }
   }
   
   public void sendEvent(final JainMgcpCommandEvent event, final JainMgcpListener listener) {
@@ -226,10 +266,19 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
       LOGGER.error(exception);
     }
   }
+  
+  private void destroyMediaSessions() {
+    final Collection<MgcpMediaSession> sessions = mediaSessions.values();
+    for(final MgcpMediaSession session : sessions) {
+      session.release();
+    }
+  }
 
   @Override public void shutdown() {
+	destroyMediaSessions();
 	// Shutdown the message processing threads.
-	  
+    requestProcessingIsRunning = false;
+    responseProcessingIsRunning = false;
 	// Shutdown the MGCP stack.
     try { 
       mgcpProvider.removeJainMgcpListener(this);
@@ -243,6 +292,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
     domainName = null;
     mgcpProvider = null;
     mgcpStack = null;
+    mediaSessions = null;
     mediaSessionCounter = -1;
     mediaSessionCounterLock = null;
     requestIdCounter = -1;
@@ -250,6 +300,7 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
     transactionIdCounter = -1;
     requestIdCounterLock = null;
     requestListeners = null;
+    requestListenersLock = null;
     responseListeners = null;
   }
 }

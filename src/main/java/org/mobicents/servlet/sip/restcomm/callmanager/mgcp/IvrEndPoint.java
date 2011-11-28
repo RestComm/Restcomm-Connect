@@ -100,9 +100,11 @@ public final class IvrEndPoint extends FSM implements EndPoint, JainMgcpListener
      } catch(final Exception exception) {
        throw new EndPointException(exception);
      }
-     // Make sure the connection was established successfully.
+     // Make sure the connection was established successfully and listen for notifications.
      final State currentState = getState();
-     if(!currentState.equals(CONNECTED)) {
+     if(currentState.equals(CONNECTED)) {
+       server.addCommandEventListener(this);
+     } else {
        final StringBuilder buffer = new StringBuilder();
        if(currentState.equals(IDLE)) {
      	setState(FAILED);
@@ -120,6 +122,8 @@ public final class IvrEndPoint extends FSM implements EndPoint, JainMgcpListener
     final DeleteConnection request = new DeleteConnection(this, mediaSession.getCallId(), endPointId, connectionId);
     request.setTransactionHandle(server.generateTransactionId());
     server.sendEvent(request, this);
+    // Stop listening to incoming notifications.
+    server.removeCommandEventListener(this);
     setState(DISCONNECTED);
   }
   
@@ -159,7 +163,7 @@ public final class IvrEndPoint extends FSM implements EndPoint, JainMgcpListener
     setState(PLAY);
     // Wait for a response.
     try {
-     wait();
+      wait();
     } catch(final InterruptedException ignored) { }
     // Make sure the request completed successfully.
     final State currentState = getState();
@@ -331,10 +335,12 @@ public final class IvrEndPoint extends FSM implements EndPoint, JainMgcpListener
     final State currentState = getState();
     if(currentState.equals(CONNECTED)) {
       disconnect();
+      mediaSession.destoryEndPoint(this);
     } else if(currentState.equals(PLAY) || currentState.equals(PLAY_COLLECT) ||
         currentState.equals(PLAY_RECORD)) {
       stop();
       disconnect();
+      mediaSession.destoryEndPoint(this);
     }
   }
   

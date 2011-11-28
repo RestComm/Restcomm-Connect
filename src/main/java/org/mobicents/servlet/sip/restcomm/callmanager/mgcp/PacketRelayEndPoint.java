@@ -20,7 +20,7 @@ import org.mobicents.servlet.sip.restcomm.fsm.State;
 public final class PacketRelayEndPoint extends FSM implements EndPoint, JainMgcpListener {
   private static final Logger LOGGER = Logger.getLogger(PacketRelayEndPoint.class);
   private static final String PREFIX = "/mobicents/media/packetrelay/";
-  // Packet relay states.
+  // Packet relay end point states.
   private static final State IDLE = new State("idle");
   private static final State CONNECTED = new State("connected");
   private static final State DISCONNECTED = new State("disconnected");
@@ -144,6 +144,7 @@ public final class PacketRelayEndPoint extends FSM implements EndPoint, JainMgcp
     final State currentState = getState();
     if(currentState.equals(CONNECTED)) {
       disconnect();
+      mediaSession.destoryEndPoint(this);
     }
   }
 }
