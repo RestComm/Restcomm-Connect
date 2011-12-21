@@ -22,30 +22,28 @@ import java.util.List;
 import java.util.Map;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaException;
-import org.mobicents.servlet.sip.restcomm.callmanager.DtmfDetector;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceDescriptor;
 import org.mobicents.servlet.sip.restcomm.util.UrlUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Action;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.FinishOnKey;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Method;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.NumDigits;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.TwiMLTag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Action;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.FinishOnKey;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.NumDigits;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTag;
 
 public final class GatherTagStrategy extends TwiMLTagStrategy {
   public GatherTagStrategy() {
     super();
   }
 
-  @Override public void execute(final TwiMLInterpreter interpreter,
-      final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+      final InterpreterContext context, final Tag tag) throws TagStrategyException {
     // Try to answer the call if it hasn't been done so already.
     final Call call = context.getCall();
 	answer(call);
@@ -55,19 +53,7 @@ public final class GatherTagStrategy extends TwiMLTagStrategy {
     final StringBuilder buffer = new StringBuilder();
     final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
     final int numDigits = Integer.parseInt(tag.getAttribute(NumDigits.NAME).getValue());
-    final DtmfDetector detector = call.getSignalDetector();
-    try {
-      while(true) {
-        buffer.append(detector.detect());
-        final String digits = buffer.toString();
-        if(digits.length() == numDigits || digits.endsWith(finishOnKey)) {
-          break;
-        }
-      }
-    } catch(final MediaException exception) {
-      interpreter.failed();
-      throw new TagStrategyException(exception);
-    }
+    
     
     // See if we got some digits
     // Do something with the digits.
@@ -109,7 +95,7 @@ public final class GatherTagStrategy extends TwiMLTagStrategy {
   
   private void visitChildren(final List<Tag> children) {
     for(final Tag child : children) {
- 	  ((TwiMLTag)child).setHasBeenVisited(true);
+ 	  ((RCMLTag)child).setHasBeenVisited(true);
  	}
   }
 }

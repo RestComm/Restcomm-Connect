@@ -42,7 +42,7 @@ public final class XmlFileIndex implements ApplicationIndex {
     this.configuration = configuration;
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
 	// Get the number of applications to be loaded.
     @SuppressWarnings("unchecked")
     final List<String> applications = (List<String>)configuration.getList(CONFIGURATION_PREFIX + "[@name]");
@@ -53,16 +53,16 @@ public final class XmlFileIndex implements ApplicationIndex {
       LOGGER.info(buffer.toString());
     }
     if(numberOfApplications > 0) {
-      if(LOGGER.isInfoEnabled()) {
-        LOGGER.info("Loading RestComm Applications.");
-      }
       // Load the applications.
       for(int index = 0; index < numberOfApplications; index++) {
     	final Application application = new Application();
-    	application.setName(configuration.getString(CONFIGURATION_PREFIX + "[@name]"));
-        application.setEndPoint(configuration.getString(CONFIGURATION_PREFIX + ".endpoint"));
-        application.setRequestMethod(configuration.getString(CONFIGURATION_PREFIX + ".request-method"));
-        application.setUri(URI.create(configuration.getString(CONFIGURATION_PREFIX + ".uri")));
+    	final StringBuilder buffer = new StringBuilder();
+        buffer.append(CONFIGURATION_PREFIX).append("(").append(index).append(")").toString();
+    	final String prefix = buffer.toString();
+    	application.setName(configuration.getString(prefix + "[@name]"));
+        application.setEndPoint(configuration.getString(prefix + ".endpoint"));
+        application.setRequestMethod(configuration.getString(prefix + ".request-method"));
+        application.setUri(URI.create(configuration.getString(prefix + ".uri")));
         applicationIndex.put(application.getEndPoint(), application);
         if(LOGGER.isInfoEnabled()) {
           LOGGER.info(application);

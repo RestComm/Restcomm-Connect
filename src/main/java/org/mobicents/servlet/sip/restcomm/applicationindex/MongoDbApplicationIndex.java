@@ -12,7 +12,7 @@ public final class MongoDbApplicationIndex implements ApplicationIndex {
     
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
     
   }
 

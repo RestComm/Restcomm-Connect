@@ -21,19 +21,19 @@ import java.net.URI;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceDescriptor;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 
 public final class RedirectTagStrategy extends TwiMLTagStrategy {
   public RedirectTagStrategy() {
     super();
   }
 
-  @Override public void execute(final TwiMLInterpreter interpreter,
-      final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+      final InterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
     // Try to answer the call if it hasn't been done so already.
     answer(call);

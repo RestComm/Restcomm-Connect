@@ -88,7 +88,7 @@ public final class FreeswitchServer implements Configurable, IEslEventListener, 
     return calls.get(uuid);
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
     final String address = configuration.getString("host");
     final int port = configuration.getInt("port");
     final String password = configuration.getString("password");

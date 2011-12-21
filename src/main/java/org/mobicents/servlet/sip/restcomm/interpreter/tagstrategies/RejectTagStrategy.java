@@ -18,18 +18,18 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Reason;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Reason;
 
 public final class RejectTagStrategy extends TwiMLTagStrategy {
   public RejectTagStrategy() {
     super();
   }
   
-  @Override public void execute(final TwiMLInterpreter interpreter,
-      final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+      final InterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
     final String reason = tag.getAttribute(Reason.NAME).getValue();
     if(call.getStatus().equals("ringing")) {

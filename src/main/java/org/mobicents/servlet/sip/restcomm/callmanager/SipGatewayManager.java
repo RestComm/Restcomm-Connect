@@ -46,7 +46,7 @@ public final class SipGatewayManager implements Configurable, LifeCycle {
     return SingletonHolder.INSTANCE;
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
 	gateway = new SipGateway();
     gateway.setName(configuration.getString(CONFIGURATION_PREFIX + "[@name]"));
     gateway.setUser(configuration.getString(CONFIGURATION_PREFIX + ".user"));

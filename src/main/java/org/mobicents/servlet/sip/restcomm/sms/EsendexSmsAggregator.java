@@ -22,7 +22,7 @@ public final class EsendexSmsAggregator implements SmsAggregator {
     password = configuration.getString("password");
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
     // Nothing to do.
   }
 

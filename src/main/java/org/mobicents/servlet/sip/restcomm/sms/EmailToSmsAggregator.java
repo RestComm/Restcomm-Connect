@@ -45,7 +45,7 @@ public final class EmailToSmsAggregator implements SmsAggregator {
     server = configuration.getString("smtp");
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
     // Nothing to do.
   }
   

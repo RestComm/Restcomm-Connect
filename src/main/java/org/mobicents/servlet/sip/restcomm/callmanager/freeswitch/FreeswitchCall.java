@@ -1,23 +1,21 @@
 package org.mobicents.servlet.sip.restcomm.callmanager.freeswitch;
 
+import java.net.URI;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 
 import org.freeswitch.esl.client.inbound.Client;
 import org.freeswitch.esl.client.transport.CommandResponse;
 import org.freeswitch.esl.client.transport.SendMsg;
 
+import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
+import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
-import org.mobicents.servlet.sip.restcomm.callmanager.DtmfDetector;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaPlayer;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaRecorder;
-import org.mobicents.servlet.sip.restcomm.callmanager.SpeechSynthesizer;
-import org.mobicents.servlet.sip.restcomm.fsm.FSM;
-import org.mobicents.servlet.sip.restcomm.fsm.State;
 
-public final class FreeswitchCall extends FSM implements Call {
+public final class FreeswitchCall extends FiniteStateMachine implements Call {
   private static final Logger LOGGER = Logger.getLogger(FreeswitchCall.class);
   //Call Directions.
   private static final String INBOUND = "inbound";
@@ -85,14 +83,6 @@ public final class FreeswitchCall extends FSM implements Call {
     // Make sure nothing went wrong.
     assertState(IN_PROGRESS);
   }
-
-  @Override public void bridge(final Call call) throws CallException {
-    
-  }
-
-  @Override public void connect() throws CallException {
-    // Nothing to do.
-  }
   
   private CommandResponse execute(final String application, final String arguments) {
     final SendMsg message = new SendMsg(uuid);
@@ -108,14 +98,6 @@ public final class FreeswitchCall extends FSM implements Call {
     
   }
 
-  @Override public void disconnect() throws CallException {
-    // Nothing to do.
-  }
-
-  @Override public CallManager getCallManager() {
-    return null;
-  }
-
   @Override public String getDirection() {
     return direction;
   }
@@ -127,24 +109,8 @@ public final class FreeswitchCall extends FSM implements Call {
   @Override public String getOriginator() {
     return null;
   }
-  
-  @Override public MediaPlayer getPlayer() {
-    return null;
-  }
 
   @Override public String getRecipient() {
-    return null;
-  }
-  
-  @Override public MediaRecorder getRecorder() {
-    return null;
-  }
-  
-  @Override public DtmfDetector getSignalDetector() {
-    return null;
-  }
-
-  @Override public SpeechSynthesizer getSpeechSynthesizer() {
     return null;
   }
 
@@ -161,23 +127,15 @@ public final class FreeswitchCall extends FSM implements Call {
     setState(COMPLETED);
   }
 
-  @Override public boolean isBridged() {
-    return false;
-  }
-
-  @Override public boolean isConnected() {
-    return false;
-  }
-
-  @Override public boolean isInConference() {
-    return false;
-  }
-
   @Override public void join(final Conference conference) throws CallException {
     
   }
 
   @Override public void leave(final Conference conference) throws CallException {
+    
+  }
+  
+  @Override public void play(final List<URI> announcements, final int iterations) throws CallException {
     
   }
 
@@ -188,9 +146,5 @@ public final class FreeswitchCall extends FSM implements Call {
       LOGGER.error(response.getReplyText());
     }
     setState(CANCELLED);
-  }
-
-  @Override public void unbridge(final Call call) throws CallException {
-    
   }
 }

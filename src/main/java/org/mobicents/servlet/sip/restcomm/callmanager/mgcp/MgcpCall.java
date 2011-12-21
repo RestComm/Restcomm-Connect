@@ -1,18 +1,28 @@
 package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+
+import org.apache.log4j.Logger;
+
+import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
+import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
-import org.mobicents.servlet.sip.restcomm.callmanager.DtmfDetector;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaPlayer;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaRecorder;
-import org.mobicents.servlet.sip.restcomm.callmanager.SpeechSynthesizer;
-import org.mobicents.servlet.sip.restcomm.fsm.FSM;
-import org.mobicents.servlet.sip.restcomm.fsm.State;
+import org.mobicents.servlet.sip.restcomm.callmanager.IVRService;
 
-public final class MgcpCall extends FSM implements Call {
-  //Call Directions.
+public final class MgcpCall extends FiniteStateMachine implements Call {
+  private static final Logger LOGGER = Logger.getLogger(MgcpCall.class);
+  // Call Directions.
   private static final String INBOUND = "inbound";
   private static final String OUTBOUND_DIAL = "outbound-dial";
   // Call states.
@@ -36,147 +46,218 @@ public final class MgcpCall extends FSM implements Call {
     IN_PROGRESS.addTransition(COMPLETED);
     IN_PROGRESS.addTransition(FAILED);
   }
+  private static final int TIMEOUT = 15 * 1000;
   
-  public MgcpCall() {
+  private SipServletRequest initialInvite;
+  
+  private MgcpMediaSession mediaSession;
+  private PacketRelayEndPoint media;
+  private IvrEndPoint ivr;
+  
+  private String direction;
+  
+  public MgcpCall(final MgcpServer server) {
     super(IDLE);
+    // Initialize the state machine.
+    addState(IDLE);
+    addState(QUEUED);
+    addState(RINGING);
+    addState(IN_PROGRESS);
+    addState(COMPLETED);
+    addState(BUSY);
+    addState(FAILED);
+    addState(NO_ANSWER);
+    addState(CANCELLED);
+    // Create a new media session for this call.
+    mediaSession = server.createMediaSession();
   }
   
-	@Override
-	public void answer() throws CallException {
-		// TODO Auto-generated method stub
-
+  public synchronized void alert(final SipServletRequest request) throws IOException {
+    assertState(IDLE);
+	direction = INBOUND;
+	final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
+	try {
+	  ringing.send();
+	  initialInvite = request;
+	  setState(RINGING);
+	} catch(final IOException exception) {
+	  setState(FAILED);
+	  cleanup();
+	  throw exception;
 	}
-
-	@Override
-	public void bridge(Call call) throws CallException {
-		// TODO Auto-generated method stub
-
+  }
+  
+  @Override public synchronized void answer() throws CallException {
+    assertState(RINGING);
+    try {
+      // Try to negotiate a media connection with a packet relay end point.
+      final byte[] offer = initialInvite.getRawContent();
+      media = mediaSession.createPacketRelayEndPoint();
+      media.connect(new String(offer));
+      // Send the response back to the caller.
+      final byte[] answer = media.getConnectionDescriptor().toString().getBytes();
+      final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
+      ok.setContent(answer, "application/sdp");
+      ok.send();
+      // Wait for an acknowledgment that the call is established.
+      wait(TIMEOUT);
+      // Make sure the call was answered.
+      if(!getState().equals(IN_PROGRESS)) {
+    	final StringBuilder buffer = new StringBuilder();
+    	buffer.append("The call to recipient ").append(getRecipient())
+    	    .append(" from sender ").append(getOriginator())
+    	    .append(" could not be completed.");
+    	setState(FAILED);
+        throw new CallException(buffer.toString());
+      }
+    } catch(final Exception exception) {
+      fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
+      throw new CallException(exception);
+    }
+  }
+  
+  public synchronized void bye(final SipServletRequest request) throws IOException {
+    assertState(IN_PROGRESS);
+    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+    try {
+      ok.send();
+      setState(COMPLETED);
+    } finally {
+      cleanup();
+    }
+  }
+  
+  public synchronized void cancel(final SipServletRequest request) throws IOException {
+    assertState(RINGING);
+    final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+    try {
+      ok.send();
+      setState(CANCELLED);
+    } finally {
+      cleanup();
+    }
+  }
+  
+  private void cleanup() {
+	try {
+	  stopIvr();
+	  // Fix Me! Ugly!
+	  media.disconnect();
+	} catch(final EndPointException exception) {
+	  LOGGER.error(exception);
 	}
+    mediaSession.release();
+	initialInvite.getSession().invalidate();	  
+  }
 
-	@Override
-	public void connect() throws CallException {
-		// TODO Auto-generated method stub
+  @Override public void dial() throws CallException {
+    
+  }
+  
+  public synchronized void established() {
+    assertState(RINGING);
+	setState(IN_PROGRESS);
+    notify();
+  }
+  
+  private void fail(int code) {
+    setState(FAILED);
+    final SipServletResponse fail = initialInvite.createResponse(code);
+    try {
+      fail.send();
+    } catch(final IOException exception) {
+      LOGGER.error(exception);
+    }
+    cleanup();
+  }
 
-	}
+  @Override public String getDirection() {
+    return direction;
+  }
 
-	@Override
-	public void dial() throws CallException {
-		// TODO Auto-generated method stub
+  @Override public String getId() {
+    return initialInvite.getApplicationSession().getId();
+  }
+  
+  public SipServletRequest getInitialInvite() {
+    return initialInvite;
+  }
+  
+  @Override public IVRService getIvrService() {
+    return null;
+  }
 
-	}
+  @Override public String getOriginator() {
+    final SipURI from = (SipURI)initialInvite.getFrom().getURI();
+    return from.getUser();
+  }
 
-	@Override
-	public void disconnect() throws CallException {
-		// TODO Auto-generated method stub
+  @Override public String getRecipient() {
+    final SipURI to = (SipURI)initialInvite.getTo().getURI();
+    return to.getUser();
+  }
 
-	}
+  @Override public String getStatus() {
+    return getState().getName();
+  }
 
-	@Override
-	public CallManager getCallManager() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override public synchronized void hangup() {
+    assertState(IN_PROGRESS);
+    terminate();
+	setState(COMPLETED);
+  }
 
-	@Override
-	public String getDirection() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override public void join(final Conference conference) throws CallException {
+    
+  }
 
-	@Override
-	public String getId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override public void leave(final Conference conference) throws CallException {
+    
+  }
 
-	@Override
-	public String getOriginator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
+    assertState(IN_PROGRESS);
+    try {
+      startIvr();
+      ivr.play(announcements);
+    } catch(final EndPointException exception) {
+      throw new CallException(exception);
+    }
+  }
 
-	@Override
-	public MediaPlayer getPlayer() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getRecipient() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MediaRecorder getRecorder() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public DtmfDetector getSignalDetector() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public SpeechSynthesizer getSpeechSynthesizer() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getStatus() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void hangup() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public boolean isBridged() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isConnected() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isInConference() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void join(Conference conference) throws CallException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void leave(Conference conference) throws CallException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void reject() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void unbridge(Call call) throws CallException {
-		// TODO Auto-generated method stub
-
-	}
-
+  @Override public synchronized void reject() {
+    assertState(RINGING);
+    final SipServletResponse busy = initialInvite.createResponse(SipServletResponse.SC_BUSY_HERE);
+    try {
+      busy.send();
+    } catch(final IOException exception) {
+      LOGGER.error(exception);
+    }
+    cleanup();
+  }
+  
+  private synchronized void startIvr() throws EndPointException {
+    if(ivr == null) {
+      ivr = mediaSession.createIvrEndPoint();
+      ivr.connect(media.getEndPointId());
+    }
+  }
+  
+  private synchronized void stopIvr() throws EndPointException {
+    if(ivr != null) {
+      ivr.release();
+      ivr = null;
+    }
+  }
+  
+  private void terminate() {
+	final SipSession sipSession = initialInvite.getSession();
+    final SipServletRequest bye = sipSession.createRequest("BYE");
+    try {
+      bye.send();
+    } catch(final IOException exception) {
+      LOGGER.error(exception);
+    }
+    cleanup();
+  }
 }

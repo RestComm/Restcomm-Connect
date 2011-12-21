@@ -17,15 +17,16 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaException;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaPlayer;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Loop;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
 
 public final class PlayTagStrategy extends TwiMLTagStrategy {
   
@@ -33,8 +34,8 @@ public final class PlayTagStrategy extends TwiMLTagStrategy {
     super();
   }
   
-  @Override public void execute(final TwiMLInterpreter interpreter,
-    final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+    final InterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
 	// Try to answer the call if it hasn't been done so already.
     answer(call);
@@ -43,12 +44,11 @@ public final class PlayTagStrategy extends TwiMLTagStrategy {
     if(text != null) {
       final int loop = Integer.parseInt(tag.getAttribute(Loop.NAME).getValue());
       final URI uri = URI.create(text);
-      final MediaPlayer player = call.getPlayer();
+      final List<URI> announcements = new ArrayList<URI>();
+      announcements.add(uri);
       try {
-        for(int counter = 1; counter <= loop; counter++) {
-          player.play(uri);
-        }
-      } catch(final MediaException exception) {
+        call.play(announcements, loop);
+      } catch(final CallException exception) {
         interpreter.failed();
         throw new TagStrategyException(exception);
       }

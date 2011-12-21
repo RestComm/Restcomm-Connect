@@ -16,28 +16,20 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
+import java.net.URI;
+import java.util.List;
+
 public interface Call {
   public void answer() throws CallException;
-  public void bridge(Call call) throws CallException;
-  public void connect() throws CallException;
   public void dial() throws CallException;
-  public void disconnect() throws CallException;
-  public CallManager getCallManager();
   public String getDirection();
   public String getId();
   public String getOriginator();
-  public MediaPlayer getPlayer();
   public String getRecipient();
-  public MediaRecorder getRecorder();
-  public DtmfDetector getSignalDetector();
-  public SpeechSynthesizer getSpeechSynthesizer();
   public String getStatus();
   public void hangup();
-  public boolean isBridged();
-  public boolean isConnected();
-  public boolean isInConference();
   public void join(Conference conference) throws CallException;
   public void leave(Conference conference) throws CallException;
+  public void play(List<URI> announcements, int iterations) throws CallException;
   public void reject();
-  public void unbridge(Call call) throws CallException;
 }

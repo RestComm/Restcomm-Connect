@@ -17,10 +17,10 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Length;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
 
 public final class PauseTagStrategy extends TwiMLTagStrategy {
   private static final int ONE_SECOND = 1000;
@@ -29,8 +29,8 @@ public final class PauseTagStrategy extends TwiMLTagStrategy {
     super();
   }
   
-  @Override public void execute(final TwiMLInterpreter interpreter,
-      final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+      final InterpreterContext context, final Tag tag) throws TagStrategyException {
 	final int length = Integer.parseInt(tag.getAttribute(Length.NAME).getValue());
     synchronized(this) {
       try {

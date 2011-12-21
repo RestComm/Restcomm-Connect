@@ -16,6 +16,63 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
-public interface TagStrategyFactory {
-  public TagStrategy getTagStrategyInstance(String name) throws TagStrategyInstantiationException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.DialTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.GatherTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.HangupTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.PauseTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.PlayTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.RecordTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.RedirectTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.RejectTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.SayTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies.SmsTagStrategy;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Dial;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Gather;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Hangup;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Play;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Record;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Redirect;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Reject;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Sms;
+
+public final class TagStrategyFactory {
+  private static final Map<String, Class<? extends TagStrategy>> STRATEGIES;
+  static {
+    STRATEGIES = new HashMap<String, Class<? extends TagStrategy>>();
+    STRATEGIES.put(Say.NAME, SayTagStrategy.class);
+    STRATEGIES.put(Play.NAME, PlayTagStrategy.class);
+    STRATEGIES.put(Gather.NAME, GatherTagStrategy.class);
+    STRATEGIES.put(Record.NAME, RecordTagStrategy.class);
+    STRATEGIES.put(Sms.NAME, SmsTagStrategy.class);
+    STRATEGIES.put(Dial.NAME, DialTagStrategy.class);
+    STRATEGIES.put(Hangup.NAME, HangupTagStrategy.class);
+    STRATEGIES.put(Redirect.NAME, RedirectTagStrategy.class);
+    STRATEGIES.put(Reject.NAME, RejectTagStrategy.class);
+    STRATEGIES.put(Pause.NAME, PauseTagStrategy.class);
+  }
+  
+  public TagStrategyFactory() {
+    super();
+  }
+  
+  public TagStrategy getTagStrategyInstance(String name) throws TagStrategyInstantiationException {
+    if(name == null) {
+      throw new NullPointerException("Can not instantiate a strategy for a null tag name.");
+	} else if(!STRATEGIES.containsKey(name)) {
+      throw new TagStrategyInstantiationException("The <" + name + "> tag does not have a suitable strategy.");
+	} else {
+	  try {
+		return STRATEGIES.get(name).newInstance();
+	  } catch(final InstantiationException exception) {
+		throw new TagStrategyInstantiationException(exception);
+	  } catch(final IllegalAccessException exception) {
+		throw new TagStrategyInstantiationException(exception);
+	  }
+	}
+  }
 }

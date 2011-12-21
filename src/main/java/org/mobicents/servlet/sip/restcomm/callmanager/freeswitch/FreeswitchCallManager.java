@@ -43,8 +43,8 @@ import org.mobicents.servlet.sip.restcomm.Environment;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 
 public final class FreeswitchCallManager extends SipServlet implements CallManager {
   private static final long serialVersionUID = 1L;
@@ -84,8 +84,8 @@ public final class FreeswitchCallManager extends SipServlet implements CallManag
 	  freeswitchRequest.send();
 	  
 	  // Hand the call to the interpreter for processing.
-	  final TwiMLInterpreterContext context = new TwiMLInterpreterContext(null);
-	  final TwiMLInterpreter interpreter = new TwiMLInterpreter(context);
+	  final InterpreterContext context = new InterpreterContext(null);
+	  final Interpreter interpreter = new Interpreter(context);
 	  interpreter.initialize();
 	  EXECUTOR.submit(interpreter);
 	} catch(final Exception exception) {
@@ -133,7 +133,7 @@ public final class FreeswitchCallManager extends SipServlet implements CallManag
 	// Bootstrap the environment.
  	environment = Environment.getInstance();
 	environment.configure(configuration);
-	environment.initialize();
+	environment.start();
 	environment.setCallManager(this);
   }
 }

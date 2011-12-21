@@ -21,6 +21,7 @@ import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndex;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.storage.Storage;
 
@@ -33,6 +34,7 @@ public final class Environment implements Configurable, LifeCycle {
   private ApplicationIndex applicationIndex;
   private CallManager callManager;
   private ConferenceCenter conferenceCenter;
+  private InterpreterExecutor interpreterExecutor;
   private SmsAggregator smsAggregator;
   private Storage storage;
   
@@ -64,39 +66,48 @@ public final class Environment implements Configurable, LifeCycle {
     return SingletonHolder.INSTANCE;
   }
   
+  public InterpreterExecutor getInterpreterExecutor() {
+    return interpreterExecutor;
+  }
+  
   public SmsAggregator getSmsAggregator() {
     return smsAggregator;
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
 	try {
       loadApplicationIndex();
       loadSmsAggregator();
       loadStorage();
+      initializeInterpreterExecutor();
 	} catch(final ObjectInstantiationException exception) {
 	  throw new RuntimeException(exception);
 	}
+  }
+  
+  private void initializeInterpreterExecutor() {
+    interpreterExecutor = new InterpreterExecutor();
   }
   
   private void loadApplicationIndex() throws ObjectInstantiationException {
     final String classpath = configuration.getString("application-index[@class]");
 	applicationIndex = (ApplicationIndex)ObjectFactory.getInstance().getObjectInstance(classpath);
 	applicationIndex.configure(configuration.subset("application-index"));
-	applicationIndex.initialize();
+	applicationIndex.start();
   }
   
   private void loadSmsAggregator() throws ObjectInstantiationException {
     final String classpath = configuration.getString("sms-aggregator[@class]");
     smsAggregator = (SmsAggregator)ObjectFactory.getInstance().getObjectInstance(classpath);
     smsAggregator.configure(configuration.subset("sms-aggregator"));
-    smsAggregator.initialize();
+    smsAggregator.start();
   }
   
   private void loadStorage() throws ObjectInstantiationException {
     final String classpath = configuration.getString("storage[@class]");
     storage = (Storage)ObjectFactory.getInstance().getObjectInstance(classpath);
     storage.configure(configuration.subset("storage"));
-    storage.initialize();
+    storage.start();
   }
   
   public void setCallManager(final CallManager callManager) {

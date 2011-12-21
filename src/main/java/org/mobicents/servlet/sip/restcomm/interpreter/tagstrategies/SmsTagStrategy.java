@@ -19,13 +19,13 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 import org.mobicents.servlet.sip.restcomm.Environment;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.From;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.To;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.From;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.To;
 
 public final class SmsTagStrategy extends TwiMLTagStrategy {
   private static final SmsAggregator smsAggregator = Environment.getInstance().getSmsAggregator();
@@ -34,8 +34,8 @@ public final class SmsTagStrategy extends TwiMLTagStrategy {
     super();
   }
 
-  @Override public void execute(final TwiMLInterpreter interpreter,
-      final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+      final InterpreterContext context, final Tag tag) throws TagStrategyException {
 	// Try to answer the call if it hasn't been done so already.
 	final Call call = context.getCall();
 	answer(call);

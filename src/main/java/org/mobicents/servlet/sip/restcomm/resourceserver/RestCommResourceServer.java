@@ -26,7 +26,7 @@ import org.mobicents.servlet.sip.restcomm.xml.XmlResource;
 import org.mobicents.servlet.sip.restcomm.xml.XmlResourceBuilder;
 import org.mobicents.servlet.sip.restcomm.xml.XmlResourceBuilderException;
 import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.TwiMLTagFactory;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTagFactory;
 
 public final class RestCommResourceServer implements ResourceServer {
   private static final Logger LOGGER = Logger.getLogger(RestCommResourceServer.class);
@@ -58,7 +58,7 @@ public final class RestCommResourceServer implements ResourceServer {
       final byte[] message = descriptor.getMessage();
       final String method = descriptor.getMethod();
       final InputStream input = strategy.getInputStream(uri, attributes, message, method);
-      final TagFactory tagFactory = new TwiMLTagFactory();
+      final TagFactory tagFactory = new RCMLTagFactory();
       final XmlResourceBuilder resourceBuilder = new XmlResourceBuilder(tagFactory);
       try {
         final XmlResource resource = resourceBuilder.build(input);

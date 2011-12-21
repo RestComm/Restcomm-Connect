@@ -26,7 +26,7 @@ public class FileSystemStorage implements Storage {
     return path;
   }
   
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
     // Nothing to do.
   }
 

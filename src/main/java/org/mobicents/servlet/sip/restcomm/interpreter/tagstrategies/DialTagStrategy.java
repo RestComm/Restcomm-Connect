@@ -17,10 +17,9 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategies;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
 public final class DialTagStrategy extends TwiMLTagStrategy {
@@ -28,27 +27,12 @@ public final class DialTagStrategy extends TwiMLTagStrategy {
     super();
   }
   
-  @Override public void execute(final TwiMLInterpreter interpreter,
-      final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+      final InterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
 	// Try to answer the call if it hasn't been done so already.
     answer(call);
     // Dial out.
-    final String from = call.getRecipient();
-    final String to = tag.getText();
-    final CallManager callManager = call.getCallManager();
-    try {
-	  final Call outboundCall = callManager.createCall(from, to);
-	  System.out.println("Dialing out to " + to);
-	  outboundCall.dial();
-	  System.out.println("Disconnecting media.");
-	  call.disconnect();
-	  System.out.println("Bridging calls.");
-	  call.bridge(outboundCall);
-	  wait(40 * 1000);
-	} catch(final Exception exception) {
-	  interpreter.failed();
-	  throw new TagStrategyException(exception);
-	}
+    
   }
 }

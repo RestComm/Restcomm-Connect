@@ -11,7 +11,7 @@ public final class JdbcStorage implements Storage {
     
   }
 
-  @Override public void initialize() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
     
   }
 

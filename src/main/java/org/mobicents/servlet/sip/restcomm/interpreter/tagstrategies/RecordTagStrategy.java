@@ -22,20 +22,19 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaRecorder;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.TwiMLInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceDescriptor;
 import org.mobicents.servlet.sip.restcomm.storage.Storage;
 import org.mobicents.servlet.sip.restcomm.util.UrlUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Action;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.MaxLength;
-import org.mobicents.servlet.sip.restcomm.xml.twiml.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Action;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.MaxLength;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 
 public final class RecordTagStrategy extends TwiMLTagStrategy {
   private static final Storage STORAGE = null;
@@ -47,8 +46,8 @@ public final class RecordTagStrategy extends TwiMLTagStrategy {
     super();
   }
   
-  @Override public void execute(final TwiMLInterpreter interpreter,
-      final TwiMLInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final Interpreter interpreter,
+      final InterpreterContext context, final Tag tag) throws TagStrategyException {
     // Try to answer the call if it hasn't been done so already.
     final Call call = context.getCall();
 	answer(call);
@@ -56,17 +55,7 @@ public final class RecordTagStrategy extends TwiMLTagStrategy {
 	final int maxLength = Integer.parseInt(tag.getAttribute(MaxLength.NAME).getValue()) * ONE_SECOND;
 	final String name = UUID.randomUUID().toString();
 	final URI path = URI.create(BASE_PATH + name + ".wav");
-	final MediaRecorder recorder = call.getRecorder();
-	try {
-	  recorder.record(path);
-	  synchronized(this) {
-	    wait(maxLength);
-	  }
-	} catch(final Exception exception) {
-	  interpreter.failed();
-	  throw new TagStrategyException(exception);
-	}
-	recorder.stop();
+
 	// Do something with the recording.
     final Attribute action = tag.getAttribute(Action.NAME);
     final String method = tag.getAttribute(Method.NAME).getValue();

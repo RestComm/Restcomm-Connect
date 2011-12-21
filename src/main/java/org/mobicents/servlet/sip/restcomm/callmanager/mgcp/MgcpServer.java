@@ -11,143 +11,92 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.RequestIdentifier;
 
 import java.net.InetAddress;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
+import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
-import org.mobicents.servlet.sip.restcomm.callmanager.MediaSession;
+import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
 
-public final class MgcpServer implements JainMgcpListener, LifeCycle {
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
+public final class MgcpServer extends FiniteStateMachine implements JainMgcpListener, LifeCycle {
+  // Initialize the logger.
   private static final Logger LOGGER = Logger.getLogger(MgcpServer.class);
-  
+  //Initialize the possible states and transitions.
+  private static final State RUNNING = new State("RUNNING");
+  private static final State SHUTDOWN = new State("SHUTDOWN");
+  static {
+    RUNNING.addTransition(SHUTDOWN);
+    SHUTDOWN.addTransition(RUNNING);
+  }
+  // Server connection information.
+  private final String name;
   private final InetAddress localIp;
   private final int localPort;
   private final InetAddress remoteIp;
   private final int remotePort;
-  
-  private NotifiedEntity callAgent;
-  private String domainName;
-  
+  // JAIN MGCP stuff.
   private JainMgcpProvider mgcpProvider;
   private JainMgcpStack mgcpStack;
-  
-  private Map<Integer, MgcpMediaSession> mediaSessions;
-  private int mediaSessionCounter;
-  private ReentrantLock mediaSessionCounterLock;
-  
-  private int requestIdCounter;
-  private ReentrantLock requestIdCounterLock;
-  
-  private int transactionIdCounter;
-  private ReentrantLock transactionIdCounterLock;
-  
-  private Thread requestProcessingThread;
-  private volatile boolean requestProcessingIsRunning;
   private List<JainMgcpListener> requestListeners;
-  private ReentrantLock requestListenersLock;
-  private BlockingQueue<JainMgcpCommandEvent> requestQueue;
-  private Thread responseProcessingThread;
-  private volatile boolean responseProcessingIsRunning;
+  private Object requestListenersLock;
   private Map<Integer, JainMgcpListener> responseListeners;
-  private BlockingQueue<JainMgcpResponseEvent> responseQueue;
+  private WrapAroundCounter requestId;
+  private WrapAroundCounter transactionId;
+  // Call agent.
+  private NotifiedEntity callAgent;
+  // Media gateway domain name.
+  private String domainName;
+  // Media Session stuff.
+  private WrapAroundCounter mediaSessionId;
+  private Map<Integer, MgcpSession> mediaSessions;
 
-  public MgcpServer(final InetAddress localIp, final int localPort, final InetAddress remoteIp,
-      final int remotePort) {
-    super();
+  public MgcpServer(final String name, final InetAddress localIp, final int localPort,
+      final InetAddress remoteIp, final int remotePort) {
+    // Initialize the finite state machine.
+    super(SHUTDOWN);
+    addState(RUNNING);
+    addState(SHUTDOWN);
+    // Remember the server connection information.
+    this.name = name;
     this.localIp = localIp;
     this.localPort = localPort;
     this.remoteIp = remoteIp;
     this.remotePort = remotePort;
   }
   
-  public void addCommandEventListener(final JainMgcpListener listener) {
-    requestListenersLock.lock();
-    try {
-	  requestListeners.add(listener);
-    } finally {
-      requestListenersLock.unlock();
+  public void addNotifyListener(final JainMgcpListener listener) {
+	assertState(RUNNING);
+    synchronized(requestListenersLock) {
+      requestListeners.add(listener);
     }
   }
   
-  public MediaSession createMediaSession() {
-	int id;
-	mediaSessionCounterLock.lock();
-	try {
-	  mediaSessionCounter++;
-	  id = mediaSessionCounter;
-	  // Make sure the counter doesn't overflow.
-	  if(mediaSessionCounter == Integer.MAX_VALUE) {
-	    mediaSessionCounter = 0;
-	  }
-	} finally {
-	  mediaSessionCounterLock.unlock();
-	}
-	// Create a new media session
-	final MgcpMediaSession mediaSession = new MgcpMediaSession(this, id);
-	mediaSessions.put(id, mediaSession);
-    return mediaSession;
-  }
-  
-  public void destroyMediaSession(final MediaSession mediaSession) {
-	final MgcpMediaSession mgcpMediaSession = (MgcpMediaSession)mediaSession;
-	final int id = Integer.parseInt(mgcpMediaSession.getCallId().toString());
-    mediaSessions.remove(id);
+  public void removeNotifyListener(final JainMgcpListener listener) {
+	assertState(RUNNING);
+    synchronized(requestListenersLock) {
+      requestListeners.remove(listener);
+    }
   }
   
   public RequestIdentifier generateRequestIdentifier() {
-	int id;
-	requestIdCounterLock.lock();
-	try {
-	  requestIdCounter++;
-	  id = requestIdCounter;
-	  // Make sure our counter doesn't overflow.
-	  if(requestIdCounter == Integer.MAX_VALUE) {
-	    requestIdCounter = 0;
-	  }
-	} finally {
-	  requestIdCounterLock.unlock();
-	}
-	return new RequestIdentifier(Integer.toString(id));
+	assertState(RUNNING);
+    return new RequestIdentifier(Integer.toString((int)requestId.getAndIncrement()));
   }
-  
-  public int generateTransactionId() {
-    int id;
-    transactionIdCounterLock.lock();
-    try {
-      transactionIdCounter++;
-      id = transactionIdCounter;
-      // Make sure our counter doesn't overflow.
-      if(transactionIdCounter == Integer.MAX_VALUE) {
-        transactionIdCounter = 0;
-      }
-    } finally {
-      transactionIdCounterLock.unlock();
-    }
-    return id;
-  }
-  
-  public NotifiedEntity getCallAgent() {
-    return callAgent;
-  }
-  
-  public String getDomainName() {
-    return domainName;
-  }
-  
-  @Override public void initialize() throws RuntimeException {
-	// Initialize constants.
+
+  @Override public synchronized void start() throws RuntimeException {
+	assertState(SHUTDOWN);
+	// Initialize the call agent.
     callAgent = new NotifiedEntity("restcomm", localIp.getHostAddress(), localPort);
+    // Initialize the media gateway domain name.
     domainName = new StringBuilder().append(remoteIp.getHostAddress()).append(":")
         .append(remotePort).toString();
 	// Start the MGCP stack.
@@ -158,128 +107,104 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
 	} catch(final Exception exception) {
 	  throw new RuntimeException(exception);
 	}
-	// Finish initialization.
-	mediaSessions = new HashMap<Integer, MgcpMediaSession>();
-	mediaSessionCounter = 0;
-	mediaSessionCounterLock = new ReentrantLock();
-	requestIdCounter = 0;
-	requestIdCounterLock = new ReentrantLock();
-	transactionIdCounter = 0;
-	transactionIdCounterLock = new ReentrantLock();
-    requestListeners = Collections.synchronizedList(new LinkedList<JainMgcpListener>());
-    requestListenersLock = new ReentrantLock();
-    requestQueue = new LinkedBlockingQueue<JainMgcpCommandEvent>();
-    responseListeners = new ConcurrentHashMap<Integer, JainMgcpListener>();
-    responseQueue = new LinkedBlockingQueue<JainMgcpResponseEvent>();
-    // Start the message processing threads.
-    initializeRequestProcessingThread();
-    initializeResponseProcessingThread();
+	requestListeners = new ArrayList<JainMgcpListener>();
+	requestListenersLock = new Object();
+	responseListeners = new HashMap<Integer, JainMgcpListener>();
+	requestId = new WrapAroundCounter(Integer.MAX_VALUE);
+	transactionId = new WrapAroundCounter(Integer.MAX_VALUE);
+	mediaSessionId = new WrapAroundCounter(Integer.MAX_VALUE);
+	mediaSessions = new HashMap<Integer, MgcpSession>();
+	setState(RUNNING);
+  }
+
+  public MgcpSession createMediaSession() throws MgcpServerException {
+    assertState(RUNNING);
+    int id = -1;
+    do {
+      id = (int)mediaSessionId.getAndIncrement();
+    } while(mediaSessions.containsKey(id));
+    final MgcpSession session = new MgcpSession(id, this);
+    mediaSessions.put(id, session);
+    return session;
+  }
+
+  public void destroyMediaSession(final MgcpSession session) {
+    assertState(RUNNING);
+    session.release();
+    mediaSessions.remove(session.getId());
   }
   
-  private void initializeRequestProcessingThread() {
-	requestProcessingIsRunning = true;
-    requestProcessingThread = new Thread(new Runnable() {
-      public void run() {
-        while(requestProcessingIsRunning) {
-          // Take an event from the head for processing or block.
-          JainMgcpCommandEvent event = null;
-          try {
-            event = requestQueue.take();
-          } catch(final InterruptedException ignored) { }
-          // If the event is not null dispatch it to the listeners.
-          if(event != null) {
-        	requestListenersLock.lock();
-        	try {
-    	      for(final JainMgcpListener listener : requestListeners) {
-    	        listener.processMgcpCommandEvent(event);
-    	      }
-        	} finally {
-        	  requestListenersLock.unlock();
-        	}
-          }
-        }
-      }
-    });
-    requestProcessingThread.setName("MGCP Server Request Processing Thread");
-    requestProcessingThread.start();
+  public NotifiedEntity getCallAgent() {
+	assertState(RUNNING);
+    return callAgent;
   }
   
-  private void initializeResponseProcessingThread() {
-    responseProcessingIsRunning = true;
-    responseProcessingThread = new Thread(new Runnable() {
-      public void run() {
-        while(responseProcessingIsRunning) {
-          // Take a response from the head for processing or block.
-          JainMgcpResponseEvent event = null;
-          try {
-            event = responseQueue.take();
-          } catch(final InterruptedException ignored) { }
-          // If the event is not null dispatch it the listener.
-          if(event != null) {
-        	// Find the listener for this response.
-    	    final JainMgcpListener listener = responseListeners.remove(event.getTransactionHandle());
-    	    // Dispatch the response to the listener.
-    	    listener.processMgcpResponseEvent(event);
-          }
-        }
-      }
-    });
-    responseProcessingThread.setName("MGCP Server Response Processing Thread");
-    responseProcessingThread.start();
+  public String getDomainName() {
+	assertState(RUNNING);
+    return domainName;
+  }
+  
+  public String getName() {
+	assertState(RUNNING);
+    return name;
   }
 
   @Override public void processMgcpCommandEvent(final JainMgcpCommandEvent event) {
-    try { requestQueue.put(event); } catch(final InterruptedException ignored) { }
+    if(getState() == RUNNING) {
+      synchronized(requestListenersLock) {
+	    for(final JainMgcpListener listener : requestListeners) {
+          listener.processMgcpCommandEvent(event);
+        }
+      }
+    }
   }
 
   @Override public void processMgcpResponseEvent(final JainMgcpResponseEvent event) {
-	try { responseQueue.put(event); } catch(final InterruptedException ignored) { }
-  }
-  
-  public void removeCommandEventListener(final JainMgcpListener listener) {
-    requestListenersLock.lock();
-    try {
-      requestListeners.remove(listener);
-    } finally {
-      requestListenersLock.unlock();
+    if(getState() == RUNNING) {
+	  // Find the listener for this response.
+      final JainMgcpListener listener = responseListeners.remove(event.getTransactionHandle());
+      // Dispatch the response to the listener.
+      listener.processMgcpResponseEvent(event);
     }
   }
   
-  public void sendEvent(final JainMgcpCommandEvent event, final JainMgcpListener listener) {
-	// Register the listener to listen for a response to the event being sent.
-	responseListeners.put(event.getTransactionHandle(), listener);
-	// Try to send the event.
+  public void sendCommand(final JainMgcpCommandEvent command, final JainMgcpListener listener) throws MgcpServerException {
+	assertState(RUNNING);
+	// Register the listener to listen for a response to the command being sent.
+	final int id = (int)transactionId.getAndIncrement();
+	command.setTransactionHandle(id);
+	responseListeners.put(id, listener);
+	// Try to send the command.
 	try {
-      mgcpProvider.sendMgcpEvents(new JainMgcpEvent[] { event });
+      mgcpProvider.sendMgcpEvents(new JainMgcpEvent[] { command });
 	} catch(final IllegalArgumentException exception) {
 	  // Make sure we don't start a memory leak.
-	  responseListeners.remove(event.getTransactionHandle());
-	  // Log the exception.
+	  responseListeners.remove(id);
+	  // Log and re-throw the exception.
 	  LOGGER.error(exception);
+	  throw new MgcpServerException(exception);
 	}
   }
   
-  public void sendEvent(final JainMgcpResponseEvent event) {
+  public void sendResponse(final JainMgcpResponseEvent response) throws MgcpServerException {
+	assertState(RUNNING);
     try {
-      mgcpProvider.sendMgcpEvents(new JainMgcpEvent[] { event });
+      mgcpProvider.sendMgcpEvents(new JainMgcpEvent[] { response });
     } catch(final IllegalArgumentException exception) {
       LOGGER.error(exception);
-    }
-  }
-  
-  private void destroyMediaSessions() {
-    final Collection<MgcpMediaSession> sessions = mediaSessions.values();
-    for(final MgcpMediaSession session : sessions) {
-      session.release();
+      throw new MgcpServerException(exception);
     }
   }
 
-  @Override public void shutdown() {
-	destroyMediaSessions();
-	// Shutdown the message processing threads.
-    requestProcessingIsRunning = false;
-    responseProcessingIsRunning = false;
-	// Shutdown the MGCP stack.
+  @Override public synchronized void shutdown() {
+    assertState(RUNNING);
+    // Stop all the media sessions.
+    final List<MgcpSession> sessions = new ArrayList<MgcpSession>(mediaSessions.values());
+    for(final MgcpSession session : sessions) {
+      session.release();
+    }
+    sessions.clear();
+    // Shutdown the MGCP stack.
     try { 
       mgcpProvider.removeJainMgcpListener(this);
       mgcpStack.deleteProvider(mgcpProvider);
@@ -287,20 +212,17 @@ public final class MgcpServer implements JainMgcpListener, LifeCycle {
       // There is nothing we can do except log the exception.
       LOGGER.error(exception);
     }
-    // Wrap up.
     callAgent = null;
     domainName = null;
     mgcpProvider = null;
     mgcpStack = null;
-    mediaSessions = null;
-    mediaSessionCounter = -1;
-    mediaSessionCounterLock = null;
-    requestIdCounter = -1;
-    requestIdCounterLock = null;
-    transactionIdCounter = -1;
-    requestIdCounterLock = null;
     requestListeners = null;
-    requestListenersLock = null;
-    responseListeners = null;
+	requestListenersLock = null;
+	responseListeners = null;
+	requestId = null;
+	transactionId = null;
+	mediaSessionId = null;
+	mediaSessions = null;
+	setState(SHUTDOWN);
   }
 }

@@ -31,7 +31,7 @@
 			<application name="RestComm Demo Application">
 				<endpoint>1234</endpoint>
 				<request-method>POST</request-method>
-				<uri>http://localhost:8080/restcomm/demo/hello-world.xml</uri>
+				<uri>http://127.0.0.1:8080/restcomm/demo/hello-world.xml</uri>
 			</application>
 		</applications>
 		<!-- <clients> <client name="John">17778889999</client> </clients> -->
@@ -74,13 +74,13 @@
 		
 		<remote-port> - The port for the media server.
 	-->
-	<media-server-manager class="org.mobicents.servlet.sip.restcomm.MediaServerManager.MgcpMediaServerManager">
-		<mgcp-stack name="mgcp-stack-1">
-			<stack-address>127.0.0.1</stack-address>
-			<stack-port>2727</stack-port>
+	<media-server-manager>
+		<mgcp-server name="server-1">
+			<local-address>127.0.0.1</local-address>
+			<local-port>2727</local-port>
 			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
-		</mgcp-stack>
+		</mgcp-server>
 	</media-server-manager>
 
 	<!-- The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.
