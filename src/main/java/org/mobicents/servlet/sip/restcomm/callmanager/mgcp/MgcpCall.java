@@ -18,9 +18,8 @@ import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
-import org.mobicents.servlet.sip.restcomm.callmanager.IVRService;
 
-public final class MgcpCall extends FiniteStateMachine implements Call {
+public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver, MgcpLinkObserver {
   private static final Logger LOGGER = Logger.getLogger(MgcpCall.class);
   // Call Directions.
   private static final String INBOUND = "inbound";
@@ -46,13 +45,8 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
     IN_PROGRESS.addTransition(COMPLETED);
     IN_PROGRESS.addTransition(FAILED);
   }
-  private static final int TIMEOUT = 15 * 1000;
   
   private SipServletRequest initialInvite;
-  
-  private MgcpMediaSession mediaSession;
-  private PacketRelayEndPoint media;
-  private IvrEndPoint ivr;
   
   private String direction;
   
@@ -68,8 +62,6 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
     addState(FAILED);
     addState(NO_ANSWER);
     addState(CANCELLED);
-    // Create a new media session for this call.
-    mediaSession = server.createMediaSession();
   }
   
   public synchronized void alert(final SipServletRequest request) throws IOException {
@@ -100,7 +92,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
       ok.setContent(answer, "application/sdp");
       ok.send();
       // Wait for an acknowledgment that the call is established.
-      wait(TIMEOUT);
+      wait();
       // Make sure the call was answered.
       if(!getState().equals(IN_PROGRESS)) {
     	final StringBuilder buffer = new StringBuilder();
@@ -116,7 +108,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
     }
   }
   
-  public synchronized void bye(final SipServletRequest request) throws IOException {
+  public void bye(final SipServletRequest request) throws IOException {
     assertState(IN_PROGRESS);
     final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
     try {
@@ -127,7 +119,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
     }
   }
   
-  public synchronized void cancel(final SipServletRequest request) throws IOException {
+  public void cancel(final SipServletRequest request) throws IOException {
     assertState(RINGING);
     final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
     try {
@@ -139,14 +131,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
   }
   
   private void cleanup() {
-	try {
-	  stopIvr();
-	  // Fix Me! Ugly!
-	  media.disconnect();
-	} catch(final EndPointException exception) {
-	  LOGGER.error(exception);
-	}
-    mediaSession.release();
+	
 	initialInvite.getSession().invalidate();	  
   }
 
@@ -154,7 +139,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
     
   }
   
-  public synchronized void established() {
+  public void established() {
     assertState(RINGING);
 	setState(IN_PROGRESS);
     notify();
@@ -182,10 +167,6 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
   public SipServletRequest getInitialInvite() {
     return initialInvite;
   }
-  
-  @Override public IVRService getIvrService() {
-    return null;
-  }
 
   @Override public String getOriginator() {
     final SipURI from = (SipURI)initialInvite.getFrom().getURI();
@@ -201,7 +182,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
     return getState().getName();
   }
 
-  @Override public synchronized void hangup() {
+  @Override public void hangup() {
     assertState(IN_PROGRESS);
     terminate();
 	setState(COMPLETED);
@@ -215,17 +196,12 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
     
   }
 
-  @Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
+  @Override public void play(final List<URI> announcements, final int iterations) throws CallException {
     assertState(IN_PROGRESS);
-    try {
-      startIvr();
-      ivr.play(announcements);
-    } catch(final EndPointException exception) {
-      throw new CallException(exception);
-    }
+    
   }
 
-  @Override public synchronized void reject() {
+  @Override public void reject() {
     assertState(RINGING);
     final SipServletResponse busy = initialInvite.createResponse(SipServletResponse.SC_BUSY_HERE);
     try {
@@ -234,20 +210,6 @@ public final class MgcpCall extends FiniteStateMachine implements Call {
       LOGGER.error(exception);
     }
     cleanup();
-  }
-  
-  private synchronized void startIvr() throws EndPointException {
-    if(ivr == null) {
-      ivr = mediaSession.createIvrEndPoint();
-      ivr.connect(media.getEndPointId());
-    }
-  }
-  
-  private synchronized void stopIvr() throws EndPointException {
-    if(ivr != null) {
-      ivr.release();
-      ivr = null;
-    }
   }
   
   private void terminate() {
