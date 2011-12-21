@@ -51,7 +51,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 	  final SipApplicationSession application = sipFactory.createApplicationSession();
 	  final SipServletRequest request = sipFactory.createRequest(application, "INVITE", fromAddress, toAddress);
 	  // Request a media server to handle the new out bound call.
-	  final MgcpServer server = servers.getMgcpServer();
+	  final MgcpServer server = servers.getMediaServer();
 	  // Create new call.
 	  final MgcpCall call = new MgcpCall(server);
 	  request.getSession().setAttribute("CALL", call);
@@ -82,7 +82,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {
 	try {
 	  // Request a media server to handle the new incoming call.
-	  final MgcpServer server = servers.getMgcpServer();
+	  final MgcpServer server = servers.getMediaServer();
       // Create a call.
 	  final MgcpCall call = new MgcpCall(server);
 	  // Bind the call to the SIP session.

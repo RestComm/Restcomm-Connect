@@ -48,6 +48,11 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   
   private SipServletRequest initialInvite;
   
+  private MgcpServer server;
+  private MgcpSession session;
+  private MgcpConnection connection;
+  private MgcpLink link;
+  
   private String direction;
   
   public MgcpCall(final MgcpServer server) {
@@ -62,6 +67,8 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     addState(FAILED);
     addState(NO_ANSWER);
     addState(CANCELLED);
+    this.server = server;
+    this.session = server.createMediaSession();
   }
   
   public synchronized void alert(final SipServletRequest request) throws IOException {
@@ -84,10 +91,11 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     try {
       // Try to negotiate a media connection with a packet relay end point.
       final byte[] offer = initialInvite.getRawContent();
-      media = mediaSession.createPacketRelayEndPoint();
-      media.connect(new String(offer));
+      connection = new MgcpConnection(server, session, null, null);
+      connection.connect(ConnectionMode.Confrnce);
+      wait();
       // Send the response back to the caller.
-      final byte[] answer = media.getConnectionDescriptor().toString().getBytes();
+      final byte[] answer = connection.getLocalDescriptor().toString().getBytes();
       final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
       ok.setContent(answer, "application/sdp");
       ok.send();
@@ -221,5 +229,41 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
       LOGGER.error(exception);
     }
     cleanup();
+  }
+
+  @Override public void connected(final MgcpLink link) {
+    
+  }
+
+  @Override public void disconnected(final MgcpLink link) {
+    
+  }
+
+  @Override public void failed(final MgcpLink link) {
+    
+  }
+
+  @Override public void operationCompleted(final MgcpIvrEndpoint endpoint) {
+    
+  }
+
+  @Override public void operationFailed(final MgcpIvrEndpoint endpoint) {
+    
+  }
+
+  @Override public void halfOpen(final MgcpConnection connection) {
+    
+  }
+
+  @Override public void open(final MgcpConnection connection) {
+    
+  }
+
+  @Override public void disconnected(final MgcpConnection connection) {
+    
+  }
+
+  @Override public void failed(final MgcpConnection connection) {
+    
   }
 }
