@@ -13,6 +13,7 @@ public final class MgcpSession {
   private final MgcpServer server;
   
   private final List<MgcpConnection> connections;
+  private final List<MgcpEndpoint> endpoints;
   private final List<MgcpLink> links;
   
   public MgcpSession(final int id, final MgcpServer server) {
@@ -20,6 +21,7 @@ public final class MgcpSession {
     this.id = id;
     this.server = server;
     this.connections = new ArrayList<MgcpConnection>();
+    this.endpoints = new ArrayList<MgcpEndpoint>();
     this.links = new ArrayList<MgcpLink>();
   }
   
@@ -66,7 +68,9 @@ public final class MgcpSession {
   }
   
   public MgcpConferenceEndpoint getConferenceEndpoint() {
-    return new MgcpConferenceEndpoint(server);
+    final MgcpConferenceEndpoint endpoint = new MgcpConferenceEndpoint(server);
+    endpoints.add(endpoint);
+    return endpoint;
   }
   
   public int getId() {
@@ -74,15 +78,27 @@ public final class MgcpSession {
   }
   
   public MgcpIvrEndpoint getIvrEndpoint() {
-    return new MgcpIvrEndpoint(server);
+	final MgcpIvrEndpoint endpoint = new MgcpIvrEndpoint(server);
+	endpoints.add(endpoint);
+    return endpoint;
   }
   
   public MgcpPacketRelayEndpoint getPacketRelayEndpoint() {
-    return new MgcpPacketRelayEndpoint(server);
+	final MgcpPacketRelayEndpoint endpoint = new MgcpPacketRelayEndpoint(server);
+	endpoints.add(endpoint);
+    return endpoint;
   }
 
   public void release() {
     destroyConnections();
     destroyLinks();
+    releaseEndpoints();
+  }
+  
+  private void releaseEndpoints() {
+    for(final MgcpEndpoint endpoint : endpoints) {
+      endpoint.release();
+    }
+    endpoints.clear();
   }
 }

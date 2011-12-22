@@ -1,5 +1,6 @@
 package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.io.IOException;
@@ -52,6 +53,8 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   private MgcpSession session;
   private MgcpConnection connection;
   private MgcpLink link;
+  private MgcpEndpoint localEndpoint;
+  private MgcpEndpoint remoteEndpoint;
   
   private String direction;
   
@@ -90,8 +93,11 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     assertState(RINGING);
     try {
       // Try to negotiate a media connection with a packet relay end point.
+      localEndpoint = session.getPacketRelayEndpoint();
       final byte[] offer = initialInvite.getRawContent();
-      connection = new MgcpConnection(server, session, null, null);
+      final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
+      connection = new MgcpConnection(server, session, localEndpoint, remoteDescriptor);
+      connection.addObserver(this);
       connection.connect(ConnectionMode.Confrnce);
       wait();
       // Send the response back to the caller.
@@ -101,15 +107,6 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
       ok.send();
       // Wait for an acknowledgment that the call is established.
       wait();
-      // Make sure the call was answered.
-      if(!getState().equals(IN_PROGRESS)) {
-    	final StringBuilder buffer = new StringBuilder();
-    	buffer.append("The call to recipient ").append(getRecipient())
-    	    .append(" from sender ").append(getOriginator())
-    	    .append(" could not be completed.");
-    	setState(FAILED);
-        throw new CallException(buffer.toString());
-      }
     } catch(final Exception exception) {
       fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
       throw new CallException(exception);
@@ -139,7 +136,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
   
   private void cleanup() {
-	
+	session.release();
 	initialInvite.getSession().invalidate();	  
   }
 
@@ -147,10 +144,12 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     
   }
   
-  public void established() {
+  public synchronized void established() {
     assertState(RINGING);
-	setState(IN_PROGRESS);
-    notify();
+    remoteEndpoint = session.getIvrEndpoint();
+    link = new MgcpLink(server, session, localEndpoint, remoteEndpoint);
+    link.addObserver(this);
+	link.connect(ConnectionMode.Confrnce);
   }
   
   private void fail(int code) {
@@ -204,12 +203,16 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     
   }
 
-  @Override public void play(final List<URI> announcements, final int iterations) throws CallException {
+  @Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
     assertState(IN_PROGRESS);
-    
+    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)remoteEndpoint;
+    ivr.play(announcements, iterations);
+    try {
+      wait();
+    } catch(final InterruptedException ignored) { }
   }
 
-  @Override public void reject() {
+  @Override public synchronized void reject() {
     assertState(RINGING);
     final SipServletResponse busy = initialInvite.createResponse(SipServletResponse.SC_BUSY_HERE);
     try {
@@ -231,8 +234,9 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     cleanup();
   }
 
-  @Override public void connected(final MgcpLink link) {
-    
+  @Override public synchronized void connected(final MgcpLink link) {
+    setState(IN_PROGRESS);
+	notify();
   }
 
   @Override public void disconnected(final MgcpLink link) {
@@ -243,27 +247,34 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     
   }
 
-  @Override public void operationCompleted(final MgcpIvrEndpoint endpoint) {
-    
+  @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {
+    notify();
   }
 
-  @Override public void operationFailed(final MgcpIvrEndpoint endpoint) {
-    
+  @Override public synchronized void operationFailed(final MgcpIvrEndpoint endpoint) {
+    notify();
   }
 
   @Override public void halfOpen(final MgcpConnection connection) {
     
   }
 
-  @Override public void open(final MgcpConnection connection) {
-    
+  @Override public synchronized void open(final MgcpConnection connection) {
+    notify();
   }
 
   @Override public void disconnected(final MgcpConnection connection) {
     
   }
 
-  @Override public void failed(final MgcpConnection connection) {
-    
+  @Override public synchronized void failed(final MgcpConnection connection) {
+	// The connection to the packet relay end point failed.
+	setState(FAILED);
+	final StringBuilder buffer = new StringBuilder();
+  	buffer.append("The call to recipient ").append(getRecipient())
+  	    .append(" from sender ").append(getOriginator())
+  	    .append(" could not be completed.");
+  	LOGGER.error(buffer.toString());
+  	notify();
   }
 }

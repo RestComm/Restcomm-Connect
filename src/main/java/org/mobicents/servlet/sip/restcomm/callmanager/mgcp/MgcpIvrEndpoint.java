@@ -104,13 +104,14 @@ public final class MgcpIvrEndpoint extends FiniteStateMachine implements JainMgc
     }
   }
   
-  public void play(final List<URI> announcements) {
+  public void play(final List<URI> announcements, final int iterations) {
 	assertState(IDLE);
 	// Create the signal parameters.
     final AdvancedAudioParametersBuilder builder = new AdvancedAudioParametersBuilder();
     for(final URI announcement : announcements) {
       builder.addAnnouncement(announcement);
     }
+    builder.setIterations(iterations);
     final String parameters = builder.build();
     // Create the signal.
     final EventName[] signal = new EventName[1];
