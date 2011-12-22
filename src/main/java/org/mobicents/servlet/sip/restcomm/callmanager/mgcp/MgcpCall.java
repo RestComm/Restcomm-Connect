@@ -146,7 +146,9 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   
   public synchronized void established() {
     assertState(RINGING);
-    remoteEndpoint = session.getIvrEndpoint();
+    final MgcpIvrEndpoint endpoint = session.getIvrEndpoint();
+    endpoint.addObserver(this);
+    remoteEndpoint = endpoint;
     link = new MgcpLink(server, session, localEndpoint, remoteEndpoint);
     link.addObserver(this);
 	link.connect(ConnectionMode.Confrnce);
@@ -244,10 +246,11 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public void failed(final MgcpLink link) {
-    
+    notify();
   }
 
   @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {
+	System.out.println("*****OPERATION COMPLETED*****");
     notify();
   }
 
