@@ -4,7 +4,9 @@ import java.net.URI;
 
 import org.joda.time.DateTime;
 
-public final class Account {
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+
+@Immutable public final class Account {
   private final Sid sid;
   private final DateTime dateCreated;
   private final DateTime dateUpdated;
@@ -59,11 +61,78 @@ public final class Account {
     return uri;
   }
   
+  public Account setDateUpdated(final DateTime dateUpdated) {
+    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+  }
+  
+  public Account setFriendlyName(final String friendlyName) {
+    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+  }
+  
+  public Account setType(final Type type) {
+    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+  }
+  
+  public Account setStatus(final Status status) {
+    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+  }
+  
+  public Account setAuthToken(final String authToken) {
+    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+  }
+  
+  public Account setUri(final URI uri) {
+    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+  }
+  
   public enum Status {
-    ACTIVE, CLOSED, SUSPENDED
+    ACTIVE("active"),
+    CLOSED("closed"),
+    SUSPENDED("suspended");
+    
+    private final String text;
+    
+    private Status(final String text) {
+      this.text = text;
+    }
+    
+    public static Status getValueOf(final String text) {
+      Status[] values = values();
+      for(final Status value : values) {
+        if(value.text.equals(text)) {
+          return value;
+        }
+      }
+      throw new IllegalArgumentException(text + " is not a valid account status.");
+    }
+    
+    @Override public String toString() {
+      return text;
+    }
   };
   
   public enum Type {
-    FULL, TRIAL
+    FULL("Full"),
+    TRIAL("Trial");
+    
+    private final String text;
+    
+    private Type(final String text) {
+      this.text = text;
+    }
+    
+    public static Type getValueOf(final String text) {
+      Type[] values = values();
+      for(final Type value : values) {
+        if(value.text.equals(text)) {
+          return value;
+        }
+      }
+      throw new IllegalArgumentException(text + " is not a valid account type.");
+    }
+    
+    @Override public String toString() {
+      return text;
+    }
   };
 }
