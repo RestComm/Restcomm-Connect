@@ -21,6 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public abstract class AbstractTag implements Tag {
   protected final Map<String, Attribute> attributes;
   protected final List<Tag> children;

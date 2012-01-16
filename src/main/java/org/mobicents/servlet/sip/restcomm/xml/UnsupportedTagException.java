@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class UnsupportedTagException extends Exception {
   private static final long serialVersionUID = 1L;
 

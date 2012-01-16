@@ -25,6 +25,9 @@ import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
 import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class Reject extends RCMLTag {
   public static final String NAME = "Reject";
   private static final Set<String> ATTRIBUTES;

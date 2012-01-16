@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import org.mobicents.servlet.sip.restcomm.xml.BooleanAttribute;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class Transcribe extends BooleanAttribute {
   public static final String NAME = "transcribe";
   

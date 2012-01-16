@@ -1,0 +1,150 @@
+/*
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+package org.mobicents.servlet.sip.restcomm.tts;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.mobicents.servlet.sip.restcomm.cache.DiskCache;
+
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
+public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
+  private static final String CLIENT_VERSION = "0-01";
+  private static final String ENVIRONMENT = "RESTCOMM_1.0.0";
+  private static final String PROTOCOL_VERSION = "2";
+  private static final String SOUND_FILE_TYPE = "WAV";
+  private static final List<NameValuePair> DEFAULT_PARAMETERS;
+  static {
+    DEFAULT_PARAMETERS = new ArrayList<NameValuePair>(28);
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("prot_vers", PROTOCOL_VERSION));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("cl_env", ENVIRONMENT));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("cl_vers", CLIENT_VERSION));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_type", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_id", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_vol", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_spd", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_vct", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq1", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq2", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq3", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq4", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_type", SOUND_FILE_TYPE));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_ext", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_kbps", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_alt_snd_type", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_alt_snd_ext", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_alt_snd_kbps", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_wp", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_bp", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_mp", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_comment", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_start_time", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_timeout", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_asw_type", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_asw_as_alt_snd", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_err_as_id3", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_echo", null));
+    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_asw_redirect_url", null));
+  }
+  
+  private Configuration configuration;
+  private String application;
+  private String login;
+  private String password;
+  private URI serviceRoot;
+  
+  private DiskCache cache;
+  
+  public AcapelaSpeechSynthesizer() {
+    super();
+  }
+  
+  @Override public void configure(final Configuration configuration) {
+    this.configuration = configuration;
+  }
+  
+  private URI store(final String text, final HttpResponse response) throws IOException {
+	final int status = response.getStatusLine().getStatusCode();
+	if(status == HttpStatus.SC_OK) {
+	  final InputStream content = response.getEntity().getContent();
+	  final URI uri = cache.put(text, content);
+	  return uri;
+	} else {
+	  final String reason = response.getStatusLine().getReasonPhrase();
+	  final StringBuilder buffer = new StringBuilder();
+	  buffer.append(status).append(" ").append(reason);
+	  throw new IOException(buffer.toString());
+	}
+  }
+  
+  private String findSpeaker(final String voice, final String language) throws IllegalArgumentException {
+	return null;
+  }
+  
+  private void loadVoices() throws RuntimeException {
+    
+  }
+  
+  @Override public void shutdown() {
+    // Nothing to do.
+  }
+
+  @Override public void start() throws RuntimeException {
+	application = configuration.getString("application");
+    login = configuration.getString("login");
+    password = configuration.getString("password");
+    serviceRoot = URI.create(configuration.getString("service-root"));
+    cache = new DiskCache(configuration.getString("cache-path"));
+    loadVoices();
+  }
+  
+  @Override public URI synthesize(final String text, final String gender, final String language)
+      throws IllegalArgumentException, SpeechSynthesizerException {
+    final List<NameValuePair> parameters = new ArrayList<NameValuePair>(33);
+    parameters.addAll(DEFAULT_PARAMETERS);
+    parameters.add(new BasicNameValuePair("cl_app", application));
+    parameters.add(new BasicNameValuePair("cl_login", login));
+    parameters.add(new BasicNameValuePair("cl_pwd", password));
+    parameters.add(new BasicNameValuePair("req_voice", findSpeaker(gender, language)));
+    parameters.add(new BasicNameValuePair("req_text", text));
+    final String parameterString = URLEncodedUtils.format(parameters, "UTF-8");
+    final HttpPost request = new HttpPost(serviceRoot);
+    try {
+	  request.setEntity(new StringEntity(parameterString));
+	  final HttpClient client = new DefaultHttpClient();
+	  final HttpResponse response = client.execute(request);
+	  return store(text, response);
+	} catch(final Exception exception) {
+      throw new SpeechSynthesizerException(exception);
+	}
+  }
+}

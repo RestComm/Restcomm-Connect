@@ -22,6 +22,9 @@ import java.util.Set;
 import static org.mobicents.servlet.sip.restcomm.http.RequestMethod.*;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class Method extends AbstractAttribute {
   public static final String NAME = "method";
   private static final Set<String> VALUES;

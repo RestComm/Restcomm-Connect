@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml;
 
 import java.util.regex.Pattern;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public abstract class PhoneNumberAttribute extends AbstractAttribute {
   private static final Pattern PATTERN = Pattern.compile("\\d{10,15}");
   public PhoneNumberAttribute() {

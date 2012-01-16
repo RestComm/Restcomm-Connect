@@ -96,7 +96,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
       localEndpoint = session.getPacketRelayEndpoint();
       final byte[] offer = initialInvite.getRawContent();
       final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
-      connection = new MgcpConnection(server, session, localEndpoint, remoteDescriptor);
+      connection = session.createConnection(localEndpoint, remoteDescriptor);
       connection.addObserver(this);
       connection.connect(ConnectionMode.Confrnce);
       wait();
@@ -136,7 +136,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
   
   private void cleanup() {
-	session.release();
+	server.destroyMediaSession(session);
 	initialInvite.getSession().invalidate();	  
   }
 
@@ -149,7 +149,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     final MgcpIvrEndpoint endpoint = session.getIvrEndpoint();
     endpoint.addObserver(this);
     remoteEndpoint = endpoint;
-    link = new MgcpLink(server, session, localEndpoint, remoteEndpoint);
+    link = session.createLink(localEndpoint, remoteEndpoint);
     link.addObserver(this);
 	link.connect(ConnectionMode.Confrnce);
   }
@@ -250,7 +250,6 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {
-	System.out.println("*****OPERATION COMPLETED*****");
     notify();
   }
 

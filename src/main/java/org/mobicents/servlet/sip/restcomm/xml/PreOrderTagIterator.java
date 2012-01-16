@@ -19,6 +19,9 @@ package org.mobicents.servlet.sip.restcomm.xml;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class PreOrderTagIterator implements TagIterator {
   private final Stack<Tag> stack;
   

@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class TimeLimit extends IntegerAttribute {
   public static final String NAME = "timeLimit";
   

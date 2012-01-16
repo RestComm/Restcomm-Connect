@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public abstract class VisitableTag extends AbstractTag {
   private boolean hasBeenVisited;
   

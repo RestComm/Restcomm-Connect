@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml;
 
 import org.mobicents.servlet.sip.restcomm.ObjectInstantiationException;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public interface TagFactory {
   public Attribute getAttributeInstance(String name) throws ObjectInstantiationException;
   public Tag getTagInstance(String name) throws ObjectInstantiationException;

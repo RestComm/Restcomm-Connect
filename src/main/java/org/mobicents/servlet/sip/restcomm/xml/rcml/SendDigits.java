@@ -20,6 +20,9 @@ import java.util.regex.Pattern;
 
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class SendDigits extends AbstractAttribute {
   public static final String NAME = "sendDigits";
   private static final Pattern PATTERN = Pattern.compile("[w\\d]*");

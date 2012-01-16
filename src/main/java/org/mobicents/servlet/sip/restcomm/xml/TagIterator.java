@@ -18,4 +18,7 @@ package org.mobicents.servlet.sip.restcomm.xml;
 
 import java.util.Iterator;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public interface TagIterator extends Iterator<Tag> { }

@@ -25,6 +25,9 @@ import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class Record extends RCMLTag {
   public static final String NAME = "Record";
   private static final Set<String> ATTRIBUTES;

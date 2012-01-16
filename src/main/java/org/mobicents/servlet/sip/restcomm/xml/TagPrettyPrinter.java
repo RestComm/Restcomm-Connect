@@ -23,6 +23,9 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class TagPrettyPrinter {
   private static final int TAB_SPACES = 2;
   

@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import org.mobicents.servlet.sip.restcomm.xml.UriAttribute;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class Action extends UriAttribute {
   public static final String NAME = "action";
 

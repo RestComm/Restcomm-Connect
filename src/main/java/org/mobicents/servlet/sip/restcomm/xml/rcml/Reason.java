@@ -21,6 +21,9 @@ import java.util.Set;
 
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class Reason extends AbstractAttribute {
   public static final String REJECTED = "rejected";
   public static final String BUSY = "busy";

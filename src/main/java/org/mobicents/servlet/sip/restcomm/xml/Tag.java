@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml;
 
 import java.util.List;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public interface Tag {
   public void addAttribute(Attribute attribute) throws UnsupportedAttributeException;
   public void addChild(Tag child) throws UnsupportedTagException;

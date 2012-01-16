@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.sms;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class SmsAggregatorException extends Exception {
   private static final long serialVersionUID = 1L;
 

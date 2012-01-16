@@ -25,9 +25,12 @@ import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
-import org.mobicents.servlet.sip.restcomm.xml.XmlResource;
+import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
 
-public final class Response extends RCMLTag implements XmlResource {
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
+public final class Response extends RCMLTag implements XmlDocument {
   public static final String NAME = "Response";
   private static final Set<String> CHILDREN;
   static {

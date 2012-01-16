@@ -26,10 +26,10 @@ import org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndex;
 import org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndexException;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
-import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceDescriptor;
-import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceServer;
-import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceServerFactory;
-import org.mobicents.servlet.sip.restcomm.util.UrlUtils;
+import org.mobicents.servlet.sip.restcomm.http.client.ResourceDescriptor;
+import org.mobicents.servlet.sip.restcomm.http.client.ResourceServer;
+import org.mobicents.servlet.sip.restcomm.http.client.ResourceServerFactory;
+import org.mobicents.servlet.sip.restcomm.util.UriUtils;
 
 public final class InterpreterContext {
   private final Call call;
@@ -72,7 +72,7 @@ public final class InterpreterContext {
 	if(method.equals(RequestMethod.GET)) {
 	  descriptor.setAttributes(attributes);
 	} else if(method.equals(RequestMethod.POST)) {
-	  final String message = UrlUtils.toQueryString(attributes);
+	  final String message = UriUtils.toQueryString(attributes);
 	  descriptor.setMessage(message.getBytes());
 	}
     return descriptor;

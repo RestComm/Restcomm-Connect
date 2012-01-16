@@ -110,6 +110,39 @@
 		<account></account>
 	</sms-aggregator>
 	-->
+	
+	<!--
+		The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway.
+	-->
+	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
+		<cache-path>/tmp</cache-path>
+		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
+		<application>EVAL_6380429</application>
+		<login>EVAL_VAAS</login>
+		<password>p5g8jr27</password>
+		<speakers>
+		  <british-english>
+		    <female>rachel8k</female>
+		    <male>graham8k</male>
+		  </british-english>
+		  <english>
+		    <female>heather8k</female>
+		    <male>ryan8k</male>
+		  </english>
+		  <french>
+		    <female>claire8k</female>
+		    <male>bruno8k</male>
+		  </french>
+		  <german>
+		    <female>sarah8k</female>
+		    <male>klaus8k</male>
+		  </german>
+		  <spanish>
+		    <female>antonio8k</female>
+		    <male>maria8k</male>
+		  </spanish>
+		</speakers>
+	</speech-synthesizer>
 
 	<!-- 
 		The Storage system is responsible for storing RestComm objects.

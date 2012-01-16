@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class ObjectInstantiationException extends Exception {
   private static final long serialVersionUID = 1L;
 

@@ -23,14 +23,14 @@ import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
-import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceDescriptor;
-import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceFetchException;
-import org.mobicents.servlet.sip.restcomm.resourceserver.ResourceServer;
+import org.mobicents.servlet.sip.restcomm.http.client.ResourceDescriptor;
+import org.mobicents.servlet.sip.restcomm.http.client.HttpServiceException;
+import org.mobicents.servlet.sip.restcomm.http.client.ResourceServer;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagIterator;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
-import org.mobicents.servlet.sip.restcomm.xml.XmlResource;
+import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTag;
 
 public final class Interpreter extends FiniteStateMachine implements Runnable, TagVisitor {
@@ -60,7 +60,7 @@ public final class Interpreter extends FiniteStateMachine implements Runnable, T
   private final TagStrategyFactory factory;
   // XML Resource.
   private ResourceDescriptor descriptor;
-  private XmlResource resource;
+  private XmlDocument resource;
 	
   public Interpreter(final InterpreterContext context) {
     super(IDLE);
@@ -112,7 +112,7 @@ public final class Interpreter extends FiniteStateMachine implements Runnable, T
     final ResourceServer server = context.getResourceServer();
     try {
       resource = server.getXmlResource(descriptor);
-  	} catch(final ResourceFetchException exception) {
+  	} catch(final HttpServiceException exception) {
   	  throw new InterpreterException(exception);
   	}
   }

@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import org.mobicents.servlet.sip.restcomm.xml.PhoneNumberAttribute;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class From extends PhoneNumberAttribute {
   public static final String NAME = "from";
   

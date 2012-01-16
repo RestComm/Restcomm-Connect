@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class ObjectFactory {
   private static final class SingletonHolder {
     private static final ObjectFactory INSTANCE = new ObjectFactory();
