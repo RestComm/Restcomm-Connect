@@ -21,10 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class AbstractTag implements Tag {
+@NotThreadSafe public abstract class AbstractTag implements Tag {
   protected final Map<String, Attribute> attributes;
   protected final List<Tag> children;
   protected Tag parent;

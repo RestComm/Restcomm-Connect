@@ -16,6 +16,10 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
@@ -26,8 +30,9 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Client extends RCMLTag {
+@NotThreadSafe public final class Client extends RCMLTag {
   public static final String NAME = "Client";
+  private static final Pattern PATTERN = Pattern.compile("[_a-z]+");
   
   public Client() {
     super();
@@ -63,5 +68,14 @@ public final class Client extends RCMLTag {
   
   @Override public boolean isVerb() {
     return false;
+  }
+  
+  @Override public void setText(final String text) {
+    final Matcher matcher = PATTERN.matcher(text);
+    if(matcher.matches()) {
+      super.setText(text);
+    } else {
+      throw new IllegalArgumentException(text + " is not a valid identifier for the <" + NAME + "> tag.");
+    }
   }
 }

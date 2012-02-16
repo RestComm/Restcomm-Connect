@@ -14,22 +14,15 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.xml.rcml;
+package org.mobicents.servlet.sip.restcomm;
 
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.PhoneNumberAttribute;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class From extends PhoneNumberAttribute {
-  public static final String NAME = "from";
-  
-  public From() {
+@ThreadSafe public final class ServiceLocator {
+  public ServiceLocator() {
     super();
-  }
-  
-  @Override public String getName() {
-    return NAME;
   }
 }

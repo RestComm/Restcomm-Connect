@@ -19,10 +19,12 @@ package org.mobicents.servlet.sip.restcomm.xml;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class UriAttribute extends AbstractAttribute {
+@NotThreadSafe public abstract class UriAttribute extends AbstractAttribute {
   public UriAttribute() {
     super();
   }

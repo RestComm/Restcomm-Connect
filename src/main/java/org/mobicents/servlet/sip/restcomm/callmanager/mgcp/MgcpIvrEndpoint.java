@@ -24,11 +24,16 @@ import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
 
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParametersBuilder;
 
-public final class MgcpIvrEndpoint extends FiniteStateMachine implements JainMgcpListener, MgcpEndpoint {
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
+@ThreadSafe public final class MgcpIvrEndpoint extends FiniteStateMachine implements JainMgcpListener, MgcpEndpoint {
   private static final Logger LOGGER = Logger.getLogger(MgcpIvrEndpoint.class);
   private static final PackageName PACKAGE_NAME = PackageName.factory("AU");
   private static final RequestedEvent[] REQUESTED_EVENTS = new RequestedEvent[2];

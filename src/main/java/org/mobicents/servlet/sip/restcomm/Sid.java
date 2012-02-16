@@ -2,7 +2,9 @@ package org.mobicents.servlet.sip.restcomm;
 
 import java.util.UUID;
 
-public final class Sid {
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+
+@Immutable public final class Sid {
   private final String id;
   
   public Sid() {

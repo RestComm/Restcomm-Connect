@@ -18,9 +18,9 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
@@ -29,7 +29,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Number extends RCMLTag {
+@NotThreadSafe public final class Number extends RCMLTag {
   public static final String NAME = "Number";
   private static final Set<String> ATTRIBUTES;
   static {
@@ -37,7 +37,9 @@ public final class Number extends RCMLTag {
     ATTRIBUTES.add(SendDigits.NAME);
     ATTRIBUTES.add(Url.NAME);
   }
-  private static final Pattern PATTERN = Pattern.compile("\\d{3}-\\d{3}-\\d{4}");
+  private static final Pattern E164 = Pattern.compile("\\+?\\d{10,15}");
+  private static final Pattern US_1 = Pattern.compile("\\d{3}\\-\\d{3}\\-\\d{4}");
+  private static final Pattern US_2 = Pattern.compile("\\(\\d{3}\\)\\d{3}\\-\\d{4}");
   
   public Number() {
     super();
@@ -72,8 +74,7 @@ public final class Number extends RCMLTag {
   }
   
   @Override public void setText(final String text) {
-    final Matcher matcher = PATTERN.matcher(text);
-    if(matcher.matches()) {
+    if(E164.matcher(text).matches() || US_1.matcher(text).matches() || US_2.matcher(text).matches()) {
       super.setText(text);
     } else {
       throw new IllegalArgumentException(text + " is not a valid phone number for the <" + NAME + "> tag.");

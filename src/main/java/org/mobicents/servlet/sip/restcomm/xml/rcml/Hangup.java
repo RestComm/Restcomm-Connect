@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
@@ -26,7 +27,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Hangup extends RCMLTag {
+@NotThreadSafe public final class Hangup extends RCMLTag {
   public static final String NAME = "Hangup";
   
   public Hangup() {

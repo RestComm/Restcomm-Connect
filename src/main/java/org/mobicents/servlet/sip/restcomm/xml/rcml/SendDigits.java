@@ -18,14 +18,15 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import java.util.regex.Pattern;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class SendDigits extends AbstractAttribute {
+@NotThreadSafe public final class SendDigits extends AbstractAttribute {
   public static final String NAME = "sendDigits";
-  private static final Pattern PATTERN = Pattern.compile("[w\\d]*");
+  private static final Pattern PATTERN = Pattern.compile("w*\\d+");
   
   public SendDigits() {
     super();

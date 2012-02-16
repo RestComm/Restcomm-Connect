@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
@@ -30,7 +31,7 @@ import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Response extends RCMLTag implements XmlDocument {
+@NotThreadSafe public final class Response extends RCMLTag implements XmlDocument {
   public static final String NAME = "Response";
   private static final Set<String> CHILDREN;
   static {

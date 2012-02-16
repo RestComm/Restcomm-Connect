@@ -19,10 +19,12 @@ package org.mobicents.servlet.sip.restcomm.xml;
 import java.util.List;
 import java.util.Stack;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class PreOrderTagIterator implements TagIterator {
+@NotThreadSafe public final class PreOrderTagIterator implements TagIterator {
   private final Stack<Tag> stack;
   
   public PreOrderTagIterator(final Tag tag) {
@@ -31,11 +33,11 @@ public final class PreOrderTagIterator implements TagIterator {
     stack.push(tag);
   }
   
-  public boolean hasNext() {
+  @Override public boolean hasNext() {
     return stack.isEmpty() ? false : true;
   }
 
-  public Tag next() {
+  @Override public Tag next() {
     if(stack.isEmpty()) {
       return null;
     }
@@ -49,7 +51,7 @@ public final class PreOrderTagIterator implements TagIterator {
 	return tag;
   }
 
-  public void remove() {
+  @Override public void remove() {
     throw new UnsupportedOperationException("remove() is not a supported operation.");
   }
 }

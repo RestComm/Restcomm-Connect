@@ -27,12 +27,13 @@ import java.nio.channels.FileLock;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class DiskCache {
+@ThreadSafe public final class DiskCache {
   private static final String FILE_EXTENSION = "wav";  
   private final String location;
   

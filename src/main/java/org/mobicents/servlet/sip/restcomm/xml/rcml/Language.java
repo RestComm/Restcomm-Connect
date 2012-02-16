@@ -19,20 +19,23 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Language extends AbstractAttribute {
+@NotThreadSafe public final class Language extends AbstractAttribute {
+  public static final String NAME = "language";
+  public static final String BRITISH_ENGLISH = "en-gb";
   public static final String ENGLISH = "en";
   public static final String SPANISH = "es";
   public static final String FRENCH = "fr";
   public static final String GERMAN = "de";
-  public static final String NAME = "language";
   private static final Set<String> VALUES;
   static {
     VALUES = new HashSet<String>();
+    VALUES.add(BRITISH_ENGLISH);
     VALUES.add(ENGLISH);
     VALUES.add(SPANISH);
     VALUES.add(FRENCH);

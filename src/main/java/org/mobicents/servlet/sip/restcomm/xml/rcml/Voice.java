@@ -19,15 +19,16 @@ package org.mobicents.servlet.sip.restcomm.xml.rcml;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Voice extends AbstractAttribute {
+@NotThreadSafe public final class Voice extends AbstractAttribute {
+  public static final String NAME = "voice";
   public static final String MAN = "man";
   public static final String WOMAN = "woman";
-  public static final String NAME = "voice";
   private static final Set<String> VALUES;
   static {
     VALUES = new HashSet<String>();

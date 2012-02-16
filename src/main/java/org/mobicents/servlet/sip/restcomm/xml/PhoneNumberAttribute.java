@@ -18,11 +18,16 @@ package org.mobicents.servlet.sip.restcomm.xml;
 
 import java.util.regex.Pattern;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class PhoneNumberAttribute extends AbstractAttribute {
-  private static final Pattern PATTERN = Pattern.compile("\\d{10,15}");
+@NotThreadSafe public abstract class PhoneNumberAttribute extends AbstractAttribute {
+  private static final Pattern E164 = Pattern.compile("\\+?\\d{10,15}");
+  private static final Pattern US_1 = Pattern.compile("\\d{3}\\-\\d{3}\\-\\d{4}");
+  private static final Pattern US_2 = Pattern.compile("\\(\\d{3}\\)\\d{3}\\-\\d{4}");
+  
   public PhoneNumberAttribute() {
     super();
   }
@@ -30,6 +35,6 @@ public abstract class PhoneNumberAttribute extends AbstractAttribute {
   @Override public abstract String getName();
 
   @Override public boolean isSupportedValue(final String value) {
-    return PATTERN.matcher(value).matches();
+    return E164.matcher(value).matches() || US_1.matcher(value).matches() || US_2.matcher(value).matches();
   }
 }

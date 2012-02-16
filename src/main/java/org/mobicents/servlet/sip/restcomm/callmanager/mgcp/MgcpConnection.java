@@ -23,8 +23,12 @@ import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
-public final class MgcpConnection extends FiniteStateMachine implements JainMgcpListener {
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
+@NotThreadSafe public final class MgcpConnection extends FiniteStateMachine implements JainMgcpListener {
   private static final Logger LOGGER = Logger.getLogger(MgcpConnection.class);
   private static final State CREATED = new State("CREATED");
   private static final State HALF_OPEN = new State("HALF_OPEN");

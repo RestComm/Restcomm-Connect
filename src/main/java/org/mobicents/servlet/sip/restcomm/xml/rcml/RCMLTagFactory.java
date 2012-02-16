@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mobicents.servlet.sip.restcomm.ObjectInstantiationException;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
@@ -27,7 +28,7 @@ import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class RCMLTagFactory implements TagFactory {
+@ThreadSafe public final class RCMLTagFactory implements TagFactory {
   private static final Map<String, Class<? extends Attribute>> ATTRIBUTES;
   private static final Map<String, Class<? extends Tag>> TAGS;
   static {

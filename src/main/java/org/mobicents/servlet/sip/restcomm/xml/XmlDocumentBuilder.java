@@ -25,11 +25,12 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.mobicents.servlet.sip.restcomm.ObjectInstantiationException;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class XmlDocumentBuilder {
+@ThreadSafe public final class XmlDocumentBuilder {
   private final TagFactory factory;
   
   public XmlDocumentBuilder(final TagFactory factory) {
@@ -119,7 +120,7 @@ public final class XmlDocumentBuilder {
   	      if(!tagStack.isEmpty() && tagStack.size() == 1) {
   	    	tag = tagStack.pop();
   	    	if(!tag.canBeRoot()) {
-  	    	  throw new XmlDocumentBuilderException("The tag <" + tag.getName() + "> can not be a RestComm XML resource root tag.");
+  	    	  throw new XmlDocumentBuilderException("The tag <" + tag.getName() + "> can not be a RestComm XML document root tag.");
   	    	}
   	      }
   	      continue;

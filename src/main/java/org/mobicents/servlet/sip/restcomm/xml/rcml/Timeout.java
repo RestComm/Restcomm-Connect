@@ -16,12 +16,13 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Timeout extends IntegerAttribute {
+@NotThreadSafe public final class Timeout extends IntegerAttribute {
   public static final String NAME = "timeout";
   
   public Timeout() {

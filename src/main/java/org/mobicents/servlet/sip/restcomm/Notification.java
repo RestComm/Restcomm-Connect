@@ -7,6 +7,9 @@ import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public interface Notification {
   public String getSid();
   public DateTime getDateCreated();

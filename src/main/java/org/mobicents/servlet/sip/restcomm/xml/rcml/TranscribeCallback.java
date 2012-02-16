@@ -16,12 +16,13 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.UriAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class TranscribeCallback extends UriAttribute {
+@NotThreadSafe public final class TranscribeCallback extends UriAttribute {
   public static final String NAME = "transcribeCallback";
   
   public TranscribeCallback() {

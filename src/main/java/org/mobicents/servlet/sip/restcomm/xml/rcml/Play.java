@@ -21,6 +21,7 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
@@ -29,7 +30,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Play extends RCMLTag {
+@NotThreadSafe public final class Play extends RCMLTag {
   public static final String NAME = "Play";
   private static final Set<String> ATTRIBUTES;
   static {

@@ -19,10 +19,12 @@ package org.mobicents.servlet.sip.restcomm.xml;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class BooleanAttribute extends AbstractAttribute {
+@NotThreadSafe public abstract class BooleanAttribute extends AbstractAttribute {
   protected static final Set<String> VALUES;
   static {
     VALUES = new HashSet<String>();

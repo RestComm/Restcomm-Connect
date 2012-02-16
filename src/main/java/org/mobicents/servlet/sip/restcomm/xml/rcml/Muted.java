@@ -16,12 +16,13 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.BooleanAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Muted extends BooleanAttribute {
+@NotThreadSafe public final class Muted extends BooleanAttribute {
   public static final String NAME = "muted";
   
   public Muted() {

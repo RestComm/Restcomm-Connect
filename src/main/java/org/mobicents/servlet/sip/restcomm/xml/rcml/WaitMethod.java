@@ -20,12 +20,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.mobicents.servlet.sip.restcomm.http.RequestMethod.*;
+
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class WaitMethod extends AbstractAttribute {
+@NotThreadSafe public final class WaitMethod extends AbstractAttribute {
   public static final String NAME = "waitMethod";
   private static final Set<String> VALUES;
   static {

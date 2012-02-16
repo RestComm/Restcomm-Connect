@@ -16,10 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class VisitableTag extends AbstractTag {
+@NotThreadSafe public abstract class VisitableTag extends AbstractTag {
   private boolean hasBeenVisited;
   
   public VisitableTag() {

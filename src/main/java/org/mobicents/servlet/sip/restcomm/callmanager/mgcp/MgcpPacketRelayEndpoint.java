@@ -2,7 +2,9 @@ package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 
-public final class MgcpPacketRelayEndpoint implements MgcpEndpoint {
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+
+@ThreadSafe public final class MgcpPacketRelayEndpoint implements MgcpEndpoint {
   private final EndpointIdentifier any;
   private volatile EndpointIdentifier endpointId;
   
