@@ -16,10 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.util;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class WrapAroundCounter {
+@ThreadSafe public final class WrapAroundCounter {
   private volatile long count;
   private final long limit;
   

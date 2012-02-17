@@ -22,14 +22,8 @@ import java.util.Map;
 
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Environment;
-import org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndex;
-import org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndexException;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
-import org.mobicents.servlet.sip.restcomm.http.client.ResourceDescriptor;
-import org.mobicents.servlet.sip.restcomm.http.client.ResourceServer;
-import org.mobicents.servlet.sip.restcomm.http.client.ResourceServerFactory;
-import org.mobicents.servlet.sip.restcomm.util.UriUtils;
 
 public final class InterpreterContext {
   private final Call call;

@@ -3,12 +3,14 @@ package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class MgcpSession {
+@NotThreadSafe public final class MgcpSession {
   private final int id;
   private final MgcpServer server;
   

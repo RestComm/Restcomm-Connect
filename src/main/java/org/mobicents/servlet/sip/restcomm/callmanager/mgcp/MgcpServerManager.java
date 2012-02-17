@@ -12,12 +12,13 @@ import org.mobicents.servlet.sip.restcomm.Configurable;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class MgcpServerManager extends FiniteStateMachine implements Configurable, LifeCycle {
+@ThreadSafe public final class MgcpServerManager extends FiniteStateMachine implements Configurable, LifeCycle {
   // Initialize the logger.
   private static final Logger LOGGER = Logger.getLogger(MgcpServerManager.class);
   // Define our root configuration node.

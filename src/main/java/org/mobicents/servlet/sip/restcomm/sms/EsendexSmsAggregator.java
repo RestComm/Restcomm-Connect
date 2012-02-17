@@ -16,17 +16,19 @@
  */
 package org.mobicents.servlet.sip.restcomm.sms;
 
-import org.apache.commons.configuration.Configuration;
-
 import com.esendex.sdk.ems.soapinterface.EsendexHeader;
 import com.esendex.sdk.ems.soapinterface.MessageType;
 import com.esendex.sdk.ems.soapinterface.SendServiceLocator;
 import com.esendex.sdk.ems.soapinterface.SendServiceSoap_BindingStub;
 
+import org.apache.commons.configuration.Configuration;
+
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class EsendexSmsAggregator implements SmsAggregator {
+@ThreadSafe public final class EsendexSmsAggregator implements SmsAggregator {
   private String account;
   private String user;
   private String password;

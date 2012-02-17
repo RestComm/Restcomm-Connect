@@ -16,10 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.util;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class HexadecimalUtils {
+@ThreadSafe public final class HexadecimalUtils {
   private static final char[] HEX_DIGITS = {
     '0', '1', '2', '3', '4', '5', '6',
     '7', '8', '9', 'a', 'b', 'c', 'd',

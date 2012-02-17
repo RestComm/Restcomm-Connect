@@ -22,8 +22,9 @@ import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
-public class MgcpLink extends FiniteStateMachine implements JainMgcpListener {
+@NotThreadSafe public class MgcpLink extends FiniteStateMachine implements JainMgcpListener {
   private static final Logger LOGGER = Logger.getLogger(MgcpLink.class);
   private static final State CREATED = new State("CREATED");
   private static final State CONNECTED = new State("CONNECTED");

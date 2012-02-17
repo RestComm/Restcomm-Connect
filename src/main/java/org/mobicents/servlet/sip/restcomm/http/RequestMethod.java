@@ -16,7 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-public final class RequestMethod {
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+
+@Immutable public final class RequestMethod {
   public static final String DELETE = "DELETE";
   public static final String HEAD = "HEAD";
   public static final String GET = "GET";

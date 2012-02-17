@@ -38,12 +38,13 @@ import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class MgcpServer extends FiniteStateMachine implements JainMgcpListener, LifeCycle {
+@ThreadSafe public final class MgcpServer extends FiniteStateMachine implements JainMgcpListener, LifeCycle {
   // Initialize the logger.
   private static final Logger LOGGER = Logger.getLogger(MgcpServer.class);
   //Initialize the possible states and transitions.

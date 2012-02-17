@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
@@ -32,12 +34,14 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.cache.DiskCache;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
+@ThreadSafe public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
   private static final String CLIENT_VERSION = "0-01";
   private static final String ENVIRONMENT = "RESTCOMM_1.0.0";
   private static final String PROTOCOL_VERSION = "2";
@@ -82,6 +86,9 @@ public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
   private String password;
   private URI serviceRoot;
   
+  private Map<String, String> women;
+  private Map<String, String> men;
+  
   private DiskCache cache;
   
   public AcapelaSpeechSynthesizer() {
@@ -92,26 +99,31 @@ public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
     this.configuration = configuration;
   }
   
-  private URI store(final String text, final HttpResponse response) throws IOException {
-	final int status = response.getStatusLine().getStatusCode();
-	if(status == HttpStatus.SC_OK) {
-	  final InputStream content = response.getEntity().getContent();
-	  final URI uri = cache.put(text, content);
-	  return uri;
+  private String findSpeaker(final String gender, final String language) throws IllegalArgumentException {
+    String speaker = null;
+	if("woman".equalsIgnoreCase(gender)) {
+	  speaker = women.get(language);
+	} else if("man".equalsIgnoreCase(gender)) {
+	  speaker = men.get(language);
 	} else {
-	  final String reason = response.getStatusLine().getReasonPhrase();
-	  final StringBuilder buffer = new StringBuilder();
-	  buffer.append(status).append(" ").append(reason);
-	  throw new IOException(buffer.toString());
+	  throw new IllegalArgumentException(gender + " is not a valid gender.");
 	}
-  }
-  
-  private String findSpeaker(final String voice, final String language) throws IllegalArgumentException {
-	return null;
+	return speaker;
   }
   
   private void loadVoices() throws RuntimeException {
-    
+    women = new HashMap<String, String>();
+    men = new HashMap<String, String>();
+    women.put("en", configuration.getString("speakers.english.female"));
+    women.put("en-gb", configuration.getString("speakers.british-english.female"));
+    women.put("es", configuration.getString("speakers.spanish.female"));
+    women.put("fr", configuration.getString("speakers.french.female"));
+    women.put("de", configuration.getString("speakers.german.female"));
+    men.put("en", configuration.getString("speakers.english.male"));
+    men.put("en-gb", configuration.getString("speakers.british-english.male"));
+    men.put("es", configuration.getString("speakers.spanish.male"));
+    men.put("fr", configuration.getString("speakers.french.male"));
+    men.put("de", configuration.getString("speakers.german.male"));
   }
   
   @Override public void shutdown() {
@@ -145,6 +157,20 @@ public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
 	  return store(text, response);
 	} catch(final Exception exception) {
       throw new SpeechSynthesizerException(exception);
+	}
+  }
+  
+  private URI store(final String text, final HttpResponse response) throws IOException {
+	final int status = response.getStatusLine().getStatusCode();
+	if(status == HttpStatus.SC_OK) {
+	  final InputStream content = response.getEntity().getContent();
+	  final URI uri = cache.put(text, content);
+	  return uri;
+	} else {
+	  final String reason = response.getStatusLine().getReasonPhrase();
+	  final StringBuilder buffer = new StringBuilder();
+	  buffer.append(status).append(" ").append(reason);
+	  throw new IOException(buffer.toString());
 	}
   }
 }

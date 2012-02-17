@@ -4,7 +4,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AdvancedAudioParametersBuilder {
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
+@NotThreadSafe public final class AdvancedAudioParametersBuilder {
   private final List<URI> announcement;
   private final List<URI> initialPrompt;
   private int iterations;
