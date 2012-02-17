@@ -16,14 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.mobicents.servlet.sip.restcomm.Application;
-import org.mobicents.servlet.sip.restcomm.Environment;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 
 public final class InterpreterContext {
   private final Call call;
@@ -33,46 +26,7 @@ public final class InterpreterContext {
     this.call = call;
   }
   
-  private Application getApplication() throws InterpreterContextException {
-	final String endpoint = call.getRecipient();
-    try {
-      final Environment environment = Environment.getInstance();
-      final ApplicationIndex index = environment.getApplicationIndex();
-	  return index.locate(endpoint);
-	} catch(final ApplicationIndexException exception) {
-	  throw new InterpreterContextException(exception);
-	}
-  }
-  
   public Call getCall() {
     return call;
-  }
-  
-  public ResourceDescriptor getEntryPointDescriptor() throws InterpreterContextException {
-    // Create a resource descriptor for the application's entry point.
-    final Application application = getApplication();
-    final String method = application.getRequestMethod();
-    final URI uri = application.getUri();
-	final ResourceDescriptor descriptor = new ResourceDescriptor(uri);
-	descriptor.setMethod(method);
-	// Append the attributes to the request.
-    final Map<String, Object> attributes = new HashMap<String, Object>();
-    attributes.put("CallSid", call.getId());
-    attributes.put("From", call.getOriginator());
-    attributes.put("To", call.getRecipient());
-    attributes.put("CallStatus", call.getStatus());
-    attributes.put("ApiVersion", "2010-04-01");
-    attributes.put("Direction", call.getDirection());
-	if(method.equals(RequestMethod.GET)) {
-	  descriptor.setAttributes(attributes);
-	} else if(method.equals(RequestMethod.POST)) {
-	  final String message = UriUtils.toQueryString(attributes);
-	  descriptor.setMessage(message.getBytes());
-	}
-    return descriptor;
-  }
-  
-  public ResourceServer getResourceServer() {
-    return ResourceServerFactory.getInstance().getResourceServerInstance();
   }
 }

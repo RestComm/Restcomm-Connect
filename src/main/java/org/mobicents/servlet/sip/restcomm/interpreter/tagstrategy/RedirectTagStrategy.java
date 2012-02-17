@@ -16,16 +16,11 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
-import java.net.URI;
-
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.http.client.ResourceDescriptor;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 
 public final class RedirectTagStrategy extends TwiMLTagStrategy {
   public RedirectTagStrategy() {
@@ -38,6 +33,7 @@ public final class RedirectTagStrategy extends TwiMLTagStrategy {
     // Try to answer the call if it hasn't been done so already.
     answer(call);
     // Redirect the interpreter to the new RCML resource.
+    /*
     final String text = tag.getText();
     if(text != null) {
       final URI base = interpreter.getDescriptor().getUri();
@@ -53,5 +49,6 @@ public final class RedirectTagStrategy extends TwiMLTagStrategy {
 	  }
       interpreter.redirect();
     }
+    */
   }
 }

@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +24,6 @@ import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
-import org.mobicents.servlet.sip.restcomm.http.client.ResourceDescriptor;
-import org.mobicents.servlet.sip.restcomm.http.client.HttpServiceException;
-import org.mobicents.servlet.sip.restcomm.http.client.ResourceServer;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagIterator;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
@@ -59,7 +57,6 @@ public final class Interpreter extends FiniteStateMachine implements Runnable, T
   //Tag strategy factory.
   private final TagStrategyFactory factory;
   // XML Resource.
-  private ResourceDescriptor descriptor;
   private XmlDocument resource;
 	
   public Interpreter(final InterpreterContext context) {
@@ -87,34 +84,17 @@ public final class Interpreter extends FiniteStateMachine implements Runnable, T
     setState(FINISHED);
   }
   
-  public ResourceDescriptor getDescriptor() {
-    return descriptor;
-  }
-  
   public void initialize() throws InterpreterException {
-    try {
-      final ResourceDescriptor descriptor = context.getEntryPointDescriptor();
-      loadResource(descriptor);
-      setState(READY);
-    } catch(final InterpreterContextException exception) {
-      setState(FAILED);
-      throw new InterpreterException(exception);
-    }
+    setState(READY);
   }
   
-  public void loadResource(final ResourceDescriptor descriptor) throws InterpreterException {
+  public void loadResource(final URI descriptor) throws InterpreterException {
 	final List<State> possibleStates = new ArrayList<State>();
 	possibleStates.add(IDLE);
 	possibleStates.add(EXECUTING);
 	assertState(possibleStates);
 	// Load the XML resource for execution.
-	this.descriptor = descriptor;
-    final ResourceServer server = context.getResourceServer();
-    try {
-      resource = server.getXmlResource(descriptor);
-  	} catch(final HttpServiceException exception) {
-  	  throw new InterpreterException(exception);
-  	}
+	
   }
   
   public void redirect() {
