@@ -14,17 +14,34 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.dao;
+package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
 import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface AccountDao {
-  public void addAccount(Account account);
-  public Account getAccount(Sid sid);
-  public void removeAccount(Account account);
-  public void updateAccount(Account account);
+@ThreadSafe public class MongoAccountDao implements AccountDao {
+  public MongoAccountDao() {
+    super();
+  }
+
+  @Override public void addAccount(final Account account) {
+    
+  }
+
+  @Override public Account getAccount(final Sid sid) {
+    return null;
+  }
+
+  @Override public void removeAccount(final Account account) {
+    
+  }
+
+  @Override public void updateAccount(final Account account) {
+    
+  }
 }

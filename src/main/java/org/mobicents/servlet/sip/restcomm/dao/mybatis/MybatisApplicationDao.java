@@ -14,17 +14,34 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.dao;
+package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
-import org.mobicents.servlet.sip.restcomm.Account;
+import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.ApplicationDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface AccountDao {
-  public void addAccount(Account account);
-  public Account getAccount(Sid sid);
-  public void removeAccount(Account account);
-  public void updateAccount(Account account);
+@ThreadSafe public class MybatisApplicationDao implements ApplicationDao {
+  public MybatisApplicationDao() {
+    super();
+  }
+
+  @Override public void addApplication(final Application application) {
+    
+  }
+
+  @Override public Application getApplication(final Sid sid) {
+    return null;
+  }
+
+  @Override public void removeApplication(final Application application) {
+    
+  }
+
+  @Override public void updateApplication(final Application application) {
+    
+  }
 }

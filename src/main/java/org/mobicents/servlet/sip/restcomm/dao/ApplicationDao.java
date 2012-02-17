@@ -16,15 +16,15 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao;
 
-import org.mobicents.servlet.sip.restcomm.Account;
+import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface AccountDao {
-  public void addAccount(Account account);
-  public Account getAccount(Sid sid);
-  public void removeAccount(Account account);
-  public void updateAccount(Account account);
+public interface ApplicationDao {
+  public void addApplication(Application application);
+  public Application getApplication(Sid sid);
+  public void removeApplication(Application application);
+  public void updateApplication(Application application);
 }
