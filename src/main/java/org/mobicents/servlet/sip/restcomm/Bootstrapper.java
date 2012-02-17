@@ -24,7 +24,7 @@ public final class Bootstrapper {
   
   public static void bootstrap(final ServletConfig config) throws BootstrapException {
     final ServletContext context = config.getServletContext();
-    final String path = context.getRealPath("/conf/restcomm.xml");
+    final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
     if(logger.isInfoEnabled()) {
       logger.info("loading configuration file located at " + path);
     }

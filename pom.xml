@@ -129,7 +129,7 @@
 		    <artifactId>esendex</artifactId>
 		    <version>1.0.0</version>
 		    <scope>system</scope>
-		    <systemPath>${project.basedir}/src/main/webapp/lib/Esendex.jar</systemPath>
+		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Esendex.jar</systemPath>
 		</dependency>
 
 		<dependency>
