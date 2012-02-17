@@ -23,12 +23,10 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 
-<<<<<<< HEAD
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-=======
->>>>>>> 66b0cca0b96f5aff81aebfc0aba0d2a93d84f04e
+
 @Immutable public final class Application {
   private final Sid sid;
   private final DateTime dateCreated;
