@@ -16,46 +16,25 @@
  */
 package org.mobicents.servlet.sip.restcomm;
 
-import java.util.UUID;
-
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Sid {
-  private final String id;
-  
-  public Sid() {
+public class BootstrapException extends Exception {
+  private static final long serialVersionUID = 1L;
+
+  public BootstrapException() {
     super();
-    id = "AC" + UUID.randomUUID().toString().replaceAll("-", "");
   }
 
-  @Override public boolean equals(Object object) {
-	if(this == object) {
-	  return true;
-	}
-	if(object == null) {
-	  return false;
-	}
-	if(getClass() != object.getClass()) {
-	  return false;
-	}
-	final Sid other = (Sid)object;
-	if(!toString().equals(other.toString())) {
-	  return false;
-	}
-	return true;
+  public BootstrapException(final String message) {
+    super(message);
   }
 
-  @Override public int hashCode() {
-	final int prime = 5;
-	int result = 1;
-	result = prime * result + id.hashCode();
-	return result;
+  public BootstrapException(final Throwable cause) {
+    super(cause);
   }
 
-  @Override public String toString() {
-    return id;
+  public BootstrapException(final String message, final Throwable cause) {
+    super(message, cause);
   }
 }

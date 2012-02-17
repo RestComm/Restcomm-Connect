@@ -144,4 +144,82 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
   public URI getUri() {
     return uri;
   }
+  
+  public Application setDateUpdated(final DateTime dateUpdated) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+        smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setFriendlyName(final String friendlyName) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setVoiceCallerIdLookup(final boolean hasVoiceCallerIdLookup) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setVoiceUrl(final URI voiceUrl) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setVoiceMethod(final RequestMethod voiceMethod) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setVoiceFallbackUrl(final URI voiceFallbackUrl) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setVoiceFallbackMethod(final RequestMethod voiceFallbackMethod) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setStatusCallback(final URI statusCallback) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setStatusCallbackMethod(final RequestMethod statusCallbackMethod) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setSmsUrl(final URI smsUrl) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setSmsMethod(final RequestMethod smsMethod) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setSmsFallbackUrl(final URI smsFallbackUrl) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
+  
+  public Application setSmsFallbackMethod(final RequestMethod smsFallbackMethod) {
+    return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
+	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+  }
 }

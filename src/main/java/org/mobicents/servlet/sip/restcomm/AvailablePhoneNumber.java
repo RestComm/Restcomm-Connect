@@ -82,4 +82,9 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   public String getIsoCountry() {
     return isoCountry;
   }
+  
+  public AvailablePhoneNumber setFriendlyName(final String friendlyName) {
+    return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude,
+        region, postalCode, isoCountry);
+  }
 }

@@ -1,4 +1,20 @@
-package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
+
+/*
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
 import java.io.IOException;
 
@@ -16,7 +32,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.Logger;
 
-import org.mobicents.servlet.sip.restcomm.Environment;
+import org.mobicents.servlet.sip.restcomm.BootstrapException;
+import org.mobicents.servlet.sip.restcomm.Bootstrapper;
+import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
@@ -26,14 +44,14 @@ import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class MgcpCallManager extends SipServlet implements CallManager {
   private static final long serialVersionUID = 4758133818077979879L;
   private static final Logger LOGGER = Logger.getLogger(MgcpCallManager.class);
   
-  private static Environment environment;
   private static MgcpServerManager servers;
-  
-  private static SipGatewayManager sipGatewayManager;
   private static SipFactory sipFactory;
   
   public MgcpCallManager() {
@@ -41,24 +59,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   }
   
   @Override public Call createCall(final String from, final String to) throws CallManagerException {
-	try {
-	  final SipGateway sipGateway = sipGatewayManager.getGateway();
-	  final String fromAddress = new StringBuilder().append("sip:").append(from).append("@")
-	      .append(sipGateway.getProxy()).toString();
-	  final String toAddress = new StringBuilder().append("sip:").append(to).append("@")
-	      .append(sipGateway.getProxy()).toString();
-	  // Create new SIP request.
-	  final SipApplicationSession application = sipFactory.createApplicationSession();
-	  final SipServletRequest request = sipFactory.createRequest(application, "INVITE", fromAddress, toAddress);
-	  // Request a media server to handle the new out bound call.
-	  final MgcpServer server = servers.getMediaServer();
-	  // Create new call.
-	  final MgcpCall call = new MgcpCall(server);
-	  request.getSession().setAttribute("CALL", call);
-	  return call;
-	} catch(final Exception exception) {
-	  throw new CallManagerException(exception);
-	}
+	return null;
   }
   
   @Override protected final void doAck(final SipServletRequest request) throws ServletException, IOException {
@@ -90,7 +91,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 	  // Alert!
 	  call.alert(request);
 	  // Hand the call to an interpreter for processing.
-	  final InterpreterExecutor executor = environment.getInterpreterExecutor();
+	  final InterpreterExecutor executor = ServiceLocator.getInstance().get(InterpreterExecutor.class);
 	  final InterpreterContext context = new InterpreterContext(call);
 	  executor.submit(context);
 	} catch(final InterpreterException exception) {
@@ -108,41 +109,16 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   }
 
   @Override public final void destroy() {
-	// Clean up.
-	environment.shutdown();
-	servers.shutdown();
+	// Do something!
   }
 
   @Override public final void init(final ServletConfig config) throws ServletException {
-	final ServletContext context = config.getServletContext();
-    final String path = context.getRealPath("/conf/restcomm.xml");
-    if(LOGGER.isInfoEnabled()) {
-      LOGGER.info("loading configuration file located at " + path);
-    }
-    // Load configuration
-    XMLConfiguration configuration = null;
     try {
-	  configuration = new XMLConfiguration(path);
-	} catch(final ConfigurationException exception) {
-      LOGGER.error("The RestComm environment could not be bootstrapped.", exception);
-	}
-    // Initialize the media server.
-    servers = new MgcpServerManager();
-    servers.configure(configuration);
-    servers.start();
-    // Initialize the conference center.
-  	// final Jsr309ConferenceCenter conferenceCenter = new Jsr309ConferenceCenter(mediaServerManager);
-    // Initialize the SIP gateway manager.
- 	// sipGatewayManager = SipGatewayManager.getInstance();
- 	// sipGatewayManager.configure(configuration);
- 	// sipGatewayManager.initialize();
-    // Initialize the SIP factory.
-	sipFactory = (SipFactory)config.getServletContext().getAttribute(SIP_FACTORY);
-	// Bootstrap the environment.
- 	environment = Environment.getInstance();
-	environment.configure(configuration);
-	environment.start();
-	environment.setCallManager(this);
-	// environment.setConferenceCenter(conferenceCenter);
+	  Bootstrapper.bootstrap(config);
+    } catch(final BootstrapException exception) {
+      throw new ServletException(exception);
+    }
+    servers = ServiceLocator.getInstance().get(MgcpServerManager.class);
+    sipFactory = (SipFactory)config.getServletContext().getAttribute(SIP_FACTORY);
   }
 }

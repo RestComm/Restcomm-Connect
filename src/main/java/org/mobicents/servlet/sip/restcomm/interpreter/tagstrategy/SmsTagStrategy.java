@@ -16,7 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
-import org.mobicents.servlet.sip.restcomm.Environment;
+import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
@@ -28,7 +28,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.From;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.To;
 
 public final class SmsTagStrategy extends TwiMLTagStrategy {
-  private static final SmsAggregator smsAggregator = Environment.getInstance().getSmsAggregator();
+  private static final SmsAggregator smsAggregator = ServiceLocator.getInstance().get(SmsAggregator.class);
 	  
   public SmsTagStrategy() {
     super();
