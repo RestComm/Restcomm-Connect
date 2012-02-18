@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import java.util.List;
+
 import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -32,16 +34,36 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
   @Override public void addAccount(final Account account) {
     
   }
+  
+  @Override public void addSubAccount(final Sid primaryAccountSid, final Account subAccount) {
+    
+  }
 
   @Override public Account getAccount(final Sid sid) {
+    return null;
+  }
+  
+  @Override public Account getSubAccount(final Sid sid) {
+    return null;
+  }
+  
+  @Override public List<Account> getSubAccounts(final Sid sid) {
     return null;
   }
 
   @Override public void removeAccount(final Account account) {
     
   }
+  
+  @Override public void removeSubAccount(final Account account) {
+    
+  }
 
   @Override public void updateAccount(final Account account) {
+    
+  }
+
+  @Override public void updateSubAccount(final Account account) {
     
   }
 }

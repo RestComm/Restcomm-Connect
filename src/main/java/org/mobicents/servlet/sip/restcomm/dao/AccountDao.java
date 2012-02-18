@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao;
 
+import java.util.List;
+
 import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
@@ -24,7 +26,12 @@ import org.mobicents.servlet.sip.restcomm.Sid;
  */
 public interface AccountDao {
   public void addAccount(Account account);
+  public void addSubAccount(Sid primaryAccountSid, Account subAccount);
   public Account getAccount(Sid sid);
+  public Account getSubAccount(Sid sid);
+  public List<Account> getSubAccounts(Sid primaryAccountSid);
   public void removeAccount(Account account);
+  public void removeSubAccount(Account account);
   public void updateAccount(Account account);
+  public void updateSubAccount(Account account);
 }

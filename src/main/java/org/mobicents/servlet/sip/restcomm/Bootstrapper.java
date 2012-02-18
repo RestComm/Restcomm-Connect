@@ -39,14 +39,14 @@ public final class Bootstrapper {
     // Register the services with the service locator.
     final ServiceLocator services = ServiceLocator.getInstance();
     try {
-    services.set(InterpreterExecutor.class, new InterpreterExecutor());
-    final CallManager callManager = (CallManager)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager");
-    services.set(CallManager.class, callManager);
-    final ConferenceCenter conferenceCenter = (ConferenceCenter)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter");
-    services.set(ConferenceCenter.class, conferenceCenter);
-    services.set(MgcpServerManager.class, getMgcpServerManager(configuration));
-    services.set(SmsAggregator.class, getSmsAggregator(configuration));
-    services.set(SpeechSynthesizer.class, getSpeechSynthesizer(configuration));
+      services.set(InterpreterExecutor.class, new InterpreterExecutor());
+      final CallManager callManager = (CallManager)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager");
+      services.set(CallManager.class, callManager);
+      final ConferenceCenter conferenceCenter = (ConferenceCenter)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter");
+      services.set(ConferenceCenter.class, conferenceCenter);
+      services.set(MgcpServerManager.class, getMgcpServerManager(configuration));
+      services.set(SmsAggregator.class, getSmsAggregator(configuration));
+      services.set(SpeechSynthesizer.class, getSpeechSynthesizer(configuration));
     } catch(final ObjectInstantiationException exception) {
       logger.error("The RestComm environment could not be bootstrapped.", exception);
       throw new BootstrapException(exception);

@@ -17,6 +17,7 @@
 package org.mobicents.servlet.sip.restcomm;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 
@@ -24,11 +25,21 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class Sid {
+  private static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
   private final String id;
   
   public Sid() {
     super();
     id = "AC" + UUID.randomUUID().toString().replaceAll("-", "");
+  }
+  
+  public Sid(final String id) throws IllegalArgumentException {
+    super();
+    if(pattern.matcher(id).matches()) {
+      this.id = id;
+    } else {
+      throw new IllegalArgumentException(id + " is an invalid sid value.");
+    }
   }
 
   @Override public boolean equals(Object object) {

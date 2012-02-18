@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.BootstrapException;
 import org.mobicents.servlet.sip.restcomm.Bootstrapper;
+import org.mobicents.servlet.sip.restcomm.Janitor;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
@@ -109,7 +110,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   }
 
   @Override public final void destroy() {
-	// Do something!
+	Janitor.cleanup();
   }
 
   @Override public final void init(final ServletConfig config) throws ServletException {
