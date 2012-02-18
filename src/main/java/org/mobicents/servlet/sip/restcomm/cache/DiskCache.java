@@ -94,9 +94,6 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
         channel = file.getChannel();
         // Acquire a lock to the file.
         lock = channel.lock();
-        if(contains(key)) {
-          return get(key);
-        }
         // Write the data to the file.
         final byte[] dataBuffer = new byte[8192];
         final ByteBuffer channelBuffer = ByteBuffer.allocate(8192);
