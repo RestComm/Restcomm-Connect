@@ -34,8 +34,8 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
   private final Sid accountSid;
   private final Sid callSid;
   private final String apiVersion;
-  private final int log;
-  private final int errorCode;
+  private final Integer log;
+  private final Integer errorCode;
   private final URI moreInfo;
   private final String messageText;
   private final DateTime messageDate;
@@ -47,7 +47,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
   private final URI uri;
   
   public Notification(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-      final Sid callSid, final String apiVersion, final int log, final int errorCode, final URI moreInfo, String messageText,
+      final Sid callSid, final String apiVersion, final Integer log, final Integer errorCode, final URI moreInfo, String messageText,
       final DateTime messageDate, final URI requestUrl, final RequestMethod requestMethod, final String requestVariables,
       final List<String> requestHeaders, final String responseBody, final URI uri) {
     super();

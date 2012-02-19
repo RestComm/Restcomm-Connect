@@ -51,11 +51,11 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
     return null;
   }
 
-  @Override public void removeAccount(final Account account) {
+  @Override public void removeAccount(final Sid sid) {
     
   }
   
-  @Override public void removeSubAccount(final Account account) {
+  @Override public void removeSubAccount(final Sid sid) {
     
   }
 

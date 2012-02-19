@@ -35,6 +35,7 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public class MybatisAccountDao implements AccountDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.";
   private final SqlSessionFactory sessions;
   
   public MybatisAccountDao(final SqlSessionFactory sessions) {
@@ -45,7 +46,7 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
   @Override public void addAccount(final Account account) {
     final SqlSession session = sessions.openSession();
     try {
-      session.insert("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.addAccount", toMap(account));
+      session.insert(namespace + "addAccount", toMap(account));
     } finally {
       session.close();
     }
@@ -56,18 +57,18 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
 	parameters.put("account_sid", primaryAccountSid.toString());
     final SqlSession session = sessions.openSession();
     try {
-      session.insert("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.addSubAccount", parameters);
+      session.insert(namespace + "addSubAccount", parameters);
     } finally {
       session.close();
     }
   }
 
   @Override public Account getAccount(final Sid sid) {
-    return getAccount("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.getAccount", sid);
+    return getAccount(namespace + "getAccount", sid);
   }
   
   @Override public Account getSubAccount(final Sid sid) {
-    return getAccount("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.getSubAccount", sid);
+    return getAccount(namespace + "getSubAccount", sid);
   }
   
   private Account getAccount(final String selector, final Sid sid) {
@@ -89,7 +90,7 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.getSubAccounts", primaryAccountSid.toString());
+      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getSubAccounts", primaryAccountSid.toString());
       final List<Account> accounts = new ArrayList<Account>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {
@@ -102,29 +103,29 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
     }
   }
 
-  @Override public void removeAccount(final Account account) {
-    removeAccount("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.removeAccount", account);
+  @Override public void removeAccount(final Sid sid) {
+    removeAccount(namespace + "removeAccount", sid);
   }
   
-  @Override public void removeSubAccount(final Account account) {
-    removeAccount("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.removeSubAccount", account);
+  @Override public void removeSubAccount(final Sid sid) {
+    removeAccount(namespace + "removeSubAccount", sid);
   }
   
-  private void removeAccount(final String selector, final Account account) {
+  private void removeAccount(final String selector, final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      session.delete(selector, account.getSid().toString());
+      session.delete(selector, sid.toString());
     } finally {
       session.close();
     }
   }
 
   @Override public void updateAccount(final Account account) {
-    updateAccount("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.updateAccount", account);
+    updateAccount(namespace + "updateAccount", account);
   }
 
   @Override public void updateSubAccount(final Account account) {
-    updateAccount("org.mobicents.servlet.sip.restcomm.dao.mybatis.AccountDao.updateSubAccount", account);
+    updateAccount(namespace + "updateSubAccount", account);
   }
   
   private void updateAccount(final String selector, final Account account) {
