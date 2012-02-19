@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao;
 
+import java.util.List;
+
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
@@ -25,6 +27,8 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 public interface ApplicationDao {
   public void addApplication(Application application);
   public Application getApplication(Sid sid);
-  public void removeApplication(Application application);
+  public List<Application> getApplications(Sid accountSid);
+  public void removeApplication(Sid sid);
+  public void removeApplications(Sid accountSid);
   public void updateApplication(Application application);
 }

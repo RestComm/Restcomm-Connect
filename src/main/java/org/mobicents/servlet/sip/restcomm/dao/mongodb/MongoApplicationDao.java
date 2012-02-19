@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import java.util.List;
+
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -28,7 +30,7 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationDao;
   public MongoApplicationDao() {
     super();
   }
-  
+
   @Override public void addApplication(final Application application) {
     
   }
@@ -37,7 +39,15 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationDao;
     return null;
   }
 
-  @Override public void removeApplication(final Application application) {
+  @Override public List<Application> getApplications(final Sid accountSid) {
+    return null;
+  }
+
+  @Override public void removeApplication(final Sid sid) {
+    
+  }
+
+  @Override public void removeApplications(final Sid accountSid) {
     
   }
 

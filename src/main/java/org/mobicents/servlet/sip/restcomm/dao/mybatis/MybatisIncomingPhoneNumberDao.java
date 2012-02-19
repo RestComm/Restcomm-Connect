@@ -34,25 +34,18 @@ import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumberDao;
   }
 
   @Override public IncomingPhoneNumber getIncomingPhoneNumber(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      @SuppressWarnings("unchecked")
-      final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getIncomingPhoneNumber", sid.toString());
-      if(result != null) {
-        return toIncomingPhoneNumber(result);
-      } else {
-        return null;
-      }
-    } finally {
-      session.close();
-    }
+    return getIncomingPhoneNumber("getIncomingPhoneNumber", sid.toString());
   }
   
   @Override public IncomingPhoneNumber getIncomingPhoneNumber(final String phoneNumber) {
+    return getIncomingPhoneNumber("getIncomingPhoneNumberByValue", phoneNumber);
+  }
+  
+  private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getIncomingPhoneNumberByValue", phoneNumber);
+      final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + selector, parameter);
       if(result != null) {
         return toIncomingPhoneNumber(result);
       } else {
@@ -81,18 +74,17 @@ import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumberDao;
   }
 
   @Override public void removeIncomingPhoneNumber(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.delete(namespace + "removeIncomingPhoneNumber", sid.toString());
-    } finally {
-      session.close();
-    }
+    removeIncomingPhoneNumbers("removeIncomingPhoneNumber", sid);
   }
 
   @Override public void removeIncomingPhoneNumbers(final Sid accountSid) {
+    removeIncomingPhoneNumbers("removeIncomingPhoneNumbers", accountSid);
+  }
+  
+  private void removeIncomingPhoneNumbers(final String selector, final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      session.delete(namespace + "removeIncomingPhoneNumbers", accountSid.toString());
+      session.delete(namespace + selector, sid.toString());
     } finally {
       session.close();
     }
