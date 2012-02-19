@@ -34,7 +34,11 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+<<<<<<< HEAD
 @ThreadSafe public final class MybatisAccountDao implements AccountDao {
+=======
+@ThreadSafe public class MybatisAccountDao implements AccountDao {
+>>>>>>> d0ac460011b93fe26e2a31da4754d6b84d4eb933
   private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountDao.";
   private final SqlSessionFactory sessions;
   
