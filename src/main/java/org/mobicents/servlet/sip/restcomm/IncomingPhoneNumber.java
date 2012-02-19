@@ -144,79 +144,85 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return uri;
   }
   
-  public IncomingPhoneNumber setDateUpdated(final DateTime dateUpdated) {
-    return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
-        smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
-  }
-  
   public IncomingPhoneNumber setFriendlyName(final String friendlyName) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setVoiceCallerIdLookup(final boolean hasVoiceCallerIdLookup) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setVoiceUrl(final URI voiceUrl) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setVoiceMethod(final RequestMethod voiceMethod) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setVoiceFallbackUrl(final URI voiceFallbackUrl) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setVoiceFallbackMethod(final RequestMethod voiceFallbackMethod) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setStatusCallback(final URI statusCallback) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setStatusCallbackMethod(final RequestMethod statusCallbackMethod) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setSmsUrl(final URI smsUrl) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setSmsMethod(final RequestMethod smsMethod) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setSmsFallbackUrl(final URI smsFallbackUrl) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public IncomingPhoneNumber setSmsFallbackMethod(final RequestMethod smsFallbackMethod) {
+	final DateTime dateUpdated = DateTime.now();
     return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);

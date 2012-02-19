@@ -24,7 +24,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class OutboundCallerId {
+@Immutable public final class OutgoingCallerId {
   private final Sid sid;
   private final DateTime dateCreated;
   private final DateTime dateUpdated;
@@ -33,7 +33,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final String phoneNumber;
   private final URI uri;
 
-  public OutboundCallerId(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
+  public OutgoingCallerId(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
       final String friendlyName, final Sid accountSid, final String phoneNumber, final URI uri) {
     super();
     this.sid = sid;
@@ -73,11 +73,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return uri;
   }
   
-  public OutboundCallerId setDateUpdated(final DateTime dateUpdated) {
-    return new OutboundCallerId(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, uri);
-  }
-  
-  public OutboundCallerId setFriendlyName(final String friendlyName) {
-    return new OutboundCallerId(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, uri);
+  public OutgoingCallerId setFriendlyName(final String friendlyName) {
+	final DateTime dateUpdated = DateTime.now();
+    return new OutgoingCallerId(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, uri);
   }
 }

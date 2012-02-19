@@ -80,27 +80,28 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return uri;
   }
   
-  public Account setDateUpdated(final DateTime dateUpdated) {
-    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
-  }
-  
   public Account setFriendlyName(final String friendlyName) {
+	final DateTime dateUpdated = DateTime.now();
     return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
   }
   
   public Account setType(final Type type) {
+	final DateTime dateUpdated = DateTime.now();
     return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
   }
   
   public Account setStatus(final Status status) {
+	final DateTime dateUpdated = DateTime.now();
     return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
   }
   
   public Account setAuthToken(final String authToken) {
+	final DateTime dateUpdated = DateTime.now();
     return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
   }
   
   public Account setUri(final URI uri) {
+	final DateTime dateUpdated = DateTime.now();
     return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
   }
   
