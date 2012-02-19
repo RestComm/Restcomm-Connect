@@ -64,7 +64,7 @@ import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumberDao;
   }
 
   @Override public List<AvailablePhoneNumber> getAvailablePhoneNumbersByPattern(final String pattern) throws IllegalArgumentException {
-    return getAvailablePhoneNumbers(namespace + "getAvailablePhoneNumbersByPattern", normalizeAlphaCharacters(pattern.replace("*", "_")));
+    return getAvailablePhoneNumbers(namespace + "getAvailablePhoneNumbersByPattern", normalizePattern(pattern));
   }
 
   @Override public List<AvailablePhoneNumber> getAvailablePhoneNumbersByRegion(final String region) {
@@ -75,13 +75,16 @@ import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumberDao;
     return getAvailablePhoneNumbers(namespace + "getAvailablePhoneNumbersByPostalCode", postalCode);
   }
   
-  private String normalizeAlphaCharacters(final String input) throws IllegalArgumentException {
+  private String normalizePattern(final String input) throws IllegalArgumentException {
     final char[] tokens = input.toUpperCase().toCharArray();
     final char[] result = new char[tokens.length];
     for(int index = 0; index < tokens.length; index++) {
       final char token = tokens[index];
-      if(token == '+' || token == '_' || Character.isDigit(token)) {
+      if(token == '+' || Character.isDigit(token)) {
         result[index] = token;
+        continue;
+      } else if(token == '*') { 
+        result[index] = '_';
         continue;
       } else if(Character.isLetter(token)) {
     	final int delta = 65; // The decimal distance from 0x0000 to 0x0041 which equals to 'A'
