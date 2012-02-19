@@ -24,7 +24,7 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationDao;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public class MybatisApplicationDao implements ApplicationDao {
+@ThreadSafe public final class MybatisApplicationDao implements ApplicationDao {
   public MybatisApplicationDao() {
     super();
   }

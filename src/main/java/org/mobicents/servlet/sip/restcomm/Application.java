@@ -21,7 +21,6 @@ import java.net.URI;
 import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -36,22 +35,22 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
   private final String apiVersion;
   private final Boolean hasVoiceCallerIdLookup;
   private final URI voiceUrl;
-  private final RequestMethod voiceMethod;
+  private final String voiceMethod;
   private final URI voiceFallbackUrl;
-  private final RequestMethod voiceFallbackMethod;
+  private final String voiceFallbackMethod;
   private final URI statusCallback;
-  private final RequestMethod statusCallbackMethod;
+  private final String statusCallbackMethod;
   private final URI smsUrl;
-  private final RequestMethod smsMethod;
+  private final String smsMethod;
   private final URI smsFallbackUrl;
-  private final RequestMethod smsFallbackMethod;
+  private final String smsFallbackMethod;
   private final URI uri;
   
   public Application(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
       final Sid accountSid, final String apiVersion, final Boolean hasVoiceCallerIdLookup, final URI voiceUrl,
-      final RequestMethod voiceMethod, final URI voiceFallbackUrl, final RequestMethod voiceFallbackMethod,
-      final URI statusCallback, final RequestMethod statusCallbackMethod, final URI smsUrl, final RequestMethod smsMethod,
-      final URI smsFallbackUrl, final RequestMethod smsFallbackMethod, final URI uri) {
+      final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod,
+      final URI statusCallback, final String statusCallbackMethod, final URI smsUrl, final String smsMethod,
+      final URI smsFallbackUrl, final String smsFallbackMethod, final URI uri) {
     super();
     this.sid = sid;
     this.dateCreated = dateCreated;
@@ -105,7 +104,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return voiceUrl;
   }
   
-  public RequestMethod getVoiceMethod() {
+  public String getVoiceMethod() {
     return voiceMethod;
   }
   
@@ -113,7 +112,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return voiceFallbackUrl;
   }
   
-  public RequestMethod getVoiceFallbackMethod() {
+  public String getVoiceFallbackMethod() {
     return voiceFallbackMethod;
   }
   
@@ -121,7 +120,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return statusCallback;
   }
   
-  public RequestMethod getStatusCallbackMethod() {
+  public String getStatusCallbackMethod() {
     return statusCallbackMethod;
   }
   
@@ -129,7 +128,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return smsUrl;
   }
   
-  public RequestMethod getSmsMethod() {
+  public String getSmsMethod() {
     return smsMethod;
   }
   
@@ -137,7 +136,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return smsFallbackUrl;
   }
   
-  public RequestMethod getSmsFallbackMethod() {
+  public String getSmsFallbackMethod() {
     return smsFallbackMethod;
   }
   
@@ -166,7 +165,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
-  public Application setVoiceMethod(final RequestMethod voiceMethod) {
+  public Application setVoiceMethod(final String voiceMethod) {
 	final DateTime dateUpdated = DateTime.now();
     return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
@@ -180,7 +179,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
-  public Application setVoiceFallbackMethod(final RequestMethod voiceFallbackMethod) {
+  public Application setVoiceFallbackMethod(final String voiceFallbackMethod) {
 	final DateTime dateUpdated = DateTime.now();
     return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
@@ -194,7 +193,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
-  public Application setStatusCallbackMethod(final RequestMethod statusCallbackMethod) {
+  public Application setStatusCallbackMethod(final String statusCallbackMethod) {
 	final DateTime dateUpdated = DateTime.now();
     return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
@@ -208,7 +207,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
-  public Application setSmsMethod(final RequestMethod smsMethod) {
+  public Application setSmsMethod(final String smsMethod) {
 	final DateTime dateUpdated = DateTime.now();
     return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,
@@ -222,7 +221,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 	    smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }
   
-  public Application setSmsFallbackMethod(final RequestMethod smsFallbackMethod) {
+  public Application setSmsFallbackMethod(final String smsFallbackMethod) {
 	final DateTime dateUpdated = DateTime.now();
     return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
 	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl,

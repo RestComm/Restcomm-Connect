@@ -13,7 +13,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumberDao;
 
 @ThreadSafe public final class MybatisAvailablePhoneNumberDao implements AvailablePhoneNumberDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.mybatis.AvailablePhoneNumberDao.";
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumberDao.";
   private static final char[] lookupTable = new char[] {'2', '2', '2', '3', '3', '3', '4', '4', '4', '5', '5', '5',
       '6', '6', '6', '7', '7', '7', '7', '8', '8', '8', '9', '9', '9', '9'};
   private final SqlSessionFactory sessions;
