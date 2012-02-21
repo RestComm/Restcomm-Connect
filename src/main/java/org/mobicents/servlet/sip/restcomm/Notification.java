@@ -17,7 +17,6 @@
 package org.mobicents.servlet.sip.restcomm;
 
 import java.net.URI;
-import java.util.List;
 
 import org.joda.time.DateTime;
 
