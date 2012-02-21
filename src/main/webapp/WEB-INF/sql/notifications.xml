@@ -28,7 +28,7 @@
   </select>
   
   <select id="getNotificationsByMessageDate" parameterType="date" resultType="hashmap">
-    SELECT * FROM notifications WHERE message_date&gt;=#{message_date} AND #{message_date}&lt;=DATE_ADD(#{message_date},INTERVAL 1 DAY);
+    SELECT * FROM notifications WHERE message_date&gt;=#{message_date} AND #{message_date}&lt;DATE_ADD(#{message_date},INTERVAL 1 DAY);
   </select>
   
   <delete id="removeNotification" parameterType="string">
