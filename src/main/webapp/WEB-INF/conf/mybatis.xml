@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<configuration>
+  <environments default="production">
+    <environment id="production">
+      <transactionManager type="JDBC"/>
+		<dataSource type="JNDI">
+				<property name="data_source" value="java:restcomm"/>
+		</dataSource>
+    </environment>
+  </environments>
+  
+  <mappers>
+    <mapper url="../sql/accounts.xml"/>
+    <mapper url="../sql/applications.xml"/>
+    <mapper url="../sql/available-phone-numbers.xml"/>
+    <mapper url="../sql/call-detail-records.xml"/>
+    <mapper url="../sql/incoming-phone-numbers.xml"/>
+    <mapper url="../sql/notifications.xml"/>
+    <mapper url="../sql/outgoing-caller_ids.xml"/>
+    <mapper url="../sql/recordings.xml"/>
+    <mapper url="../sql/sand-boxes.xml"/>
+    <mapper url="../sql/short-codes.xml"/>
+    <mapper url="../sql/sms-messages.xml"/>
+    <mapper url="../sql/transcriptions.xml"/>
+  </mappers>
+</configuration>

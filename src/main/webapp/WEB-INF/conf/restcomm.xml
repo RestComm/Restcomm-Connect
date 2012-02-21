@@ -10,52 +10,14 @@
 	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
-	<!-- An application index as the name implies is an index containing all the applications that will be executed by RestComm.
-		Refer to the org.mobicents.servlet.sip.restcomm.ApplicationIndex interface for more information.
-		
-		The default application index is configured below by providing a list of applications that should be executed by RestComm. 
-		Each application MUST have a name and the following attributes: 
-		
-		enpoint - The endpoint to which the application will bind.
-		          NOTE: This will usually be a DID in E.164 format.
-		          
-		request-method - The HTTP method used to request the application's entry point.
-		
-		uri - The HTTP URI to the application's entry point. 
-		
-		The application index may also contain an optional list of client mappings which can be used with the <Client> noun
-		in RestComm applications.
-	-->
-	<application-index class="org.mobicents.servlet.sip.restcomm.applicationindex.XmlFileIndex">
-		<applications>
-			<application name="RestComm Demo Application">
-				<endpoint>1234</endpoint>
-				<request-method>POST</request-method>
-				<uri>http://127.0.0.1:8080/restcomm/demo/hello-world.xml</uri>
-			</application>
-		</applications>
-		<!-- <clients> <client name="John">17778889999</client> </clients> -->
-	</application-index>
+	<dao-manager class="org.mobicents.servlet.sip.restcomm.dao.mybatis.MybatisDaoManager">
+		<configuration-file>./mybatis.xml</configuration-file>
+	</dao-manager>
 
-	<!-- The gateway manager controls access to the gateways used to reach other networks like the PSTN.
-		
-		The default gateway manager is used to manage SIP gateways and is configured below by providing a
-		SIP gateway that will be used by RestComm. The gateway MUST have a name and the following parameters: 
-		
-		
-		<user> - The user name to use for registration.
-		
-		<password> - The password to use for registration.
-		
-		<register> - A true/false value indicating if the service provider requires registration.
-		             NOTE: Registration is not currently supported.
-		             
-		<proxy> - The FQDN or IP address to the SIP proxy.
-	-->
 	<gateway-manager class="org.mobicents.servlet.sip.restcomm.callmanager.SipGatewayManager">
 		<gateway name="provider">
-			<!-- <user>john</user> -->
-			<!-- <password>1234</password> -->
+			<user>john</user>
+			<password>1234</password>
 			<register>false</register>
 			<proxy>sip.mycompany.com</proxy>
 		</gateway>
@@ -98,24 +60,17 @@
 		
 		Please pay attention to the format expected by the service providers. 
 	-->
-	<sms-aggregator class="org.mobicents.servlet.sip.restcomm.sms.EmailToSmsAggregator">
-		<domain>mycompany.com</domain>
-		<smtp>mail.mycompany.com</smtp>
-		<gateway>tmomail.net</gateway>
-	</sms-aggregator>
-	<!--
 	<sms-aggregator class="org.mobicents.servlet.sip.restcomm.sms.EsendexSmsAggregator">
 		<user></user>
 		<password></password>
 		<account></account>
 	</sms-aggregator>
-	-->
 	
 	<!--
 		The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway.
 	-->
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
-		<cache-path>/tmp</cache-path>
+		<cache-path>../../cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
 		<application>EVAL_6380429</application>
 		<login>EVAL_VAAS</login>
@@ -143,19 +98,4 @@
 		  </spanish>
 		</speakers>
 	</speech-synthesizer>
-
-	<!-- 
-		The Storage system is responsible for storing RestComm objects.
-		Refer to the org.mobicents.servlet.sip.restcomm.storage.Storage interface for more information.
-		
-		The default storage system uses the filesystem to store the RestComm objects.
-		
-		<location> - The location on the file system to use for storage. 
-		
-		<uri> - The HTTP URI to the storage location.
-    -->
-	<storage class="org.mobicents.servlet.sip.restcomm.storage.FileSystemStorage">
-		<path>/home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/</path>
-		<uri>http://localhost:8080/restcomm/</uri>
-	</storage>
 </restcomm>
