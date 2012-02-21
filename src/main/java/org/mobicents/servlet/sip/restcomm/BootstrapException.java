@@ -19,7 +19,7 @@ package org.mobicents.servlet.sip.restcomm;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class BootstrapException extends Exception {
+public final class BootstrapException extends Exception {
   private static final long serialVersionUID = 1L;
 
   public BootstrapException() {
