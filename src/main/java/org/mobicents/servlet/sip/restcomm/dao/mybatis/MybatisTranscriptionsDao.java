@@ -14,13 +14,13 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.Transcription;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.TranscriptionDao;
+import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 
-@ThreadSafe public final class MybatisTranscriptionDao implements TranscriptionDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.TranscriptionDao.";
+@ThreadSafe public final class MybatisTranscriptionsDao implements TranscriptionsDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao.";
   private final SqlSessionFactory sessions;
   
-  public MybatisTranscriptionDao(final SqlSessionFactory sessions) {
+  public MybatisTranscriptionsDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

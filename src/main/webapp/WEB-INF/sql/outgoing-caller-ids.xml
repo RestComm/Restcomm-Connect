@@ -3,7 +3,7 @@
 <!--
   @author thomas.quintana@telestax.com (Thomas Quintana)
 -->
-<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdDao">
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao">
   <insert id="addOutgoingCallerId" parameterType="map">
     INSERT INTO outgoing_caller_ids (sid, date_created, date_updated, friendly_name, account_sid, phone_number, uri)
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{account_sid}, #{phone_number}, #{uri});

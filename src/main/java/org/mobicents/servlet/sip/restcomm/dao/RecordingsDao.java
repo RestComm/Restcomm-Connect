@@ -5,7 +5,7 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
-public interface RecordingDao {
+public interface RecordingsDao {
   public void addRecording(Recording recording);
   public Recording getRecording(Sid sid);
   public Recording getRecordingByCall(Sid callSid);

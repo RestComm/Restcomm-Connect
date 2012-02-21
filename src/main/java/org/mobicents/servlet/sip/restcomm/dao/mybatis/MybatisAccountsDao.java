@@ -29,16 +29,16 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
+import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class MybatisAccountDao implements AccountDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountDao.";
+@ThreadSafe public final class MybatisAccountsDao implements AccountsDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
   private final SqlSessionFactory sessions;
   
-  public MybatisAccountDao(final SqlSessionFactory sessions) {
+  public MybatisAccountsDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

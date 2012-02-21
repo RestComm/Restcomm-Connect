@@ -11,13 +11,13 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.SandBox;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.SandBoxDao;
+import org.mobicents.servlet.sip.restcomm.dao.SandBoxesDao;
 
-@ThreadSafe public final class MybatisSandBoxDao implements SandBoxDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.SandBoxDao.";
+@ThreadSafe public final class MybatisSandBoxesDao implements SandBoxesDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.SandBoxesDao.";
   private final SqlSessionFactory sessions;
   
-  public MybatisSandBoxDao(final SqlSessionFactory sessions) {
+  public MybatisSandBoxesDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

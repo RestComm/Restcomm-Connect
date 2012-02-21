@@ -3,7 +3,7 @@
 <!--
   @author thomas.quintana@telestax.com (Thomas Quintana)
 -->
-<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.ApplicationDao">
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao">
   <insert id="addApplication" parameterType="map">
     INSERT INTO incoming_phone_numbers (sid, date_created, date_updated, friendly_name, account_sid, api_version,
     voice_url, voice_method, voice_fallback_url, voice_fallback_method, status_callback, status_callback_method,

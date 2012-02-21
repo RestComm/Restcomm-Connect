@@ -5,7 +5,7 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.ShortCode;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
-public interface ShortCodeDao {
+public interface ShortCodesDao {
   public void addShortCode(ShortCode shortCode);
   public ShortCode getShortCode(Sid sid);
   public List<ShortCode> getShortCodes(Sid accountSid);

@@ -15,13 +15,13 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ShortCode;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.ShortCodeDao;
+import org.mobicents.servlet.sip.restcomm.dao.ShortCodesDao;
 
-@ThreadSafe public final class MybatisShortCodeDao implements ShortCodeDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.ShortCodeDao.";
+@ThreadSafe public final class MybatisShortCodesDao implements ShortCodesDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.ShortCodesDao.";
   private final SqlSessionFactory sessions;
 
-  public MybatisShortCodeDao(final SqlSessionFactory sessions) {
+  public MybatisShortCodesDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

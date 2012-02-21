@@ -24,7 +24,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface ApplicationDao {
+public interface ApplicationsDao {
   public void addApplication(Application application);
   public Application getApplication(Sid sid);
   public List<Application> getApplications(Sid accountSid);

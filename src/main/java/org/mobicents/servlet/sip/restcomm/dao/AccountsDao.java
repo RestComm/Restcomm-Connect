@@ -24,7 +24,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface AccountDao {
+public interface AccountsDao {
   public void addAccount(Account account);
   public void addSubAccount(Sid primaryAccountSid, Account subAccount);
   public Account getAccount(Sid sid);

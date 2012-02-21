@@ -21,12 +21,12 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.AccountDao;
+import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public class MongoAccountDao implements AccountDao {
+@ThreadSafe public class MongoAccountDao implements AccountsDao {
   public MongoAccountDao() {
     super();
   }

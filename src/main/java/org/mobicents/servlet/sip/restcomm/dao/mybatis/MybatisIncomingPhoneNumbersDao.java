@@ -13,13 +13,13 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumberDao;
+import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 
-@ThreadSafe public final class MybatisIncomingPhoneNumberDao implements IncomingPhoneNumberDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumberDao.";
+@ThreadSafe public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumbersDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao.";
   private final SqlSessionFactory sessions;
   
-  public MybatisIncomingPhoneNumberDao(final SqlSessionFactory sessions) {
+  public MybatisIncomingPhoneNumbersDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

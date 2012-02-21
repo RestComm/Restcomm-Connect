@@ -7,7 +7,7 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
-public interface NotificationDao {
+public interface NotificationsDao {
   public void addNotification(Notification notification);
   public Notification getNotification(Sid sid);
   public List<Notification> getNotifications(Sid accountSid);

@@ -16,13 +16,13 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.CallDetailRecord;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordDao;
+import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
 
-@ThreadSafe public final class MybatisCallDetailRecordDao implements CallDetailRecordDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordDao.";
+@ThreadSafe public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao.";
   private final SqlSessionFactory sessions;
   
-  public MybatisCallDetailRecordDao(final SqlSessionFactory sessions) {
+  public MybatisCallDetailRecordsDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

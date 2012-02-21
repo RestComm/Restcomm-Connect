@@ -13,13 +13,13 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.NotificationDao;
+import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 
-@ThreadSafe public final class MybatisNotificationDao implements NotificationDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.NotificationDao.";
+@ThreadSafe public final class MybatisNotificationsDao implements NotificationsDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.NotificationsDao.";
   private final SqlSessionFactory sessions;
 
-  public MybatisNotificationDao(final SqlSessionFactory sessions) {
+  public MybatisNotificationsDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

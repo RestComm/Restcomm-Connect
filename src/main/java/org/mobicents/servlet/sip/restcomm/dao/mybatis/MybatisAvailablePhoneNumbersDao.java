@@ -10,15 +10,15 @@ import org.apache.ibatis.session.SqlSessionFactory;
 
 import org.mobicents.servlet.sip.restcomm.AvailablePhoneNumber;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumberDao;
+import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
 
-@ThreadSafe public final class MybatisAvailablePhoneNumberDao implements AvailablePhoneNumberDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumberDao.";
+@ThreadSafe public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumbersDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao.";
   private static final char[] lookupTable = new char[] {'2', '2', '2', '3', '3', '3', '4', '4', '4', '5', '5', '5',
       '6', '6', '6', '7', '7', '7', '7', '8', '8', '8', '9', '9', '9', '9'};
   private final SqlSessionFactory sessions;
   
-  public MybatisAvailablePhoneNumberDao(final SqlSessionFactory sessions) {
+  public MybatisAvailablePhoneNumbersDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

@@ -14,13 +14,13 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.SmsMessageDao;
+import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
 
-@ThreadSafe public final class MybatisSmsMessageDao implements SmsMessageDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.SmsMessageDao.";
+@ThreadSafe public final class MybatisSmsMessagesDao implements SmsMessagesDao {
+  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao.";
   private final SqlSessionFactory sessions;
   
-  public MybatisSmsMessageDao(final SqlSessionFactory sessions) {
+  public MybatisSmsMessagesDao(final SqlSessionFactory sessions) {
     super();
     this.sessions = sessions;
   }

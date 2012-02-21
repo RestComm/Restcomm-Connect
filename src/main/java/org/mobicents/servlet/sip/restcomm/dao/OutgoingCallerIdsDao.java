@@ -5,7 +5,7 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.OutgoingCallerId;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
-public interface OutgoingCallerIdDao {
+public interface OutgoingCallerIdsDao {
   public void addOutgoingCallerId(OutgoingCallerId outgoingCallerId);
   public OutgoingCallerId getOutgoingCallerId(Sid sid);
   public List<OutgoingCallerId> getOutgoingCallerIds(Sid accountSid);

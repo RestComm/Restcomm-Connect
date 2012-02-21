@@ -7,7 +7,7 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.CallDetailRecord;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
-public interface CallDetailRecordDao {
+public interface CallDetailRecordsDao {
   public void addCallDetailRecord(CallDetailRecord cdr);
   public CallDetailRecord getCallDetailRecord(Sid sid);
   public List<CallDetailRecord> getCallDetailRecords(Sid accountSid);

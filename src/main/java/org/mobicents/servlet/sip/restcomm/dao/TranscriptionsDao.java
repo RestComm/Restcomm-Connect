@@ -5,7 +5,7 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.Transcription;
 
-public interface TranscriptionDao {
+public interface TranscriptionsDao {
   public void addTranscription(Transcription transcription);
   public Transcription getTranscription(Sid sid);
   public Transcription getTranscriptionByRecording(Sid recordingSid);

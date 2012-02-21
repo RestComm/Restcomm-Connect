@@ -5,7 +5,7 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
-public interface IncomingPhoneNumberDao {
+public interface IncomingPhoneNumbersDao {
   public void addIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
   public IncomingPhoneNumber getIncomingPhoneNumber(Sid sid);
   public List<IncomingPhoneNumber> getIncomingPhoneNumbers(Sid accountSid);

@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.mobicents.servlet.sip.restcomm.AvailablePhoneNumber;
 
-public interface AvailablePhoneNumberDao {
+public interface AvailablePhoneNumbersDao {
   public void addAvailablePhoneNumber(AvailablePhoneNumber availablePhoneNumber);
   public List<AvailablePhoneNumber> getAvailablePhoneNumbers();
   public List<AvailablePhoneNumber> getAvailablePhoneNumbersByAreaCode(String areaCode);
