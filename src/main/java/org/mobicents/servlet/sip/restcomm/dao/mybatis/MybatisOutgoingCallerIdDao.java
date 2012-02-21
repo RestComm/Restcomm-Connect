@@ -15,7 +15,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdDao;
 
-@ThreadSafe public class MybatisOutgoingCallerIdDao implements OutgoingCallerIdDao {
+@ThreadSafe public final class MybatisOutgoingCallerIdDao implements OutgoingCallerIdDao {
   private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdDao.";
   private final SqlSessionFactory sessions;
   

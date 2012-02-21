@@ -22,7 +22,6 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -40,16 +39,16 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
   private final String messageText;
   private final DateTime messageDate;
   private final URI requestUrl;
-  private final RequestMethod requestMethod;
+  private final String requestMethod;
   private final String requestVariables;
-  private final List<String> requestHeaders;
+  private final String responseHeaders;
   private final String responseBody;
   private final URI uri;
   
   public Notification(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
       final Sid callSid, final String apiVersion, final Integer log, final Integer errorCode, final URI moreInfo, String messageText,
-      final DateTime messageDate, final URI requestUrl, final RequestMethod requestMethod, final String requestVariables,
-      final List<String> requestHeaders, final String responseBody, final URI uri) {
+      final DateTime messageDate, final URI requestUrl, final String requestMethod, final String requestVariables,
+      final String responseHeaders, final String responseBody, final URI uri) {
     super();
     this.sid = sid;
     this.dateCreated = dateCreated;
@@ -65,7 +64,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     this.requestUrl = requestUrl;
     this.requestMethod = requestMethod;
     this.requestVariables = requestVariables;
-    this.requestHeaders = requestHeaders;
+    this.responseHeaders = responseHeaders;
     this.responseBody = responseBody;
     this.uri = uri;
   }
@@ -118,7 +117,7 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return requestUrl;
   }
   
-  public RequestMethod getRequestMethod() {
+  public String getRequestMethod() {
     return requestMethod;
   }
   
@@ -126,8 +125,8 @@ import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
     return requestVariables;
   }
   
-  public List<String> getRequestHeaders() {
-    return requestHeaders;
+  public String getResponseHeaders() {
+    return responseHeaders;
   }
   
   public String getResponseBody() {
