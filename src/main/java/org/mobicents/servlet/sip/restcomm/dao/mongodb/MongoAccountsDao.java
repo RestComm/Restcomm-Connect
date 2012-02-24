@@ -17,9 +17,11 @@
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -29,12 +31,15 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class MongoAccountsDao implements AccountsDao {
+  private static final Logger logger = Logger.getLogger(MongoAccountsDao.class);
   private final DBCollection accounts;
   private final DBCollection subAccounts;
 
@@ -45,19 +50,33 @@ import com.mongodb.DBObject;
   }
 
   @Override public void addAccount(final Account account) {
-    accounts.insert(toDbObject(account));
+    final WriteResult result = accounts.insert(toDbObject(account));
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
   
   @Override public void addSubAccount(final Sid primaryAccountSid, final Account subAccount) {
     final DBObject object = toDbObject(subAccount);
     object.put("account_sid", primaryAccountSid.toString());
-    subAccounts.insert(object);
+    final WriteResult result = subAccounts.insert(object);
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
 
   @Override public Account getAccount(final Sid sid) {
+    return getAccount(accounts, sid);
+  }
+  
+  @Override public Account getSubAccount(final Sid sid) {
+    return getAccount(subAccounts, sid);
+  }
+  
+  private Account getAccount(final DBCollection collection, final Sid sid) {
     final BasicDBObject query = new BasicDBObject();
     query.put("sid", sid.toString());
-    final DBObject result = accounts.findOne(query);
+    final DBObject result = collection.findOne(query);
     if(result != null) {
       return toAccount(result);
     } else {
@@ -65,28 +84,50 @@ import com.mongodb.DBObject;
     }
   }
   
-  @Override public Account getSubAccount(final Sid sid) {
-    return null;
-  }
-  
   @Override public List<Account> getSubAccounts(final Sid sid) {
-    return null;
+    final BasicDBObject query = new BasicDBObject();
+    query.put("account_sid", sid.toString());
+    final List<Account> accounts = new ArrayList<Account>();
+    final DBCursor results = subAccounts.find(query);
+    while(results.hasNext()) {
+      accounts.add(toAccount(results.next()));
+    }
+    return accounts;
   }
 
   @Override public void removeAccount(final Sid sid) {
-    
+    removeAccount(accounts, sid);
   }
   
   @Override public void removeSubAccount(final Sid sid) {
-    
+    removeAccount(subAccounts, sid);
+  }
+  
+  
+  private void removeAccount(final DBCollection collection, final Sid sid) {
+    final BasicDBObject query = new BasicDBObject();
+    query.put("sid", sid.toString());
+    final WriteResult result = collection.remove(query);
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
 
   @Override public void updateAccount(final Account account) {
-    
+    updateAccount(accounts, account);
   }
 
   @Override public void updateSubAccount(final Account account) {
-    
+    updateAccount(subAccounts, account);
+  }
+  
+  private void updateAccount(final DBCollection collection, final Account account) {
+    final BasicDBObject query = new BasicDBObject();
+    query.put("sid", account.getSid().toString());
+    final WriteResult result = collection.update(query, toDbObject(account));
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
   
   private Account toAccount(final DBObject object) {

@@ -15,7 +15,7 @@ public interface CallDetailRecordsDao {
   public List<CallDetailRecord> getCallDetailRecordsBySender(String sender);
   public List<CallDetailRecord> getCallDetailRecordsByStatus(String status);
   public List<CallDetailRecord> getCallDetailRecordsByStartTime(DateTime startTime);
-  public List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parenCallSid);
+  public List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parentCallSid);
   public void removeCallDetailRecord(Sid sid);
   public void removeCallDetailRecords(Sid accountSid);
   public void updateCallDetailRecord(CallDetailRecord cdr);

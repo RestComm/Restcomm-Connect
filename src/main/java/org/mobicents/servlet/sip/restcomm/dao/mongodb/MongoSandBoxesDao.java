@@ -1,8 +1,25 @@
+/*
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
 import java.net.URI;
 import java.util.Date;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.SandBox;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -13,8 +30,13 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 @ThreadSafe public final class MongoSandBoxesDao implements SandBoxesDao {
+  private static final Logger logger = Logger.getLogger(MongoSandBoxesDao.class);
   private final DBCollection collection;
 
   public MongoSandBoxesDao(final DB database) {
@@ -23,19 +45,39 @@ import com.mongodb.DBObject;
   }
   
   @Override public void addSandBox(final SandBox sandBox) {
-    
+    final WriteResult result = collection.insert(toDbObject(sandBox));
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
 
   @Override public SandBox getSandBox(final Sid accountSid) {
-    return null;
+    final BasicDBObject query = new BasicDBObject();
+    query.put("account_sid", accountSid.toString());
+    final DBObject result = collection.findOne(query);
+    if(result != null) {
+      return toSandBox(result);
+    } else {
+      return null;
+    }
   }
 
   @Override public void removeSandBox(final Sid accountSid) {
-    
+    final BasicDBObject query = new BasicDBObject();
+    query.put("account_sid", accountSid.toString());
+    final WriteResult result = collection.remove(query);
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
 
   @Override public void updateSandBox(final SandBox sandBox) {
-    
+    final BasicDBObject query = new BasicDBObject();
+    query.put("account_sid", sandBox.getAccountSid().toString());
+    final WriteResult result = collection.update(query, toDbObject(sandBox));
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
   
   private DBObject toDbObject(final SandBox sandBox) {

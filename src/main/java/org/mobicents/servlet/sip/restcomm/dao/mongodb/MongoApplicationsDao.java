@@ -16,25 +16,32 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
+
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class MongoApplicationsDao implements ApplicationsDao {
+  private static final Logger logger = Logger.getLogger(MongoApplicationsDao.class);
   private final DBCollection collection;
 
   public MongoApplicationsDao(final DB database) {
@@ -43,27 +50,60 @@ import com.mongodb.DBObject;
   }
 
   @Override public void addApplication(final Application application) {
-    
+    final WriteResult result = collection.insert(toDbObject(application));
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
 
   @Override public Application getApplication(final Sid sid) {
-    return null;
+	final BasicDBObject query = new BasicDBObject();
+	query.put("sid", sid.toString());
+	final DBObject result = collection.findOne(query);
+	if(result != null) {
+	  return toApplication(result);
+	} else {
+	  return null;
+	}
   }
 
   @Override public List<Application> getApplications(final Sid accountSid) {
-    return null;
+    final BasicDBObject query = new BasicDBObject();
+	query.put("account_sid", accountSid.toString());
+	final List<Application> applications = new ArrayList<Application>();
+	final DBCursor results = collection.find(query);
+	while(results.hasNext()) {
+	  applications.add(toApplication(results.next()));
+	}
+	return applications;
   }
 
   @Override public void removeApplication(final Sid sid) {
-    
+    final BasicDBObject query = new BasicDBObject();
+    query.put("sid", sid.toString());
+    removeApplications(query);
   }
 
   @Override public void removeApplications(final Sid accountSid) {
-    
+    final BasicDBObject query = new BasicDBObject();
+    query.put("account_sid", accountSid.toString());
+    removeApplications(query);
+  }
+  
+  private void removeApplications(final DBObject query) {
+    final WriteResult result = collection.remove(query);
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
 
   @Override public void updateApplication(final Application application) {
-    
+    final BasicDBObject query = new BasicDBObject();
+    query.put("sid", application.getSid().toString());
+    final WriteResult result = collection.update(query, toDbObject(application));
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
   }
   
   private Application toApplication(final DBObject object) {
