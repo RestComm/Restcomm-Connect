@@ -1,6 +1,9 @@
 package org.mobicents.servlet.sip.restcomm.dao;
 
-public interface DaoManager {
+import org.mobicents.servlet.sip.restcomm.Configurable;
+import org.mobicents.servlet.sip.restcomm.LifeCycle;
+
+public interface DaoManager extends Configurable, LifeCycle{
   public AccountsDao getAccountsDao();
   public ApplicationsDao getApplicationsDao();
   public AvailablePhoneNumbersDao getAvailablePhoneNumbersDao();

@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
+import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
@@ -59,11 +60,11 @@ public final class Bootstrapper {
     final ServiceLocator services = ServiceLocator.getInstance();
     try {
       services.set(InterpreterExecutor.class, new InterpreterExecutor());
+      services.set(MgcpServerManager.class, getMgcpServerManager(configuration));
       final CallManager callManager = (CallManager)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager");
       services.set(CallManager.class, callManager);
-      final ConferenceCenter conferenceCenter = (ConferenceCenter)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter");
-      services.set(ConferenceCenter.class, conferenceCenter);
-      services.set(MgcpServerManager.class, getMgcpServerManager(configuration));
+      services.set(ConferenceCenter.class, getConferenceCenter(configuration));
+      services.set(DaoManager.class, getDaoManager(configuration));
       services.set(SmsAggregator.class, getSmsAggregator(configuration));
       services.set(SpeechSynthesizer.class, getSpeechSynthesizer(configuration));
     } catch(final ObjectInstantiationException exception) {
@@ -74,9 +75,21 @@ public final class Bootstrapper {
   
   private static MgcpServerManager getMgcpServerManager(final Configuration configuration) throws ObjectInstantiationException {
     final MgcpServerManager mgcpServerManager = new MgcpServerManager();
-	mgcpServerManager.configure(configuration);
+	mgcpServerManager.configure(configuration.subset("media-server-manager"));
 	mgcpServerManager.start();
 	return mgcpServerManager;
+  }
+  
+  private static ConferenceCenter getConferenceCenter(final Configuration configuration) {
+    return null;
+  }
+  
+  private static DaoManager getDaoManager(final Configuration configuration) throws ObjectInstantiationException {
+    final String classpath = configuration.getString("dao-manager[@class]");
+    final DaoManager daoManager = (DaoManager)ObjectFactory.getInstance().getObjectInstance(classpath);
+    daoManager.configure(configuration.subset("dao-manager"));
+    daoManager.start();
+    return daoManager;
   }
   
   private static SmsAggregator getSmsAggregator(final Configuration configuration) throws ObjectInstantiationException {
@@ -90,7 +103,7 @@ public final class Bootstrapper {
   private static SpeechSynthesizer getSpeechSynthesizer(final Configuration configuration) throws ObjectInstantiationException {
     final String classpath = configuration.getString("speech-synthesizer[@class]");
     final SpeechSynthesizer speechSynthesizer = (SpeechSynthesizer)ObjectFactory.getInstance().getObjectInstance(classpath);
-    speechSynthesizer.configure(configuration);
+    speechSynthesizer.configure(configuration.subset("speech-synthesizer"));
     speechSynthesizer.start();
     return speechSynthesizer;
   }

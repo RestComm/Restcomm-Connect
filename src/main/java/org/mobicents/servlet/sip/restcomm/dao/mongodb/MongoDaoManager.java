@@ -19,8 +19,7 @@ package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 import java.net.UnknownHostException;
 
 import org.apache.commons.configuration.Configuration;
-import org.mobicents.servlet.sip.restcomm.Configurable;
-import org.mobicents.servlet.sip.restcomm.LifeCycle;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
@@ -42,7 +41,7 @@ import com.mongodb.Mongo;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class MongoDaoManager implements Configurable, DaoManager, LifeCycle {
+@ThreadSafe public final class MongoDaoManager implements DaoManager {
   private Configuration configuration;
   private Mongo mongo;
   private AccountsDao accountsDao;

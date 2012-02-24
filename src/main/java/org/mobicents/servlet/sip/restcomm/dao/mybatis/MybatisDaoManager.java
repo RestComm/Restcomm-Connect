@@ -21,11 +21,10 @@ import java.io.FileReader;
 import java.io.Reader;
 
 import org.apache.commons.configuration.Configuration;
+
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
-import org.mobicents.servlet.sip.restcomm.Configurable;
-import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
@@ -44,7 +43,7 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class MybatisDaoManager implements Configurable, DaoManager, LifeCycle {
+@ThreadSafe public final class MybatisDaoManager implements DaoManager {
   private Configuration configuration;
   private SqlSessionFactory sessions;
   private AccountsDao accountsDao;

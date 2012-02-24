@@ -114,6 +114,8 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   }
 
   @Override public final void init(final ServletConfig config) throws ServletException {
+	final ServletContext context = config.getServletContext();
+	context.setAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager", this);
     try {
 	  Bootstrapper.bootstrap(config);
     } catch(final BootstrapException exception) {

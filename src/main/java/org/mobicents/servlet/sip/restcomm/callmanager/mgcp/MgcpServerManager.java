@@ -21,8 +21,6 @@ import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
 @ThreadSafe public final class MgcpServerManager extends FiniteStateMachine implements Configurable, LifeCycle {
   // Initialize the logger.
   private static final Logger LOGGER = Logger.getLogger(MgcpServerManager.class);
-  // Define our root configuration node.
-  private static final String CONFIGURATION_PREFIX = "media-server-manager.mgcp-server";
   // Initialize the possible states and transitions.
   private static final State RUNNING = new State("RUNNING");
   private static final State SHUTDOWN = new State("SHUTDOWN");
@@ -58,7 +56,7 @@ import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
   @Override public synchronized void start() throws RuntimeException {
 	assertState(SHUTDOWN);
     @SuppressWarnings("unchecked")
-    final List<String> names = (List<String>)configuration.getList(CONFIGURATION_PREFIX + "[@name]");
+    final List<String> names = (List<String>)configuration.getList("mgcp-server[@name]");
     final int numberOfServers = names.size();
     if(LOGGER.isInfoEnabled()) {
       final StringBuilder buffer = new StringBuilder();
@@ -70,7 +68,7 @@ import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
       servers = new ArrayList<MgcpServer>();
       for(int index = 0; index < numberOfServers; index++) {
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(CONFIGURATION_PREFIX).append("(").append(index).append(")").toString();
+        buffer.append("mgcp-server(").append(index).append(")").toString();
     	final String prefix = buffer.toString();
     	try {
           final String name = configuration.getString(prefix + "[@name]");

@@ -14,15 +14,6 @@
 		<configuration-file>./mybatis.xml</configuration-file>
 	</dao-manager>
 
-	<gateway-manager class="org.mobicents.servlet.sip.restcomm.callmanager.SipGatewayManager">
-		<gateway name="provider">
-			<user>john</user>
-			<password>1234</password>
-			<register>false</register>
-			<proxy>sip.mycompany.com</proxy>
-		</gateway>
-	</gateway-manager>
-
 	<!-- The media server manager is responsible for managing the media servers in use by RestComm.
 		
 		The default way to control media servers is using the MGCP stack. The MGCP stack MUST have a name and
@@ -37,7 +28,7 @@
 		<remote-port> - The port for the media server.
 	-->
 	<media-server-manager>
-		<mgcp-server name="server-1">
+		<mgcp-server name="Mobicents Media Server">
 			<local-address>127.0.0.1</local-address>
 			<local-port>2727</local-port>
 			<remote-address>127.0.0.1</remote-address>
