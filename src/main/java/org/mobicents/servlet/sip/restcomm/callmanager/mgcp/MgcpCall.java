@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
+import javax.servlet.sip.Address;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -15,10 +16,12 @@ import javax.servlet.sip.SipURI;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.From;
 
 public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver, MgcpLinkObserver {
   private static final Logger LOGGER = Logger.getLogger(MgcpCall.class);
@@ -164,13 +167,25 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     }
     cleanup();
   }
+  
+  @Override public Sid getAccountSid() {
+    return null;
+  }
+  
+  @Override public String getApiVersion() {
+    return null;
+  }
 
   @Override public String getDirection() {
     return direction;
   }
+  
+  @Override public String getForwardedFrom() {
+    return null;
+  }
 
-  @Override public String getId() {
-    return initialInvite.getApplicationSession().getId();
+  @Override public Sid getSid() {
+    return null;
   }
   
   public SipServletRequest getInitialInvite() {
@@ -180,6 +195,10 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   @Override public String getOriginator() {
     final SipURI from = (SipURI)initialInvite.getFrom().getURI();
     return from.getUser();
+  }
+  
+  @Override public String getOriginatorName() {
+    return initialInvite.getFrom().getDisplayName();
   }
 
   @Override public String getRecipient() {

@@ -19,12 +19,18 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
 import java.net.URI;
 import java.util.List;
 
+import org.mobicents.servlet.sip.restcomm.Sid;
+
 public interface Call {
   public void answer() throws CallException;
   public void dial() throws CallException;
+  public Sid getAccountSid();
+  public String getApiVersion();
   public String getDirection();
-  public String getId();
+  public String getForwardedFrom();
+  public Sid getSid();
   public String getOriginator();
+  public String getOriginatorName();
   public String getRecipient();
   public String getStatus();
   public void hangup();

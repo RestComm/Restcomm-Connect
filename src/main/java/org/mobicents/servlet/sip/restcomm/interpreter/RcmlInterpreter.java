@@ -20,16 +20,30 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.URIUtils;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagIterator;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
+import org.mobicents.servlet.sip.restcomm.xml.XmlDocumentBuilder;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTagFactory;
 
 public final class RcmlInterpreter extends FiniteStateMachine implements Runnable, TagVisitor {
   // Logger.
@@ -51,13 +65,20 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     EXECUTING.addTransition(FAILED);
     REDIRECTED.addTransition(READY);
   }
+  private static final List<NameValuePair> EMPTY_NAME_VALUE_PAIRS = new ArrayList<NameValuePair>(0);
   
   // RcmlInterpreter environment.
   private final RcmlInterpreterContext context;
   //Tag strategy factory.
   private final TagStrategyFactory factory;
+  // XML Resource Builder.
+  private final XmlDocumentBuilder builder;
   // XML Resource.
   private XmlDocument resource;
+  // XML Resource fetch method.
+  private String method;
+  //XML Resource URI.
+  private URI uri;
 	
   public RcmlInterpreter(final RcmlInterpreterContext context) {
     super(IDLE);
@@ -69,6 +90,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     addState(FAILED);
     this.context = context;
     this.factory = new TagStrategyFactory();
+    this.builder = new XmlDocumentBuilder(new RCMLTagFactory());
   }
   
   public void failed() {
@@ -84,17 +106,61 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     setState(FINISHED);
   }
   
+  public URI getCurrentUri() {
+    return uri;
+  }
+  
+  public String getCurrentUriMethod() {
+    return method;
+  }
+  
   public void initialize() throws InterpreterException {
+	try {
+	  loadResource(context.getVoiceUrl(), context.getVoiceMethod());
+	} catch(final InterpreterException exception) {
+	  loadResource(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod());
+	}
     setState(READY);
   }
   
-  public void loadResource(final URI descriptor) throws InterpreterException {
+  public void loadResource(final URI uri, final String fetchMethod) throws InterpreterException {
+    loadResource(uri, fetchMethod, EMPTY_NAME_VALUE_PAIRS);
+  }
+  
+  public void loadResource(final URI uri, final String fetchMethod, List<NameValuePair> additionalParameters) throws InterpreterException {
 	final List<State> possibleStates = new ArrayList<State>();
 	possibleStates.add(IDLE);
 	possibleStates.add(EXECUTING);
 	assertState(possibleStates);
 	// Load the XML resource for execution.
-	
+	final List<NameValuePair> parameters = context.getRcmlRequestParameters();
+	parameters.addAll(additionalParameters);
+	final String parameterString = URLEncodedUtils.format(parameters, "UTF-8");
+	try {
+	  HttpUriRequest request = null;
+	  if(RequestMethod.GET.equals(fetchMethod)) {
+	    request = new HttpGet(URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(),
+	        parameterString, null));
+	  } else if(RequestMethod.POST.equals(fetchMethod)) {
+	    request = new HttpPost(uri);
+	    ((HttpPost)request).setEntity(new StringEntity(parameterString));
+	  }
+	  final HttpClient client = new DefaultHttpClient();
+	  final HttpResponse response = client.execute(request);
+	  final int status = response.getStatusLine().getStatusCode();
+	  if(status == HttpStatus.SC_OK) {
+	    this.resource = builder.build(response.getEntity().getContent());
+	    this.method = fetchMethod;
+	    this.uri = uri;
+	  } else {
+		final String reason = response.getStatusLine().getReasonPhrase();
+		final StringBuilder buffer = new StringBuilder();
+		buffer.append(status).append(" ").append(reason);
+	    throw new InterpreterException();
+	  }
+	} catch(final Exception exception) {
+	  throw new InterpreterException(exception);
+	}
   }
   
   public void redirect() {
