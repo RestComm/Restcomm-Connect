@@ -7,24 +7,24 @@
   <environments default="production">
     <environment id="production">
       <transactionManager type="JDBC"/>
-		<dataSource type="JNDI">
-				<property name="data_source" value="java:restcomm"/>
-		</dataSource>
+        <dataSource type="JNDI">
+          <property name="data_source" value="java:restcomm"/>
+        </dataSource>
     </environment>
   </environments>
   
   <mappers>
-    <mapper url="../sql/accounts.xml"/>
-    <mapper url="../sql/applications.xml"/>
-    <mapper url="../sql/available-phone-numbers.xml"/>
-    <mapper url="../sql/call-detail-records.xml"/>
-    <mapper url="../sql/incoming-phone-numbers.xml"/>
-    <mapper url="../sql/notifications.xml"/>
-    <mapper url="../sql/outgoing-caller_ids.xml"/>
-    <mapper url="../sql/recordings.xml"/>
-    <mapper url="../sql/sand-boxes.xml"/>
-    <mapper url="../sql/short-codes.xml"/>
-    <mapper url="../sql/sms-messages.xml"/>
-    <mapper url="../sql/transcriptions.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/accounts.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/applications.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/available-phone-numbers.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/call-detail-records.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/incoming-phone-numbers.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/notifications.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/outgoing-caller_ids.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/recordings.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/sand-boxes.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/short-codes.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/sms-messages.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/transcriptions.xml"/>
   </mappers>
 </configuration>

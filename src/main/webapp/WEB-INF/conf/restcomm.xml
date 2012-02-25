@@ -11,7 +11,9 @@
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
 	<dao-manager class="org.mobicents.servlet.sip.restcomm.dao.mybatis.MybatisDaoManager">
-		<configuration-file>./mybatis.xml</configuration-file>
+	    <datasource>java:restcomm</datasource>
+	    <configuration-file>${restcomm:home}WEB-INF/conf/mybatis.xml</configuration-file>
+		<sql-files>${restcomm:home}WEB-INF/sql</sql-files>
 	</dao-manager>
 
 	<!-- The media server manager is responsible for managing the media servers in use by RestComm.
@@ -61,7 +63,7 @@
 		The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway.
 	-->
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
-		<cache-path>../../cache/acapela</cache-path>
+		<cache-path>${restcomm:home}cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
 		<application>EVAL_6380429</application>
 		<login>EVAL_VAAS</login>

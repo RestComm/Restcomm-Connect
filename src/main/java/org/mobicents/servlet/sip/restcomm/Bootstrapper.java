@@ -22,6 +22,7 @@ import javax.servlet.ServletContext;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
@@ -48,6 +49,10 @@ public final class Bootstrapper {
     if(logger.isInfoEnabled()) {
       logger.info("loading configuration file located at " + path);
     }
+    // Initialize the configuration interpolator.
+    final ConfigurationStringLookup strings = new ConfigurationStringLookup();
+    strings.addProperty("home", context.getRealPath("/"));
+    ConfigurationInterpolator.registerGlobalLookup("restcomm", strings);
     // Load the restcomm configuration.
     XMLConfiguration configuration = null;
     try {
@@ -63,7 +68,7 @@ public final class Bootstrapper {
       services.set(MgcpServerManager.class, getMgcpServerManager(configuration));
       final CallManager callManager = (CallManager)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager");
       services.set(CallManager.class, callManager);
-      services.set(ConferenceCenter.class, getConferenceCenter(configuration));
+      // services.set(ConferenceCenter.class, getConferenceCenter(configuration));
       services.set(DaoManager.class, getDaoManager(configuration));
       services.set(SmsAggregator.class, getSmsAggregator(configuration));
       services.set(SpeechSynthesizer.class, getSpeechSynthesizer(configuration));
