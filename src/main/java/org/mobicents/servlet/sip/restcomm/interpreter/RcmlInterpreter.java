@@ -69,16 +69,16 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   
   // RcmlInterpreter environment.
   private final RcmlInterpreterContext context;
-  //Tag strategy factory.
-  private final TagStrategyFactory factory;
+  //Tag strategy strategies.
+  private final TagStrategyFactory strategies;
   // XML Resource Builder.
-  private final XmlDocumentBuilder builder;
+  private final XmlDocumentBuilder resourceBuilder;
   // XML Resource.
   private XmlDocument resource;
-  // XML Resource fetch method.
-  private String method;
+  // XML Resource fetch resourceFetchMethod.
+  private String resourceFetchMethod;
   //XML Resource URI.
-  private URI uri;
+  private URI resourceUri;
 	
   public RcmlInterpreter(final RcmlInterpreterContext context) {
     super(IDLE);
@@ -89,8 +89,8 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     addState(FINISHED);
     addState(FAILED);
     this.context = context;
-    this.factory = new TagStrategyFactory();
-    this.builder = new XmlDocumentBuilder(new RCMLTagFactory());
+    this.strategies = new TagStrategyFactory();
+    this.resourceBuilder = new XmlDocumentBuilder(new RCMLTagFactory());
   }
   
   public void failed() {
@@ -107,11 +107,11 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   }
   
   public URI getCurrentUri() {
-    return uri;
+    return resourceUri;
   }
   
   public String getCurrentUriMethod() {
-    return method;
+    return resourceFetchMethod;
   }
   
   public void initialize() throws InterpreterException {
@@ -149,9 +149,9 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	  final HttpResponse response = client.execute(request);
 	  final int status = response.getStatusLine().getStatusCode();
 	  if(status == HttpStatus.SC_OK) {
-	    this.resource = builder.build(response.getEntity().getContent());
-	    this.method = fetchMethod;
-	    this.uri = uri;
+	    this.resource = resourceBuilder.build(response.getEntity().getContent());
+	    this.resourceFetchMethod = fetchMethod;
+	    this.resourceUri = uri;
 	  } else {
 		final String reason = response.getStatusLine().getReasonPhrase();
 		final StringBuilder buffer = new StringBuilder();
@@ -203,7 +203,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 
   public void visit(final Tag tag) throws VisitorException {
 	try {
-	  final TagStrategy strategy = factory.getTagStrategyInstance(tag.getName());
+	  final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
 	  strategy.execute(this, context, tag);
 	} catch(final TagStrategyInstantiationException exception) {
 	  throw new VisitorException(exception);

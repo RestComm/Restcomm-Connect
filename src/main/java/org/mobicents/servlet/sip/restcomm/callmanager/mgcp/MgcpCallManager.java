@@ -21,26 +21,25 @@ import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.BootstrapException;
 import org.mobicents.servlet.sip.restcomm.Bootstrapper;
+import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.Janitor;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
-import org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGateway;
-import org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManager;
+import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -83,18 +82,21 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 
   @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {
 	try {
-	  // Request a media server to handle the new incoming call.
-	  final MgcpServer server = servers.getMediaServer();
-      // Create a call.
-	  final MgcpCall call = new MgcpCall(server);
-	  // Bind the call to the SIP session.
-	  request.getSession().setAttribute("CALL", call);
-	  // Alert!
-	  call.alert(request);
-	  // Hand the call to an interpreter for processing.
-	  final InterpreterExecutor executor = ServiceLocator.getInstance().get(InterpreterExecutor.class);
-	  final RcmlInterpreterContext context = new RcmlInterpreterContext(call);
-	  executor.submit(context);
+	  final IncomingPhoneNumber incomingPhoneNumber = getIncomingPhoneNumber(request);
+	  if(incomingPhoneNumber != null) {
+		// Initialize the call.
+	    final MgcpServer server = servers.getMediaServer();
+        final MgcpCall call = new MgcpCall(server);
+	    request.getSession().setAttribute("CALL", call);
+	    call.alert(request);
+	    // Hand the call to the interpreter for processing.
+	    final InterpreterExecutor executor = ServiceLocator.getInstance().get(InterpreterExecutor.class);
+	    final RcmlInterpreterContext context = new RcmlInterpreterContext(call);
+	    executor.submit(context);
+	  } else {
+	    final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
+	    notFound.send();
+	  }
 	} catch(final InterpreterException exception) {
 	  throw new ServletException(exception);
 	}
@@ -111,6 +113,15 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 
   @Override public final void destroy() {
 	Janitor.cleanup();
+  }
+  
+  private IncomingPhoneNumber getIncomingPhoneNumber(final SipServletRequest invite) {
+    final ServiceLocator services = ServiceLocator.getInstance();
+    final DaoManager daos = services.get(DaoManager.class);
+    final IncomingPhoneNumbersDao dao = daos.getIncomingPhoneNumbersDao();
+    final SipURI uri = (SipURI)invite.getTo().getURI();
+    final String phoneNumber = uri.getUser();
+    return dao.getIncomingPhoneNumber(phoneNumber);
   }
 
   @Override public final void init(final ServletConfig config) throws ServletException {
