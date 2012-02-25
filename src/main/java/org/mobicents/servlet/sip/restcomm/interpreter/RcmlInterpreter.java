@@ -31,10 +31,10 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTag;
 
-public final class Interpreter extends FiniteStateMachine implements Runnable, TagVisitor {
+public final class RcmlInterpreter extends FiniteStateMachine implements Runnable, TagVisitor {
   // Logger.
-  private static final Logger logger = Logger.getLogger(Interpreter.class);
-  // Interpreter states.
+  private static final Logger logger = Logger.getLogger(RcmlInterpreter.class);
+  // RcmlInterpreter states.
   public static final State IDLE = new State("idle");
   public static final State REDIRECTED = new State("redirected");
   public static final State READY = new State("ready");
@@ -52,14 +52,14 @@ public final class Interpreter extends FiniteStateMachine implements Runnable, T
     REDIRECTED.addTransition(READY);
   }
   
-  // Interpreter environment.
-  private final InterpreterContext context;
+  // RcmlInterpreter environment.
+  private final RcmlInterpreterContext context;
   //Tag strategy factory.
   private final TagStrategyFactory factory;
   // XML Resource.
   private XmlDocument resource;
 	
-  public Interpreter(final InterpreterContext context) {
+  public RcmlInterpreter(final RcmlInterpreterContext context) {
     super(IDLE);
     addState(IDLE);
     addState(REDIRECTED);

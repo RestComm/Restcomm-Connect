@@ -22,7 +22,7 @@
     DELETE FROM short_codes WHERE sid=#{sid};
   </delete>
   
-  <delete id="removeShortCodes" parameterType="string>">
+  <delete id="removeShortCodes" parameterType="string">
     DELETE FROM short_codes WHERE account_sid=#{account_sid};
   </delete>
   

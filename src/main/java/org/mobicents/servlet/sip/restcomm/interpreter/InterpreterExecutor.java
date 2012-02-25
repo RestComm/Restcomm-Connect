@@ -27,8 +27,8 @@ public final class InterpreterExecutor implements LifeCycle {
     }
   }
   
-  public void submit(final InterpreterContext context) throws InterpreterException {
-    final Interpreter interpreter = new Interpreter(context);
+  public void submit(final RcmlInterpreterContext context) throws InterpreterException {
+    final RcmlInterpreter interpreter = new RcmlInterpreter(context);
     interpreter.initialize();
     executor.submit(interpreter);
   }

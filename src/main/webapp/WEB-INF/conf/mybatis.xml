@@ -20,7 +20,7 @@
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/call-detail-records.xml"/>
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/incoming-phone-numbers.xml"/>
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/notifications.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/outgoing-caller_ids.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/outgoing-caller-ids.xml"/>
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/recordings.xml"/>
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/sand-boxes.xml"/>
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/short-codes.xml"/>

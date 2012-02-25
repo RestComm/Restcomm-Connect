@@ -18,10 +18,10 @@ package org.mobicents.servlet.sip.restcomm.interpreter;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 
-public final class InterpreterContext {
+public final class RcmlInterpreterContext {
   private final Call call;
   
-  public InterpreterContext(final Call call) {
+  public RcmlInterpreterContext(final Call call) {
     super();
     this.call = call;
   }

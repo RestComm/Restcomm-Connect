@@ -16,22 +16,22 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
-public final class InterpreterContextException extends Exception {
+public final class RcmlInterpreterContextException extends Exception {
   private static final long serialVersionUID = 1L;
 
-  public InterpreterContextException() {
+  public RcmlInterpreterContextException() {
     super();
   }
 
-  public InterpreterContextException(final String message) {
+  public RcmlInterpreterContextException(final String message) {
     super(message);
   }
 
-  public InterpreterContextException(final Throwable cause) {
+  public RcmlInterpreterContextException(final Throwable cause) {
     super(cause);
   }
 
-  public InterpreterContextException(final String message, final Throwable cause) {
+  public RcmlInterpreterContextException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

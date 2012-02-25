@@ -23,8 +23,8 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
 
@@ -34,8 +34,8 @@ public final class PlayTagStrategy extends TwiMLTagStrategy {
     super();
   }
   
-  @Override public void execute(final Interpreter interpreter,
-    final InterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter,
+    final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
 	// Try to answer the call if it hasn't been done so already.
     answer(call);

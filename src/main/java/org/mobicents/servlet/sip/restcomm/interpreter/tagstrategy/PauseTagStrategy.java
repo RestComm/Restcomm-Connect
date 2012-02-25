@@ -17,8 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
 
@@ -29,8 +29,8 @@ public final class PauseTagStrategy extends TwiMLTagStrategy {
     super();
   }
   
-  @Override public void execute(final Interpreter interpreter,
-      final InterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter,
+      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
 	final int length = Integer.parseInt(tag.getAttribute(Length.NAME).getValue());
     synchronized(this) {
       try {

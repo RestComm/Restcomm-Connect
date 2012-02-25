@@ -20,8 +20,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
 public abstract class TwiMLTagStrategy implements TagStrategy {
@@ -39,6 +39,6 @@ public abstract class TwiMLTagStrategy implements TagStrategy {
     }
   }
 
-  public abstract void execute(final Interpreter interpreter,
-      final InterpreterContext context, final Tag tag) throws TagStrategyException;
+  public abstract void execute(final RcmlInterpreter interpreter,
+      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException;
 }

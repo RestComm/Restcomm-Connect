@@ -19,5 +19,5 @@ package org.mobicents.servlet.sip.restcomm.interpreter;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
 public interface TagStrategy {
-  public void execute(Interpreter interpreter, InterpreterContext context, Tag tag) throws TagStrategyException;
+  public void execute(RcmlInterpreter interpreter, RcmlInterpreterContext context, Tag tag) throws TagStrategyException;
 }

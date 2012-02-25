@@ -40,18 +40,6 @@
 
 	<!-- The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.
 		Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator interface for more information.
-		
-		The default SMS aggregator uses public email-2-sms gateways to transmit text messages to the
-		mobile networks. Please keep in  mind that this is a free service and must not be abused so that
-		it can remain available and FREE. 
-		
-		<domain> - The domain from which emails are being sent. 
-		
-		<smtp> - The SMTP mail server to use for sending emails to the SMS gateway. 
-		
-		<gateway> - The email-2-sms gateway. A list can be found @ http://en.wikipedia.org/wiki/List_of_SMS_gateways. 
-		
-		Please pay attention to the format expected by the service providers. 
 	-->
 	<sms-aggregator class="org.mobicents.servlet.sip.restcomm.sms.EsendexSmsAggregator">
 		<user></user>

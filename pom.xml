@@ -98,6 +98,7 @@
     		<groupId>axis</groupId>
     		<artifactId>axis</artifactId>
     		<version>${axis.version}</version>
+    		<scope>provided</scope>
 		</dependency>
 		
 		<dependency>

@@ -43,7 +43,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGateway;
 import org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManager;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -93,7 +93,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 	  call.alert(request);
 	  // Hand the call to an interpreter for processing.
 	  final InterpreterExecutor executor = ServiceLocator.getInstance().get(InterpreterExecutor.class);
-	  final InterpreterContext context = new InterpreterContext(call);
+	  final RcmlInterpreterContext context = new RcmlInterpreterContext(call);
 	  executor.submit(context);
 	} catch(final InterpreterException exception) {
 	  throw new ServletException(exception);

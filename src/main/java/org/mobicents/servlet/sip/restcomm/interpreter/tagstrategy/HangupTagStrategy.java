@@ -18,8 +18,8 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.Interpreter;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
 public final class HangupTagStrategy extends TwiMLTagStrategy {
@@ -27,8 +27,8 @@ public final class HangupTagStrategy extends TwiMLTagStrategy {
     super();
   }
 
-  @Override public void execute(final Interpreter interpreter,
-      InterpreterContext context, Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter,
+      RcmlInterpreterContext context, Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
 	// Try to answer the call if it hasn't been done so already.
 	answer(call);
