@@ -16,12 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.cache;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.security.MessageDigest;
@@ -80,35 +80,37 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 	return new String(HexadecimalUtils.toHex(hash));
   }
   
+  public URI put(final String key, final URI uri) throws IOException {
+    return put(key, new BufferedInputStream(uri.toURL().openStream()));
+  }
+  
   public URI put(final String key, final InputStream data) throws IOException {
     if(contains(key)) {
       return get(key);
     } else {
       final String path = buildPath(key);
-      RandomAccessFile file = null;
+      FileOutputStream file = null;
   	  FileChannel channel = null;
   	  FileLock lock = null;
       try {
         // Create a new file.
-        file = new RandomAccessFile(new File(path), "rw");
+        file = new FileOutputStream(new File(path));
         channel = file.getChannel();
-        // Acquire a lock to the file.
         lock = channel.lock();
         // Write the data to the file.
         final byte[] dataBuffer = new byte[8192];
-        final ByteBuffer channelBuffer = ByteBuffer.allocate(8192);
         int bytesRead = 0;
         do {
-          bytesRead = data.read(dataBuffer);
+          bytesRead = data.read(dataBuffer, 0, 8192);
           if(bytesRead > 0) {
-            channelBuffer.put(dataBuffer, 0, bytesRead);
-            channel.write(channelBuffer);
-            channelBuffer.clear();
+            file.write(dataBuffer, 0, bytesRead);
           }
         } while(bytesRead != -1);
         // return a URI to the file.
         return toUri(path);
       } finally {
+    	// Close the input stream.
+    	data.close();
     	// Release the lock.
     	if(lock != null && lock.isValid()) {
           lock.release();

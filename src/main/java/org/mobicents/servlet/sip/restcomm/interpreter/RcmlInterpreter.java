@@ -24,12 +24,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
@@ -143,7 +143,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	        parameterString, null));
 	  } else if(RequestMethod.POST.equals(fetchMethod)) {
 	    request = new HttpPost(uri);
-	    ((HttpPost)request).setEntity(new StringEntity(parameterString));
+	    ((HttpPost)request).setEntity(new UrlEncodedFormEntity(parameters));
 	  }
 	  final HttpClient client = new DefaultHttpClient();
 	  final HttpResponse response = client.execute(request);
@@ -156,7 +156,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		final String reason = response.getStatusLine().getReasonPhrase();
 		final StringBuilder buffer = new StringBuilder();
 		buffer.append(status).append(" ").append(reason);
-	    throw new InterpreterException();
+	    throw new InterpreterException(buffer.toString());
 	  }
 	} catch(final Exception exception) {
 	  throw new InterpreterException(exception);

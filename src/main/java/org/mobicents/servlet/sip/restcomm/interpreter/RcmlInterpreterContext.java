@@ -70,14 +70,14 @@ public final class RcmlInterpreterContext {
   
   public List<NameValuePair> getRcmlRequestParameters() {
     final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-    parameters.add(new BasicNameValuePair("CallSid", call.getSid().toString()));
-    parameters.add(new BasicNameValuePair("AccountSid", call.getAccountSid().toString()));
+    //parameters.add(new BasicNameValuePair("CallSid", call.getSid().toString()));
+    //parameters.add(new BasicNameValuePair("AccountSid", call.getAccountSid().toString()));
     parameters.add(new BasicNameValuePair("From", call.getOriginator()));
     parameters.add(new BasicNameValuePair("To", call.getRecipient()));
     parameters.add(new BasicNameValuePair("CallStatus", call.getStatus()));
-    parameters.add(new BasicNameValuePair("ApiVersion", call.getApiVersion()));
+    //parameters.add(new BasicNameValuePair("ApiVersion", call.getApiVersion()));
     parameters.add(new BasicNameValuePair("Direction", call.getDirection()));
-    parameters.add(new BasicNameValuePair("ForwardedFrom", call.getForwardedFrom()));
+    //parameters.add(new BasicNameValuePair("ForwardedFrom", call.getForwardedFrom()));
     parameters.add(new BasicNameValuePair("CallerName", call.getOriginatorName()));
     return parameters;
   }

@@ -17,7 +17,6 @@
 package org.mobicents.servlet.sip.restcomm.tts;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,14 +28,14 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.cache.DiskCache;
+import org.mobicents.servlet.sip.restcomm.util.UriUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -148,29 +147,32 @@ import org.mobicents.servlet.sip.restcomm.cache.DiskCache;
     parameters.add(new BasicNameValuePair("cl_pwd", password));
     parameters.add(new BasicNameValuePair("req_voice", findSpeaker(gender, language)));
     parameters.add(new BasicNameValuePair("req_text", text));
-    final String parameterString = URLEncodedUtils.format(parameters, "UTF-8");
-    final HttpPost request = new HttpPost(serviceRoot);
+    final HttpPost post = new HttpPost(serviceRoot);
     try {
-	  request.setEntity(new StringEntity(parameterString));
-	  final HttpClient client = new DefaultHttpClient();
-	  final HttpResponse response = client.execute(request);
-	  return store(text, response);
+	  post.setEntity(new UrlEncodedFormEntity(parameters, "UTF-8"));
+	  HttpClient client = new DefaultHttpClient();
+	  final HttpResponse response = client.execute(post);
+	  final int status = response.getStatusLine().getStatusCode();
+	  if(status == HttpStatus.SC_OK) {
+	    final Map<String, String> results = UriUtils.parseEntity(response.getEntity());
+	    if("OK".equals(results.get("res"))) {
+	      final URI uri = URI.create(results.get("snd_url"));
+	      final StringBuilder key = new StringBuilder();
+	      key.append(language).append(":").append(gender).append(":").append(text);
+	      return cache.put(key.toString(), uri);
+	    } else {
+	      final StringBuilder buffer = new StringBuilder();
+	      buffer.append(results.get("err_code")).append(" ").append(results.get("err_msg"));
+	      throw new SpeechSynthesizerException(buffer.toString());
+	    }
+	  } else {
+	    final String reason = response.getStatusLine().getReasonPhrase();
+	    final StringBuilder buffer = new StringBuilder();
+	    buffer.append(status).append(" ").append(reason);
+	    throw new IOException(buffer.toString());
+	  }
 	} catch(final Exception exception) {
       throw new SpeechSynthesizerException(exception);
-	}
-  }
-  
-  private URI store(final String text, final HttpResponse response) throws IOException {
-	final int status = response.getStatusLine().getStatusCode();
-	if(status == HttpStatus.SC_OK) {
-	  final InputStream content = response.getEntity().getContent();
-	  final URI uri = cache.put(text, content);
-	  return uri;
-	} else {
-	  final String reason = response.getStatusLine().getReasonPhrase();
-	  final StringBuilder buffer = new StringBuilder();
-	  buffer.append(status).append(" ").append(reason);
-	  throw new IOException(buffer.toString());
 	}
   }
 }

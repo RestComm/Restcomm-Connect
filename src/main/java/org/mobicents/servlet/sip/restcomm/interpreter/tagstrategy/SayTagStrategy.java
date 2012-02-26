@@ -39,7 +39,7 @@ public final class SayTagStrategy extends TwiMLTagStrategy  {
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
 	final Call call = context.getCall();
 	// Try to answer the call if it hasn't been done so already.
-    answer(call);
+    // answer(call);
     // Say something.
     final String text = tag.getText();
     final String gender = tag.getAttribute(Voice.NAME).getValue();
