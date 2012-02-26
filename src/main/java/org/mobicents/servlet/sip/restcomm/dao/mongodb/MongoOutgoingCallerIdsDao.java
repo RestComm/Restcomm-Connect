@@ -16,24 +16,26 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.OutgoingCallerId;
-import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import org.joda.time.DateTime;
+
+import org.mobicents.servlet.sip.restcomm.OutgoingCallerId;
+import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -106,24 +108,24 @@ import com.mongodb.WriteResult;
   
   private DBObject toDbObject(final OutgoingCallerId outgoingCallerId) {
     final BasicDBObject object = new BasicDBObject();
-    object.put("sid", outgoingCallerId.getSid().toString());
-    object.put("date_created", outgoingCallerId.getDateCreated().toDate());
-    object.put("date_updated", outgoingCallerId.getDateUpdated().toDate());
+    object.put("sid", writeSid(outgoingCallerId.getSid()));
+    object.put("date_created", writeDateTime(outgoingCallerId.getDateCreated()));
+    object.put("date_updated", writeDateTime(outgoingCallerId.getDateUpdated()));
     object.put("friendly_name", outgoingCallerId.getFriendlyName());
-    object.put("account_sid", outgoingCallerId.getAccountSid().toString());
+    object.put("account_sid", writeSid(outgoingCallerId.getAccountSid()));
     object.put("phone_number", outgoingCallerId.getPhoneNumber());
-    object.put("uri", outgoingCallerId.getUri().toString());
+    object.put("uri", writeUri(outgoingCallerId.getUri()));
     return object;
   }
   
   private OutgoingCallerId toOutgoingCallerId(final DBObject object) {
-    final Sid sid = new Sid((String)object.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)object.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)object.get("date_updated"));
-    final String friendlyName = (String)object.get("friendly_name");
-    final Sid accountSid = new Sid((String)object.get("account_sid"));
-    final String phoneNumber = (String)object.get("phone_number");
-    final URI uri = URI.create((String)object.get("uri"));
+    final Sid sid = readSid(object.get("sid"));
+    final DateTime dateCreated = readDateTime(object.get("date_created"));
+    final DateTime dateUpdated = readDateTime(object.get("date_updated"));
+    final String friendlyName = readString(object.get("friendly_name"));
+    final Sid accountSid = readSid(object.get("account_sid"));
+    final String phoneNumber = readString(object.get("phone_number"));
+    final URI uri = readUri(object.get("uri"));
     return new OutgoingCallerId(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, uri);
   }
 }

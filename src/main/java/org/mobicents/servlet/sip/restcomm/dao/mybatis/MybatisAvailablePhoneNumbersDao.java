@@ -27,6 +27,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.mobicents.servlet.sip.restcomm.AvailablePhoneNumber;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -126,15 +127,15 @@ import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
   }
   
   private AvailablePhoneNumber toAvailablePhoneNumber(final Map<String, Object> map) {
-    final String friendlyName = (String)map.get("friendly_name");
-    final String phoneNumber = (String)map.get("phone_number");
-    final Integer lata = (Integer)map.get("lata");
-    final String rateCenter = (String)map.get("rate_center");
-    final Double latitude = (Double)map.get("latitude");
-    final Double longitude = (Double)map.get("longitude");
-    final String region = (String)map.get("region");
-    final Integer postalCode = (Integer)map.get("postal_code");
-    final String isoCountry = (String)map.get("iso_country");
+    final String friendlyName = readString(map.get("friendly_name"));
+    final String phoneNumber = readString(map.get("phone_number"));
+    final Integer lata = readInteger(map.get("lata"));
+    final String rateCenter = readString(map.get("rate_center"));
+    final Double latitude = readDouble(map.get("latitude"));
+    final Double longitude = readDouble(map.get("longitude"));
+    final String region = readString(map.get("region"));
+    final Integer postalCode = readInteger(map.get("postal_code"));
+    final String isoCountry = readString(map.get("iso_country"));
     return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode, isoCountry);
   }
   

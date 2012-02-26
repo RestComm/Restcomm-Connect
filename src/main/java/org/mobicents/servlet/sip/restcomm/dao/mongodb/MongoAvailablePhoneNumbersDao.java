@@ -16,6 +16,13 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +31,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.AvailablePhoneNumber;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -128,15 +129,15 @@ import com.mongodb.WriteResult;
   }
   
   private AvailablePhoneNumber toAvailablePhoneNumber(final DBObject object) {
-    final String friendlyName = (String)object.get("friendly_name");
-    final String phoneNumber = (String)object.get("phone_number");
-    final Integer lata = (Integer)object.get("lata");
-    final String rateCenter = (String)object.get("rate_center");
-    final Double latitude = (Double)object.get("latitude");
-    final Double longitude = (Double)object.get("longitude");
-    final String region = (String)object.get("region");
-    final Integer postalCode = (Integer)object.get("postal_code");
-    final String isoCountry = (String)object.get("iso_country");
+    final String friendlyName = readString(object.get("friendly_name"));
+    final String phoneNumber = readString(object.get("phone_number"));
+    final Integer lata = readInteger(object.get("lata"));
+    final String rateCenter = readString(object.get("rate_center"));
+    final Double latitude = readDouble(object.get("latitude"));
+    final Double longitude = readDouble(object.get("longitude"));
+    final String region = readString(object.get("region"));
+    final Integer postalCode = readInteger(object.get("postal_code"));
+    final String isoCountry = readString(object.get("iso_country"));
     return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude,
         region, postalCode, isoCountry);
   }

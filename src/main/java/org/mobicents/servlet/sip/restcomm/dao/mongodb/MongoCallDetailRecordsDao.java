@@ -16,10 +16,16 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
+
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -28,13 +34,7 @@ import org.mobicents.servlet.sip.restcomm.CallDetailRecord;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -146,46 +146,46 @@ import com.mongodb.WriteResult;
   }
   
   private CallDetailRecord toCallDetailRecord(final DBObject object) {
-    final Sid sid = new Sid((String)object.get("sid"));
-    final Sid parentCallSid = new Sid((String)object.get("parent_call_sid"));
-    final DateTime dateCreated = new DateTime((Date)object.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)object.get("date_updated"));
-    final Sid accountSid = new Sid((String)object.get("account_sid"));
-    final String recipient = (String)object.get("recipient");
-    final String sender = (String)object.get("sender");
-    final Sid phoneNumberSid = new Sid((String)object.get("phone_number_sid"));
-    final String status = (String)object.get("status");
-    final DateTime startTime = new DateTime((String)object.get("start_time"));
-    final DateTime endTime = new DateTime((String)object.get("end_time"));
-    final Integer duration = (Integer)object.get("duration");
-    final BigDecimal price = new BigDecimal((String)object.get("price"));
-    final String answeredBy = (String)object.get("answered_by");
-    final String forwardedFrom = (String)object.get("forwarded_from");
-    final String callerName = (String)object.get("caller_name");
-    final URI uri = URI.create((String)object.get("uri"));
+    final Sid sid = readSid(object.get("sid"));
+    final Sid parentCallSid = readSid(object.get("parent_call_sid"));
+    final DateTime dateCreated = readDateTime(object.get("date_created"));
+    final DateTime dateUpdated = readDateTime(object.get("date_updated"));
+    final Sid accountSid = readSid(object.get("account_sid"));
+    final String recipient = readString(object.get("recipient"));
+    final String sender = readString(object.get("sender"));
+    final Sid phoneNumberSid = readSid(object.get("phone_number_sid"));
+    final String status = readString(object.get("status"));
+    final DateTime startTime = readDateTime(object.get("start_time"));
+    final DateTime endTime = readDateTime(object.get("end_time"));
+    final Integer duration = readInteger(object.get("duration"));
+    final BigDecimal price = readBigDecimal(object.get("price"));
+    final String answeredBy = readString(object.get("answered_by"));
+    final String forwardedFrom = readString(object.get("forwarded_from"));
+    final String callerName = readString(object.get("caller_name"));
+    final URI uri = readUri(object.get("uri"));
     return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, recipient, sender, phoneNumberSid,
         status, startTime, endTime, duration, price, answeredBy, forwardedFrom, callerName, uri);
   }
   
   private DBObject toDbObject(final CallDetailRecord cdr) {
     final BasicDBObject object = new BasicDBObject();
-    object.put("sid", cdr.getSid().toString());
-    object.put("parent_call_sid", cdr.getParentCallSid().toString());
-    object.put("date_created", cdr.getDateCreated().toDate());
-    object.put("date_updated", cdr.getDateUpdated().toDate());
-    object.put("account_sid", cdr.getAccountSid().toString());
+    object.put("sid", writeSid(cdr.getSid()));
+    object.put("parent_call_sid", writeSid(cdr.getParentCallSid()));
+    object.put("date_created", writeDateTime(cdr.getDateCreated()));
+    object.put("date_updated", writeDateTime(cdr.getDateUpdated()));
+    object.put("account_sid", writeSid(cdr.getAccountSid()));
     object.put("recipient", cdr.getTo());
     object.put("sender", cdr.getFrom());
-    object.put("phone_number_sid", cdr.getPhoneNumberSid().toString());
+    object.put("phone_number_sid", writeSid(cdr.getPhoneNumberSid()));
     object.put("status", cdr.getStatus());
-    object.put("start_time", cdr.getStartTime().toDate());
-    object.put("end_time", cdr.getEndTime().toDate());
+    object.put("start_time", writeDateTime(cdr.getStartTime()));
+    object.put("end_time", writeDateTime(cdr.getEndTime()));
     object.put("duration", cdr.getDuration());
-    object.put("price", cdr.getPrice().toString());
+    object.put("price", writeBigDecimal(cdr.getPrice()));
     object.put("answered_by", cdr.getAnsweredBy());
     object.put("forwarded_from", cdr.getForwardedFrom());
     object.put("caller_name", cdr.getCallerName());
-    object.put("uri", cdr.getUri().toString());
+    object.put("uri", writeUri(cdr.getUri()));
     return object;
   }
 }

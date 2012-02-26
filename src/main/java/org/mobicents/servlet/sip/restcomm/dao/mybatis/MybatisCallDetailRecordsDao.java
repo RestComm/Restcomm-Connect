@@ -19,7 +19,6 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import org.mobicents.servlet.sip.restcomm.CallDetailRecord;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -138,46 +138,46 @@ import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
   }
   
   private CallDetailRecord toCallDetailRecord(final Map<String, Object> map) {
-    final Sid sid = new Sid((String)map.get("sid"));
-    final Sid parentCallSid = new Sid((String)map.get("parent_call_sid"));
-    final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-    final Sid accountSid = new Sid((String)map.get("account_sid"));
-    final String to = (String)map.get("to");
-    final String from = (String)map.get("from");
-    final Sid phoneNumberSid = new Sid((String)map.get("phone_number_sid"));
-    final String status = (String)map.get("status");
-    final DateTime startTime = new DateTime((Date)map.get("start_time"));
-    final DateTime endTime = new DateTime((Date)map.get("end_time"));
-    final Integer duration = (Integer)map.get("duration");
-    final BigDecimal price = new BigDecimal((String)map.get("price"));
-    final String answeredBy = (String)map.get("answered_by");
-    final String forwardedFrom = (String)map.get("forwarded_from");
-    final String callerName = (String)map.get("caller_name");
-    final URI uri = URI.create((String)map.get("uri"));
+    final Sid sid = readSid(map.get("sid"));
+    final Sid parentCallSid = readSid(map.get("parent_call_sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final Sid accountSid = readSid(map.get("account_sid"));
+    final String to = readString(map.get("to"));
+    final String from = readString(map.get("from"));
+    final Sid phoneNumberSid = readSid(map.get("phone_number_sid"));
+    final String status = readString(map.get("status"));
+    final DateTime startTime = readDateTime(map.get("start_time"));
+    final DateTime endTime = readDateTime(map.get("end_time"));
+    final Integer duration = readInteger(map.get("duration"));
+    final BigDecimal price = readBigDecimal(map.get("price"));
+    final String answeredBy = readString(map.get("answered_by"));
+    final String forwardedFrom = readString(map.get("forwarded_from"));
+    final String callerName = readString(map.get("caller_name"));
+    final URI uri = readUri(map.get("uri"));
     return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
         startTime, endTime, duration, price, answeredBy, forwardedFrom, callerName, uri);
   }
   
   private Map<String, Object> toMap(final CallDetailRecord cdr) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", cdr.getSid().toString());
-    map.put("parent_call_sid", cdr.getParentCallSid().toString());
-    map.put("date_created", cdr.getDateCreated().toDate());
-    map.put("date_updated", cdr.getDateUpdated().toDate());
-    map.put("account_sid", cdr.getAccountSid().toString());
+    map.put("sid", writeSid(cdr.getSid()));
+    map.put("parent_call_sid", writeSid(cdr.getParentCallSid()));
+    map.put("date_created", writeDateTime(cdr.getDateCreated()));
+    map.put("date_updated", writeDateTime(cdr.getDateUpdated()));
+    map.put("account_sid", writeSid(cdr.getAccountSid()));
     map.put("to", cdr.getTo());
     map.put("from", cdr.getFrom());
-    map.put("phone_number_sid", cdr.getPhoneNumberSid().toString());
+    map.put("phone_number_sid", writeSid(cdr.getPhoneNumberSid()));
     map.put("status", cdr.getStatus());
-    map.put("start_time", cdr.getStartTime().toDate());
-    map.put("end_time", cdr.getEndTime().toDate());
+    map.put("start_time", writeDateTime(cdr.getStartTime()));
+    map.put("end_time", writeDateTime(cdr.getEndTime()));
     map.put("duration", cdr.getDuration());
-    map.put("price", cdr.getPrice().toString());
+    map.put("price", writeBigDecimal(cdr.getPrice()));
     map.put("answered_by", cdr.getAnsweredBy());
     map.put("forwarded_from", cdr.getForwardedFrom());
     map.put("caller_name", cdr.getCallerName());
-    map.put("uri", cdr.getUri().toString());
+    map.put("uri", writeUri(cdr.getUri()));
     return map;
   }
 }

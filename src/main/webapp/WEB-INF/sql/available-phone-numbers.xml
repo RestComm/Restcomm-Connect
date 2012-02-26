@@ -5,31 +5,31 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao">
   <insert id="addAvailablePhoneNumber" parameterType="map">
-    INSERT INTO available_phone_numbers (friendly_name, phone_number, lata, rate_center, latitude, longitude, region, postal_code, iso_country)
+    INSERT INTO "restcomm_available_phone_numbers" ("friendly_name", "phone_number", "lata", "rate_center", "latitude", "longitude", "region", "postal_code", "iso_country")
     VALUES (#{friendly_name}, #{phone_number}, #{lata}, #{rate_center}, #{latitude}, #{longitude}, #{region}, #{postal_code}, #{iso_country});
   </insert>
   
   <select id="getAvailablePhoneNumbers" resultType="hashmap">
-    SELECT * FROM available_phone_numbers;
+    SELECT * FROM "restcomm_available_phone_numbers";
   </select>
   
   <select id="getAvailablePhoneNumbersByAreaCode" parameterType="string" resultType="hashmap">
-    SELECT * FROM available_phone_numbers WHERE iso_country='US' OR iso_country='CA' AND phone_number LIKE #{phone_number};
+    SELECT * FROM "restcomm_available_phone_numbers" WHERE "iso_country"='US' OR "iso_country"='CA' AND "phone_number" LIKE #{phone_number};
   </select>
   
   <select id="getAvailablePhoneNumbersByPattern" parameterType="string" resultType="hashmap">
-    SELECT * FROM available_phone_numbers WHERE phone_number LIKE #{phone_number};
+    SELECT * FROM "restcomm_available_phone_numbers" WHERE "phone_number" LIKE #{phone_number};
   </select>
   
   <select id="getAvailablePhoneNumbersByRegion" parameterType="string" resultType="hashmap">
-    SELECT * FROM available_phone_numbers WHERE region=#{region};
+    SELECT * FROM "restcomm_available_phone_numbers" WHERE "region"=#{region};
   </select>
   
   <select id="getAvailablePhoneNumbersByPostalCode" parameterType="int" resultType="hashmap">
-    SELECT * FROM available_phone_numbers WHERE postal_code=#{postal_code};
+    SELECT * FROM "restcomm_available_phone_numbers" WHERE "postal_code"=#{postal_code};
   </select>
   
   <delete id="removeAvailablePhoneNumber" parameterType="string">
-    DELETE FROM available_phone_numbers WHERE phone_number=#{phone_number};
+    DELETE FROM "restcomm_available_phone_numbers" WHERE "phone_number"=#{phone_number};
   </delete>
 </mapper>

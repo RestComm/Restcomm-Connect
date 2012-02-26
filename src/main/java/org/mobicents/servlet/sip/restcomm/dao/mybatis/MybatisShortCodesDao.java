@@ -18,7 +18,6 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +31,7 @@ import org.mobicents.servlet.sip.restcomm.ShortCode;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ShortCodesDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -114,34 +114,34 @@ import org.mobicents.servlet.sip.restcomm.dao.ShortCodesDao;
   
   private Map<String, Object> toMap(final ShortCode shortCode) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", shortCode.getSid().toString());
-    map.put("date_created", shortCode.getDateCreated().toDate());
-    map.put("date_updated", shortCode.getDateUpdated().toDate());
+    map.put("sid", writeSid(shortCode.getSid()));
+    map.put("date_created", writeDateTime(shortCode.getDateCreated()));
+    map.put("date_updated", writeDateTime(shortCode.getDateUpdated()));
     map.put("friendly_name", shortCode.getFriendlyName());
-    map.put("account_sid", shortCode.getAccountSid().toString());
+    map.put("account_sid", writeSid(shortCode.getAccountSid()));
     map.put("short_code", shortCode.getShortCode());
     map.put("api_version", shortCode.getApiVersion());
-    map.put("sms_url", shortCode.getSmsUrl().toString());
+    map.put("sms_url", writeUri(shortCode.getSmsUrl()));
     map.put("sms_method", shortCode.getSmsMethod());
-    map.put("sms_fallback_url", shortCode.getSmsFallbackUrl().toString());
+    map.put("sms_fallback_url", writeUri(shortCode.getSmsFallbackUrl()));
     map.put("sms_fallback_method", shortCode.getSmsFallbackMethod());
-    map.put("uri", shortCode.getUri().toString());
+    map.put("uri", writeUri(shortCode.getUri()));
     return map;
   }
   
   private ShortCode toShortCode(final Map<String, Object> map) {
-    final Sid sid = new Sid((String)map.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-    final String friendlyName = (String)map.get("friendly_name");
-    final Sid accountSid = new Sid((String)map.get("account_sid"));
-    final Integer shortCode = (Integer)map.get("short_code");
-    final String apiVersion = (String)map.get("api_version");
-    final URI smsUrl = URI.create((String)map.get("sms_url"));
-    final String smsMethod = (String)map.get("sms_method");
-    final URI smsFallbackUrl = URI.create((String)map.get("sms_fallback_url"));
-    final String smsFallbackMethod = (String)map.get("sms_fallback_method");
-    final URI uri = URI.create((String)map.get("uri"));
+    final Sid sid = readSid(map.get("sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final String friendlyName = readString(map.get("friendly_name"));
+    final Sid accountSid = readSid(map.get("account_sid"));
+    final Integer shortCode = readInteger(map.get("short_code"));
+    final String apiVersion = readString(map.get("api_version"));
+    final URI smsUrl = readUri(map.get("sms_url"));
+    final String smsMethod = readString(map.get("sms_method"));
+    final URI smsFallbackUrl = readUri(map.get("sms_fallback_url"));
+    final String smsFallbackMethod = readString(map.get("sms_fallback_method"));
+    final URI uri = readUri(map.get("uri"));
     return new ShortCode(sid, dateCreated, dateUpdated, friendlyName, accountSid, shortCode,
         apiVersion, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
   }

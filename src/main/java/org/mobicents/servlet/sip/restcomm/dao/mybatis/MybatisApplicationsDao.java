@@ -18,18 +18,20 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -111,25 +113,25 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
   }
   
   private Application toApplication(final Map<String, Object> map) {
-	final Sid sid = new Sid((String)map.get("sid"));
-	final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-	final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-	final String friendlyName = (String)map.get("friendly_name");
-	final Sid accountSid = new Sid((String)map.get("account_sid"));
-	final String apiVersion = (String)map.get("api_version");
-	final URI voiceUrl = URI.create((String)map.get("voice_url"));
-	final String voiceMethod = (String)map.get("voice_method");
-	final URI voiceFallbackUrl = URI.create((String)map.get("voice_fallback_url"));
-	final String voiceFallbackMethod = (String)map.get("voice_fallback_method");
-	final URI statusCallback = URI.create((String)map.get("status_callback"));
-	final String statusCallbackMethod = (String)map.get("status_callback_method");
-	final Boolean hasVoiceCallerIdLookup = (Boolean)map.get("voice_caller_id_lookup");
-	final URI smsUrl = URI.create((String)map.get("sms_url"));
-	final String smsMethod = (String)map.get("sms_method");
-	final URI smsFallbackUrl = URI.create((String)map.get("sms_fallback_url"));
-	final String smsFallbackMethod = (String)map.get("sms_fallback_method");
-	final URI smsStatusCallback = URI.create((String)map.get("sms_status_callback"));
-	final URI uri = URI.create((String)map.get("uri"));
+	final Sid sid = readSid(map.get("sid"));
+	final DateTime dateCreated = readDateTime(map.get("date_created"));
+	final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+	final String friendlyName = readString(map.get("friendly_name"));
+	final Sid accountSid = readSid(map.get("account_sid"));
+	final String apiVersion = readString(map.get("api_version"));
+	final URI voiceUrl = readUri(map.get("voice_url"));
+	final String voiceMethod = readString(map.get("voice_method"));
+	final URI voiceFallbackUrl = readUri(map.get("voice_fallback_url"));
+	final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
+	final URI statusCallback = readUri(map.get("status_callback"));
+	final String statusCallbackMethod = readString(map.get("status_callback_method"));
+	final Boolean hasVoiceCallerIdLookup = readBoolean(map.get("voice_caller_id_lookup"));
+	final URI smsUrl = readUri(map.get("sms_url"));
+	final String smsMethod = readString(map.get("sms_method"));
+	final URI smsFallbackUrl = readUri(map.get("sms_fallback_url"));
+	final String smsFallbackMethod = readString(map.get("sms_fallback_method"));
+	final URI smsStatusCallback = readUri(map.get("sms_status_callback"));
+	final URI uri = readUri(map.get("uri"));
     return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion,
         voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
         hasVoiceCallerIdLookup, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback,
@@ -138,25 +140,25 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
   
   private Map<String, Object> toMap(final Application application) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", application.getSid().toString());
-    map.put("date_created", application.getDateCreated().toDate());
-    map.put("date_updated", application.getDateUpdated().toDate());
+    map.put("sid", writeSid(application.getSid()));
+    map.put("date_created", writeDateTime(application.getDateCreated()));
+    map.put("date_updated", writeDateTime(application.getDateUpdated()));
     map.put("friendly_name", application.getFriendlyName());
-    map.put("account_sid", application.getAccountSid().toString());
+    map.put("account_sid", writeSid(application.getAccountSid()));
     map.put("api_version", application.getApiVersion());
-    map.put("voice_url", application.getVoiceUrl().toString());
+    map.put("voice_url", writeUri(application.getVoiceUrl()));
     map.put("voice_method", application.getVoiceMethod());
-    map.put("voice_fallback_url", application.getVoiceFallbackUrl().toString());
+    map.put("voice_fallback_url", writeUri(application.getVoiceFallbackUrl()));
     map.put("voice_fallback_method", application.getVoiceFallbackMethod());
-    map.put("status_callback", application.getStatusCallback().toString());
+    map.put("status_callback", writeUri(application.getStatusCallback()));
     map.put("status_callback_method", application.getStatusCallbackMethod());
     map.put("voice_caller_id_lookup", application.hasVoiceCallerIdLookup());
-    map.put("sms_url", application.getSmsUrl().toString());
+    map.put("sms_url", writeUri(application.getSmsUrl()));
     map.put("sms_method", application.getSmsMethod());
-    map.put("sms_fallback_url", application.getSmsFallbackUrl().toString());
+    map.put("sms_fallback_url", writeUri(application.getSmsFallbackUrl()));
     map.put("sms_fallback_method", application.getSmsFallbackMethod());
-    map.put("sms_status_callback", null);
-    map.put("uri", application.getUri().toString());
+    map.put("sms_status_callback", writeUri(application.getSmsStatusCallback()));
+    map.put("uri", writeUri(application.getUri()));
     return map;
   }
 }

@@ -18,18 +18,20 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -138,27 +140,27 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
   }
   
   private Account toAccount(final Map<String, Object> map) {
-	final Sid sid = new Sid((String)map.get("sid"));
-	final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-	final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-	final String friendlyName = (String)map.get("friendly_name");
-	final Account.Type type = Account.Type.valueOf((String)map.get("type"));
-	final Account.Status status = Account.Status.valueOf((String)map.get("status"));
-	final String authToken = (String)map.get("auth_token");
-	final URI uri = URI.create((String)map.get("uri"));
+	final Sid sid = readSid(map.get("sid"));
+	final DateTime dateCreated = readDateTime(map.get("date_created"));
+	final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+	final String friendlyName = readString(map.get("friendly_name"));
+	final Account.Type type = readAccountType(map.get("type"));
+	final Account.Status status = readAccountStatus(map.get("status"));
+	final String authToken = readString(map.get("auth_token"));
+	final URI uri = readUri(map.get("uri"));
     return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
   }
   
   private Map<String, Object> toMap(final Account account) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", account.getSid().toString());
-    map.put("date_created", account.getDateCreated().toDate());
-    map.put("date_updated", account.getDateUpdated().toDate());
+    map.put("sid", writeSid(account.getSid()));
+    map.put("date_created", writeDateTime(account.getDateCreated()));
+    map.put("date_updated", writeDateTime(account.getDateUpdated()));
     map.put("friendly_name", account.getFriendlyName());
-    map.put("type", account.getType().toString());
-    map.put("status", account.getStatus().toString());
+    map.put("type", writeAccountType(account.getType()));
+    map.put("status", writeAccountStatus(account.getStatus()));
     map.put("auth_token", account.getAuthToken());
-    map.put("uri", account.getUri().toString());
+    map.put("uri", writeUri(account.getUri()));
     return map;
   }
 }

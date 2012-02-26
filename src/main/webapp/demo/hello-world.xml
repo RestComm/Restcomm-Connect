@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Play loop="1">http://127.0.0.1:8080/restcomm/demo/demo.wav</Play>
+	<Say>Welcome to RestComm</Say>
 	<Hangup />
 </Response>

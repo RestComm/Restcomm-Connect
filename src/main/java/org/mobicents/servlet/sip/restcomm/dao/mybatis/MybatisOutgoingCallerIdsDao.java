@@ -18,18 +18,20 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.OutgoingCallerId;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -113,24 +115,24 @@ import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
   
   private Map<String, Object> toMap(final OutgoingCallerId outgoingCallerId) {
 	final Map<String, Object> map = new HashMap<String, Object>();
-	map.put("sid", outgoingCallerId.getSid().toString());
-	map.put("date_created", outgoingCallerId.getDateCreated().toDate());
-	map.put("date_updated", outgoingCallerId.getDateUpdated().toDate());
+	map.put("sid", writeSid(outgoingCallerId.getSid()));
+	map.put("date_created", writeDateTime(outgoingCallerId.getDateCreated()));
+	map.put("date_updated", writeDateTime(outgoingCallerId.getDateUpdated()));
 	map.put("friendly_name", outgoingCallerId.getFriendlyName());
-	map.put("account_sid", outgoingCallerId.getAccountSid().toString());
+	map.put("account_sid", writeSid(outgoingCallerId.getAccountSid()));
 	map.put("phone_number", outgoingCallerId.getPhoneNumber());
-	map.put("uri", outgoingCallerId.getUri().toString());
+	map.put("uri", writeUri(outgoingCallerId.getUri()));
     return map;
   }
   
   private OutgoingCallerId toOutgoingCallerId(final Map<String, Object> map) {
-    final Sid sid = new Sid((String)map.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-    final String friendlyName = (String)map.get("friendly_name");
-    final Sid accountSid = new Sid((String)map.get("account_sid"));
-    final String phoneNumber = (String)map.get("phone_number");
-    final URI uri = URI.create((String)map.get("uri"));
+    final Sid sid = readSid(map.get("sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final String friendlyName = readString(map.get("friendly_name"));
+    final Sid accountSid = readSid(map.get("account_sid"));
+    final String phoneNumber = readString(map.get("phone_number"));
+    final URI uri = readUri(map.get("uri"));
     return new OutgoingCallerId(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, uri);
   }
 }

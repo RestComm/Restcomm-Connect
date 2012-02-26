@@ -18,18 +18,20 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -123,44 +125,44 @@ import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
   
   private Map<String, Object> toMap(final Notification notification) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", notification.getSid().toString());
-    map.put("date_created", notification.getDateCreated().toDate());
-    map.put("date_updated", notification.getDateUpdated().toDate());
-    map.put("account_sid", notification.getAccountSid().toString());
-    map.put("call_sid", notification.getCallSid().toString());
+    map.put("sid", writeSid(notification.getSid()));
+    map.put("date_created", writeDateTime(notification.getDateCreated()));
+    map.put("date_updated", writeDateTime(notification.getDateUpdated()));
+    map.put("account_sid", writeSid(notification.getAccountSid()));
+    map.put("call_sid", writeSid(notification.getCallSid()));
     map.put("api_version", notification.getApiVersion());
     map.put("log", notification.getLog());
     map.put("error_code", notification.getErrorCode());
-    map.put("more_info", notification.getMoreInfo().toString());
+    map.put("more_info", writeUri(notification.getMoreInfo()));
     map.put("message_text", notification.getMessageText());
-    map.put("message_date", notification.getMessageDate().toDate());
-    map.put("request_url", notification.getRequestUrl().toString());
+    map.put("message_date", writeDateTime(notification.getMessageDate()));
+    map.put("request_url", writeUri(notification.getRequestUrl()));
     map.put("request_method", notification.getRequestMethod());
     map.put("request_variables", notification.getRequestVariables());
     map.put("response_headers", notification.getResponseHeaders());
     map.put("response_body", notification.getResponseBody());
-    map.put("uri", notification.getUri().toString());
+    map.put("uri", writeUri(notification.getUri()));
     return map;
   }
   
   private Notification toNotification(final Map<String, Object> map) {
-    final Sid sid = new Sid((String)map.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-    final Sid accountSid = new Sid((String)map.get("account_sid"));
-    final Sid callSid = new Sid((String)map.get("call_sid"));
-    final String apiVersion = (String)map.get("api_version");
-    final Integer log = (Integer)map.get("log");
-    final Integer errorCode = (Integer)map.get("error_code");
-    final URI moreInfo = URI.create((String)map.get("more_info"));
-    final String messageText = (String)map.get("message_text");
-    final DateTime messageDate = new DateTime((Date)map.get("message_date"));
-    final URI requestUrl = URI.create((String)map.get("request_url"));
-    final String requestMethod = (String)map.get("request_method");
-    final String requestVariables = (String)map.get("request_variables");
-    final String responseHeaders = (String)map.get("response_headers");
-    final String responseBody = (String)map.get("response_body");
-    final URI uri = URI.create((String)map.get("uri"));
+    final Sid sid = readSid(map.get("sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final Sid accountSid = readSid(map.get("account_sid"));
+    final Sid callSid = readSid(map.get("call_sid"));
+    final String apiVersion = readString(map.get("api_version"));
+    final Integer log = readInteger(map.get("log"));
+    final Integer errorCode = readInteger(map.get("error_code"));
+    final URI moreInfo = readUri(map.get("more_info"));
+    final String messageText = readString(map.get("message_text"));
+    final DateTime messageDate = readDateTime(map.get("message_date"));
+    final URI requestUrl = readUri(map.get("request_url"));
+    final String requestMethod = readString(map.get("request_method"));
+    final String requestVariables = readString(map.get("request_variables"));
+    final String responseHeaders = readString(map.get("response_headers"));
+    final String responseBody = readString(map.get("response_body"));
+    final URI uri = readUri(map.get("uri"));
     return new Notification(sid, dateCreated, dateUpdated, accountSid, callSid, apiVersion,
         log, errorCode, moreInfo, messageText, messageDate, requestUrl, requestMethod,
         requestVariables, responseHeaders, responseBody, uri);

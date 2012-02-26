@@ -27,11 +27,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 @Immutable public final class Sid {
   private static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
   private final String id;
-  
-  public Sid() {
-    super();
-    id = "AC" + UUID.randomUUID().toString().replaceAll("-", "");
-  }
+  public enum Type {ACCOUNT, APPLICATION, CALL, CONFERENCE, NOTIFICATION, PHONE_NUMBER, RECORDING, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION};
   
   public Sid(final String id) throws IllegalArgumentException {
     super();
@@ -57,6 +53,45 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 	  return false;
 	}
 	return true;
+  }
+  
+  public static Sid generate(final Type type) {
+	final String uuid = UUID.randomUUID().toString().replace("-", "");
+    switch(type) {
+      case ACCOUNT: {
+        return new Sid("AC" + uuid);
+      }
+      case APPLICATION: {
+        return new Sid("AP" + uuid);
+      }
+      case CALL: {
+        return new Sid("CA" + uuid);
+      }
+      case CONFERENCE: {
+        return new Sid("CF" + uuid);
+      }
+      case NOTIFICATION: {
+        return new Sid("NO" + uuid);
+      }
+      case PHONE_NUMBER: {
+        return new Sid("PN" + uuid);
+      }
+      case RECORDING: {
+        return new Sid("RE" + uuid);
+      }
+      case SHORT_CODE: {
+        return new Sid("SC" + uuid);
+      }
+      case SMS_MESSAGE: {
+        return new Sid("SM" + uuid);
+      }
+      case TRANSCRIPTION: {
+        return new Sid("TR" + uuid);
+      }
+      default: {
+        return null;
+      }
+    }
   }
 
   @Override public int hashCode() {

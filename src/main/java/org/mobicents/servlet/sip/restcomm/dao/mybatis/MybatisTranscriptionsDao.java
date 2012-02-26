@@ -19,18 +19,20 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.Transcription;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -112,30 +114,30 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
   
   private Map<String, Object> toMap(final Transcription transcription) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", transcription.getSid().toString());
-    map.put("date_created", transcription.getDateCreated().toDate());
-    map.put("date_updated", transcription.getDateUpdated().toDate());
-    map.put("account_sid", transcription.getAccountSid().toString());
+    map.put("sid", writeSid(transcription.getSid()));
+    map.put("date_created", writeDateTime(transcription.getDateCreated()));
+    map.put("date_updated", writeDateTime(transcription.getDateUpdated()));
+    map.put("account_sid", writeSid(transcription.getAccountSid()));
     map.put("status", transcription.getStatus());
-    map.put("recording_sid", transcription.getRecordingSid().toString());
+    map.put("recording_sid", writeSid(transcription.getRecordingSid()));
     map.put("duration", transcription.getDuration());
     map.put("transcription_text", transcription.getTranscriptionText());
-    map.put("price", transcription.getPrice().toString());
-    map.put("uri", transcription.getUri().toString());
+    map.put("price", writeBigDecimal(transcription.getPrice()));
+    map.put("uri", writeUri(transcription.getUri()));
     return map;
   }
   
   private Transcription toTranscription(final Map<String, Object> map) {
-    final Sid sid = new Sid((String)map.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-    final Sid accountSid = new Sid((String)map.get("account_sid"));
-    final String status = (String)map.get("status");
-    final Sid recordingSid = new Sid((String)map.get("recording_sid"));
-    final Integer duration = (Integer)map.get("duration");
-    final String transcriptionText = (String)map.get("transcription_text");
-    final BigDecimal price = new BigDecimal((String)map.get("price"));
-    final URI uri = URI.create((String)map.get("uri"));
+    final Sid sid = readSid(map.get("sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final Sid accountSid = readSid(map.get("account_sid"));
+    final String status = readString(map.get("status"));
+    final Sid recordingSid = readSid(map.get("recording_sid"));
+    final Integer duration = readInteger(map.get("duration"));
+    final String transcriptionText = readString(map.get("transcription_text"));
+    final BigDecimal price = readBigDecimal(map.get("price"));
+    final URI uri = readUri(map.get("uri"));
     return new Transcription(sid, dateCreated, dateUpdated, accountSid, status, recordingSid,
         duration, transcriptionText, price, uri);
   }

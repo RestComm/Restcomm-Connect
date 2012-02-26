@@ -25,7 +25,6 @@ import com.mongodb.WriteResult;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -36,6 +35,7 @@ import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -107,25 +107,25 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
   }
   
   private Application toApplication(final DBObject object) {
-    final Sid sid = new Sid((String)object.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)object.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)object.get("date_updated"));
-    final String friendlyName = (String)object.get("friendly_name");
-    final Sid accountSid = new Sid((String)object.get("account_sid"));
-    final String apiVersion = (String)object.get("api_version");
-    final URI voiceUrl = URI.create((String)object.get("voice_url"));
-    final String voiceMethod = (String)object.get("voice_method");
-    final URI voiceFallbackUrl = URI.create((String)object.get("voice_fallback_url"));
-    final String voiceFallbackMethod = (String)object.get("voice_fallback_method");
-    final URI statusCallback = URI.create((String)object.get("status_callback"));
-    final String statusCallbackMethod = (String)object.get("status_callback_method");
-    final Boolean hasVoiceCallerIdLookup = (Boolean)object.get("voice_caller_id_lookup");
-    final URI smsUrl = URI.create((String)object.get("sms_url"));
-    final String smsMethod = (String)object.get("sms_method");
-    final URI smsFallbackUrl = URI.create((String)object.get("sms_fallback_url"));
-    final String smsFallbackMethod = (String)object.get("sms_fallback_method");
-    final URI smsStatusCallback = URI.create((String)object.get("sms_status_callback"));
-    final URI uri = URI.create((String)object.get("uri"));
+    final Sid sid = readSid(object.get("sid"));
+    final DateTime dateCreated = readDateTime(object.get("date_created"));
+    final DateTime dateUpdated = readDateTime(object.get("date_updated"));
+    final String friendlyName = readString(object.get("friendly_name"));
+    final Sid accountSid = readSid(object.get("account_sid"));
+    final String apiVersion = readString(object.get("api_version"));
+    final URI voiceUrl = readUri(object.get("voice_url"));
+    final String voiceMethod = readString(object.get("voice_method"));
+    final URI voiceFallbackUrl = readUri(object.get("voice_fallback_url"));
+    final String voiceFallbackMethod = readString(object.get("voice_fallback_method"));
+    final URI statusCallback = readUri(object.get("status_callback"));
+    final String statusCallbackMethod = readString(object.get("status_callback_method"));
+    final Boolean hasVoiceCallerIdLookup = readBoolean(object.get("voice_caller_id_lookup"));
+    final URI smsUrl = readUri(object.get("sms_url"));
+    final String smsMethod = readString(object.get("sms_method"));
+    final URI smsFallbackUrl = readUri(object.get("sms_fallback_url"));
+    final String smsFallbackMethod = readString(object.get("sms_fallback_method"));
+    final URI smsStatusCallback = readUri(object.get("sms_status_callback"));
+    final URI uri = readUri(object.get("uri"));
     return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
         voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl, smsMethod,
         smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri);
@@ -133,25 +133,25 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
   
   private DBObject toDbObject(final Application application) {
     final BasicDBObject object = new BasicDBObject();
-    object.put("sid", application.getSid().toString());
-    object.put("date_created", application.getDateCreated().toDate());
-    object.put("date_updated", application.getDateUpdated().toDate());
+    object.put("sid", writeSid(application.getSid()));
+    object.put("date_created", writeDateTime(application.getDateCreated()));
+    object.put("date_updated", writeDateTime(application.getDateUpdated()));
     object.put("friendly_name", application.getFriendlyName());
-    object.put("account_sid", application.getAccountSid().toString());
+    object.put("account_sid", writeSid(application.getAccountSid()));
     object.put("api_version", application.getApiVersion());
-    object.put("voice_url", application.getVoiceUrl().toString());
+    object.put("voice_url", writeUri(application.getVoiceUrl()));
     object.put("voice_method", application.getVoiceMethod());
-    object.put("voice_fallback_url", application.getVoiceFallbackUrl().toString());
+    object.put("voice_fallback_url", writeUri(application.getVoiceFallbackUrl()));
     object.put("voice_fallback_method", application.getVoiceFallbackMethod());
-    object.put("status_callback", application.getStatusCallback().toString());
+    object.put("status_callback", writeUri(application.getStatusCallback()));
     object.put("status_callback_method", application.getStatusCallbackMethod());
     object.put("voice_caller_id_lookup", application.hasVoiceCallerIdLookup());
-    object.put("sms_url", application.getSmsUrl().toString());
+    object.put("sms_url", writeUri(application.getSmsUrl()));
     object.put("sms_method", application.getSmsMethod());
-    object.put("sms_fallback_url", application.getSmsFallbackUrl().toString());
+    object.put("sms_fallback_url", writeUri(application.getSmsFallbackUrl()));
     object.put("sms_fallback_method", application.getSmsFallbackMethod());
-    object.put("sms_status_callback", application.getSmsStatusCallback().toString());
-    object.put("uri", application.getUri().toString());
+    object.put("sms_status_callback", writeUri(application.getSmsStatusCallback()));
+    object.put("uri", writeUri(application.getUri()));
     return object;
   }
 }

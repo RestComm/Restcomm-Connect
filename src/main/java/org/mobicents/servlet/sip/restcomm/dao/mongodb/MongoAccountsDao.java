@@ -16,9 +16,15 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
+
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -27,13 +33,7 @@ import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -131,27 +131,27 @@ import com.mongodb.WriteResult;
   }
   
   private Account toAccount(final DBObject object) {
-	final Sid sid = new Sid((String)object.get("sid"));
-	final DateTime dateCreated = new DateTime((Date)object.get("date_created"));
-	final DateTime dateUpdated = new DateTime((Date)object.get("date_updated"));
-	final String friendlyName = (String)object.get("friendly_name");
-	final Account.Type type = Account.Type.getValueOf((String)object.get("type"));
-	final Account.Status status = Account.Status.getValueOf((String)object.get("status"));
-	final String authToken = (String)object.get("auth_token");
-	final URI uri = URI.create((String)object.get("uri"));
+	final Sid sid = readSid(object.get("sid"));
+	final DateTime dateCreated = readDateTime(object.get("date_created"));
+	final DateTime dateUpdated = readDateTime(object.get("date_updated"));
+	final String friendlyName = readString(object.get("friendly_name"));
+	final Account.Type type = readAccountType((String)object.get("type"));
+	final Account.Status status = readAccountStatus((String)object.get("status"));
+	final String authToken = readString(object.get("auth_token"));
+	final URI uri = readUri(object.get("uri"));
     return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
   }
   
   private DBObject toDbObject(final Account account) {
     final BasicDBObject object = new BasicDBObject();
-    object.put("sid", account.getSid());
-    object.put("date_created", account.getDateCreated().toDate());
-    object.put("date_updated", account.getDateUpdated().toDate());
+    object.put("sid", writeSid(account.getSid()));
+    object.put("date_created", writeDateTime(account.getDateCreated()));
+    object.put("date_updated", writeDateTime(account.getDateUpdated()));
     object.put("friendly_name", account.getFriendlyName());
-    object.put("type", account.getType().toString());
-    object.put("status", account.getStatus().toString());
+    object.put("type", writeAccountType(account.getType()));
+    object.put("status", writeAccountStatus(account.getStatus()));
     object.put("auth_token", account.getAuthToken());
-    object.put("uri", account.getUri().toString());
+    object.put("uri", writeUri(account.getUri()));
     return object;
   }
 }

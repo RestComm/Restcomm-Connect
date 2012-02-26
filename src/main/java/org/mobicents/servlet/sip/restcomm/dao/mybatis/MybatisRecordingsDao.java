@@ -18,18 +18,20 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -111,26 +113,26 @@ import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
   
   private Map<String, Object> toMap(final Recording recording) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", recording.getSid().toString());
-    map.put("date_created", recording.getDateCreated().toDate());
-    map.put("date_updated", recording.getDateUpdated().toDate());
-    map.put("account_sid", recording.getAccountSid().toString());
-    map.put("call_sid", recording.getCallSid().toString());
+    map.put("sid", writeSid(recording.getSid()));
+    map.put("date_created", writeDateTime(recording.getDateCreated()));
+    map.put("date_updated", writeDateTime(recording.getDateUpdated()));
+    map.put("account_sid", writeSid(recording.getAccountSid()));
+    map.put("call_sid", writeSid(recording.getCallSid()));
     map.put("duration", recording.getDuration());
     map.put("api_version", recording.getApiVersion());
-    map.put("uri", recording.getUri().toString());
+    map.put("uri", writeUri(recording.getUri()));
     return map;
   }
   
   private Recording toRecording(final Map<String, Object> map) {
-    final Sid sid = new Sid((String)map.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-    final Sid accountSid = new Sid((String)map.get("account_sid"));
-    final Sid callSid = new Sid((String)map.get("call_sid"));
-    final Integer duration = (Integer)map.get("duration");
-    final String apiVersion = (String)map.get("api_version");
-    final URI uri = URI.create((String)map.get("uri"));
+    final Sid sid = readSid(map.get("sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final Sid accountSid = readSid(map.get("account_sid"));
+    final Sid callSid = readSid(map.get("call_sid"));
+    final Integer duration = readInteger(map.get("duration"));
+    final String apiVersion = readString(map.get("api_version"));
+    final URI uri = readUri(map.get("uri"));
     return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri);
   }
 }

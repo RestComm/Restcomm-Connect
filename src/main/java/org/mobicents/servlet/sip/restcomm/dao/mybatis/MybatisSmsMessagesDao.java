@@ -19,18 +19,20 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -104,36 +106,36 @@ import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
   
   private Map<String, Object> toMap(final SmsMessage smsMessage) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", smsMessage.getSid().toString());
-    map.put("date_created", smsMessage.getDateCreated().toDate());
-    map.put("date_updated", smsMessage.getDateUpdated().toDate());
-    map.put("date_sent", smsMessage.getDateSent().toDate());
-    map.put("account_sid", smsMessage.getAccountSid().toString());
+    map.put("sid", writeSid(smsMessage.getSid()));
+    map.put("date_created", writeDateTime(smsMessage.getDateCreated()));
+    map.put("date_updated", writeDateTime(smsMessage.getDateUpdated()));
+    map.put("date_sent", writeDateTime(smsMessage.getDateSent()));
+    map.put("account_sid", writeSid(smsMessage.getAccountSid()));
     map.put("sender", smsMessage.getSender());
     map.put("recipient", smsMessage.getRecipient());
     map.put("body", smsMessage.getBody());
     map.put("status", smsMessage.getStatus());
     map.put("direction", smsMessage.getDirection());
-    map.put("price", smsMessage.getPrice().toString());
+    map.put("price", writeBigDecimal(smsMessage.getPrice()));
     map.put("api_version", smsMessage.getApiVersion());
-    map.put("uri", smsMessage.getUri().toString());
+    map.put("uri", writeUri(smsMessage.getUri()));
     return map;
   }
   
   private SmsMessage toSmsMessage(final Map<String, Object> map) {
-    final Sid sid = new Sid((String)map.get("sid"));
-    final DateTime dateCreated = new DateTime((Date)map.get("date_created"));
-    final DateTime dateUpdated = new DateTime((Date)map.get("date_updated"));
-    final DateTime dateSent = new DateTime((Date)map.get("date_sent"));
-    final Sid accountSid = new Sid((String)map.get("account_sid"));
-    final String sender = (String)map.get("sender");
-    final String recipient = (String)map.get("recipient");
-    final String body = (String)map.get("body");
-    final String status = (String)map.get("status");
-    final String direction = (String)map.get("direction");
-    final BigDecimal price = new BigDecimal((String)map.get("price"));
-    final String apiVersion = (String)map.get("api_version");
-    final URI uri = URI.create((String)map.get("uri"));
+    final Sid sid = readSid(map.get("sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final DateTime dateSent = readDateTime(map.get("date_sent"));
+    final Sid accountSid = readSid(map.get("account_sid"));
+    final String sender = readString(map.get("sender"));
+    final String recipient = readString(map.get("recipient"));
+    final String body = readString(map.get("body"));
+    final String status = readString(map.get("status"));
+    final String direction = readString(map.get("direction"));
+    final BigDecimal price = readBigDecimal(map.get("price"));
+    final String apiVersion = readString(map.get("api_version"));
+    final URI uri = readUri(map.get("uri"));
     return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status,
         direction, price, apiVersion, uri);
   }
