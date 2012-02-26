@@ -34,7 +34,6 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class DiskCache {
-  private static final String FILE_EXTENSION = "wav";  
   private final String location;
   
   public DiskCache(final String location) throws IllegalArgumentException {
@@ -50,24 +49,10 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
     this.location = temp;
   }
   
-  private String buildPath(final String key) {
+  private String buildPath(final String key, final String extension) {
 	final StringBuilder buffer = new StringBuilder();
-	buffer.append(location).append(hash(key)).append(".").append(FILE_EXTENSION);
+	buffer.append(location).append(hash(key)).append(".").append(extension);
     return buffer.toString();
-  }
-  
-  public boolean contains(final String key) {
-	final String path = buildPath(key);
-	final File file = new File(path);
-    return file.exists();
-  }
-  
-  public URI get(final String key) {
-	if(contains(key)) {
-	  return toUri(buildPath(key));
-	} else {
-      return null;
-	}
   }
   
   private String hash(final String key) {
@@ -80,46 +65,54 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 	return new String(HexadecimalUtils.toHex(hash));
   }
   
-  public URI put(final String key, final URI uri) throws IOException {
-    return put(key, new BufferedInputStream(uri.toURL().openStream()));
+  private String getFileExtension(final URI uri) {
+	final String path = uri.getPath();
+    return path.substring(path.lastIndexOf(".") + 1);
   }
   
-  public URI put(final String key, final InputStream data) throws IOException {
-    if(contains(key)) {
-      return get(key);
+  public URI put(final String key, final URI uri) throws IOException {
+	final String extension = getFileExtension(uri);
+	final String path = buildPath(key, extension);
+	final File file = new File(path);
+    if(file.exists()) {
+      return toUri(path);
     } else {
-      final String path = buildPath(key);
-      FileOutputStream file = null;
-  	  FileChannel channel = null;
-  	  FileLock lock = null;
-      try {
-        // Create a new file.
-        file = new FileOutputStream(new File(path));
-        channel = file.getChannel();
-        lock = channel.lock();
-        // Write the data to the file.
-        final byte[] dataBuffer = new byte[8192];
-        int bytesRead = 0;
-        do {
-          bytesRead = data.read(dataBuffer, 0, 8192);
-          if(bytesRead > 0) {
-            file.write(dataBuffer, 0, bytesRead);
-          }
-        } while(bytesRead != -1);
-        // return a URI to the file.
-        return toUri(path);
-      } finally {
-    	// Close the input stream.
-    	data.close();
-    	// Release the lock.
-    	if(lock != null && lock.isValid()) {
-          lock.release();
-    	}
-    	// Close the file.
-    	if(file != null) {
-          file.close();
-    	}
+      final InputStream data = new BufferedInputStream(uri.toURL().openStream());
+      return put(data, file);
+    }
+  }
+  
+  private URI put(final InputStream data, final File file) throws IOException {
+    FileOutputStream output = null;
+  	FileChannel channel = null;
+  	FileLock lock = null;
+    try {
+      // Create a new file.
+      output = new FileOutputStream(file);
+      channel = output.getChannel();
+      lock = channel.lock();
+      // Write the data to the file.
+      final byte[] dataBuffer = new byte[8192];
+      int bytesRead = 0;
+      do {
+        bytesRead = data.read(dataBuffer, 0, 8192);
+        if(bytesRead > 0) {
+          output.write(dataBuffer, 0, bytesRead);
+        }
+      } while(bytesRead != -1);
+      // return a URI to the file.
+      return toUri(file.getPath());
+    } finally {
+      // Release the lock.
+      if(lock != null && lock.isValid()) {
+        lock.release();
       }
+      // Close the output stream.
+      if(output != null) {
+        output.close();
+      }
+      // Close the input stream.
+      data.close();
     }
   }
   

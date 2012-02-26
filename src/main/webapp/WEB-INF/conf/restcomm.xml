@@ -52,6 +52,7 @@
 	-->
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}cache/acapela</cache-path>
+		<url-path>${restcomm:uri}cache/acapela</url-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
 		<application>EVAL_6380429</application>
 		<login>EVAL_VAAS</login>
