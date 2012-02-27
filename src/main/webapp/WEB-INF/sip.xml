@@ -29,10 +29,32 @@
 	<servlet>
 		<servlet-name>SipCallManager</servlet-name>
 		<display-name>SipCallManager</display-name>
-		<description>SipCallManager</description>
+		<description>The RestComm SIP Call Manager.</description>
 		<servlet-class>
 			org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpCallManager
 		</servlet-class>
+		<load-on-startup>0</load-on-startup>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>SipGatewayManager</servlet-name>
+		<display-name>SipGatewayManager</display-name>
+		<description>The RestComm SIP Gateway Manager.</description>
+		<servlet-class>
+			org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManager
+		</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
+	
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManagerBootstrapper
+		</listener-class>
+	</listener>
+	
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManagerTimerListener
+		</listener-class>
+	</listener>
 </sip-app>

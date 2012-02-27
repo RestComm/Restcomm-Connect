@@ -25,14 +25,13 @@ import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.ServletTimer;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-import javax.servlet.sip.TimerListener;
 import javax.servlet.sip.TimerService;
 
 import org.apache.log4j.Logger;
@@ -43,11 +42,16 @@ import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 
-public final class SipGatewayManager extends SipServlet implements TimerListener {
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
+public final class SipGatewayManager extends SipServlet {
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(SipGatewayManager.class);
-  private static final String gatewayAttribute = "org.mobicents.servlet.sip.restcomm.Gateway";
   private static final String userAgent = "RestComm/1.0 ALPHA 2";
+  
+  public static final int defaultRegistrationTtl = 3600;
+  
   private TimerService clock;
   private SipFactory sipFactory;
   private SipURI outboundInterface;
@@ -56,9 +60,21 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
   public SipGatewayManager() {
     super();
   }
+  
+  private Address createContactHeader(final Gateway gateway, final int expires) throws ServletParseException {
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("sip:").append(gateway.getUser()).append("@").append(outboundInterface.getHost());
+    final Address contact = sipFactory.createAddress(buffer.toString());
+    contact.setExpires(expires);
+    return contact;
+  }
 
   @Override public void destroy() {
-	// Nothing to do.
+    for(final Gateway gateway : gateways) {
+      if(gateway.register()) {
+    	register(gateway, 0);
+      }
+    }
   }
   
   @Override protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
@@ -67,14 +83,11 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
       final int status = response.getStatus();
       if(status == SipServletResponse.SC_UNAUTHORIZED || status == SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED) {
     	final SipApplicationSession application = response.getApplicationSession();
-    	final Gateway gateway = (Gateway)application.getAttribute(gatewayAttribute);
-        final SipServletRequest register = register(gateway);
+    	final Gateway gateway = (Gateway)application.getAttribute(Gateway.class.getName());
         final AuthInfo authentication = sipFactory.createAuthInfo();
         final String realm = response.getChallengeRealms().next(); 
         authentication.addAuthInfo(status, realm, gateway.getUser(), gateway.getPassword());
-        register.addAuthHeader(response, authentication);
-        register.addHeader("User-Agent", userAgent);
-        register.send();
+        register(gateway, defaultRegistrationTtl, authentication, response);
       }
     }
   }
@@ -84,11 +97,11 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
     if("REGISTER".equalsIgnoreCase(method)) {
       final int status = response.getStatus();
       if(status == SipServletResponse.SC_OK) {
+        final SipApplicationSession application = response.getApplicationSession();
+        final Gateway gateway = (Gateway)application.getAttribute(Gateway.class.getName());
         final Address contact = response.getAddressHeader("Contact");
         final long expires = contact.getExpires() * 1000;
-        final SipApplicationSession application = sipFactory.createApplicationSession();
-        final Gateway gateway = (Gateway)application.getAttribute(gatewayAttribute);
-        clock.createTimer(application, expires, false, gateway);
+        clock.createTimer(application, expires, false, "REGISTER");
         application.setExpires(TimeUtils.millisToMinutes(expires));
         if(logger.isDebugEnabled()) {
           final StringBuilder buffer = new StringBuilder();
@@ -126,45 +139,41 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
 	sipFactory = (SipFactory)context.getAttribute(SIP_FACTORY);
   }
   
-  private Address createContactHeader(final Gateway gateway) throws ServletParseException {
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append("sip:").append(gateway.getUser()).append("@").append(outboundInterface.getHost());
-    final Address contact = sipFactory.createAddress(buffer.toString());
-    contact.setExpires(3600);
-    contact.setQ(1.0F);
-    return contact;
+  public void register(final Gateway gateway, final int expires) {
+    register(gateway, expires, null, null);
   }
   
-  private SipServletRequest register(final Gateway gateway) throws ServletParseException {
-	final SipApplicationSession application = sipFactory.createApplicationSession();
-	application.setAttribute(gatewayAttribute, gateway);
-	final StringBuilder buffer = new StringBuilder();
-	buffer.append("sip:").append(gateway.getUser()).append("@").append(gateway.getProxy());
-	final String aor = buffer.toString();
-	final SipServletRequest register = sipFactory.createRequest(application, "REGISTER", aor, aor);
-	final SipURI uri = sipFactory.createSipURI(null, gateway.getProxy());
-	register.addAddressHeader("Contact", createContactHeader(gateway), false);
-	register.addHeader("User-Agent", userAgent);
-	register.addHeader("User-Agent", "RestComm/1.0 ALPHA 2");
-	register.pushRoute(sipFactory.createAddress(gateway.getProxy()));
-	register.setRequestURI(uri);
-    return register;
-  }
-  
-  public void start() throws ServletParseException, IOException {
-    for(final Gateway gateway : gateways) {
-      if(gateway.register()) {
-        register(gateway).send();
-      }
+  private void register(final Gateway gateway, final int expires, final AuthInfo authentication,
+      final SipServletResponse response) {
+    try {
+	  final SipApplicationSession application = sipFactory.createApplicationSession();
+	  application.setAttribute(Gateway.class.getName(), gateway);
+	  application.setAttribute(SipGatewayManager.class.getName(), this);
+	  final StringBuilder buffer = new StringBuilder();
+	  buffer.append("sip:").append(gateway.getUser()).append("@").append(gateway.getProxy());
+	  final String aor = buffer.toString();
+	  final SipServletRequest register = sipFactory.createRequest(application, "REGISTER", aor, aor);
+	  if(authentication != null && response != null) {
+	    register.addAuthHeader(response, authentication);
+	  }
+	  register.addAddressHeader("Contact", createContactHeader(gateway, expires), false);
+	  register.addHeader("User-Agent", userAgent);
+	  final SipURI uri = sipFactory.createSipURI(null, gateway.getProxy());
+	  register.pushRoute(uri);
+	  register.setRequestURI(uri);
+	  final SipSession session = register.getSession();
+	  session.setHandler("SipGatewayManager");
+      register.send();
+    } catch(final Exception exception) {
+      logger.error(exception);
     }
   }
   
-  @Override public void timeout(final ServletTimer timer) {
-    final Gateway gateway = (Gateway)timer.getInfo();
-    try {
-      register(gateway).send();
-    } catch(final Exception exception) {
-      logger.error(exception);
+  public void start() {
+    for(final Gateway gateway : gateways) {
+      if(gateway.register()) {
+    	register(gateway, defaultRegistrationTtl);
+      }
     }
   }
 }

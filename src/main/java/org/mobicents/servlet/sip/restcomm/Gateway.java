@@ -82,7 +82,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     buffer.append("Name: ").append(name).append("\n");
     buffer.append("User: ").append(user).append("\n");
     buffer.append("Password: ").append(password).append("\n");
-    buffer.append("Proxy: ").append("proxy").append("\n");
+    buffer.append("Proxy: ").append(proxy).append("\n");
     buffer.append("Register: ").append(register);
     return buffer.toString();
   }
