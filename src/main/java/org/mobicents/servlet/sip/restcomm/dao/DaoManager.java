@@ -16,4 +16,5 @@ public interface DaoManager extends Configurable, LifeCycle{
   public ShortCodesDao getShortCodesDao();
   public SmsMessagesDao getSmsMessagesDao();
   public TranscriptionsDao getTranscriptionsDao();
+  public GatewaysDao getGatewaysDao();
 }
