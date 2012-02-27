@@ -61,10 +61,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return register;
   }
   
-  public Gateway setName(final String name) {
-    return new Gateway(name, password, proxy, register, user);
-  }
-  
   public Gateway setPassword(final String password) {
     return new Gateway(name, password, proxy, register, user);
   }

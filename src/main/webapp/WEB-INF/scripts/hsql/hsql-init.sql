@@ -202,7 +202,7 @@ CREATE TABLE "restcomm_sand_boxes" (
 );
 
 CREATE TABLE "restcomm_gateways" (
-"name" VARCHAR(255) NOT NULL UNIQUE,
+"name" VARCHAR(255) NOT NULL PRIMARY KEY,
 "user" VARCHAR(255),
 "password" VARCHAR(255),
 "proxy" LONGVARCHAR NOT NULL,

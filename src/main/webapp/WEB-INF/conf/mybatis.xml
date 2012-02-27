@@ -26,5 +26,6 @@
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/short-codes.xml"/>
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/sms-messages.xml"/>
     <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/transcriptions.xml"/>
+    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/gateways.xml"/>
   </mappers>
 </configuration>

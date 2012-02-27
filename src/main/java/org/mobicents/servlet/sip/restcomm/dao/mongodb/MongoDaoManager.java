@@ -26,6 +26,7 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
@@ -56,6 +57,7 @@ import com.mongodb.Mongo;
   private ShortCodesDao shortCodesDao;
   private SmsMessagesDao smsMessagesDao;
   private TranscriptionsDao transcriptionsDao;
+  private GatewaysDao gatewaysDao;
 
   public MongoDaoManager() {
     super();
@@ -112,6 +114,10 @@ import com.mongodb.Mongo;
   @Override public TranscriptionsDao getTranscriptionsDao() {
     return transcriptionsDao;
   }
+  
+  @Override public GatewaysDao getGatewaysDao() {
+    return gatewaysDao;
+  }
 
   @Override public void start() throws RuntimeException {
     final String host = configuration.getString("host");
@@ -145,6 +151,7 @@ import com.mongodb.Mongo;
     shortCodesDao = new MongoShortCodesDao(database);
     smsMessagesDao = new MongoSmsMessagesDao(database);
     transcriptionsDao = new MongoTranscriptionsDao(database);
+    gatewaysDao = new MongoGatewaysDao(database);
   }
 
   @Override public void shutdown() {

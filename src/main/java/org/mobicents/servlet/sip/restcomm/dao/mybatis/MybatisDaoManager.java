@@ -31,6 +31,7 @@ import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
@@ -58,6 +59,7 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
   private ShortCodesDao shortCodesDao;
   private SmsMessagesDao smsMessagesDao;
   private TranscriptionsDao transcriptionsDao;
+  private GatewaysDao gatewaysDao;
   
   public MybatisDaoManager() {
     super();
@@ -115,6 +117,10 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
     return transcriptionsDao;
   }
   
+  @Override public GatewaysDao getGatewaysDao() {
+    return gatewaysDao;
+  }
+  
   @Override public void shutdown() {
     // Nothing to do.
   }
@@ -145,5 +151,6 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
     shortCodesDao = new MybatisShortCodesDao(sessions);
     smsMessagesDao = new MybatisSmsMessagesDao(sessions);
     transcriptionsDao = new MybatisTranscriptionsDao(sessions);
+    gatewaysDao = new MybatisGatewaysDao(sessions);
   }
 }
