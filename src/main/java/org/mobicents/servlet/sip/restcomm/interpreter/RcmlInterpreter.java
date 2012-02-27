@@ -152,6 +152,14 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	    this.resource = resourceBuilder.build(response.getEntity().getContent());
 	    this.resourceFetchMethod = fetchMethod;
 	    this.resourceUri = uri;
+	    if(logger.isInfoEnabled()) {
+	      final StringBuilder buffer = new StringBuilder();
+	      buffer.append("Successfully Loaded Resource\n");
+	      buffer.append("URI: ").append(resourceUri.toString()).append("\n");
+	      buffer.append("Fetch Method: ").append(resourceFetchMethod).append("\n");
+	      buffer.append(resource.toString());
+	      logger.info(buffer.toString());
+	    }
 	  } else {
 		final String reason = response.getStatusLine().getReasonPhrase();
 		final StringBuilder buffer = new StringBuilder();
@@ -206,8 +214,10 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	  final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
 	  strategy.execute(this, context, tag);
 	} catch(final TagStrategyInstantiationException exception) {
+	  logger.error(exception);
 	  throw new VisitorException(exception);
 	} catch(final TagStrategyException exception) {
+	  logger.error(exception);
 	  throw new VisitorException(exception);
 	}
   }

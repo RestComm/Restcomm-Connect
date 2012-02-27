@@ -39,7 +39,7 @@ import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
+import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -66,14 +66,14 @@ import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
   private List<JainMgcpListener> requestListeners;
   private Object requestListenersLock;
   private Map<Integer, JainMgcpListener> responseListeners;
-  private WrapAroundCounter requestId;
-  private WrapAroundCounter transactionId;
+  private RangeCounter requestId;
+  private RangeCounter transactionId;
   // Call agent.
   private NotifiedEntity callAgent;
   // Media gateway domain name.
   private String domainName;
   // Media Session stuff.
-  private WrapAroundCounter mediaSessionId;
+  private RangeCounter mediaSessionId;
   private Map<Integer, MgcpSession> mediaSessions;
 
   public MgcpServer(final String name, final InetAddress localIp, final int localPort,
@@ -127,9 +127,9 @@ import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
 	requestListeners = new ArrayList<JainMgcpListener>();
 	requestListenersLock = new Object();
 	responseListeners = new HashMap<Integer, JainMgcpListener>();
-	requestId = new WrapAroundCounter(Integer.MAX_VALUE);
-	transactionId = new WrapAroundCounter(Integer.MAX_VALUE);
-	mediaSessionId = new WrapAroundCounter(Integer.MAX_VALUE);
+	requestId = new RangeCounter(1, Integer.MAX_VALUE);
+	transactionId = new RangeCounter(1, Integer.MAX_VALUE);
+	mediaSessionId = new RangeCounter(1, Integer.MAX_VALUE);
 	mediaSessions = new HashMap<Integer, MgcpSession>();
 	setState(RUNNING);
   }

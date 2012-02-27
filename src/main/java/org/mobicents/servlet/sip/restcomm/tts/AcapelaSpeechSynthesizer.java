@@ -84,10 +84,8 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
   private String login;
   private String password;
   private URI serviceRoot;
-  
   private Map<String, String> women;
   private Map<String, String> men;
-  
   private DiskCache cache;
   
   public AcapelaSpeechSynthesizer() {

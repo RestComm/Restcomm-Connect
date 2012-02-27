@@ -21,15 +21,26 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class WrapAroundCounter {
+@ThreadSafe public final class RangeCounter {
+  private final long initialValue;
   private volatile long count;
   private final long limit;
   
-  public WrapAroundCounter(final long limit) {
+  public RangeCounter(final long limit) {
 	if(limit <= 0) {
 	  throw new IllegalArgumentException("The counter limit can not be less than or equal to 0");
 	}
+	this.initialValue = 0;
 	this.count = 0;
+    this.limit = limit;
+  }
+  
+  public RangeCounter(final long initialValue, final long limit) {
+    if(limit <= initialValue) {
+      throw new IllegalArgumentException("The counter limit can not be less than or equal to initial value");
+    }
+    this.initialValue = initialValue;
+    this.count = initialValue;
     this.limit = limit;
   }
   
@@ -46,7 +57,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   public synchronized void increment() {
     count += 1;
     if(count == limit) {
-      count = 0;
+      count = initialValue;
     }
   }
 }

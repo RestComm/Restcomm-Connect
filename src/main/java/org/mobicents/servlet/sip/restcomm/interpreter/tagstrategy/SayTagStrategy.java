@@ -17,13 +17,17 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
+import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
@@ -39,16 +43,22 @@ public final class SayTagStrategy extends TwiMLTagStrategy  {
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
 	final Call call = context.getCall();
 	// Try to answer the call if it hasn't been done so already.
-    // answer(call);
+    answer(call);
     // Say something.
     final String text = tag.getText();
     final String gender = tag.getAttribute(Voice.NAME).getValue();
     final String language = tag.getAttribute(Language.NAME).getValue();
+    final int iterations = ((IntegerAttribute)tag.getAttribute(Loop.NAME)).getIntegerValue();
     if(text != null) {
       final ServiceLocator services = ServiceLocator.getInstance();
       final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
-      final URI uri = synthesizer.synthesize(text, gender, language);
-      System.out.println(uri.toString());
+      final List<URI> announcements = new ArrayList<URI>();
+      announcements.add(synthesizer.synthesize(text, gender, language));
+      try {
+		call.play(announcements, iterations);
+	  } catch(final CallException exception) {
+		throw new TagStrategyException(exception);
+	  }
     }
   }
 }

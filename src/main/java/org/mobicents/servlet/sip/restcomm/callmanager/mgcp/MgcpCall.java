@@ -88,6 +88,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
 	} catch(final IOException exception) {
 	  setState(FAILED);
 	  cleanup();
+	  LOGGER.error(exception);
 	  throw exception;
 	}
   }
@@ -100,6 +101,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
       final byte[] offer = initialInvite.getRawContent();
       final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
       connection = session.createConnection(localEndpoint, remoteDescriptor);
+      System.out.println("Made it here!");
       connection.addObserver(this);
       connection.connect(ConnectionMode.Confrnce);
       wait();
@@ -112,6 +114,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
       wait();
     } catch(final Exception exception) {
       fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
+      LOGGER.error(exception);
       throw new CallException(exception);
     }
   }

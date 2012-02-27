@@ -13,7 +13,7 @@ import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
+import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -34,7 +34,7 @@ import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
   // The servers we are managing.
   private List<MgcpServer> servers;
   // Index pointing to the next available server.
-  private WrapAroundCounter index;
+  private RangeCounter index;
   
   public MgcpServerManager() {
 	// Initialize the finite state machine.
@@ -84,7 +84,7 @@ import org.mobicents.servlet.sip.restcomm.util.WrapAroundCounter;
     	  throw new RuntimeException(exception);
     	}
       }
-      index = new WrapAroundCounter(servers.size());
+      index = new RangeCounter(servers.size());
       setState(RUNNING);
     }
   }
