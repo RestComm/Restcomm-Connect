@@ -188,7 +188,7 @@ CREATE TABLE "restcomm_sand_boxes" (
 "date_created" DATE NOT NULL,
 "date_updated" DATE NOT NULL,
 "pin" VARCHAR(8) NOT NULL,
-"account_sid" VARCHAR(34) NOT NULL,
+"account_sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "phone_number" VARCHAR(15) NOT NULL,
 "application_sid" VARCHAR(34) NOT NULL,
 "api_version" VARCHAR(10) NOT NULL,
@@ -199,4 +199,12 @@ CREATE TABLE "restcomm_sand_boxes" (
 "status_callback" LONGVARCHAR,
 "status_callback_method" VARCHAR(4),
 "uri" LONGVARCHAR NOT NULL
+);
+
+CREATE TABLE "restcomm_gateways" (
+"name" VARCHAR(255) NOT NULL UNIQUE,
+"user" VARCHAR(255),
+"password" VARCHAR(255),
+"proxy" LONGVARCHAR NOT NULL,
+"register" BOOLEAN NOT NULL
 );
