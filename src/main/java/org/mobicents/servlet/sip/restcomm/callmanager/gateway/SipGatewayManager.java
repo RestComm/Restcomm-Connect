@@ -41,6 +41,7 @@ import org.mobicents.servlet.sip.restcomm.Gateway;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
+import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 
 public final class SipGatewayManager extends SipServlet implements TimerListener {
   private static final long serialVersionUID = 1L;
@@ -88,7 +89,7 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
         final SipApplicationSession application = sipFactory.createApplicationSession();
         final Gateway gateway = (Gateway)application.getAttribute(gatewayAttribute);
         clock.createTimer(application, expires, false, gateway);
-        application.setExpires(toMinutes(expires));
+        application.setExpires(TimeUtils.millisToMinutes(expires));
         if(logger.isDebugEnabled()) {
           final StringBuilder buffer = new StringBuilder();
           buffer.append("Successfully registered\n");
@@ -164,17 +165,6 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
       register(gateway).send();
     } catch(final Exception exception) {
       logger.error(exception);
-    }
-  }
-  
-  private int toMinutes(final long milliseconds) {
-    final long minute = 60 * 1000;
-    final long remainder = milliseconds % minute;
-    if(remainder != 0) {
-      final long delta = minute - remainder;
-      return (int)((milliseconds + delta) / minute);
-    } else {
-      return (int)(milliseconds / minute);
     }
   }
 }
