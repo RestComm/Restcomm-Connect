@@ -23,14 +23,20 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
+<<<<<<< HEAD
 import javax.servlet.sip.AuthInfo;
+=======
+>>>>>>> e6ccc5771c3338fc8bb4cca0ba6cde62caed87c1
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.ServletTimer;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
+<<<<<<< HEAD
 import javax.servlet.sip.SipServletResponse;
+=======
+>>>>>>> e6ccc5771c3338fc8bb4cca0ba6cde62caed87c1
 import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TimerListener;
 import javax.servlet.sip.TimerService;
@@ -42,14 +48,19 @@ import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 
 public final class SipGatewayManager extends SipServlet implements TimerListener {
+<<<<<<< HEAD
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(SipGatewayManager.class);
   private static final String gatewayAttribute = "org.mobicents.servlet.sip.restcomm.Gateway";
   private static final String userAgent = "RestComm/1.0 ALPHA 2";
+=======
+  private static final Logger logger = Logger.getLogger(SipGatewayManager.class);
+>>>>>>> e6ccc5771c3338fc8bb4cca0ba6cde62caed87c1
   private TimerService clock;
   private SipFactory sipFactory;
   private SipURI outboundInterface;
   private List<Gateway> gateways;
+<<<<<<< HEAD
   
   public SipGatewayManager() {
     super();
@@ -99,6 +110,17 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
     }
   }
   
+=======
+  
+  public SipGatewayManager() {
+    super();
+  }
+
+  @Override public void destroy() {
+	// Nothing to do.
+  }
+  
+>>>>>>> e6ccc5771c3338fc8bb4cca0ba6cde62caed87c1
   private SipURI getOutboundInterface(final ServletConfig config) {
 	final ServletContext context = config.getServletContext();
     SipURI result = null;
@@ -135,14 +157,21 @@ public final class SipGatewayManager extends SipServlet implements TimerListener
   
   private SipServletRequest register(final Gateway gateway) throws ServletParseException {
 	final SipApplicationSession application = sipFactory.createApplicationSession();
+<<<<<<< HEAD
 	application.setAttribute(gatewayAttribute, gateway);
+=======
+>>>>>>> e6ccc5771c3338fc8bb4cca0ba6cde62caed87c1
 	final StringBuilder buffer = new StringBuilder();
 	buffer.append("sip:").append(gateway.getUser()).append("@").append(gateway.getProxy());
 	final String aor = buffer.toString();
 	final SipServletRequest register = sipFactory.createRequest(application, "REGISTER", aor, aor);
 	final SipURI uri = sipFactory.createSipURI(null, gateway.getProxy());
 	register.addAddressHeader("Contact", createContactHeader(gateway), false);
+<<<<<<< HEAD
 	register.addHeader("User-Agent", userAgent);
+=======
+	register.addHeader("User-Agent", "RestComm/1.0 ALPHA 2");
+>>>>>>> e6ccc5771c3338fc8bb4cca0ba6cde62caed87c1
 	register.pushRoute(sipFactory.createAddress(gateway.getProxy()));
 	register.setRequestURI(uri);
     return register;
