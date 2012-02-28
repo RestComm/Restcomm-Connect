@@ -97,13 +97,13 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     assertState(RINGING);
     try {
       // Try to negotiate a media connection with a packet relay end point.
-      localEndpoint = session.getPacketRelayEndpoint();
+      localEndpoint = session.getIvrEndpoint();
+      ((MgcpIvrEndpoint)localEndpoint).addObserver(this);
       final byte[] offer = initialInvite.getRawContent();
       final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
       connection = session.createConnection(localEndpoint, remoteDescriptor);
-      System.out.println("Made it here!");
       connection.addObserver(this);
-      connection.connect(ConnectionMode.Confrnce);
+      connection.connect(ConnectionMode.SendRecv);
       wait();
       // Send the response back to the caller.
       final byte[] answer = connection.getLocalDescriptor().toString().getBytes();
@@ -152,12 +152,17 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   
   public synchronized void established() {
     assertState(RINGING);
+    setState(IN_PROGRESS);
+    initialInvite.setExpires(240);
+    notify();
+    /*
     final MgcpIvrEndpoint endpoint = session.getIvrEndpoint();
     endpoint.addObserver(this);
     remoteEndpoint = endpoint;
     link = session.createLink(localEndpoint, remoteEndpoint);
     link.addObserver(this);
-	link.connect(ConnectionMode.Confrnce);
+	link.connect(ConnectionMode.Inactive);
+	*/
   }
   
   private void fail(int code) {
@@ -229,11 +234,22 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
 
   @Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
     assertState(IN_PROGRESS);
-    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)remoteEndpoint;
+    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
     ivr.play(announcements, iterations);
     try {
       wait();
     } catch(final InterruptedException ignored) { }
+  }
+  
+  @Override public synchronized String playAndCollect(final List<URI> announcements, final String endInputKey, final int maxNumberOfDigits,
+      int timeout) {
+    assertState(IN_PROGRESS);
+    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
+    ivr.playCollect(announcements, maxNumberOfDigits, maxNumberOfDigits, timeout, timeout, endInputKey);
+    try {
+      wait();
+    } catch(final InterruptedException ignored) { }
+    return ivr.getDigits();
   }
 
   @Override public synchronized void reject() {
@@ -259,15 +275,14 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public synchronized void connected(final MgcpLink link) {
-    setState(IN_PROGRESS);
-	notify();
+    
   }
 
   @Override public void disconnected(final MgcpLink link) {
     
   }
 
-  @Override public void failed(final MgcpLink link) {
+  @Override public synchronized void failed(final MgcpLink link) {
     notify();
   }
 
@@ -300,5 +315,13 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   	    .append(" could not be completed.");
   	LOGGER.error(buffer.toString());
   	notify();
+  }
+
+  @Override public synchronized void modified(ConnectionDescriptor descriptor, MgcpLink link) {
+    
+  }
+
+  @Override public synchronized void modified(final MgcpConnection connection) {
+    
   }
 }

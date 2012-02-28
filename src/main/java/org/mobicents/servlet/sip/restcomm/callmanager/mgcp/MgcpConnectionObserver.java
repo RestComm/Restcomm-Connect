@@ -5,4 +5,5 @@ public interface MgcpConnectionObserver {
   public void open(MgcpConnection connection);
   public void disconnected(MgcpConnection connection);
   public void failed(MgcpConnection connection);
+  public void modified(MgcpConnection connection);
 }

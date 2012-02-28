@@ -37,5 +37,6 @@ public interface Call {
   public void join(Conference conference) throws CallException;
   public void leave(Conference conference) throws CallException;
   public void play(List<URI> announcements, int iterations) throws CallException;
+  public String playAndCollect(List<URI> announcements, String endInputKey, int maxNumberOfDigits, int timeout);
   public void reject();
 }

@@ -161,7 +161,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private String buildFirstDigitTimer() {
     if(firstDigitTimer > 0) {
       final StringBuilder buffer = new StringBuilder();
-      buffer.append("fdt=").append(firstDigitTimer);
+      buffer.append("fdt=").append(firstDigitTimer * 10);
       return buffer.toString();
     } else {
       return null;
@@ -171,7 +171,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private String buildInterDigitTimer() {
     if(interDigitTimer > 0) {
       final StringBuilder buffer = new StringBuilder();
-      buffer.append("idt=").append(interDigitTimer);
+      buffer.append("idt=").append(interDigitTimer * 10);
       return buffer.toString();
     } else {
       return null;

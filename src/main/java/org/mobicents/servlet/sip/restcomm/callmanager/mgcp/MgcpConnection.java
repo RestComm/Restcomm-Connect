@@ -133,6 +133,12 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
   }
   
+  private void fireModified() {
+    for(final MgcpConnectionObserver observer : observers) {
+      observer.modified(this);
+    }
+  }
+  
   private void fireOpen() {
     for(final MgcpConnectionObserver observer : observers) {
       observer.open(this);
@@ -214,6 +220,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   
   private void open(final ModifyConnectionResponse response) {
     localDescriptor = response.getLocalConnectionDescriptor();
+    fireModified();
   }
 
   @Override public void processMgcpResponseEvent(final JainMgcpResponseEvent response) {

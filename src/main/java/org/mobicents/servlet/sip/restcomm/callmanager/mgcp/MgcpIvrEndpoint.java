@@ -211,10 +211,14 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     	    final Map<String, String> parameters = parseAdvancedAudioParameters(response.getParms());
     	    // Process parameters.
     	    final int returnCode = Integer.parseInt(parameters.get("rc"));
-    	    if(returnCode == 100) {
+    	    if(returnCode == 100 || returnCode == 326) {
     	      final State currentState = getState();
     	      if(currentState.equals(PLAY_COLLECT)) {
-    	        digits = parameters.get("dc");
+    	    	if(returnCode == 100) {
+    	          digits = parameters.get("dc");
+    	    	} else if(returnCode == 326) {
+    	    	  digits = new String();
+    	    	}
     	      }
     	      setState(IDLE);
     	      fireOperationCompleted();

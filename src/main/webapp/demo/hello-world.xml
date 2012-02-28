@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
 	<Say>Welcome to RestComm</Say>
+	<Gather numDigits="1" action="http://192.168.1.106:8080/restcomm/demo/hello-world.xml" method="GET"/>
 	<Hangup />
 </Response>
