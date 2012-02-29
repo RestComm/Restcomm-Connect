@@ -16,6 +16,7 @@ import javax.servlet.sip.SipURI;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
+import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
@@ -58,6 +59,8 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   
   private Sid sid;
   private Direction direction;
+  
+  private String digits;
   
   private List<CallObserver> observers;
   
@@ -181,6 +184,10 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     }
     cleanup();
   }
+  
+  @Override public String getDigits() {
+    return digits;
+  }
 
   @Override public Direction getDirection() {
     return direction;
@@ -211,6 +218,10 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     final SipURI to = (SipURI)initialInvite.getTo().getURI();
     return to.getUser();
   }
+  
+  @Override public Recording getRecording() {
+    return null;
+  }
 
   @Override public Status getStatus() {
     return Status.getValueOf(getState().getName());
@@ -239,7 +250,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     } catch(final InterruptedException ignored) { }
   }
   
-  @Override public synchronized String playAndCollect(final List<URI> announcements, final String endInputKey, final int maxNumberOfDigits,
+  @Override public synchronized void playAndCollect(final List<URI> announcements, final String endInputKey, final int maxNumberOfDigits,
       int timeout) {
     assertState(IN_PROGRESS);
     final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
@@ -247,12 +258,12 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     try {
       wait();
     } catch(final InterruptedException ignored) { }
-    return ivr.getDigits();
+    digits = ivr.getDigits();
   }
   
-  @Override public URI playAndRecord(final List<URI> prompts, final long preSpeechTimer, final long recordingLength,
+  @Override public void playAndRecord(final List<URI> prompts, final long preSpeechTimer, final long recordingLength,
       String endInputKey) throws CallException {
-  	return null;
+  	
   }
 
   @Override public synchronized void reject() {

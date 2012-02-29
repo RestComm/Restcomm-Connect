@@ -64,6 +64,7 @@ public final class Bootstrapper {
     // Register the services with the service locator.
     final ServiceLocator services = ServiceLocator.getInstance();
     try {
+      services.set(Configuration.class, configuration.subset("runtime-settings"));
       services.set(InterpreterExecutor.class, new InterpreterExecutor());
       services.set(MgcpServerManager.class, getMgcpServerManager(configuration));
       final CallManager callManager = (CallManager)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager");

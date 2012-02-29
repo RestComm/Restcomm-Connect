@@ -22,6 +22,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class TimeUtils {
+  public static final long SECOND_IN_MILLIS = 1000;
+  
   private TimeUtils() {
     super();
   }
