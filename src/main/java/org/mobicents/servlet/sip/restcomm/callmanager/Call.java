@@ -19,27 +19,30 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
 import java.net.URI;
 import java.util.List;
 
+import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
 public interface Call {
   public void addObserver(CallObserver observer);
   public void answer() throws CallException;
   public void dial() throws CallException;
+  public String getDigits();
   public Direction getDirection();
   public String getForwardedFrom();
   public Sid getSid();
   public String getOriginator();
   public String getOriginatorName();
   public String getRecipient();
+  public Recording getRecording();
   public Status getStatus();
   public void hangup();
   public void join(Conference conference) throws CallException;
   public void leave(Conference conference) throws CallException;
   public void play(List<URI> announcements, int iterations) throws CallException;
-  public String playAndCollect(List<URI> announcements, String endInputKey,
+  public void playAndCollect(List<URI> announcements, String endInputKey,
       int maxNumberOfDigits, int timeout) throws CallException;
-  public URI playAndRecord(List<URI> prompts, long preSpeechTimer, long recordingLength,
-      String endInputKey) throws CallException;
+  public void playAndRecord(List<URI> prompts, URI recordId, long postSpeechTimer,
+      long recordingLength, String endInputKey) throws CallException;
   public void reject();
   
   public enum Direction {

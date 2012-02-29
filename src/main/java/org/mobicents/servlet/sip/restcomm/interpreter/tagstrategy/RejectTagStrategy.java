@@ -16,7 +16,14 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.configuration.Configuration;
+import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -35,7 +42,20 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
       final String reason = tag.getAttribute(Reason.NAME).getValue();
       if(reason.equals(Reason.REJECTED)) {
         answer(call);
-        /* Fix Me: This should answer the call play a not-in-service message and hang up. */
+        final ServiceLocator services = ServiceLocator.getInstance();
+        final Configuration configuration = services.get(Configuration.class);
+        final URI uri = URI.create(configuration.getString("reject-audio-file"));
+        final List<URI> announcement = new ArrayList<URI>();
+        announcement.add(uri);
+        try {
+          call.play(announcement, 1);
+        } catch(final CallException exception) {
+          interpreter.failed();
+          final StringBuilder buffer = new StringBuilder();
+          buffer.append("There was an error while playing the rejection announcement. ");
+          buffer.append("The announcement is located @ ").append(uri.toString());
+          throw new TagStrategyException(buffer.toString(), exception);
+        }
         call.hangup();
       } else if(reason.equals(Reason.BUSY)) {
         call.reject();

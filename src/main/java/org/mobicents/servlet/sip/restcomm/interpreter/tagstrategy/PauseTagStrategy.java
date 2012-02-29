@@ -19,12 +19,12 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
 
 public final class PauseTagStrategy extends RcmlTagStrategy {
-  private static final int ONE_SECOND = 1000;
   
   public PauseTagStrategy() {
     super();
@@ -33,6 +33,7 @@ public final class PauseTagStrategy extends RcmlTagStrategy {
   @Override public synchronized void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
 	final int length = ((IntegerAttribute)tag.getAttribute(Length.NAME)).getIntegerValue();
-    try { wait(length * ONE_SECOND); } catch(final InterruptedException ignored) { return; }
+    try { wait(length * TimeUtils.SECOND_IN_MILLIS); }
+    catch(final InterruptedException ignored) { return; }
   }
 }

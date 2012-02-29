@@ -20,6 +20,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private long postSpeechTimer;
   private long recordingLength;
   private String endInputKey;
+  private URI recordId;
   
   public AdvancedAudioParametersBuilder() {
     super();
@@ -36,6 +37,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     postSpeechTimer = -1;
     recordingLength = -1;
     endInputKey = null;
+    recordId = null;
   }
   
   public void addAnnouncement(final URI uri) {
@@ -71,6 +73,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 	appendTo(buffer, buildPostSpeechTimer());
 	appendTo(buffer, buildRecordingLength());
 	appendTo(buffer, buildEndInputKey());
+	appendTo(buffer, buildRecordId());
     return buffer.toString();
   }
   
@@ -218,6 +221,16 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
   }
   
+  private String buildRecordId() {
+    if(recordId != null) {
+      final StringBuilder buffer = new StringBuilder();
+      buffer.append("ri=").append(recordId);
+      return buffer.toString();
+    } else {
+      return null;
+    }
+  }
+  
   public void setClearDigitBuffer(final boolean clearDigitBuffer) {
     this.clearDigitBuffer = clearDigitBuffer;
   }
@@ -260,5 +273,9 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   
   public void setPostSpeechTimer(final long postSpeechTimer) {
     this.postSpeechTimer = postSpeechTimer;
+  }
+  
+  public void setRecordId(final URI recordId) {
+    this.recordId = recordId;
   }
 }

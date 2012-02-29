@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
@@ -31,6 +32,8 @@ import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.UriAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Action;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.FinishOnKey;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.NumDigits;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
@@ -38,6 +41,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Play;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 
 public final class GatherTagStrategy extends RcmlTagStrategy {
   public GatherTagStrategy() {
@@ -54,7 +58,8 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
       final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
       final int numDigits = ((IntegerAttribute)tag.getAttribute(NumDigits.NAME)).getIntegerValue();
       final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
-      final String digits = call.playAndCollect(announcements, finishOnKey, numDigits, timeout);
+      call.playAndCollect(announcements, finishOnKey, numDigits, timeout);
+      final String digits = call.getDigits();
       // Redirect to action URI.
       final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();
       final String method = tag.getAttribute(Method.NAME).getValue();
@@ -76,11 +81,20 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
       final RcmlTag tag = (RcmlTag)child;
       final String name = tag.getName();
       if(Say.NAME.equals(name)) {
-        
+    	final String gender = tag.getAttribute(Voice.NAME).getValue();
+        final String language = tag.getAttribute(Language.NAME).getValue();
+        final String text = tag.getText();
+        announcements.addAll(say(gender, language, text));
       } else if(Play.NAME.equals(name)) {
-        
+        final String text = tag.getText();
+        if(text != null) {
+          final URI uri = URI.create(text);
+          announcements.add(uri);
+        }
       } else if(Pause.NAME.equals(name)) {
-        
+        final int length = ((IntegerAttribute)tag
+            .getAttribute(Length.NAME)).getIntegerValue();
+        announcements.addAll(pause(length));
       }
  	  tag.setHasBeenVisited(true);
  	}
