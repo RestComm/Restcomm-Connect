@@ -218,10 +218,6 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     final SipURI to = (SipURI)initialInvite.getTo().getURI();
     return to.getUser();
   }
-  
-  @Override public Recording getRecording() {
-    return null;
-  }
 
   @Override public Status getStatus() {
     return Status.getValueOf(getState().getName());
@@ -258,12 +254,16 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     try {
       wait();
     } catch(final InterruptedException ignored) { }
-    digits = ivr.getDigits();
   }
   
-  @Override public void playAndRecord(final List<URI> prompts, final URI recordId, final long preSpeechTimer,
+  @Override public synchronized void playAndRecord(final List<URI> prompts, final URI recordId, final long postSpeechTimer,
       final long recordingLength, final String endInputKey) throws CallException {
-  	
+  	assertState(IN_PROGRESS);
+  	final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
+  	ivr.playRecord(prompts, recordId, postSpeechTimer, recordingLength, endInputKey);
+  	try {
+  	  wait();
+  	} catch(final InterruptedException ignored) { return; }
   }
 
   @Override public synchronized void reject() {
@@ -301,6 +301,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {
+    digits = endpoint.getDigits();
     notify();
   }
 

@@ -43,6 +43,20 @@ public final class Bootstrapper {
     super();
   }
   
+  private static String getRestCommPath(final ServletConfig config) {
+	final ServletContext context = config.getServletContext();
+    final String path = context.getRealPath("/");
+    if(path.endsWith("/")) {
+      return path.substring(0, path.length() - 1);
+    } else {
+      return path;
+    }
+  }
+  
+  private static String getRestCommUri(final ServletConfig config) {
+	return config.getServletContext().getContextPath();
+  }
+  
   public static void bootstrap(final ServletConfig config) throws BootstrapException {
     final ServletContext context = config.getServletContext();
     final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
@@ -51,7 +65,8 @@ public final class Bootstrapper {
     }
     // Initialize the configuration interpolator.
     final ConfigurationStringLookup strings = new ConfigurationStringLookup();
-    strings.addProperty("home", context.getRealPath("/"));
+    strings.addProperty("home", getRestCommPath(config));
+    strings.addProperty("uri", getRestCommUri(config));
     ConfigurationInterpolator.registerGlobalLookup("restcomm", strings);
     // Load the restcomm configuration.
     XMLConfiguration configuration = null;

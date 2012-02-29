@@ -19,7 +19,6 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
 import java.net.URI;
 import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
 public interface Call {
@@ -33,7 +32,6 @@ public interface Call {
   public String getOriginator();
   public String getOriginatorName();
   public String getRecipient();
-  public Recording getRecording();
   public Status getStatus();
   public void hangup();
   public void join(Conference conference) throws CallException;

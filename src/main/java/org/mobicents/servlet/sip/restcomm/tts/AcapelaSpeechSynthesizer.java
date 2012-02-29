@@ -41,42 +41,42 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
-  private static final String CLIENT_VERSION = "0-01";
-  private static final String ENVIRONMENT = "RESTCOMM_1.0.0";
-  private static final String PROTOCOL_VERSION = "2";
-  private static final String SOUND_FILE_TYPE = "WAV";
-  private static final List<NameValuePair> DEFAULT_PARAMETERS;
+  private static final String clientVersion = "0-01";
+  private static final String environment = "RESTCOMM_1.0.0";
+  private static final String protocolVersion = "2";
+  private static final String soundFileType = "WAV";
+  private static final List<NameValuePair> defaultParameters;
   static {
-    DEFAULT_PARAMETERS = new ArrayList<NameValuePair>(28);
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("prot_vers", PROTOCOL_VERSION));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("cl_env", ENVIRONMENT));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("cl_vers", CLIENT_VERSION));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_type", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_id", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_vol", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_spd", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_vct", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq1", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq2", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq3", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_eq4", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_type", SOUND_FILE_TYPE));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_ext", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_snd_kbps", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_alt_snd_type", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_alt_snd_ext", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_alt_snd_kbps", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_wp", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_bp", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_mp", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_comment", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_start_time", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_timeout", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_asw_type", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_asw_as_alt_snd", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_err_as_id3", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_echo", null));
-    DEFAULT_PARAMETERS.add(new BasicNameValuePair("req_asw_redirect_url", null));
+    defaultParameters = new ArrayList<NameValuePair>(28);
+    defaultParameters.add(new BasicNameValuePair("prot_vers", protocolVersion));
+    defaultParameters.add(new BasicNameValuePair("cl_env", environment));
+    defaultParameters.add(new BasicNameValuePair("cl_vers", clientVersion));
+    defaultParameters.add(new BasicNameValuePair("req_type", null));
+    defaultParameters.add(new BasicNameValuePair("req_snd_id", null));
+    defaultParameters.add(new BasicNameValuePair("req_vol", null));
+    defaultParameters.add(new BasicNameValuePair("req_spd", null));
+    defaultParameters.add(new BasicNameValuePair("req_vct", null));
+    defaultParameters.add(new BasicNameValuePair("req_eq1", null));
+    defaultParameters.add(new BasicNameValuePair("req_eq2", null));
+    defaultParameters.add(new BasicNameValuePair("req_eq3", null));
+    defaultParameters.add(new BasicNameValuePair("req_eq4", null));
+    defaultParameters.add(new BasicNameValuePair("req_snd_type", soundFileType));
+    defaultParameters.add(new BasicNameValuePair("req_snd_ext", null));
+    defaultParameters.add(new BasicNameValuePair("req_snd_kbps", null));
+    defaultParameters.add(new BasicNameValuePair("req_alt_snd_type", null));
+    defaultParameters.add(new BasicNameValuePair("req_alt_snd_ext", null));
+    defaultParameters.add(new BasicNameValuePair("req_alt_snd_kbps", null));
+    defaultParameters.add(new BasicNameValuePair("req_wp", null));
+    defaultParameters.add(new BasicNameValuePair("req_bp", null));
+    defaultParameters.add(new BasicNameValuePair("req_mp", null));
+    defaultParameters.add(new BasicNameValuePair("req_comment", null));
+    defaultParameters.add(new BasicNameValuePair("req_start_time", null));
+    defaultParameters.add(new BasicNameValuePair("req_timeout", null));
+    defaultParameters.add(new BasicNameValuePair("req_asw_type", null));
+    defaultParameters.add(new BasicNameValuePair("req_asw_as_alt_snd", null));
+    defaultParameters.add(new BasicNameValuePair("req_err_as_id3", null));
+    defaultParameters.add(new BasicNameValuePair("req_echo", null));
+    defaultParameters.add(new BasicNameValuePair("req_asw_redirect_url", null));
   }
   
   private Configuration configuration;
@@ -92,8 +92,50 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
     super();
   }
   
+  public String buildKey(final String text, final String gender, final String language) {
+    final StringBuilder key = new StringBuilder();
+    key.append(language).append(":").append(gender).append(":").append(text);
+    return key.toString();
+  }
+  
   @Override public void configure(final Configuration configuration) {
     this.configuration = configuration;
+  }
+  
+  public URI getSpeech(final String text, final String gender, final String language)
+      throws IllegalArgumentException, SpeechSynthesizerException {
+    final List<NameValuePair> parameters = new ArrayList<NameValuePair>(33);
+    parameters.addAll(defaultParameters);
+    parameters.add(new BasicNameValuePair("cl_app", application));
+    parameters.add(new BasicNameValuePair("cl_login", login));
+    parameters.add(new BasicNameValuePair("cl_pwd", password));
+    parameters.add(new BasicNameValuePair("req_voice", findSpeaker(gender, language)));
+    parameters.add(new BasicNameValuePair("req_text", text));
+    final HttpPost post = new HttpPost(serviceRoot);
+    try {
+	  post.setEntity(new UrlEncodedFormEntity(parameters, "UTF-8"));
+	  HttpClient client = new DefaultHttpClient();
+	  final HttpResponse response = client.execute(post);
+	  final int status = response.getStatusLine().getStatusCode();
+	  if(status == HttpStatus.SC_OK) {
+	    final Map<String, String> results = UriUtils.parseEntity(response.getEntity());
+	    if("OK".equals(results.get("res"))) {
+	      final URI uri = URI.create(results.get("snd_url"));
+	      return cache.put(buildKey(text, gender, language), uri);
+	    } else {
+	      final StringBuilder buffer = new StringBuilder();
+	      buffer.append(results.get("err_code")).append(" ").append(results.get("err_msg"));
+	      throw new SpeechSynthesizerException(buffer.toString());
+	    }
+	  } else {
+	    final String reason = response.getStatusLine().getReasonPhrase();
+	    final StringBuilder buffer = new StringBuilder();
+	    buffer.append(status).append(" ").append(reason);
+	    throw new IOException(buffer.toString());
+	  }
+	} catch(final Exception exception) {
+      throw new SpeechSynthesizerException(exception);
+	}
   }
   
   private String findSpeaker(final String gender, final String language) throws IllegalArgumentException {
@@ -137,40 +179,12 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
   }
   
   @Override public URI synthesize(final String text, final String gender, final String language)
-      throws IllegalArgumentException, SpeechSynthesizerException {
-    final List<NameValuePair> parameters = new ArrayList<NameValuePair>(33);
-    parameters.addAll(DEFAULT_PARAMETERS);
-    parameters.add(new BasicNameValuePair("cl_app", application));
-    parameters.add(new BasicNameValuePair("cl_login", login));
-    parameters.add(new BasicNameValuePair("cl_pwd", password));
-    parameters.add(new BasicNameValuePair("req_voice", findSpeaker(gender, language)));
-    parameters.add(new BasicNameValuePair("req_text", text));
-    final HttpPost post = new HttpPost(serviceRoot);
-    try {
-	  post.setEntity(new UrlEncodedFormEntity(parameters, "UTF-8"));
-	  HttpClient client = new DefaultHttpClient();
-	  final HttpResponse response = client.execute(post);
-	  final int status = response.getStatusLine().getStatusCode();
-	  if(status == HttpStatus.SC_OK) {
-	    final Map<String, String> results = UriUtils.parseEntity(response.getEntity());
-	    if("OK".equals(results.get("res"))) {
-	      final URI uri = URI.create(results.get("snd_url"));
-	      final StringBuilder key = new StringBuilder();
-	      key.append(language).append(":").append(gender).append(":").append(text);
-	      return cache.put(key.toString(), uri);
-	    } else {
-	      final StringBuilder buffer = new StringBuilder();
-	      buffer.append(results.get("err_code")).append(" ").append(results.get("err_msg"));
-	      throw new SpeechSynthesizerException(buffer.toString());
-	    }
-	  } else {
-	    final String reason = response.getStatusLine().getReasonPhrase();
-	    final StringBuilder buffer = new StringBuilder();
-	    buffer.append(status).append(" ").append(reason);
-	    throw new IOException(buffer.toString());
-	  }
-	} catch(final Exception exception) {
-      throw new SpeechSynthesizerException(exception);
-	}
+	      throws IllegalArgumentException, SpeechSynthesizerException {
+	final String key = buildKey(text, gender, language);
+    if(cache.contains(key, soundFileType)) {
+      return cache.get(key, soundFileType);
+    } else {
+      return getSpeech(text, gender, language);
+    }
   }
 }

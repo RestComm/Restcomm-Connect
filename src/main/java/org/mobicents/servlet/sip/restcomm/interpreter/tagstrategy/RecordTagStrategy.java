@@ -24,8 +24,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
-import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
@@ -42,10 +42,24 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.PlayBeep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
 
 public final class RecordTagStrategy extends RcmlTagStrategy {
-  private static final List<URI> EMPTY_ANNOUNCEMENT = new ArrayList<URI>();
+  private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
+  private final String basePath;
+  private final String baseUri;
   
   public RecordTagStrategy() {
     super();
+    final ServiceLocator services = ServiceLocator.getInstance();
+    final Configuration configuration = services.get(Configuration.class);
+    basePath = addSuffix(configuration.getString("recordings-basePath"), "/");
+    baseUri = addSuffix(configuration.getString("recordings-uri"), "/");
+  }
+  
+  private String addSuffix(final String text, final String suffix) {
+    if(text.endsWith(suffix)) {
+      return text;
+    } else {
+      return text + suffix;
+    }
   }
   
   @Override public void execute(final RcmlInterpreter interpreter,
@@ -58,17 +72,17 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
         call.play(playBeep(), 1);
       }
       // Record something.
+      final Sid sid = Sid.generate(Sid.Type.RECORDING);
       final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
       final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
       final int maxLength = ((IntegerAttribute)tag.getAttribute(MaxLength.NAME)).getIntegerValue();
-      //call.playAndRecord(EMPTY_ANNOUNCEMENT, timeout, maxLength, finishOnKey);
+      call.playAndRecord(emptyAnnouncement, toPath(sid), timeout, maxLength, finishOnKey);
       // Redirect to action URI.
       final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();
       final String method = tag.getAttribute(Method.NAME).getValue();
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-      final Recording recording = call.getRecording();
-      parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
-      parameters.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
+      parameters.add(new BasicNameValuePair("RecordingUrl", toUri(sid)));
+      parameters.add(new BasicNameValuePair("RecordingDuration", "-1"));
       parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
       interpreter.loadResource(action, method, parameters);
       interpreter.redirect();
@@ -85,5 +99,17 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
     final List<URI> announcement = new ArrayList<URI>();
     announcement.add(uri);
     return announcement;
+  }
+  
+  private URI toPath(final Sid sid) {
+    final StringBuilder path = new StringBuilder();
+    path.append(basePath).append(sid.toString()).append(".wav");
+    return URI.create(path.toString());
+  }
+  
+  private String toUri(final Sid sid) {
+    final StringBuilder uri = new StringBuilder();
+    uri.append(baseUri).append(sid.toString()).append(".wav");
+    return uri.toString();
   }
 }

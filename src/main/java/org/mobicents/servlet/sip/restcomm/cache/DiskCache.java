@@ -51,8 +51,26 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
   
   private String buildPath(final String key, final String extension) {
 	final StringBuilder buffer = new StringBuilder();
-	buffer.append(location).append(hash(key)).append(".").append(extension);
+	buffer.append(location).append(hash(key)).append(".").append(extension.toLowerCase());
     return buffer.toString();
+  }
+  
+  public boolean contains(final String key, final String extension) {
+    final String path = buildPath(key, extension);
+	final File file = new File(path);
+    if(file.exists()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  public URI get(final String key, final String extension) {
+    if(contains(key, extension)) {
+      return toUri(buildPath(key, extension));
+    } else {
+      return null;
+    }
   }
   
   private String hash(final String key) {

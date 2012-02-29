@@ -64,8 +64,20 @@ public final class RcmlInterpreterContext {
     }
   }
   
+  public IncomingPhoneNumber getIncomingPhoneNumber() {
+    return null;
+  }
+  
   public Call getCall() {
 	return call;
+  }
+  
+  public Application getSmsApplication() {
+    return null;
+  }
+  
+  public Application getVoiceApplication() {
+    return null;
   }
   
   public List<NameValuePair> getRcmlRequestParameters() {

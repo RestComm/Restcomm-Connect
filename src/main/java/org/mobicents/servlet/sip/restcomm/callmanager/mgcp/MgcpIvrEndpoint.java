@@ -161,8 +161,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     setState(PLAY_COLLECT);
   }
   
-  public synchronized void playRecord(final List<URI> prompts, final long preSpeechTimer, final long recordingLength,
-      final String endInputKey) {
+  public synchronized void playRecord(final List<URI> prompts, final URI recordId, final long postSpeechTimer,
+      final long recordingLength, final String endInputKey) {
     assertState(IDLE);
     // Create the signal parameters.
     final AdvancedAudioParametersBuilder builder = new AdvancedAudioParametersBuilder();
@@ -170,7 +170,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
       builder.addInitialPrompt(prompt);
     }
     builder.setClearDigitBuffer(true);
-    builder.setPreSpeechTimer(preSpeechTimer);
+    builder.setRecordId(recordId);
+    builder.setPostSpeechTimer(postSpeechTimer);
     builder.setRecordingLength(recordingLength);
     builder.setEndInputKey(endInputKey);
     final String parameters = builder.build();
@@ -213,7 +214,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     	    final int returnCode = Integer.parseInt(parameters.get("rc"));
     	    if(returnCode == 100 || returnCode == 326) {
     	      final State currentState = getState();
-    	      if(currentState.equals(PLAY_COLLECT)) {
+    	      if(currentState.equals(PLAY_COLLECT) || currentState.equals(PLAY_RECORD)) {
     	    	if(returnCode == 100) {
     	          digits = parameters.get("dc");
     	    	}
