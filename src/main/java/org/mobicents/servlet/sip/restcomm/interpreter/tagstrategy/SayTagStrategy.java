@@ -33,7 +33,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 
-public final class SayTagStrategy extends TwiMLTagStrategy  {
+public final class SayTagStrategy extends RcmlTagStrategy  {
   
   public SayTagStrategy() {
     super();

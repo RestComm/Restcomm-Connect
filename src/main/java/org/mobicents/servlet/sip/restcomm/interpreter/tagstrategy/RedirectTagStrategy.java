@@ -22,7 +22,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
-public final class RedirectTagStrategy extends TwiMLTagStrategy {
+public final class RedirectTagStrategy extends RcmlTagStrategy {
   public RedirectTagStrategy() {
     super();
   }

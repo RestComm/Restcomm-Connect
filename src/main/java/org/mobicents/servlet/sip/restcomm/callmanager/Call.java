@@ -22,20 +22,80 @@ import java.util.List;
 import org.mobicents.servlet.sip.restcomm.Sid;
 
 public interface Call {
+  public void addObserver(CallObserver observer);
   public void answer() throws CallException;
   public void dial() throws CallException;
-  public Sid getAccountSid();
-  public String getApiVersion();
-  public String getDirection();
+  public Direction getDirection();
   public String getForwardedFrom();
   public Sid getSid();
   public String getOriginator();
   public String getOriginatorName();
   public String getRecipient();
-  public String getStatus();
+  public Status getStatus();
   public void hangup();
   public void join(Conference conference) throws CallException;
   public void leave(Conference conference) throws CallException;
   public void play(List<URI> announcements, int iterations) throws CallException;
+  public String playAndCollect(List<URI> announcements, String endInputKey,
+      int maxNumberOfDigits, int timeout) throws CallException;
+  public URI playAndRecord(List<URI> prompts, long preSpeechTimer, long recordingLength,
+      String endInputKey) throws CallException;
   public void reject();
+  
+  public enum Direction {
+    INBOUND("inbound"),
+    OUTBOUND_DIAL("outbound-dial");
+    
+    private final String text;
+    
+    private Direction(final String text) {
+      this.text = text;
+    }
+    
+    public static Direction getValueOf(final String text) {
+      final Direction[] values = values();
+      for(final Direction value : values) {
+        if(value.toString().equals(text)) {
+          return value;
+        }
+      }
+      throw new IllegalArgumentException(text + " is not a valid direction.");
+    }
+    
+    @Override public String toString() {
+      return text;
+    }
+  }
+
+  public enum Status {
+    IDLE("idle"),
+    QUEUED("queued"),
+    RINGING("ringing"),
+    IN_PROGRESS("in-progress"),
+    COMPLETED("completed"),
+    BUSY("busy"),
+    FAILED("failed"),
+    NO_ANSWER("no-answer"),
+    CANCELLED("cancelled");
+
+    private final String text;
+    
+    private Status(final String text) {
+      this.text = text;
+    }
+    
+    public static Status getValueOf(final String text) {
+      final Status[] values = values();
+      for(final Status value : values) {
+        if(value.toString().equals(text)) {
+          return value;
+        }
+      }
+      throw new IllegalArgumentException(text + " is not a valid status.");
+    }
+    
+    @Override public String toString() {
+      return text;
+    }
+  }
 }

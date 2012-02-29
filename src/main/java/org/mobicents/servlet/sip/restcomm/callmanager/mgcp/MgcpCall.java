@@ -5,9 +5,9 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.sip.Address;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -20,24 +20,21 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.From;
 
 public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver, MgcpLinkObserver {
   private static final Logger LOGGER = Logger.getLogger(MgcpCall.class);
-  // Call Directions.
-  private static final String INBOUND = "inbound";
-  private static final String OUTBOUND_DIAL = "outbound-dial";
   // Call states.
-  private static final State IDLE = new State("idle");
-  private static final State QUEUED = new State("queued");
-  private static final State RINGING = new State("ringing");
-  private static final State IN_PROGRESS = new State("in-progress");
-  private static final State COMPLETED = new State("completed");
-  private static final State BUSY = new State("busy");
-  private static final State FAILED = new State("failed");
-  private static final State NO_ANSWER = new State("no-answer");
-  private static final State CANCELLED = new State("cancelled");
+  private static final State IDLE = new State(Status.IDLE.toString());
+  private static final State QUEUED = new State(Status.QUEUED.toString());
+  private static final State RINGING = new State(Status.RINGING.toString());
+  private static final State IN_PROGRESS = new State(Status.IN_PROGRESS.toString());
+  private static final State COMPLETED = new State(Status.COMPLETED.toString());
+  private static final State BUSY = new State(Status.BUSY.toString());
+  private static final State FAILED = new State(Status.FAILED.toString());
+  private static final State NO_ANSWER = new State(Status.NO_ANSWER.toString());
+  private static final State CANCELLED = new State(Status.CANCELLED.toString());
   static {
     IDLE.addTransition(RINGING);
     IDLE.addTransition(QUEUED);
@@ -59,7 +56,10 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   private MgcpEndpoint localEndpoint;
   private MgcpEndpoint remoteEndpoint;
   
-  private String direction;
+  private Sid sid;
+  private Direction direction;
+  
+  private List<CallObserver> observers;
   
   public MgcpCall(final MgcpServer server) {
     super(IDLE);
@@ -75,11 +75,17 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     addState(CANCELLED);
     this.server = server;
     this.session = server.createMediaSession();
+    this.sid = Sid.generate(Sid.Type.CALL);
+    this.observers = new ArrayList<CallObserver>();
+  }
+  
+  @Override public void addObserver(final CallObserver observer) {
+    
   }
   
   public synchronized void alert(final SipServletRequest request) throws IOException {
     assertState(IDLE);
-	direction = INBOUND;
+	direction = Direction.INBOUND;
 	final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
 	try {
 	  ringing.send();
@@ -97,13 +103,13 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     assertState(RINGING);
     try {
       // Try to negotiate a media connection with a packet relay end point.
-      localEndpoint = session.getPacketRelayEndpoint();
+      localEndpoint = session.getIvrEndpoint();
+      ((MgcpIvrEndpoint)localEndpoint).addObserver(this);
       final byte[] offer = initialInvite.getRawContent();
       final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
       connection = session.createConnection(localEndpoint, remoteDescriptor);
-      System.out.println("Made it here!");
       connection.addObserver(this);
-      connection.connect(ConnectionMode.Confrnce);
+      connection.connect(ConnectionMode.SendRecv);
       wait();
       // Send the response back to the caller.
       final byte[] answer = connection.getLocalDescriptor().toString().getBytes();
@@ -152,12 +158,17 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   
   public synchronized void established() {
     assertState(RINGING);
+    setState(IN_PROGRESS);
+    initialInvite.setExpires(240);
+    notify();
+    /*
     final MgcpIvrEndpoint endpoint = session.getIvrEndpoint();
     endpoint.addObserver(this);
     remoteEndpoint = endpoint;
     link = session.createLink(localEndpoint, remoteEndpoint);
     link.addObserver(this);
-	link.connect(ConnectionMode.Confrnce);
+	link.connect(ConnectionMode.Inactive);
+	*/
   }
   
   private void fail(int code) {
@@ -170,16 +181,8 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     }
     cleanup();
   }
-  
-  @Override public Sid getAccountSid() {
-    return null;
-  }
-  
-  @Override public String getApiVersion() {
-    return null;
-  }
 
-  @Override public String getDirection() {
+  @Override public Direction getDirection() {
     return direction;
   }
   
@@ -188,7 +191,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public Sid getSid() {
-    return null;
+    return sid;
   }
   
   public SipServletRequest getInitialInvite() {
@@ -209,8 +212,8 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     return to.getUser();
   }
 
-  @Override public String getStatus() {
-    return getState().getName();
+  @Override public Status getStatus() {
+    return Status.getValueOf(getState().getName());
   }
 
   @Override public void hangup() {
@@ -229,11 +232,27 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
 
   @Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
     assertState(IN_PROGRESS);
-    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)remoteEndpoint;
+    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
     ivr.play(announcements, iterations);
     try {
       wait();
     } catch(final InterruptedException ignored) { }
+  }
+  
+  @Override public synchronized String playAndCollect(final List<URI> announcements, final String endInputKey, final int maxNumberOfDigits,
+      int timeout) {
+    assertState(IN_PROGRESS);
+    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
+    ivr.playCollect(announcements, maxNumberOfDigits, maxNumberOfDigits, timeout, timeout, endInputKey);
+    try {
+      wait();
+    } catch(final InterruptedException ignored) { }
+    return ivr.getDigits();
+  }
+  
+  @Override public URI playAndRecord(final List<URI> prompts, final long preSpeechTimer, final long recordingLength,
+      String endInputKey) throws CallException {
+  	return null;
   }
 
   @Override public synchronized void reject() {
@@ -259,15 +278,14 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public synchronized void connected(final MgcpLink link) {
-    setState(IN_PROGRESS);
-	notify();
+    
   }
 
   @Override public void disconnected(final MgcpLink link) {
     
   }
 
-  @Override public void failed(final MgcpLink link) {
+  @Override public synchronized void failed(final MgcpLink link) {
     notify();
   }
 
@@ -300,5 +318,13 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   	    .append(" could not be completed.");
   	LOGGER.error(buffer.toString());
   	notify();
+  }
+
+  @Override public synchronized void modified(ConnectionDescriptor descriptor, MgcpLink link) {
+    
+  }
+
+  @Override public synchronized void modified(final MgcpConnection connection) {
+    
   }
 }

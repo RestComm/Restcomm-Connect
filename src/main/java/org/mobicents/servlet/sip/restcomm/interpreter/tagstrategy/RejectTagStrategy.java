@@ -23,7 +23,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Reason;
 
-public final class RejectTagStrategy extends TwiMLTagStrategy {
+public final class RejectTagStrategy extends RcmlTagStrategy {
   public RejectTagStrategy() {
     super();
   }

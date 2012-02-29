@@ -118,6 +118,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	try {
 	  loadResource(context.getVoiceUrl(), context.getVoiceMethod());
 	} catch(final InterpreterException exception) {
+	  logger.error("Using fallback url the default voice url failed.", exception);
 	  loadResource(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod());
 	}
     setState(READY);

@@ -21,7 +21,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
-public final class RecordTagStrategy extends TwiMLTagStrategy {
+public final class RecordTagStrategy extends RcmlTagStrategy {
   private static final int ONE_SECOND = 1000;
   
   public RecordTagStrategy() {

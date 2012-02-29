@@ -17,12 +17,13 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
-public final class DialTagStrategy extends TwiMLTagStrategy {
+public final class DialTagStrategy extends RcmlTagStrategy {
   public DialTagStrategy() {
     super();
   }
@@ -30,9 +31,11 @@ public final class DialTagStrategy extends TwiMLTagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-	// Try to answer the call if it hasn't been done so already.
-    answer(call);
-    // Dial out.
-    
+    try {
+      call.answer();
+      // Dial out.
+    } catch(final CallException exception) {
+      
+    }
   }
 }

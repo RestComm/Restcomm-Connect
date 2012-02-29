@@ -11,8 +11,10 @@ import jain.protocol.ip.mgcp.message.CreateConnection;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
 import jain.protocol.ip.mgcp.message.DeleteConnection;
 import jain.protocol.ip.mgcp.message.ModifyConnection;
+import jain.protocol.ip.mgcp.message.ModifyConnectionResponse;
 import jain.protocol.ip.mgcp.message.parms.CallIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConflictingParameterException;
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
@@ -117,21 +119,36 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
   }
   
-  public void modifyFirstConnection(final ConnectionMode connectionMode) {
-    modify(firstConnectionId, firstEndpoint.getId(), connectionMode);
+  private void fireModified(final ConnectionDescriptor descriptor) {
+    for(final MgcpLinkObserver observer : observers) {
+      observer.modified(descriptor, this);
+    }
   }
   
-  public void modifySecondConnection(final ConnectionMode connectionMode) {
-    modify(secondConnectionId, secondEndpoint.getId(), connectionMode);
+  public void modifyFirstConnection(final ConnectionMode connectionMode, final ConnectionDescriptor remoteDescriptor) {
+    modify(firstConnectionId, firstEndpoint.getId(), connectionMode, remoteDescriptor);
+  }
+  
+  public void modifySecondConnection(final ConnectionMode connectionMode, final ConnectionDescriptor remoteDescriptor) {
+    modify(secondConnectionId, secondEndpoint.getId(), connectionMode, remoteDescriptor);
   }
   
   private void modify(final ConnectionIdentifier connectionId, final EndpointIdentifier endpointId,
-      final ConnectionMode connectionMode) throws MgcpLinkException {
+      final ConnectionMode connectionMode, final ConnectionDescriptor remoteDescriptor) throws MgcpLinkException {
     assertState(CONNECTED);
+    // Make sure there is something to modify.
+    if(remoteDescriptor == null && connectionMode == null) {
+      return;
+    }
     try {
       final CallIdentifier callId = new CallIdentifier(Integer.toString(session.getId()));
       final ModifyConnection mdcx = new ModifyConnection(this, callId, endpointId, connectionId);
-      mdcx.setMode(connectionMode);
+      if(connectionMode != null) {
+        mdcx.setMode(connectionMode);
+      }
+      if(remoteDescriptor != null) {
+        mdcx.setRemoteConnectionDescriptor(remoteDescriptor);
+      }
       server.sendCommand(mdcx, this);
     } catch(final MgcpServerException exception) {
       throw new MgcpLinkException(exception);
@@ -150,6 +167,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     setState(CONNECTED);
     fireConnected();
   }
+  
+  private void modified(final ModifyConnectionResponse response) {
+    fireModified(response.getLocalConnectionDescriptor());
+  }
 
   @Override public void processMgcpResponseEvent(final JainMgcpResponseEvent response) {
     final ReturnCode returnCode = response.getReturnCode();
@@ -159,6 +180,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   	  final State currentState = getState();
   	  if(currentState.equals(CREATED)) {
   	    created((CreateConnectionResponse)response);
+  	  } else if(currentState.equals(CONNECTED)) {
+  	    if(response instanceof ModifyConnectionResponse) {
+  	      modified((ModifyConnectionResponse)response);
+  	    }
   	  }
   	} else {
 	  setState(FAILED);

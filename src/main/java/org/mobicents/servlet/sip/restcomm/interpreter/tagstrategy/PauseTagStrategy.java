@@ -22,7 +22,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
 
-public final class PauseTagStrategy extends TwiMLTagStrategy {
+public final class PauseTagStrategy extends RcmlTagStrategy {
   private static final int ONE_SECOND = 1000;
   
   public PauseTagStrategy() {
