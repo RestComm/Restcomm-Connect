@@ -28,7 +28,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Pause extends RCMLTag {
+@NotThreadSafe public final class Pause extends RcmlTag {
   public static final String NAME = "Pause";
   private static final Set<String> ATTRIBUTES;
   static {

@@ -31,7 +31,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Conference extends RCMLTag {
+@NotThreadSafe public final class Conference extends RcmlTag {
   public static final String NAME = "Conference";
   private static final Set<String> ATTRIBUTES;
   static {

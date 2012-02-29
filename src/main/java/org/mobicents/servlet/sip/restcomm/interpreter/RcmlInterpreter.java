@@ -42,8 +42,8 @@ import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
 import org.mobicents.servlet.sip.restcomm.xml.XmlDocumentBuilder;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTagFactory;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 
 public final class RcmlInterpreter extends FiniteStateMachine implements Runnable, TagVisitor {
   // Logger.
@@ -90,7 +90,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     addState(FAILED);
     this.context = context;
     this.strategies = new TagStrategyFactory();
-    this.resourceBuilder = new XmlDocumentBuilder(new RCMLTagFactory());
+    this.resourceBuilder = new XmlDocumentBuilder(new RcmlTagFactory());
   }
   
   public void failed() {
@@ -181,7 +181,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     while(getState().equals(READY)) {
       TagIterator iterator = resource.iterator();
       while(iterator.hasNext()) {
-        final RCMLTag tag = (RCMLTag)iterator.next();
+        final RcmlTag tag = (RcmlTag)iterator.next();
         if(!tag.hasBeenVisited() && tag.isVerb()) {
           // Make sure we're ready to execute the next tag.
           assertState(READY);

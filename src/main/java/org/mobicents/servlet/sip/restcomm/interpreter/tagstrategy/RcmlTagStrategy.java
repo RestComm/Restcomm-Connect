@@ -4,10 +4,12 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 
 public abstract class RcmlTagStrategy implements TagStrategy {
   public RcmlTagStrategy() {
@@ -31,8 +33,11 @@ public abstract class RcmlTagStrategy implements TagStrategy {
   }
   
   protected List<URI> say(final String gender, final String language, final String text) {
+    final ServiceLocator services = ServiceLocator.getInstance();
+    final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
+    final URI uri = synthesizer.synthesize(text, gender, language);
     final List<URI> announcements = new ArrayList<URI>();
-    // Add synthesized text.
+    announcements.add(uri);
     return announcements;
   }
 }

@@ -30,7 +30,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Client extends RCMLTag {
+@NotThreadSafe public final class Client extends RcmlTag {
   public static final String NAME = "Client";
   private static final Pattern PATTERN = Pattern.compile("[_a-z]+");
   

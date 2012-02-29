@@ -30,7 +30,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Gather extends RCMLTag {
+@NotThreadSafe public final class Gather extends RcmlTag {
   public static final String NAME = "Gather";
   private static final Set<String> ATTRIBUTES;
   private static final Set<String> CHILDREN;

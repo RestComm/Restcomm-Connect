@@ -17,16 +17,13 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
@@ -42,22 +39,27 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
 	final Call call = context.getCall();
-	// Try to answer the call if it hasn't been done so already.
     answer(call);
-    // Say something.
     final String text = tag.getText();
-    final String gender = tag.getAttribute(Voice.NAME).getValue();
-    final String language = tag.getAttribute(Language.NAME).getValue();
-    final int iterations = ((IntegerAttribute)tag.getAttribute(Loop.NAME)).getIntegerValue();
     if(text != null) {
-      final ServiceLocator services = ServiceLocator.getInstance();
-      final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
-      final List<URI> announcements = new ArrayList<URI>();
-      announcements.add(synthesizer.synthesize(text, gender, language));
+      final String gender = tag.getAttribute(Voice.NAME).getValue();
+      final String language = tag.getAttribute(Language.NAME).getValue();
+      final List<URI> announcement = say(gender, language, text);
+      final int iterations = ((IntegerAttribute)tag.getAttribute(Loop.NAME)).getIntegerValue();
       try {
-		call.play(announcements, iterations);
+    	if(iterations == 0) {
+    	  while(Call.Status.IN_PROGRESS == call.getStatus()) {
+    	    call.play(announcement, 1);
+    	  }
+    	} else {
+		  call.play(announcement, iterations);
+    	}
 	  } catch(final CallException exception) {
-		throw new TagStrategyException(exception);
+		interpreter.failed();
+		final StringBuilder buffer = new StringBuilder();
+		buffer.append("There was an error while saying ").append(text).append(" by a ");
+		buffer.append(language).append(" speaking ").append(gender).append(".");
+		throw new TagStrategyException(buffer.toString(), exception);
 	  }
     }
   }

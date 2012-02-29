@@ -25,6 +25,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
 
@@ -37,20 +38,26 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
     final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-	// Try to answer the call if it hasn't been done so already.
     answer(call);
     // Play something.
     final String text = tag.getText();
     if(text != null) {
-      final int loop = Integer.parseInt(tag.getAttribute(Loop.NAME).getValue());
-      final URI uri = URI.create(text);
-      final List<URI> announcements = new ArrayList<URI>();
-      announcements.add(uri);
+      final List<URI> announcement = new ArrayList<URI>();
+      announcement.add(URI.create(text));
+      final int iterations = ((IntegerAttribute)tag.getAttribute(Loop.NAME)).getIntegerValue();
       try {
-        call.play(announcements, loop);
+    	if(iterations == 0) {
+    	  while(Call.Status.IN_PROGRESS == call.getStatus()) {
+    	    call.play(announcement, 1);
+    	  }
+    	} else {
+          call.play(announcement, iterations);
+    	}
       } catch(final CallException exception) {
         interpreter.failed();
-        throw new TagStrategyException(exception);
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append("There was an error while playing the file located @ ").append(text);
+        throw new TagStrategyException(buffer.toString(), exception);
       }
     }
   }

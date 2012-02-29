@@ -27,7 +27,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Hangup extends RCMLTag {
+@NotThreadSafe public final class Hangup extends RcmlTag {
   public static final String NAME = "Hangup";
   
   public Hangup() {

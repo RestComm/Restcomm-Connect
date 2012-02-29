@@ -31,11 +31,11 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-    final String reason = tag.getAttribute(Reason.NAME).getValue();
-    if(call.getStatus().equals("ringing")) {
+    if(Call.Status.RINGING == call.getStatus()) {
+      final String reason = tag.getAttribute(Reason.NAME).getValue();
       if(reason.equals(Reason.REJECTED)) {
         answer(call);
-        /* Fix Me: This should answer the call play a not-in-service message and hangup. */
+        /* Fix Me: This should answer the call play a not-in-service message and hang up. */
         call.hangup();
       } else if(reason.equals(Reason.BUSY)) {
         call.reject();

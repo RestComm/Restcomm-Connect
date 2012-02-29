@@ -22,8 +22,8 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitableTag;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class RCMLTag extends VisitableTag {  
-  public RCMLTag() {
+@NotThreadSafe public abstract class RcmlTag extends VisitableTag {  
+  public RcmlTag() {
     super();
   }
   

@@ -29,7 +29,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Number extends RCMLTag {
+@NotThreadSafe public final class Number extends RcmlTag {
   public static final String NAME = "Number";
   private static final Set<String> ATTRIBUTES;
   static {

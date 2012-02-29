@@ -28,7 +28,7 @@ import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class RCMLTagFactory implements TagFactory {
+@ThreadSafe public final class RcmlTagFactory implements TagFactory {
   private static final Map<String, Class<? extends Attribute>> ATTRIBUTES;
   private static final Map<String, Class<? extends Tag>> TAGS;
   static {
@@ -80,7 +80,7 @@ import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
     TAGS.put(Pause.NAME, Pause.class);
   }
   
-  public RCMLTagFactory() {
+  public RcmlTagFactory() {
     super();
   }
 

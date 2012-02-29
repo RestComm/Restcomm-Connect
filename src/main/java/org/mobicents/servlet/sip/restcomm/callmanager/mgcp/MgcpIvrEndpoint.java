@@ -216,8 +216,6 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     	      if(currentState.equals(PLAY_COLLECT)) {
     	    	if(returnCode == 100) {
     	          digits = parameters.get("dc");
-    	    	} else if(returnCode == 326) {
-    	    	  digits = new String();
     	    	}
     	      }
     	      setState(IDLE);

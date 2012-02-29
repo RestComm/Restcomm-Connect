@@ -31,7 +31,7 @@ import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Response extends RCMLTag implements XmlDocument {
+@NotThreadSafe public final class Response extends RcmlTag implements XmlDocument {
   public static final String NAME = "Response";
   private static final Set<String> CHILDREN;
   static {

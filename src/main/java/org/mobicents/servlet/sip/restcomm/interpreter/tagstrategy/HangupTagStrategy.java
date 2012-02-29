@@ -30,9 +30,7 @@ public final class HangupTagStrategy extends RcmlTagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       RcmlInterpreterContext context, Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-	// Try to answer the call if it hasn't been done so already.
 	answer(call);
-	// Hangup and end the interpreter session.
 	call.hangup();
 	interpreter.finish();
   }
