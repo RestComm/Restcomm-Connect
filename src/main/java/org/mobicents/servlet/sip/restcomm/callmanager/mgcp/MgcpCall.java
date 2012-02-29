@@ -249,14 +249,11 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     } catch(final InterruptedException ignored) { }
     return ivr.getDigits();
   }
-<<<<<<< HEAD
   
   @Override public URI playAndRecord(final List<URI> prompts, final long preSpeechTimer, final long recordingLength,
       String endInputKey) throws CallException {
   	return null;
   }
-=======
->>>>>>> 71d974c9401dfe69f0bd603075093de2bd4a2fe6
 
   @Override public synchronized void reject() {
     assertState(RINGING);

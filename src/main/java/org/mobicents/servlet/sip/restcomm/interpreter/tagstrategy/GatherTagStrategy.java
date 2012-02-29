@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -37,7 +36,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.NumDigits;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RCMLTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
 
-public final class GatherTagStrategy implements TagStrategy {
+public final class GatherTagStrategy extends RcmlTagStrategy {
   public GatherTagStrategy() {
     super();
   }
@@ -45,25 +44,19 @@ public final class GatherTagStrategy implements TagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-<<<<<<< HEAD
     try {
-    call.answer();
-=======
-	answer(call);
-    // Start gathering digits.
-    try {
->>>>>>> 71d974c9401dfe69f0bd603075093de2bd4a2fe6
-    final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();
-    final String method = tag.getAttribute(Method.NAME).getValue();
-    final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
-    final int numDigits = ((IntegerAttribute)tag.getAttribute(NumDigits.NAME)).getIntegerValue();
-    final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
-    final List<URI> announcements = getAnnouncements(tag.getChildren());
-    final String digits = call.playAndCollect(announcements, finishOnKey, numDigits, timeout);
-    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-    parameters.add(new BasicNameValuePair("Digits", digits));
-    interpreter.loadResource(action, method, parameters);
-    interpreter.redirect();
+	  answer(call);
+      final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();
+      final String method = tag.getAttribute(Method.NAME).getValue();
+      final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
+      final int numDigits = ((IntegerAttribute)tag.getAttribute(NumDigits.NAME)).getIntegerValue();
+      final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
+      final List<URI> announcements = getAnnouncements(tag.getChildren());
+      final String digits = call.playAndCollect(announcements, finishOnKey, numDigits, timeout);
+      final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+      parameters.add(new BasicNameValuePair("Digits", digits));
+      interpreter.loadResource(action, method, parameters);
+      interpreter.redirect();
     } catch(final Exception exception) {
       throw new TagStrategyException(exception);
     }
