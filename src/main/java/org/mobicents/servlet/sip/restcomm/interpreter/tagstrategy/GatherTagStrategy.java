@@ -45,8 +45,14 @@ public final class GatherTagStrategy implements TagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
+<<<<<<< HEAD
     try {
     call.answer();
+=======
+	answer(call);
+    // Start gathering digits.
+    try {
+>>>>>>> 71d974c9401dfe69f0bd603075093de2bd4a2fe6
     final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();
     final String method = tag.getAttribute(Method.NAME).getValue();
     final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();

@@ -36,10 +36,14 @@ public interface Call {
   public void join(Conference conference) throws CallException;
   public void leave(Conference conference) throws CallException;
   public void play(List<URI> announcements, int iterations) throws CallException;
+<<<<<<< HEAD
   public String playAndCollect(List<URI> announcements, String endInputKey,
       int maxNumberOfDigits, int timeout) throws CallException;
   public URI playAndRecord(List<URI> prompts, long preSpeechTimer, long recordingLength,
       String endInputKey) throws CallException;
+=======
+  public String playAndCollect(List<URI> announcements, String endInputKey, int maxNumberOfDigits, int timeout);
+>>>>>>> 71d974c9401dfe69f0bd603075093de2bd4a2fe6
   public void reject();
   
   public enum Direction {
