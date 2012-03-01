@@ -133,7 +133,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
   }
   
   public synchronized void playCollect(final List<URI> prompts, final int maxNumberOfDigits, final int minNumberOfDigits,
-      final long firstDigitTimer, final long interDigitTimer, final String endInputKey) {
+      final long firstDigitTimer, final long interDigitTimer, final String patterns) {
     assertState(IDLE);
     // Create the signal parameters.
     final AdvancedAudioParametersBuilder builder = new AdvancedAudioParametersBuilder();
@@ -145,7 +145,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     builder.setMinNumberOfDigits(minNumberOfDigits);
     builder.setFirstDigitTimer(firstDigitTimer);
     builder.setInterDigitTimer(interDigitTimer);
-    builder.setEndInputKey(endInputKey);
+    builder.setDigitPattern(patterns);
     final String parameters = builder.build();
     // Create the signal.
     final EventName[] signal = new EventName[1];
@@ -212,11 +212,13 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     	    final Map<String, String> parameters = parseAdvancedAudioParameters(response.getParms());
     	    // Process parameters.
     	    final int returnCode = Integer.parseInt(parameters.get("rc"));
-    	    if(returnCode == 100 || returnCode == 326) {
+    	    if(returnCode == 100 || returnCode == 326 || returnCode == 328) {
     	      final State currentState = getState();
     	      if(currentState.equals(PLAY_COLLECT) || currentState.equals(PLAY_RECORD)) {
     	    	if(returnCode == 100) {
     	          digits = parameters.get("dc");
+    	    	} else if(returnCode == 328) {
+    	    	  stop();
     	    	}
     	      }
     	      setState(IDLE);

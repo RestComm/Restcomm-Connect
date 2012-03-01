@@ -30,6 +30,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.BooleanAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
@@ -45,13 +46,16 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private final String baseRecordingsPath;
   private final String baseRecordingsUri;
+  private final List<URI> beepAudioFile;
   
   public RecordTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     final Configuration configuration = services.get(Configuration.class);
-    baseRecordingsPath = addSuffix(configuration.getString("recordings-baseRecordingsPath"), "/");
+    baseRecordingsPath = addSuffix(configuration.getString("recordings-path"), "/");
     baseRecordingsUri = addSuffix(configuration.getString("recordings-uri"), "/");
+    beepAudioFile = new ArrayList<URI>();
+    beepAudioFile.add(URI.create("file://" + configuration.getString("beep-audio-file")));
   }
   
   private String addSuffix(final String text, final String suffix) {
@@ -69,7 +73,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
     try {
       final boolean playBeep = ((BooleanAttribute)tag.getAttribute(PlayBeep.NAME)).getBooleanValue();
       if(playBeep) {
-        call.play(playBeep(), 1);
+        call.play(beepAudioFile, 1);
       }
       // Record something.
       final Sid sid = Sid.generate(Sid.Type.RECORDING);
@@ -78,7 +82,13 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
       final int maxLength = ((IntegerAttribute)tag.getAttribute(MaxLength.NAME)).getIntegerValue();
       call.playAndRecord(emptyAnnouncement, toPath(sid), timeout, maxLength, finishOnKey);
       // Redirect to action URI.
-      final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();
+      URI action = null;
+      final Attribute attribute = tag.getAttribute(Action.NAME);
+      if(attribute != null) {
+        action = ((UriAttribute)attribute).getUriValue();
+      } else {
+        action = interpreter.getCurrentUri();
+      }
       final String method = tag.getAttribute(Method.NAME).getValue();
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
       parameters.add(new BasicNameValuePair("RecordingUrl", toUri(sid)));
@@ -90,15 +100,6 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
       interpreter.failed();
       throw new TagStrategyException("There was an error while recording audio.", exception);
     }
-  }
-  
-  private List<URI> playBeep() {
-    final ServiceLocator services = ServiceLocator.getInstance();
-    final Configuration configuration = services.get(Configuration.class);
-    final URI uri = URI.create(configuration.getString("beep-audio-file"));
-    final List<URI> announcement = new ArrayList<URI>();
-    announcement.add(uri);
-    return announcement;
   }
   
   private URI toPath(final Sid sid) {

@@ -184,7 +184,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private String buildPreSpeechTimer() {
     if(preSpeechTimer > 0) {
       final StringBuilder buffer = new StringBuilder();
-      buffer.append("prt=").append(preSpeechTimer);
+      buffer.append("prt=").append(preSpeechTimer * 10);
       return buffer.toString();
     } else {
       return null;
@@ -194,7 +194,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private String buildPostSpeechTimer() {
     if(postSpeechTimer > 0) {
       final StringBuilder buffer = new StringBuilder();
-      buffer.append("pst=").append(postSpeechTimer);
+      buffer.append("pst=").append(postSpeechTimer * 10);
       return buffer.toString();
     } else {
       return null;
@@ -204,7 +204,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private String buildRecordingLength() {
     if(recordingLength > 0) {
       final StringBuilder buffer = new StringBuilder();
-      buffer.append("rlt=").append(recordingLength);
+      buffer.append("rlt=").append(recordingLength * 1000);
       return buffer.toString();
     } else {
       return null;
