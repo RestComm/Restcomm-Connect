@@ -17,6 +17,10 @@
 		
 		<recordings-path>${restcomm:home}/recordings</recordings-path>
 		<recordings-uri>${restcomm:uri}/recordings</recordings-uri>
+		
+		<outbound-proxy-user></outbound-proxy-user>
+		<outbound-proxy-password></outbound-proxy-password>
+		<outbound-proxy-uri>sip:softswitch1.speechbucket.com</outbound-proxy-uri>
 	</runtime-settings>
 
 	<dao-manager class="org.mobicents.servlet.sip.restcomm.dao.mybatis.MybatisDaoManager">

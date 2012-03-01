@@ -21,23 +21,32 @@ import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.servlet.sip.URI;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
+import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.BootstrapException;
 import org.mobicents.servlet.sip.restcomm.Bootstrapper;
 import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.Janitor;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
+import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
@@ -51,15 +60,44 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   private static final long serialVersionUID = 4758133818077979879L;
   private static final Logger LOGGER = Logger.getLogger(MgcpCallManager.class);
   
-  private static MgcpServerManager servers;
   private static SipFactory sipFactory;
+  
+  private static String proxyUser;
+  private static String proxyPassword;
+  private static SipURI proxyUri;
+  
+  private static MgcpServerManager servers;
+  
+  private static InterpreterExecutor executor;
+  
+  private static ApplicationsDao applicationsDao;
+  private static IncomingPhoneNumbersDao incomingPhoneNumbersDao;
   
   public MgcpCallManager() {
     super();
   }
   
   @Override public Call createCall(final String from, final String to) throws CallManagerException {
-	return null;
+    final SipURI fromUri = sipFactory.createSipURI(from, proxyUri.getHost());
+    final SipURI toUri = sipFactory.createSipURI(to, proxyUri.getHost());
+    return createCall(fromUri, toUri);
+  }
+  
+  @Override public Call createCall(URI from, URI to) throws CallManagerException {
+    final SipServletRequest invite = invite(from, to);
+    final MgcpServer server = servers.getMediaServer();
+    final MgcpCall call = new MgcpCall(server);
+	invite.getSession().setAttribute("CALL", call);
+	return call;
+  }
+  
+  private SipServletRequest invite(final URI from, final URI to) {
+    final SipApplicationSession application = sipFactory.createApplicationSession();
+    final SipServletRequest invite = sipFactory.createRequest(application, "INVITE", from, to);
+    if(proxyUri != null) {
+      invite.pushRoute(proxyUri);
+    }
+    return invite;
   }
   
   @Override protected final void doAck(final SipServletRequest request) throws ServletException, IOException {
@@ -80,18 +118,34 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
     call.cancel(request);
   }
 
+  @Override protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
+    final SipServletRequest request = response.getRequest();
+    final String method = request.getMethod();
+    if("INVITE".equalsIgnoreCase(method)) {
+      final int status = response.getStatus();
+      if(status == SipServletResponse.SC_UNAUTHORIZED || status == SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED) {
+        final SipServletRequest invite = invite(request.getFrom().getURI(), request.getTo().getURI());
+        final AuthInfo authorization = sipFactory.createAuthInfo();
+        final String realm = response.getChallengeRealms().next(); 
+        authorization.addAuthInfo(status, realm, proxyUser, proxyPassword);
+        invite.addAuthHeader(response, authorization);
+        invite.send();
+      }
+    }
+  }
+
   @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {
 	try {
 	  final IncomingPhoneNumber incomingPhoneNumber = getIncomingPhoneNumber(request);
 	  if(incomingPhoneNumber != null) {
+	    final Application application = getVoiceApplication(incomingPhoneNumber);
 		// Initialize the call.
 	    final MgcpServer server = servers.getMediaServer();
         final MgcpCall call = new MgcpCall(server);
 	    request.getSession().setAttribute("CALL", call);
 	    call.alert(request);
 	    // Hand the call to the interpreter for processing.
-	    final InterpreterExecutor executor = ServiceLocator.getInstance().get(InterpreterExecutor.class);
-	    final RcmlInterpreterContext context = new RcmlInterpreterContext(call);
+	    final RcmlInterpreterContext context = new RcmlInterpreterContext(application, incomingPhoneNumber, call);
 	    executor.submit(context);
 	  } else {
 	    final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
@@ -116,12 +170,18 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   }
   
   private IncomingPhoneNumber getIncomingPhoneNumber(final SipServletRequest invite) {
-    final ServiceLocator services = ServiceLocator.getInstance();
-    final DaoManager daos = services.get(DaoManager.class);
-    final IncomingPhoneNumbersDao dao = daos.getIncomingPhoneNumbersDao();
     final SipURI uri = (SipURI)invite.getTo().getURI();
     final String phoneNumber = uri.getUser();
-    return dao.getIncomingPhoneNumber(phoneNumber);
+    return incomingPhoneNumbersDao.getIncomingPhoneNumber(phoneNumber);
+  }
+  
+  private Application getVoiceApplication(final IncomingPhoneNumber incomingPhoneNumber) {
+	final Sid applicationSid = incomingPhoneNumber.getVoiceApplicationSid();
+	if(applicationSid != null) {
+	  return applicationsDao.getApplication(applicationSid);
+	} else {
+	  return null;
+	}
   }
 
   @Override public final void init(final ServletConfig config) throws ServletException {
@@ -132,7 +192,16 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
     } catch(final BootstrapException exception) {
       throw new ServletException(exception);
     }
-    servers = ServiceLocator.getInstance().get(MgcpServerManager.class);
     sipFactory = (SipFactory)config.getServletContext().getAttribute(SIP_FACTORY);
+    final ServiceLocator services = ServiceLocator.getInstance();
+    executor = services.get(InterpreterExecutor.class);
+    servers = services.get(MgcpServerManager.class);
+    final Configuration configuration = services.get(Configuration.class);
+    proxyUser = configuration.getString("outbound-proxy-user");
+    proxyPassword = configuration.getString("outbound-proxy-password");
+    final String uri = configuration.getString("outbound-proxy-uri");
+    if(uri != null) {
+      proxyUri = sipFactory.createSipURI(null, uri);
+    }
   }
 }

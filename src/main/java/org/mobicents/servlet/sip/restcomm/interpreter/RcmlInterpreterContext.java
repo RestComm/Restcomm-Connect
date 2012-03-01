@@ -25,69 +25,86 @@ import org.apache.http.message.BasicNameValuePair;
 
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
-import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
-import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 
-public final class RcmlInterpreterContext {
+@ThreadSafe public final class RcmlInterpreterContext {
+  private final Application application;
+  private final IncomingPhoneNumber incomingPhoneNumber;
   private final Call call;
-  private URI voiceUrl;
-  private String voiceMethod;
-  private URI voiceFallbackUrl;
-  private String voiceFallbackMethod;
   
-  public RcmlInterpreterContext(final Call call) {
+  private final Sid accountSid;
+  private final String apiVersion;
+  private final URI voiceUrl;
+  private final String voiceMethod;
+  private final URI voiceFallbackUrl;
+  private final String voiceFallbackMethod;
+  
+  public RcmlInterpreterContext(final Application application, final IncomingPhoneNumber incomingPhoneNumber,
+      final Call call) {
     super();
+    this.application = application;
+    this.incomingPhoneNumber = incomingPhoneNumber;
     this.call = call;
-    if("inbound".equals(call.getDirection())); {
-      final ServiceLocator services = ServiceLocator.getInstance();
-      final DaoManager daos = services.get(DaoManager.class);
-      final IncomingPhoneNumbersDao incomingPhoneNumbersDao = daos.getIncomingPhoneNumbersDao();
-      final IncomingPhoneNumber incomingPhoneNumber = incomingPhoneNumbersDao.getIncomingPhoneNumber(call.getRecipient());
-      final Sid voiceApplicationSid = incomingPhoneNumber.getVoiceApplicationSid();
-      if(voiceApplicationSid != null) {
-        final ApplicationsDao applicationsDao = daos.getApplicationsDao();
-        final Application application = applicationsDao.getApplication(voiceApplicationSid);
-        voiceUrl = application.getVoiceUrl();
-        voiceMethod = application.getVoiceMethod();
-        voiceFallbackUrl = application.getVoiceFallbackUrl();
-        voiceFallbackMethod = application.getVoiceFallbackMethod();
-      } else {
-        voiceUrl = incomingPhoneNumber.getVoiceUrl();
-        voiceMethod = incomingPhoneNumber.getVoiceMethod();
-        voiceFallbackUrl = incomingPhoneNumber.getVoiceFallbackUrl();
-        voiceFallbackMethod = incomingPhoneNumber.getVoiceFallbackMethod();
-      }
+    if(application != null) {
+      this.accountSid = application.getAccountSid();
+      this.apiVersion = application.getApiVersion();
+      this.voiceUrl = application.getVoiceUrl();
+      this.voiceMethod = application.getVoiceMethod();
+      this.voiceFallbackUrl = application.getVoiceFallbackUrl();
+      this.voiceFallbackMethod = application.getVoiceFallbackMethod();
+    } else {
+      this.accountSid = incomingPhoneNumber.getAccountSid();
+      this.apiVersion = incomingPhoneNumber.getApiVersion();
+      this.voiceUrl = incomingPhoneNumber.getVoiceUrl();
+      this.voiceMethod = incomingPhoneNumber.getVoiceMethod();
+      this.voiceFallbackUrl = incomingPhoneNumber.getVoiceFallbackUrl();
+      this.voiceFallbackMethod = incomingPhoneNumber.getVoiceFallbackMethod();
     }
   }
   
+  public RcmlInterpreterContext(final Application application, final Call call) {
+    super();
+    this.application = application;
+    this.incomingPhoneNumber = null;
+    this.call = call;
+    this.accountSid = application.getAccountSid();
+    this.apiVersion = application.getApiVersion();
+    this.voiceUrl = application.getVoiceUrl();
+    this.voiceMethod = application.getVoiceMethod();
+    this.voiceFallbackUrl = application.getVoiceFallbackUrl();
+    this.voiceFallbackMethod = application.getVoiceFallbackMethod();
+  }
+  
+  public Sid getAccountSid() {
+    return accountSid;
+  }
+  
+  public String getApiVersion() {
+    return apiVersion;
+  }
+  
+  public Application getApplication() {
+    return application;
+  }
+  
   public IncomingPhoneNumber getIncomingPhoneNumber() {
-    return null;
+    return incomingPhoneNumber;
   }
   
   public Call getCall() {
 	return call;
   }
   
-  public Application getSmsApplication() {
-    return null;
-  }
-  
-  public Application getVoiceApplication() {
-    return null;
-  }
-  
   public List<NameValuePair> getRcmlRequestParameters() {
     final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
     parameters.add(new BasicNameValuePair("CallSid", call.getSid().toString()));
-    //parameters.add(new BasicNameValuePair("AccountSid", call.getAccountSid().toString()));
+    parameters.add(new BasicNameValuePair("AccountSid", accountSid.toString()));
     parameters.add(new BasicNameValuePair("From", call.getOriginator()));
     parameters.add(new BasicNameValuePair("To", call.getRecipient()));
     parameters.add(new BasicNameValuePair("CallStatus", call.getStatus().toString()));
-    //parameters.add(new BasicNameValuePair("ApiVersion", call.getApiVersion()));
+    parameters.add(new BasicNameValuePair("ApiVersion", apiVersion));
     parameters.add(new BasicNameValuePair("Direction", call.getDirection().toString()));
     parameters.add(new BasicNameValuePair("ForwardedFrom", call.getForwardedFrom()));
     parameters.add(new BasicNameValuePair("CallerName", call.getOriginatorName()));

@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
+import javax.servlet.sip.URI;
+
 public interface CallManager {
   public Call createCall(String from, String to) throws CallManagerException;
+  public Call createCall(URI from, URI to) throws CallManagerException;
 }

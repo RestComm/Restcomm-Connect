@@ -156,7 +156,8 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public void dial() throws CallException {
-    
+    assertState(IDLE);
+    direction = Direction.OUTBOUND_DIAL;
   }
   
   public synchronized void established() {
@@ -164,14 +165,10 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     setState(IN_PROGRESS);
     initialInvite.setExpires(240);
     notify();
-    /*
-    final MgcpIvrEndpoint endpoint = session.getIvrEndpoint();
-    endpoint.addObserver(this);
-    remoteEndpoint = endpoint;
-    link = session.createLink(localEndpoint, remoteEndpoint);
-    link.addObserver(this);
-	link.connect(ConnectionMode.Inactive);
-	*/
+  }
+  
+  public synchronized void established(final SipServletRequest initialRequest) {
+    
   }
   
   private void fail(int code) {
