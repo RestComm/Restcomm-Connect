@@ -162,7 +162,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
   }
   
   public synchronized void playRecord(final List<URI> prompts, final URI recordId, final long postSpeechTimer,
-      final long recordingLength, final String endInputKey) {
+      final long recordingLength, final String patterns) {
     assertState(IDLE);
     // Create the signal parameters.
     final AdvancedAudioParametersBuilder builder = new AdvancedAudioParametersBuilder();
@@ -173,7 +173,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     builder.setRecordId(recordId);
     builder.setPostSpeechTimer(postSpeechTimer);
     builder.setRecordingLength(recordingLength);
-    builder.setEndInputKey(endInputKey);
+    builder.setDigitPattern(patterns);
     final String parameters = builder.build();
     // Create the signal.
     final EventName[] signal = new EventName[1];

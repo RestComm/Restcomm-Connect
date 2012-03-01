@@ -13,8 +13,13 @@ import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 
 public abstract class RcmlTagStrategy implements TagStrategy {
+  private final URI silenceAudioFile;
+
   public RcmlTagStrategy() {
     super();
+    final ServiceLocator services = ServiceLocator.getInstance();
+    final Configuration configuration = services.get(Configuration.class);
+    silenceAudioFile = URI.create("file://" + configuration.getString("silence-audio-file"));
   }
   
   protected void answer(final Call call) throws TagStrategyException {
@@ -28,12 +33,9 @@ public abstract class RcmlTagStrategy implements TagStrategy {
   }
   
   protected List<URI> pause(final int seconds) {
-    final ServiceLocator services = ServiceLocator.getInstance();
-    final Configuration configuration = services.get(Configuration.class);
-    final URI uri = URI.create(configuration.getString("silence-audio-file"));
     final List<URI> silence = new ArrayList<URI>();
     for(int count = 1; count <= seconds; count++) {
-      silence.add(uri);
+      silence.add(silenceAudioFile);
     }
     return silence;
   }

@@ -31,8 +31,15 @@ import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Reason;
 
 public final class RejectTagStrategy extends RcmlTagStrategy {
+  private final List<URI> rejectAudioFile;
+  
   public RejectTagStrategy() {
     super();
+    final ServiceLocator services = ServiceLocator.getInstance();
+    final Configuration configuration = services.get(Configuration.class);
+    final URI uri = URI.create("file://" + configuration.getString("reject-audio-file"));
+    rejectAudioFile = new ArrayList<URI>();
+    rejectAudioFile.add(uri);
   }
   
   @Override public void execute(final RcmlInterpreter interpreter,
@@ -42,18 +49,13 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
       final String reason = tag.getAttribute(Reason.NAME).getValue();
       if(reason.equals(Reason.REJECTED)) {
         answer(call);
-        final ServiceLocator services = ServiceLocator.getInstance();
-        final Configuration configuration = services.get(Configuration.class);
-        final URI uri = URI.create(configuration.getString("reject-audio-file"));
-        final List<URI> announcement = new ArrayList<URI>();
-        announcement.add(uri);
         try {
-          call.play(announcement, 1);
+          call.play(rejectAudioFile, 1);
         } catch(final CallException exception) {
           interpreter.failed();
           final StringBuilder buffer = new StringBuilder();
           buffer.append("There was an error while playing the rejection announcement. ");
-          buffer.append("The announcement is located @ ").append(uri.toString());
+          buffer.append("The announcement is located @ ").append(rejectAudioFile.toString());
           throw new TagStrategyException(buffer.toString(), exception);
         }
         call.hangup();

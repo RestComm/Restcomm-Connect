@@ -246,21 +246,21 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     } catch(final InterruptedException ignored) { }
   }
   
-  @Override public synchronized void playAndCollect(final List<URI> announcements, final String endInputKey, final int maxNumberOfDigits,
-      int timeout) {
+  @Override public synchronized void playAndCollect(final List<URI> prompts, final int maxNumberOfDigits, final int minNumberOfDigits,
+	      final long firstDigitTimer, final long interDigitTimer, final String endInputKey) {
     assertState(IN_PROGRESS);
     final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
-    ivr.playCollect(announcements, maxNumberOfDigits, maxNumberOfDigits, timeout, timeout, endInputKey);
+    ivr.playCollect(prompts, maxNumberOfDigits, minNumberOfDigits, firstDigitTimer, interDigitTimer, endInputKey);
     try {
       wait();
     } catch(final InterruptedException ignored) { }
   }
   
   @Override public synchronized void playAndRecord(final List<URI> prompts, final URI recordId, final long postSpeechTimer,
-      final long recordingLength, final String endInputKey) throws CallException {
+      final long recordingLength, final String patterns) throws CallException {
   	assertState(IN_PROGRESS);
   	final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
-  	ivr.playRecord(prompts, recordId, postSpeechTimer, recordingLength, endInputKey);
+  	ivr.playRecord(prompts, recordId, postSpeechTimer, recordingLength, patterns);
   	try {
   	  wait();
   	} catch(final InterruptedException ignored) { return; }

@@ -57,7 +57,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
     final FinishOnKey finishOnKey = new FinishOnKey();
     finishOnKey.setValue("#");
     final NumDigits numDigits = new NumDigits();
-    numDigits.setIntegerValue(-1);
+    numDigits.setIntegerValue(Short.MAX_VALUE);
     try {
       addAttribute(method);
       addAttribute(timeout);

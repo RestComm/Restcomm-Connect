@@ -58,7 +58,7 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
       final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
       final int numDigits = ((IntegerAttribute)tag.getAttribute(NumDigits.NAME)).getIntegerValue();
       final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
-      call.playAndCollect(announcements, finishOnKey, numDigits, timeout);
+      call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
       final String digits = call.getDigits();
       // Redirect to action URI.
       final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();

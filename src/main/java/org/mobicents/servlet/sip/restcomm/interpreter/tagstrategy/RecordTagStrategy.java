@@ -43,15 +43,15 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
 
 public final class RecordTagStrategy extends RcmlTagStrategy {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
-  private final String basePath;
-  private final String baseUri;
+  private final String baseRecordingsPath;
+  private final String baseRecordingsUri;
   
   public RecordTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     final Configuration configuration = services.get(Configuration.class);
-    basePath = addSuffix(configuration.getString("recordings-basePath"), "/");
-    baseUri = addSuffix(configuration.getString("recordings-uri"), "/");
+    baseRecordingsPath = addSuffix(configuration.getString("recordings-baseRecordingsPath"), "/");
+    baseRecordingsUri = addSuffix(configuration.getString("recordings-uri"), "/");
   }
   
   private String addSuffix(final String text, final String suffix) {
@@ -103,13 +103,13 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
   
   private URI toPath(final Sid sid) {
     final StringBuilder path = new StringBuilder();
-    path.append(basePath).append(sid.toString()).append(".wav");
+    path.append("file://").append(baseRecordingsPath).append(sid.toString()).append(".wav");
     return URI.create(path.toString());
   }
   
   private String toUri(final Sid sid) {
     final StringBuilder uri = new StringBuilder();
-    uri.append(baseUri).append(sid.toString()).append(".wav");
+    uri.append(baseRecordingsUri).append(sid.toString()).append(".wav");
     return uri.toString();
   }
 }
