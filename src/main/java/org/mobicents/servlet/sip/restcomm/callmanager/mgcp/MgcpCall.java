@@ -16,15 +16,16 @@ import javax.servlet.sip.SipURI;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
-import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 
-public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver, MgcpLinkObserver {
+@ThreadSafe public final class MgcpCall extends FiniteStateMachine
+    implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver, MgcpLinkObserver {
   private static final Logger LOGGER = Logger.getLogger(MgcpCall.class);
   // Call states.
   private static final State IDLE = new State(Status.IDLE.toString());
@@ -52,16 +53,17 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   
   private MgcpServer server;
   private MgcpSession session;
-  private MgcpConnection connection;
-  private MgcpLink link;
-  private MgcpEndpoint localEndpoint;
-  private MgcpEndpoint remoteEndpoint;
+  private MgcpPacketRelayEndpoint relayEndpoint;
+  private MgcpConferenceEndpoint cnfEndpoint;
+  private MgcpIvrEndpoint ivrEndpoint;
+  private MgcpConnection userAgentConnection;
+  private MgcpConnection relayOutboundConnection;
+  private MgcpConnection relayInboundConnection;
+  private MgcpLink ivrLink;
   
   private Sid sid;
   private Direction direction;
-  
   private String digits;
-  
   private List<CallObserver> observers;
   
   public MgcpCall(final MgcpServer server) {
@@ -105,17 +107,16 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   @Override public synchronized void answer() throws CallException {
     assertState(RINGING);
     try {
-      // Try to negotiate a media connection with a packet relay end point.
-      localEndpoint = session.getIvrEndpoint();
-      ((MgcpIvrEndpoint)localEndpoint).addObserver(this);
+      // Try to negotiate a media userAgentConnection with a packet relay end point.
+      relayEndpoint = session.getPacketRelayEndpoint();
       final byte[] offer = initialInvite.getRawContent();
       final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
-      connection = session.createConnection(localEndpoint, remoteDescriptor);
-      connection.addObserver(this);
-      connection.connect(ConnectionMode.SendRecv);
+      userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
+      userAgentConnection.addObserver(this);
+      userAgentConnection.connect(ConnectionMode.SendRecv);
       wait();
       // Send the response back to the caller.
-      final byte[] answer = connection.getLocalDescriptor().toString().getBytes();
+      final byte[] answer = userAgentConnection.getLocalDescriptor().toString().getBytes();
       final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
       ok.setContent(answer, "application/sdp");
       ok.send();
@@ -162,9 +163,9 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   
   public synchronized void established() {
     assertState(RINGING);
-    setState(IN_PROGRESS);
-    initialInvite.setExpires(240);
-    notify();
+    relayOutboundConnection = session.createConnection(relayEndpoint);
+    relayOutboundConnection.addObserver(this);
+    relayOutboundConnection.connect(ConnectionMode.SendRecv);
   }
   
   public synchronized void established(final SipServletRequest initialRequest) {
@@ -234,33 +235,28 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     
   }
 
-  @Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
+  @Override public synchronized void play(final List<URI> announcements, final int iterations)
+      throws CallException, InterruptedException {
     assertState(IN_PROGRESS);
-    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
+    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)ivrEndpoint;
     ivr.play(announcements, iterations);
-    try {
-      wait();
-    } catch(final InterruptedException ignored) { }
+    wait();
   }
   
   @Override public synchronized void playAndCollect(final List<URI> prompts, final int maxNumberOfDigits, final int minNumberOfDigits,
-	      final long firstDigitTimer, final long interDigitTimer, final String endInputKey) {
+	      final long firstDigitTimer, final long interDigitTimer, final String endInputKey) throws CallException, InterruptedException {
     assertState(IN_PROGRESS);
-    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
+    final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)ivrEndpoint;
     ivr.playCollect(prompts, maxNumberOfDigits, minNumberOfDigits, firstDigitTimer, interDigitTimer, endInputKey);
-    try {
-      wait();
-    } catch(final InterruptedException ignored) { }
+    wait();
   }
   
   @Override public synchronized void playAndRecord(final List<URI> prompts, final URI recordId, final long postSpeechTimer,
-      final long recordingLength, final String patterns) throws CallException {
+      final long recordingLength, final String patterns) throws CallException, InterruptedException {
   	assertState(IN_PROGRESS);
-  	final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)localEndpoint;
+  	final MgcpIvrEndpoint ivr = (MgcpIvrEndpoint)ivrEndpoint;
   	ivr.playRecord(prompts, recordId, postSpeechTimer, recordingLength, patterns);
-  	try {
-  	  wait();
-  	} catch(final InterruptedException ignored) { return; }
+  	wait();
   }
 
   @Override public synchronized void reject() {
@@ -286,7 +282,10 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public synchronized void connected(final MgcpLink link) {
-    
+	assertState(RINGING);
+	initialInvite.setExpires(240);
+	setState(IN_PROGRESS);
+    notify();
   }
 
   @Override public void disconnected(final MgcpLink link) {
@@ -306,12 +305,27 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
     notify();
   }
 
-  @Override public void halfOpen(final MgcpConnection connection) {
-    
+  @Override public synchronized void halfOpen(final MgcpConnection connection) {
+    if(connection == relayOutboundConnection) {
+      cnfEndpoint = session.getConferenceEndpoint();
+      relayInboundConnection = session.createConnection(cnfEndpoint, relayOutboundConnection.getLocalDescriptor());
+      relayInboundConnection.addObserver(this);
+      relayInboundConnection.connect(ConnectionMode.Confrnce);
+    }
   }
 
   @Override public synchronized void open(final MgcpConnection connection) {
-    notify();
+    if(connection == relayInboundConnection) {
+      relayOutboundConnection.modify(connection.getLocalDescriptor());
+    } else if(connection == relayOutboundConnection) {
+      ivrEndpoint = session.getIvrEndpoint();
+      ivrEndpoint.addObserver(this);
+      ivrLink = session.createLink(ivrEndpoint, cnfEndpoint);
+      ivrLink.addObserver(this);
+      ivrLink.connect(ConnectionMode.Confrnce);
+    } else if(connection == userAgentConnection) {
+      notify();
+    }
   }
 
   @Override public void disconnected(final MgcpConnection connection) {
@@ -319,7 +333,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   }
 
   @Override public synchronized void failed(final MgcpConnection connection) {
-	// The connection to the packet relay end point failed.
+	// The userAgentConnection to the packet relay end point failed.
 	setState(FAILED);
 	final StringBuilder buffer = new StringBuilder();
   	buffer.append("The call to recipient ").append(getRecipient())
@@ -329,7 +343,7 @@ public final class MgcpCall extends FiniteStateMachine implements Call, MgcpConn
   	notify();
   }
 
-  @Override public synchronized void modified(ConnectionDescriptor descriptor, MgcpLink link) {
+  @Override public synchronized void modified(MgcpLink link) {
     
   }
 

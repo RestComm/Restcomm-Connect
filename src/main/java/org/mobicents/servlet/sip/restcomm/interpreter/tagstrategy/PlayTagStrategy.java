@@ -58,7 +58,7 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("There was an error while playing the file located @ ").append(text);
         throw new TagStrategyException(buffer.toString(), exception);
-      }
+      } catch(final InterruptedException ignored) { return; }
     }
   }
 }

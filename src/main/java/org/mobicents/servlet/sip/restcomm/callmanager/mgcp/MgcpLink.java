@@ -46,8 +46,13 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   
   private ConnectionIdentifier firstConnectionId;
   private ConnectionIdentifier secondConnectionId;
+  private ConnectionDescriptor firstConnectionDescriptor;
+  private ConnectionDescriptor secondConnectionDescriptor;
   
   private final List<MgcpLinkObserver> observers;
+  
+  private volatile boolean modifyingFirstConnection;
+  private volatile boolean modifyingSecondConnection;
   
   public MgcpLink(final MgcpServer server, final MgcpSession session, final MgcpEndpoint firstEndpoint,
       final MgcpEndpoint secondEndpoint) {
@@ -61,6 +66,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     this.firstEndpoint = firstEndpoint;
     this.secondEndpoint = secondEndpoint;
     this.observers = Collections.synchronizedList(new ArrayList<MgcpLinkObserver>());
+    this.modifyingFirstConnection = false;
+    this.modifyingSecondConnection = false;
   }
   
   public void addObserver(final MgcpLinkObserver observer) {
@@ -119,18 +126,36 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
   }
   
-  private void fireModified(final ConnectionDescriptor descriptor) {
+  private void fireModified() {
     for(final MgcpLinkObserver observer : observers) {
-      observer.modified(descriptor, this);
+      observer.modified(this);
     }
   }
   
-  public void modifyFirstConnection(final ConnectionMode connectionMode, final ConnectionDescriptor remoteDescriptor) {
-    modify(firstConnectionId, firstEndpoint.getId(), connectionMode, remoteDescriptor);
+  public ConnectionDescriptor getFirstConnectionDescriptor() {
+    return firstConnectionDescriptor;
   }
   
-  public void modifySecondConnection(final ConnectionMode connectionMode, final ConnectionDescriptor remoteDescriptor) {
-    modify(secondConnectionId, secondEndpoint.getId(), connectionMode, remoteDescriptor);
+  public ConnectionDescriptor getSecondConnectionDescriptor() {
+    return secondConnectionDescriptor;
+  }
+  
+  public void modifyFirstConnection(final ConnectionMode connectionMode, final ConnectionDescriptor remoteDescriptor) throws MgcpLinkException {
+    if(!modifyingFirstConnection) {
+      modify(firstConnectionId, firstEndpoint.getId(), connectionMode, remoteDescriptor);
+      modifyingFirstConnection = true;
+    } else {
+      throw new MgcpLinkException("Invalid state this connection is already being modified.");
+    }
+  }
+  
+  public void modifySecondConnection(final ConnectionMode connectionMode, final ConnectionDescriptor remoteDescriptor) throws MgcpLinkException {
+    if(!modifyingSecondConnection) {
+      modify(secondConnectionId, secondEndpoint.getId(), connectionMode, remoteDescriptor);
+      modifyingSecondConnection = true;
+    } else {
+      throw new MgcpLinkException("Invalid state this connection is already being modified.");
+    }
   }
   
   private void modify(final ConnectionIdentifier connectionId, final EndpointIdentifier endpointId,
@@ -164,12 +189,20 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     firstEndpoint.updateId(response.getSpecificEndpointIdentifier());
     secondConnectionId = response.getSecondConnectionIdentifier();
     secondEndpoint.updateId(response.getSecondEndpointIdentifier());
+    firstConnectionDescriptor = response.getLocalConnectionDescriptor();
     setState(CONNECTED);
     fireConnected();
   }
   
   private void modified(final ModifyConnectionResponse response) {
-    fireModified(response.getLocalConnectionDescriptor());
+	if(modifyingFirstConnection) {
+	  firstConnectionDescriptor = response.getLocalConnectionDescriptor();
+	  modifyingFirstConnection = false;
+	} else if(modifyingSecondConnection) {
+	  secondConnectionDescriptor = response.getLocalConnectionDescriptor();
+	  modifyingSecondConnection = false;
+	}
+    fireModified();
   }
 
   @Override public void processMgcpResponseEvent(final JainMgcpResponseEvent response) {

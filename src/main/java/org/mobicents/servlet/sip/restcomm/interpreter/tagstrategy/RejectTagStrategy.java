@@ -57,7 +57,7 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
           buffer.append("There was an error while playing the rejection announcement. ");
           buffer.append("The announcement is located @ ").append(rejectAudioFile.toString());
           throw new TagStrategyException(buffer.toString(), exception);
-        }
+        } catch(final InterruptedException ignored) { return; }
         call.hangup();
       } else if(reason.equals(Reason.BUSY)) {
         call.reject();

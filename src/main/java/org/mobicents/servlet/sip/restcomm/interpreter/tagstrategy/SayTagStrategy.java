@@ -60,7 +60,7 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
 		buffer.append("There was an error while saying ").append(text).append(" by a ");
 		buffer.append(language).append(" speaking ").append(gender).append(".");
 		throw new TagStrategyException(buffer.toString(), exception);
-	  }
+	  } catch(final InterruptedException ignored) { return; }
     }
   }
 }

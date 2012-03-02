@@ -196,6 +196,9 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
     final ServiceLocator services = ServiceLocator.getInstance();
     executor = services.get(InterpreterExecutor.class);
     servers = services.get(MgcpServerManager.class);
+    final DaoManager daos = services.get(DaoManager.class);
+    applicationsDao = daos.getApplicationsDao();
+    incomingPhoneNumbersDao = daos.getIncomingPhoneNumbersDao();
     final Configuration configuration = services.get(Configuration.class);
     proxyUser = configuration.getString("outbound-proxy-user");
     proxyPassword = configuration.getString("outbound-proxy-password");
