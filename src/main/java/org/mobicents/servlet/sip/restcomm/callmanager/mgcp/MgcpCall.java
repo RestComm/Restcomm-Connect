@@ -4,7 +4,6 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
-import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 
 @ThreadSafe public final class MgcpCall extends FiniteStateMachine
     implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
@@ -57,14 +55,11 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
   private MgcpPacketRelayEndpoint relayEndpoint;
   private MgcpConferenceEndpoint cnfEndpoint;
   private MgcpIvrEndpoint ivrEndpoint;
-  private MgcpConferenceEndpoint remoteEndpoint;
   private MgcpConnection userAgentConnection;
   private MgcpConnection relayOutboundConnection;
   private MgcpConnection relayInboundConnection;
   private MgcpConnection ivrOutboundConnection;
   private MgcpConnection ivrInboundConnection;
-  private MgcpConnection remoteOutboundConnection;
-  private MgcpConnection remoteInboundConnection;
   
   private Sid sid;
   private Direction direction;
@@ -115,7 +110,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 	}
   }
   
-  @Override public synchronized void answer() throws CallException {
+  @Override public synchronized void answer() throws CallException, InterruptedException {
     assertState(RINGING);
     try {
       // Try to negotiate media with a packet relay end point.
@@ -125,19 +120,23 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
       userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
       userAgentConnection.addObserver(this);
       userAgentConnection.connect(ConnectionMode.SendRecv);
-      wait();
+    } catch(final IOException exception) {
+      LOGGER.error(exception);
+      throw new CallException(exception);
+    }
+    wait();
+    try {
       // Send the response back to the caller.
       final byte[] answer = userAgentConnection.getLocalDescriptor().toString().getBytes();
       final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
       ok.setContent(answer, "application/sdp");
       ok.send();
-      // Wait for an acknowledgment that the call is established.
-      wait();
-    } catch(final Exception exception) {
+    } catch(final IOException exception) {
       fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
       LOGGER.error(exception);
       throw new CallException(exception);
     }
+    wait();
   }
   
   public synchronized void bye(final SipServletRequest request) throws IOException {
@@ -230,13 +229,13 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
   @Override public String getForwardedFrom() {
     return null;
   }
+  
+  public MgcpEndpoint getJoinableEndpoint() {
+    return cnfEndpoint;
+  }
 
   @Override public Sid getSid() {
     return sid;
-  }
-  
-  public SipServletRequest getInitialInvite() {
-    return initialInvite;
   }
 
   @Override public String getOriginator() {
@@ -261,14 +260,6 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
     assertState(IN_PROGRESS);
     terminate();
 	setState(COMPLETED);
-  }
-
-  @Override public synchronized void join(final Conference conference) throws CallException {
-    
-  }
-
-  @Override public synchronized void leave(final Conference conference) throws CallException {
-    
   }
 
   @Override public synchronized void play(final List<URI> announcements, final int iterations)
@@ -376,11 +367,10 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
   }
 
   @Override public synchronized void disconnected(final MgcpConnection connection) {
-    
+    // Nothing to do.
   }
 
   @Override public synchronized void failed(final MgcpConnection connection) {
-	// The userAgentConnection to the packet relay end point failed.
 	setState(FAILED);
 	final StringBuilder buffer = new StringBuilder();
   	buffer.append("The call to recipient ").append(getRecipient())
@@ -391,6 +381,6 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
   }
 
   @Override public synchronized void modified(final MgcpConnection connection) {
-    
+    // Nothing to do.
   }
 }

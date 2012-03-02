@@ -21,9 +21,7 @@ import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
@@ -34,7 +32,6 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.URI;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.BootstrapException;
@@ -58,7 +55,6 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
  */
 public final class MgcpCallManager extends SipServlet implements CallManager {
   private static final long serialVersionUID = 4758133818077979879L;
-  private static final Logger LOGGER = Logger.getLogger(MgcpCallManager.class);
   
   private static SipFactory sipFactory;
   

@@ -21,6 +21,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
+import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -30,11 +31,13 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.CallerId;
 
 public final class DialTagStrategy extends RcmlTagStrategy {
   private final CallManager callManager;
+  private final ConferenceCenter conferenceCenter;
   
   public DialTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     callManager = services.get(CallManager.class);
+    conferenceCenter = services.get(ConferenceCenter.class);
   }
   
   @Override public void execute(final RcmlInterpreter interpreter,
@@ -48,6 +51,7 @@ public final class DialTagStrategy extends RcmlTagStrategy {
       // Dial out.
       final Call outboundCall = callManager.createCall(from, to);
       outboundCall.dial();
+      
       outboundCall.hangup();
     } catch(final CallException exception) {
       final StringBuilder buffer = new StringBuilder();

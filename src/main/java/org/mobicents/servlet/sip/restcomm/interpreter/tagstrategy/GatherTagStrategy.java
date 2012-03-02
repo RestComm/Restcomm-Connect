@@ -51,7 +51,9 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-    answer(call);
+    try {
+      answer(call);
+    } catch(final InterruptedException ignored) { return; }
     try {
 	  // Collect some digits.
 	  final List<URI> announcements = getAnnouncements(tag.getChildren());

@@ -38,7 +38,9 @@ public final class SmsTagStrategy extends RcmlTagStrategy {
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
 	// Try to answer the call if it hasn't been done so already.
 	final Call call = context.getCall();
-	answer(call);
+	try {
+	  answer(call);
+	} catch(final InterruptedException ignored) { return; }
 	// Send the text message.
 	final String body = tag.getText();
 	if(body != null) {

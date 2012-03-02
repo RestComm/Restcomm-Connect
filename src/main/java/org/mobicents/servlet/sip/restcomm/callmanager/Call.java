@@ -23,7 +23,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 
 public interface Call {
   public void addObserver(CallObserver observer);
-  public void answer() throws CallException;
+  public void answer() throws CallException, InterruptedException;
   public void dial() throws CallException, InterruptedException ;
   public String getDigits();
   public Direction getDirection();
@@ -34,8 +34,6 @@ public interface Call {
   public String getRecipient();
   public Status getStatus();
   public void hangup();
-  public void join(Conference conference) throws CallException;
-  public void leave(Conference conference) throws CallException;
   public void play(List<URI> announcements, int iterations) throws CallException, InterruptedException;
   public void playAndCollect(List<URI> prompts, int maxNumberOfDigits, int minNumberOfDigits,
       long firstDigitTimer, long interDigitTimer, String endInputKey) throws CallException, InterruptedException;

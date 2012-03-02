@@ -39,7 +39,9 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
 	final Call call = context.getCall();
-    answer(call);
+	try {
+      answer(call);
+	} catch(final InterruptedException ignored) { return; }
     final String text = tag.getText();
     if(text != null) {
       final String gender = tag.getAttribute(Voice.NAME).getValue();

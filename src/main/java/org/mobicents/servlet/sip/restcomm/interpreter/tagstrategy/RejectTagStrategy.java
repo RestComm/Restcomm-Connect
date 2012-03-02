@@ -48,8 +48,8 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
     if(Call.Status.RINGING == call.getStatus()) {
       final String reason = tag.getAttribute(Reason.NAME).getValue();
       if(reason.equals(Reason.REJECTED)) {
-        answer(call);
-        try {
+    	try {
+    	  answer(call);
           call.play(rejectAudioFile, 1);
         } catch(final CallException exception) {
           interpreter.failed();

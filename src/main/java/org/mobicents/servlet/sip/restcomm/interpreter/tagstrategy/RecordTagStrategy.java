@@ -69,7 +69,9 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-    answer(call);
+    try {
+      answer(call);
+    } catch(final InterruptedException ignored) { return; }
     try {
       final boolean playBeep = ((BooleanAttribute)tag.getAttribute(PlayBeep.NAME)).getBooleanValue();
       if(playBeep) {

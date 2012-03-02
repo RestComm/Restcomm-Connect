@@ -34,7 +34,9 @@ public final class RedirectTagStrategy extends RcmlTagStrategy {
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
-    answer(call);
+    try {
+      answer(call);
+    } catch(final InterruptedException ignored) { return; }
     // Redirect the interpreter to the new RCML resource.
     final String text = tag.getText();
     if(text != null) {

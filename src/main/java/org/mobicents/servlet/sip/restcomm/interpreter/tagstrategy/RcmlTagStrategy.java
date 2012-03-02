@@ -22,7 +22,7 @@ public abstract class RcmlTagStrategy implements TagStrategy {
     silenceAudioFile = URI.create("file://" + configuration.getString("silence-audio-file"));
   }
   
-  protected void answer(final Call call) throws TagStrategyException {
+  protected void answer(final Call call) throws TagStrategyException, InterruptedException {
 	try {
       if(Call.Status.RINGING == call.getStatus()) {
         call.answer();
