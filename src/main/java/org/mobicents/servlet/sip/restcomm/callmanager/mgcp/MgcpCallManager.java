@@ -86,7 +86,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   @Override public Call createCall(URI from, URI to) throws CallManagerException {
     final SipServletRequest invite = invite(from, to);
     final MgcpServer server = servers.getMediaServer();
-    final MgcpCall call = new MgcpCall(server);
+    final MgcpCall call = new MgcpCall(invite, server);
 	invite.getSession().setAttribute("CALL", call);
 	return call;
   }
@@ -129,6 +129,12 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
         final String realm = response.getChallengeRealms().next(); 
         authorization.addAuthInfo(status, realm, proxyUser, proxyPassword);
         invite.addAuthHeader(response, authorization);
+        final SipServletRequest initialInvite = response.getRequest();
+        if(initialInvite.getContentLength() > 0) {
+          invite.setContent(initialInvite.getContent(), initialInvite.getContentType());
+        }
+        final Call call = (Call)initialInvite.getSession().getAttribute("CALL");
+        invite.getSession().setAttribute("CALL", call);
         invite.send();
       }
     }
@@ -161,7 +167,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 	final SipSession session = response.getSession();
 	if(request.getMethod().equals("INVITE") && response.getStatus() == SipServletResponse.SC_OK) {
 	  final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
-	  
+	  call.established(response.getRequest(), response);
 	}
   }
 

@@ -24,7 +24,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 public interface Call {
   public void addObserver(CallObserver observer);
   public void answer() throws CallException;
-  public void dial() throws CallException;
+  public void dial() throws CallException, InterruptedException ;
   public String getDigits();
   public Direction getDirection();
   public String getForwardedFrom();
@@ -42,6 +42,7 @@ public interface Call {
   public void playAndRecord(List<URI> prompts, URI recordId, long postSpeechTimer,
       long recordingLength, String patterns) throws CallException, InterruptedException;
   public void reject();
+  public void removeObserver(CallObserver observer);
   
   public enum Direction {
     INBOUND("inbound"),
