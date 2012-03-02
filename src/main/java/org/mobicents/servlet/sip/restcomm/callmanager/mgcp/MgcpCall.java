@@ -59,7 +59,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
   private MgcpConnection userAgentConnection;
   private MgcpConnection relayOutboundConnection;
   private MgcpConnection relayInboundConnection;
-  private MgcpLink ivrLink;
+  private MgcpConnection ivrOutboundConnection;
+  private MgcpConnection ivrInboundConnection;
   
   private Sid sid;
   private Direction direction;
@@ -282,10 +283,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
   }
 
   @Override public synchronized void connected(final MgcpLink link) {
-	assertState(RINGING);
-	initialInvite.setExpires(240);
-	setState(IN_PROGRESS);
-    notify();
+	
   }
 
   @Override public void disconnected(final MgcpLink link) {
@@ -308,21 +306,32 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
   @Override public synchronized void halfOpen(final MgcpConnection connection) {
     if(connection == relayOutboundConnection) {
       cnfEndpoint = session.getConferenceEndpoint();
-      relayInboundConnection = session.createConnection(cnfEndpoint, relayOutboundConnection.getLocalDescriptor());
+      relayInboundConnection = session.createConnection(cnfEndpoint, connection.getLocalDescriptor());
       relayInboundConnection.addObserver(this);
       relayInboundConnection.connect(ConnectionMode.Confrnce);
+    } else if(connection == ivrOutboundConnection) {
+      ivrInboundConnection = session.createConnection(cnfEndpoint, connection.getLocalDescriptor());
+      ivrInboundConnection.addObserver(this);
+      ivrInboundConnection.connect(ConnectionMode.Confrnce);
     }
   }
 
   @Override public synchronized void open(final MgcpConnection connection) {
     if(connection == relayInboundConnection) {
       relayOutboundConnection.modify(connection.getLocalDescriptor());
-    } else if(connection == relayOutboundConnection) {
+    } if(connection == relayOutboundConnection) {
       ivrEndpoint = session.getIvrEndpoint();
       ivrEndpoint.addObserver(this);
-      ivrLink = session.createLink(ivrEndpoint, cnfEndpoint);
-      ivrLink.addObserver(this);
-      ivrLink.connect(ConnectionMode.Confrnce);
+      ivrOutboundConnection = session.createConnection(ivrEndpoint);
+      ivrOutboundConnection.addObserver(this);
+      ivrOutboundConnection.connect(ConnectionMode.SendRecv);
+    } else if(connection == ivrInboundConnection) {
+      ivrOutboundConnection.modify(connection.getLocalDescriptor());
+    } if(connection == ivrOutboundConnection) {
+      assertState(RINGING);
+      initialInvite.setExpires(240);
+      setState(IN_PROGRESS);
+      notify(); 
     } else if(connection == userAgentConnection) {
       notify();
     }
