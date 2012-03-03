@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
+import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
@@ -81,10 +82,11 @@ public final class Bootstrapper {
     try {
       services.set(Configuration.class, configuration.subset("runtime-settings"));
       services.set(InterpreterExecutor.class, new InterpreterExecutor());
-      services.set(MgcpServerManager.class, getMgcpServerManager(configuration));
+      final MgcpServerManager serverManager = getMgcpServerManager(configuration);
+      services.set(MgcpServerManager.class, serverManager);
       final CallManager callManager = (CallManager)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager");
       services.set(CallManager.class, callManager);
-      // services.set(ConferenceCenter.class, getConferenceCenter(configuration));
+      services.set(ConferenceCenter.class, getConferenceCenter(serverManager));
       services.set(DaoManager.class, getDaoManager(configuration));
       services.set(SmsAggregator.class, getSmsAggregator(configuration));
       services.set(SpeechSynthesizer.class, getSpeechSynthesizer(configuration));
@@ -101,8 +103,8 @@ public final class Bootstrapper {
 	return mgcpServerManager;
   }
   
-  private static ConferenceCenter getConferenceCenter(final Configuration configuration) {
-    return null;
+  private static ConferenceCenter getConferenceCenter(final MgcpServerManager serverManager) {
+    return new MgcpConferenceCenter(serverManager);
   }
   
   private static DaoManager getDaoManager(final Configuration configuration) throws ObjectInstantiationException {

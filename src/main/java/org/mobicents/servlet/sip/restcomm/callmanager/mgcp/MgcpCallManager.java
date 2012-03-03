@@ -48,7 +48,6 @@ import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
-import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -147,8 +146,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 	    request.getSession().setAttribute("CALL", call);
 	    call.alert(request);
 	    // Hand the call to the interpreter for processing.
-	    final RcmlInterpreterContext context = new RcmlInterpreterContext(application, incomingPhoneNumber, call);
-	    executor.submit(context);
+	    executor.submit(application, incomingPhoneNumber, call);
 	  } else {
 	    final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
 	    notFound.send();

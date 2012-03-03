@@ -17,5 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
 public interface Conference {
+  public void addCall(final Call call) throws InterruptedException;
   public String getName();
+  public void removeCall(final Call call) throws InterruptedException;
 }

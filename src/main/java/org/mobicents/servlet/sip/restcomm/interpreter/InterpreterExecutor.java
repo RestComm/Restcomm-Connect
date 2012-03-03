@@ -4,7 +4,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.mobicents.servlet.sip.restcomm.Application;
+import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
+import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 
 public final class InterpreterExecutor implements LifeCycle {
   private final ExecutorService executor;
@@ -27,7 +30,9 @@ public final class InterpreterExecutor implements LifeCycle {
     }
   }
   
-  public void submit(final RcmlInterpreterContext context) throws InterpreterException {
+  public void submit(final Application application, final IncomingPhoneNumber incomingPhoneNumber, final Call call)
+      throws InterpreterException {
+	final RcmlInterpreterContext context = new RcmlInterpreterContext(application, incomingPhoneNumber, call);
     final RcmlInterpreter interpreter = new RcmlInterpreter(context);
     interpreter.initialize();
     executor.submit(interpreter);

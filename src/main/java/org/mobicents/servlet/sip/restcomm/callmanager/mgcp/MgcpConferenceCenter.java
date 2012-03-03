@@ -7,7 +7,6 @@ import java.util.Set;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
-import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceException;
 
 @ThreadSafe public class MgcpConferenceCenter implements ConferenceCenter {
   private final MgcpServerManager serverManager;
@@ -19,8 +18,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceException;
     this.conferences = new HashMap<String, MgcpConference>();
   }
   
-  @Override public Conference getConference(final String name)
-      throws ConferenceException {
+  @Override public Conference getConference(final String name) {
     MgcpConference conference = conferences.get(name);
     if(conference == null) {
       synchronized(this) {
