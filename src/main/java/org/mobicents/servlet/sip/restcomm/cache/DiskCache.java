@@ -26,7 +26,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -37,7 +36,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
  */
 @ThreadSafe public final class DiskCache {
   private final String location;
-  private final Map<String, Lock> locks;
+  private final Map<String, ReentrantLock> locks;
   
   public DiskCache(final String location) throws IllegalArgumentException {
     super();
@@ -50,7 +49,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
       throw new IllegalArgumentException(location + " is not a valid cache location.");
     }
     this.location = temp;
-    this.locks = new ConcurrentHashMap<String, Lock>();
+    this.locks = new ConcurrentHashMap<String, ReentrantLock>();
   }
   
   private String buildPath(final String key, final String extension) {
@@ -92,6 +91,18 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
     return path.substring(path.lastIndexOf(".") + 1);
   }
   
+  private ReentrantLock getLock(final File file) {
+    final String key = file.getName();
+    ReentrantLock lock = locks.get(key);
+    synchronized(locks) {
+      if(lock == null) {
+        lock = new ReentrantLock();
+        locks.put(key, lock);
+      }
+    }
+    return lock;
+  }
+  
   public URI put(final String key, final URI uri) throws IOException {
 	final String extension = getFileExtension(uri);
 	final String path = buildPath(key, extension);
@@ -99,8 +110,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
     if(file.exists()) {
 	  return toUri(path);
     } else {
-      final Lock lock = new ReentrantLock();
-      locks.put(file.toString(), lock);
+      final ReentrantLock lock = getLock(file);
       lock.lock();
       if(!file.exists()) {
         try {
@@ -108,8 +118,11 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
           return put(data, file);
         } finally {
           lock.unlock();
+          removeLock(lock);
         }
       } else {
+    	lock.unlock();
+    	removeLock(lock);
         return toUri(path);
       }
     }
@@ -140,6 +153,12 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
       }
       // Close the input stream.
       data.close();
+    }
+  }
+  
+  private void removeLock(final ReentrantLock lock) {
+    if(!lock.hasQueuedThreads()) {
+      locks.remove(lock);
     }
   }
   
