@@ -22,10 +22,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
@@ -35,6 +37,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
  */
 @ThreadSafe public final class DiskCache {
   private final String location;
+  private final Map<String, Lock> locks;
   
   public DiskCache(final String location) throws IllegalArgumentException {
     super();
@@ -47,6 +50,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
       throw new IllegalArgumentException(location + " is not a valid cache location.");
     }
     this.location = temp;
+    this.locks = new ConcurrentHashMap<String, Lock>();
   }
   
   private String buildPath(final String key, final String extension) {
@@ -93,22 +97,30 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 	final String path = buildPath(key, extension);
 	final File file = new File(path);
     if(file.exists()) {
-      return toUri(path);
+	  return toUri(path);
     } else {
-      final InputStream data = new BufferedInputStream(uri.toURL().openStream());
-      return put(data, file);
+      final Lock lock = new ReentrantLock();
+      locks.put(file.toString(), lock);
+      lock.lock();
+      if(!file.exists()) {
+        try {
+          final InputStream data = new BufferedInputStream(uri.toURL().openStream());
+          return put(data, file);
+        } finally {
+          lock.unlock();
+        }
+      } else {
+        return toUri(path);
+      }
     }
   }
   
   private URI put(final InputStream data, final File file) throws IOException {
+	final File temporaryFile = new File(file.getPath() + ".tmp");
     FileOutputStream output = null;
-  	FileChannel channel = null;
-  	FileLock lock = null;
     try {
       // Create a new file.
-      output = new FileOutputStream(file);
-      channel = output.getChannel();
-      lock = channel.lock();
+      output = new FileOutputStream(temporaryFile);
       // Write the data to the file.
       final byte[] dataBuffer = new byte[8192];
       int bytesRead = 0;
@@ -119,12 +131,9 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
         }
       } while(bytesRead != -1);
       // return a URI to the file.
+      temporaryFile.renameTo(file);
       return toUri(file.getPath());
     } finally {
-      // Release the lock.
-      if(lock != null && lock.isValid()) {
-        lock.release();
-      }
       // Close the output stream.
       if(output != null) {
         output.close();
