@@ -51,6 +51,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   private Sid sid;
   private Direction direction;
   private String digits;
+  private boolean muted;
   private List<CallObserver> observers;
   
   private SipServletRequest initialInvite;
@@ -150,6 +151,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       setState(COMPLETED);
     } finally {
       cleanup();
+      fireFinished();
     }
   }
   
@@ -221,6 +223,12 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     cleanup();
   }
   
+  private synchronized void fireFinished() {
+    for(final CallObserver observer : observers) {
+      observer.finished(this);
+    }
+  }
+  
   @Override public String getDigits() {
     return digits;
   }
@@ -259,6 +267,11 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     assertState(IN_PROGRESS);
     terminate();
 	setState(COMPLETED);
+	fireFinished();
+  }
+  
+  @Override public boolean isMuted() {
+    return muted;
   }
   
   public synchronized void join(final MgcpConference conference) throws InterruptedException {
@@ -271,11 +284,11 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   public synchronized void leave(final MgcpConference conference) throws InterruptedException {
-    assertState(IN_PROGRESS);
-    remoteOutboundConnection.disconnect();
-    wait();
-    remoteInboundConnection.disconnect();
-    wait();
+    // Nothing to do.
+  }
+  
+  @Override public synchronized void mute() throws InterruptedException {
+    // Nothing to do.
   }
 
   @Override public synchronized void play(final List<URI> announcements, final int iterations)
@@ -323,6 +336,12 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       LOGGER.error(exception);
     }
     cleanup();
+  }
+  
+  @Override public synchronized void unmute() throws InterruptedException {
+    relayOutboundConnection.modify(ConnectionMode.SendRecv);
+    wait();
+    muted = false;
   }
 
   @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {

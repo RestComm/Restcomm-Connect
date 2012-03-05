@@ -34,6 +34,8 @@ public interface Call {
   public String getRecipient();
   public Status getStatus();
   public void hangup();
+  public boolean isMuted();
+  public void mute() throws InterruptedException;
   public void play(List<URI> announcements, int iterations) throws CallException, InterruptedException;
   public void playAndCollect(List<URI> prompts, int maxNumberOfDigits, int minNumberOfDigits,
       long firstDigitTimer, long interDigitTimer, String endInputKey) throws CallException, InterruptedException;
@@ -41,6 +43,7 @@ public interface Call {
       long recordingLength, String patterns) throws CallException, InterruptedException;
   public void reject();
   public void removeObserver(CallObserver observer);
+  public void unmute() throws InterruptedException;
   
   public enum Direction {
     INBOUND("inbound"),

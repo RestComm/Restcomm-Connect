@@ -16,11 +16,14 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
+import java.util.List;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -30,7 +33,7 @@ import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.CallerId;
 
-public final class DialTagStrategy extends RcmlTagStrategy {
+public final class DialTagStrategy extends RcmlTagStrategy implements CallObserver {
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;
   
@@ -49,17 +52,15 @@ public final class DialTagStrategy extends RcmlTagStrategy {
     final String to = tag.getText();
     try {
       answer(call);
-      // Dial out.
-      final Call outboundCall = callManager.createCall(from, to);
-      outboundCall.dial();
-      // Bridge the call.
-      final Conference bridge = conferenceCenter.getConference("bridge");
-      bridge.addCall(call);
-      bridge.addCall(outboundCall);
-      wait(30 * 1000);
-      bridge.removeCall(call);
-      bridge.removeCall(outboundCall);
-      outboundCall.hangup();
+      if(tag.hasChildren() && (to != null && !to.isEmpty())) {
+        throw new TagStrategyException("The <Dial> tag can not contain text and child elements at the same time.");
+      } else {
+        if(to != null) {
+          bridge(call, from, to);
+        } else if(tag.hasChildren()) {
+          handleChildren(call, from, tag.getChildren());
+        }
+      }
     } catch(final CallException exception) {
       final StringBuilder buffer = new StringBuilder();
       buffer.append("There was an error while bridging a call from ");
@@ -71,5 +72,75 @@ public final class DialTagStrategy extends RcmlTagStrategy {
       buffer.append(from).append(" to ").append(to);
       throw new TagStrategyException(buffer.toString(), exception);
     } catch(final InterruptedException ignored) { return; }
+  }
+  
+  private synchronized void handleChildren(final Call call, final String callerId, final List<Tag> children)
+      throws InterruptedException, CallManagerException, CallException {
+    final Tag child = children.get(0);
+    if(org.mobicents.servlet.sip.restcomm.xml.rcml.Conference.NAME.equals(child.getName())) {
+      handleConference(call, child.getText());
+    } else {
+      handleNumbersAndClients(call, callerId, children);
+    }
+  }
+  
+  private synchronized void handleConference(final Call call, final String room) throws InterruptedException {
+    final Conference conference = conferenceCenter.getConference(room);
+    call.addObserver(this);
+    conference.addCall(call);
+    wait();
+    call.removeObserver(this);
+    conference.removeCall(call);
+  }
+  
+  private synchronized void handleNumbersAndClients(final Call call, final String callerId, final List<Tag> children)
+      throws CallManagerException, CallException, InterruptedException {
+    for(final Tag child : children) {
+      final String to = child.getText();
+      final Call outboundCall = callManager.createCall(callerId, to);
+      outboundCall.dial();
+      if(outboundCall.getStatus() == Call.Status.IN_PROGRESS) {
+    	outboundCall.addObserver(this);
+    	call.addObserver(this);
+	    final String name = new StringBuilder().append(callerId).append(":").append(to).toString();
+	    final Conference bridge = conferenceCenter.getConference(name);
+	    bridge.addCall(outboundCall);
+	    bridge.addCall(call);
+	    wait();
+	    call.removeObserver(this);
+	    bridge.removeCall(call);
+	    outboundCall.removeObserver(this);
+	    bridge.removeCall(outboundCall);
+	    conferenceCenter.removeConference(name);
+	    break;
+      }
+    }
+  }
+  
+  private synchronized void bridge(final Call call, final String callerId, final String to)
+      throws CallManagerException, CallException, InterruptedException {
+    final Call outboundCall = callManager.createCall(callerId, normalizeText(to));
+    outboundCall.dial();
+    outboundCall.addObserver(this);
+    call.addObserver(this);
+    // Bridge the call.
+    final String name = new StringBuilder().append(callerId).append(":").append(to).toString();
+    final Conference bridge = conferenceCenter.getConference(name);
+    bridge.addCall(outboundCall);
+    bridge.addCall(call);
+    wait();
+    call.removeObserver(this);
+    bridge.removeCall(call);
+    outboundCall.removeObserver(this);
+    bridge.removeCall(outboundCall);
+    conferenceCenter.removeConference(name);
+  }
+  
+  private String normalizeText(final String phoneNumber) {
+    return phoneNumber.replace("-", "");
+  }
+  
+  @Override public synchronized void finished(final Call call) {
+    notify();
   }
 }
