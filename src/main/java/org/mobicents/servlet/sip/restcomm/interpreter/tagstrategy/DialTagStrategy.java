@@ -33,6 +33,9 @@ import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.CallerId;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class DialTagStrategy extends RcmlTagStrategy implements CallObserver {
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;

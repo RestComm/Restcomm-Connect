@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.http;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 @Immutable public final class RequestMethod {
   public static final String DELETE = "DELETE";
   public static final String HEAD = "HEAD";

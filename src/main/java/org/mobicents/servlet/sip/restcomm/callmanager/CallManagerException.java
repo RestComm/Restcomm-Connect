@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class CallManagerException extends Exception {
   private static final long serialVersionUID = 1L;
 

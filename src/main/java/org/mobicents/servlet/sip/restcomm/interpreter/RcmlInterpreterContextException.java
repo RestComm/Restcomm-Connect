@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class RcmlInterpreterContextException extends Exception {
   private static final long serialVersionUID = 1L;
 

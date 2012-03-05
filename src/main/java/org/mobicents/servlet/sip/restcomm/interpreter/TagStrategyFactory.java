@@ -40,6 +40,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Reject;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Sms;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class TagStrategyFactory {
   private static final Map<String, Class<? extends TagStrategy>> STRATEGIES;
   static {

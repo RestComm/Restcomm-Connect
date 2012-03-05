@@ -27,6 +27,9 @@ import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.From;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.To;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class SmsTagStrategy extends RcmlTagStrategy {
   private static final SmsAggregator smsAggregator = ServiceLocator.getInstance().get(SmsAggregator.class);
 	  

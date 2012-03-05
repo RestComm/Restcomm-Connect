@@ -24,6 +24,7 @@
 		<mongodb.version>2.7.2</mongodb.version>
 		<mybatis.version>3.0.6</mybatis.version>
 		<jodatime.version>2.0</jodatime.version>
+		<libphonenumber.version>4.3</libphonenumber.version>
 		<arquillian.version>1.0.0.Alpha4</arquillian.version>
 		<junit.version>4.8.2</junit.version>
 	</properties>
@@ -124,6 +125,12 @@
 			<artifactId>joda-time</artifactId>
 			<version>${jodatime.version}</version>
 		</dependency>
+		
+		<dependency>
+                <groupId>com.googlecode.libphonenumber</groupId>
+                <artifactId>libphonenumber</artifactId>
+                <version>${libphonenumber.version}</version>
+        </dependency>
 		
 		<dependency>
 		    <groupId>com.esendex</groupId>

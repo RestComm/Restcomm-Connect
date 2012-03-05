@@ -30,6 +30,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class SayTagStrategy extends RcmlTagStrategy  {
   
   public SayTagStrategy() {

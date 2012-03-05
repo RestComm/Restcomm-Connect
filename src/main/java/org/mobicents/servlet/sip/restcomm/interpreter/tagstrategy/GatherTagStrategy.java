@@ -43,6 +43,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class GatherTagStrategy extends RcmlTagStrategy {
   public GatherTagStrategy() {
     super();

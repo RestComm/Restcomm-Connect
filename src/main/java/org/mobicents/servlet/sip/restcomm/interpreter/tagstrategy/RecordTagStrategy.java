@@ -42,6 +42,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.PlayBeep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class RecordTagStrategy extends RcmlTagStrategy {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private final String baseRecordingsPath;

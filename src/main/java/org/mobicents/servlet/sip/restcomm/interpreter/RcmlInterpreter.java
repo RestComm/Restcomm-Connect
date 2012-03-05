@@ -45,6 +45,9 @@ import org.mobicents.servlet.sip.restcomm.xml.XmlDocumentBuilder;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public final class RcmlInterpreter extends FiniteStateMachine implements Runnable, TagVisitor {
   // Logger.
   private static final Logger logger = Logger.getLogger(RcmlInterpreter.class);

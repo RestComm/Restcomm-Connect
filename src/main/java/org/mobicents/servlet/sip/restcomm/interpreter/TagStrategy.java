@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.interpreter;
 
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public interface TagStrategy {
   public void execute(RcmlInterpreter interpreter, RcmlInterpreterContext context, Tag tag) throws TagStrategyException;
 }

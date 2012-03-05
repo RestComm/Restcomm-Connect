@@ -18,6 +18,9 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
 
 import java.util.Set;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public interface ConferenceCenter {
   public Conference getConference(final String name);
   public Set<String> getConferenceNames();

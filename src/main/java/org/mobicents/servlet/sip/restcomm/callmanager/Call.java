@@ -21,6 +21,9 @@ import java.util.List;
 
 import org.mobicents.servlet.sip.restcomm.Sid;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 public interface Call {
   public void addObserver(CallObserver observer);
   public void answer() throws CallException, InterruptedException;

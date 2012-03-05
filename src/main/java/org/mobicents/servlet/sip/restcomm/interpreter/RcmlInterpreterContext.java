@@ -29,6 +29,9 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 
+/**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
+ */
 @ThreadSafe public final class RcmlInterpreterContext {
   private final Application application;
   private final IncomingPhoneNumber incomingPhoneNumber;
