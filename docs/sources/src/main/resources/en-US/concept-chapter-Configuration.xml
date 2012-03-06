@@ -22,146 +22,197 @@
 			</thead>
 			<tbody>
 				<row>
-					<entry>application-index</entry>
-					<entry>An index of RestComm applications to be executed.</entry>
+					<entry>runtime-settings</entry>
+					<entry>Settings that RestComm will use at runtime to make decisions.</entry>
 				</row>
 				<row>
-					<entry>gateway-manager</entry>
-					<entry>Manages access to SIP gateways.</entry>
+					<entry>dao-manager</entry>
+					<entry>
+					  Manages the data store used by RestComm. The default implementation is based on MyBatis and is used
+					  to interact with RDBMS systems. Alternatively, RestComm now ships with a MongoDB implementations as
+					  well.
+					</entry>
 				</row>
 				<row>
-					<entry>media-server</entry>
-					<entry>Passes in the configuration parameters to the JSR-309 stack implementation.</entry>
+					<entry>media-server-manager</entry>
+					<entry>
+					  Manages media servers managed by RestComm and the connections to them. The media server manager
+					  also implements load-balancing across the media servers. The current implementation is round-robin
+					  but in future releases media server load will dictate how connections are managed.
+					</entry>
 				</row>
 				<row>
 					<entry>sms-aggregator</entry>
-					<entry>Manages SMS service providers.</entry>
+					<entry>
+					  Manages SMS service providers. Please keep in mind that not all SMS providers support all the functionality
+					  offered by RestComm and therefore, certain SMS related feature may be related. Refer to the appropriate
+					  documentation for more information.
+					</entry>
 				</row>
 				<row>
-					<entry>storage</entry>
-					<entry>Manages storage on behalf of RestComm.</entry>
+					<entry>speech-synthesizer</entry>
+					<entry>
+					  A text to speech synthesizer for RestComm. The default implementation uses the Acapela Group TTS service.
+					  In future releases we are planning on supporting all the major service providers.
+					</entry>
 				</row>
 			</tbody>
 		</tgroup>
 	</table>
 	<section>
-		<title>Application Index</title>
-		<para>An application index as the name implies is an index containing all the applications descriptions that will be used
-		by RestComm to locate and execute applications.</para>
-			
-		<para>The default application index is configured by providing a list of application descriptions that should be used
-		by RestComm. Each application description MUST have a name describing the application and the following properties:</para>
+		<title>Runtime Settings</title>
+		<para>
+		  The runtime-settings are used by RestComm at runtime to make important decisions. A list of the runtime settings
+		  and a descriptions is provided below.
+		</para>
 			
 		<table frame='all'>
-			<title>Application Index Properties</title>
+			<title>Runtime Settings</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' />
 				<colspec colname='c2' />
 				<thead>
 					<row>
-						<entry align="center">Property</entry>
+						<entry align="center">Element</entry>
 						<entry align="center">Description</entry>
 					</row>
 				</thead>
 				<tbody>
 					<row>
-						<entry>enpoint</entry>
-						<entry>The endpoint to which the application will bind.</entry>
+						<entry>beep-audio-file</entry>
+						<entry>The audio file to play for the 'beep' and 'playBeep' attributes.</entry>
 					</row>
 					<row>
-						<entry>request-method</entry>
-						<entry>The HTTP method used to request the application's entry point.</entry>
+						<entry>reject-audio-file</entry>
+						<entry>The audio file to play for the &lt;Reject&gt; verb using the 'rejected' attribute.</entry>
 					</row>
 					<row>
-						<entry>uri</entry>
-						<entry>The HTTP URI to the application's entry point.</entry>
+						<entry>silence-audio-file</entry>
+						<entry>
+						  This file has one second of silence and is used to insert &lt;Pause&gt; verbs in the &lt;Gather&gt;
+						  verb as a prompt that can be played by the media server.
+						</entry>
+					</row>
+					<row>
+						<entry>recordings-path</entry>
+						<entry>
+						  The path to the directory used to save recordings made by RestComm.
+						</entry>
+					</row>
+					<row>
+						<entry>recordings-uri</entry>
+						<entry>
+						  The HTTP URI to the recordings directory.
+						</entry>
+					</row>
+					<row>
+						<entry>outbound-proxy-user</entry>
+						<entry>
+						  The user name used to authenticate with the outbound proxy. (Optional)
+						</entry>
+					</row>
+					<row>
+						<entry>outbound-proxy-password</entry>
+						<entry>
+						  The password used to authenticated with the outbound proxy. (Optional)
+						</entry>
+					</row>
+					<row>
+						<entry>outbound-proxy-uri</entry>
+						<entry>
+						  The SIP URI to the outbound proxy. Note: Do not prepend 'sip:' to the proxy uri.
+						</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
-			
-		<para>The application index may also contain an optional list of client mappings which can be used with the &lt;Client&gt;
-		    noun in RestComm applications.</para>
-		
-		<note><para>Endpoint will usually be a DID in E.164 format (ex. +14445556666)</para></note>
-		
-		<para>For example, to configure a RestComm application that listens on phone number +14445556666 and is fetched from
-			<uri>http://localhost:8080/restcomm/demo/hello-world.xml</uri> using a <constant>POST</constant> request your
-			configuration file would look like the following:</para>
-		<programlisting role="XML">
-		    &lt;application-index class="org.mobicents.servlet.sip.restcomm.applicationindex.XmlFileIndex"&gt;
-		        &lt;applications&gt;
-			        &lt;application name="RestComm Demo Application"&gt;
-				        &lt;endpoint&gt;+14445556666&lt;/endpoint&gt;
-				        &lt;request-method&gt;POST&lt;/request-method&gt;
-				        &lt;uri&gt;http://localhost:8080/restcomm/demo/hello-world.xml&lt;/uri&gt;
-			        &lt;/application&gt;
-		        &lt;/applications&gt;
-	        &lt;/application-index&gt;
-		</programlisting>
 	</section>
 	<section>
-		<title>Gateway Manager</title>
-		<para>The gateway manager controls access to the gateways used to reach other networks like the PSTN.</para>
+		<title>Dao Manager</title>
+		<para>The data access object manager is used to gain access to the data store that RestComm will use.</para>
 			
-		<para>The default gateway manager is used to manage SIP gateways and is configured by providing a list of
-			SIP gateways that will be used by RestComm. The gateways MUST have a descriptive name and the following properties:</para>
+		<para>The default data access object manager is based on MyBatis and provides access to RDBM systems. Alternatively,
+		  a MongoDB implementation is included.</para>
 		
 		<table frame='all'>
-			<title>Gateway Manager Properties</title>
+			<title>MyBatis Settings</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' />
 				<colspec colname='c2' />
 				<thead>
 					<row>
-						<entry align="center">Property</entry>
+						<entry align="center">Element</entry>
 						<entry align="center">Description</entry>
 					</row>
 				</thead>
 				<tbody>
 					<row>
+						<entry>datasource</entry>
+						<entry>The JNDI data source to use.</entry>
+					</row>
+					<row>
+						<entry>configuration-file</entry>
+						<entry>The path to the mybatis.xml configuration file.</entry>
+					</row>
+					<row>
+						<entry>sql-files</entry>
+						<entry>The path to the XML files containing the SQL statements that will be executed by the database.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		
+		<table frame='all'>
+			<title>MongoDB Settings</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Element</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>host</entry>
+						<entry>The IP address or host name of MongoDB server.</entry>
+					</row>
+					<row>
+						<entry>port</entry>
+						<entry>The port on the MongoDB server to use.</entry>
+					</row>
+					<row>
+						<entry>database</entry>
+						<entry>The name of the database to use.</entry>
+					</row>
+					<row>
 						<entry>user</entry>
-						<entry>The user name to use for registration.</entry>
+						<entry>The user name used to authenticate with MongoDB (Optional).</entry>
 					</row>
 					<row>
 						<entry>password</entry>
-						<entry>The password to use for registration.</entry>
-					</row>
-					<row>
-						<entry>register</entry>
-						<entry>A true/false value indicating if the service provider requires registration. (See the road map for availability)</entry>
-					</row>
-					<row>
-						<entry>proxy</entry>
-						<entry>The FQDN or IP address to the SIP proxy.</entry>
+						<entry>The password used to authenticate with MongoDB (Optional).</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
-		
-		<para>An example of configuring a SIP gateway follows:</para>
-		
-		<programlisting role="XML">
-			&lt;gateway-manager class="org.mobicents.servlet.sip.restcomm.callmanager.SipGatewayManager"&gt;
-		        &lt;gateway name="provider"&gt;
-			        &lt;user&gt;john&lt;/user&gt;
-			        &lt;password&gt;1234&lt;/password&gt;
-			        &lt;register&gt;false&lt;/register&gt;
-			        &lt;proxy&gt;sip.mycompany.com&lt;/proxy&gt;
-		        &lt;/gateway&gt;
-	        &lt;/gateway-manager&gt;
-		</programlisting>
 	</section>
 	<section>
-		<title>Media Server</title>
+		<title>Media Server Manager</title>
 		
-		<para>The media server is responsible for all the media services used by RestComm.</para>
-		
-		<para>The ONLY way to control media servers is by using a JSR-309 implementation. The default JSR-309
-		implementation uses a MGCP stack and MUST have a name and the following properties:</para>
+		<para>
+		  The media server manager is responsible for all the media servers managed by RestComm. The media server manager
+		  is also responsible for load-balancing connections to the media servers that it manages. Currently, load-balancing
+		  uses a naive round-robin implementation but in future implementations the algorithm will be based on media server
+		  load.
+		  
+		  When configuring the media server manager multiple media server can be defined. Below is a description of settings
+		  for each media server.
+		</para>
 		
 		<table frame='all'>
-			<title>Media Server Manager Properties</title>
+			<title>Media Server Manager Settings</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' />
 				<colspec colname='c2' />
@@ -173,15 +224,15 @@
 				</thead>
 				<tbody>
 					<row>
-						<entry>stack-ip</entry>
+						<entry>local-address</entry>
 						<entry>The local IP address for the MGCP stack.</entry>
 					</row>
 					<row>
-						<entry>stack-port</entry>
+						<entry>local-port</entry>
 						<entry>The local port for the MGCP stack.</entry>
 					</row>
 					<row>
-						<entry>remote-ip</entry>
+						<entry>remote-address</entry>
 						<entry>The IP address for the media server.</entry>
 					</row>
 					<row>
@@ -191,103 +242,92 @@
 				</tbody>
 			</tgroup>
 		</table>
-		
-		<para>An example of configuring a media gateway on the local host follows:</para>
-		
-		<programlisting role="XML">
-			&lt;media-server class="org.mobicents.servlet.sip.restcomm.MediaServerManager.MgcpMediaServer"&gt;
-		        &lt;mgcp-stack name="mgcp-stack-1"&gt;
-			        &lt;stack-address>127.0.0.1&lt;/stack-address&gt;
-			        &lt;stack-port>2727&lt;/stack-port&gt;
-			        &lt;remote-address>127.0.0.1&lt;/remote-address&gt;
-			        &lt;remote-port>2427&lt;/remote-port&gt;
-		        &lt;/mgcp-stack&gt;
-	        &lt;/media-server&gt;
-		</programlisting>
-		<note><para>In order to use a media server that is controlled by a protocol other than MGCP requires a custom
-		JSR-309 implementation</para></note>
 	</section>
 	<section>
 		<title>SMS Aggregator</title>
 		<para>The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.</para>
 		
-		<para>The default SMS aggregator uses public email-2-sms gateways to transmit text messages to the
-		mobile networks. Please keep in  mind that this is a free service and must not be abused so that
-		it can remain available and FREE.</para>
+		<para>
+		  The default SMS aggregator uses Essendex. Please know that in order to use SMS and account with Essendex
+		  is required until support for more service providers is implemented.
+		</para>
 		
 		<table frame='all'>
-			<title>SMS Aggregator Properties</title>
+			<title>SMS Aggregator Settings</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' />
 				<colspec colname='c2' />
 				<thead>
 					<row>
-						<entry align="center">Property</entry>
+						<entry align="center">Element</entry>
 						<entry align="center">Description</entry>
 					</row>
 				</thead>
 				<tbody>
 					<row>
-						<entry>domain</entry>
-						<entry>The domain from which emails are being sent.</entry>
+						<entry>user</entry>
+						<entry>The user name used to authenticate with Essendex.</entry>
 					</row>
 					<row>
-						<entry>smtp</entry>
-						<entry>The SMTP mail server to use for sending emails to the SMS gateway.</entry>
+						<entry>password</entry>
+						<entry>The password used to authenticate with Essendex.</entry>
 					</row>
 					<row>
-						<entry>gateway</entry>
-						<entry>The email-2-sms gateway. A list can be found @ http://en.wikipedia.org/wiki/List_of_SMS_gateways.</entry>
+						<entry>account</entry>
+						<entry>The account used to authenticate with Essendex.</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
-		
-		<para>Please pay attention to the format expected by the service providers.</para>
-		
-		<programlisting role="XML">
-			&lt;sms-aggregator class="org.mobicents.servlet.sip.restcomm.sms.EmailToSmsAggregator"&gt;
-		        &lt;domain&gt;mycompany.com&lt;/domain&gt;
-		        &lt;smtp&gt;mail.mycompany.com&lt;/smtp&gt;
-		        &lt;gateway&gt;tmomail.net&lt;/gateway&gt;
-	        &lt;/sms-aggregator&gt;
-		</programlisting>
 	</section>
 	<section>
-		<title>Storage</title>
-		<para>The Storage system is responsible for storing RestComm objects.</para>
+		<title>Speech Synthesizer</title>
+		<para>The speech synthesizer turns text to speech on behalf of RestComm.</para>
 		
-		<para>The default storage system uses the filesystem to store the RestComm objects.</para>
+		<para>The default speech synthesizer uses the TTS service provided by the Acapela Group. Please know that in order to use
+		  TTS an account with the Acapela Group is required until support for more service providers is implemented.</para>
 		
 		<table frame='all'>
-			<title>Storage Properties</title>
+			<title>Acapela Group Speech Synthesizer Settings</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' />
 				<colspec colname='c2' />
 				<thead>
 					<row>
-						<entry align="center">Property</entry>
+						<entry align="center">Element</entry>
 						<entry align="center">Description</entry>
 					</row>
 				</thead>
 				<tbody>
 					<row>
-						<entry>location</entry>
-						<entry>The location on the file system to use for storage.</entry>
+						<entry>cache-path</entry>
+						<entry>The location on the file system to use for caching TTS results.</entry>
 					</row>
 					<row>
-						<entry>uri</entry>
-						<entry>The HTTP URI to the storage location.</entry>
+						<entry>service-root</entry>
+						<entry>The acapela group service root URI.</entry>
+					</row>
+					<row>
+						<entry>application</entry>
+						<entry>The application used to authenticate with the acapela group.</entry>
+					</row>
+					<row>
+						<entry>login</entry>
+						<entry>The login used to authenticate with the acapela group.</entry>
+					</row>
+					<row>
+						<entry>password</entry>
+						<entry>The password used to authenticate with the acapela group.</entry>
+					</row>
+					<row>
+						<entry>speakers</entry>
+						<entry>
+						  A list of male and female speakers for different languages. These can be replaced
+						  with other alternatives provided by the acapela group.
+						</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
-		
-		<programlisting role="XML">
-			&lt;storage class="org.mobicents.servlet.sip.restcomm.storage.FileSystemStorage"&gt;
-		        &lt;path&gt;/home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/&lt;/path&gt;
-		        &lt;uri&gt;http://localhost:8080/restcomm/&lt;/uri&gt;
-	        &lt;/storage&gt;
-		</programlisting>
 	</section>
 </chapter>

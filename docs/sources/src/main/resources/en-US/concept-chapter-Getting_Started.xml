@@ -17,12 +17,12 @@
 			Server. We will start by downloading the binary distribution and unzipping it to the working directory.</para>
 		</formalpara>
 		<screen>
-			~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-jboss-1.0.0.ALPHA.zip
-			~]$ unzip restcomm-saas-jboss-1.0.0.ALPHA.zip
+			~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-jboss-1.0.0.ALPHA2.zip
+			~]$ unzip restcomm-saas-jboss-1.0.0.ALPHA2.zip
 		</screen>
 		<para>Okay now lets start the Mobicents Sip Servlet Container and the Mobicents Media Server.</para>
 		<screen>
-			~]$ cd restcomm-saas-jboss-1.0.0.ALPHA/bin
+			~]$ cd restcomm-saas-jboss-1.0.0.ALPHA2/bin
 			~]$ ./run.sh &amp;
 			~]$ cd ../mobicents-media-server/bin/
 			~]$ ./run.sh &amp;
@@ -33,12 +33,12 @@
 			following steps.</para>
 		</formalpara>
 		<screen>
-			~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-tomcat-1.0.0.ALPHA.zip
-			~]$ unzip restcomm-saas-tomcat-1.0.0.ALPHA.zip
+			~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-tomcat-1.0.0.ALPHA2.zip
+			~]$ unzip restcomm-saas-tomcat-1.0.0.ALPHA2.zip
 		</screen>
 		<para>Okay now lets start the Mobicents Sip Servlet Container and the Mobicents Media Server.</para>
 		<screen>
-			~]$ cd restcomm-saas-tomcat-1.0.0.ALPHA/bin
+			~]$ cd restcomm-saas-tomcat-1.0.0.ALPHA2/bin
 			~]$ ./startup.sh
 			~]$ cd ../mobicents-media-server/bin/
 			~]$ ./run.sh &amp;

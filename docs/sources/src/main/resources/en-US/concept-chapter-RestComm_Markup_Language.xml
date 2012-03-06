@@ -48,22 +48,12 @@
 	    	<para>The 'voice' attribute allows you to select the gender of the voice used to synthesize
 	    		the text to speech for playback.</para>
 	    </formalpara>
-	    <warning>
-	    	<title>Partial Support</title>
-	    	<para>The current version of RestComm only supports a 'voice' value of 'man' see the road map for
-	    		availability of 'woman'.</para>
-	    </warning>
 	    <formalpara>
 	    	<title>language</title>
 	    	<para>The 'language' attribute allows you pick a specific language for speech synthesis.
 	    		RestComm currently supports languages 'en' (English), 'es' (Spanish), 'fr' (French),
 	    		and 'de' (German).</para>
 	    </formalpara>
-	    <warning>
-	    	<title>Partial Support</title>
-	    	<para>The current version of RestComm only supports a 'language' value of 'en' see the road map for
-	    		availability of 'es', 'fr', 'de'.</para>
-	    </warning>
 	    <formalpara>
 	    	<title>loop</title>
 	    	<para>The 'loop' attribute specifies how many times you'd like the text repeated. Specifying '0' will
