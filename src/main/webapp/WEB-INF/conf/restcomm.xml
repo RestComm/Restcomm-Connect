@@ -44,9 +44,9 @@
 	-->
 	<media-server-manager>
 		<mgcp-server name="Mobicents Media Server">
-			<local-address>192.168.1.106</local-address>
+			<local-address>127.0.0.1</local-address>
 			<local-port>2727</local-port>
-			<remote-address>192.168.1.106</remote-address>
+			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
 		</mgcp-server>
 	</media-server-manager>
@@ -66,9 +66,9 @@
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
-		<application>EVAL_6380429</application>
-		<login>EVAL_VAAS</login>
-		<password>p5g8jr27</password>
+		<application></application>
+		<login></login>
+		<password></password>
 		<speakers>
 		  <british-english>
 		    <female>rachel8k</female>
