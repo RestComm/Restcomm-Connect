@@ -27,6 +27,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.UriAttribute;
@@ -66,11 +67,19 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
       call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
       final String digits = call.getDigits();
       // Redirect to action URI.
-      final URI action = ((UriAttribute)tag.getAttribute(Action.NAME)).getUriValue();
+      URI action = null;
+      final URI base = interpreter.getCurrentUri();
+      final Attribute attribute = tag.getAttribute(Action.NAME);
+      if(attribute == null) {
+        action = base;
+      } else {
+        action = ((UriAttribute)attribute).getUriValue();
+      }
+      final URI uri = resolveIfNotAbsolute(base, action);
       final String method = tag.getAttribute(Method.NAME).getValue();
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
       parameters.add(new BasicNameValuePair("Digits", digits));
-      interpreter.loadResource(action, method, parameters);
+      interpreter.loadResource(uri, method, parameters);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Say>Welcome to RestComm</Say>
-	<Dial>19549376176</Dial>
-	<Hangup />
+	<Say>Welcome to RestComm, a TeleStax sponsored project.</Say>
+	<Say language="de">Willkommen bei RestComm einem TeleStax geförderten Projektes.</Say>
+	<Say language="fr">Bienvenue à RestComm projet un TeleStax parrainé.</Say>
+	<Say language="es">Bienvenido a RestComm, un proyecto patrocinado por TeleStax.</Say>
+	<Play>./demo.wav</Play>
+	<Hangup/>
 </Response>

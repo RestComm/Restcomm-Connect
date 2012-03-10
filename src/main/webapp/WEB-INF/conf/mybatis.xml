@@ -14,18 +14,18 @@
   </environments>
   
   <mappers>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/accounts.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/applications.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/available-phone-numbers.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/call-detail-records.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/incoming-phone-numbers.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/notifications.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/outgoing-caller-ids.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/recordings.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/sand-boxes.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/short-codes.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/sms-messages.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/transcriptions.xml"/>
-    <mapper url="file:///home/thomas/Applications/mss-1.6.0/server/default/deploy/restcomm.war/WEB-INF/sql/gateways.xml"/>
+    <mapper url="file://${sql}/accounts.xml"/>
+    <mapper url="file://${sql}/applications.xml"/>
+    <mapper url="file://${sql}/available-phone-numbers.xml"/>
+    <mapper url="file://${sql}/call-detail-records.xml"/>
+    <mapper url="file://${sql}/incoming-phone-numbers.xml"/>
+    <mapper url="file://${sql}/notifications.xml"/>
+    <mapper url="file://${sql}/outgoing-caller-ids.xml"/>
+    <mapper url="file://${sql}/recordings.xml"/>
+    <mapper url="file://${sql}/sand-boxes.xml"/>
+    <mapper url="file://${sql}/short-codes.xml"/>
+    <mapper url="file://${sql}/sms-messages.xml"/>
+    <mapper url="file://${sql}/transcriptions.xml"/>
+    <mapper url="file://${sql}/gateways.xml"/>
   </mappers>
 </configuration>

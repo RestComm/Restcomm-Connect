@@ -59,6 +59,22 @@ public abstract class RcmlTagStrategy implements TagStrategy {
     return silence;
   }
   
+  protected URI resolveIfNotAbsolute(final URI base, final String uri) {
+    return resolveIfNotAbsolute(base, URI.create(uri));
+  }
+  
+  protected URI resolveIfNotAbsolute(final URI base, final URI uri) {
+	if(base.equals(uri)) {
+	  return uri;
+	} else {
+      if(!uri.isAbsolute()) {
+        return base.resolve(uri);
+      } else {
+        return uri;
+      }
+	}
+  }
+  
   protected List<URI> say(final String gender, final String language, final String text) {
     final ServiceLocator services = ServiceLocator.getInstance();
     final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);

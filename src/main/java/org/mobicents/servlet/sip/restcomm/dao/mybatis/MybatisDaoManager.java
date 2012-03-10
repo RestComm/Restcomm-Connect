@@ -19,6 +19,7 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
+import java.util.Properties;
 
 import org.apache.commons.configuration.Configuration;
 
@@ -137,7 +138,10 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
     } catch(final FileNotFoundException exception) {
       throw new RuntimeException(exception);
     }
-    sessions = builder.build(reader);
+    final Properties properties = new Properties();
+    final String sqlFiles = configuration.getString("sql-files");
+    properties.setProperty("sql", sqlFiles);
+    sessions = builder.build(reader, properties);
     // Instantiate the DAO objects.
     accountsDao = new MybatisAccountsDao(sessions);
     applicationsDao = new MybatisApplicationsDao(sessions);

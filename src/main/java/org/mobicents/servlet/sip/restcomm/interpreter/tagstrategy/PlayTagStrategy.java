@@ -47,8 +47,10 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
     // Play something.
     final String text = tag.getText();
     if(text != null) {
+      final URI base = interpreter.getCurrentUri();
+      final URI uri = resolveIfNotAbsolute(base, text);
       final List<URI> announcement = new ArrayList<URI>();
-      announcement.add(URI.create(text));
+      announcement.add(uri);
       final int iterations = ((IntegerAttribute)tag.getAttribute(Loop.NAME)).getIntegerValue();
       try {
     	if(iterations == 0) {

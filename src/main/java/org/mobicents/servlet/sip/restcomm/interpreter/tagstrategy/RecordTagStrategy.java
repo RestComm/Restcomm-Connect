@@ -88,18 +88,20 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
       call.playAndRecord(emptyAnnouncement, toPath(sid), timeout, maxLength, finishOnKey);
       // Redirect to action URI.
       URI action = null;
+      final URI base = interpreter.getCurrentUri();
       final Attribute attribute = tag.getAttribute(Action.NAME);
-      if(attribute != null) {
-        action = ((UriAttribute)attribute).getUriValue();
+      if(attribute == null) {
+        action = base;
       } else {
-        action = interpreter.getCurrentUri();
+        action = ((UriAttribute)attribute).getUriValue();
       }
+      final URI uri = resolveIfNotAbsolute(base, action);
       final String method = tag.getAttribute(Method.NAME).getValue();
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
       parameters.add(new BasicNameValuePair("RecordingUrl", toUri(sid)));
       parameters.add(new BasicNameValuePair("RecordingDuration", "-1"));
       parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
-      interpreter.loadResource(action, method, parameters);
+      interpreter.loadResource(uri, method, parameters);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();
