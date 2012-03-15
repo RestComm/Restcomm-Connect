@@ -26,6 +26,7 @@
 	<dao-manager class="org.mobicents.servlet.sip.restcomm.dao.mybatis.MybatisDaoManager">
 	    <datasource>java:restcomm</datasource>
 	    <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
+	    <data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
 

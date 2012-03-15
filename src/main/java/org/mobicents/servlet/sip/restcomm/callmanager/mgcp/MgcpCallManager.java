@@ -202,7 +202,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
     proxyUser = configuration.getString("outbound-proxy-user");
     proxyPassword = configuration.getString("outbound-proxy-password");
     final String uri = configuration.getString("outbound-proxy-uri");
-    if(uri != null) {
+    if(uri != null && !uri.isEmpty()) {
       proxyUri = sipFactory.createSipURI(null, uri);
     }
   }

@@ -139,7 +139,9 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
       throw new RuntimeException(exception);
     }
     final Properties properties = new Properties();
+    final String dataFiles = configuration.getString("data-files");
     final String sqlFiles = configuration.getString("sql-files");
+    properties.setProperty("data", dataFiles);
     properties.setProperty("sql", sqlFiles);
     sessions = builder.build(reader, properties);
     // Instantiate the DAO objects.
