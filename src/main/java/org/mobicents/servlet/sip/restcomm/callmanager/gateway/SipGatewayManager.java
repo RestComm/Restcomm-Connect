@@ -50,7 +50,7 @@ public final class SipGatewayManager extends SipServlet {
   private static final Logger logger = Logger.getLogger(SipGatewayManager.class);
   private static final String userAgent = "RestComm/1.0 ALPHA 2";
   
-  public static final int defaultRegistrationTtl = 3600;
+  public static final int defaultRegistrationTtl = 30;
   
   private TimerService clock;
   private SipFactory sipFactory;

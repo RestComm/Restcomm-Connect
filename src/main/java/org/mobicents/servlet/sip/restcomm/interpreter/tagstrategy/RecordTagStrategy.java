@@ -30,6 +30,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.util.WavUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.BooleanAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
@@ -82,10 +83,11 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
       }
       // Record something.
       final Sid sid = Sid.generate(Sid.Type.RECORDING);
+      final URI recording = toPath(sid);
       final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
       final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
       final int maxLength = ((IntegerAttribute)tag.getAttribute(MaxLength.NAME)).getIntegerValue();
-      call.playAndRecord(emptyAnnouncement, toPath(sid), timeout, maxLength, finishOnKey);
+      call.playAndRecord(emptyAnnouncement, recording, timeout, maxLength, finishOnKey);
       // Redirect to action URI.
       URI action = null;
       final URI base = interpreter.getCurrentUri();
@@ -99,7 +101,8 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
       final String method = tag.getAttribute(Method.NAME).getValue();
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
       parameters.add(new BasicNameValuePair("RecordingUrl", toUri(sid)));
-      parameters.add(new BasicNameValuePair("RecordingDuration", "-1"));
+      final String duration = Double.toString(WavUtils.getAudioDuration(recording));
+      parameters.add(new BasicNameValuePair("RecordingDuration", duration));
       parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
       interpreter.loadResource(uri, method, parameters);
       interpreter.redirect();

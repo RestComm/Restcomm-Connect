@@ -32,6 +32,7 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
   public static final String SPANISH = "es";
   public static final String FRENCH = "fr";
   public static final String GERMAN = "de";
+  public static final String PORTUGUESE = "pt";
   private static final Set<String> VALUES;
   static {
     VALUES = new HashSet<String>();
@@ -40,6 +41,7 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
     VALUES.add(SPANISH);
     VALUES.add(FRENCH);
     VALUES.add(GERMAN);
+    VALUES.add(PORTUGUESE);
   }
   
   public Language() {

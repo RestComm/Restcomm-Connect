@@ -158,11 +158,13 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
     women.put("es", configuration.getString("speakers.spanish.female"));
     women.put("fr", configuration.getString("speakers.french.female"));
     women.put("de", configuration.getString("speakers.german.female"));
+    women.put("pt", configuration.getString("speakers.portuguese.female"));
     men.put("en", configuration.getString("speakers.english.male"));
     men.put("en-gb", configuration.getString("speakers.british-english.male"));
     men.put("es", configuration.getString("speakers.spanish.male"));
     men.put("fr", configuration.getString("speakers.french.male"));
     men.put("de", configuration.getString("speakers.german.male"));
+    men.put("pt", configuration.getString("speakers.portuguese.male"));
   }
   
   @Override public void shutdown() {
