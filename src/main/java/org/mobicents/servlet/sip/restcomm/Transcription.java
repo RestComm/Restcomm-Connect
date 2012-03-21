@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
 
@@ -26,20 +27,27 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Transcription {
+@Immutable public final class Transcription implements Serializable {
+  private static final long serialVersionUID = 1L;
+  
   private final Sid sid;
   private final DateTime dateCreated;
   private final DateTime dateUpdated;
   private final Sid accountSid;
-  private final String status;
+  private final Status status;
   private final Sid recordingSid;
   private final Integer duration;
   private final String transcriptionText;
   private final BigDecimal price;
   private final URI uri;
+  
+  public Transcription(final Sid sid, final DateTime dateCreated, final Sid accountSid, final Status status,
+      final Sid recordingSid) {
+    this(sid, dateCreated, null, accountSid, status, recordingSid, null, null, null, null);
+  }
 
   public Transcription(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-      final String status, final Sid recordingSid, final Integer duration, final String transcriptionText, final BigDecimal price,
+      final Status status, final Sid recordingSid, final Integer duration, final String transcriptionText, final BigDecimal price,
       final URI uri) {
     super();
     this.sid = sid;
@@ -70,7 +78,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return accountSid;
   }
 
-  public String getStatus() {
+  public Status getStatus() {
     return status;
   }
 
@@ -92,5 +100,31 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 
   public URI getUri() {
     return uri;
+  }
+  
+  public enum Status {
+    IN_PROGRESS("in-progress"),
+    COMPLETED("completed"),
+    FAILED("failed");
+    
+    private final String text;
+    
+    private Status(final String text) {
+      this.text = text;
+    }
+    
+    public static Status getStatusValue(final String text) {
+      final Status[] values = values();
+      for(final Status value : values) {
+        if(value.toString().equals(text)) {
+          return value;
+        }
+      }
+      throw new IllegalArgumentException(text + " is not a valid status.");
+    }
+    
+    @Override public String toString() {
+      return text;
+    }
   }
 }

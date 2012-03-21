@@ -62,6 +62,13 @@
 	</sms-aggregator>
 	
 	<!--
+		The Speech Recognizer is responsible for turning speech in to text.
+	-->
+	<speech-recognizer class="org.mobicents.servlet.sip.restcomm.asr.ISpeechRecognizer">
+		<api-key production="false"></api-key>
+	</speech-recognizer>
+	
+	<!--
 		The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway.
 	-->
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
@@ -91,6 +98,10 @@
 		    <female>maria8k</female>
 		    <male>antonio8k</male>
 		  </spanish>
+		  <portuguese>
+		    <female>marcia8k</female>
+		    <male>marcia8k</male>
+		  </portuguese>
 		</speakers>
 	</speech-synthesizer>
 </restcomm>

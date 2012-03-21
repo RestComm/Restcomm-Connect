@@ -16,7 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
+import java.io.Serializable;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,9 +26,15 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.Transcription;
+import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
+import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizerObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -42,15 +50,19 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.MaxLength;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.PlayBeep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeCallback;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class RecordTagStrategy extends RcmlTagStrategy {
+public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRecognizerObserver {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
+  
   private final String baseRecordingsPath;
   private final String baseRecordingsUri;
   private final List<URI> beepAudioFile;
+  private final SpeechRecognizer speechRecognizer;
+  private final TranscriptionsDao dao;
   
   public RecordTagStrategy() {
     super();
@@ -60,6 +72,9 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
     baseRecordingsUri = addSuffix(configuration.getString("recordings-uri"), "/");
     beepAudioFile = new ArrayList<URI>();
     beepAudioFile.add(URI.create("file://" + configuration.getString("beep-audio-file")));
+    speechRecognizer = services.get(SpeechRecognizer.class);
+    final DaoManager daos = services.get(DaoManager.class);
+    dao = daos.getTranscriptionsDao();
   }
   
   private String addSuffix(final String text, final String suffix) {
@@ -88,6 +103,11 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
       final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
       final int maxLength = ((IntegerAttribute)tag.getAttribute(MaxLength.NAME)).getIntegerValue();
       call.playAndRecord(emptyAnnouncement, recording, timeout, maxLength, finishOnKey);
+      // Transcribe the recording.
+      final URI transcribeCallback = getTranscribeCallback(tag);
+      if(transcribeCallback != null) {
+        
+      }
       // Redirect to action URI.
       URI action = null;
       final URI base = interpreter.getCurrentUri();
@@ -112,6 +132,25 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
     }
   }
   
+  private URI getTranscribeCallback(final Tag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(TranscribeCallback.NAME);
+    if(attribute != null) {
+      try {
+        return ((UriAttribute)attribute).getUriValue();
+      } catch(final URISyntaxException ignored) { }
+    }
+    return null;
+  }
+  
+  @Override public void failed(final Serializable object) {
+    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+  }
+  
+  @Override public void succeeded(final String text, final Serializable object) {
+    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+    
+  }
+  
   private URI toPath(final Sid sid) {
     final StringBuilder path = new StringBuilder();
     path.append("file://").append(baseRecordingsPath).append(sid.toString()).append(".wav");
@@ -122,5 +161,15 @@ public final class RecordTagStrategy extends RcmlTagStrategy {
     final StringBuilder uri = new StringBuilder();
     uri.append(baseRecordingsUri).append(sid.toString()).append(".wav");
     return uri.toString();
+  }
+  
+  private void transcribe(final Sid accountSid, final Sid recordingSid, final URI transcribeCallback, final URI recording,
+      final int duration) {
+	final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
+	final DateTime dateCreated = DateTime.now();
+    final Transcription transcription = new Transcription(sid, dateCreated, accountSid, Transcription.Status.IN_PROGRESS,
+        recordingSid);
+    dao.addTranscription(transcription);
+    speechRecognizer.recognize(recording, "en-US", this, transcription);
   }
 }

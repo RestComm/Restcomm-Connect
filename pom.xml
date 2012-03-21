@@ -139,6 +139,14 @@
 		    <scope>system</scope>
 		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Esendex.jar</systemPath>
 		</dependency>
+		
+		<dependency>
+		    <groupId>com.ispeech</groupId>
+		    <artifactId>ispeech</artifactId>
+		    <version>1.0.1</version>
+		    <scope>system</scope>
+		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/ispeech-java-sdk.jar</systemPath>
+		</dependency>
 
 		<dependency>
 			<groupId>org.jboss.arquillian</groupId>
