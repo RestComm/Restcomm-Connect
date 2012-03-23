@@ -26,15 +26,11 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
-import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.Transcription;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizerObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -62,7 +58,6 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   private final String baseRecordingsUri;
   private final List<URI> beepAudioFile;
   private final SpeechRecognizer speechRecognizer;
-  private final TranscriptionsDao dao;
   
   public RecordTagStrategy() {
     super();
@@ -73,8 +68,6 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     beepAudioFile = new ArrayList<URI>();
     beepAudioFile.add(URI.create("file://" + configuration.getString("beep-audio-file")));
     speechRecognizer = services.get(SpeechRecognizer.class);
-    final DaoManager daos = services.get(DaoManager.class);
-    dao = daos.getTranscriptionsDao();
   }
   
   private String addSuffix(final String text, final String suffix) {
@@ -106,7 +99,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
       // Transcribe the recording.
       final URI transcribeCallback = getTranscribeCallback(tag);
       if(transcribeCallback != null) {
-        
+        speechRecognizer.recognize(recording, "en-US", this, null);
       }
       // Redirect to action URI.
       URI action = null;
@@ -143,11 +136,10 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   @Override public void failed(final Serializable object) {
-    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+    
   }
   
   @Override public void succeeded(final String text, final Serializable object) {
-    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
     
   }
   
@@ -161,15 +153,5 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     final StringBuilder uri = new StringBuilder();
     uri.append(baseRecordingsUri).append(sid.toString()).append(".wav");
     return uri.toString();
-  }
-  
-  private void transcribe(final Sid accountSid, final Sid recordingSid, final URI transcribeCallback, final URI recording,
-      final int duration) {
-	final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
-	final DateTime dateCreated = DateTime.now();
-    final Transcription transcription = new Transcription(sid, dateCreated, accountSid, Transcription.Status.IN_PROGRESS,
-        recordingSid);
-    dao.addTranscription(transcription);
-    speechRecognizer.recognize(recording, "en-US", this, transcription);
   }
 }
