@@ -16,28 +16,43 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
+import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class MgcpConference implements Conference {
+public final class MgcpConference extends FiniteStateMachine implements Conference, LifeCycle, MgcpConnectionObserver {
+  private static final State INIT = new State(Status.INIT.toString());
+  private static final State IN_PROGRESS = new State(Status.IN_PROGRESS.toString());
+  private static final State COMPLETE = new State(Status.COMPLETED.toString());
+  
   private final String name;
-  private final MgcpSession session;
-  private final MgcpConferenceEndpoint endpoint;
   private final Map<Sid, MgcpCall> calls;
+  
+  private final MgcpSession session;
+  private MgcpConferenceEndpoint conference;
+  private MgcpIvrEndpoint ivr;
+  private MgcpConnection ivrOutboundConnection;
+  private MgcpConnection ivrInboundConnection;
 
   public MgcpConference(final String name, final MgcpServer server) {
-    super();
+    super(INIT);
+    addState(INIT);
+    addState(IN_PROGRESS);
+    addState(COMPLETE);
     this.name = name;
-    this.session = server.createMediaSession();
-    this.endpoint = session.getConferenceEndpoint();
     this.calls = new HashMap<Sid, MgcpCall>();
+    this.session = server.createMediaSession();
   }
   
   public synchronized void addCall(final Call call) throws InterruptedException {
@@ -47,7 +62,7 @@ public final class MgcpConference implements Conference {
   }
   
   public MgcpConferenceEndpoint getConferenceEndpoint() {
-    return endpoint;
+    return conference;
   }
 	
   @Override public String getName() {
@@ -58,5 +73,60 @@ public final class MgcpConference implements Conference {
     final MgcpCall mgcpCall = (MgcpCall)call;
     mgcpCall.leave(this);
     calls.remove(mgcpCall.getSid());
+  }
+
+  @Override public synchronized void halfOpen(final MgcpConnection connection) {
+    if(connection == ivrOutboundConnection) {
+      conference = session.getConferenceEndpoint();
+      ivrInboundConnection = session.createConnection(conference, connection.getLocalDescriptor());
+      ivrInboundConnection.addObserver(this);
+      ivrInboundConnection.connect(ConnectionMode.Confrnce);
+    }
+  }
+
+  @Override public synchronized void open(final MgcpConnection connection) {
+    if(connection == ivrInboundConnection) {
+      
+    } else if(connection == ivrOutboundConnection) {
+      
+    }
+  }
+
+  @Override public synchronized void disconnected(final MgcpConnection connection) {
+    if(connection == ivrOutboundConnection) {
+      ivrOutboundConnection.removeObserver(this);
+      ivrOutboundConnection = null;
+      ivrInboundConnection.disconnect();
+    } else if(connection == ivrInboundConnection) {
+      ivrInboundConnection.removeObserver(this);
+      ivrInboundConnection = null;
+      ivr = null;
+      notify();
+    }
+  }
+
+  @Override public synchronized void failed(final MgcpConnection connection) {
+    // Nothing to do.
+  }
+
+  @Override public synchronized void modified(final MgcpConnection connection) {
+    // Nothing to do.
+  }
+
+  @Override public synchronized void start() throws RuntimeException {
+    ivr = session.getIvrEndpoint();
+    ivrOutboundConnection = session.createConnection(ivr);
+    ivrOutboundConnection.addObserver(this);
+    ivrOutboundConnection.connect(ConnectionMode.SendRecv);
+    try {
+      wait();
+    } catch(final InterruptedException ignored) { return; }
+  }
+
+  @Override public synchronized void shutdown() {
+    try {
+      ivrOutboundConnection.disconnect();
+      wait();
+    } catch(final InterruptedException ignored) { return; }
   }
 }

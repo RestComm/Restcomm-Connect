@@ -20,7 +20,33 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Conference {
-  public void addCall(final Call call) throws InterruptedException;
+  public void addCall(Call call) throws InterruptedException;
   public String getName();
-  public void removeCall(final Call call) throws InterruptedException;
+  public void removeCall(Call call) throws InterruptedException;
+  
+  public enum Status {
+    INIT("init"),
+    IN_PROGRESS("in-progress"),
+    COMPLETED("completed");
+    
+    private final String text;
+    
+    private Status(final String text) {
+      this.text = text;
+    }
+    
+    public static Status getValueOf(final String text) throws IllegalArgumentException {
+      final Status[] values = values();
+      for(final Status value : values) {
+        if(value.toString().equals(text)) {
+          return value;
+        }
+      }
+      throw new IllegalArgumentException(text + " is not a valid status.");
+    }
+    
+    @Override public String toString() {
+      return text;
+    }
+  }
 }

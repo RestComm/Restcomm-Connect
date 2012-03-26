@@ -20,7 +20,9 @@ import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
@@ -46,6 +48,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.MaxLength;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.PlayBeep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Transcribe;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeCallback;
 
 /**
@@ -97,9 +100,14 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
       final int maxLength = ((IntegerAttribute)tag.getAttribute(MaxLength.NAME)).getIntegerValue();
       call.playAndRecord(emptyAnnouncement, recording, timeout, maxLength, finishOnKey);
       // Transcribe the recording.
+      final boolean transcribe = transcribe(tag);
       final URI transcribeCallback = getTranscribeCallback(tag);
-      if(transcribeCallback != null) {
-        speechRecognizer.recognize(recording, "en-US", this, null);
+      if(transcribe || (transcribeCallback != null)) {
+        final Map<String, Object> information = new HashMap<String, Object>();
+        information.put("interpreterContext", context);
+        information.put("recordingUri", toUri(sid));
+        information.put("transcribeCallback", transcribeCallback);
+        speechRecognizer.recognize(recording, "en-US", this, (Serializable)information);
       }
       // Redirect to action URI.
       URI action = null;
@@ -136,11 +144,20 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   @Override public void failed(final Serializable object) {
+	handleTranscription(false, null, object);
+  }
+  
+  private void handleTranscription(final boolean success, final String text, final Serializable object) {
+    @SuppressWarnings("unchecked")
+	final Map<String, Object> information = (HashMap<String, Object>)object;
+    final RcmlInterpreterContext context = (RcmlInterpreterContext)information.get("interpreterContext");
+    final String recordingUri = (String)information.get("recordingUri");
+    final URI transcribeCallback = (URI)information.get("transcribeCallback");
     
   }
   
   @Override public void succeeded(final String text, final Serializable object) {
-    
+    handleTranscription(true, text, object);
   }
   
   private URI toPath(final Sid sid) {
@@ -153,5 +170,14 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     final StringBuilder uri = new StringBuilder();
     uri.append(baseRecordingsUri).append(sid.toString()).append(".wav");
     return uri.toString();
+  }
+  
+  private boolean transcribe(final Tag tag) {
+    final Attribute attribute = tag.getAttribute(Transcribe.NAME);
+    if(attribute != null) {
+      return ((BooleanAttribute)attribute).getBooleanValue();
+    } else {
+      return false;
+    }
   }
 }

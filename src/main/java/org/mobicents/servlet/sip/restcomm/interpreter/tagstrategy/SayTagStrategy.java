@@ -19,10 +19,8 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 import java.net.URI;
 import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
-import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -36,12 +34,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SayTagStrategy extends RcmlTagStrategy  {
-  private final DaoManager daos;
   
   public SayTagStrategy() {
     super();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    daos = services.get(DaoManager.class);
   }
   
   @Override public void execute(final RcmlInterpreter interpreter,

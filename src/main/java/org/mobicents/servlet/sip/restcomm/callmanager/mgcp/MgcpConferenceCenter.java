@@ -44,6 +44,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
         if(conference == null) {
           final MgcpServer server = serverManager.getMediaServer();
           conference = new MgcpConference(name, server);
+          conference.start();
           conferences.put(name, conference);
         }
       }
@@ -57,7 +58,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
 
   @Override public synchronized void removeConference(final String name) {
     if(conferences.containsKey(name)) {
-      conferences.remove(name);
+      final MgcpConference conference = conferences.remove(name);
+      conference.shutdown();
     }
   }
 }

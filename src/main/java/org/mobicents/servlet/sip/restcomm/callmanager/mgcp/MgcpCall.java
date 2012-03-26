@@ -70,7 +70,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   private Sid sid;
   private Direction direction;
   private String digits;
-  private boolean muted;
+  private volatile boolean muted;
   private List<CallObserver> observers;
   
   private SipServletRequest initialInvite;
@@ -168,9 +168,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     try {
       ok.send();
       setState(COMPLETED);
+      fireCompleted();
     } finally {
       cleanup();
-      fireFinished();
     }
   }
   
@@ -242,9 +242,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     cleanup();
   }
   
-  private synchronized void fireFinished() {
+  private synchronized void fireCompleted() {
     for(final CallObserver observer : observers) {
-      observer.finished(this);
+      observer.completed(this);
     }
   }
   
@@ -284,9 +284,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 
   @Override public synchronized void hangup() {
     assertState(IN_PROGRESS);
-    terminate();
 	setState(COMPLETED);
-	fireFinished();
+	fireCompleted();
+	terminate();
   }
   
   @Override public boolean isMuted() {
@@ -303,11 +303,15 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   public synchronized void leave(final MgcpConference conference) throws InterruptedException {
-    // Nothing to do.
+    assertState(IN_PROGRESS);
+    remoteOutboundConnection.disconnect();
+    wait();
   }
   
   @Override public synchronized void mute() throws InterruptedException {
-    // Nothing to do.
+    userAgentConnection.modify(ConnectionMode.RecvOnly);
+    wait();
+    muted = true;
   }
 
   @Override public synchronized void play(final List<URI> announcements, final int iterations)
@@ -358,7 +362,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   @Override public synchronized void unmute() throws InterruptedException {
-    relayOutboundConnection.modify(ConnectionMode.SendRecv);
+    userAgentConnection.modify(ConnectionMode.SendRecv);
     wait();
     muted = false;
   }
@@ -426,7 +430,14 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
 
   @Override public synchronized void disconnected(final MgcpConnection connection) {
-    if(connection == remoteOutboundConnection || connection == remoteInboundConnection) {
+    if(connection == remoteOutboundConnection) {
+      remoteOutboundConnection.removeObserver(this);
+      remoteOutboundConnection = null;
+      remoteInboundConnection.disconnect();
+    } else if(connection == remoteInboundConnection) {
+      remoteInboundConnection.removeObserver(this);
+      remoteInboundConnection = null;
+      remoteEndpoint = null;
       notify();
     }
   }
@@ -442,6 +453,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
 
   @Override public synchronized void modified(final MgcpConnection connection) {
-    // Nothing to do.
+    if(connection == userAgentConnection) {
+      notify();
+    }
   }
 }

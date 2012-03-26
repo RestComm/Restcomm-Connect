@@ -143,7 +143,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     return phoneNumber.replace("-", "");
   }
   
-  @Override public synchronized void finished(final Call call) {
+  @Override public synchronized void completed(final Call call) {
     notify();
   }
 }
