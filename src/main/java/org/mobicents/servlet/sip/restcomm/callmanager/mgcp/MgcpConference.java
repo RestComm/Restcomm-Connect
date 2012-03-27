@@ -35,6 +35,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   private static final State INIT = new State(Status.INIT.toString());
   private static final State IN_PROGRESS = new State(Status.IN_PROGRESS.toString());
   private static final State COMPLETE = new State(Status.COMPLETED.toString());
+  private static final State FAILED = new State(Status.FAILED.toString());
   
   private final String name;
   private final Map<Sid, MgcpCall> calls;
@@ -56,12 +57,14 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
   
   public synchronized void addCall(final Call call) throws InterruptedException {
+    assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
     mgcpCall.join(this);
     calls.put(call.getSid(), mgcpCall);
   }
   
   public MgcpConferenceEndpoint getConferenceEndpoint() {
+    assertState(IN_PROGRESS);
     return conference;
   }
 	
@@ -70,6 +73,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
   
   public synchronized void removeCall(final Call call) throws InterruptedException {
+    assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
     mgcpCall.leave(this);
     calls.remove(mgcpCall.getSid());
@@ -86,9 +90,11 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
 
   @Override public synchronized void open(final MgcpConnection connection) {
     if(connection == ivrInboundConnection) {
-      
+      ivrOutboundConnection.modify(connection.getLocalDescriptor());
     } else if(connection == ivrOutboundConnection) {
-      
+      assertState(INIT);
+      setState(IN_PROGRESS);
+      notify();
     }
   }
 
@@ -106,7 +112,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
 
   @Override public synchronized void failed(final MgcpConnection connection) {
-    // Nothing to do.
+    setState(FAILED);
+    notify();
   }
 
   @Override public synchronized void modified(final MgcpConnection connection) {
@@ -114,6 +121,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
 
   @Override public synchronized void start() throws RuntimeException {
+    assertState(INIT);
     ivr = session.getIvrEndpoint();
     ivrOutboundConnection = session.createConnection(ivr);
     ivrOutboundConnection.addObserver(this);
@@ -121,12 +129,16 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     try {
       wait();
     } catch(final InterruptedException ignored) { return; }
+    setState(IN_PROGRESS);
   }
 
   @Override public synchronized void shutdown() {
+    assertState(IN_PROGRESS);
+    ivrOutboundConnection.disconnect();
     try {
-      ivrOutboundConnection.disconnect();
       wait();
     } catch(final InterruptedException ignored) { return; }
+    session.release();
+    setState(COMPLETE);
   }
 }

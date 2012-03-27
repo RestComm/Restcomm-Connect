@@ -27,7 +27,8 @@ public interface Conference {
   public enum Status {
     INIT("init"),
     IN_PROGRESS("in-progress"),
-    COMPLETED("completed");
+    COMPLETED("completed"),
+    FAILED("failed");
     
     private final String text;
     
