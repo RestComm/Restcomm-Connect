@@ -153,18 +153,52 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
   private void loadVoices() throws RuntimeException {
     women = new HashMap<String, String>();
     men = new HashMap<String, String>();
-    women.put("en", configuration.getString("speakers.english.female"));
+    // Initialize female voices.
+    women.put("bf", configuration.getString("speakers.belgium-french.female"));
+    women.put("bp", configuration.getString("speakers.brazilian-portuguese.female"));
     women.put("en-gb", configuration.getString("speakers.british-english.female"));
-    women.put("es", configuration.getString("speakers.spanish.female"));
+    women.put("cf", configuration.getString("speakers.canadian-french.female"));
+    women.put("cs", configuration.getString("speakers.czech.female"));
+    women.put("dan", configuration.getString("speakers.danish.female"));
+    women.put("en", configuration.getString("speakers.english.female"));
+    women.put("fi", configuration.getString("speakers.finnish.female"));
     women.put("fr", configuration.getString("speakers.french.female"));
     women.put("de", configuration.getString("speakers.german.female"));
+    women.put("el", configuration.getString("speakers.greek.female"));
+    women.put("it", configuration.getString("speakers.italian.female"));
+    women.put("nl", configuration.getString("speakers.netherlands-dutch.female"));
+    women.put("no", configuration.getString("speakers.norwegian.female"));
+    women.put("pl", configuration.getString("speakers.polish.female"));
     women.put("pt", configuration.getString("speakers.portuguese.female"));
-    men.put("en", configuration.getString("speakers.english.male"));
+    women.put("ru", configuration.getString("speakers.russian.female"));
+    women.put("ar", configuration.getString("speakers.saudi-arabia-arabic.female"));
+    women.put("ca", configuration.getString("speakers.spain-catalan.female"));
+    women.put("es", configuration.getString("speakers.spanish.female"));
+    women.put("sv", configuration.getString("speakers.swedish.female"));
+    women.put("tr", configuration.getString("speakers.turkish.female"));
+    // Initialize male voices.
+    men.put("bf", configuration.getString("speakers.belgium-french.male"));
+    men.put("bp", configuration.getString("speakers.brazilian-portuguese.male"));
     men.put("en-gb", configuration.getString("speakers.british-english.male"));
-    men.put("es", configuration.getString("speakers.spanish.male"));
+    men.put("cf", configuration.getString("speakers.canadian-french.male"));
+    men.put("cs", configuration.getString("speakers.czech.male"));
+    men.put("dan", configuration.getString("speakers.danish.male"));
+    men.put("en", configuration.getString("speakers.english.male"));
+    men.put("fi", configuration.getString("speakers.finnish.male"));
     men.put("fr", configuration.getString("speakers.french.male"));
     men.put("de", configuration.getString("speakers.german.male"));
+    men.put("el", configuration.getString("speakers.greek.male"));
+    men.put("it", configuration.getString("speakers.italian.male"));
+    men.put("nl", configuration.getString("speakers.netherlands-dutch.male"));
+    men.put("no", configuration.getString("speakers.norwegian.male"));
+    men.put("pl", configuration.getString("speakers.polish.male"));
     men.put("pt", configuration.getString("speakers.portuguese.male"));
+    men.put("ru", configuration.getString("speakers.russian.male"));
+    men.put("ar", configuration.getString("speakers.saudi-arabia-arabic.male"));
+    men.put("ca", configuration.getString("speakers.spain-catalan.male"));
+    men.put("es", configuration.getString("speakers.spanish.male"));
+    men.put("sv", configuration.getString("speakers.swedish.male"));
+    men.put("tr", configuration.getString("speakers.turkish.male"));
   }
   
   @Override public void shutdown() {
