@@ -23,69 +23,54 @@ import java.util.List;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
+import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.UriAttribute;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Action;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.FinishOnKey;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.NumDigits;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Play;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class GatherTagStrategy extends RcmlTagStrategy {
+  private URI action;
+  private String method;
+  private int timeout;
+  private String finishOnKey;
+  private int numDigits;
+
   public GatherTagStrategy() {
     super();
   }
 
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
-    final Call call = context.getCall();
-    try {
-      answer(call);
-    } catch(final InterruptedException ignored) { return; }
     try {
 	  // Collect some digits.
+      final Call call = context.getCall();
 	  final List<URI> announcements = getAnnouncements(tag.getChildren());
-      final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
-      final int numDigits = ((IntegerAttribute)tag.getAttribute(NumDigits.NAME)).getIntegerValue();
-      final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
       call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
-      final String digits = call.getDigits();
-      // Redirect to action URI.
-      URI action = null;
-      final URI base = interpreter.getCurrentUri();
-      final Attribute attribute = tag.getAttribute(Action.NAME);
-      if(attribute == null) {
-        action = base;
-      } else {
-        action = ((UriAttribute)attribute).getUriValue();
-      }
-      final URI uri = resolveIfNotAbsolute(base, action);
-      final String method = tag.getAttribute(Method.NAME).getValue();
+      // Redirect to action URI.;
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-      parameters.add(new BasicNameValuePair("Digits", digits));
-      interpreter.loadResource(uri, method, parameters);
+      parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
+      interpreter.loadResource(action, method, parameters);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();
-      final StringBuilder buffer = new StringBuilder();
-      buffer.append("There was an error while gathering digits.");
-      throw new TagStrategyException(buffer.toString(), exception);
+      notify(interpreter, context, tag, Notification.ERROR, 12400);
+      throw new TagStrategyException(exception);
     }
   }
   
@@ -113,5 +98,47 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
  	  tag.setHasBeenVisited(true);
  	}
     return announcements;
+  }
+  
+  private int getNumDigits(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) {
+    final Attribute attribute = tag.getAttribute(NumDigits.NAME);
+    if(attribute != null) {
+      final String value = attribute.getValue();
+      if(StringUtils.isPositiveInteger(value)) {
+    	final int result = Integer.parseInt(value);
+    	if(result >= 1) {
+          return result; 
+    	}
+      }
+    }
+    notify(interpreter, context, tag, Notification.WARNING, 13314);
+    return Short.MAX_VALUE;
+  }
+  
+  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) throws TagStrategyException {
+    super.initialize(interpreter, context, tag);
+    try {
+      action = getAction(interpreter, context, tag);
+      method = getMethod(interpreter, context, tag);
+      if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+        notify(interpreter, context, tag, Notification.WARNING, 13312);
+        method = "POST";
+      }
+      timeout = getTimeout(interpreter, context, tag);
+      if(timeout == -1 || timeout == 0) {
+        notify(interpreter, context, tag, Notification.WARNING, 13313);
+        timeout = 5;
+      }
+      finishOnKey = getFinishOnKey(interpreter, context, tag);
+      if(finishOnKey == null) {
+        notify(interpreter, context, tag, Notification.WARNING, 13310);
+        finishOnKey = "#";
+      }
+      numDigits = getNumDigits(interpreter, context, tag);
+    } catch(final IllegalArgumentException exception) {
+      notify(interpreter, context, tag, Notification.ERROR, 11100);
+    }
   }
 }

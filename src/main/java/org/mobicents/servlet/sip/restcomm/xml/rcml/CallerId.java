@@ -16,8 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.regex.Pattern;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
@@ -26,10 +24,6 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
  */
 @NotThreadSafe public final class CallerId extends AbstractAttribute {
   public static final String NAME = "callerId";
-  private static final Pattern  CLIENT = Pattern.compile("client:[_a-z]+");
-  private static final Pattern E164 = Pattern.compile("\\+?\\d{10,15}");
-  private static final Pattern US = Pattern.compile("\\d\\-\\d{3}\\-\\d{3}\\-\\d{4}");
-  
   
   public CallerId() {
     super();
@@ -37,9 +31,5 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
   
   @Override public String getName() {
     return NAME;
-  }
-
-  @Override public boolean isSupportedValue(final String value) {
-    return CLIENT.matcher(value).matches() || E164.matcher(value).matches() || US.matcher(value).matches();
   }
 }

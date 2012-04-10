@@ -21,11 +21,15 @@ import java.net.URI;
 import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class Notification {
+  public static final int ERROR = 0;
+  public static final int WARNING = 1;
+
   private final Sid sid;
   private final DateTime dateCreated;
   private final DateTime dateUpdated;
@@ -44,7 +48,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final String responseBody;
   private final URI uri;
   
-  public Notification(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
+  private Notification(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
       final Sid callSid, final String apiVersion, final Integer log, final Integer errorCode, final URI moreInfo, String messageText,
       final DateTime messageDate, final URI requestUrl, final String requestMethod, final String requestVariables,
       final String responseHeaders, final String responseBody, final URI uri) {
@@ -66,6 +70,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     this.responseHeaders = responseHeaders;
     this.responseBody = responseBody;
     this.uri = uri;
+  }
+  
+  public static Builder builder() {
+    return new Builder();
   }
 
   public Sid getSid() {
@@ -134,5 +142,89 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   
   public URI getUri() {
     return uri;
+  }
+  
+  @NotThreadSafe public static class Builder {
+    private Sid accountSid;
+    private Sid callSid;
+    private String apiVersion;
+    private Integer log;
+    private Integer errorCode;
+    private URI moreInfo;
+    private String messageText;
+    private DateTime messageDate;
+    private URI requestUrl;
+    private String requestMethod;
+    private String requestVariables;
+    private String responseHeaders;
+    private String responseBody;
+    private URI uri;
+
+    private Builder() {
+      super();
+    }
+    
+    public Notification build() {
+      final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+      final DateTime dateCreated = DateTime.now();
+      return new Notification(sid, dateCreated, dateCreated, accountSid, callSid, apiVersion, log, errorCode, moreInfo, messageText,
+          messageDate, requestUrl, requestMethod, requestVariables, responseHeaders, responseBody, uri);
+    }
+    
+    public void setAccountSid(final Sid accountSid) {
+      this.accountSid = accountSid;
+    }
+    
+    public void setCallSid(final Sid callSid) {
+      this.callSid = callSid;
+    }
+    
+    public void setApiVersion(final String apiVersion) {
+      this.apiVersion = apiVersion;
+    }
+    
+    public void setLog(final int log) {
+      this.log = log;
+    }
+    
+    public void setErrorCode(final int errorCode) {
+      this.errorCode = errorCode;
+    }
+    
+    public void setMoreInfo(final URI moreInfo) {
+      this.moreInfo = moreInfo;
+    }
+    
+    public void setMessageText(final String messageText) {
+      this.messageText = messageText;
+    }
+    
+    public void setMessageDate(final DateTime messageDate) {
+      this.messageDate = messageDate;
+    }
+    
+    public void setRequestUrl(final URI requestUrl) {
+      this.requestUrl = requestUrl;
+    }
+    
+    public void setRequestMethod(final String requestMethod) {
+      this.requestMethod = requestMethod;
+    }
+    
+    public void setRequestVariables(final String requestVariables) {
+      this.requestVariables = requestVariables;
+    }
+    
+    public void setResponseHeaders(final String responseHeaders) {
+      this.responseHeaders = responseHeaders;
+    }
+    
+    public void setResponseBody(final String responseBody) {
+      this.responseBody = responseBody;
+    }
+    
+    public void setUri(final URI uri) {
+      this.uri = uri;
+    }
   }
 }

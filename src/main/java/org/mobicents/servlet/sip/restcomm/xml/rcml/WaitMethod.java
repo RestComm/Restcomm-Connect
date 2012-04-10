@@ -16,11 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.mobicents.servlet.sip.restcomm.http.RequestMethod.*;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
@@ -29,12 +24,6 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
  */
 @NotThreadSafe public final class WaitMethod extends AbstractAttribute {
   public static final String NAME = "waitMethod";
-  private static final Set<String> VALUES;
-  static {
-    VALUES = new HashSet<String>();
-    VALUES.add(GET);
-    VALUES.add(POST);
-  }
   
   public WaitMethod() {
     super();
@@ -42,9 +31,5 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
   
   @Override public String getName() {
     return NAME;
-  }
-
-  @Override public boolean isSupportedValue(final String value) {
-    return VALUES.contains(value);
   }
 }

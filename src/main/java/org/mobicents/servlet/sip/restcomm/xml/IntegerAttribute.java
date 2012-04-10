@@ -31,15 +31,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   }
 
   @Override public abstract String getName();
-
-  @Override public boolean isSupportedValue(String value) {
-	try {
-      Integer.parseInt(value);
-      return true;
-	} catch(final NumberFormatException exception) {
-	  return false;
-	}
-  }
   
   public void setIntegerValue(final int newValue) {
     setValue(Integer.toString(newValue));

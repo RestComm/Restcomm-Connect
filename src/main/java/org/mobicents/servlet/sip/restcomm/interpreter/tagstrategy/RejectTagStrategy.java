@@ -50,7 +50,7 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
     final Call call = context.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
       final String reason = tag.getAttribute(Reason.NAME).getValue();
-      if(reason.equals(Reason.REJECTED)) {
+      if(reason.equals("rejected")) {
     	try {
     	  answer(call);
           call.play(rejectAudioFile, 1);
@@ -62,7 +62,7 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
           throw new TagStrategyException(buffer.toString(), exception);
         } catch(final InterruptedException ignored) { return; }
         call.hangup();
-      } else if(reason.equals(Reason.BUSY)) {
+      } else if(reason.equals("busy")) {
         call.reject();
       }
       interpreter.finish();

@@ -16,8 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.regex.Pattern;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
@@ -26,7 +24,6 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
  */
 @NotThreadSafe public final class FinishOnKey extends AbstractAttribute {
   public static final String NAME = "finishOnKey";
-  private static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
   
   public FinishOnKey() {
 	super();
@@ -34,9 +31,5 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
   @Override public String getName() {
     return NAME;
-  }
-
-  @Override public boolean isSupportedValue(final String value) {
-    return PATTERN.matcher(value).matches();
   }
 }

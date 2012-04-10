@@ -40,34 +40,18 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     text = null;
   }
 
-  public void addAttribute(final Attribute attribute) throws UnsupportedAttributeException {
-	final String attributeName = attribute.getName();
-    if(canContainAttribute(attributeName)) {
-      attributes.put(attribute.getName(), attribute);
-    } else {
-      final String attributeValue = attribute.getValue();
-      throw new UnsupportedAttributeException("The <" + getName() + "> tag does not support an attribute named "
-          + attributeName + " with a value of " + attributeValue);
-    }
+  public void addAttribute(final Attribute attribute) {
+	attributes.put(attribute.getName(), attribute);
   }
   
-  public void addChild(final Tag child) throws UnsupportedTagException {
-    if(canContainChild(child)) {
-      child.setParent(this);
-      children.add(child);
-    } else {
-      throw new UnsupportedTagException("The <" + getName() + "> tag does not support <" + child.getName()
-          + "> as a child tag.");
-    }
+  public void addChild(final Tag child) {
+    child.setParent(this);
+    children.add(child);
   }
   
   public boolean canBeRoot() {
     return false;
   }
-  
-  public abstract boolean canContainAttribute(String name);
-
-  public abstract boolean canContainChild(Tag tag);
 
   public Attribute getAttribute(final String name) {
     return attributes.get(name);

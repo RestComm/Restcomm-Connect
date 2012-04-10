@@ -25,5 +25,6 @@ import org.mobicents.servlet.sip.restcomm.LifeCycle;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface SpeechSynthesizer extends Configurable, LifeCycle {
-  public URI synthesize(String text, String gender, String language) throws IllegalArgumentException, SpeechSynthesizerException;
+  public boolean isSupported(String language) throws IllegalArgumentException;
+  public URI synthesize(String text, String gender, String language) throws SpeechSynthesizerException;
 }

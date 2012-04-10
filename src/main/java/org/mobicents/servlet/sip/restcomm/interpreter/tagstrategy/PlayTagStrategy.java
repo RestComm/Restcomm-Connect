@@ -20,52 +20,62 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class PlayTagStrategy extends RcmlTagStrategy {
-  
+  private int loop;
+  private URI uri;
+
   public PlayTagStrategy() {
     super();
   }
   
   @Override public void execute(final RcmlInterpreter interpreter,
     final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
-    final Call call = context.getCall();
-    try {
-      answer(call);
-    } catch(final InterruptedException ignored) { return; }
-    // Play something.
-    final String text = tag.getText();
-    if(text != null) {
-      final URI base = interpreter.getCurrentUri();
-      final URI uri = resolveIfNotAbsolute(base, text);
+    if(uri != null) {
       final List<URI> announcement = new ArrayList<URI>();
       announcement.add(uri);
-      final int iterations = ((IntegerAttribute)tag.getAttribute(Loop.NAME)).getIntegerValue();
       try {
-    	if(iterations == 0) {
+        final Call call = context.getCall();
+    	if(loop == 0) {
     	  while(Call.Status.IN_PROGRESS == call.getStatus()) {
     	    call.play(announcement, 1);
     	  }
     	} else {
-          call.play(announcement, iterations);
+          call.play(announcement, loop);
     	}
       } catch(final CallException exception) {
         interpreter.failed();
-        final StringBuilder buffer = new StringBuilder();
-        buffer.append("There was an error while playing the file located @ ").append(text);
-        throw new TagStrategyException(buffer.toString(), exception);
+        notify(interpreter, context, tag, Notification.ERROR, 12400);
+        throw new TagStrategyException(exception);
       } catch(final InterruptedException ignored) { return; }
+    }
+  }
+  
+  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) throws TagStrategyException {
+    super.initialize(interpreter, context, tag);
+    try {
+      loop = getLoop(interpreter, context, tag);
+      if(loop == -1) {
+        notify(interpreter, context, tag, Notification.WARNING, 13410);
+        loop = 1;
+      }
+      uri = getUri(interpreter, context, tag);
+      if(uri == null) {
+        notify(interpreter, context, tag, Notification.ERROR, 13420);
+      }
+    } catch(final IllegalArgumentException exception) {
+      notify(interpreter, context, tag, Notification.ERROR, 11100);
     }
   }
 }

@@ -22,6 +22,5 @@ package org.mobicents.servlet.sip.restcomm.xml;
 public interface Attribute {
   public String getName();
   public String getValue();
-  public boolean isSupportedValue(String value);
   public void setValue(String newValue);
 }

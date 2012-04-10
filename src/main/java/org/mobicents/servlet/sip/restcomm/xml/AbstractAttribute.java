@@ -34,13 +34,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     return value;
   }
 
-  public abstract boolean isSupportedValue(String value);
-
   public void setValue(final String newValue) {
-    if(isSupportedValue(newValue)) {
-      value = newValue;
-    } else {
-      throw new IllegalArgumentException(value + " is not a supported value for attribute " + getName());
-    }
+    value = newValue;
   }
 }

@@ -40,7 +40,7 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   public Reject() {
     super();
     final Reason reason = new Reason();
-    reason.setValue(Reason.REJECTED);
+    reason.setValue("rejected");
     try {
       addAttribute(reason);
     } catch(final UnsupportedAttributeException ignored) {

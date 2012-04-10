@@ -28,6 +28,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
+import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
@@ -36,6 +37,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.WavUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.BooleanAttribute;
@@ -62,46 +64,38 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   private final List<URI> beepAudioFile;
   private final SpeechRecognizer speechRecognizer;
   
+  private URI action;
+  private String method;
+  private int timeout;
+  private String finishOnKey;
+  private int maxLength;
+  private boolean transcribe;
+  private URI transcribeCallback;
+  private boolean playBeep;
+  
   public RecordTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     final Configuration configuration = services.get(Configuration.class);
-    baseRecordingsPath = addSuffix(configuration.getString("recordings-path"), "/");
-    baseRecordingsUri = addSuffix(configuration.getString("recordings-uri"), "/");
+    baseRecordingsPath = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-path"), "/");
+    baseRecordingsUri = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-uri"), "/");
     beepAudioFile = new ArrayList<URI>();
     beepAudioFile.add(URI.create("file://" + configuration.getString("beep-audio-file")));
     speechRecognizer = services.get(SpeechRecognizer.class);
-  }
-  
-  private String addSuffix(final String text, final String suffix) {
-    if(text.endsWith(suffix)) {
-      return text;
-    } else {
-      return text + suffix;
-    }
   }
   
   @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
     final Call call = context.getCall();
     try {
-      answer(call);
-    } catch(final InterruptedException ignored) { return; }
-    try {
-      final boolean playBeep = ((BooleanAttribute)tag.getAttribute(PlayBeep.NAME)).getBooleanValue();
       if(playBeep) {
         call.play(beepAudioFile, 1);
       }
       // Record something.
       final Sid sid = Sid.generate(Sid.Type.RECORDING);
       final URI recording = toPath(sid);
-      final int timeout = ((IntegerAttribute)tag.getAttribute(Timeout.NAME)).getIntegerValue();
-      final String finishOnKey = tag.getAttribute(FinishOnKey.NAME).getValue();
-      final int maxLength = ((IntegerAttribute)tag.getAttribute(MaxLength.NAME)).getIntegerValue();
       call.playAndRecord(emptyAnnouncement, recording, timeout, maxLength, finishOnKey);
       // Transcribe the recording.
-      final boolean transcribe = transcribe(tag);
-      final URI transcribeCallback = getTranscribeCallback(tag);
       if(transcribe || (transcribeCallback != null)) {
         final Map<String, Object> information = new HashMap<String, Object>();
         information.put("interpreterContext", context);
@@ -110,22 +104,12 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
         speechRecognizer.recognize(recording, "en-US", this, (Serializable)information);
       }
       // Redirect to action URI.
-      URI action = null;
-      final URI base = interpreter.getCurrentUri();
-      final Attribute attribute = tag.getAttribute(Action.NAME);
-      if(attribute == null) {
-        action = base;
-      } else {
-        action = ((UriAttribute)attribute).getUriValue();
-      }
-      final URI uri = resolveIfNotAbsolute(base, action);
-      final String method = tag.getAttribute(Method.NAME).getValue();
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
       parameters.add(new BasicNameValuePair("RecordingUrl", toUri(sid)));
       final String duration = Double.toString(WavUtils.getAudioDuration(recording));
       parameters.add(new BasicNameValuePair("RecordingDuration", duration));
       parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
-      interpreter.loadResource(uri, method, parameters);
+      interpreter.loadResource(action, method, parameters);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();
@@ -133,18 +117,62 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     }
   }
   
-  private URI getTranscribeCallback(final Tag tag) throws TagStrategyException {
+  @Override public void failed(final Serializable object) {
+	handleTranscription(false, null, object);
+  }
+  
+  private int getMaxLength(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) {
+    final Attribute attribute = tag.getAttribute(MaxLength.NAME);
+    if(attribute != null) {
+      final String value = attribute.getValue();
+      if(StringUtils.isPositiveInteger(value)) {
+    	final int result = Integer.parseInt(value);
+        if(result >= 1) {
+          return result;
+        }
+      }
+    }
+    notify(interpreter, context, tag, Notification.WARNING, 13612);
+    return 3600;
+  }
+  
+  private boolean getPlayBeep(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) {
+    final Attribute attribute = tag.getAttribute(PlayBeep.NAME);
+    if(attribute != null) {
+	  final String value = attribute.getValue();
+      if("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+        return Boolean.parseBoolean(value);
+      }
+    }
+    return true;
+  }
+  
+  private boolean getTranscribe(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) {
+    final Attribute attribute = tag.getAttribute(Transcribe.NAME);
+    if(attribute != null) {
+      final String value = attribute.getValue();
+      if("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+        return Boolean.parseBoolean(value);
+      }
+    }
+    notify(interpreter, context, tag, Notification.ERROR, 21503);
+    return false;
+  }
+  
+  private URI getTranscribeCallback(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) throws TagStrategyException {
     final Attribute attribute = tag.getAttribute(TranscribeCallback.NAME);
     if(attribute != null) {
       try {
-        return ((UriAttribute)attribute).getUriValue();
-      } catch(final URISyntaxException ignored) { }
+        return URI.create(attribute.getValue());
+      } catch(final IllegalArgumentException exception) {
+        notify(interpreter, context, tag, Notification.ERROR, 11100);
+      }
     }
     return null;
-  }
-  
-  @Override public void failed(final Serializable object) {
-	handleTranscription(false, null, object);
   }
   
   private void handleTranscription(final boolean success, final String text, final Serializable object) {
@@ -154,6 +182,31 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     final String recordingUri = (String)information.get("recordingUri");
     final URI transcribeCallback = (URI)information.get("transcribeCallback");
     
+  }
+  
+  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final Tag tag) throws TagStrategyException {
+    super.initialize(interpreter, context, tag);
+    action = getAction(interpreter, context, tag);
+    method = getMethod(interpreter, context, tag);
+    if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+      notify(interpreter, context, tag, Notification.WARNING, 13610);
+      method = "POST";
+    }
+    timeout = getTimeout(interpreter, context, tag);
+    if(timeout == -1 || timeout == 0) {
+      notify(interpreter, context, tag, Notification.WARNING, 13611);
+      timeout = 5;
+    }
+    finishOnKey = getFinishOnKey(interpreter, context, tag);
+    if(finishOnKey == null) {
+      notify(interpreter, context, tag, Notification.WARNING, 13613);
+      finishOnKey = "1234567890*#";
+    }
+    maxLength = getMaxLength(interpreter, context, tag);
+    transcribe = getTranscribe(interpreter, context, tag);
+    transcribeCallback = getTranscribeCallback(interpreter, context, tag);
+    playBeep = getPlayBeep(interpreter, context, tag);
   }
   
   @Override public void succeeded(final String text, final Serializable object) {
@@ -170,14 +223,5 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     final StringBuilder uri = new StringBuilder();
     uri.append(baseRecordingsUri).append(sid.toString()).append(".wav");
     return uri.toString();
-  }
-  
-  private boolean transcribe(final Tag tag) {
-    final Attribute attribute = tag.getAttribute(Transcribe.NAME);
-    if(attribute != null) {
-      return ((BooleanAttribute)attribute).getBooleanValue();
-    } else {
-      return false;
-    }
   }
 }

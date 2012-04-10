@@ -26,12 +26,12 @@ import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
-import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
+import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Response extends RcmlTag implements XmlDocument {
+@NotThreadSafe public final class Response extends RcmlTag implements RcmlDocument {
   public static final String NAME = "Response";
   private static final Set<String> CHILDREN;
   static {

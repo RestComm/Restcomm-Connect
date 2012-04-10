@@ -16,15 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
 /**
@@ -32,37 +25,13 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
  */
 @NotThreadSafe public final class Play extends RcmlTag {
   public static final String NAME = "Play";
-  private static final Set<String> ATTRIBUTES;
-  static {
-    ATTRIBUTES = new HashSet<String>();
-    ATTRIBUTES.add(Loop.NAME);
-  }
   
   public Play() {
     super();
-    final Loop loop = new Loop();
-    loop.setIntegerValue(1);
-    try {
-      addAttribute(loop);
-    } catch(final UnsupportedAttributeException ignored) {
-      // Will never happen.
-    }
   }
   
   @Override public void accept(final TagVisitor visitor) throws VisitorException {
     visitor.visit(this);
-  }
-  
-  @Override public void addChild(final Tag child) {
-    throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any children.");
-  }
-  
-  @Override public boolean canContainAttribute(final String name) {
-    return ATTRIBUTES.contains(name);
-  }
-
-  @Override public boolean canContainChild(final Tag tag) {
-    return false;
   }
 
   @Override public String getName() {
@@ -75,14 +44,5 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   
   @Override public boolean isVerb() {
     return true;
-  }
-  
-  @Override public void setText(final String newText) {
-    try {
-      new URI(newText);
-      super.setText(newText);
-    } catch(final URISyntaxException ignored) {
-      throw new IllegalArgumentException("The value " + newText + " is not a valid URL.");
-    }
   }
 }

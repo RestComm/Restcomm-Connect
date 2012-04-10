@@ -16,25 +16,25 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml;
 
-import java.util.regex.Pattern;
-
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class PhoneNumberAttribute extends AbstractAttribute {
-  private static final Pattern E164 = Pattern.compile("\\+?\\d{10,15}");
-  private static final Pattern US_1 = Pattern.compile("\\d{3}\\-\\d{3}\\-\\d{4}");
-  private static final Pattern US_2 = Pattern.compile("\\(\\d{3}\\)\\d{3}\\-\\d{4}");
-  
-  public PhoneNumberAttribute() {
+public final class RcmlDocumentBuilderException extends Exception {
+  private static final long serialVersionUID = 1L;
+
+  public RcmlDocumentBuilderException() {
     super();
   }
-  
-  @Override public abstract String getName();
 
-  @Override public boolean isSupportedValue(final String value) {
-    return E164.matcher(value).matches() || US_1.matcher(value).matches() || US_2.matcher(value).matches();
+  public RcmlDocumentBuilderException(final String message) {
+    super(message);
+  }
+
+  public RcmlDocumentBuilderException(final Throwable cause) {
+    super(cause);
+  }
+
+  public RcmlDocumentBuilderException(final String message, final Throwable cause) {
+    super(message, cause);
   }
 }

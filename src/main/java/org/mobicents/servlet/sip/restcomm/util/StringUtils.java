@@ -14,27 +14,31 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.xml;
+package org.mobicents.servlet.sip.restcomm.util;
+
+import java.util.regex.Pattern;
+
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class XmlDocumentBuilderException extends Exception {
-  private static final long serialVersionUID = 1L;
+@ThreadSafe public final class StringUtils {
+  private static final Pattern numberPattern = Pattern.compile("\\d+");
 
-  public XmlDocumentBuilderException() {
+  private StringUtils() {
     super();
   }
-
-  public XmlDocumentBuilderException(final String message) {
-    super(message);
+  
+  public static String addSuffixIfNotPresent(final String text, final String suffix) {
+    if(text.endsWith(suffix)) {
+      return text;
+    } else {
+      return text + suffix;
+    }
   }
-
-  public XmlDocumentBuilderException(final Throwable cause) {
-    super(cause);
-  }
-
-  public XmlDocumentBuilderException(final String message, final Throwable cause) {
-    super(message, cause);
+  
+  public static boolean isPositiveInteger(final String text) {
+    return numberPattern.matcher(text).matches();
   }
 }

@@ -34,15 +34,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   public final URI getUriValue() throws URISyntaxException {
     return new URI(value);
   }
-
-  @Override public boolean isSupportedValue(final String value) {
-    try {
-	  new URI(value);
-	  return true;
-	} catch(final URISyntaxException exception) {
-	  return false;
-	}
-  }
   
   public void setUriValue(final URI newValue) {
     setValue(newValue.toString());

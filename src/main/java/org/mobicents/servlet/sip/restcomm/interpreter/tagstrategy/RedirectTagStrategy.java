@@ -43,7 +43,7 @@ public final class RedirectTagStrategy extends RcmlTagStrategy {
     // Redirect the interpreter to the new RCML resource.
     final String text = tag.getText();
     if(text != null) {
-      final URI base = interpreter.getCurrentUri();
+      final URI base = interpreter.getCurrentResourceUri();
       final URI uri = resolveIfNotAbsolute(base, text);
       final String method = tag.getAttribute(Method.NAME).getValue();
       try {

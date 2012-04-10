@@ -17,10 +17,13 @@
 package org.mobicents.servlet.sip.restcomm.util;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -28,12 +31,12 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class UriUtils {
-  private UriUtils() {
+@ThreadSafe public final class HttpUtils {
+  private HttpUtils() {
     super();
   }
   
-  public static Map<String, String> parseEntity(final HttpEntity entity)
+  public static Map<String, String> toMap(final HttpEntity entity)
       throws IllegalStateException, IOException {
 	final int length = (int)entity.getContentLength();
 	final byte[] data = new byte[length];
@@ -50,5 +53,19 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
       }
     }
     return map;
+  }
+  
+  public static String toString(final Header[] headers) {
+	final StringBuilder buffer = new StringBuilder();
+    for(int index = 0; index < headers.length; index++) {
+      final Header header = headers[index];
+      try {
+        buffer.append(header.getName()).append("=").append(URLEncoder.encode(header.getValue(), "UTF-8"));
+      } catch(final UnsupportedEncodingException ignored) { };
+      if(index < (headers.length - 1)) {
+        buffer.append("&");
+      }
+    }
+    return buffer.toString();
   }
 }

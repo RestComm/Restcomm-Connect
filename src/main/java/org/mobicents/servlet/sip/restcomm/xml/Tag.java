@@ -22,11 +22,8 @@ import java.util.List;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Tag {
-  public void addAttribute(Attribute attribute) throws UnsupportedAttributeException;
-  public void addChild(Tag child) throws UnsupportedTagException;
-  public boolean canBeRoot();
-  public boolean canContainAttribute(String name);
-  public boolean canContainChild(Tag tag);
+  public void addAttribute(Attribute attribute);
+  public void addChild(Tag child);
   public Attribute getAttribute(String name);
   public List<Attribute> getAttributes();
   public List<Tag> getChildren();

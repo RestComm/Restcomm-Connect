@@ -30,27 +30,23 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class XmlDocumentBuilder {
+@ThreadSafe public final class RcmlDocumentBuilder {
   private final TagFactory factory;
   
-  public XmlDocumentBuilder(final TagFactory factory) {
+  public RcmlDocumentBuilder(final TagFactory factory) {
     super();
     this.factory = factory;
   }
   
-  public XmlDocument build(final InputStream input) throws XmlDocumentBuilderException {
+  public RcmlDocument build(final InputStream input) throws RcmlDocumentBuilderException {
     try {
       final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
       final XMLStreamReader xmlStreamReader = xmlInputFactory.createXMLStreamReader(input);
       return parse(xmlStreamReader);
     } catch(final XMLStreamException exception) {
-      throw new XmlDocumentBuilderException(exception);
+      throw new RcmlDocumentBuilderException(exception);
     } catch(final ObjectInstantiationException exception) {
-      throw new XmlDocumentBuilderException(exception);
-	} catch(final UnsupportedTagException exception) {
-	  throw new XmlDocumentBuilderException(exception);
-	} catch(final UnsupportedAttributeException exception) {
-	  throw new XmlDocumentBuilderException(exception);
+      throw new RcmlDocumentBuilderException(exception);
 	}
   }
   
@@ -64,7 +60,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   }
   
   private void doStartElement(final XMLStreamReader xmlStreamReader, final Stack<Tag> tagStack)
-      throws ObjectInstantiationException, UnsupportedTagException, UnsupportedAttributeException {
+      throws ObjectInstantiationException {
     final String tagName = xmlStreamReader.getLocalName();
     final Tag tag = factory.getTagInstance(tagName);
     // Process the current element's attributes.
@@ -72,34 +68,28 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     if(attributeCount > 0) {
       for(int index = 0; index < attributeCount; index++) {
         final String attributeName = xmlStreamReader.getAttributeLocalName(index);
-        if(tag.canContainAttribute(attributeName)) {
-          final String attributeValue = xmlStreamReader.getAttributeValue(index);
-      	  Attribute attribute = tag.getAttribute(attributeName);
-      	  if(attribute == null) {
-      	    attribute = factory.getAttributeInstance(attributeName);
-      	    tag.addAttribute(attribute);
-      	  }
-          attribute.setValue(attributeValue);
-        }
+        final String attributeValue = xmlStreamReader.getAttributeValue(index);
+      	Attribute attribute = tag.getAttribute(attributeName);
+      	if(attribute == null) {
+      	  attribute = factory.getAttributeInstance(attributeName);
+      	  tag.addAttribute(attribute);
+      	}
+        attribute.setValue(attributeValue);
       }
     }
     tagStack.push(tag);
   }
   
-  private void doEndElement(final XMLStreamReader xmlStreamReader, final Stack<Tag> tagStack) throws UnsupportedTagException {
+  private void doEndElement(final XMLStreamReader xmlStreamReader, final Stack<Tag> tagStack) {
     final Tag tag = tagStack.pop();
     if(!tagStack.isEmpty()) {
-      final Tag parent = tagStack.peek();
-      if(parent.canContainChild(tag)) {
-        parent.addChild(tag);
-      }
+      tagStack.peek().addChild(tag);
     } else {
       tagStack.push(tag);
     }
   }
   
-  private XmlDocument parse(final XMLStreamReader xmlStreamReader) throws XMLStreamException, ObjectInstantiationException,
-      UnsupportedTagException, UnsupportedAttributeException, XmlDocumentBuilderException {
+  private RcmlDocument parse(final XMLStreamReader xmlStreamReader) throws XMLStreamException, ObjectInstantiationException {
     final Stack<Tag> tagStack = new Stack<Tag>();
     Tag tag = null;
     while(xmlStreamReader.hasNext()) {
@@ -119,9 +109,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   	    case XMLStreamConstants.END_DOCUMENT: {
   	      if(!tagStack.isEmpty() && tagStack.size() == 1) {
   	    	tag = tagStack.pop();
-  	    	if(!tag.canBeRoot()) {
-  	    	  throw new XmlDocumentBuilderException("The tag <" + tag.getName() + "> can not be a RestComm XML document root tag.");
-  	    	}
   	      }
   	      continue;
   	    }
@@ -130,6 +117,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   	    }
   	  }
   	}
-    return (XmlDocument)tag;
+    return (RcmlDocument)tag;
   }
 }

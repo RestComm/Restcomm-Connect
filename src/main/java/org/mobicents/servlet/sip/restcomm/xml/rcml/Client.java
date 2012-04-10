@@ -16,15 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
 /**
@@ -32,7 +25,6 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
  */
 @NotThreadSafe public final class Client extends RcmlTag {
   public static final String NAME = "Client";
-  private static final Pattern PATTERN = Pattern.compile("[_a-z]+");
   
   public Client() {
     super();
@@ -40,22 +32,6 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   
   @Override public void accept(final TagVisitor visitor) throws VisitorException {
     visitor.visit(this);
-  }
-  
-  @Override public void addAttribute(final Attribute attribute) throws UnsupportedAttributeException {
-    throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any attributes.");
-  }
-
-  @Override public void addChild(final Tag child) throws UnsupportedTagException {
-	throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any children.");
-  }
-
-  @Override public boolean canContainAttribute(final String name) {
-    return false;
-  }
-
-  @Override public boolean canContainChild(final Tag tag) {
-    return false;
   }
 
   @Override public String getName() {
@@ -68,14 +44,5 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   
   @Override public boolean isVerb() {
     return false;
-  }
-  
-  @Override public void setText(final String text) {
-    final Matcher matcher = PATTERN.matcher(text);
-    if(matcher.matches()) {
-      super.setText(text);
-    } else {
-      throw new IllegalArgumentException(text + " is not a valid identifier for the <" + NAME + "> tag.");
-    }
   }
 }

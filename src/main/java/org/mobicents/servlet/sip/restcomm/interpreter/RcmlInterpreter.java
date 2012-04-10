@@ -36,12 +36,13 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
+import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagIterator;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
-import org.mobicents.servlet.sip.restcomm.xml.XmlDocument;
-import org.mobicents.servlet.sip.restcomm.xml.XmlDocumentBuilder;
+import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
+import org.mobicents.servlet.sip.restcomm.xml.RcmlDocumentBuilder;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 
@@ -75,11 +76,15 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   //Tag strategy strategies.
   private final TagStrategyFactory strategies;
   // XML Resource Builder.
-  private final XmlDocumentBuilder resourceBuilder;
+  private final RcmlDocumentBuilder resourceBuilder;
   // XML Resource.
-  private XmlDocument resource;
-  // XML Resource fetch resourceFetchMethod.
-  private String resourceFetchMethod;
+  private RcmlDocument resource;
+  // XML Resource request attributes.
+  private String resourceRequestVariables;
+  // XML Resource request resourceRequestMethod.
+  private String resourceRequestMethod;
+  // XML Resource response headers.
+  private String resourceResponseHeaders;
   //XML Resource URI.
   private URI resourceUri;
 	
@@ -93,7 +98,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     addState(FAILED);
     this.context = context;
     this.strategies = new TagStrategyFactory();
-    this.resourceBuilder = new XmlDocumentBuilder(new RcmlTagFactory());
+    this.resourceBuilder = new RcmlDocumentBuilder(new RcmlTagFactory());
   }
   
   public void failed() {
@@ -109,12 +114,24 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     setState(FINISHED);
   }
   
-  public URI getCurrentUri() {
-    return resourceUri;
+  public String getCurrentResource() {
+    return resource.toString();
   }
   
-  public String getCurrentUriMethod() {
-    return resourceFetchMethod;
+  public String getCurrentResourceRequestMethod() {
+    return resourceRequestMethod;
+  }
+  
+  public String getCurrentResourceRequestVariables() {
+    return resourceRequestVariables;
+  }
+  
+  public String getCurrentResourceResponseHeaders() {
+    return resourceResponseHeaders;
+  }
+  
+  public URI getCurrentResourceUri() {
+    return resourceUri;
   }
   
   public void initialize() throws InterpreterException {
@@ -139,12 +156,12 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	// Load the XML resource for execution.
 	final List<NameValuePair> parameters = context.getRcmlRequestParameters();
 	parameters.addAll(additionalParameters);
-	final String parameterString = URLEncodedUtils.format(parameters, "UTF-8");
+	resourceRequestVariables = URLEncodedUtils.format(parameters, "UTF-8");
 	try {
 	  HttpUriRequest request = null;
 	  if(RequestMethod.GET.equals(fetchMethod)) {
 	    request = new HttpGet(URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(),
-	        parameterString, null));
+	        resourceRequestVariables, null));
 	  } else if(RequestMethod.POST.equals(fetchMethod)) {
 	    request = new HttpPost(uri);
 	    ((HttpPost)request).setEntity(new UrlEncodedFormEntity(parameters));
@@ -153,14 +170,15 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	  final HttpResponse response = client.execute(request);
 	  final int status = response.getStatusLine().getStatusCode();
 	  if(status == HttpStatus.SC_OK) {
+		this.resourceResponseHeaders = HttpUtils.toString(response.getAllHeaders());
 	    this.resource = resourceBuilder.build(response.getEntity().getContent());
-	    this.resourceFetchMethod = fetchMethod;
+	    this.resourceRequestMethod = fetchMethod;
 	    this.resourceUri = uri;
 	    if(logger.isInfoEnabled()) {
 	      final StringBuilder buffer = new StringBuilder();
 	      buffer.append("Successfully Loaded Resource\n");
 	      buffer.append("URI: ").append(resourceUri.toString()).append("\n");
-	      buffer.append("Fetch Method: ").append(resourceFetchMethod).append("\n");
+	      buffer.append("Fetch Method: ").append(resourceRequestMethod).append("\n");
 	      buffer.append(resource.toString());
 	      logger.info(buffer.toString());
 	    }
@@ -216,6 +234,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   public void visit(final Tag tag) throws VisitorException {
 	try {
 	  final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
+	  strategy.initialize(this, context, tag);
 	  strategy.execute(this, context, tag);
 	} catch(final TagStrategyInstantiationException exception) {
 	  logger.error(exception);

@@ -35,7 +35,7 @@ import org.apache.http.message.BasicNameValuePair;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.cache.DiskCache;
-import org.mobicents.servlet.sip.restcomm.util.UriUtils;
+import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -103,7 +103,7 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
   }
   
   public URI getSpeech(final String text, final String gender, final String language)
-      throws IllegalArgumentException, SpeechSynthesizerException {
+      throws SpeechSynthesizerException {
     final List<NameValuePair> parameters = new ArrayList<NameValuePair>(33);
     parameters.addAll(defaultParameters);
     parameters.add(new BasicNameValuePair("cl_app", application));
@@ -118,7 +118,7 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
 	  final HttpResponse response = client.execute(post);
 	  final int status = response.getStatusLine().getStatusCode();
 	  if(status == HttpStatus.SC_OK) {
-	    final Map<String, String> results = UriUtils.parseEntity(response.getEntity());
+	    final Map<String, String> results = HttpUtils.toMap(response.getEntity());
 	    if("OK".equals(results.get("res"))) {
 	      final URI uri = URI.create(results.get("snd_url"));
 	      return cache.put(buildKey(text, gender, language), uri);
@@ -142,12 +142,27 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
     String speaker = null;
 	if("woman".equalsIgnoreCase(gender)) {
 	  speaker = women.get(language);
+	  if(speaker == null || speaker.isEmpty()) {
+	    speaker = men.get(language);
+	  }
 	} else if("man".equalsIgnoreCase(gender)) {
 	  speaker = men.get(language);
+	  if(speaker == null || speaker.isEmpty()) {
+	    speaker = women.get(language);
+	  }
 	} else {
 	  throw new IllegalArgumentException(gender + " is not a valid gender.");
 	}
 	return speaker;
+  }
+  
+  @Override public boolean isSupported(final String language) throws IllegalArgumentException {
+    String speaker = findSpeaker("woman", language);
+    if(speaker == null || speaker.isEmpty()) {
+      return false;
+    } else {
+      return true;
+    }
   }
   
   private void loadVoices() throws RuntimeException {
@@ -215,7 +230,7 @@ import org.mobicents.servlet.sip.restcomm.util.UriUtils;
   }
   
   @Override public URI synthesize(final String text, final String gender, final String language)
-	      throws IllegalArgumentException, SpeechSynthesizerException {
+	      throws SpeechSynthesizerException {
 	final String key = buildKey(text, gender, language);
     if(cache.contains(key, soundFileType)) {
       return cache.get(key, soundFileType);

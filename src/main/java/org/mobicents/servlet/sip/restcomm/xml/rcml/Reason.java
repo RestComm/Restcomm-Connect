@@ -16,9 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
@@ -27,14 +24,6 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
  */
 @NotThreadSafe public final class Reason extends AbstractAttribute {
   public static final String NAME = "reason";
-  public static final String REJECTED = "rejected";
-  public static final String BUSY = "busy";
-  private static final Set<String> VALUES;
-  static {
-    VALUES = new HashSet<String>();
-    VALUES.add(REJECTED);
-    VALUES.add(BUSY);
-  }
   
   public Reason() {
     super();
@@ -42,9 +31,5 @@ import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
   
   @Override public String getName() {
     return NAME;
-  }
-
-  @Override public boolean isSupportedValue(final String value) {
-    return VALUES.contains(value);
   }
 }

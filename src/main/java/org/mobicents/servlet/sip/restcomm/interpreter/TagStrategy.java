@@ -23,4 +23,5 @@ import org.mobicents.servlet.sip.restcomm.xml.Tag;
  */
 public interface TagStrategy {
   public void execute(RcmlInterpreter interpreter, RcmlInterpreterContext context, Tag tag) throws TagStrategyException;
+  public void initialize(RcmlInterpreter interpreter, RcmlInterpreterContext context, Tag tag) throws TagStrategyException;
 }
