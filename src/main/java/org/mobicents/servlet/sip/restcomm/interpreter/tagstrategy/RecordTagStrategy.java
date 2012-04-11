@@ -66,7 +66,8 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   private boolean playBeep;
   
   private Sid sid;
-  private URI recording;
+  private URI path;
+  private String uri;
   
   public RecordTagStrategy() {
     super();
@@ -77,6 +78,9 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     baseRecordingsUri = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-uri"), "/");
     beepAudioFile = new ArrayList<URI>();
     beepAudioFile.add(URI.create("file://" + configuration.getString("beep-audio-file")));
+    sid = Sid.generate(Sid.Type.RECORDING);
+    path = toPath(sid);
+    uri = toUri(sid);
   }
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -87,28 +91,26 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
         call.play(beepAudioFile, 1);
       }
       // Record something.
-      sid = Sid.generate(Sid.Type.RECORDING);
-      recording = toPath(sid);
-      call.playAndRecord(emptyAnnouncement, recording, timeout, maxLength, finishOnKey);
-      // Transcribe the recording.
+      call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
+      // Transcribe the path.
       if(transcribe || (transcribeCallback != null)) {
         final Map<String, Object> information = new HashMap<String, Object>();
         information.put("interpreterContext", context);
         information.put("recordingUri", toUri(sid));
         information.put("transcribeCallback", transcribeCallback);
-        speechRecognizer.recognize(recording, "en-US", this, (Serializable)information);
+        speechRecognizer.recognize(path, "en-US", this, (Serializable)information);
       }
       // Redirect to action URI.
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-      parameters.add(new BasicNameValuePair("RecordingUrl", toUri(sid)));
-      final String duration = Double.toString(WavUtils.getAudioDuration(recording));
+      parameters.add(new BasicNameValuePair("RecordingUrl", uri));
+      final String duration = Double.toString(WavUtils.getAudioDuration(path));
       parameters.add(new BasicNameValuePair("RecordingDuration", duration));
       parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
       interpreter.loadResource(action, method, parameters);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();
-      throw new TagStrategyException("There was an error while recording audio.", exception);
+      throw new TagStrategyException("There was an error while path audio.", exception);
     }
   }
   
@@ -209,14 +211,14 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   private URI toPath(final Sid sid) {
-    final StringBuilder path = new StringBuilder();
-    path.append("file://").append(baseRecordingsPath).append(sid.toString()).append(".wav");
-    return URI.create(path.toString());
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("file://").append(baseRecordingsPath).append(sid.toString()).append(".wav");
+    return URI.create(buffer.toString());
   }
   
   private String toUri(final Sid sid) {
-    final StringBuilder uri = new StringBuilder();
-    uri.append(baseRecordingsUri).append(sid.toString()).append(".wav");
-    return uri.toString();
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append(baseRecordingsUri).append(sid.toString()).append(".wav");
+    return buffer.toString();
   }
 }

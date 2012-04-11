@@ -50,6 +50,7 @@ import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
     ATTRIBUTES.put(NumDigits.NAME, NumDigits.class);
     ATTRIBUTES.put(PlayBeep.NAME, PlayBeep.class);
     ATTRIBUTES.put(Reason.NAME, Reason.class);
+    ATTRIBUTES.put(RingbackTone.NAME, RingbackTone.class);
     ATTRIBUTES.put(SendDigits.NAME, SendDigits.class);
     ATTRIBUTES.put(StartConferenceOnEnter.NAME, StartConferenceOnEnter.class);
     ATTRIBUTES.put(StatusCallback.NAME, StatusCallback.class);
@@ -58,26 +59,30 @@ import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
     ATTRIBUTES.put(To.NAME, To.class);
     ATTRIBUTES.put(Transcribe.NAME, Transcribe.class);
     ATTRIBUTES.put(TranscribeCallback.NAME, TranscribeCallback.class);
+    ATTRIBUTES.put(TranscribeLanguage.NAME, TranscribeLanguage.class);
     ATTRIBUTES.put(Url.NAME, Url.class);
     ATTRIBUTES.put(Voice.NAME, Voice.class);
     ATTRIBUTES.put(WaitMethod.NAME, WaitMethod.class);
     ATTRIBUTES.put(WaitUrl.NAME, WaitUrl.class);
     
     TAGS = new HashMap<String, Class<? extends Tag>>();
-    TAGS.put(Response.NAME, Response.class);
-    TAGS.put(Say.NAME, Say.class);
-    TAGS.put(Play.NAME, Play.class);
-    TAGS.put(Gather.NAME, Gather.class);
-    TAGS.put(Record.NAME, Record.class);
-    TAGS.put(Sms.NAME, Sms.class);
-    TAGS.put(Dial.NAME, Dial.class);
     TAGS.put(Client.NAME, Client.class);
-    TAGS.put(Number.NAME, Number.class);
     TAGS.put(Conference.NAME, Conference.class);
+    TAGS.put(Dial.NAME, Dial.class);
+    TAGS.put(Fax.NAME, Fax.class);
+    TAGS.put(Gather.NAME, Gather.class);
     TAGS.put(Hangup.NAME, Hangup.class);
+    TAGS.put(Mms.NAME, Mms.class);
+    TAGS.put(Number.NAME, Number.class);
+    TAGS.put(Pause.NAME, Pause.class);
+    TAGS.put(Play.NAME, Play.class);
+    TAGS.put(Record.NAME, Record.class);
     TAGS.put(Redirect.NAME, Redirect.class);
     TAGS.put(Reject.NAME, Reject.class);
-    TAGS.put(Pause.NAME, Pause.class);
+    TAGS.put(Response.NAME, Response.class);
+    TAGS.put(Say.NAME, Say.class);
+    TAGS.put(Sms.NAME, Sms.class);
+    TAGS.put(Uri.NAME, Uri.class);
   }
   
   public RcmlTagFactory() {
