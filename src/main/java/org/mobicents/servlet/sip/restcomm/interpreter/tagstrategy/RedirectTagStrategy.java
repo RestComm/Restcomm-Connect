@@ -18,13 +18,12 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import java.net.URI;
 
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -34,12 +33,8 @@ public final class RedirectTagStrategy extends RcmlTagStrategy {
     super();
   }
 
-  @Override public void execute(final RcmlInterpreter interpreter,
-      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
-    final Call call = context.getCall();
-    try {
-      answer(call);
-    } catch(final InterruptedException ignored) { return; }
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     // Redirect the interpreter to the new RCML resource.
     final String text = tag.getText();
     if(text != null) {

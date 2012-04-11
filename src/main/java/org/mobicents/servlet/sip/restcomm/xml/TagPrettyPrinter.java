@@ -23,10 +23,12 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Stack;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class TagPrettyPrinter {
+@ThreadSafe public final class TagPrettyPrinter {
   private static final int TAB_SPACES = 2;
   
   private TagPrettyPrinter() {

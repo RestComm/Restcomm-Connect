@@ -20,7 +20,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -30,12 +30,9 @@ public final class HangupTagStrategy extends RcmlTagStrategy {
     super();
   }
 
-  @Override public void execute(final RcmlInterpreter interpreter,
-      RcmlInterpreterContext context, Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
-    try {
-	  answer(call);
-    } catch(final InterruptedException ignored) { return; }
 	call.hangup();
 	interpreter.finish();
   }

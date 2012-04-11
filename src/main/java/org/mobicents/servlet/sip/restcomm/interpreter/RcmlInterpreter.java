@@ -232,16 +232,16 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   }
 
   public void visit(final Tag tag) throws VisitorException {
-	try {
-	  final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
-	  strategy.initialize(this, context, tag);
-	  strategy.execute(this, context, tag);
-	} catch(final TagStrategyInstantiationException exception) {
-	  logger.error(exception);
-	  throw new VisitorException(exception);
-	} catch(final TagStrategyException exception) {
-	  logger.error(exception);
-	  throw new VisitorException(exception);
-	}
+    if(tag instanceof RcmlTag) {
+      final RcmlTag rcmlTag = (RcmlTag)tag;
+	  try {
+	    final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
+	    strategy.initialize(this, context, rcmlTag);
+	    strategy.execute(this, context, rcmlTag);
+	  } catch(final Exception exception) {
+	    logger.error(exception);
+	    throw new VisitorException(exception);
+	  }
+    }
   }
 }

@@ -16,16 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.mobicents.servlet.sip.restcomm.http.RequestMethod.*;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
 /**
@@ -33,58 +25,13 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
  */
 @NotThreadSafe public final class Conference extends RcmlTag {
   public static final String NAME = "Conference";
-  private static final Set<String> ATTRIBUTES;
-  static {
-    ATTRIBUTES = new HashSet<String>();
-    ATTRIBUTES.add(Muted.NAME);
-    ATTRIBUTES.add(Beep.NAME);
-    ATTRIBUTES.add(StartConferenceOnEnter.NAME);
-    ATTRIBUTES.add(EndConferenceOnExit.NAME);
-    ATTRIBUTES.add(WaitUrl.NAME);
-    ATTRIBUTES.add(WaitMethod.NAME);
-    ATTRIBUTES.add(MaxParticipants.NAME);
-  }
   
   public Conference() {
     super();
-    final Muted muted = new Muted();
-    muted.setBooleanValue(false);
-    final Beep beep = new Beep();
-    beep.setBooleanValue(true);
-    final StartConferenceOnEnter startConferenceOnEnter = new StartConferenceOnEnter();
-    startConferenceOnEnter.setBooleanValue(true);
-    final EndConferenceOnExit endConferenceOnExit = new EndConferenceOnExit();
-    endConferenceOnExit.setBooleanValue(false);
-    final WaitMethod waitMethod = new WaitMethod();
-    waitMethod.setValue(POST);
-    final MaxParticipants maxParticipants = new MaxParticipants();
-    maxParticipants.setIntegerValue(40);
-    try {
-      addAttribute(muted);
-      addAttribute(beep);
-      addAttribute(startConferenceOnEnter);
-      addAttribute(endConferenceOnExit);
-      addAttribute(waitMethod);
-      addAttribute(maxParticipants);
-    } catch(final UnsupportedAttributeException ignored) {
-      // Will never happen.
-    }
   }
   
   @Override public void accept(final TagVisitor visitor) throws VisitorException {
     visitor.visit(this);
-  }
-  
-  @Override public void addChild(final Tag child) throws UnsupportedTagException {
-	throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any children.");
-  }
-
-  @Override public boolean canContainAttribute(final String name) {
-    return ATTRIBUTES.contains(name);
-  }
-
-  @Override public boolean canContainChild(final Tag tag) {
-    return false;
   }
 
   @Override public String getName() {

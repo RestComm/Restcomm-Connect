@@ -69,12 +69,9 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
       for(int index = 0; index < attributeCount; index++) {
         final String attributeName = xmlStreamReader.getAttributeLocalName(index);
         final String attributeValue = xmlStreamReader.getAttributeValue(index);
-      	Attribute attribute = tag.getAttribute(attributeName);
-      	if(attribute == null) {
-      	  attribute = factory.getAttributeInstance(attributeName);
-      	  tag.addAttribute(attribute);
-      	}
-        attribute.setValue(attributeValue);
+      	final Attribute attribute = factory.getAttributeInstance(attributeName);
+      	attribute.setValue(attributeValue);
+      	tag.addAttribute(attribute);
       }
     }
     tagStack.push(tag);

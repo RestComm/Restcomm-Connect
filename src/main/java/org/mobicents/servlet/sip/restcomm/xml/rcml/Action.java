@@ -17,12 +17,12 @@
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.UriAttribute;
+import org.mobicents.servlet.sip.restcomm.xml.AbstractAttribute;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class Action extends UriAttribute {
+@NotThreadSafe public final class Action extends AbstractAttribute {
   public static final String NAME = "action";
 
   public Action() {

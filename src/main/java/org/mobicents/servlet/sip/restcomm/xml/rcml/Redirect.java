@@ -16,16 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.mobicents.servlet.sip.restcomm.http.RequestMethod.*;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
 /**
@@ -33,37 +25,13 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
  */
 @NotThreadSafe public final class Redirect extends RcmlTag {
   public static final String NAME = "Redirect";
-  private static final Set<String> ATTRIBUTES;
-  static {
-	ATTRIBUTES = new HashSet<String>();
-    ATTRIBUTES.add(Method.NAME);
-  }
   
   public Redirect() {
     super();
-    final Method method = new Method();
-    method.setValue(POST);
-    try {
-      addAttribute(method);
-    } catch(final UnsupportedAttributeException ignored) {
-      // Will never happen.
-    }
   }
   
   @Override public void accept(final TagVisitor visitor) throws VisitorException {
     visitor.visit(this);
-  }
-  
-  @Override public void addChild(final Tag child) throws UnsupportedTagException {
-	throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any children.");
-  }
-  
-  @Override public boolean canContainAttribute(final String name) {
-    return ATTRIBUTES.contains(name);
-  }
-
-  @Override public boolean canContainChild(final Tag tag) {
-    return false;
   }
 
   @Override public String getName() {

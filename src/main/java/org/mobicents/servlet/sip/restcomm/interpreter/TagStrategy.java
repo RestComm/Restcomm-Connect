@@ -16,12 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface TagStrategy {
-  public void execute(RcmlInterpreter interpreter, RcmlInterpreterContext context, Tag tag) throws TagStrategyException;
-  public void initialize(RcmlInterpreter interpreter, RcmlInterpreterContext context, Tag tag) throws TagStrategyException;
+  public void execute(RcmlInterpreter interpreter, RcmlInterpreterContext context, RcmlTag tag) throws TagStrategyException;
+  public void initialize(RcmlInterpreter interpreter, RcmlInterpreterContext context, RcmlTag tag) throws TagStrategyException;
 }

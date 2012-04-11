@@ -27,7 +27,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Reason;
 
 /**
@@ -45,14 +45,13 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
     rejectAudioFile.add(uri);
   }
   
-  @Override public void execute(final RcmlInterpreter interpreter,
-      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
       final String reason = tag.getAttribute(Reason.NAME).getValue();
       if(reason.equals("rejected")) {
     	try {
-    	  answer(call);
           call.play(rejectAudioFile, 1);
         } catch(final CallException exception) {
           interpreter.failed();

@@ -32,6 +32,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.CallerId;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -47,14 +48,13 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     conferenceCenter = services.get(ConferenceCenter.class);
   }
   
-  @Override public void execute(final RcmlInterpreter interpreter,
-      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     Attribute attribute = tag.getAttribute(CallerId.NAME);
     final String from = attribute != null ? attribute.getValue() : call.getOriginator();
     final String to = tag.getText();
     try {
-      answer(call);
       if(tag.hasChildren() && (to != null && !to.isEmpty())) {
         throw new TagStrategyException("The <Dial> tag can not contain text and child elements at the same time.");
       } else {

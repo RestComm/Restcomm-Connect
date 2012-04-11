@@ -17,20 +17,16 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
-import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
-import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -45,10 +41,11 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
     super();
   }
   
-  @Override public void execute(final RcmlInterpreter interpreter,
-      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     if(text != null) {
-      final List<URI> announcement = say(gender, language, text);
+      final List<URI> announcement = new ArrayList<URI>();
+      announcement.add(say(gender, language, text));
       try {
         final Call call = context.getCall();
     	if(loop == 0) {
@@ -66,39 +63,18 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
     }
   }
   
-  private String getGender(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
-    final Attribute attribute = tag.getAttribute(Voice.NAME);
-    if(attribute != null) {
-      final String gender = attribute.getValue();
-      if("man".equals(gender) || "woman".equals(gender)) {
-        return gender;
-      }
-    }
-    notify(interpreter, context, tag, Notification.WARNING, 13511);
-    return "man";
-  }
-  
-  private String getLanguage(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
-    final Attribute attribute = tag.getAttribute(Language.NAME);
-    if(attribute != null) {
-      final ServiceLocator services = ServiceLocator.getInstance();
-      final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
-      final String language = attribute.getValue();
-      if(synthesizer.isSupported(language)) {
-        return language;
-      }
-    }
-    notify(interpreter, context, tag, Notification.WARNING, 13512);
-    return "en";
-  }
-  
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) throws TagStrategyException {
+      final RcmlTag tag) throws TagStrategyException {
 	super.initialize(interpreter, context, tag);
     gender = getGender(interpreter, context, tag);
+    if(gender == null) {
+      notify(interpreter, context, tag, Notification.WARNING, 13511);
+      gender = "man";
+    }
     language = getLanguage(interpreter, context, tag);
+    if(language == null) {
+      language = "en";
+    }
     loop = getLoop(interpreter, context, tag);
     if(loop == -1) {
       notify(interpreter, context, tag, Notification.WARNING, 13510);

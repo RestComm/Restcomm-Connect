@@ -16,14 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
 /**
@@ -31,15 +25,6 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
  */
 @NotThreadSafe public final class Number extends RcmlTag {
   public static final String NAME = "Number";
-  private static final Set<String> ATTRIBUTES;
-  static {
-    ATTRIBUTES = new HashSet<String>();
-    ATTRIBUTES.add(SendDigits.NAME);
-    ATTRIBUTES.add(Url.NAME);
-  }
-  private static final Pattern E164 = Pattern.compile("\\+?\\d{10,15}");
-  private static final Pattern US_1 = Pattern.compile("\\d{3}\\-\\d{3}\\-\\d{4}");
-  private static final Pattern US_2 = Pattern.compile("\\(\\d{3}\\)\\d{3}\\-\\d{4}");
   
   public Number() {
     super();
@@ -47,18 +32,6 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   
   @Override public void accept(final TagVisitor visitor) throws VisitorException {
     visitor.visit(this);
-  }
-  
-  @Override public void addChild(final Tag child) throws UnsupportedTagException {
-	throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any children.");
-  }
-  
-  @Override public boolean canContainAttribute(final String name) {
-    return ATTRIBUTES.contains(name);
-  }
-
-  @Override public boolean canContainChild(final Tag tag) {
-    return false;
   }
 
   @Override public String getName() {
@@ -71,13 +44,5 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   
   @Override public boolean isVerb() {
     return false;
-  }
-  
-  @Override public void setText(final String text) {
-    if(E164.matcher(text).matches() || US_1.matcher(text).matches() || US_2.matcher(text).matches()) {
-      super.setText(text);
-    } else {
-      throw new IllegalArgumentException(text + " is not a valid phone number for the <" + NAME + "> tag.");
-    }
   }
 }

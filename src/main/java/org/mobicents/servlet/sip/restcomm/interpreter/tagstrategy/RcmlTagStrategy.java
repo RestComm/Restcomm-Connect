@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
@@ -38,17 +39,20 @@ import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Action;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.FinishOnKey;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class RcmlTagStrategy implements TagStrategy {
+@NotThreadSafe public abstract class RcmlTagStrategy implements TagStrategy {
   private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1,12}");
   
   protected final Configuration configuration;
@@ -66,7 +70,7 @@ public abstract class RcmlTagStrategy implements TagStrategy {
   }
   
   protected URI getAction(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Action.NAME);
     if(attribute != null) {
       final URI base = interpreter.getCurrentResourceUri();
@@ -77,7 +81,7 @@ public abstract class RcmlTagStrategy implements TagStrategy {
   }
   
   protected String getFinishOnKey(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(FinishOnKey.NAME);
     if(attribute != null) {
       final String value = attribute.getValue();
@@ -88,20 +92,64 @@ public abstract class RcmlTagStrategy implements TagStrategy {
     return null;
   }
   
+  protected String getGender(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    final Attribute attribute = tag.getAttribute(Voice.NAME);
+    if(attribute != null) {
+      final String gender = attribute.getValue();
+      if("man".equals(gender) || "woman".equals(gender)) {
+        return gender;
+      }
+    }
+    return null;
+  }
+  
+  protected String getLanguage(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    final Attribute attribute = tag.getAttribute(Language.NAME);
+    if(attribute != null) {
+      final ServiceLocator services = ServiceLocator.getInstance();
+      final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
+      final String language = attribute.getValue();
+      if(synthesizer.isSupported(language)) {
+        return language;
+      }
+    }
+    return null;
+  }
+  
+  protected int getLength(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    final Attribute attribute = tag.getAttribute(Length.NAME);
+    if(attribute != null) {
+      final String value = attribute.getValue();
+      if(StringUtils.isPositiveInteger(value)) {
+        final int result = Integer.parseInt(value);
+        if(result > 0) {
+          return result;
+        }
+      }
+    }
+    return -1;
+  }
+  
   protected int getLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Loop.NAME);
     if(attribute != null) {
       final String value = attribute.getValue();
       if(StringUtils.isPositiveInteger(value)) {
-        return Integer.parseInt(value);
+        final int result = Integer.parseInt(value);
+        if(result >= 0) {
+          return result;
+        }
       }
     }
     return -1;
   }
   
   protected String getMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Method.NAME);
     if(attribute != null) {
       return attribute.getValue();
@@ -117,19 +165,22 @@ public abstract class RcmlTagStrategy implements TagStrategy {
   }
   
   protected int getTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Timeout.NAME);
     if(attribute != null) {
       final String value = attribute.getValue();
       if(StringUtils.isPositiveInteger(value)) {
-        return Integer.parseInt(value);
+        final int result = Integer.parseInt(value);
+        if(result > 0) {
+          return result;
+        }
       }
     }
     return -1;
   }
   
   protected URI getUri(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
 	final String text = tag.getText();
 	if(text != null && !text.isEmpty()) {
 	  final URI base = interpreter.getCurrentResourceUri();
@@ -140,7 +191,7 @@ public abstract class RcmlTagStrategy implements TagStrategy {
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-	      final Tag tag) throws TagStrategyException {
+	      final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
       try {
@@ -154,7 +205,7 @@ public abstract class RcmlTagStrategy implements TagStrategy {
   }
   
   protected void notify(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag, final int log, final int errorCode) {
+      final RcmlTag tag, final int log, final int errorCode) {
 	  final Notification.Builder builder = Notification.builder();
     builder.setAccountSid(context.getAccountSid());
     builder.setCallSid(context.getCall().getSid());
@@ -201,12 +252,9 @@ public abstract class RcmlTagStrategy implements TagStrategy {
 	}
   }
   
-  protected List<URI> say(final String gender, final String language, final String text) {
+  protected URI say(final String gender, final String language, final String text) {
     final ServiceLocator services = ServiceLocator.getInstance();
     final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
-    final URI uri = synthesizer.synthesize(text, gender, language);
-    final List<URI> announcements = new ArrayList<URI>();
-    announcements.add(uri);
-    return announcements;
+    return synthesizer.synthesize(text, gender, language);
   }
 }

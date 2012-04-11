@@ -26,7 +26,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -39,8 +39,8 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
     super();
   }
   
-  @Override public void execute(final RcmlInterpreter interpreter,
-    final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     if(uri != null) {
       final List<URI> announcement = new ArrayList<URI>();
       announcement.add(uri);
@@ -62,7 +62,7 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) throws TagStrategyException {
+      final RcmlTag tag) throws TagStrategyException {
     super.initialize(interpreter, context, tag);
     try {
       loop = getLoop(interpreter, context, tag);

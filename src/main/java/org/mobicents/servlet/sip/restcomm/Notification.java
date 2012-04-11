@@ -48,7 +48,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private final String responseBody;
   private final URI uri;
   
-  private Notification(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
+  public Notification(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
       final Sid callSid, final String apiVersion, final Integer log, final Integer errorCode, final URI moreInfo, String messageText,
       final DateTime messageDate, final URI requestUrl, final String requestMethod, final String requestVariables,
       final String responseHeaders, final String responseBody, final URI uri) {

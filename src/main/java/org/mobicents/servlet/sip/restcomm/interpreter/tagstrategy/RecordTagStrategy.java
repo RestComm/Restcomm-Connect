@@ -18,7 +18,6 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import java.io.Serializable;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,16 +39,9 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.WavUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.BooleanAttribute;
-import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.UriAttribute;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Action;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.FinishOnKey;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.MaxLength;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.PlayBeep;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Transcribe;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeCallback;
 
@@ -73,27 +65,30 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   private URI transcribeCallback;
   private boolean playBeep;
   
+  private Sid sid;
+  private URI recording;
+  
   public RecordTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
+    speechRecognizer = services.get(SpeechRecognizer.class);
     final Configuration configuration = services.get(Configuration.class);
     baseRecordingsPath = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-path"), "/");
     baseRecordingsUri = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-uri"), "/");
     beepAudioFile = new ArrayList<URI>();
     beepAudioFile.add(URI.create("file://" + configuration.getString("beep-audio-file")));
-    speechRecognizer = services.get(SpeechRecognizer.class);
   }
   
-  @Override public void execute(final RcmlInterpreter interpreter,
-      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     try {
       if(playBeep) {
         call.play(beepAudioFile, 1);
       }
       // Record something.
-      final Sid sid = Sid.generate(Sid.Type.RECORDING);
-      final URI recording = toPath(sid);
+      sid = Sid.generate(Sid.Type.RECORDING);
+      recording = toPath(sid);
       call.playAndRecord(emptyAnnouncement, recording, timeout, maxLength, finishOnKey);
       // Transcribe the recording.
       if(transcribe || (transcribeCallback != null)) {
@@ -122,13 +117,13 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   private int getMaxLength(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(MaxLength.NAME);
     if(attribute != null) {
       final String value = attribute.getValue();
       if(StringUtils.isPositiveInteger(value)) {
     	final int result = Integer.parseInt(value);
-        if(result >= 1) {
+        if(result > 1) {
           return result;
         }
       }
@@ -138,7 +133,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   private boolean getPlayBeep(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(PlayBeep.NAME);
     if(attribute != null) {
 	  final String value = attribute.getValue();
@@ -150,7 +145,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   private boolean getTranscribe(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Transcribe.NAME);
     if(attribute != null) {
       final String value = attribute.getValue();
@@ -163,7 +158,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   private URI getTranscribeCallback(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) throws TagStrategyException {
+      final RcmlTag tag) throws TagStrategyException {
     final Attribute attribute = tag.getAttribute(TranscribeCallback.NAME);
     if(attribute != null) {
       try {
@@ -185,7 +180,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) throws TagStrategyException {
+      final RcmlTag tag) throws TagStrategyException {
     super.initialize(interpreter, context, tag);
     action = getAction(interpreter, context, tag);
     method = getMethod(interpreter, context, tag);

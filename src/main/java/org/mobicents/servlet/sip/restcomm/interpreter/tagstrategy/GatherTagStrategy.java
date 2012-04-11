@@ -30,16 +30,12 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.IntegerAttribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.NumDigits;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Play;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -55,12 +51,12 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
     super();
   }
 
-  @Override public void execute(final RcmlInterpreter interpreter,
-      final RcmlInterpreterContext context, final Tag tag) throws TagStrategyException {
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     try {
 	  // Collect some digits.
-      final Call call = context.getCall();
-	  final List<URI> announcements = getAnnouncements(tag.getChildren());
+	  final List<URI> announcements = getAnnouncements(interpreter, context, tag);
+	  final Call call = context.getCall();
       call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
       // Redirect to action URI.;
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
@@ -74,26 +70,18 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
     }
   }
   
-  private List<URI> getAnnouncements(final List<Tag> children) {
+  private List<URI> getAnnouncements(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+	final List<Tag> children = tag.getChildren();
 	final List<URI> announcements = new ArrayList<URI>();
     for(final Tag child : children) {
-      final RcmlTag tag = (RcmlTag)child;
       final String name = tag.getName();
       if(Say.NAME.equals(name)) {
-    	final String gender = tag.getAttribute(Voice.NAME).getValue();
-        final String language = tag.getAttribute(Language.NAME).getValue();
-        final String text = tag.getText();
-        announcements.addAll(say(gender, language, text));
+        announcements.addAll(getSay(interpreter, context, (RcmlTag)child));
       } else if(Play.NAME.equals(name)) {
-        final String text = tag.getText();
-        if(text != null) {
-          final URI uri = URI.create(text);
-          announcements.add(uri);
-        }
+        announcements.addAll(getPlay(interpreter, context, (RcmlTag)child));
       } else if(Pause.NAME.equals(name)) {
-        final int length = ((IntegerAttribute)tag
-            .getAttribute(Length.NAME)).getIntegerValue();
-        announcements.addAll(pause(length));
+        announcements.addAll(getPause(interpreter, context, (RcmlTag)child));
       }
  	  tag.setHasBeenVisited(true);
  	}
@@ -101,7 +89,7 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
   }
   
   private int getNumDigits(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) {
+      final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(NumDigits.NAME);
     if(attribute != null) {
       final String value = attribute.getValue();
@@ -116,8 +104,62 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
     return Short.MAX_VALUE;
   }
   
+  private List<URI> getPause(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    final int length = getLength(interpreter, context, tag);
+    return pause(length);
+  }
+  
+  private List<URI> getPlay(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    int loop = getLoop(interpreter, context, tag);
+    if(loop == -1) {
+      loop = 1;
+    }
+    final URI uri = getUri(interpreter, context, tag);
+    if(uri == null) {
+      notify(interpreter, context, tag, Notification.ERROR, 13325);
+    }
+    final List<URI> announcements = new ArrayList<URI>();
+    if(uri != null) {
+      for(int counter = 0; counter < loop; counter++) {
+        announcements.add(uri);
+      }
+    }
+    return announcements;
+  }
+  
+  private List<URI> getSay(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    String gender = getGender(interpreter, context, tag);
+    if(gender == null) {
+      notify(interpreter, context, tag, Notification.WARNING, 13321);
+      gender = "man";
+    }
+    String language = getLanguage(interpreter, context, tag);
+    if(language == null) {
+      language = "en";
+    }
+    int loop = getLoop(interpreter, context, tag);
+    final String text = tag.getText();
+    if(text == null || text.isEmpty()) {
+  	  notify(interpreter, context, tag, Notification.WARNING, 13322);
+  	}
+    if(loop == -1) {
+      loop = 1;
+    }
+    final List<URI> announcements = new ArrayList<URI>();
+    if(text != null) {
+      final URI uri = say(gender, language, text);
+      for(int counter = 0; counter < loop; counter++) {
+        announcements.add(uri);
+      }
+    }
+    return announcements;
+  }
+  
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final Tag tag) throws TagStrategyException {
+      final RcmlTag tag) throws TagStrategyException {
     super.initialize(interpreter, context, tag);
     try {
       action = getAction(interpreter, context, tag);
@@ -127,7 +169,7 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
         method = "POST";
       }
       timeout = getTimeout(interpreter, context, tag);
-      if(timeout == -1 || timeout == 0) {
+      if(timeout == -1) {
         notify(interpreter, context, tag, Notification.WARNING, 13313);
         timeout = 5;
       }

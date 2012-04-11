@@ -17,11 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedTagException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 
 /**
@@ -37,22 +33,6 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   @Override public void accept(final TagVisitor visitor) throws VisitorException {
     visitor.visit(this);
   }
-  
-  @Override public void addAttribute(final Attribute attribute) throws UnsupportedAttributeException {
-    throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any attributes.");
-  }
-
-  @Override public void addChild(final Tag child) throws UnsupportedTagException {
-	throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any children.");
-  }
-
-  @Override public boolean canContainAttribute(final String name) {
-    return false;
-  }
-
-  @Override public boolean canContainChild(final Tag tag) {
-    return false;
-  }
 
   @Override public String getName() {
     return NAME;
@@ -64,9 +44,5 @@ import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
   
   @Override public boolean isVerb() {
     return true;
-  }
-  
-  @Override public void setText(final String text) {
-    throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any text.");
   }
 }

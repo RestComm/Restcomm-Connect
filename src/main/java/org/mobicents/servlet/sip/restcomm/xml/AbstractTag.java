@@ -48,10 +48,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     child.setParent(this);
     children.add(child);
   }
-  
-  public boolean canBeRoot() {
-    return false;
-  }
 
   public Attribute getAttribute(final String name) {
     return attributes.get(name);

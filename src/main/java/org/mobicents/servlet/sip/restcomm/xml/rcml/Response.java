@@ -16,15 +16,11 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml.rcml;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
-import org.mobicents.servlet.sip.restcomm.xml.UnsupportedAttributeException;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
 
@@ -33,20 +29,6 @@ import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
  */
 @NotThreadSafe public final class Response extends RcmlTag implements RcmlDocument {
   public static final String NAME = "Response";
-  private static final Set<String> CHILDREN;
-  static {
-    CHILDREN = new HashSet<String>();
-    CHILDREN.add(Say.NAME);
-    CHILDREN.add(Play.NAME);
-    CHILDREN.add(Gather.NAME);
-    CHILDREN.add(Record.NAME);
-    CHILDREN.add(Sms.NAME);
-    CHILDREN.add(Dial.NAME);
-    CHILDREN.add(Hangup.NAME);
-    CHILDREN.add(Redirect.NAME);
-    CHILDREN.add(Reject.NAME);
-    CHILDREN.add(Pause.NAME);
-  }
   
   public Response() {
     super();
@@ -60,22 +42,6 @@ import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
 	  }
 	}
   }
-  
-  @Override public void addAttribute(final Attribute attribute) throws UnsupportedAttributeException {
-    throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any attributes.");
-  }
-  
-  @Override public boolean canBeRoot() {
-    return true;
-  }
-  
-  @Override public boolean canContainAttribute(final String name) {
-    return false;
-  }
-
-  @Override public boolean canContainChild(final Tag tag) {
-    return CHILDREN.contains(tag.getName());
-  }
 
   @Override public String getName() {
     return NAME;
@@ -87,9 +53,5 @@ import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
   
   @Override public boolean isVerb() {
     return false;
-  }
-  
-  @Override public void setText(final String text) {
-    throw new UnsupportedOperationException("The <" + NAME + "> tag may not have any text.");
   }
 }
