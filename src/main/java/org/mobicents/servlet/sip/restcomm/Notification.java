@@ -144,7 +144,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     return uri;
   }
   
-  @NotThreadSafe public static class Builder {
+  @NotThreadSafe public static final class Builder {
+    private Sid sid;
     private Sid accountSid;
     private Sid callSid;
     private String apiVersion;
@@ -165,10 +166,13 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
     
     public Notification build() {
-      final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
-      final DateTime dateCreated = DateTime.now();
-      return new Notification(sid, dateCreated, dateCreated, accountSid, callSid, apiVersion, log, errorCode, moreInfo, messageText,
+      final DateTime now = DateTime.now();
+      return new Notification(sid, now, now, accountSid, callSid, apiVersion, log, errorCode, moreInfo, messageText,
           messageDate, requestUrl, requestMethod, requestVariables, responseHeaders, responseBody, uri);
+    }
+    
+    public void setSid(final Sid sid) {
+      this.sid = sid;
     }
     
     public void setAccountSid(final Sid accountSid) {

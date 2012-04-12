@@ -104,6 +104,10 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     }
   }
   
+  public void updateSmsMessage(final SmsMessage smsMessage) {
+    
+  }
+  
   private Map<String, Object> toMap(final SmsMessage smsMessage) {
     final Map<String, Object> map = new HashMap<String, Object>();
     map.put("sid", writeSid(smsMessage.getSid()));
@@ -114,8 +118,8 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     map.put("sender", smsMessage.getSender());
     map.put("recipient", smsMessage.getRecipient());
     map.put("body", smsMessage.getBody());
-    map.put("status", smsMessage.getStatus());
-    map.put("direction", smsMessage.getDirection());
+    map.put("status", smsMessage.getStatus().toString());
+    map.put("direction", smsMessage.getDirection().toString());
     map.put("price", writeBigDecimal(smsMessage.getPrice()));
     map.put("api_version", smsMessage.getApiVersion());
     map.put("uri", writeUri(smsMessage.getUri()));
@@ -131,8 +135,8 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final String sender = readString(map.get("sender"));
     final String recipient = readString(map.get("recipient"));
     final String body = readString(map.get("body"));
-    final String status = readString(map.get("status"));
-    final String direction = readString(map.get("direction"));
+    final SmsMessage.Status status = SmsMessage.Status.getStatusValue(readString(map.get("status")));
+    final SmsMessage.Direction direction = SmsMessage.Direction.getDirectionValue(readString(map.get("direction")));
     final BigDecimal price = readBigDecimal(map.get("price"));
     final String apiVersion = readString(map.get("api_version"));
     final URI uri = readUri(map.get("uri"));

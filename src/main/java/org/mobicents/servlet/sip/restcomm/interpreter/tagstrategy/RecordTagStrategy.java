@@ -16,23 +16,32 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
-import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
+import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.Transcription;
+import org.mobicents.servlet.sip.restcomm.Transcription.Status;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizerObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -44,15 +53,16 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.PlayBeep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Transcribe;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeCallback;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeLanguage;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRecognizerObserver {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
+  private static final Logger logger = Logger.getLogger(RecordTagStrategy.class);
   
   private final String baseRecordingsPath;
-  private final String baseRecordingsUri;
   private final List<URI> beepAudioFile;
   private final SpeechRecognizer speechRecognizer;
   
@@ -63,59 +73,60 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   private int maxLength;
   private boolean transcribe;
   private URI transcribeCallback;
+  private String transcribeLanguage;
   private boolean playBeep;
   
-  private Sid sid;
-  private URI path;
-  private String uri;
+  private Recording recording;
+  private RcmlInterpreterContext context;
   
   public RecordTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     speechRecognizer = services.get(SpeechRecognizer.class);
     final Configuration configuration = services.get(Configuration.class);
-    baseRecordingsPath = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-path"), "/");
-    baseRecordingsUri = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-uri"), "/");
+    final String path = configuration.getString("recordings-path");
+    baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
     beepAudioFile = new ArrayList<URI>();
-    beepAudioFile.add(URI.create("file://" + configuration.getString("beep-audio-file")));
-    sid = Sid.generate(Sid.Type.RECORDING);
-    path = toPath(sid);
-    uri = toUri(sid);
+    final URI uri = URI.create("file://" + configuration.getString("beep-audio-file"));
+    beepAudioFile.add(uri);
   }
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
+    this.context = context;
     final Call call = context.getCall();
     try {
       if(playBeep) {
         call.play(beepAudioFile, 1);
       }
       // Record something.
+      final Sid sid = Sid.generate(Sid.Type.RECORDING);
+      final URI path = toPath(sid);
       call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
+      final double duration = WavUtils.getAudioDuration(path);
+      recording = recording(sid, duration);
+      final RecordingsDao dao = daos.getRecordingsDao();
+      dao.addRecording(recording);
       // Transcribe the path.
       if(transcribe || (transcribeCallback != null)) {
-        final Map<String, Object> information = new HashMap<String, Object>();
-        information.put("interpreterContext", context);
-        information.put("recordingUri", toUri(sid));
-        information.put("transcribeCallback", transcribeCallback);
-        speechRecognizer.recognize(path, "en-US", this, (Serializable)information);
+        speechRecognizer.recognize(path, transcribeLanguage, this);
       }
       // Redirect to action URI.
       final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-      parameters.add(new BasicNameValuePair("RecordingUrl", uri));
-      final String duration = Double.toString(WavUtils.getAudioDuration(path));
-      parameters.add(new BasicNameValuePair("RecordingDuration", duration));
+      parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
+      parameters.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
       parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
       interpreter.loadResource(action, method, parameters);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();
-      throw new TagStrategyException("There was an error while path audio.", exception);
+      notify(interpreter, context, tag, Notification.ERROR, 12400);
+      throw new TagStrategyException(exception);
     }
   }
   
-  @Override public void failed(final Serializable object) {
-	handleTranscription(false, null, object);
+  @Override public void failed() {
+	handleTranscription(false, null);
   }
   
   private int getMaxLength(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -172,13 +183,49 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     return null;
   }
   
-  private void handleTranscription(final boolean success, final String text, final Serializable object) {
-    @SuppressWarnings("unchecked")
-	final Map<String, Object> information = (HashMap<String, Object>)object;
-    final RcmlInterpreterContext context = (RcmlInterpreterContext)information.get("interpreterContext");
-    final String recordingUri = (String)information.get("recordingUri");
-    final URI transcribeCallback = (URI)information.get("transcribeCallback");
-    
+  private String getTranscribeLanguage(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    final Attribute attribute = tag.getAttribute(TranscribeLanguage.NAME);
+    if(attribute != null) {
+      final String language = attribute.getValue();
+      if(speechRecognizer.isSupported(language)) {
+        return language;
+      }
+    }
+    return "en";
+  }
+  
+  private void handleTranscription(final boolean success, final String text) {
+    final Transcription.Builder builder = Transcription.builder();
+    final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
+    builder.setAccountSid(context.getAccountSid());
+    builder.setSid(sid);
+    if(success) {
+      builder.setStatus(Status.COMPLETED);
+      builder.setTranscriptionText(text);
+    } else {
+      builder.setStatus(Status.FAILED);
+    }
+    builder.setRecordingSid(sid);
+    builder.setDuration(recording.getDuration());
+    builder.setPrice(new BigDecimal(0.00));
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(context.getAccountSid().toString()).append("/Transcriptions/");
+    buffer.append(sid.toString());
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
+    final Transcription transcription = builder.build();
+    final TranscriptionsDao dao = daos.getTranscriptionsDao();
+    dao.addTranscription(transcription);
+    if(transcribeCallback != null) {
+      final List<NameValuePair> variables = new ArrayList<NameValuePair>();
+      variables.add(new BasicNameValuePair("TranscriptionText", transcription.getTranscriptionText()));
+      variables.add(new BasicNameValuePair("TranscriptionStatus", transcription.getStatus().toString()));
+      variables.add(new BasicNameValuePair("TranscriptionUrl", transcription.getUri().toString()));
+      variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
+      transcribeCallback(transcribeCallback, variables);
+    }
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -203,11 +250,28 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     maxLength = getMaxLength(interpreter, context, tag);
     transcribe = getTranscribe(interpreter, context, tag);
     transcribeCallback = getTranscribeCallback(interpreter, context, tag);
+    transcribeLanguage = getTranscribeLanguage(interpreter, context, tag);
     playBeep = getPlayBeep(interpreter, context, tag);
   }
   
-  @Override public void succeeded(final String text, final Serializable object) {
-    handleTranscription(true, text, object);
+  protected Recording recording(final Sid sid, final double duration) {
+    final Recording.Builder builder = Recording.builder();
+    builder.setSid(sid);
+    builder.setAccountSid(context.getAccountSid());
+    builder.setCallSid(context.getCall().getSid());
+    builder.setDuration(duration);
+    builder.setApiVersion(context.getApiVersion());
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(context.getAccountSid().toString()).append("/Recordings/");
+    buffer.append(sid.toString());
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
+    return builder.build();
+  }
+  
+  @Override public void succeeded(final String text) {
+    handleTranscription(true, text);
   }
   
   private URI toPath(final Sid sid) {
@@ -216,9 +280,17 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     return URI.create(buffer.toString());
   }
   
-  private String toUri(final Sid sid) {
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append(baseRecordingsUri).append(sid.toString()).append(".wav");
-    return buffer.toString();
+  private void transcribeCallback(final URI uri, List<NameValuePair> additionalVariables) {
+    final List<NameValuePair> variables = context.getRcmlRequestParameters();
+    variables.addAll(additionalVariables);
+    final HttpPost post = new HttpPost(uri);
+    try { post.setEntity(new UrlEncodedFormEntity(variables)); }
+    catch(final UnsupportedEncodingException ignored) { }
+    final HttpClient client = new DefaultHttpClient();
+	try {
+	  client.execute(post);
+	} catch(final Exception exception) {
+	  logger.error(exception);
+	}
   }
 }

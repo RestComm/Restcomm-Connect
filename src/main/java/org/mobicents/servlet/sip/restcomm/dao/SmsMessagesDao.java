@@ -30,4 +30,5 @@ public interface SmsMessagesDao {
   public List<SmsMessage> getSmsMessages(Sid accountSid);
   public void removeSmsMessage(Sid sid);
   public void removeSmsMessages(Sid accountSid);
+  public void updateSmsMessage(SmsMessage smsMessage);
 }

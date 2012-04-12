@@ -15,8 +15,9 @@
 		<reject-audio-file>${restcomm:home}/audio/reject.wav</reject-audio-file>
 		<silence-audio-file>${restcomm:home}/audio/one-second-silence.wav</silence-audio-file>
 		
+		<error-dictionary-uri>${restcomm:uri}/errors</error-dictionary-uri>
+		
 		<recordings-path>${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>${restcomm:uri}/recordings</recordings-uri>
 		
 		<outbound-proxy-user></outbound-proxy-user>
 		<outbound-proxy-password></outbound-proxy-password>

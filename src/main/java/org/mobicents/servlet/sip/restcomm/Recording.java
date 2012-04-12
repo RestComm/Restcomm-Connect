@@ -21,6 +21,7 @@ import java.net.URI;
 import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -31,12 +32,12 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final DateTime dateUpdated;
   private final Sid accountSid;
   private final Sid callSid;
-  private final Integer duration;
+  private final Double duration;
   private final String apiVersion;
   private final URI uri;
 
   public Recording(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-      final Sid callSid, final Integer duration, final String apiVersion, final URI uri) {
+      final Sid callSid, final Double duration, final String apiVersion, final URI uri) {
     super();
     this.sid = sid;
     this.dateCreated = dateCreated;
@@ -46,6 +47,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     this.duration = duration;
     this.apiVersion = apiVersion;
     this.uri = uri;
+  }
+  
+  public static Builder builder() {
+    return new Builder();
   }
 
   public Sid getSid() {
@@ -68,7 +73,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return callSid;
   }
 
-  public Integer getDuration() {
+  public Double getDuration() {
     return duration;
   }
 
@@ -78,5 +83,47 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 
   public URI getUri() {
     return uri;
+  }
+  
+  @NotThreadSafe public static final class Builder {
+	private Sid sid;
+    private Sid accountSid;
+    private Sid callSid;
+    private Double duration;
+    private String apiVersion;
+    private URI uri;
+
+    private Builder() {
+      super();
+    }
+    
+    public Recording build() {
+      final DateTime now = DateTime.now();
+      return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri);
+    }
+    
+    public void setSid(final Sid sid) {
+      this.sid = sid;
+    }
+    
+    public void setAccountSid(final Sid accountSid) {
+      this.accountSid = accountSid;
+    }
+    
+    public void setCallSid(final Sid callSid) {
+      this.callSid = callSid;
+    }
+    
+    public void setDuration(final double duration) {
+      this.duration = duration;
+    }
+    
+    public void setApiVersion(final String apiVersion) {
+      this.apiVersion = apiVersion;
+    }
+    
+    public void setUri(final URI uri) {
+      this.uri = uri;
+    }
   }
 }

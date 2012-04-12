@@ -135,7 +135,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final String text = readString(map.get("status"));
     final Transcription.Status status = Transcription.Status.getStatusValue(text);
     final Sid recordingSid = readSid(map.get("recording_sid"));
-    final Integer duration = readInteger(map.get("duration"));
+    final Double duration = readDouble(map.get("duration"));
     final String transcriptionText = readString(map.get("transcription_text"));
     final BigDecimal price = readBigDecimal(map.get("price"));
     final URI uri = readUri(map.get("uri"));

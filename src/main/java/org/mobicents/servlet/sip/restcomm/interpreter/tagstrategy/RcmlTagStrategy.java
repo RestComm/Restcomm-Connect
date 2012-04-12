@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
@@ -57,6 +58,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
   
   protected final Configuration configuration;
   protected final DaoManager daos;
+  protected final String homeDirectory;
+  protected final String rootUri;
   private final String errorDictionary;
   private final URI silenceAudioFile;
 
@@ -65,7 +68,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     final ServiceLocator services = ServiceLocator.getInstance();
     daos = services.get(DaoManager.class);
     configuration = services.get(Configuration.class);
-    errorDictionary = StringUtils.addSuffixIfNotPresent(configuration.getString("error-errorDictionary-uri"), "/");
+    homeDirectory = StringUtils.addSuffixIfNotPresent(configuration.getString("home-directory"), "/");
+    rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
+    errorDictionary = StringUtils.addSuffixIfNotPresent(configuration.getString("error-dictionary-uri"), "/");
     silenceAudioFile = URI.create("file://" + configuration.getString("silence-audio-file"));
   }
   
@@ -206,7 +211,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
   
   protected void notify(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag, final int log, final int errorCode) {
-	  final Notification.Builder builder = Notification.builder();
+	final Notification.Builder builder = Notification.builder();
+	final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+	builder.setSid(sid);
     builder.setAccountSid(context.getAccountSid());
     builder.setCallSid(context.getCall().getSid());
     builder.setApiVersion(context.getApiVersion());
@@ -222,7 +229,12 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     builder.setRequestVariables(interpreter.getCurrentResourceRequestVariables());
     builder.setResponseBody(interpreter.getCurrentResource());
     builder.setResponseHeaders(interpreter.getCurrentResourceResponseHeaders());
-    builder.setUri(null);
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(context.getAccountSid().toString()).append("/Notifications/");
+    buffer.append(sid.toString());
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
     final Notification notification = builder.build();
     final NotificationsDao dao = daos.getNotificationsDao();
     dao.addNotification(notification);

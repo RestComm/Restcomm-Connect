@@ -130,7 +130,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final DateTime dateUpdated = readDateTime(map.get("date_updated"));
     final Sid accountSid = readSid(map.get("account_sid"));
     final Sid callSid = readSid(map.get("call_sid"));
-    final Integer duration = readInteger(map.get("duration"));
+    final Double duration = readDouble(map.get("duration"));
     final String apiVersion = readString(map.get("api_version"));
     final URI uri = readUri(map.get("uri"));
     return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri);

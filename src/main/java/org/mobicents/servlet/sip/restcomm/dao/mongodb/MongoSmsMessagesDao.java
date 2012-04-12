@@ -98,6 +98,15 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     }
   }
   
+  public void updateSmsMessage(final SmsMessage smsMessage) {
+    final BasicDBObject query = new BasicDBObject();
+    query.put("sid", smsMessage.getSid().toString());
+    final WriteResult result = collection.update(query, toDbObject(smsMessage));
+    if(!result.getLastError().ok()) {
+      logger.error(result.getLastError().getErrorMessage());
+    }
+  }
+  
   private DBObject toDbObject(final SmsMessage smsMessage) {
     final BasicDBObject object = new BasicDBObject();
     object.put("sid", writeSid(smsMessage.getSid()));
@@ -108,8 +117,8 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     object.put("sender", smsMessage.getSender());
     object.put("recipient", smsMessage.getRecipient());
     object.put("body", smsMessage.getBody());
-    object.put("status", smsMessage.getStatus());
-    object.put("direction", smsMessage.getDirection());
+    object.put("status", smsMessage.getStatus().toString());
+    object.put("direction", smsMessage.getDirection().toString());
     object.put("price", writeBigDecimal(smsMessage.getPrice()));
     object.put("api_version", smsMessage.getApiVersion());
     object.put("uri", writeUri(smsMessage.getUri()));
@@ -125,8 +134,8 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final String sender = readString(object.get("sender"));
     final String recipient = readString(object.get("recipient"));
     final String body = readString(object.get("body"));
-    final String status = readString(object.get("status"));
-    final String direction = readString(object.get("direction"));
+    final SmsMessage.Status status = SmsMessage.Status.getStatusValue(readString(object.get("status")));
+    final SmsMessage.Direction direction = SmsMessage.Direction.getDirectionValue(readString(object.get("direction")));
     final BigDecimal price = readBigDecimal(object.get("price"));
     final String apiVersion = readString(object.get("api_version"));
     final URI uri = readUri(object.get("uri"));
