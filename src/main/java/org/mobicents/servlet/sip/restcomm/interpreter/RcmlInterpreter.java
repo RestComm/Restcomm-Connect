@@ -144,27 +144,27 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     setState(READY);
   }
   
-  public void loadResource(final URI uri, final String fetchMethod) throws InterpreterException {
-    loadResource(uri, fetchMethod, EMPTY_NAME_VALUE_PAIRS);
+  public void loadResource(final URI uri, final String method) throws InterpreterException {
+    loadResource(uri, method, EMPTY_NAME_VALUE_PAIRS);
   }
   
-  public void loadResource(final URI uri, final String fetchMethod, List<NameValuePair> additionalParameters) throws InterpreterException {
+  public void loadResource(final URI uri, final String method, List<NameValuePair> additionalVariables) throws InterpreterException {
 	final List<State> possibleStates = new ArrayList<State>();
 	possibleStates.add(IDLE);
 	possibleStates.add(EXECUTING);
 	assertState(possibleStates);
 	// Load the XML resource for execution.
-	final List<NameValuePair> parameters = context.getRcmlRequestParameters();
-	parameters.addAll(additionalParameters);
-	resourceRequestVariables = URLEncodedUtils.format(parameters, "UTF-8");
+	final List<NameValuePair> variables = context.getRcmlRequestParameters();
+	variables.addAll(additionalVariables);
+	resourceRequestVariables = URLEncodedUtils.format(variables, "UTF-8");
 	try {
 	  HttpUriRequest request = null;
-	  if(RequestMethod.GET.equals(fetchMethod)) {
+	  if(RequestMethod.GET.equals(method)) {
 	    request = new HttpGet(URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(),
 	        resourceRequestVariables, null));
-	  } else if(RequestMethod.POST.equals(fetchMethod)) {
+	  } else if(RequestMethod.POST.equals(method)) {
 	    request = new HttpPost(uri);
-	    ((HttpPost)request).setEntity(new UrlEncodedFormEntity(parameters));
+	    ((HttpPost)request).setEntity(new UrlEncodedFormEntity(variables));
 	  }
 	  final HttpClient client = new DefaultHttpClient();
 	  final HttpResponse response = client.execute(request);
@@ -172,7 +172,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	  if(status == HttpStatus.SC_OK) {
 		this.resourceResponseHeaders = HttpUtils.toString(response.getAllHeaders());
 	    this.resource = resourceBuilder.build(response.getEntity().getContent());
-	    this.resourceRequestMethod = fetchMethod;
+	    this.resourceRequestMethod = method;
 	    this.resourceUri = uri;
 	    if(logger.isInfoEnabled()) {
 	      final StringBuilder buffer = new StringBuilder();

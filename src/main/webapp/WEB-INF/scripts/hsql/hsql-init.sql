@@ -146,7 +146,7 @@ CREATE TABLE "restcomm_recordings" (
 "date_updated" DATE NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
 "call_sid" VARCHAR(34) NOT NULL,
-"duration" INT NOT NULL,
+"duration" DOUBLE NOT NULL,
 "api_version" VARCHAR(10) NOT NULL,
 "uri" LONGVARCHAR NOT NULL
 );
@@ -158,7 +158,7 @@ CREATE TABLE "restcomm_transcriptions" (
 "account_sid" VARCHAR(34) NOT NULL,
 "status" VARCHAR(11) NOT NULL,
 "recording_sid" VARCHAR(34) NOT NULL,
-"duration" INT NOT NULL,
+"duration" DOUBLE NOT NULL,
 "transcription_text" LONGVARCHAR NOT NULL,
 "price" VARCHAR(8) NOT NULL,
 "uri" LONGVARCHAR NOT NULL

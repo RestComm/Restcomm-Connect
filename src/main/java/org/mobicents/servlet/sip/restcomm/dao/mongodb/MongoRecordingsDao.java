@@ -126,7 +126,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final DateTime dateUpdated = readDateTime(object.get("date_updated"));
     final Sid accountSid = readSid(object.get("account_sid"));
     final Sid callSid = readSid(object.get("call_sid"));
-    final Integer duration = readInteger(object.get("duration"));
+    final Double duration = readDouble(object.get("duration"));
     final String apiVersion= readString(object.get("api_version"));
     final URI uri = readUri(object.get("uri"));
     return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri);

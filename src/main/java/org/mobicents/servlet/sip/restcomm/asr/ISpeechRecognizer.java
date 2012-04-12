@@ -21,8 +21,9 @@ import com.iSpeech.iSpeechRecognizer;
 import com.iSpeech.iSpeechRecognizer.SpeechRecognizerEvent;
 
 import java.io.File;
-import java.io.Serializable;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,6 +38,16 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
  */
 @ThreadSafe public final class ISpeechRecognizer implements Runnable, SpeechRecognizer, SpeechRecognizerEvent {
   private static final Logger logger = Logger.getLogger(ISpeechRecognizer.class);
+  private static final Map<String, String> languages = new HashMap<String, String>();
+  static {
+    languages.put("en", "en-US");
+    languages.put("en-gb", "en-GB");
+    languages.put("es", "es-ES");
+    languages.put("it", "it-IT");
+    languages.put("fr", "fr-FR");
+    languages.put("pl", "pl-PL");
+    languages.put("pt", "pt-PT");
+  }
   
   private Configuration configuration;
   private String apiKey;
@@ -54,14 +65,18 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     this.configuration = configuration;
   }
   
-  @Override public void recognize(final URI audioFile, final String locale,
-      final SpeechRecognizerObserver observer, final Serializable object) {
-    recognize(new File(audioFile), locale, observer, object);
+  @Override public boolean isSupported(final String language) {
+  	return languages.containsKey(language);
   }
   
-  @Override public void recognize(final File audioFile, final String locale,
-      final SpeechRecognizerObserver observer, final Serializable object) {
-    try { queue.put(new SpeechRecognitionRequest(audioFile, locale, observer, object)); }
+  @Override public void recognize(final URI audioFile, final String language,
+      final SpeechRecognizerObserver observer) {
+    recognize(new File(audioFile), language, observer);
+  }
+  
+  @Override public void recognize(final File audioFile, final String language,
+      final SpeechRecognizerObserver observer) {
+    try { queue.put(new SpeechRecognitionRequest(audioFile, languages.get(language), observer)); }
     catch(final InterruptedException ignored) { }
   }
   
@@ -72,14 +87,14 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 	    request = queue.take();
 	    final iSpeechRecognizer recognizer = iSpeechRecognizer.getInstance(apiKey, production);
 	    recognizer.setFreeForm(iSpeechRecognizer.FREEFORM_DICTATION);
-	    recognizer.setLanguage(request.getLocale());
+	    recognizer.setLanguage(request.getLanguage());
 	    final SpeechResult results = recognizer.startFileRecognize("audio/x-wav", request.getFile(), this);
-	    request.getObserver().succeeded(results.Text, request.getObject());
+	    request.getObserver().succeeded(results.Text);
 	  } catch(final InterruptedException ignored) {
 	    // Nothing to do.
 	  } catch(final Exception exception) {
         logger.error(exception);
-        request.getObserver().failed(request.getObject());
+        request.getObserver().failed();
 	  }
     }
   }
@@ -107,33 +122,26 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   
   @Immutable private final class SpeechRecognitionRequest {
     private final File file;
-    private final String locale;
+    private final String language;
     private final SpeechRecognizerObserver observer;
-    private final Serializable object;
     
-    private SpeechRecognitionRequest(final File file, final String locale, final SpeechRecognizerObserver observer,
-        final Serializable object) {
+    private SpeechRecognitionRequest(final File file, final String language, final SpeechRecognizerObserver observer) {
       super();
       this.file = file;
-      this.locale = locale;
+      this.language = language;
       this.observer = observer;
-      this.object = object;
     }
 
 	private File getFile() {
 	  return file;
 	}
 
-	private String getLocale() {
-	  return locale;
+	private String getLanguage() {
+	  return language;
 	}
 
 	private SpeechRecognizerObserver getObserver() {
 	  return observer;
-	}
-
-	private Serializable getObject() {
-	  return object;
 	}
   }
 }

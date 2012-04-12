@@ -23,6 +23,7 @@ import java.net.URI;
 import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -36,18 +37,13 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final Sid accountSid;
   private final Status status;
   private final Sid recordingSid;
-  private final Integer duration;
+  private final Double duration;
   private final String transcriptionText;
   private final BigDecimal price;
   private final URI uri;
-  
-  public Transcription(final Sid sid, final DateTime dateCreated, final Sid accountSid, final Status status,
-      final Sid recordingSid) {
-    this(sid, dateCreated, null, accountSid, status, recordingSid, null, null, null, null);
-  }
 
   public Transcription(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-      final Status status, final Sid recordingSid, final Integer duration, final String transcriptionText, final BigDecimal price,
+      final Status status, final Sid recordingSid, final Double duration, final String transcriptionText, final BigDecimal price,
       final URI uri) {
     super();
     this.sid = sid;
@@ -60,6 +56,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     this.transcriptionText = transcriptionText;
     this.price = price;
     this.uri = uri;
+  }
+  
+  public static Builder builder() {
+    return new Builder();
   }
 
   public Sid getSid() {
@@ -86,7 +86,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return recordingSid;
   }
 
-  public Integer getDuration() {
+  public Double getDuration() {
     return duration;
   }
 
@@ -100,6 +100,59 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 
   public URI getUri() {
     return uri;
+  }
+  
+  @NotThreadSafe public static final class Builder {
+	private Sid sid;
+    private Sid accountSid;
+    private Status status;
+    private Sid recordingSid;
+    private Double duration;
+    private String transcriptionText;
+    private BigDecimal price;
+    private URI uri;
+
+    private Builder() {
+      super();
+    }
+    
+    public Transcription build() {
+      final DateTime dateCreated = DateTime.now();
+      return new Transcription(sid, dateCreated, dateCreated, accountSid, status, recordingSid, duration,
+          transcriptionText, price, uri);
+    }
+    
+    public void setSid(final Sid sid) {
+      this.sid = sid;
+    }
+    
+    public void setAccountSid(final Sid accountSid) {
+      this.accountSid = accountSid;
+    }
+    
+    public void setStatus(final Status status) {
+      this.status = status;
+    }
+    
+    public void setRecordingSid(final Sid recordingSid) {
+      this.recordingSid = recordingSid;
+    }
+    
+    public void setDuration(final double duration) {
+      this.duration = duration;
+    }
+    
+    public void setTranscriptionText(final String transcriptionText) {
+      this.transcriptionText = transcriptionText;
+    }
+    
+    public void setPrice(final BigDecimal price) {
+      this.price = price;
+    }
+    
+    public void setUri(final URI uri) {
+      this.uri = uri;
+    }
   }
   
   public enum Status {

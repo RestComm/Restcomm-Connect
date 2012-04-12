@@ -17,7 +17,6 @@
 package org.mobicents.servlet.sip.restcomm.asr;
 
 import java.io.File;
-import java.io.Serializable;
 import java.net.URI;
 
 import org.mobicents.servlet.sip.restcomm.Configurable;
@@ -27,8 +26,7 @@ import org.mobicents.servlet.sip.restcomm.LifeCycle;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface SpeechRecognizer extends Configurable, LifeCycle {
-  public void recognize(File audioFile, String locale, SpeechRecognizerObserver observer,
-      Serializable object);
-  public void recognize(URI audioFile, String locale, SpeechRecognizerObserver observer,
-      Serializable object);
+  public boolean isSupported(String language);
+  public void recognize(File audioFile, String language, SpeechRecognizerObserver observer);
+  public void recognize(URI audioFile, String language, SpeechRecognizerObserver observer);
 }

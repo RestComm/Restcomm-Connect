@@ -25,6 +25,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 
+import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpConferenceCenter;
@@ -80,7 +81,10 @@ public final class Bootstrapper {
     // Register the services with the service locator.
     final ServiceLocator services = ServiceLocator.getInstance();
     try {
-      services.set(Configuration.class, configuration.subset("runtime-settings"));
+      final Configuration runtimeConfiguration = configuration.subset("runtime-settings");
+      runtimeConfiguration.setProperty("home-directory", getRestCommPath(config));
+      runtimeConfiguration.setProperty("root-uri", getRestCommUri(config));
+      services.set(Configuration.class, runtimeConfiguration);
       services.set(InterpreterExecutor.class, new InterpreterExecutor());
       final MgcpServerManager serverManager = getMgcpServerManager(configuration);
       services.set(MgcpServerManager.class, serverManager);
@@ -89,6 +93,7 @@ public final class Bootstrapper {
       services.set(ConferenceCenter.class, getConferenceCenter(serverManager));
       services.set(DaoManager.class, getDaoManager(configuration));
       services.set(SmsAggregator.class, getSmsAggregator(configuration));
+      services.set(SpeechRecognizer.class, getSpeechRecognizer(configuration));
       services.set(SpeechSynthesizer.class, getSpeechSynthesizer(configuration));
     } catch(final ObjectInstantiationException exception) {
       logger.error("The RestComm environment could not be bootstrapped.", exception);
@@ -121,6 +126,14 @@ public final class Bootstrapper {
 	smsAggregator.configure(configuration.subset("sms-aggregator"));
 	smsAggregator.start();
 	return smsAggregator;
+  }
+  
+  private static SpeechRecognizer getSpeechRecognizer(final Configuration configuration) throws ObjectInstantiationException {
+    final String classpath = configuration.getString("speech-recognizer[@class]");
+    final SpeechRecognizer speechRecognizer = (SpeechRecognizer)ObjectFactory.getInstance().getObjectInstance(classpath);
+    speechRecognizer.configure(configuration.subset("speech-recognizer"));
+    speechRecognizer.start();
+    return speechRecognizer;
   }
   
   private static SpeechSynthesizer getSpeechSynthesizer(final Configuration configuration) throws ObjectInstantiationException {
