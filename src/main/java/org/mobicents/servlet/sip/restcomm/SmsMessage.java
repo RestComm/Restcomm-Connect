@@ -28,6 +28,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class SmsMessage {
+  public static final int MAX_SIZE = 160;
   private final Sid sid;
   private final DateTime dateCreated;
   private final DateTime dateUpdated;

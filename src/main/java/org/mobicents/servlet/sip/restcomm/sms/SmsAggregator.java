@@ -23,5 +23,5 @@ import org.mobicents.servlet.sip.restcomm.LifeCycle;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface SmsAggregator extends Configurable, LifeCycle {
-  public void send(String from, String to, String body) throws SmsAggregatorException;
+  public void send(String from, String to, String body, SmsAggregatorObserver observer) throws SmsAggregatorException;
 }

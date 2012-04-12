@@ -83,19 +83,20 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   @Override public void run() {
     while(running) {
       SpeechRecognitionRequest request = null;
-      try {
-	    request = queue.take();
-	    final iSpeechRecognizer recognizer = iSpeechRecognizer.getInstance(apiKey, production);
-	    recognizer.setFreeForm(iSpeechRecognizer.FREEFORM_DICTATION);
-	    recognizer.setLanguage(request.getLanguage());
-	    final SpeechResult results = recognizer.startFileRecognize("audio/x-wav", request.getFile(), this);
-	    request.getObserver().succeeded(results.Text);
-	  } catch(final InterruptedException ignored) {
-	    // Nothing to do.
-	  } catch(final Exception exception) {
-        logger.error(exception);
-        request.getObserver().failed();
-	  }
+      try { request = queue.take(); } 
+      catch(final InterruptedException ignored) { }
+      if(request != null) {
+        try {
+	      final iSpeechRecognizer recognizer = iSpeechRecognizer.getInstance(apiKey, production);
+	      recognizer.setFreeForm(iSpeechRecognizer.FREEFORM_DICTATION);
+	      recognizer.setLanguage(request.getLanguage());
+	      final SpeechResult results = recognizer.startFileRecognize("audio/x-wav", request.getFile(), this);
+	      request.getObserver().succeeded(results.Text);
+	    } catch(final Exception exception) {
+          logger.error(exception);
+          request.getObserver().failed();
+	    }
+      }
     }
   }
   

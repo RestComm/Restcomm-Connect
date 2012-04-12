@@ -112,11 +112,11 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
         speechRecognizer.recognize(path, transcribeLanguage, this);
       }
       // Redirect to action URI.
-      final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-      parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
-      parameters.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
-      parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
-      interpreter.loadResource(action, method, parameters);
+      final List<NameValuePair> variables = new ArrayList<NameValuePair>();
+      variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
+      variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
+      variables.add(new BasicNameValuePair("Digits", call.getDigits()));
+      interpreter.loadResource(action, method, variables);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();

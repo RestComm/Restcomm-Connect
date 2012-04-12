@@ -16,13 +16,20 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -32,6 +39,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
+import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.From;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
@@ -45,7 +53,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class SmsTagStrategy extends RcmlTagStrategy {
+public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregatorObserver {
+  private static final Logger logger = Logger.getLogger(SmsTagStrategy.class);
   private final SmsAggregator smsAggregator;
   
   private PhoneNumber from;
@@ -56,6 +65,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy {
   private URI statusCallback;
   
   private volatile SmsMessage sms;
+  private RcmlInterpreterContext context;
 	  
   public SmsTagStrategy() {
     super();
@@ -65,13 +75,14 @@ public final class SmsTagStrategy extends RcmlTagStrategy {
 
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
+    this.context = context;
 	// Send the text message.
 	if(body != null) {
 	  try {
 	    final SmsMessagesDao dao = daos.getSmsMessagesDao();
 	    sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
 	    dao.addSmsMessage(sms);
-		smsAggregator.send(from.toString(), to.toString(), body);
+		smsAggregator.send(from.toString(), to.toString(), body, this);
 		sms = sms.setStatus(SmsMessage.Status.SENDING);
 		dao.updateSmsMessage(sms);
 		if(action != null) {
@@ -87,6 +98,10 @@ public final class SmsTagStrategy extends RcmlTagStrategy {
 	    throw new TagStrategyException(exception);
 	  }
 	}
+  }
+  
+  @Override public void failed() {
+    handleSmsMessage(false);
   }
   
   private PhoneNumber getFrom(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -124,14 +139,45 @@ public final class SmsTagStrategy extends RcmlTagStrategy {
     return null;
   }
   
+  private void handleSmsMessage(final boolean success) {
+    if(success) {
+      sms = sms.setStatus(SmsMessage.Status.SENT);
+    } else {
+      sms = sms.setStatus(SmsMessage.Status.FAILED);
+    }
+    final SmsMessagesDao dao = daos.getSmsMessagesDao();
+    dao.updateSmsMessage(sms);
+    if(statusCallback != null) {
+      final List<NameValuePair> variables = context.getRcmlRequestParameters();
+	  variables.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
+	  variables.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
+	  final HttpPost post = new HttpPost(statusCallback);
+	  try { post.setEntity(new UrlEncodedFormEntity(variables)); }
+	  catch(final UnsupportedEncodingException ignored) { }
+	  final HttpClient client = new DefaultHttpClient();
+	  try {
+	    client.execute(post);
+	  } catch(final Exception exception) {
+	    logger.error(exception);
+	  }
+    }
+  }
+  
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
 	      final RcmlTag tag) throws TagStrategyException {
     super.initialize(interpreter, context, tag);
     from = getFrom(interpreter, context, tag);
     to = getTo(interpreter, context, tag);
     body = tag.getText();
+    if(body == null || body.isEmpty() || body.length() > SmsMessage.MAX_SIZE) {
+      notify(interpreter, context, tag, Notification.WARNING, 14103);
+    }
     action = getAction(interpreter, context, tag);
     method = getMethod(interpreter, context, tag);
+    if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+      notify(interpreter, context, tag, Notification.WARNING, 14104);
+      method = "POST";
+    }
     statusCallback = getStatusCallback(interpreter, context, tag);
   }
   
@@ -156,5 +202,9 @@ public final class SmsTagStrategy extends RcmlTagStrategy {
     final URI uri = URI.create(buffer.toString());
     builder.setUri(uri);
     return builder.build();
+  }
+  
+  @Override public void succeeded() {
+    handleSmsMessage(true);
   }
 }

@@ -16,51 +16,108 @@
  */
 package org.mobicents.servlet.sip.restcomm.sms;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import com.esendex.sdk.ems.soapinterface.EsendexHeader;
 import com.esendex.sdk.ems.soapinterface.MessageType;
 import com.esendex.sdk.ems.soapinterface.SendServiceLocator;
 import com.esendex.sdk.ems.soapinterface.SendServiceSoap_BindingStub;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class EsendexSmsAggregator implements SmsAggregator {
+@ThreadSafe public final class EsendexSmsAggregator implements Runnable, SmsAggregator {
+  private static final Logger logger = Logger.getLogger(EsendexSmsAggregator.class);
+
+  private Configuration configuration;
   private String account;
   private String user;
   private String password;
+  
+  private Thread worker;
+  private volatile boolean running;
+  private BlockingQueue<SmsMessageRequest> queue;
   
   public EsendexSmsAggregator() {
     super();
   }
   
   @Override public void configure(final Configuration configuration) {
-    account = configuration.getString("account");
-    user = configuration.getString("user");
-    password = configuration.getString("password");
+    this.configuration = configuration;
+  }
+  
+  @Override public void run() {
+    while(running) {
+      SmsMessageRequest request = null;
+      try { request = queue.take(); }
+      catch(final InterruptedException ignored) { }
+      if(request != null) {
+        try {
+          final EsendexHeader header = new EsendexHeader(user, password, account);
+  	      final SendServiceLocator locator = new SendServiceLocator();
+          final SendServiceSoap_BindingStub service = (SendServiceSoap_BindingStub)locator.getSendServiceSoap();
+          service.setHeader(header);
+  	      service.sendMessage(request.getTo(), request.getBody(), MessageType.Text);
+  	      request.getObserver().succeeded();
+        } catch(final Exception exception) {
+          logger.error(exception);
+          request.getObserver().failed();
+        }
+      }
+    }
   }
 
   @Override public void start() throws RuntimeException {
-    // Nothing to do.
+    account = configuration.getString("account");
+    user = configuration.getString("user");
+    password = configuration.getString("password");
+    queue = new LinkedBlockingQueue<SmsMessageRequest>();
+    worker = new Thread(this);
+    worker.setName("Esendex Aggregator Worker");
+    worker.start();
   }
 
-  @Override public void send(final String from, final String to, final String body)
+  @Override public void send(final String from, final String to, final String body, final SmsAggregatorObserver observer)
       throws SmsAggregatorException {
-    try {
-	  final EsendexHeader header = new EsendexHeader(user, password, account);
-	  final SendServiceLocator locator = new SendServiceLocator();
-      final SendServiceSoap_BindingStub service = (SendServiceSoap_BindingStub)locator.getSendServiceSoap();
-      service.setHeader(header);
-	  service.sendMessage(to, body, MessageType.Text);
-	} catch(final Exception exception) {
-	  throw new SmsAggregatorException(exception);
-	}
+    try { queue.put(new SmsMessageRequest(to, body, observer)); }
+    catch(final InterruptedException ignored) { }
   }
   
   @Override public void shutdown() {
-    // Nothing to do.
+    if(running) {
+      running = false;
+    }
+  }
+  
+  @Immutable private final class SmsMessageRequest {
+    private final String to;
+    private final String body;
+    private final SmsAggregatorObserver observer;
+
+    private SmsMessageRequest(final String to, final String body, final SmsAggregatorObserver observer) {
+      super();
+      this.to = to;
+      this.body = body;
+      this.observer = observer;
+    }
+    
+    private String getTo() {
+      return to;
+    }
+    
+    private String getBody() {
+      return body;
+    }
+    
+    private SmsAggregatorObserver getObserver() {
+      return observer;
+    }
   }
 }
