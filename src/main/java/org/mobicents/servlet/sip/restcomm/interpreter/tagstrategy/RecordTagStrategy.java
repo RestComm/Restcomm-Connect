@@ -40,6 +40,10 @@ import org.mobicents.servlet.sip.restcomm.Transcription.Status;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizerObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+<<<<<<< HEAD
+=======
+import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+>>>>>>> c783cfdcea97b9072cdb3463df3487c814e27982
 import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -64,6 +68,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   
   private final String baseRecordingsPath;
   private final List<URI> beepAudioFile;
+  private final DaoManager daos;
   private final SpeechRecognizer speechRecognizer;
   
   private URI action;
@@ -82,6 +87,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   public RecordTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
+    daos = services.get(DaoManager.class);
     speechRecognizer = services.get(SpeechRecognizer.class);
     final Configuration configuration = services.get(Configuration.class);
     final String path = configuration.getString("recordings-path");

@@ -117,8 +117,13 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
     
     public Transcription build() {
+<<<<<<< HEAD
       final DateTime now = DateTime.now();
       return new Transcription(sid, now, now, accountSid, status, recordingSid, duration,
+=======
+      final DateTime dateCreated = DateTime.now();
+      return new Transcription(sid, dateCreated, dateCreated, accountSid, status, recordingSid, duration,
+>>>>>>> c783cfdcea97b9072cdb3463df3487c814e27982
           transcriptionText, price, uri);
     }
     

@@ -98,8 +98,13 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
     
     public Recording build() {
+<<<<<<< HEAD
       final DateTime now = DateTime.now();
       return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri);
+=======
+      final DateTime dateCreated = DateTime.now();
+      return new Recording(sid, dateCreated, dateCreated, accountSid, callSid, duration, apiVersion, uri);
+>>>>>>> c783cfdcea97b9072cdb3463df3487c814e27982
     }
     
     public void setSid(final Sid sid) {

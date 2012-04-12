@@ -144,7 +144,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     return uri;
   }
   
+<<<<<<< HEAD
   @NotThreadSafe public static final class Builder {
+=======
+  @NotThreadSafe public static class Builder {
+>>>>>>> c783cfdcea97b9072cdb3463df3487c814e27982
     private Sid sid;
     private Sid accountSid;
     private Sid callSid;
@@ -166,8 +170,13 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     }
     
     public Notification build() {
+<<<<<<< HEAD
       final DateTime now = DateTime.now();
       return new Notification(sid, now, now, accountSid, callSid, apiVersion, log, errorCode, moreInfo, messageText,
+=======
+      final DateTime dateCreated = DateTime.now();
+      return new Notification(sid, dateCreated, dateCreated, accountSid, callSid, apiVersion, log, errorCode, moreInfo, messageText,
+>>>>>>> c783cfdcea97b9072cdb3463df3487c814e27982
           messageDate, requestUrl, requestMethod, requestVariables, responseHeaders, responseBody, uri);
     }
     
