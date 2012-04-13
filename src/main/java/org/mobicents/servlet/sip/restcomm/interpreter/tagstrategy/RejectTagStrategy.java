@@ -21,12 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Reason;
 
@@ -35,6 +36,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Reason;
  */
 public final class RejectTagStrategy extends RcmlTagStrategy {
   private final List<URI> rejectAudioFile;
+  
+  private String reason;
   
   public RejectTagStrategy() {
     super();
@@ -49,22 +52,31 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
       final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
-      final String reason = tag.getAttribute(Reason.NAME).getValue();
-      if(reason.equals("rejected")) {
-    	try {
-          call.play(rejectAudioFile, 1);
-        } catch(final CallException exception) {
-          interpreter.failed();
-          final StringBuilder buffer = new StringBuilder();
-          buffer.append("There was an error while playing the rejection announcement. ");
-          buffer.append("The announcement is located @ ").append(rejectAudioFile.toString());
-          throw new TagStrategyException(buffer.toString(), exception);
-        } catch(final InterruptedException ignored) { return; }
+      if("rejected".equalsIgnoreCase(reason)) {
+    	try { call.play(rejectAudioFile, 1); }
+    	catch(final Exception ignored) {  }
         call.hangup();
-      } else if(reason.equals("busy")) {
+      } else if("busy".equalsIgnoreCase(reason)) {
         call.reject();
       }
       interpreter.finish();
     }
+  }
+  
+  private String getReason(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    final Attribute attribute = tag.getAttribute(Reason.NAME);
+    if(attribute != null) {
+      final String value = attribute.getValue();
+      if("busy".equalsIgnoreCase(value) || "rejected".equalsIgnoreCase(value)) {
+        return value;
+      }
+    }
+    return "rejected";
+  }
+  
+  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    reason = getReason(interpreter, context, tag);
   }
 }

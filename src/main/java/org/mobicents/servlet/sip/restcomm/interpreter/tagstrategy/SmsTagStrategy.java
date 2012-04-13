@@ -77,7 +77,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
       final RcmlTag tag) throws TagStrategyException {
     this.context = context;
 	// Send the text message.
-	if(body != null) {
+	if(body != null && !body.isEmpty() && body.length() <= SmsMessage.MAX_SIZE) {
 	  try {
 	    final SmsMessagesDao dao = daos.getSmsMessagesDao();
 	    sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
