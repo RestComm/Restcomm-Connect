@@ -16,7 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.xml;
 
-import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Stack;
 
 import javax.xml.stream.XMLInputFactory;
@@ -38,8 +39,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     this.factory = factory;
   }
   
-  public RcmlDocument build(final InputStream input) throws RcmlDocumentBuilderException {
-    try {
+  public RcmlDocument build(final Reader input) throws RcmlDocumentBuilderException {
+  try {
       final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
       final XMLStreamReader xmlStreamReader = xmlInputFactory.createXMLStreamReader(input);
       return parse(xmlStreamReader);
@@ -48,6 +49,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     } catch(final ObjectInstantiationException exception) {
       throw new RcmlDocumentBuilderException(exception);
 	}
+  }
+  
+  public RcmlDocument build(final String input) throws RcmlDocumentBuilderException {
+    return build(new StringReader(input));
   }
   
   private void doCharacters(final XMLStreamReader reader, final Stack<Tag> tagStack) {

@@ -116,11 +116,11 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
       variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
       variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
       variables.add(new BasicNameValuePair("Digits", call.getDigits()));
-      interpreter.loadResource(action, method, variables);
+      interpreter.load(action, method, variables);
       interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();
-      notify(interpreter, context, tag, Notification.ERROR, 12400);
+      interpreter.notify(context, Notification.ERROR, 12400);
       throw new TagStrategyException(exception);
     }
   }
@@ -141,7 +141,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
         }
       }
     }
-    notify(interpreter, context, tag, Notification.WARNING, 13612);
+    interpreter.notify(context, Notification.WARNING, 13612);
     return 3600;
   }
   
@@ -166,7 +166,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
         return Boolean.parseBoolean(value);
       }
     }
-    notify(interpreter, context, tag, Notification.ERROR, 21503);
+    interpreter.notify(context, Notification.ERROR, 21503);
     return false;
   }
   
@@ -177,7 +177,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
       try {
         return URI.create(attribute.getValue());
       } catch(final IllegalArgumentException exception) {
-        notify(interpreter, context, tag, Notification.ERROR, 11100);
+        interpreter.notify(context, Notification.ERROR, 11100);
       }
     }
     return null;
@@ -234,17 +234,17 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     action = getAction(interpreter, context, tag);
     method = getMethod(interpreter, context, tag);
     if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-      notify(interpreter, context, tag, Notification.WARNING, 13610);
+      interpreter.notify(context, Notification.WARNING, 13610);
       method = "POST";
     }
     timeout = getTimeout(interpreter, context, tag);
     if(timeout == -1 || timeout == 0) {
-      notify(interpreter, context, tag, Notification.WARNING, 13611);
+      interpreter.notify(context, Notification.WARNING, 13611);
       timeout = 5;
     }
     finishOnKey = getFinishOnKey(interpreter, context, tag);
     if(finishOnKey == null) {
-      notify(interpreter, context, tag, Notification.WARNING, 13613);
+      interpreter.notify(context, Notification.WARNING, 13613);
       finishOnKey = "1234567890*#";
     }
     maxLength = getMaxLength(interpreter, context, tag);

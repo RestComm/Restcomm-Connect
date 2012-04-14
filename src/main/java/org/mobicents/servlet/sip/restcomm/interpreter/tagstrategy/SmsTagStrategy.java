@@ -77,7 +77,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
       final RcmlTag tag) throws TagStrategyException {
     this.context = context;
 	// Send the text message.
-	if(body != null) {
+	if(body != null && !body.isEmpty() && body.length() <= SmsMessage.MAX_SIZE) {
 	  try {
 	    final SmsMessagesDao dao = daos.getSmsMessagesDao();
 	    sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
@@ -89,12 +89,12 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
 		  final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
 		  parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
 		  parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
-		  interpreter.loadResource(action, method, parameters);
+		  interpreter.load(action, method, parameters);
 	      interpreter.redirect();
 		}
 	  } catch(final Exception exception) {
 		interpreter.failed();
-		notify(interpreter, context, tag, Notification.ERROR, 12400);
+		interpreter.notify(context, Notification.ERROR, 12400);
 	    throw new TagStrategyException(exception);
 	  }
 	}
@@ -123,7 +123,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
       try {
         return phoneNumberUtil.parse(value, "US");
       } catch(final NumberParseException exception) {
-        notify(interpreter, context, tag, Notification.WARNING, 14102);
+        interpreter.notify(context, Notification.WARNING, 14102);
       }
     }
     return null;
@@ -170,12 +170,12 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
     to = getTo(interpreter, context, tag);
     body = tag.getText();
     if(body == null || body.isEmpty() || body.length() > SmsMessage.MAX_SIZE) {
-      notify(interpreter, context, tag, Notification.WARNING, 14103);
+      interpreter.notify(context, Notification.WARNING, 14103);
     }
     action = getAction(interpreter, context, tag);
     method = getMethod(interpreter, context, tag);
     if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-      notify(interpreter, context, tag, Notification.WARNING, 14104);
+      interpreter.notify(context, Notification.WARNING, 14104);
       method = "POST";
     }
     statusCallback = getStatusCallback(interpreter, context, tag);

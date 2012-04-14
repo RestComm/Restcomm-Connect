@@ -179,8 +179,8 @@ CREATE TABLE "restcomm_notifications" (
 "request_url" LONGVARCHAR NOT NULL,
 "request_method" VARCHAR(4) NOT NULL,
 "request_variables" LONGVARCHAR NOT NULL,
-"response_headers" LONGVARCHAR NOT NULL,
-"response_body" LONGVARCHAR NOT NULL,
+"response_headers" LONGVARCHAR,
+"response_body" LONGVARCHAR,
 "uri" LONGVARCHAR NOT NULL
 );
 

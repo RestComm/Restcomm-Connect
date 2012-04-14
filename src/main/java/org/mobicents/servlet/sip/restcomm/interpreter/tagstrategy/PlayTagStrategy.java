@@ -55,7 +55,7 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
     	}
       } catch(final CallException exception) {
         interpreter.failed();
-        notify(interpreter, context, tag, Notification.ERROR, 12400);
+        interpreter.notify(context, Notification.ERROR, 12400);
         throw new TagStrategyException(exception);
       } catch(final InterruptedException ignored) { return; }
     }
@@ -67,15 +67,15 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
     try {
       loop = getLoop(interpreter, context, tag);
       if(loop == -1) {
-        notify(interpreter, context, tag, Notification.WARNING, 13410);
+        interpreter.notify(context, Notification.WARNING, 13410);
         loop = 1;
       }
       uri = getUri(interpreter, context, tag);
       if(uri == null) {
-        notify(interpreter, context, tag, Notification.ERROR, 13420);
+        interpreter.notify(context, Notification.ERROR, 13420);
       }
     } catch(final IllegalArgumentException exception) {
-      notify(interpreter, context, tag, Notification.ERROR, 11100);
+      interpreter.notify(context, Notification.ERROR, 11100);
     }
   }
 }

@@ -16,13 +16,18 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -33,10 +38,18 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
+import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
+import org.mobicents.servlet.sip.restcomm.Notification;
+import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
-import org.mobicents.servlet.sip.restcomm.http.RequestMethod;
+import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
+import org.mobicents.servlet.sip.restcomm.xml.RcmlDocumentBuilderException;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagIterator;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
@@ -71,6 +84,10 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   }
   private static final List<NameValuePair> EMPTY_NAME_VALUE_PAIRS = new ArrayList<NameValuePair>(0);
   
+  // Configuration
+  private final Configuration configuration;
+  // Data Access Object Manager.
+  private final DaoManager daos;
   // RcmlInterpreter environment.
   private final RcmlInterpreterContext context;
   //Tag strategy strategies.
@@ -79,14 +96,16 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   private final RcmlDocumentBuilder resourceBuilder;
   // XML Resource.
   private RcmlDocument resource;
-  // XML Resource request attributes.
-  private String resourceRequestVariables;
-  // XML Resource request resourceRequestMethod.
-  private String resourceRequestMethod;
-  // XML Resource response headers.
-  private String resourceResponseHeaders;
   //XML Resource URI.
   private URI resourceUri;
+  // XML Resource request attributes.
+  private String requestVariables;
+  // XML Resource request requestMethod.
+  private String requestMethod;
+  // XML Resource response body.
+  private String responseBody;
+  // XML Resource response headers.
+  private String responseHeaders;
 	
   public RcmlInterpreter(final RcmlInterpreterContext context) {
     super(IDLE);
@@ -99,11 +118,29 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     this.context = context;
     this.strategies = new TagStrategyFactory();
     this.resourceBuilder = new RcmlDocumentBuilder(new RcmlTagFactory());
+    final ServiceLocator services = ServiceLocator.getInstance();
+    configuration = services.get(Configuration.class);
+    daos = services.get(DaoManager.class);
   }
   
   public void failed() {
     assertState(EXECUTING);
     setState(FAILED);
+  }
+  
+  private HttpResponse fetch(final URI uri, final String method, List<NameValuePair> variables)
+      throws InterpreterException {
+    final HttpUriRequest request = request(uri, method, variables);
+    final HttpClient client = new DefaultHttpClient();
+	try {
+	  return client.execute(request);
+	} catch(final ClientProtocolException exception) {
+	  notify(context, Notification.ERROR, 11206, uri, method, getQueryString(getVariables(variables)), null, null);
+	  throw new InterpreterException(exception);
+	} catch(final IOException exception) {
+	  notify(context, Notification.ERROR, 11200, uri, method, getQueryString(getVariables(variables)), null, null);
+	  throw new InterpreterException(exception);
+	}
   }
   
   public void finish() {
@@ -114,88 +151,139 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     setState(FINISHED);
   }
   
-  public String getCurrentResource() {
-    return resource.toString();
-  }
-  
-  public String getCurrentResourceRequestMethod() {
-    return resourceRequestMethod;
-  }
-  
-  public String getCurrentResourceRequestVariables() {
-    return resourceRequestVariables;
-  }
-  
-  public String getCurrentResourceResponseHeaders() {
-    return resourceResponseHeaders;
-  }
-  
   public URI getCurrentResourceUri() {
     return resourceUri;
   }
   
+  private URI getMoreInfo(final int errorCode) {
+    String errorDictionary = configuration.getString("error-dictionary-uri");
+    errorDictionary = StringUtils.addSuffixIfNotPresent(errorDictionary, "/");
+	final StringBuilder buffer = new StringBuilder();
+	buffer.append(errorDictionary).append(errorCode).append(".html");
+    return URI.create(buffer.toString());
+  }
+  
   public void initialize() throws InterpreterException {
 	try {
-	  loadResource(context.getVoiceUrl(), context.getVoiceMethod());
+	  load(context.getVoiceUrl(), context.getVoiceMethod());
 	} catch(final InterpreterException exception) {
 	  logger.error("Using fallback url the default voice url failed.", exception);
-	  loadResource(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod());
+	  load(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod());
 	}
     setState(READY);
   }
   
-  public void loadResource(final URI uri, final String method) throws InterpreterException {
-    loadResource(uri, method, EMPTY_NAME_VALUE_PAIRS);
+  public void load(final URI uri, final String method) throws InterpreterException {
+    load(uri, method, EMPTY_NAME_VALUE_PAIRS);
   }
   
-  public void loadResource(final URI uri, final String method, List<NameValuePair> additionalVariables) throws InterpreterException {
+  public void load(final URI uri, final String method, List<NameValuePair> variables)
+      throws InterpreterException {
 	final List<State> possibleStates = new ArrayList<State>();
 	possibleStates.add(IDLE);
 	possibleStates.add(EXECUTING);
 	assertState(possibleStates);
 	// Load the XML resource for execution.
-	final List<NameValuePair> variables = context.getRcmlRequestParameters();
-	variables.addAll(additionalVariables);
-	resourceRequestVariables = URLEncodedUtils.format(variables, "UTF-8");
+	final String queryString = getQueryString(getVariables(variables));
 	try {
-	  HttpUriRequest request = null;
-	  if(RequestMethod.GET.equals(method)) {
-	    request = new HttpGet(URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(),
-	        resourceRequestVariables, null));
-	  } else if(RequestMethod.POST.equals(method)) {
-	    request = new HttpPost(uri);
-	    ((HttpPost)request).setEntity(new UrlEncodedFormEntity(variables));
-	  }
-	  final HttpClient client = new DefaultHttpClient();
-	  final HttpResponse response = client.execute(request);
+	  final HttpResponse response = fetch(uri, method, variables);
+	  validate(response);
 	  final int status = response.getStatusLine().getStatusCode();
 	  if(status == HttpStatus.SC_OK) {
-		this.resourceResponseHeaders = HttpUtils.toString(response.getAllHeaders());
-	    this.resource = resourceBuilder.build(response.getEntity().getContent());
-	    this.resourceRequestMethod = method;
-	    this.resourceUri = uri;
-	    if(logger.isInfoEnabled()) {
-	      final StringBuilder buffer = new StringBuilder();
-	      buffer.append("Successfully Loaded Resource\n");
-	      buffer.append("URI: ").append(resourceUri.toString()).append("\n");
-	      buffer.append("Fetch Method: ").append(resourceRequestMethod).append("\n");
-	      buffer.append(resource.toString());
-	      logger.info(buffer.toString());
-	    }
+		final String body = StringUtils.toString(response.getEntity().getContent());
+		final RcmlDocument document = resourceBuilder.build(body);
+		validate(document);
+		requestMethod = method;
+		requestVariables = queryString;
+		responseHeaders = HttpUtils.toString(response.getAllHeaders());
+		responseBody = body;
+	    resource = resourceBuilder.build(body);
+	    resourceUri = uri;
 	  } else {
-		final String reason = response.getStatusLine().getReasonPhrase();
-		final StringBuilder buffer = new StringBuilder();
-		buffer.append(status).append(" ").append(reason);
-	    throw new InterpreterException(buffer.toString());
+		notify(context, Notification.ERROR, 11200, uri, method, queryString, null, null);
 	  }
-	} catch(final Exception exception) {
+	} catch(final IOException exception) {
+	  notify(context, Notification.ERROR, 11200, uri, method, queryString, null, null);
+	  throw new InterpreterException(exception);
+	} catch(final RcmlDocumentBuilderException exception) {
+	  notify(context, Notification.ERROR, 12100, uri, method, queryString, null, null);
 	  throw new InterpreterException(exception);
 	}
+  }
+  
+  public void notify(final RcmlInterpreterContext context, final int log, final int errorCode) {
+    notify(context, log, errorCode, resourceUri, requestMethod, requestVariables, responseBody,
+        responseHeaders);
+  }
+  
+  public void notify(final RcmlInterpreterContext context, final int log, final int errorCode,
+      final URI resourceUri, final String requestMethod, final String requestVariables,
+      final String responseBody, final String responseHeaders) {
+	final Notification.Builder builder = Notification.builder();
+	final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+	builder.setSid(sid);
+    builder.setAccountSid(context.getAccountSid());
+    builder.setCallSid(context.getCall().getSid());
+    builder.setApiVersion(context.getApiVersion());
+    builder.setLog(log);
+    builder.setErrorCode(errorCode);
+    builder.setMoreInfo(getMoreInfo(errorCode));
+    // Fix Me: This is going to have to be resolved in Beta 2 release. Create proper message text.
+    // This has been documented in Issue# 55 @ http://code.google.com/p/restcomm/issues/detail?id=55
+    builder.setMessageText(new String());
+    builder.setMessageDate(DateTime.now());
+    builder.setRequestUrl(resourceUri);
+    builder.setRequestMethod(requestMethod);
+    builder.setRequestVariables(requestVariables);
+    builder.setResponseBody(responseBody);
+    builder.setResponseHeaders(responseHeaders);
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(context.getAccountSid().toString()).append("/Notifications/");
+    buffer.append(sid.toString());
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
+    final Notification notification = builder.build();
+    final NotificationsDao dao = daos.getNotificationsDao();
+    dao.addNotification(notification);
   }
   
   public void redirect() {
     assertState(EXECUTING);
     setState(REDIRECTED);
+  }
+  
+  private String getQueryString(final List<NameValuePair> variables) {
+    return URLEncodedUtils.format(variables, "UTF-8");
+  }
+  
+  private List<NameValuePair> getVariables(final List<NameValuePair> variables) {
+    final List<NameValuePair> result = context.getRcmlRequestParameters();
+    result.addAll(variables);
+    return result;
+  }
+  
+  private HttpUriRequest request(final URI uri, final String method, List<NameValuePair> variables)
+      throws InterpreterException {
+	final List<NameValuePair> allVariables = getVariables(variables);
+	final String queryString = getQueryString(allVariables);
+	HttpUriRequest request = null;
+	try {
+	  if("GET".equalsIgnoreCase(method)) {
+        request = new HttpGet(URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(),
+            queryString, null));
+      } else if("POST".equalsIgnoreCase(method)) {
+        final HttpPost post = new HttpPost(uri);
+        post.setEntity(new UrlEncodedFormEntity(allVariables));
+        request = post;
+      }
+	} catch(final URISyntaxException exception) {
+	  notify(context, Notification.ERROR, 11100, uri, method, queryString, null, null);
+	  throw new InterpreterException(exception);
+	} catch(final UnsupportedEncodingException ignored) { }
+	return request;
   }
   
   public void run() {
@@ -208,12 +296,8 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
           assertState(READY);
           setState(EXECUTING);
           // Try to execute the next tag.
-          try {
-            tag.accept(this);
-          } catch(final VisitorException exception) {
-            setState(FAILED);
-            logger.error(exception);
-          }
+          try { tag.accept(this); }
+          catch(final VisitorException ignored) { /* Handled in tag strategy. */ }
           tag.setHasBeenVisited(true);
           // Handle any state changes caused by executing the tag.
           final State state = getState();
@@ -230,6 +314,24 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
       setState(FINISHED);
     }
   }
+  
+  private void checkContentType(final String type) throws InterpreterException {
+    if(!"text/xml".equals(type) && !"application/xml".equals(type) && !"text/html".equals(type)) {
+      notify(context, Notification.ERROR, 12300);
+      throw new InterpreterException("Invalid content type " + type);
+    }
+  }
+  
+  private void validate(final HttpResponse response) throws InterpreterException {
+    checkContentType(response.getFirstHeader("Content-Type").getValue());
+  }
+  
+  private void validate(final Tag tag) throws InterpreterException {
+    if(!"Response".equals(tag.getName())) {
+      notify(context, Notification.ERROR, 12102);
+      throw new InterpreterException();
+    }
+  }
 
   public void visit(final Tag tag) throws VisitorException {
     if(tag instanceof RcmlTag) {
@@ -238,10 +340,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	    final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
 	    strategy.initialize(this, context, rcmlTag);
 	    strategy.execute(this, context, rcmlTag);
-	  } catch(final Exception exception) {
-	    logger.error(exception);
-	    throw new VisitorException(exception);
-	  }
+	  } catch(final Exception exception) { /* Handled in tag strategy. */ }
     }
   }
 }

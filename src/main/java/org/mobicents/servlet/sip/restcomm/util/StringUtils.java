@@ -16,6 +16,10 @@
  */
 package org.mobicents.servlet.sip.restcomm.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.util.regex.Pattern;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -40,5 +44,19 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   
   public static boolean isPositiveInteger(final String text) {
     return numberPattern.matcher(text).matches();
+  }
+  
+  public static String toString(final InputStream input) throws IOException {
+    final InputStreamReader reader = new InputStreamReader(input);
+    final StringWriter writer = new StringWriter();
+    final char[] data = new char[512];
+    int bytesRead = -1;
+    do {
+      bytesRead = reader.read(data);
+      if(bytesRead > 0) {
+        writer.write(data, 0, bytesRead);
+      }
+    } while(bytesRead != -1);
+    return writer.getBuffer().toString();
   }
 }

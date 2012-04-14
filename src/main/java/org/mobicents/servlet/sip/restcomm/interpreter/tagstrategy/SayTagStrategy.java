@@ -57,7 +57,7 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
     	}
 	  } catch(final CallException exception) {
 		interpreter.failed();
-		notify(interpreter, context, tag, Notification.ERROR, 12400);
+		interpreter.notify(context, Notification.ERROR, 12400);
 		throw new TagStrategyException(exception);
 	  } catch(final InterruptedException ignored) { return; }
     }
@@ -68,7 +68,7 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
 	super.initialize(interpreter, context, tag);
     gender = getGender(interpreter, context, tag);
     if(gender == null) {
-      notify(interpreter, context, tag, Notification.WARNING, 13511);
+      interpreter.notify(context, Notification.WARNING, 13511);
       gender = "man";
     }
     language = getLanguage(interpreter, context, tag);
@@ -77,12 +77,12 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
     }
     loop = getLoop(interpreter, context, tag);
     if(loop == -1) {
-      notify(interpreter, context, tag, Notification.WARNING, 13510);
+      interpreter.notify(context, Notification.WARNING, 13510);
       loop = 1;
     }
     text = tag.getText();
     if(text == null || text.isEmpty()) {
-  	  notify(interpreter, context, tag, Notification.WARNING, 13520);
+  	  interpreter.notify(context, Notification.WARNING, 13520);
   	}
   }
 }

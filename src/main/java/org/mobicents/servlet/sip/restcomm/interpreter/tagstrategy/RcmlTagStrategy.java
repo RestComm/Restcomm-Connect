@@ -163,12 +163,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     }
   }
   
-  private URI getMoreInfo(final int errorCode) {
-	final StringBuilder buffer = new StringBuilder();
-	buffer.append(errorDictionary).append(errorCode).append(".html");
-    return URI.create(buffer.toString());
-  }
-  
   protected int getTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Timeout.NAME);
@@ -196,7 +190,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-	      final RcmlTag tag) throws TagStrategyException {
+      final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
       try {
@@ -204,40 +198,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 	  } catch(final CallException exception) {
 	    throw new TagStrategyException(exception);
 	  } catch(final InterruptedException exception) {
-	    notify(interpreter, context, tag, Notification.ERROR, 21220);
+	    interpreter.notify(context, Notification.ERROR, 21220);
 	  }
     }
-  }
-  
-  protected void notify(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag, final int log, final int errorCode) {
-	final Notification.Builder builder = Notification.builder();
-	final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
-	builder.setSid(sid);
-    builder.setAccountSid(context.getAccountSid());
-    builder.setCallSid(context.getCall().getSid());
-    builder.setApiVersion(context.getApiVersion());
-    builder.setLog(log);
-    builder.setErrorCode(errorCode);
-    builder.setMoreInfo(getMoreInfo(errorCode));
-    // Fix Me: This is going to have to be resolved in Beta 2 release. Create proper message text.
-    // This has been documented in Issue# 55 @ http://code.google.com/p/restcomm/issues/detail?id=55
-    builder.setMessageText(new String());
-    builder.setMessageDate(DateTime.now());
-    builder.setRequestUrl(interpreter.getCurrentResourceUri());
-    builder.setRequestMethod(interpreter.getCurrentResourceRequestMethod());
-    builder.setRequestVariables(interpreter.getCurrentResourceRequestVariables());
-    builder.setResponseBody(interpreter.getCurrentResource());
-    builder.setResponseHeaders(interpreter.getCurrentResourceResponseHeaders());
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
-    buffer.append(context.getAccountSid().toString()).append("/Notifications/");
-    buffer.append(sid.toString());
-    final URI uri = URI.create(buffer.toString());
-    builder.setUri(uri);
-    final Notification notification = builder.build();
-    final NotificationsDao dao = daos.getNotificationsDao();
-    dao.addNotification(notification);
   }
   
   protected List<URI> pause(final int seconds) {
