@@ -54,15 +54,27 @@ public final class RedirectTagStrategy extends RcmlTagStrategy {
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     super.initialize(interpreter, context, tag);
+    initMethod(interpreter, context, tag);
+    initUri(interpreter, context, tag);
+  }
+  
+  private void initMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    method = getMethod(interpreter, context, tag);
+	if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+	  interpreter.notify(context, Notification.WARNING, 13710);
+	  method = "POST";
+	}
+  }
+  
+  private void initUri(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     try {
-      method = getMethod(interpreter, context, tag);
-      if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-        interpreter.notify(context, Notification.WARNING, 13710);
-        method = "POST";
-      }
       uri = getUri(interpreter, context, tag);
     } catch(final IllegalArgumentException ignored) {
+      interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 11100);
+      throw new TagStrategyException(tag.getText() + " is an invalid URI.");
     }
   }
 }

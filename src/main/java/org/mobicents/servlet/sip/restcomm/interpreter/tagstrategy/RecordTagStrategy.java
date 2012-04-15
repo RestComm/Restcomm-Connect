@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
@@ -61,6 +62,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeLanguage;
 public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRecognizerObserver {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private static final Logger logger = Logger.getLogger(RecordTagStrategy.class);
+  private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1,12}");
   
   private final String baseRecordingsPath;
   private final List<URI> beepAudioFile;
@@ -104,20 +106,22 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
       final URI path = toPath(sid);
       call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
       final double duration = WavUtils.getAudioDuration(path);
-      recording = recording(sid, duration);
-      final RecordingsDao dao = daos.getRecordingsDao();
-      dao.addRecording(recording);
-      // Transcribe the path.
-      if(transcribe || (transcribeCallback != null)) {
-        speechRecognizer.recognize(path, transcribeLanguage, this);
+      if(duration > 0) {
+        recording = recording(sid, duration);
+        final RecordingsDao dao = daos.getRecordingsDao();
+        dao.addRecording(recording);
+        // Transcribe the path.
+        if(transcribe || (transcribeCallback != null)) {
+          speechRecognizer.recognize(path, transcribeLanguage, this);
+        }
+        // Redirect to action URI.
+        final List<NameValuePair> variables = new ArrayList<NameValuePair>();
+        variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
+        variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
+        variables.add(new BasicNameValuePair("Digits", call.getDigits()));
+        interpreter.load(action, method, variables);
+        interpreter.redirect();
       }
-      // Redirect to action URI.
-      final List<NameValuePair> variables = new ArrayList<NameValuePair>();
-      variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
-      variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
-      variables.add(new BasicNameValuePair("Digits", call.getDigits()));
-      interpreter.load(action, method, variables);
-      interpreter.redirect();
     } catch(final Exception exception) {
       interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);
@@ -140,6 +144,8 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
           return result;
         }
       }
+    } else {
+      return 3600;
     }
     interpreter.notify(context, Notification.WARNING, 13612);
     return 3600;
@@ -206,7 +212,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     } else {
       builder.setStatus(Status.FAILED);
     }
-    builder.setRecordingSid(sid);
+    builder.setRecordingSid(recording.getSid());
     builder.setDuration(recording.getDuration());
     builder.setPrice(new BigDecimal(0.00));
     final StringBuilder buffer = new StringBuilder();
@@ -228,25 +234,63 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     }
   }
   
-  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  private void initAction(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    super.initialize(interpreter, context, tag);
-    action = getAction(interpreter, context, tag);
+    try {
+      action = getAction(interpreter, context, tag);
+      if(action == null) {
+        action = interpreter.getCurrentResourceUri();
+      }
+    } catch(final IllegalArgumentException exception) {
+      interpreter.failed();
+      interpreter.notify(context, Notification.ERROR, 11100);
+      throw new TagStrategyException(exception);
+    }
+  }
+  
+  private void initMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     method = getMethod(interpreter, context, tag);
     if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
       interpreter.notify(context, Notification.WARNING, 13610);
       method = "POST";
     }
-    timeout = getTimeout(interpreter, context, tag);
-    if(timeout == -1 || timeout == 0) {
-      interpreter.notify(context, Notification.WARNING, 13611);
+  }
+  
+  private void initTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Object object = getTimeout(interpreter, context, tag);
+    if(object == null) {
       timeout = 5;
+    } else {
+      timeout = (Integer)object;
+      if(timeout == -1) {
+        interpreter.notify(context, Notification.WARNING, 13611);
+        timeout = 5;
+      }
     }
+  }
+  
+  private void initFinishOnKey(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     finishOnKey = getFinishOnKey(interpreter, context, tag);
     if(finishOnKey == null) {
-      interpreter.notify(context, Notification.WARNING, 13613);
       finishOnKey = "1234567890*#";
+    } else {
+      if(!finishOnKeyPattern.matcher(finishOnKey).matches()) {
+    	interpreter.notify(context, Notification.WARNING, 13613);
+    	finishOnKey = "1234567890*#";
+      }
     }
+  }
+  
+  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    super.initialize(interpreter, context, tag);
+    initAction(interpreter, context, tag);
+    initMethod(interpreter, context, tag);
+    initTimeout(interpreter, context, tag);
+    initFinishOnKey(interpreter, context, tag);
     maxLength = getMaxLength(interpreter, context, tag);
     transcribe = getTranscribe(interpreter, context, tag);
     transcribeCallback = getTranscribeCallback(interpreter, context, tag);

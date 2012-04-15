@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>	
-	<Gather action="hello-world-sms.xml">
+	<Gather action="hello-world-record.xml">
 		<Play>demo.wav</Play>
 	</Gather>
-	<Hangup/>
 </Response>

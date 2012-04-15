@@ -43,7 +43,7 @@ public final class PauseTagStrategy extends RcmlTagStrategy {
 	      final RcmlTag tag) throws TagStrategyException {
     length = getLength(interpreter, context, tag);
     if(length == -1) {
-      interpreter.notify(context, Notification.ERROR, 13910);
+      interpreter.notify(context, Notification.WARNING, 13910);
       length = 1;
     }
   }

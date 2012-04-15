@@ -19,7 +19,6 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
 
@@ -50,8 +49,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class RcmlTagStrategy implements TagStrategy {
-  private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1,12}");
-  
   protected final Configuration configuration;
   protected final DaoManager daos;
   protected final String homeDirectory;
@@ -74,19 +71,15 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     if(attribute != null) {
       final URI base = interpreter.getCurrentResourceUri();
   	  return resolveIfNotAbsolute(base, attribute.getValue());
-    } else {
-      return null;
-    }
+    } 
+    return null;
   }
   
   protected String getFinishOnKey(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(FinishOnKey.NAME);
     if(attribute != null) {
-      final String value = attribute.getValue();
-      if(finishOnKeyPattern.matcher(value).matches()) {
-        return value;
-      }
+      return attribute.getValue();
     }
     return null;
   }
@@ -100,9 +93,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     final String gender = attribute.getValue();
     if("man".equals(gender) || "woman".equals(gender)) {
       return gender;
-    } else {
-      return null;
     }
+    return null;
   }
   
   protected String getLanguage(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -120,22 +112,23 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     return null;
   }
   
-  protected int getLength(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  protected Integer getLength(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Length.NAME);
-    if(attribute != null) {
-      final String value = attribute.getValue();
-      if(StringUtils.isPositiveInteger(value)) {
-        final int result = Integer.parseInt(value);
-        if(result > 0) {
-          return result;
-        }
+    if(attribute == null) {
+      return 1;
+    }
+    final String value = attribute.getValue();
+    if(StringUtils.isPositiveInteger(value)) {
+      final int result = Integer.parseInt(value);
+      if(result > 0) {
+        return result;
       }
     }
     return -1;
   }
   
-  protected int getLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  protected Integer getLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Loop.NAME);
     if(attribute == null) {
@@ -160,16 +153,17 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     return attribute.getValue();
   }
   
-  protected int getTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  protected Integer getTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Timeout.NAME);
-    if(attribute != null) {
-      final String value = attribute.getValue();
-      if(StringUtils.isPositiveInteger(value)) {
-        final int result = Integer.parseInt(value);
-        if(result > 0) {
-          return result;
-        }
+    if(attribute == null) {
+      return null;
+    }
+    final String value = attribute.getValue();
+    if(StringUtils.isPositiveInteger(value)) {
+      final int result = Integer.parseInt(value);
+      if(result > 0) {
+        return result;
       }
     }
     return -1;

@@ -183,18 +183,28 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
     super.initialize(interpreter, context, tag);
     from = getFrom(interpreter, context, tag);
     to = getTo(interpreter, context, tag);
+    initBody(interpreter, context, tag);
+    action = getAction(interpreter, context, tag);
+    initMethod(interpreter, context, tag);
+    statusCallback = getStatusCallback(interpreter, context, tag);
+  }
+  
+  private void initBody(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     body = tag.getText();
     if(body == null || body.isEmpty() || body.length() > SmsMessage.MAX_SIZE) {
       interpreter.notify(context, Notification.WARNING, 14103);
       throw new TagStrategyException("Invalid SMS body length.");
     }
-    action = getAction(interpreter, context, tag);
+  }
+  
+  private void initMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     method = getMethod(interpreter, context, tag);
     if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
       interpreter.notify(context, Notification.WARNING, 14104);
       method = "POST";
     }
-    statusCallback = getStatusCallback(interpreter, context, tag);
   }
   
   private SmsMessage sms(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,

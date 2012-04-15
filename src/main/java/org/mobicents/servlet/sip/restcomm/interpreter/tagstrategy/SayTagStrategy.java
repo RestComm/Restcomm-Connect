@@ -65,20 +65,40 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
 	super.initialize(interpreter, context, tag);
+    initGender(interpreter, context, tag);
+    initLanguage(interpreter, context, tag);
+    initLoop(interpreter, context, tag);
+    initText(interpreter, context, tag);
+  }
+  
+  private void initGender(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     gender = getGender(interpreter, context, tag);
-    if(gender == null) {
-      interpreter.notify(context, Notification.WARNING, 13511);
-      gender = "man";
-    }
+	if(gender == null) {
+	  interpreter.notify(context, Notification.WARNING, 13511);
+	  gender = "man";
+	}
+  }
+  
+  private void initLanguage(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     language = getLanguage(interpreter, context, tag);
     if(language == null) {
       language = "en";
     }
+  }
+  
+  private void initLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     loop = getLoop(interpreter, context, tag);
     if(loop == -1) {
       interpreter.notify(context, Notification.WARNING, 13510);
       loop = 1;
     }
+  }
+  
+  private void initText(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     text = tag.getText();
     if(text == null || text.isEmpty()) {
   	  interpreter.notify(context, Notification.WARNING, 13520);

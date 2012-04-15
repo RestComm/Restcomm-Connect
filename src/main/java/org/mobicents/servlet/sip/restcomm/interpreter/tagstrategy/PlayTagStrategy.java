@@ -60,23 +60,35 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
     } catch(final InterruptedException ignored) { return; }
   }
   
-  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  private void initLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    super.initialize(interpreter, context, tag);
+    loop = getLoop(interpreter, context, tag);
+    if(loop == -1) {
+      interpreter.notify(context, Notification.WARNING, 13410);
+      loop = 1;
+    }
+  }
+  
+  private void initUri(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     try {
-      loop = getLoop(interpreter, context, tag);
-      if(loop == -1) {
-        interpreter.notify(context, Notification.WARNING, 13410);
-        loop = 1;
-      }
       uri = getUri(interpreter, context, tag);
       if(uri == null) {
+    	interpreter.failed();
         interpreter.notify(context, Notification.ERROR, 13420);
         throw new TagStrategyException("There is no resource to play.");
       }
     } catch(final IllegalArgumentException exception) {
+      interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 11100);
-      throw new TagStrategyException("An illegal resource URI was provided.");
+      throw new TagStrategyException(tag.getText() + " is an invalid URI.");
     }
+  }
+  
+  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    super.initialize(interpreter, context, tag);
+    initLoop(interpreter, context, tag);
+    initUri(interpreter, context, tag);
   }
 }

@@ -19,6 +19,7 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -41,6 +42,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class GatherTagStrategy extends RcmlTagStrategy {
+  private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1}");
+  
   private URI action;
   private String method;
   private int timeout;
@@ -78,7 +81,7 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
   }
   
   private List<URI> getAnnouncements(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) {
+      final RcmlTag tag) throws TagStrategyException {
 	final List<Tag> children = tag.getChildren();
 	final List<URI> announcements = new ArrayList<URI>();
     for(final Tag child : children) {
@@ -98,13 +101,14 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
   private int getNumDigits(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(NumDigits.NAME);
-    if(attribute != null) {
-      final String value = attribute.getValue();
-      if(StringUtils.isPositiveInteger(value)) {
-    	final int result = Integer.parseInt(value);
-    	if(result >= 1) {
-          return result; 
-    	}
+    if(attribute == null) {
+      return Short.MAX_VALUE;
+    }
+    final String value = attribute.getValue();
+    if(StringUtils.isPositiveInteger(value)) {
+      final int result = Integer.parseInt(value);
+      if(result >= 1) {
+        return result; 
       }
     }
     interpreter.notify(context, Notification.WARNING, 13314);
@@ -113,19 +117,24 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
   
   private List<URI> getPause(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
-    final int length = getLength(interpreter, context, tag);
+    int length = getLength(interpreter, context, tag);
+    if(length == -1) {
+      length = 1;
+    }
     return pause(length);
   }
   
   private List<URI> getPlay(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) {
+      final RcmlTag tag) throws TagStrategyException {
     int loop = getLoop(interpreter, context, tag);
     if(loop == -1) {
       loop = 1;
     }
     final URI uri = getUri(interpreter, context, tag);
     if(uri == null) {
+      interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 13325);
+      throw new TagStrategyException("There is no resource to play.");
     }
     final List<URI> announcements = new ArrayList<URI>();
     if(uri != null) {
@@ -168,6 +177,15 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     super.initialize(interpreter, context, tag);
+    initAction(interpreter, context, tag);
+    initMethod(interpreter, context, tag);
+    initTimeout(interpreter, context, tag);
+    initFinishOnKey(interpreter, context, tag);
+    numDigits = getNumDigits(interpreter, context, tag);
+  }
+  
+  private void initAction(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     try {
       action = getAction(interpreter, context, tag);
       if(action == null) {
@@ -178,21 +196,41 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
       interpreter.notify(context, Notification.ERROR, 11100);
       throw new TagStrategyException(exception);
     }
+  }
+  
+  private void initMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     method = getMethod(interpreter, context, tag);
     if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
       interpreter.notify(context, Notification.WARNING, 13312);
       method = "POST";
     }
-    timeout = getTimeout(interpreter, context, tag);
-    if(timeout == -1) {
-      interpreter.notify(context, Notification.WARNING, 13313);
+  }
+  
+  private void initTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Object object = getTimeout(interpreter, context, tag);
+    if(object == null) {
       timeout = 5;
+    } else {
+      timeout = (Integer)object;
+      if(timeout == -1) {
+        interpreter.notify(context, Notification.WARNING, 13313);
+        timeout = 5;
+      }
     }
+  }
+  
+  private void initFinishOnKey(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
     finishOnKey = getFinishOnKey(interpreter, context, tag);
     if(finishOnKey == null) {
-      interpreter.notify(context, Notification.WARNING, 13310);
       finishOnKey = "#";
+    } else {
+      if(!finishOnKeyPattern.matcher(finishOnKey).matches()) {
+    	interpreter.notify(context, Notification.WARNING, 13310);
+    	finishOnKey = "#";
+      }
     }
-    numDigits = getNumDigits(interpreter, context, tag);
   }
 }

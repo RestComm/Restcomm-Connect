@@ -3,5 +3,5 @@
 	<Say>
     	Welcome to RestComm, a TeleStax sponsored project.
     </Say>
-    <Redirect>hello-world-play.xml</Redirect>
+    <Redirect>hello-world-gather.xml</Redirect>
 </Response>

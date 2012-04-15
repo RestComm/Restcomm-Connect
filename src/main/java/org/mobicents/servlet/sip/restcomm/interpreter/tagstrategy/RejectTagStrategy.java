@@ -58,6 +58,7 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
     	  super.initialize(interpreter, context, tag);
     	  call.play(rejectAudioFile, 1);
         } catch(final Exception exception) {
+          interpreter.failed();
     	  interpreter.notify(context, Notification.ERROR, 12400);
     	  throw new TagStrategyException(exception);
     	}
