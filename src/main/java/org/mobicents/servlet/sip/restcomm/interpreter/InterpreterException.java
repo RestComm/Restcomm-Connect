@@ -19,7 +19,7 @@ package org.mobicents.servlet.sip.restcomm.interpreter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class InterpreterException extends Exception {
+public final class InterpreterException extends RuntimeException {
   private static final long serialVersionUID = 1L;
 
   public InterpreterException() {

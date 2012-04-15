@@ -128,7 +128,7 @@ CREATE TABLE "restcomm_sms_messages" (
 "sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATE NOT NULL,
 "date_updated" DATE NOT NULL,
-"date_sent" DATE NOT NULL,
+"date_sent" DATE,
 "account_sid" VARCHAR(34) NOT NULL,
 "sender" VARCHAR(15) NOT NULL,
 "recipient" VARCHAR(15) NOT NULL,

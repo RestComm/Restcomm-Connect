@@ -25,4 +25,8 @@
   <delete id="removeSmsMessages" parameterType="string">
     DELETE FROM "restcomm_sms_messages" WHERE "account_sid"=#{account_sid};
   </delete>
+  
+  <update id="updateSmsMessage" parameterType="map">
+    UPDATE "restcomm_sms_messages" SET "date_sent"=#{date_sent}, "status"=#{status}, "price"=#{price} WHERE "sid"=#{sid};
+  </update>
 </mapper>

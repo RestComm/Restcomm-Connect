@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>	
-	<Play loop="2">http://mobicents.googlecode.com/svn/trunk/servers/sip-servlets/sip-servlets-examples/media-jsr309-servlet/src/main/sipapp/audio/dtmf0.wav</Play>
-	<Hangup />
+	<Play>demo.wav</Play>
+	<Pause length="5"/>
+	<Sms from="19549376176" to="19549376176">Welcome to RestComm.</Sms>
+	<Hangup/>
 </Response>

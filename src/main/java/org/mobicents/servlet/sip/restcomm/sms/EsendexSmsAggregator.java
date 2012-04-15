@@ -81,6 +81,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     queue = new LinkedBlockingQueue<SmsMessageRequest>();
     worker = new Thread(this);
     worker.setName("Esendex Aggregator Worker");
+    running = true;
     worker.start();
   }
 
@@ -93,6 +94,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   @Override public void shutdown() {
     if(running) {
       running = false;
+      worker.interrupt();
     }
   }
   

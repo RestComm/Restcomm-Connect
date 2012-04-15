@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Response>
-    <Say>I will pause 3 seconds starting now!</Say>
-    <Pause length="3"/>
-    <Say>I just paused 3 seconds</Say>
-</Response>

@@ -105,7 +105,12 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
   }
   
   public void updateSmsMessage(final SmsMessage smsMessage) {
-    
+    final SqlSession session = sessions.openSession();
+    try {
+      session.update(namespace + "updateSmsMessage", toMap(smsMessage));
+    } finally {
+      session.close();
+    }
   }
   
   private Map<String, Object> toMap(final SmsMessage smsMessage) {

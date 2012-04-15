@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
+import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -41,5 +42,9 @@ public final class PauseTagStrategy extends RcmlTagStrategy {
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
 	      final RcmlTag tag) throws TagStrategyException {
     length = getLength(interpreter, context, tag);
+    if(length == -1) {
+      interpreter.notify(context, Notification.ERROR, 13910);
+      length = 1;
+    }
   }
 }

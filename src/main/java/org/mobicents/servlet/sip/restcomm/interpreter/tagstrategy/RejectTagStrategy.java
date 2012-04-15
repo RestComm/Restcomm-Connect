@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 
+import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -53,8 +54,13 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
     final Call call = context.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
       if("rejected".equalsIgnoreCase(reason)) {
-    	try { call.play(rejectAudioFile, 1); }
-    	catch(final Exception ignored) {  }
+    	try { 
+    	  super.initialize(interpreter, context, tag);
+    	  call.play(rejectAudioFile, 1);
+        } catch(final Exception exception) {
+    	  interpreter.notify(context, Notification.ERROR, 12400);
+    	  throw new TagStrategyException(exception);
+    	}
         call.hangup();
       } else if("busy".equalsIgnoreCase(reason)) {
         call.reject();

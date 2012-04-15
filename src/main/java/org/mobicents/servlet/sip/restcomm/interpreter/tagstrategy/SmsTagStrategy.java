@@ -30,6 +30,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -48,6 +49,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.To;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
@@ -55,6 +57,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  */
 public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregatorObserver {
   private static final Logger logger = Logger.getLogger(SmsTagStrategy.class);
+  private final PhoneNumberUtil phoneNumberUtil;
   private final SmsAggregator smsAggregator;
   
   private PhoneNumber from;
@@ -69,6 +72,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
 	  
   public SmsTagStrategy() {
     super();
+    phoneNumberUtil = PhoneNumberUtil.getInstance();
     final ServiceLocator services = ServiceLocator.getInstance();
     smsAggregator = services.get(SmsAggregator.class);
   }
@@ -77,26 +81,25 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
       final RcmlTag tag) throws TagStrategyException {
     this.context = context;
 	// Send the text message.
-	if(body != null && !body.isEmpty() && body.length() <= SmsMessage.MAX_SIZE) {
-	  try {
-	    final SmsMessagesDao dao = daos.getSmsMessagesDao();
-	    sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
-	    dao.addSmsMessage(sms);
-		smsAggregator.send(from.toString(), to.toString(), body, this);
-		sms = sms.setStatus(SmsMessage.Status.SENDING);
-		dao.updateSmsMessage(sms);
-		if(action != null) {
-		  final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-		  parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
-		  parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
-		  interpreter.load(action, method, parameters);
-	      interpreter.redirect();
-		}
-	  } catch(final Exception exception) {
-		interpreter.failed();
-		interpreter.notify(context, Notification.ERROR, 12400);
-	    throw new TagStrategyException(exception);
-	  }
+	try {
+	  final SmsMessagesDao dao = daos.getSmsMessagesDao();
+	  sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
+	  dao.addSmsMessage(sms);
+	  smsAggregator.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
+	      phoneNumberUtil.format(to, PhoneNumberFormat.E164), body, this);
+	  sms = sms.setStatus(SmsMessage.Status.SENDING);
+	  dao.updateSmsMessage(sms);
+	  if(action != null) {
+	    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+	    parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
+	    parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
+	    interpreter.load(action, method, parameters);
+	    interpreter.redirect();
+      }
+	} catch(final Exception exception) {
+	  interpreter.failed();
+	  interpreter.notify(context, Notification.ERROR, 12400);
+	  throw new TagStrategyException(exception);
 	}
   }
   
@@ -106,26 +109,37 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
   
   private PhoneNumber getFrom(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
-    return getPhoneNumber(interpreter, context, tag, From.NAME);
+    final PhoneNumber phoneNumber = getPhoneNumber(interpreter, context, tag, From.NAME);
+    if(phoneNumber != null) {
+      return phoneNumber;
+    } else {
+      interpreter.notify(context, Notification.WARNING, 14102);
+      return null;
+    }
   }
   
   private PhoneNumber getTo(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
-    return getPhoneNumber(interpreter, context, tag, To.NAME);
+    final PhoneNumber phoneNumber = getPhoneNumber(interpreter, context, tag, To.NAME);
+    if(phoneNumber != null) {
+      return phoneNumber;
+    } else {
+      interpreter.notify(context, Notification.WARNING, 14101);
+      return null;
+    }
   }
   
   private PhoneNumber getPhoneNumber(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag, final String attributeName) {
     final Attribute attribute = tag.getAttribute(attributeName);
+    String value = null;
     if(attribute != null) {
-      final String value = attribute.getValue();
-      final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-      try {
-        return phoneNumberUtil.parse(value, "US");
-      } catch(final NumberParseException exception) {
-        interpreter.notify(context, Notification.WARNING, 14102);
-      }
+      value = attribute.getValue();
+    } else {
+      value = context.getCall().getOriginator();
     }
+    try { return phoneNumberUtil.parse(value, "US"); }
+    catch(final NumberParseException ignored) { }
     return null;
   }
   
@@ -141,6 +155,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
   
   private void handleSmsMessage(final boolean success) {
     if(success) {
+      sms = sms.setDateSent(DateTime.now());
       sms = sms.setStatus(SmsMessage.Status.SENT);
     } else {
       sms = sms.setStatus(SmsMessage.Status.FAILED);
@@ -171,6 +186,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
     body = tag.getText();
     if(body == null || body.isEmpty() || body.length() > SmsMessage.MAX_SIZE) {
       interpreter.notify(context, Notification.WARNING, 14103);
+      throw new TagStrategyException("Invalid SMS body length.");
     }
     action = getAction(interpreter, context, tag);
     method = getMethod(interpreter, context, tag);
@@ -188,8 +204,8 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
     final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
     builder.setSid(sid);
     builder.setAccountSid(context.getAccountSid());
-    builder.setSender(sender.toString());
-    builder.setRecipient(recipient.toString());
+    builder.setSender(phoneNumberUtil.format(sender, PhoneNumberFormat.E164));
+    builder.setRecipient(phoneNumberUtil.format(recipient, PhoneNumberFormat.E164));
     builder.setBody(body);
     builder.setStatus(status);
     builder.setDirection(direction);

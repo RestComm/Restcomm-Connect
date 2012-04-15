@@ -131,11 +131,19 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   }
   
   public static String writeBigDecimal(final BigDecimal bigDecimal) {
-    return bigDecimal.toString();
+    if(bigDecimal != null) {
+      return bigDecimal.toString();
+    } else {
+      return null;
+    }
   }
   
   public static Date writeDateTime(final DateTime dateTime) {
-    return dateTime.toDate();
+    if(dateTime != null) {
+      return dateTime.toDate();
+    } else {
+      return null;
+    }
   }
   
   public static String writeSid(final Sid sid) {

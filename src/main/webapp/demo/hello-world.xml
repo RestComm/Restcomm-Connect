@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
 	<Say>
-    	Welcome to RestComm, a TeleStax sponsored project. We will now connect you to the conference room named Brazil. Please hold for other participants.
+    	Welcome to RestComm, a TeleStax sponsored project.
     </Say>
-
-    <Say language="es">
-    	Bienvenido a RestComm, un proyecto patrocinado por TeleStax. Ahora vamos a conectar a la sala de conferencias llamada Brasil. Por favor espere por los demás participantes.
-    </Say>
-
-    <Say language="pt">
-    	Bem-vindo ao RestComm, um projeto TeleStax patrocinado. Vamos agora conectá-lo à sala de conferências chamado Brasil. Por favor, aguarde outros participantes.
-    </Say>
+    <Redirect>hello-world-play.xml</Redirect>
 </Response>

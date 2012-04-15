@@ -106,12 +106,14 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     queue = new LinkedBlockingQueue<SpeechRecognitionRequest>();
     worker = new Thread(this);
     worker.setName("iSpeech Recognizer Worker");
+    running = true;
     worker.start();
   }
 
   @Override public void shutdown() {
     if(running) {
       running = false;
+      worker.interrupt();
     }
   }
 

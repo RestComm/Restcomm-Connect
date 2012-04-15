@@ -36,7 +36,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
 
@@ -45,6 +44,7 @@ import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
+import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
@@ -63,15 +63,13 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class RcmlInterpreter extends FiniteStateMachine implements Runnable, TagVisitor {
-  // Logger.
-  private static final Logger logger = Logger.getLogger(RcmlInterpreter.class);
   // RcmlInterpreter states.
-  public static final State IDLE = new State("idle");
-  public static final State REDIRECTED = new State("redirected");
-  public static final State READY = new State("ready");
-  public static final State EXECUTING = new State("executing");
-  public static final State FINISHED = new State("finished");
-  public static final State FAILED = new State("failed");
+  private static final State IDLE = new State("idle");
+  private static final State REDIRECTED = new State("redirected");
+  private static final State READY = new State("ready");
+  private static final State EXECUTING = new State("executing");
+  private static final State FINISHED = new State("finished");
+  private static final State FAILED = new State("failed");
   static {
     IDLE.addTransition(READY);
     READY.addTransition(EXECUTING);
@@ -123,6 +121,14 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     daos = services.get(DaoManager.class);
   }
   
+  private void cleanup(final RcmlInterpreterContext context) {
+    final Call call = context.getCall();
+    if(Call.Status.IN_PROGRESS == call.getStatus()) {
+      call.hangup();
+    }
+    finish();
+  }
+  
   public void failed() {
     assertState(EXECUTING);
     setState(FAILED);
@@ -135,10 +141,10 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	try {
 	  return client.execute(request);
 	} catch(final ClientProtocolException exception) {
-	  notify(context, Notification.ERROR, 11206, uri, method, getQueryString(getVariables(variables)), null, null);
+	  notify(context, Notification.ERROR, 11206, uri, method, getQueryString(getVariables(variables)));
 	  throw new InterpreterException(exception);
 	} catch(final IOException exception) {
-	  notify(context, Notification.ERROR, 11200, uri, method, getQueryString(getVariables(variables)), null, null);
+	  notify(context, Notification.ERROR, 11200, uri, method, getQueryString(getVariables(variables)));
 	  throw new InterpreterException(exception);
 	}
   }
@@ -167,7 +173,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	try {
 	  load(context.getVoiceUrl(), context.getVoiceMethod());
 	} catch(final InterpreterException exception) {
-	  logger.error("Using fallback url the default voice url failed.", exception);
 	  load(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod());
 	}
     setState(READY);
@@ -187,12 +192,12 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	final String queryString = getQueryString(getVariables(variables));
 	try {
 	  final HttpResponse response = fetch(uri, method, variables);
-	  validate(response);
+	  validate(uri, method, queryString, response);
 	  final int status = response.getStatusLine().getStatusCode();
 	  if(status == HttpStatus.SC_OK) {
 		final String body = StringUtils.toString(response.getEntity().getContent());
 		final RcmlDocument document = resourceBuilder.build(body);
-		validate(document);
+		validate(uri, method, queryString, document);
 		requestMethod = method;
 		requestVariables = queryString;
 		responseHeaders = HttpUtils.toString(response.getAllHeaders());
@@ -200,13 +205,13 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	    resource = resourceBuilder.build(body);
 	    resourceUri = uri;
 	  } else {
-		notify(context, Notification.ERROR, 11200, uri, method, queryString, null, null);
+		notify(context, Notification.ERROR, 11200, uri, method, queryString);
 	  }
 	} catch(final IOException exception) {
-	  notify(context, Notification.ERROR, 11200, uri, method, queryString, null, null);
+	  notify(context, Notification.ERROR, 11200, uri, method, queryString);
 	  throw new InterpreterException(exception);
 	} catch(final RcmlDocumentBuilderException exception) {
-	  notify(context, Notification.ERROR, 12100, uri, method, queryString, null, null);
+	  notify(context, Notification.ERROR, 12100, uri, method, queryString);
 	  throw new InterpreterException(exception);
 	}
   }
@@ -214,6 +219,11 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   public void notify(final RcmlInterpreterContext context, final int log, final int errorCode) {
     notify(context, log, errorCode, resourceUri, requestMethod, requestVariables, responseBody,
         responseHeaders);
+  }
+  
+  public void notify(final RcmlInterpreterContext context, final int log, final int errorCode,
+      final URI resourceUri, final String requestMethod, final String requestVariables) {
+    notify(context, log, errorCode, resourceUri, requestMethod, requestVariables, null, null);
   }
   
   public void notify(final RcmlInterpreterContext context, final int log, final int errorCode,
@@ -280,7 +290,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
         request = post;
       }
 	} catch(final URISyntaxException exception) {
-	  notify(context, Notification.ERROR, 11100, uri, method, queryString, null, null);
+	  notify(context, Notification.ERROR, 11100, uri, method, queryString);
 	  throw new InterpreterException(exception);
 	} catch(final UnsupportedEncodingException ignored) { }
 	return request;
@@ -288,6 +298,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   
   public void run() {
     while(getState().equals(READY)) {
+      // Start executing the document.
       TagIterator iterator = resource.iterator();
       while(iterator.hasNext()) {
         final RcmlTag tag = (RcmlTag)iterator.next();
@@ -305,30 +316,36 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
         	iterator = resource.iterator();
         	setState(READY);
           } else if(state.equals(FINISHED) || state.equals(FAILED)) {
-            return;
+            break;
           } else {
             setState(READY);
           }
         }
       }
-      setState(FINISHED);
+      cleanup(context);
     }
   }
   
   private void checkContentType(final String type) throws InterpreterException {
     if(!"text/xml".equals(type) && !"application/xml".equals(type) && !"text/html".equals(type)) {
-      notify(context, Notification.ERROR, 12300);
       throw new InterpreterException("Invalid content type " + type);
     }
   }
   
-  private void validate(final HttpResponse response) throws InterpreterException {
-    checkContentType(response.getFirstHeader("Content-Type").getValue());
+  private void validate(final URI uri, final String method, final String queryString,
+      final HttpResponse response) throws InterpreterException {
+	try {
+      checkContentType(response.getFirstHeader("Content-Type").getValue());
+	} catch(final InterpreterException exception) {
+	  notify(context, Notification.ERROR, 12300, uri, method, queryString);
+	  throw new InterpreterException(exception);
+	}
   }
   
-  private void validate(final Tag tag) throws InterpreterException {
+  private void validate(final URI uri, final String method, final String queryString,
+      final Tag tag) throws InterpreterException {
     if(!"Response".equals(tag.getName())) {
-      notify(context, Notification.ERROR, 12102);
+      notify(context, Notification.ERROR, 12102, uri, method, queryString);
       throw new InterpreterException();
     }
   }

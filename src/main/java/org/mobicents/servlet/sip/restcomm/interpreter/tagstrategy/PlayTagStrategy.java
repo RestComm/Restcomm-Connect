@@ -41,24 +41,23 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    if(uri != null) {
-      final List<URI> announcement = new ArrayList<URI>();
-      announcement.add(uri);
-      try {
-        final Call call = context.getCall();
-    	if(loop == 0) {
-    	  while(Call.Status.IN_PROGRESS == call.getStatus()) {
-    	    call.play(announcement, 1);
-    	  }
-    	} else {
-          call.play(announcement, loop);
+    final List<URI> announcement = new ArrayList<URI>();
+    announcement.add(uri);
+    try {
+      final Call call = context.getCall();
+      if(loop == 0) {
+    	while(Call.Status.IN_PROGRESS == call.getStatus()) {
+    	  call.play(announcement, 1);
     	}
-      } catch(final CallException exception) {
-        interpreter.failed();
-        interpreter.notify(context, Notification.ERROR, 12400);
-        throw new TagStrategyException(exception);
-      } catch(final InterruptedException ignored) { return; }
-    }
+    	interpreter.finish();
+      } else {
+        call.play(announcement, loop);
+      }
+    } catch(final CallException exception) {
+      interpreter.failed();
+      interpreter.notify(context, Notification.ERROR, 12400);
+      throw new TagStrategyException(exception);
+    } catch(final InterruptedException ignored) { return; }
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -73,9 +72,11 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
       uri = getUri(interpreter, context, tag);
       if(uri == null) {
         interpreter.notify(context, Notification.ERROR, 13420);
+        throw new TagStrategyException("There is no resource to play.");
       }
     } catch(final IllegalArgumentException exception) {
       interpreter.notify(context, Notification.ERROR, 11100);
+      throw new TagStrategyException("An illegal resource URI was provided.");
     }
   }
 }

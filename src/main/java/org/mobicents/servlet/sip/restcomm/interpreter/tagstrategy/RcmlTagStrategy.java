@@ -23,16 +23,12 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
 
-import org.joda.time.DateTime;
-
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
-import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategy;
@@ -60,7 +56,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
   protected final DaoManager daos;
   protected final String homeDirectory;
   protected final String rootUri;
-  private final String errorDictionary;
   private final URI silenceAudioFile;
 
   public RcmlTagStrategy() {
@@ -70,7 +65,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
     configuration = services.get(Configuration.class);
     homeDirectory = StringUtils.addSuffixIfNotPresent(configuration.getString("home-directory"), "/");
     rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
-    errorDictionary = StringUtils.addSuffixIfNotPresent(configuration.getString("error-dictionary-uri"), "/");
     silenceAudioFile = URI.create("file://" + configuration.getString("silence-audio-file"));
   }
   
@@ -81,7 +75,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
       final URI base = interpreter.getCurrentResourceUri();
   	  return resolveIfNotAbsolute(base, attribute.getValue());
     } else {
-      return interpreter.getCurrentResourceUri();
+      return null;
     }
   }
   
@@ -100,25 +94,28 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
   protected String getGender(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Voice.NAME);
-    if(attribute != null) {
-      final String gender = attribute.getValue();
-      if("man".equals(gender) || "woman".equals(gender)) {
-        return gender;
-      }
+    if(attribute == null) {
+      return "man";
     }
-    return null;
+    final String gender = attribute.getValue();
+    if("man".equals(gender) || "woman".equals(gender)) {
+      return gender;
+    } else {
+      return null;
+    }
   }
   
   protected String getLanguage(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Language.NAME);
-    if(attribute != null) {
-      final ServiceLocator services = ServiceLocator.getInstance();
-      final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
-      final String language = attribute.getValue();
-      if(synthesizer.isSupported(language)) {
-        return language;
-      }
+    if(attribute == null) {
+      return "en";
+    }
+    final ServiceLocator services = ServiceLocator.getInstance();
+    final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
+    final String language = attribute.getValue();
+    if(synthesizer.isSupported(language)) {
+      return language;
     }
     return null;
   }
@@ -141,13 +138,14 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
   protected int getLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Loop.NAME);
-    if(attribute != null) {
-      final String value = attribute.getValue();
-      if(StringUtils.isPositiveInteger(value)) {
-        final int result = Integer.parseInt(value);
-        if(result >= 0) {
-          return result;
-        }
+    if(attribute == null) {
+      return 1;
+    }
+    final String value = attribute.getValue();
+    if(StringUtils.isPositiveInteger(value)) {
+      final int result = Integer.parseInt(value);
+      if(result >= 0) {
+        return result;
       }
     }
     return -1;
@@ -156,11 +154,10 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
   protected String getMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) {
     final Attribute attribute = tag.getAttribute(Method.NAME);
-    if(attribute != null) {
-      return attribute.getValue();
-    } else {
-      return null;
+    if(attribute == null) {
+      return "POST";
     }
+    return attribute.getValue();
   }
   
   protected int getTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -196,6 +193,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
       try {
 		call.answer();
 	  } catch(final CallException exception) {
+		interpreter.notify(context, Notification.ERROR, 12400);
 	    throw new TagStrategyException(exception);
 	  } catch(final InterruptedException exception) {
 	    interpreter.notify(context, Notification.ERROR, 21220);

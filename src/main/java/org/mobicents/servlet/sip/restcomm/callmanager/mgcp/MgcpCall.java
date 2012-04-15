@@ -343,7 +343,6 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     } catch(final IOException exception) {
       LOGGER.error(exception);
     }
-    cleanup();
   }
   
   @Override public synchronized void removeObserver(CallObserver observer) {

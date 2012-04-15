@@ -43,24 +43,23 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    if(text != null) {
-      final List<URI> announcement = new ArrayList<URI>();
-      announcement.add(say(gender, language, text));
-      try {
-        final Call call = context.getCall();
-    	if(loop == 0) {
-    	  while(Call.Status.IN_PROGRESS == call.getStatus()) {
-    	    call.play(announcement, 1);
-    	  }
-    	} else {
-		  call.play(announcement, loop);
+    final List<URI> announcement = new ArrayList<URI>();
+    announcement.add(say(gender, language, text));
+    try {
+      final Call call = context.getCall();
+      if(loop == 0) {
+    	while(Call.Status.IN_PROGRESS == call.getStatus()) {
+    	  call.play(announcement, 1);
     	}
-	  } catch(final CallException exception) {
-		interpreter.failed();
-		interpreter.notify(context, Notification.ERROR, 12400);
-		throw new TagStrategyException(exception);
-	  } catch(final InterruptedException ignored) { return; }
-    }
+    	interpreter.finish();
+      } else {
+		call.play(announcement, loop);
+      }
+	} catch(final CallException exception) {
+	  interpreter.failed();
+	  interpreter.notify(context, Notification.ERROR, 12400);
+	  throw new TagStrategyException(exception);
+	} catch(final InterruptedException ignored) { return; }
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -83,6 +82,7 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
     text = tag.getText();
     if(text == null || text.isEmpty()) {
   	  interpreter.notify(context, Notification.WARNING, 13520);
+  	  throw new TagStrategyException("There is no text to synthesize.");
   	}
   }
 }
