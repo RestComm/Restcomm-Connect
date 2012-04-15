@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>	
-	<Play>demo.wav</Play>
-	<Pause length="5"/>
-	<Sms from="19549376176" to="19549376176">Welcome to RestComm.</Sms>
+	<Gather action="hello-world-sms.xml">
+		<Play>demo.wav</Play>
+	</Gather>
 	<Hangup/>
 </Response>

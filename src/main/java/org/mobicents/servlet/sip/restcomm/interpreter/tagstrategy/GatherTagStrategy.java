@@ -57,12 +57,19 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
 	  // Collect some digits.
 	  final List<URI> announcements = getAnnouncements(interpreter, context, tag);
 	  final Call call = context.getCall();
+	  try {
       call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
+	  }catch(final Exception exception) {
+	    exception.printStackTrace();
+	  }
       // Redirect to action URI.;
-      final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-      parameters.add(new BasicNameValuePair("Digits", call.getDigits()));
-      interpreter.load(action, method, parameters);
-      interpreter.redirect();
+      final String digits = call.getDigits();
+      if(digits.length() > 0) {
+        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+        parameters.add(new BasicNameValuePair("Digits", digits));
+        interpreter.load(action, method, parameters);
+        interpreter.redirect();
+      }
     } catch(final Exception exception) {
       interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);
@@ -75,7 +82,7 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
 	final List<Tag> children = tag.getChildren();
 	final List<URI> announcements = new ArrayList<URI>();
     for(final Tag child : children) {
-      final String name = tag.getName();
+      final String name = child.getName();
       if(Say.NAME.equals(name)) {
         announcements.addAll(getSay(interpreter, context, (RcmlTag)child));
       } else if(Play.NAME.equals(name)) {
@@ -141,13 +148,13 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
       language = "en";
     }
     int loop = getLoop(interpreter, context, tag);
+    if(loop == -1) {
+      loop = 1;
+    }
     final String text = tag.getText();
     if(text == null || text.isEmpty()) {
   	  interpreter.notify(context, Notification.WARNING, 13322);
   	}
-    if(loop == -1) {
-      loop = 1;
-    }
     final List<URI> announcements = new ArrayList<URI>();
     if(text != null) {
       final URI uri = say(gender, language, text);
@@ -163,24 +170,29 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
     super.initialize(interpreter, context, tag);
     try {
       action = getAction(interpreter, context, tag);
-      method = getMethod(interpreter, context, tag);
-      if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-        interpreter.notify(context, Notification.WARNING, 13312);
-        method = "POST";
+      if(action == null) {
+        action = interpreter.getCurrentResourceUri();
       }
-      timeout = getTimeout(interpreter, context, tag);
-      if(timeout == -1) {
-        interpreter.notify(context, Notification.WARNING, 13313);
-        timeout = 5;
-      }
-      finishOnKey = getFinishOnKey(interpreter, context, tag);
-      if(finishOnKey == null) {
-        interpreter.notify(context, Notification.WARNING, 13310);
-        finishOnKey = "#";
-      }
-      numDigits = getNumDigits(interpreter, context, tag);
     } catch(final IllegalArgumentException exception) {
+      interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 11100);
+      throw new TagStrategyException(exception);
     }
+    method = getMethod(interpreter, context, tag);
+    if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+      interpreter.notify(context, Notification.WARNING, 13312);
+      method = "POST";
+    }
+    timeout = getTimeout(interpreter, context, tag);
+    if(timeout == -1) {
+      interpreter.notify(context, Notification.WARNING, 13313);
+      timeout = 5;
+    }
+    finishOnKey = getFinishOnKey(interpreter, context, tag);
+    if(finishOnKey == null) {
+      interpreter.notify(context, Notification.WARNING, 13310);
+      finishOnKey = "#";
+    }
+    numDigits = getNumDigits(interpreter, context, tag);
   }
 }
