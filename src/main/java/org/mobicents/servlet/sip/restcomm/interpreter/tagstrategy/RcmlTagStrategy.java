@@ -189,8 +189,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
 	  } catch(final CallException exception) {
 		interpreter.notify(context, Notification.ERROR, 12400);
 	    throw new TagStrategyException(exception);
-	  } catch(final InterruptedException exception) {
-	    interpreter.notify(context, Notification.ERROR, 21220);
 	  }
     }
   }

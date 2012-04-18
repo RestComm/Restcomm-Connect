@@ -69,8 +69,6 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   
   private Sid sid;
   private Direction direction;
-  private String digits;
-  private volatile boolean muted;
   private List<CallObserver> observers;
   
   private SipServletRequest initialInvite;
@@ -89,6 +87,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   private MgcpConnection remoteOutboundConnection;
   private MgcpConnection remoteInboundConnection;
   
+  private volatile String digits;
+  private volatile boolean muted;
+  
   public MgcpCall(final MgcpServer server) {
     super(IDLE);
     // Initialize the state machine.
@@ -101,9 +102,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     addState(FAILED);
     addState(NO_ANSWER);
     addState(CANCELLED);
+    this.sid = Sid.generate(Sid.Type.CALL);
     this.server = server;
     this.session = server.createMediaSession();
-    this.sid = Sid.generate(Sid.Type.CALL);
     this.observers = new ArrayList<CallObserver>();
   }
   
@@ -125,15 +126,17 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 	  ringing.send();
 	  initialInvite = request;
 	  setState(RINGING);
+	  fireStatusChanged();
 	} catch(final IOException exception) {
-	  setState(FAILED);
 	  cleanup();
+	  setState(FAILED);
+	  fireStatusChanged();
 	  LOGGER.error(exception);
 	  throw exception;
 	}
   }
   
-  @Override public synchronized void answer() throws CallException, InterruptedException {
+  @Override public synchronized void answer() throws CallException {
     assertState(RINGING);
     try {
       // Try to negotiate media with a packet relay end point.
@@ -143,23 +146,19 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
       userAgentConnection.addObserver(this);
       userAgentConnection.connect(ConnectionMode.SendRecv);
-    } catch(final IOException exception) {
-      LOGGER.error(exception);
-      throw new CallException(exception);
-    }
-    wait();
-    try {
+      wait();
       // Send the response back to the caller.
       final byte[] answer = userAgentConnection.getLocalDescriptor().toString().getBytes();
       final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
       ok.setContent(answer, "application/sdp");
       ok.send();
-    } catch(final IOException exception) {
+      wait();
+    } catch(final Exception exception) {
       fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
+      fireStatusChanged();
       LOGGER.error(exception);
       throw new CallException(exception);
     }
-    wait();
   }
   
   public synchronized void bye(final SipServletRequest request) throws IOException {
@@ -168,7 +167,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     try {
       ok.send();
       setState(COMPLETED);
-      fireCompleted();
+      fireStatusChanged();
     } finally {
       cleanup();
     }
@@ -180,6 +179,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     try {
       ok.send();
       setState(CANCELLED);
+      fireStatusChanged();
     } finally {
       cleanup();
     }
@@ -190,27 +190,29 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 	initialInvite.getSession().invalidate();	  
   }
 
-  @Override public synchronized void dial() throws CallException, InterruptedException {
+  @Override public synchronized void dial() throws CallException {
     assertState(QUEUED);
     direction = Direction.OUTBOUND_DIAL;
     // Try to negotiate media with a packet relay end point.
-    relayEndpoint = session.getPacketRelayEndpoint();
-    userAgentConnection = session.createConnection(relayEndpoint);
-    userAgentConnection.addObserver(this);
-    userAgentConnection.connect(ConnectionMode.SendRecv);
-    wait();
     try {
+	  relayEndpoint = session.getPacketRelayEndpoint();
+      userAgentConnection = session.createConnection(relayEndpoint);
+      userAgentConnection.addObserver(this);
+      userAgentConnection.connect(ConnectionMode.SendRecv);
+      wait();
       final byte[] offer = userAgentConnection.getLocalDescriptor().toString().getBytes();
       initialInvite.setContent(offer, "application/sdp");
       initialInvite.send();
+      wait();
     } catch(final Exception exception) {
+      setState(FAILED);
+      fireStatusChanged();
       final StringBuilder buffer = new StringBuilder();
       buffer.append("There was an error while dialing out from ");
       buffer.append(initialInvite.getFrom().toString()).append(" to ");
       buffer.append(initialInvite.getTo().toString());
       throw new CallException(buffer.toString(), exception);
     }
-    wait();
   }
   
   public synchronized void established() {
@@ -232,7 +234,6 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   private void fail(int code) {
-    setState(FAILED);
     final SipServletResponse fail = initialInvite.createResponse(code);
     try {
       fail.send();
@@ -240,11 +241,12 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       LOGGER.error(exception);
     }
     cleanup();
+    setState(FAILED);
   }
   
-  private synchronized void fireCompleted() {
+  private synchronized void fireStatusChanged() {
     for(final CallObserver observer : observers) {
-      observer.completed(this);
+      observer.onStatusChanged(this);
     }
   }
   
@@ -285,7 +287,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   @Override public synchronized void hangup() {
     assertState(IN_PROGRESS);
 	setState(COMPLETED);
-	fireCompleted();
+	fireStatusChanged();
 	terminate();
   }
   
@@ -293,46 +295,58 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     return muted;
   }
   
-  public synchronized void join(final MgcpConference conference) throws InterruptedException {
+  public synchronized void join(final MgcpConference conference) {
     assertState(IN_PROGRESS);
     remoteEndpoint = conference.getConferenceEndpoint();
     remoteOutboundConnection = session.createConnection(remoteEndpoint);
     remoteOutboundConnection.addObserver(this);
     remoteOutboundConnection.connect(ConnectionMode.Confrnce);
-    wait();
+    try {
+      wait();
+    } catch(final InterruptedException ignored) {
+      leave(conference);
+    }
   }
   
-  public synchronized void leave(final MgcpConference conference) throws InterruptedException {
+  public synchronized void leave(final MgcpConference conference) {
     assertState(IN_PROGRESS);
-    remoteOutboundConnection.disconnect();
-    wait();
+    if(remoteOutboundConnection != null) {
+      remoteOutboundConnection.disconnect();
+      try { wait(); }
+      catch(final InterruptedException ignored) { }
+    }
   }
   
-  @Override public synchronized void mute() throws InterruptedException {
+  @Override public synchronized void mute() {
     userAgentConnection.modify(ConnectionMode.RecvOnly);
-    wait();
+    try { wait(); }
+    catch(final InterruptedException ignored) {
+      unmute();
+    }
     muted = true;
   }
 
-  @Override public synchronized void play(final List<URI> announcements, final int iterations)
-      throws CallException, InterruptedException {
+  @Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
     assertState(IN_PROGRESS);
     ivrEndpoint.play(announcements, iterations);
-    wait();
+    try { wait(); }
+    catch(final InterruptedException ignored) { stopMedia(); }
   }
   
   @Override public synchronized void playAndCollect(final List<URI> prompts, final int maxNumberOfDigits, final int minNumberOfDigits,
-	      final long firstDigitTimer, final long interDigitTimer, final String endInputKey) throws CallException, InterruptedException {
+	      final long firstDigitTimer, final long interDigitTimer, final String endInputKey) throws CallException {
     assertState(IN_PROGRESS);
     ivrEndpoint.playCollect(prompts, maxNumberOfDigits, minNumberOfDigits, firstDigitTimer, interDigitTimer, endInputKey);
-    wait();
+    try { wait(); }
+    catch(final InterruptedException ignored) { stopMedia(); }
   }
   
   @Override public synchronized void playAndRecord(final List<URI> prompts, final URI recordId, final long postSpeechTimer,
-      final long recordingLength, final String patterns) throws CallException, InterruptedException {
+      final long recordingLength, final String patterns) throws CallException {
   	assertState(IN_PROGRESS);
   	ivrEndpoint.playRecord(prompts, recordId, postSpeechTimer, recordingLength, patterns);
-  	wait();
+  	try { wait(); }
+  	catch(final InterruptedException ignored) { stopMedia(); }
   }
 
   @Override public synchronized void reject() {
@@ -341,12 +355,22 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     try {
       busy.send();
     } catch(final IOException exception) {
+      setState(FAILED);
+      fireStatusChanged();
       LOGGER.error(exception);
     }
   }
   
   @Override public synchronized void removeObserver(CallObserver observer) {
     observers.remove(observer);
+  }
+  
+  @Override public synchronized void setExpires(final int minutes) {
+    initialInvite.setExpires(minutes);
+  }
+  
+  @Override public synchronized void stopMedia() {
+    ivrEndpoint.stop();
   }
   
   private void terminate() {
@@ -360,9 +384,10 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     cleanup();
   }
   
-  @Override public synchronized void unmute() throws InterruptedException {
+  @Override public synchronized void unmute() {
     userAgentConnection.modify(ConnectionMode.SendRecv);
-    wait();
+    try { wait(); }
+    catch(final InterruptedException ignored) { }
     muted = false;
   }
 
@@ -410,8 +435,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       possibleStates.add(QUEUED);
       possibleStates.add(RINGING);
       assertState(possibleStates);
-      initialInvite.setExpires(240);
+      setExpires(240);
       setState(IN_PROGRESS);
+      fireStatusChanged();
       notify(); 
     } else if(connection == remoteInboundConnection) {
       remoteOutboundConnection.modify(connection.getLocalDescriptor());
@@ -432,7 +458,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     if(connection == remoteOutboundConnection) {
       remoteOutboundConnection.removeObserver(this);
       remoteOutboundConnection = null;
-      remoteInboundConnection.disconnect();
+      if(remoteInboundConnection != null) {
+        remoteInboundConnection.disconnect();
+      }
     } else if(connection == remoteInboundConnection) {
       remoteInboundConnection.removeObserver(this);
       remoteInboundConnection = null;
@@ -443,6 +471,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 
   @Override public synchronized void failed(final MgcpConnection connection) {
 	setState(FAILED);
+	fireStatusChanged();
 	final StringBuilder buffer = new StringBuilder();
   	buffer.append("The call to recipient ").append(getRecipient())
   	    .append(" from sender ").append(getOriginator())

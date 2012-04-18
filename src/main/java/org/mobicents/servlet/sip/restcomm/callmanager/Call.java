@@ -26,8 +26,8 @@ import org.mobicents.servlet.sip.restcomm.Sid;
  */
 public interface Call {
   public void addObserver(CallObserver observer);
-  public void answer() throws CallException, InterruptedException;
-  public void dial() throws CallException, InterruptedException ;
+  public void answer() throws CallException;
+  public void dial() throws CallException;
   public String getDigits();
   public Direction getDirection();
   public String getForwardedFrom();
@@ -38,15 +38,17 @@ public interface Call {
   public Status getStatus();
   public void hangup();
   public boolean isMuted();
-  public void mute() throws InterruptedException;
-  public void play(List<URI> announcements, int iterations) throws CallException, InterruptedException;
+  public void mute();
+  public void play(List<URI> announcements, int iterations) throws CallException;
   public void playAndCollect(List<URI> prompts, int maxNumberOfDigits, int minNumberOfDigits,
-      long firstDigitTimer, long interDigitTimer, String endInputKey) throws CallException, InterruptedException;
+      long firstDigitTimer, long interDigitTimer, String endInputKey) throws CallException;
   public void playAndRecord(List<URI> prompts, URI recordId, long postSpeechTimer,
-      long recordingLength, String patterns) throws CallException, InterruptedException;
+      long recordingLength, String patterns) throws CallException;
   public void reject();
   public void removeObserver(CallObserver observer);
-  public void unmute() throws InterruptedException;
+  public void setExpires(int minutes);
+  public void stopMedia();
+  public void unmute();
   
   public enum Direction {
     INBOUND("inbound"),

@@ -59,7 +59,7 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
 	  interpreter.failed();
 	  interpreter.notify(context, Notification.ERROR, 12400);
 	  throw new TagStrategyException(exception);
-	} catch(final InterruptedException ignored) { return; }
+	}
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,

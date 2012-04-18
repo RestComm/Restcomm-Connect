@@ -57,7 +57,7 @@ public final class PlayTagStrategy extends RcmlTagStrategy {
       interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);
       throw new TagStrategyException(exception);
-    } catch(final InterruptedException ignored) { return; }
+    }
   }
   
   private void initLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,

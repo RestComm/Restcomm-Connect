@@ -20,5 +20,5 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface CallObserver {
-  public void completed(Call call);
+  public void onStatusChanged(Call call);
 }
