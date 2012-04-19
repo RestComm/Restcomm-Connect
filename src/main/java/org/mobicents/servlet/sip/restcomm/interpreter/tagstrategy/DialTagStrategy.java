@@ -74,28 +74,6 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     phoneNumberUtil = PhoneNumberUtil.getInstance();
   }
   
-  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) throws TagStrategyException {
-	try {
-	  final String text = tag.getText();
-	  if(text != null && !text.isEmpty()) {
-	    try {
-		  to = phoneNumberUtil.parse(text, "US");
-		  bridge(context.getCall());
-		} catch(final NumberParseException exception) {
-		  // Notify!
-		}
-	  } else {
-	    children = tag.getChildren();
-	    if(children != null && !children.isEmpty()) {
-	      
-	    }
-	  }
-    } catch(final Exception exception) {
-      throw new TagStrategyException(exception);
-    }
-  }
-  
   private synchronized void bridge(final Call call) throws CallManagerException, CallException {
     final String sender = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
     final String recipient = phoneNumberUtil.format(to, PhoneNumberFormat.E164);
@@ -123,14 +101,42 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     }
   }
   
-  private synchronized void join(final Call call) {
-    final Conference conference = conferenceCenter.getConference(null);
-    call.addObserver(this);
-    conference.addCall(call);
-    try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
-    catch(final InterruptedException ignored) { }
-    call.removeObserver(this);
-    conference.removeCall(call);
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+	try {
+	  final Call call = context.getCall();
+	  final String text = tag.getText();
+	  if(text != null && !text.isEmpty()) {
+	    try {
+		  to = phoneNumberUtil.parse(text, "US");
+		  bridge(call);
+		} catch(final NumberParseException exception) {
+		  // Notify!
+		}
+	  } else {
+	    if(hasConferenceTag(tag.getChildren())) {
+	      join(call);
+	    } else {
+	      
+	    }
+	  }
+    } catch(final Exception exception) {
+      throw new TagStrategyException(exception);
+    }
+  }
+  
+  private Tag getConferenceTag(final List<Tag> tags) {
+    final String name = org.mobicents.servlet.sip.restcomm.xml.rcml.Conference.NAME;
+    for(final Tag tag : tags) {
+      if(name.equals(tag.getName())) {
+        return tag;
+      }
+    }
+    return null;
+  }
+  
+  private boolean hasConferenceTag(final List<Tag> tags) {
+    return getConferenceTag(tags) == null;
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -229,6 +235,24 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     } else {
       record = false;
     }
+  }
+  
+  private synchronized void join(final Call call) {
+	final boolean muted;
+	final boolean beep;
+	final boolean startConferenceOnEnter;
+	final boolean endConferenceOnExit;
+	final URI waitUrl;
+	final String waitMethod;
+	final int maxParticipant;
+	
+    final Conference conference = conferenceCenter.getConference(null);
+    call.addObserver(this);
+    conference.addCall(call);
+    try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
+    catch(final InterruptedException ignored) { }
+    call.removeObserver(this);
+    conference.removeCall(call);
   }
   
   @Override public synchronized void onStatusChanged(final Call call) {
