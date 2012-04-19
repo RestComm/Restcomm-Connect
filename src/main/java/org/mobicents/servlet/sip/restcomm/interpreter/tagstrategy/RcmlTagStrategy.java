@@ -35,15 +35,15 @@ import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Action;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.FinishOnKey;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Language;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Length;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Loop;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Method;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Timeout;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Action;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.FinishOnKey;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Language;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Length;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Loop;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Timeout;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -187,6 +187,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Voice;
       try {
 		call.answer();
 	  } catch(final CallException exception) {
+		interpreter.failed();
 		interpreter.notify(context, Notification.ERROR, 12400);
 	    throw new TagStrategyException(exception);
 	  }

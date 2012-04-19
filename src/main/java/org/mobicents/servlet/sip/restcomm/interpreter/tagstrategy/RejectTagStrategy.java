@@ -30,7 +30,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Reason;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

@@ -24,6 +24,37 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Action;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Beep;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.CallerId;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.EndConferenceOnExit;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.FinishOnKey;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.From;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.HangupOnStar;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Language;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Length;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Loop;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.MaxLength;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.MaxParticipants;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Muted;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.PlayBeep;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.RingbackTone;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.SendDigits;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StartConferenceOnEnter;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StatusCallback;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Timeout;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Transcribe;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeCallback;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Url;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitMethod;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -50,6 +81,8 @@ import org.mobicents.servlet.sip.restcomm.xml.TagFactory;
     ATTRIBUTES.put(NumDigits.NAME, NumDigits.class);
     ATTRIBUTES.put(PlayBeep.NAME, PlayBeep.class);
     ATTRIBUTES.put(Reason.NAME, Reason.class);
+    ATTRIBUTES.put(org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Record.NAME,
+        org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Record.class);
     ATTRIBUTES.put(RingbackTone.NAME, RingbackTone.class);
     ATTRIBUTES.put(SendDigits.NAME, SendDigits.class);
     ATTRIBUTES.put(StartConferenceOnEnter.NAME, StartConferenceOnEnter.class);

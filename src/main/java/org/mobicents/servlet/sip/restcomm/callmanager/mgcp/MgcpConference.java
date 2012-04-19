@@ -56,7 +56,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     this.session = server.createMediaSession();
   }
   
-  public synchronized void addCall(final Call call) throws InterruptedException {
+  public synchronized void addCall(final Call call) {
     assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
     mgcpCall.join(this);
@@ -72,7 +72,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     return name;
   }
   
-  public synchronized void removeCall(final Call call) throws InterruptedException {
+  public synchronized void removeCall(final Call call) {
     assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
     mgcpCall.leave(this);

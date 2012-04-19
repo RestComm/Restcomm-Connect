@@ -49,12 +49,12 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.WavUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.MaxLength;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.PlayBeep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Transcribe;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeCallback;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.TranscribeLanguage;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.MaxLength;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.PlayBeep;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Transcribe;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeCallback;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

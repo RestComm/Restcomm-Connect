@@ -32,11 +32,11 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.NumDigits;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Play;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

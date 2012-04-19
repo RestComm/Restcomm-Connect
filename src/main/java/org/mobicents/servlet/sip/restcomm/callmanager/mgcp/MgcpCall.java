@@ -190,7 +190,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 	initialInvite.getSession().invalidate();	  
   }
 
-  @Override public synchronized void dial() throws CallException {
+  @Override public synchronized void dial(final long timeout) throws CallException {
     assertState(QUEUED);
     direction = Direction.OUTBOUND_DIAL;
     // Try to negotiate media with a packet relay end point.
@@ -199,11 +199,19 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       userAgentConnection = session.createConnection(relayEndpoint);
       userAgentConnection.addObserver(this);
       userAgentConnection.connect(ConnectionMode.SendRecv);
-      wait();
-      final byte[] offer = userAgentConnection.getLocalDescriptor().toString().getBytes();
-      initialInvite.setContent(offer, "application/sdp");
-      initialInvite.send();
-      wait();
+      long start = System.currentTimeMillis();
+      wait(timeout);
+      long end = System.currentTimeMillis();
+      if(end < start + timeout) {
+        final byte[] offer = userAgentConnection.getLocalDescriptor().toString().getBytes();
+        initialInvite.setContent(offer, "application/sdp");
+        initialInvite.send();
+        wait((start + timeout) - end);
+        if(Call.Status.IN_PROGRESS == getStatus()) {
+          return;
+        }
+      }
+      throw new CallException("Timed Out!");
     } catch(final Exception exception) {
       setState(FAILED);
       fireStatusChanged();
@@ -211,7 +219,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       buffer.append("There was an error while dialing out from ");
       buffer.append(initialInvite.getFrom().toString()).append(" to ");
       buffer.append(initialInvite.getTo().toString());
-      throw new CallException(buffer.toString(), exception);
+      throw new CallException(exception);
     }
   }
   
@@ -435,7 +443,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       possibleStates.add(QUEUED);
       possibleStates.add(RINGING);
       assertState(possibleStates);
-      setExpires(240);
+      setExpires(480);
       setState(IN_PROGRESS);
       fireStatusChanged();
       notify(); 

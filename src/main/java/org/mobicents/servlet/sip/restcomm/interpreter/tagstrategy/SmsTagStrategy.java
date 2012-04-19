@@ -42,10 +42,10 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.From;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.StatusCallback;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.To;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.From;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StatusCallback;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;

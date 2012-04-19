@@ -20,9 +20,9 @@ package org.mobicents.servlet.sip.restcomm.callmanager;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Conference {
-  public void addCall(Call call) throws InterruptedException;
+  public void addCall(Call call);
   public String getName();
-  public void removeCall(Call call) throws InterruptedException;
+  public void removeCall(Call call);
   
   public enum Status {
     INIT("init"),
