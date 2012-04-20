@@ -22,8 +22,10 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
@@ -33,6 +35,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
+import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -44,12 +47,13 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.CallerId;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.HangupOnStar;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Record;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.RingbackTone;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class DialTagStrategy extends RcmlTagStrategy implements CallObserver {
+public final class DialTagStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;
   private final PhoneNumberUtil phoneNumberUtil;
@@ -60,6 +64,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   private boolean hangupOnStar;
   private int timeLimit;
   private PhoneNumber callerId;
+  private URI ringbackTone;
   private boolean record;
   private List<Tag> children;
   
@@ -69,36 +74,36 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   public DialTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
+    final Configuration configuration = services.get(Configuration.class);
     callManager = services.get(CallManager.class);
     conferenceCenter = services.get(ConferenceCenter.class);
     phoneNumberUtil = PhoneNumberUtil.getInstance();
+    ringbackTone = URI.create("file://" + configuration.getString("ringback-audio-file"));
   }
   
   private synchronized void bridge(final Call call) throws CallManagerException, CallException {
     final String sender = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
-    final String recipient = phoneNumberUtil.format(to, PhoneNumberFormat.E164);
-    outboundCall = callManager.createCall(sender, recipient);
+	final String recipient = phoneNumberUtil.format(to, PhoneNumberFormat.E164);
+	final String name = new StringBuilder().append(sender).append(":").append(recipient).toString();
+	final Conference bridge = conferenceCenter.getConference(name);
+	final List<URI> ringbackAudioFiles = new ArrayList<URI>();
+	ringbackAudioFiles.add(ringbackTone);
+	bridge.setBackgroundMusic(ringbackAudioFiles);
+	bridge.addCall(call);
+	outboundCall = callManager.createCall(sender, recipient);
     outboundCall.addObserver(this);
     outboundCall.dial(TimeUtils.SECOND_IN_MILLIS * timeout);
     if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
-      // Try to bridge the call.
-      final String name = new StringBuilder().append(sender).append(":").append(recipient).toString();
-      final Conference bridge = conferenceCenter.getConference(name);
+      bridge.stopBackgroundMusic();
       bridge.addCall(outboundCall);
-      bridge.addCall(call);
       try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
       catch(final InterruptedException ignored) { }
       if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
+        outboundCall.removeObserver(this);
         outboundCall.hangup();
       }
-      call.removeObserver(this);
-      bridge.removeCall(call);
-      outboundCall.removeObserver(this);
-      bridge.removeCall(outboundCall);
-      conferenceCenter.removeConference(name);
-    } else {
-      // Notify!
     }
+    conferenceCenter.removeConference(name);
   }
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -115,12 +120,13 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 		}
 	  } else {
 	    if(hasConferenceTag(tag.getChildren())) {
-	      join(call);
+	      // join(call);
 	    } else {
 	      
 	    }
 	  }
     } catch(final Exception exception) {
+      exception.printStackTrace();
       throw new TagStrategyException(exception);
     }
   }
@@ -147,6 +153,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     initHangupOnStar(interpreter, context, tag);
     initMethod(interpreter, context, tag);
     initRecord(interpreter, context, tag);
+    initRingbackTone(interpreter, context, tag);
     initTimeout(interpreter, context, tag);
     initTimeLimit(interpreter, context, tag);
   }
@@ -189,6 +196,15 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
       interpreter.notify(context, Notification.WARNING, 13210);
       method = "POST";
+    }
+  }
+  
+  private void initRingbackTone(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(RingbackTone.NAME);
+    if(attribute != null) {
+      final URI base = interpreter.getCurrentResourceUri();
+      ringbackTone = resolveIfNotAbsolute(base, attribute.getValue());
     }
   }
   
@@ -237,30 +253,48 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     }
   }
   
-  private synchronized void join(final Call call) {
-	final boolean muted;
-	final boolean beep;
-	final boolean startConferenceOnEnter;
-	final boolean endConferenceOnExit;
-	final URI waitUrl;
-	final String waitMethod;
-	final int maxParticipant;
-	
-    final Conference conference = conferenceCenter.getConference(null);
-    call.addObserver(this);
+  /* FIX ME! */
+  private synchronized void join(final String name, final boolean muted, final boolean beep,
+	  final boolean startConferenceOnEnter, final boolean endConferenceOnExit, final URI waitUrl,
+	  final String waitMethod, final int maxParticipant, final Call call) {
+    final Conference conference = conferenceCenter.getConference(name);
+    if(muted) { call.mute(); }
+    if(beep) { conference.alert(); }
+    if(!startConferenceOnEnter) {
+      if(!call.isMuted()) {
+        call.mute();
+      }
+      if(conference.getNumberOfParticipants() == 0) {
+    	final List<URI> music = new ArrayList<URI>();
+    	music.add(waitUrl);
+    	conference.setBackgroundMusic(music);
+        conference.playBackgroundMusic();
+      }
+    } else {
+      conference.stopBackgroundMusic();
+    }
     conference.addCall(call);
     try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
     catch(final InterruptedException ignored) { }
-    call.removeObserver(this);
-    conference.removeCall(call);
+    conference.removeObserver(this);
+    if(endConferenceOnExit) {
+      conferenceCenter.removeConference(name);
+    } else {
+      conference.removeCall(call);
+    }
   }
   
-  @Override public synchronized void onStatusChanged(final Call call) {
-	if(outboundCall == call) {
-      final Call.Status status = call.getStatus();
-      if(Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
-        notify();
-      }
-	}
+  @Override synchronized public void onStatusChanged(final Call call) {
+    final Call.Status status = call.getStatus();
+    if(Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
+      notify();
+    }
+  }
+  
+  @Override synchronized public void onStatusChanged(final Conference conference) {
+    final Conference.Status status = conference.getStatus();
+    if(Conference.Status.COMPLETED == status || Conference.Status.FAILED == status) {
+      notify();
+    }
   }
 }

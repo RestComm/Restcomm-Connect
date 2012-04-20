@@ -14,6 +14,8 @@
 		<beep-audio-file>${restcomm:home}/audio/beep.wav</beep-audio-file>
 		<reject-audio-file>${restcomm:home}/audio/reject.wav</reject-audio-file>
 		<silence-audio-file>${restcomm:home}/audio/one-second-silence.wav</silence-audio-file>
+		<alert-audio-file></alert-audio-file>
+		<ringback-audio-file></ringback-audio-file>
 		
 		<error-dictionary-uri>${restcomm:uri}/errors</error-dictionary-uri>
 		

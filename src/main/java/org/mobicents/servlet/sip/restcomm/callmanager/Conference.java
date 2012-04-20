@@ -16,13 +16,26 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager;
 
+import java.net.URI;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Conference {
   public void addCall(Call call);
+  public void addObserver(ConferenceObserver observer);
+  public void alert();
   public String getName();
+  public int getNumberOfParticipants();
+  public Collection<Call> getParticipants();
+  public Status getStatus();
+  public void playBackgroundMusic();
   public void removeCall(Call call);
+  public void removeObserver(ConferenceObserver observer);
+  public void setBackgroundMusic(List<URI> music);
+  public void stopBackgroundMusic();
   
   public enum Status {
     INIT("init"),
