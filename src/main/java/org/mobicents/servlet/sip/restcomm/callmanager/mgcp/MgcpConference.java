@@ -121,7 +121,6 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     ivrInboundConnection.removeObserver(this);
     ivrInboundConnection = null;
     ivr = null;
-    System.out.println("********************* WTF!!! *******************");
   }
   
   public void fireStatusChanged() {
@@ -158,6 +157,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
       backgroundMusic = false;
     }
   }
+  
+  
   
   @Override synchronized public void setBackgroundMusic(final List<URI> musicAudioFiles) {
     this.musicAudioFiles = musicAudioFiles;

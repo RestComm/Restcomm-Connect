@@ -258,7 +258,6 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     }
   }
   
-  /* FIX ME! */
   private synchronized void join(final String name, final boolean muted, final boolean beep,
 	  final boolean startConferenceOnEnter, final boolean endConferenceOnExit, final URI waitUrl,
 	  final String waitMethod, final int maxParticipant, final Call call) {

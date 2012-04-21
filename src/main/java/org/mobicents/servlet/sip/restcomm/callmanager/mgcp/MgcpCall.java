@@ -341,7 +341,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   @Override public synchronized void mute() {
-    userAgentConnection.modify(ConnectionMode.RecvOnly);
+    relayOutboundConnection.modify(ConnectionMode.RecvOnly);
     try { wait(); }
     catch(final InterruptedException ignored) {
       unmute();
@@ -408,7 +408,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   @Override public synchronized void unmute() {
-    userAgentConnection.modify(ConnectionMode.SendRecv);
+    relayOutboundConnection.modify(ConnectionMode.SendRecv);
     try { wait(); }
     catch(final InterruptedException ignored) { }
     muted = false;
@@ -501,7 +501,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
 
   @Override public synchronized void modified(final MgcpConnection connection) {
-    if(connection == userAgentConnection) {
+    if(connection == relayOutboundConnection) {
       notify();
     }
   }
