@@ -62,8 +62,9 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
   }
   
   public void destroyConnection(final MgcpConnection connection) {
-    connections.remove(connection);
-    connection.disconnect();
+    if(connections.remove(connection)) {
+      connection.disconnect();
+    }
   }
   
   private void destroyConnections() {
@@ -74,8 +75,9 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
   }
   
   public void destroyLink(final MgcpLink link) {
-    links.remove(link);
-    link.disconnect();
+    if(links.remove(link)) {
+      link.disconnect();
+    }
   }
   
   private void destroyLinks() {

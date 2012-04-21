@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Say>
-    	Welcome to RestComm, a TeleStax sponsored project.
-    </Say>
-    <Redirect>hello-world-gather.xml</Redirect>
+	<Dial callerId="+19549376176">19549376176</Dial>
 </Response>

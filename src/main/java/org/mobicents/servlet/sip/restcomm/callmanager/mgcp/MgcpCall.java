@@ -84,6 +84,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   private MgcpConnection relayInboundConnection;
   private MgcpConnection ivrOutboundConnection;
   private MgcpConnection ivrInboundConnection;
+  private MgcpConference remoteConference;
   private MgcpConnection remoteOutboundConnection;
   private MgcpConnection remoteInboundConnection;
   
@@ -166,6 +167,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
     try {
       ok.send();
+      if(remoteConference != null) {
+        remoteConference.removeCall(this);
+      }
       setState(COMPLETED);
       fireStatusChanged();
     } finally {
@@ -207,11 +211,10 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
         initialInvite.setContent(offer, "application/sdp");
         initialInvite.send();
         wait((start + timeout) - end);
-        if(Call.Status.IN_PROGRESS == getStatus()) {
-          return;
+        if(Call.Status.IN_PROGRESS != getStatus()) {
+          cleanup();
         }
       }
-      throw new CallException("Timed Out!");
     } catch(final Exception exception) {
       setState(FAILED);
       fireStatusChanged();
@@ -252,7 +255,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     setState(FAILED);
   }
   
-  private synchronized void fireStatusChanged() {
+  private void fireStatusChanged() {
     for(final CallObserver observer : observers) {
       observer.onStatusChanged(this);
     }
@@ -294,6 +297,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 
   @Override public synchronized void hangup() {
     assertState(IN_PROGRESS);
+    if(remoteConference != null) {
+      remoteConference.removeCall(this);
+    }
 	setState(COMPLETED);
 	fireStatusChanged();
 	terminate();
@@ -314,14 +320,23 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     } catch(final InterruptedException ignored) {
       leave(conference);
     }
+    remoteConference = conference;
   }
   
   public synchronized void leave(final MgcpConference conference) {
     assertState(IN_PROGRESS);
     if(remoteOutboundConnection != null) {
-      remoteOutboundConnection.disconnect();
+      session.destroyConnection(remoteOutboundConnection);
       try { wait(); }
       catch(final InterruptedException ignored) { }
+      remoteOutboundConnection.removeObserver(this);
+      remoteOutboundConnection = null;
+      if(remoteInboundConnection != null) {
+        remoteInboundConnection.removeObserver(this);
+        remoteInboundConnection = null;
+        remoteEndpoint = null;
+      }
+      remoteConference = null;
     }
   }
   
@@ -464,15 +479,12 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 
   @Override public synchronized void disconnected(final MgcpConnection connection) {
     if(connection == remoteOutboundConnection) {
-      remoteOutboundConnection.removeObserver(this);
-      remoteOutboundConnection = null;
       if(remoteInboundConnection != null) {
-        remoteInboundConnection.disconnect();
+    	session.destroyConnection(remoteInboundConnection);
+      } else {
+        notify();
       }
     } else if(connection == remoteInboundConnection) {
-      remoteInboundConnection.removeObserver(this);
-      remoteInboundConnection = null;
-      remoteEndpoint = null;
       notify();
     }
   }

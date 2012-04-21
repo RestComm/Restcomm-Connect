@@ -215,12 +215,12 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     return parameters;
   }
   
-  @Override public void processMgcpCommandEvent(final JainMgcpCommandEvent command) {
+  @Override public synchronized void processMgcpCommandEvent(final JainMgcpCommandEvent command) {
     final int commandValue = command.getObjectIdentifier();
     switch(commandValue) {
       case Constants.CMD_NOTIFY: {
     	final Notify request = (Notify)command;
-    	if(request.getRequestIdentifier().toString().equals(requestId.toString())) {
+    	if(requestId != null && request.getRequestIdentifier().toString().equals(requestId.toString())) {
     	  final EventName[] observedEvents = request.getObservedEvents();
     	  // We are only waiting for "operation completed" or "operation failed" events.
     	  if(observedEvents.length == 1) {

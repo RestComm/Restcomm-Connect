@@ -58,6 +58,8 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   private final ConferenceCenter conferenceCenter;
   private final PhoneNumberUtil phoneNumberUtil;
   
+  private Call outboundCall;
+  
   private URI action;
   private String method;
   private int timeout;
@@ -67,9 +69,6 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   private URI ringbackTone;
   private boolean record;
   private List<Tag> children;
-  
-  private Call outboundCall;
-  private PhoneNumber to;
   
   public DialTagStrategy() {
     super();
@@ -81,7 +80,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     ringbackTone = URI.create("file://" + configuration.getString("ringback-audio-file"));
   }
   
-  private synchronized void bridge(final Call call) throws CallManagerException, CallException {
+  private void bridge(final Call call, final PhoneNumber to) throws CallManagerException, CallException {
     final String sender = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
 	final String recipient = phoneNumberUtil.format(to, PhoneNumberFormat.E164);
 	final String name = new StringBuilder().append(sender).append(":").append(recipient).toString();
@@ -89,6 +88,8 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 	final List<URI> ringbackAudioFiles = new ArrayList<URI>();
 	ringbackAudioFiles.add(ringbackTone);
 	bridge.setBackgroundMusic(ringbackAudioFiles);
+	bridge.playBackgroundMusic();
+	call.addObserver(this);
 	bridge.addCall(call);
 	outboundCall = callManager.createCall(sender, recipient);
     outboundCall.addObserver(this);
@@ -96,13 +97,14 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
       bridge.stopBackgroundMusic();
       bridge.addCall(outboundCall);
-      try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
+      try { synchronized(this) { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); } }
       catch(final InterruptedException ignored) { }
       if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
         outboundCall.removeObserver(this);
         outboundCall.hangup();
       }
     }
+    call.removeObserver(this);
     conferenceCenter.removeConference(name);
   }
   
@@ -113,8 +115,8 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 	  final String text = tag.getText();
 	  if(text != null && !text.isEmpty()) {
 	    try {
-		  to = phoneNumberUtil.parse(text, "US");
-		  bridge(call);
+		  final PhoneNumber to = phoneNumberUtil.parse(text, "US");
+		  bridge(call, to);
 		} catch(final NumberParseException exception) {
 		  // Notify!
 		}
@@ -126,7 +128,6 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 	    }
 	  }
     } catch(final Exception exception) {
-      exception.printStackTrace();
       throw new TagStrategyException(exception);
     }
   }
@@ -187,6 +188,8 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
         interpreter.notify(context, Notification.WARNING, 13213);
         hangupOnStar = false;
       }
+    } else {
+      hangupOnStar = false;
     }
   }
   
@@ -227,6 +230,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     final Attribute attribute = tag.getAttribute(TimeLimit.NAME);
     if(attribute == null) { 
       timeLimit = 14400;
+      return;
     }
     final String value = attribute.getValue();
     if(StringUtils.isPositiveInteger(value)) {
@@ -244,6 +248,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     final Attribute attribute = tag.getAttribute(Record.NAME);
     if(attribute == null) {
       record = false;
+      return;
     }
     final String value = attribute.getValue();
     if("true".equalsIgnoreCase(value)) {

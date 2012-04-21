@@ -45,11 +45,18 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   private static final State IN_PROGRESS = new State(Status.IN_PROGRESS.toString());
   private static final State COMPLETE = new State(Status.COMPLETED.toString());
   private static final State FAILED = new State(Status.FAILED.toString());
+  static {
+    INIT.addTransition(IN_PROGRESS);
+    INIT.addTransition(FAILED);
+    IN_PROGRESS.addTransition(COMPLETE);
+    IN_PROGRESS.addTransition(FAILED);
+  }
   
   private final String name;
   private final Map<Sid, MgcpCall> calls;
   private final List<ConferenceObserver> observers;
   
+  private final MgcpServer server;
   private final MgcpSession session;
   private MgcpConferenceEndpoint conference;
   private MgcpIvrEndpoint ivr;
@@ -69,6 +76,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     this.name = name;
     this.calls = new HashMap<Sid, MgcpCall>();
     this.observers = new ArrayList<ConferenceObserver>();
+    this.server = server;
     this.session = server.createMediaSession();
     this.alertAudioFile = new ArrayList<URI>();
     final ServiceLocator services = ServiceLocator.getInstance();
@@ -95,6 +103,25 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     catch(final InterruptedException ignored) {
       ivr.stop();
     }
+  }
+  
+  private void cleanup() {
+    try {
+    for(final MgcpCall call : calls.values()) {
+      final MgcpCall mgcpCall = (MgcpCall)call;
+      mgcpCall.leave(this);
+    }
+    calls.clear();
+    session.destroyConnection(ivrOutboundConnection);
+    }catch(Exception exception) {exception.printStackTrace();}
+    try { wait(); }
+    catch(final InterruptedException ignored) { }
+    ivrOutboundConnection.removeObserver(this);
+    ivrOutboundConnection = null;
+    ivrInboundConnection.removeObserver(this);
+    ivrInboundConnection = null;
+    ivr = null;
+    System.out.println("********************* WTF!!! *******************");
   }
   
   public void fireStatusChanged() {
@@ -178,13 +205,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
 
   @Override public synchronized void disconnected(final MgcpConnection connection) {
     if(connection == ivrOutboundConnection) {
-      ivrOutboundConnection.removeObserver(this);
-      ivrOutboundConnection = null;
-      ivrInboundConnection.disconnect();
+      session.destroyConnection(ivrInboundConnection);
     } else if(connection == ivrInboundConnection) {
-      ivrInboundConnection.removeObserver(this);
-      ivrInboundConnection = null;
-      ivr = null;
       notify();
     }
   }
@@ -202,6 +224,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   @Override public synchronized void start() throws RuntimeException {
     assertState(INIT);
     ivr = session.getIvrEndpoint();
+    ivr.addObserver(this);
     ivrOutboundConnection = session.createConnection(ivr);
     ivrOutboundConnection.addObserver(this);
     ivrOutboundConnection.connect(ConnectionMode.SendRecv);
@@ -216,14 +239,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   @Override public synchronized void shutdown() {
     assertState(IN_PROGRESS);
     stopBackgroundMusic();
-    for(final MgcpCall call : calls.values()) {
-      removeCall(call);
-    }
-    ivrOutboundConnection.disconnect();
-    try {
-      wait();
-    } catch(final InterruptedException ignored) { return; }
-    session.release();
+    cleanup();
+    server.destroyMediaSession(session);
     setState(COMPLETE);
     fireStatusChanged();
   }
