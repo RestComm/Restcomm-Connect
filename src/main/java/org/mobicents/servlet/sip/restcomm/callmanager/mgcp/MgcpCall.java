@@ -162,6 +162,12 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     }
   }
   
+  public void busy() {
+    assertState(QUEUED);
+    setState(BUSY);
+    fireStatusChanged();
+  }
+  
   public synchronized void bye(final SipServletRequest request) throws IOException {
     assertState(IN_PROGRESS);
     final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
@@ -174,6 +180,22 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       fireStatusChanged();
     } finally {
       cleanup();
+    }
+  }
+  
+  @Override public synchronized void cancel() throws CallException {
+    assertState(QUEUED);
+    if(Direction.OUTBOUND_DIAL == direction) {
+      final SipServletRequest cancel = initialInvite.createCancel();
+      try {
+        cancel.send();
+        setState(CANCELLED);
+        fireStatusChanged();
+      } catch(final IOException exception) {
+    	setState(FAILED);
+    	fireStatusChanged();
+        throw new CallException(exception);
+      }
     }
   }
   
@@ -192,6 +214,30 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   private void cleanup() {
 	server.destroyMediaSession(session);
 	initialInvite.getSession().invalidate();	  
+  }
+  
+  @Override public synchronized void dial() throws CallException {
+    assertState(QUEUED);
+    direction = Direction.OUTBOUND_DIAL;
+    // Try to negotiate media with a packet relay end point.
+    try {
+	  relayEndpoint = session.getPacketRelayEndpoint();
+      userAgentConnection = session.createConnection(relayEndpoint);
+      userAgentConnection.addObserver(this);
+      userAgentConnection.connect(ConnectionMode.SendRecv);
+      wait();
+      final byte[] offer = userAgentConnection.getLocalDescriptor().toString().getBytes();
+      initialInvite.setContent(offer, "application/sdp");
+      initialInvite.send();
+    } catch(final Exception exception) {
+      setState(FAILED);
+      fireStatusChanged();
+      final StringBuilder buffer = new StringBuilder();
+      buffer.append("There was an error while dialing out from ");
+      buffer.append(initialInvite.getFrom().toString()).append(" to ");
+      buffer.append(initialInvite.getTo().toString());
+      throw new CallException(exception);
+    }
   }
 
   @Override public synchronized void dial(final long timeout) throws CallException {
@@ -242,6 +288,16 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     userAgentConnection.modify(remoteDescriptor);
     final SipServletRequest ack = successResponse.createAck();
     ack.send();
+  }
+  
+  public void failed() {
+    final List<State> possibleStates = new ArrayList<State>();
+    possibleStates.add(QUEUED);
+    possibleStates.add(RINGING);
+    possibleStates.add(IN_PROGRESS);
+    assertState(possibleStates);
+    setState(FAILED);
+    fireStatusChanged();
   }
   
   private void fail(int code) {

@@ -114,22 +114,25 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 
   @Override protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
     final SipServletRequest request = response.getRequest();
+    final MgcpCall call = (MgcpCall)request.getSession().getAttribute("CALL");
     final String method = request.getMethod();
     if("INVITE".equalsIgnoreCase(method)) {
       final int status = response.getStatus();
-      if(status == SipServletResponse.SC_UNAUTHORIZED || status == SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED) {
+      if(SipServletResponse.SC_UNAUTHORIZED == status || SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED == status) {
         final SipServletRequest invite = invite(request.getFrom().getURI(), request.getTo().getURI());
         final AuthInfo authorization = sipFactory.createAuthInfo();
         final String realm = response.getChallengeRealms().next(); 
         authorization.addAuthInfo(status, realm, proxyUser, proxyPassword);
         invite.addAuthHeader(response, authorization);
-        final SipServletRequest initialInvite = response.getRequest();
-        if(initialInvite.getContentLength() > 0) {
-          invite.setContent(initialInvite.getContent(), initialInvite.getContentType());
+        if(request.getContentLength() > 0) {
+          invite.setContent(request.getContent(), request.getContentType());
         }
-        final Call call = (Call)initialInvite.getSession().getAttribute("CALL");
         invite.getSession().setAttribute("CALL", call);
         invite.send();
+      } else if(SipServletResponse.SC_BUSY_HERE == status || SipServletResponse.SC_BUSY_EVERYWHERE == status) {
+        call.busy();
+      } else {
+        call.failed();
       }
     }
   }
