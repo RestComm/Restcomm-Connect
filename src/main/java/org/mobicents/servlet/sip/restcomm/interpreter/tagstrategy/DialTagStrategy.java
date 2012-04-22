@@ -90,13 +90,13 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 	bridge.setBackgroundMusic(ringbackAudioFiles);
 	bridge.playBackgroundMusic();
 	call.addObserver(this);
-	bridge.addCall(call);
+	bridge.addParticipant(call);
 	outboundCall = callManager.createCall(sender, recipient);
     outboundCall.addObserver(this);
     outboundCall.dial(TimeUtils.SECOND_IN_MILLIS * timeout);
     if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
       bridge.stopBackgroundMusic();
-      bridge.addCall(outboundCall);
+      bridge.addParticipant(outboundCall);
       try { synchronized(this) { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); } }
       catch(final InterruptedException ignored) { }
       if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
@@ -277,14 +277,14 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     } else {
       conference.stopBackgroundMusic();
     }
-    conference.addCall(call);
+    conference.addParticipant(call);
     try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
     catch(final InterruptedException ignored) { }
     conference.removeObserver(this);
     if(endConferenceOnExit) {
       conferenceCenter.removeConference(name);
     } else {
-      conference.removeCall(call);
+      conference.removeParticipant(call);
     }
   }
   

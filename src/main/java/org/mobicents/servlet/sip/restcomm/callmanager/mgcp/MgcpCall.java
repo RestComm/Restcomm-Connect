@@ -168,7 +168,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     try {
       ok.send();
       if(remoteConference != null) {
-        remoteConference.removeCall(this);
+        remoteConference.removeParticipant(this);
       }
       setState(COMPLETED);
       fireStatusChanged();
@@ -298,7 +298,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   @Override public synchronized void hangup() {
     assertState(IN_PROGRESS);
     if(remoteConference != null) {
-      remoteConference.removeCall(this);
+      remoteConference.removeParticipant(this);
     }
 	setState(COMPLETED);
 	fireStatusChanged();

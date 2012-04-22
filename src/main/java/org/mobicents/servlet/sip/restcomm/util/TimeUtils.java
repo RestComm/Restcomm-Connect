@@ -23,6 +23,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
  */
 @ThreadSafe public final class TimeUtils {
   public static final long SECOND_IN_MILLIS = 1000;
+  public static final long MINUTE_IN_MILLIS = SECOND_IN_MILLIS * 60;
+  public static final long HOURS_IN_MILLIES = MINUTE_IN_MILLIS * 60;
   
   private TimeUtils() {
     super();

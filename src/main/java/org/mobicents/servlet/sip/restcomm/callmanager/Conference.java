@@ -24,18 +24,21 @@ import java.util.List;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Conference {
-  public void addCall(Call call);
+  public void addParticipant(Call participant);
   public void addObserver(ConferenceObserver observer);
   public void alert();
   public String getName();
   public int getNumberOfParticipants();
   public Collection<Call> getParticipants();
   public Status getStatus();
+  public void play(URI audio);
   public void playBackgroundMusic();
-  public void removeCall(Call call);
+  public void recordAudio(URI destination, long length);
+  public void removeParticipant(Call participant);
   public void removeObserver(ConferenceObserver observer);
   public void setBackgroundMusic(List<URI> music);
   public void stopBackgroundMusic();
+  public void stopRecordingAudio();
   
   public enum Status {
     INIT("init"),

@@ -114,8 +114,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   }
   
   public void disconnect() throws MgcpConnectionException {
-	System.out.println("******************* " + endpoint.getId().toString() + " ***********************");
-    System.out.println("******************* " + getState().getName() + " ***********************");
     final List<State> possibleStates = new ArrayList<State>();
     possibleStates.add(HALF_OPEN);
     possibleStates.add(OPEN);
