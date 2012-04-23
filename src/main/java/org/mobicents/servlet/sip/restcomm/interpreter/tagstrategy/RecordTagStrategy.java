@@ -64,7 +64,6 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   private static final Logger logger = Logger.getLogger(RecordTagStrategy.class);
   private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1,12}");
   
-  private final String baseRecordingsPath;
   private final List<URI> beepAudioFile;
   private final SpeechRecognizer speechRecognizer;
   
@@ -86,8 +85,6 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     final ServiceLocator services = ServiceLocator.getInstance();
     speechRecognizer = services.get(SpeechRecognizer.class);
     final Configuration configuration = services.get(Configuration.class);
-    final String path = configuration.getString("recordings-path");
-    baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
     beepAudioFile = new ArrayList<URI>();
     final URI uri = URI.create("file://" + configuration.getString("beep-audio-file"));
     beepAudioFile.add(uri);
@@ -103,7 +100,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
       }
       // Record something.
       final Sid sid = Sid.generate(Sid.Type.RECORDING);
-      final URI path = toPath(sid);
+      final URI path = toRecordingPath(sid);
       call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
       final double duration = WavUtils.getAudioDuration(path);
       if(duration > 0) {
@@ -316,12 +313,6 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
   
   @Override public void succeeded(final String text) {
     handleTranscription(true, text);
-  }
-  
-  private URI toPath(final Sid sid) {
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append("file://").append(baseRecordingsPath).append(sid.toString()).append(".wav");
-    return URI.create(buffer.toString());
   }
   
   private void transcribeCallback(final URI uri, List<NameValuePair> additionalVariables) {

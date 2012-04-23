@@ -189,6 +189,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     if(backgroundMusic) {
       backgroundMusic = false;
       ivrEndpoint.stop();
+      try { wait(); }
+      catch(final InterruptedException ignored) { }
     }
   }
   
@@ -197,6 +199,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     if(recordAudio) {
       recordAudio = false;
       ivrEndpoint.stop();
+      try { wait(); }
+      catch(final InterruptedException ignored) { }
     }
   }
   
@@ -268,6 +272,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   @Override public synchronized void shutdown() {
     assertState(IN_PROGRESS);
     stopBackgroundMusic();
+    stopRecordingAudio();
     cleanup();
     server.destroyMediaSession(session);
     setState(COMPLETE);
@@ -278,6 +283,10 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     if(backgroundMusic) {
       backgroundMusic = false;
       playBackgroundMusic();
+    } else if(recordAudio) {
+      recordAudio = false;
+    } else {
+      notify();
     }
   }
 

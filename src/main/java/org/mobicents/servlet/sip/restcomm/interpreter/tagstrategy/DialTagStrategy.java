@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
@@ -44,11 +45,18 @@ import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Beep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.CallerId;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.EndConferenceOnExit;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.HangupOnStar;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.MaxParticipants;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Muted;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Record;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.RingbackTone;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StartConferenceOnEnter;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitMethod;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -68,7 +76,6 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   private PhoneNumber callerId;
   private URI ringbackTone;
   private boolean record;
-  private List<Tag> children;
   
   public DialTagStrategy() {
     super();
@@ -97,6 +104,11 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
       bridge.stopBackgroundMusic();
       bridge.addParticipant(outboundCall);
+      if(record) {
+        final Sid sid = Sid.generate(Sid.Type.RECORDING);
+        final URI destination = toRecordingPath(sid);
+        bridge.recordAudio(destination, TimeUtils.SECOND_IN_MILLIS * timeLimit);
+      }
       try { synchronized(this) { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); } }
       catch(final InterruptedException ignored) { }
       if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
@@ -118,17 +130,46 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 		  final PhoneNumber to = phoneNumberUtil.parse(text, "US");
 		  bridge(call, to);
 		} catch(final NumberParseException exception) {
-		  // Notify!
+		  interpreter.notify(context, Notification.WARNING, 13223);
 		}
 	  } else {
-	    if(hasConferenceTag(tag.getChildren())) {
-	      // join(call);
+	    final List<Tag> children = tag.getChildren();
+	    if(hasConferenceTag(children)) {
+	      final RcmlTag conference = (RcmlTag)getConferenceTag(children);
+	      final String name = conference.getText();
+	      final boolean muted = getMuted(interpreter, context, conference);
+	      final boolean beep = getBeep(interpreter, context, conference);
+	      final boolean startConferenceOnEnter = getStartConferenceOnEnter(interpreter, context, conference);
+	      final boolean endConferenceOnExit = getEndConferenceOnExit(interpreter, context, conference);
+	      final URI waitUrl = getWaitUrl(interpreter, context, conference);
+	      final String waitMethod = getWaitMethod(interpreter, context, conference);
+	      final int maxParticipants = getMaxParticipants(interpreter, context, conference);
+	      join(name, muted, beep, startConferenceOnEnter, endConferenceOnExit, waitUrl,
+	          waitMethod, maxParticipants, call);
 	    } else {
 	      
 	    }
 	  }
     } catch(final Exception exception) {
+      interpreter.failed();
+  	  interpreter.notify(context, Notification.ERROR, 12400);
       throw new TagStrategyException(exception);
+    }
+  }
+  
+  private boolean getBeep(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(Beep.NAME);
+    if(attribute == null) {
+      return true;
+    }
+    final String value = attribute.getValue();
+    if("true".equalsIgnoreCase(value)) {
+      return true;
+    } else if("false".equalsIgnoreCase(value)) {
+      return false;
+    } else {
+      return true;
     }
   }
   
@@ -142,8 +183,107 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     return null;
   }
   
+  private boolean getEndConferenceOnExit(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(EndConferenceOnExit.NAME);
+    if(attribute == null) {
+      return false;
+    }
+    final String value = attribute.getValue();
+    if("true".equalsIgnoreCase(value)) {
+      return true;
+    } else if("false".equalsIgnoreCase(value)) {
+      return false;
+    } else {
+      interpreter.notify(context, Notification.WARNING, 13231);
+      return false;
+    }
+  }
+  
+  private int getMaxParticipants(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(MaxParticipants.NAME);
+    if(attribute == null) {
+      return 40;
+    }
+    final String value = attribute.getValue();
+    if(StringUtils.isPositiveInteger(value)) {
+      final int result = Integer.parseInt(value);
+      if(result > 0) {
+        return result;
+      }
+    }
+    return 40;
+  }
+  
+  private boolean getMuted(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(Muted.NAME);
+    if(attribute == null) {
+      return false;
+    }
+    final String value = attribute.getValue();
+    if("true".equalsIgnoreCase(value)) {
+      return true;
+    } else if("false".equalsIgnoreCase(value)) {
+      return false;
+    } else {
+      interpreter.notify(context, Notification.WARNING, 13230);
+      return false;
+    }
+  }
+  
+  private boolean getStartConferenceOnEnter(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(StartConferenceOnEnter.NAME);
+    if(attribute == null) {
+      return true;
+    }
+    final String value = attribute.getValue();
+    if("true".equalsIgnoreCase(value)) {
+      return true;
+    } else if("false".equalsIgnoreCase(value)) {
+      return false;
+    } else {
+      interpreter.notify(context, Notification.WARNING, 13232);
+      return true;
+    }
+  }
+  
+  private URI getWaitUrl(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(WaitUrl.NAME);
+    if(attribute != null) {
+      try {
+        final URI base = interpreter.getCurrentResourceUri();
+	    return resolveIfNotAbsolute(base, attribute.getValue());
+      } catch(final IllegalArgumentException exception) {
+        interpreter.notify(context, Notification.ERROR, 13233);
+        throw new TagStrategyException(exception);
+      }
+    }
+    return null;
+  }
+  
+  private String getWaitMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    final Attribute attribute = tag.getAttribute(WaitMethod.NAME);
+    if(attribute == null) {
+      return "POST";
+    }
+    final String value = attribute.getValue();
+    if("GET".equalsIgnoreCase(value)) {
+      return "GET";
+    } else if("POST".equalsIgnoreCase(value)) {
+      return "POST";
+    } else {
+    	interpreter.notify(context, Notification.WARNING, 13234);
+      return "POST";
+    }
+  }
+  
   private boolean hasConferenceTag(final List<Tag> tags) {
-    return getConferenceTag(tags) == null;
+    return getConferenceTag(tags) != null;
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -262,29 +402,34 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 	  final boolean startConferenceOnEnter, final boolean endConferenceOnExit, final URI waitUrl,
 	  final String waitMethod, final int maxParticipant, final Call call) {
     final Conference conference = conferenceCenter.getConference(name);
-    if(muted) { call.mute(); }
-    if(beep) { conference.alert(); }
     if(!startConferenceOnEnter) {
       if(!call.isMuted()) {
         call.mute();
       }
       if(conference.getNumberOfParticipants() == 0) {
-    	final List<URI> music = new ArrayList<URI>();
-    	music.add(waitUrl);
-    	conference.setBackgroundMusic(music);
-        conference.playBackgroundMusic();
+        if(waitUrl != null) {
+    	  final List<URI> music = new ArrayList<URI>();
+    	  music.add(waitUrl);
+    	  conference.setBackgroundMusic(music);
+          conference.playBackgroundMusic();
+        }
       }
     } else {
       conference.stopBackgroundMusic();
+      if(beep) { conference.alert(); }
+      if(muted) { call.mute(); }
     }
+    call.addObserver(this);
     conference.addParticipant(call);
     try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
     catch(final InterruptedException ignored) { }
-    conference.removeObserver(this);
+    call.removeObserver(this);
     if(endConferenceOnExit) {
       conferenceCenter.removeConference(name);
     } else {
-      conference.removeParticipant(call);
+      if(Call.Status.IN_PROGRESS == call.getStatus()) {
+        conference.removeParticipant(call);
+      }
     }
   }
   

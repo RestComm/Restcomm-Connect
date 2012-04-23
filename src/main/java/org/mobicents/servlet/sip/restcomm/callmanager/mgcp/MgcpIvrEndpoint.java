@@ -57,6 +57,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
   private static final State PLAY = new State("PLAY");
   private static final State PLAY_COLLECT = new State("PLAY_COLLECT");
   private static final State PLAY_RECORD = new State("PLAY_RECORD");
+  private static final State STOP = new State("STOP");
   private static final State FAILED = new State("FAILED");
   static {
     final RequestedAction[] action = new RequestedAction[] { RequestedAction.NotifyImmediately };
@@ -67,11 +68,16 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     IDLE.addTransition(PLAY_RECORD);
     IDLE.addTransition(FAILED);
     PLAY.addTransition(IDLE);
+    PLAY.addTransition(STOP);
     PLAY.addTransition(FAILED);
     PLAY_COLLECT.addTransition(IDLE);
+    PLAY_COLLECT.addTransition(STOP);
     PLAY_COLLECT.addTransition(FAILED);
     PLAY_RECORD.addTransition(IDLE);
+    PLAY_RECORD.addTransition(STOP);
     PLAY_RECORD.addTransition(FAILED);
+    STOP.addTransition(IDLE);
+    STOP.addTransition(FAILED);
   }
 	  
   private final MgcpServer server;
@@ -89,6 +95,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     addState(PLAY);
     addState(PLAY_COLLECT);
     addState(PLAY_RECORD);
+    addState(STOP);
     addState(FAILED);
     server.addNotifyListener(this);
     this.server = server;
@@ -269,6 +276,11 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 	if(code.getValue() == ReturnCode.TRANSACTION_BEING_EXECUTED) {
 	  return;
 	} else if(code.getValue() == ReturnCode.TRANSACTION_EXECUTED_NORMALLY) {
+	  final State currentState = getState();
+	  if(STOP.equals(currentState)) {
+	    setState(IDLE);
+	    fireOperationCompleted();
+	  }
 	  return;
 	} else {
 	  setState(FAILED);
@@ -309,6 +321,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
     request.setRequestedEvents(REQUESTED_EVENTS);
     // Send the request.
     server.sendCommand(request, this);
+    setState(STOP);
   }
 
   @Override public synchronized void updateId(final EndpointIdentifier endpointId) {

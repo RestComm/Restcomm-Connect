@@ -24,6 +24,7 @@ import org.apache.commons.configuration.Configuration;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
@@ -54,6 +55,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
   protected final String homeDirectory;
   protected final String rootUri;
   private final URI silenceAudioFile;
+  private final String baseRecordingsPath;
 
   public RcmlTagStrategy() {
     super();
@@ -63,6 +65,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
     homeDirectory = StringUtils.addSuffixIfNotPresent(configuration.getString("home-directory"), "/");
     rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
     silenceAudioFile = URI.create("file://" + configuration.getString("silence-audio-file"));
+    baseRecordingsPath = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-path"), "/");
   }
   
   protected URI getAction(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -222,5 +225,11 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
     final ServiceLocator services = ServiceLocator.getInstance();
     final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
     return synthesizer.synthesize(text, gender, language);
+  }
+  
+  protected URI toRecordingPath(final Sid sid) {
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("file://").append(baseRecordingsPath).append(sid.toString()).append(".wav");
+    return URI.create(buffer.toString());
   }
 }
