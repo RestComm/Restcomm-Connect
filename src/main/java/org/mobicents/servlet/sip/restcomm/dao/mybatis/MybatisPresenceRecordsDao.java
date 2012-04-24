@@ -52,10 +52,18 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
   }
 
   @Override public List<PresenceRecord> getPresenceRecords(final String aor) {
+    return getPresenceRecords(namespace + "getPresenceRecords", aor);
+  }
+  
+  @Override public List<PresenceRecord> getPresenceRecordsByUser(String user) {
+    return getPresenceRecords(namespace + "getPresenceRecordsByUser", user);
+  }
+  
+  private List<PresenceRecord> getPresenceRecords(final String selector, final String parameter) {
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getPresenceRecords", aor);
+      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(selector, parameter);
       final List<PresenceRecord> records = new ArrayList<PresenceRecord>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {
@@ -103,6 +111,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final Map<String, Object> map = new HashMap<String, Object>();
     map.put("address_of_record", record.getAddressOfRecord());
     map.put("display_name", record.getDisplayName());
+    map.put("user", record.getUser());
     map.put("uri", record.getUri());
     map.put("user_agent", record.getUserAgent());
     map.put("ttl", record.getTimeToLive());
@@ -113,10 +122,11 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
   private PresenceRecord toPresenceRecord(final Map<String, Object> map) {
     final String aor = readString(map.get("address_of_record"));
     final String name = readString(map.get("display_name"));
+    final String user = readString(map.get("user"));
     final String uri = readString(map.get("uri"));
     final String ua = readString(map.get("user_agent"));
     final Integer ttl = readInteger(map.get("ttl"));
     final DateTime expires = readDateTime(map.get("expires"));
-    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
+    return new PresenceRecord(aor, name, user, uri, ua, ttl, expires);
   }
 }

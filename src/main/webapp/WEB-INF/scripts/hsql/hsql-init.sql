@@ -125,6 +125,7 @@ CREATE TABLE "restcomm_clients" (
 CREATE TABLE "restcomm_presence_records" (
 "address_of_record" LONGVARCHAR NOT NULL,
 "display_name" VARCHAR(255),
+"user" VARCHAR(64) NOT NULL,
 "uri" LONGVARCHAR NOT NULL,
 "user_agent" LONGVARCHAR,
 "ttl" INT NOT NULL,

@@ -121,7 +121,8 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
   }
   
   private void register(final SipServletRequest request) throws ServletParseException {
-	final String aor = request.getTo().getURI().toString();
+    final SipURI to = (SipURI)request.getTo().getURI();
+	final String aor = to.toString();
     final ListIterator<Address> contacts = request.getAddressHeaders("Contact");
     while(contacts.hasNext()) {
       final Address contact = contacts.next();
@@ -139,7 +140,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
         if(expires == 0) {
           dao.removePresenceRecord(uri);
         } else {
-          final PresenceRecord record = new PresenceRecord(aor, name, uri, ua, expires);
+          final PresenceRecord record = new PresenceRecord(aor, name, to.getUser(), uri, ua, expires);
           if(dao.hasPresenceRecord(aor)) {
             dao.updatePresenceRecord(record);
           } else {

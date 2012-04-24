@@ -57,6 +57,16 @@ import com.mongodb.WriteResult;
   @Override public List<PresenceRecord> getPresenceRecords(final String aor) {
     final BasicDBObject query = new BasicDBObject();
     query.put("address_of_record", aor);
+    return getPresenceRecord(query);
+  }
+  
+  @Override public List<PresenceRecord> getPresenceRecordsByUser(final String user) {
+    final BasicDBObject query = new BasicDBObject();
+    query.put("user", user);
+    return getPresenceRecord(query);
+  }
+  
+  private List<PresenceRecord> getPresenceRecord(final DBObject query) {
     final List<PresenceRecord> records = new ArrayList<PresenceRecord>();
     final DBCursor results = collection.find(query);
     while(results.hasNext()) {
@@ -103,6 +113,7 @@ import com.mongodb.WriteResult;
     final BasicDBObject object = new BasicDBObject();
     object.put("address_of_record", record.getAddressOfRecord());
     object.put("display_name", record.getDisplayName());
+    object.put("user", record.getUser());
     object.put("uri", record.getUri());
     object.put("user_agent", record.getUserAgent());
     object.put("ttl", record.getTimeToLive());
@@ -113,10 +124,11 @@ import com.mongodb.WriteResult;
   private PresenceRecord toPresenceRecord(final DBObject object) {
     final String aor = readString(object.get("address_of_record"));
     final String name = readString(object.get("display_name"));
+    final String user = readString(object.get("user"));
     final String uri = readString(object.get("uri"));
     final String ua = readString(object.get("user_agent"));
     final Integer ttl = readInteger(object.get("ttl"));
     final DateTime expires = readDateTime(object.get("expires"));
-    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
+    return new PresenceRecord(aor, name, user, uri, ua, ttl, expires);
   }
 }

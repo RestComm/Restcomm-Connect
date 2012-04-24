@@ -26,21 +26,23 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 @Immutable public final class PresenceRecord {
   private final String aor;
   private final String name;
+  private final String user;
   private final String uri;
   private final String ua;
   private final int ttl;
   private final DateTime expires;
   
-  public PresenceRecord(final String aor, final String name, final String uri, final String ua,
-      final int ttl) {
-    this(aor, name, uri, ua, ttl, DateTime.now().plusSeconds(ttl));
+  public PresenceRecord(final String aor, final String name, final String user, final String uri,
+      final String ua, final int ttl) {
+    this(aor, name, user, uri, ua, ttl, DateTime.now().plusSeconds(ttl));
   }
 
-  public PresenceRecord(final String aor, final String name, final String uri, final String ua,
-      final int ttl, final DateTime expires) {
+  public PresenceRecord(final String aor, final String name, final String user, final String uri,
+      final String ua,final int ttl, final DateTime expires) {
     super();
     this.aor = aor;
     this.name = name;
+    this.user = user;
     this.uri = uri;
     this.ua = ua;
     this.ttl = ttl;
@@ -53,6 +55,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 
   public String getDisplayName() {
     return name;
+  }
+  
+  public String getUser() {
+    return user;
   }
 
   public String getUri() {
@@ -71,15 +77,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return expires;
   }
   
-  public PresenceRecord setDisplayName(final String name) {
-    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
-  }
-  
-  public PresenceRecord setUserAgent(final String ua) {
-    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
-  }
-  
   public PresenceRecord setTimeToLive(final int ttl) {
-    return new PresenceRecord(aor, name, uri, ua, ttl);
+    return new PresenceRecord(aor, name, user, uri, ua, ttl);
   }
 }
