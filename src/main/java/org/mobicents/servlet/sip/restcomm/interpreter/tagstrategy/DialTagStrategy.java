@@ -435,7 +435,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   
   @Override synchronized public void onStatusChanged(final Call call) {
     final Call.Status status = call.getStatus();
-    if(Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
+    if(Call.Status.CANCELLED == status || Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
       notify();
     }
   }

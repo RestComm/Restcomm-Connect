@@ -21,9 +21,9 @@
 		
 		<recordings-path>${restcomm:home}/recordings</recordings-path>
 		
-		<outbound-proxy-user></outbound-proxy-user>
-		<outbound-proxy-password></outbound-proxy-password>
-		<outbound-proxy-uri></outbound-proxy-uri>
+		<outbound-proxy-user>3055872294</outbound-proxy-user>
+		<outbound-proxy-password>0121</outbound-proxy-password>
+		<outbound-proxy-uri>softswitch1.speechbucket.com</outbound-proxy-uri>
 	</runtime-settings>
 
 	<dao-manager class="org.mobicents.servlet.sip.restcomm.dao.mybatis.MybatisDaoManager">
@@ -48,9 +48,9 @@
 	-->
 	<media-server-manager>
 		<mgcp-server name="Mobicents Media Server">
-			<local-address>127.0.0.1</local-address>
+			<local-address>192.168.1.106</local-address>
 			<local-port>2727</local-port>
-			<remote-address>127.0.0.1</remote-address>
+			<remote-address>192.168.1.106</remote-address>
 			<remote-port>2427</remote-port>
 		</mgcp-server>
 	</media-server-manager>

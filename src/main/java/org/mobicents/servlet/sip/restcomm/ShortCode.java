@@ -106,32 +106,27 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   }
   
   public ShortCode setApiVersion(final String apiVersion) {
-	final DateTime dateUpdated = DateTime.now();
-    return new ShortCode(sid, dateCreated, dateUpdated, friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
+    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
         smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public ShortCode setSmsUrl(final URI smsUrl) {
-    final DateTime dateUpdated = DateTime.now();
-    return new ShortCode(sid, dateCreated, dateUpdated, friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
+    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
 	    smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public ShortCode setSmsMethod(final String smsMethod) {
-    final DateTime dateUpdated = DateTime.now();
-    return new ShortCode(sid, dateCreated, dateUpdated, friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
+    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
 	    smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public ShortCode setSmsFallbackUrl(final URI smsFallbackUrl) {
-    final DateTime dateUpdated = DateTime.now();
-    return new ShortCode(sid, dateCreated, dateUpdated, friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
+    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
 	    smsFallbackUrl, smsFallbackMethod, uri);
   }
   
   public ShortCode setSmsFallbackMethod(final String smsFallbackMethod) {
-    final DateTime dateUpdated = DateTime.now();
-    return new ShortCode(sid, dateCreated, dateUpdated, friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
+    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
 	    smsFallbackUrl, smsFallbackMethod, uri);
   }
 }

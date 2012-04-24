@@ -48,7 +48,7 @@ import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 public final class SipGatewayManager extends SipServlet {
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(SipGatewayManager.class);
-  private static final String userAgent = "RestComm/1.0 ALPHA 2";
+  private static final String userAgent = "RestComm/1.0";
   
   public static final int defaultRegistrationTtl = 30;
   

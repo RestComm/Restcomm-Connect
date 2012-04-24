@@ -25,6 +25,7 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
@@ -49,6 +50,7 @@ import com.mongodb.Mongo;
   private ApplicationsDao applicationsDao;
   private AvailablePhoneNumbersDao availablePhoneNumbersDao;
   private CallDetailRecordsDao callDetailRecordsDao;
+  private ClientsDao clientsDao;
   private IncomingPhoneNumbersDao incomingPhoneNumbersDao;
   private NotificationsDao notificationsDao;
   private OutgoingCallerIdsDao outgoingCallerIdsDao;
@@ -81,6 +83,10 @@ import com.mongodb.Mongo;
 
   @Override public CallDetailRecordsDao getCallDetailRecordsDao() {
     return callDetailRecordsDao;
+  }
+  
+  @Override public ClientsDao getClientsDao() {
+    return clientsDao;
   }
 
   @Override public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao() {
@@ -143,6 +149,7 @@ import com.mongodb.Mongo;
     applicationsDao = new MongoApplicationsDao(database);
     availablePhoneNumbersDao = new MongoAvailablePhoneNumbersDao(database);
     callDetailRecordsDao = new MongoCallDetailRecordsDao(database);
+    clientsDao =  new MongoClientsDao(database);
     incomingPhoneNumbersDao = new MongoIncomingPhoneNumbersDao(database);
     notificationsDao = new MongoNotificationsDao(database);
     outgoingCallerIdsDao = new MongoOutgoingCallerIdsDao(database);

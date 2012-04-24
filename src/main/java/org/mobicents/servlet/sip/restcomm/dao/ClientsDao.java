@@ -16,25 +16,20 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao;
 
-import org.mobicents.servlet.sip.restcomm.Configurable;
-import org.mobicents.servlet.sip.restcomm.LifeCycle;
+import java.util.List;
+
+import org.mobicents.servlet.sip.restcomm.Client;
+import org.mobicents.servlet.sip.restcomm.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface DaoManager extends Configurable, LifeCycle{
-  public AccountsDao getAccountsDao();
-  public ApplicationsDao getApplicationsDao();
-  public AvailablePhoneNumbersDao getAvailablePhoneNumbersDao();
-  public CallDetailRecordsDao getCallDetailRecordsDao();
-  public ClientsDao getClientsDao();
-  public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao();
-  public NotificationsDao getNotificationsDao();
-  public OutgoingCallerIdsDao getOutgoingCallerIdsDao();
-  public RecordingsDao getRecordingsDao();
-  public SandBoxesDao getSandBoxesDao();
-  public ShortCodesDao getShortCodesDao();
-  public SmsMessagesDao getSmsMessagesDao();
-  public TranscriptionsDao getTranscriptionsDao();
-  public GatewaysDao getGatewaysDao();
+public interface ClientsDao {
+  public void addClient(Client client);
+  public Client getClient(Sid sid);
+  public Client getClient(String friendlyName);
+  public List<Client> getClients(Sid accountSid);
+  public void removeClient(Sid sid);
+  public void removeClients(Sid accountSid);
+  public void updateClient(Client client);
 }

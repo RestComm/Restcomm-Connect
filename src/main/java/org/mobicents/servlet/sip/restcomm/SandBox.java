@@ -118,38 +118,32 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   }
   
   public SandBox setVoiceUrl(final URI voiceUrl) {
-    final DateTime dateUpdated = DateTime.now();
-    return new SandBox(dateCreated, dateUpdated, pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
+    return new SandBox(dateCreated, DateTime.now(), pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
         smsUrl, smsMethod, statusCallback, statusCallbackMethod, uri);
   }
   
   public SandBox setVoiceMethod(final String voiceMethod) {
-    final DateTime dateUpdated = DateTime.now();
-    return new SandBox(dateCreated, dateUpdated, pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
+    return new SandBox(dateCreated, DateTime.now(), pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
         smsUrl, smsMethod, statusCallback, statusCallbackMethod, uri);
   }
   
   public SandBox setSmsUrl(final URI smsUrl) {
-    final DateTime dateUpdated = DateTime.now();
-    return new SandBox(dateCreated, dateUpdated, pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
+    return new SandBox(dateCreated, DateTime.now(), pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
         smsUrl, smsMethod, statusCallback, statusCallbackMethod, uri);
   }
   
   public SandBox setSmsMethod(final String smsMethod) {
-    final DateTime dateUpdated = DateTime.now();
-    return new SandBox(dateCreated, dateUpdated, pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
+    return new SandBox(dateCreated, DateTime.now(), pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
         smsUrl, smsMethod, statusCallback, statusCallbackMethod, uri);
   }
   
   public SandBox setStatusCallback(final URI statusCallback) {
-    final DateTime dateUpdated = DateTime.now();
-    return new SandBox(dateCreated, dateUpdated, pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
+    return new SandBox(dateCreated, DateTime.now(), pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
         smsUrl, smsMethod, statusCallback, statusCallbackMethod, uri);
   }
   
   public SandBox setStatusCallbackMethod(final String statusCallbackMethod) {
-    final DateTime dateUpdated = DateTime.now();
-    return new SandBox(dateCreated, dateUpdated, pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
+    return new SandBox(dateCreated, DateTime.now(), pin, accountSid, phoneNumber, applicationSid, apiVersion, voiceUrl, voiceMethod,
         smsUrl, smsMethod, statusCallback, statusCallbackMethod, uri);
   }
 }

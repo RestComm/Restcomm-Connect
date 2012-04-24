@@ -109,6 +109,19 @@ CREATE TABLE "restcomm_call_detail_records" (
 "uri" LONGVARCHAR NOT NULL
 );
 
+CREATE TABLE "restcomm_clients" (
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"date_created" DATE NOT NULL,
+"date_updated" DATE NOT NULL,
+"account_sid" VARCHAR(34) NOT NULL,
+"api_version" VARCHAR(10) NOT NULL,
+"friendly_name" VARCHAR(64) NOT NULL,
+"login" VARCHAR(64) NOT NULL UNIQUE,
+"password" VARCHAR(64) NOT NULL,
+"status" INT NOT NULL,
+"uri" LONGVARCHAR NOT NULL
+);
+
 CREATE TABLE "restcomm_short_codes" (
 "sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATE NOT NULL,

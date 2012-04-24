@@ -18,6 +18,7 @@
     <mapper url="file://${sql}/applications.xml"/>
     <mapper url="file://${sql}/available-phone-numbers.xml"/>
     <mapper url="file://${sql}/call-detail-records.xml"/>
+    <mapper url="file://${sql}/clients.xml"/>
     <mapper url="file://${sql}/incoming-phone-numbers.xml"/>
     <mapper url="file://${sql}/notifications.xml"/>
     <mapper url="file://${sql}/outgoing-caller-ids.xml"/>

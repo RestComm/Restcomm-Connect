@@ -119,12 +119,12 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   }
   
   public SmsMessage setDateSent(final DateTime dateSent) {
-    return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient,
+    return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient,
         body, status, direction, price, apiVersion, uri);
   }
   
   public SmsMessage setStatus(final Status status) {
-    return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient,
+    return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient,
         body, status, direction, price, apiVersion, uri);
   }
   

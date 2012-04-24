@@ -31,6 +31,7 @@ import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
@@ -52,6 +53,7 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
   private ApplicationsDao applicationsDao;
   private AvailablePhoneNumbersDao availablePhoneNumbersDao;
   private CallDetailRecordsDao callDetailRecordsDao;
+  private ClientsDao clientsDao;
   private IncomingPhoneNumbersDao incomingPhoneNumbersDao;
   private NotificationsDao notificationsDao;
   private OutgoingCallerIdsDao outgoingCallerIdsDao;
@@ -84,6 +86,10 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 
   @Override public CallDetailRecordsDao getCallDetailRecordsDao() {
     return callDetailRecordsDao;
+  }
+  
+  @Override public ClientsDao getClientsDao() {
+    return clientsDao;
   }
 
   @Override public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao() {
@@ -149,6 +155,7 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
     applicationsDao = new MybatisApplicationsDao(sessions);
     availablePhoneNumbersDao = new MybatisAvailablePhoneNumbersDao(sessions);
     callDetailRecordsDao = new MybatisCallDetailRecordsDao(sessions);
+    clientsDao = new MybatisClientsDao(sessions);
     incomingPhoneNumbersDao = new MybatisIncomingPhoneNumbersDao(sessions);
     notificationsDao = new MybatisNotificationsDao(sessions);
     outgoingCallerIdsDao = new MybatisOutgoingCallerIdsDao(sessions);

@@ -74,7 +74,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   }
   
   public OutgoingCallerId setFriendlyName(final String friendlyName) {
-	final DateTime dateUpdated = DateTime.now();
-    return new OutgoingCallerId(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, uri);
+    return new OutgoingCallerId(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, uri);
   }
 }
