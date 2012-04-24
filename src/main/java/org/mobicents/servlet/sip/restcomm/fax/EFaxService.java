@@ -14,13 +14,35 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.http;
+package org.mobicents.servlet.sip.restcomm.fax;
 
+import java.net.URI;
+
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AuthenticationFilter {
+@ThreadSafe public final class EFaxService implements FaxService {
+  public EFaxService() {
+    super();
+  }
+  
+  @Override public void configure(final Configuration configuration) {
+    
+  }
 
+  @Override public void start() throws RuntimeException {
+    
+  }
+
+  @Override public void shutdown() {
+    
+  }
+
+  @Override public void send(final String from, final String to, final URI content,
+      final FaxServiceObserver observer) {
+    
+  }
 }

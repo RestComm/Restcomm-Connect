@@ -14,13 +14,16 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.http;
+package org.mobicents.servlet.sip.restcomm.fax;
 
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import java.net.URI;
+
+import org.mobicents.servlet.sip.restcomm.Configurable;
+import org.mobicents.servlet.sip.restcomm.LifeCycle;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AuthenticationFilter {
-
+public interface FaxService extends Configurable, LifeCycle {
+  public void send(String from, String to, URI content, FaxServiceObserver observer);
 }

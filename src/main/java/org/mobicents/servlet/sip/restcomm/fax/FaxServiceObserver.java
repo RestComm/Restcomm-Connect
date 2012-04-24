@@ -14,13 +14,11 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.http;
-
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+package org.mobicents.servlet.sip.restcomm.fax;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AuthenticationFilter {
+public interface FaxServiceObserver {
 
 }

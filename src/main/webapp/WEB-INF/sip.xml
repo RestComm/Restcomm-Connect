@@ -25,7 +25,19 @@
 				</or>
 			</pattern>
 		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>PresenceManager</servlet-name>
+			<pattern>
+				<or>
+					<equal>
+						<var>request.method</var>
+						<value>REGISTER</value>
+					</equal>
+				</or>
+			</pattern>
+		</servlet-mapping>
 	</servlet-selection>
+	
 	<servlet>
 		<servlet-name>SipCallManager</servlet-name>
 		<display-name>SipCallManager</display-name>
@@ -44,6 +56,16 @@
 			org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManager
 		</servlet-class>
 		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>PresenceManager</servlet-name>
+		<display-name>PresenceManager</display-name>
+		<description>The RestComm SIP Presence Manager.</description>
+		<servlet-class>
+			org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceManager
+		</servlet-class>
+		<load-on-startup>2</load-on-startup>
 	</servlet>
 	
 	<listener>
