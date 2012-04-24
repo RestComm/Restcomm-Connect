@@ -84,6 +84,9 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
       try {
         if(isPermitted(header, method)) {
           register(request);
+          final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+          ok.send();
+          request.getApplicationSession().invalidate();
         } else {
           createAuthenticateResponse(request).send();
         }
@@ -160,10 +163,14 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
     final String response = authorization.get("response");
     final ClientsDao dao = daos.getClientsDao();
     final Client client = dao.getClient(user);
-    final String password = client.getPassword();
-    final String result =  DigestAuthentication.response(algorithm, user, realm, password, nonce, nc,
-        cnonce, method, uri, null, qop);
-    return result.equals(response);
+    if(client != null && Client.ENABLED == client.getStatus()) {
+      final String password = client.getPassword();
+      final String result =  DigestAuthentication.response(algorithm, user, realm, password, nonce, nc,
+          cnonce, method, uri, null, qop);
+      return result.equals(response);
+    } else {
+      return false;
+    }
   }
   
   private Map<String, String> toMap(final String header) {

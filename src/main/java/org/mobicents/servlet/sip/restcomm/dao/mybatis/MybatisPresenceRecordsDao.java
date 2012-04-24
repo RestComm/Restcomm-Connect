@@ -16,9 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readInteger;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,9 +24,11 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -107,6 +106,7 @@ import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
     map.put("uri", record.getUri());
     map.put("user_agent", record.getUserAgent());
     map.put("ttl", record.getTimeToLive());
+    map.put("expires", writeDateTime(record.getExpires()));
     return map;
   }
   
@@ -116,6 +116,7 @@ import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
     final String uri = readString(map.get("uri"));
     final String ua = readString(map.get("user_agent"));
     final Integer ttl = readInteger(map.get("ttl"));
-    return new PresenceRecord(aor, name, uri, ua, ttl);
+    final DateTime expires = readDateTime(map.get("expires"));
+    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
   }
 }

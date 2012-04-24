@@ -21,6 +21,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
@@ -104,6 +106,7 @@ import com.mongodb.WriteResult;
     object.put("uri", record.getUri());
     object.put("user_agent", record.getUserAgent());
     object.put("ttl", record.getTimeToLive());
+    object.put("expires", writeDateTime(record.getExpires()));
     return object;
   }
   
@@ -113,6 +116,7 @@ import com.mongodb.WriteResult;
     final String uri = readString(object.get("uri"));
     final String ua = readString(object.get("user_agent"));
     final Integer ttl = readInteger(object.get("ttl"));
-    return new PresenceRecord(aor, name, uri, ua, ttl);
+    final DateTime expires = readDateTime(object.get("expires"));
+    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
   }
 }

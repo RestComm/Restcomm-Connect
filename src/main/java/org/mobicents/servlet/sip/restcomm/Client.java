@@ -27,8 +27,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class Client {
-  public static final int NOT_PRESENT = 0;
-  public static final int PRESENT = 1;
+  public static final int DISABLED = 0;
+  public static final int ENABLED = 1;
   
   private final Sid sid;
   private final DateTime dateCreated;

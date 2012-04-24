@@ -124,10 +124,11 @@ CREATE TABLE "restcomm_clients" (
 
 CREATE TABLE "restcomm_presence_records" (
 "address_of_record" LONGVARCHAR NOT NULL,
-"display_name" VARCHAR(255) NOT NULL,
+"display_name" VARCHAR(255),
 "uri" LONGVARCHAR NOT NULL,
-"user_agent" LONGVARCHAR NOT NULL,
-"ttl" INT NOT NULL
+"user_agent" LONGVARCHAR,
+"ttl" INT NOT NULL,
+"expires" DATE NOT NULL
 );
 
 CREATE TABLE "restcomm_short_codes" (

@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager.presence;
 
+import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 
 /**
@@ -27,15 +29,22 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final String uri;
   private final String ua;
   private final int ttl;
-
+  private final DateTime expires;
+  
   public PresenceRecord(final String aor, final String name, final String uri, final String ua,
       final int ttl) {
+    this(aor, name, uri, ua, ttl, DateTime.now().plusSeconds(ttl));
+  }
+
+  public PresenceRecord(final String aor, final String name, final String uri, final String ua,
+      final int ttl, final DateTime expires) {
     super();
     this.aor = aor;
     this.name = name;
     this.uri = uri;
     this.ua = ua;
     this.ttl = ttl;
+    this.expires = expires;
   }
 
   public String getAddressOfRecord() {
@@ -58,12 +67,16 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return ttl;
   }
   
+  public DateTime getExpires() {
+    return expires;
+  }
+  
   public PresenceRecord setDisplayName(final String name) {
-    return new PresenceRecord(aor, name, uri, ua, ttl);
+    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
   }
   
   public PresenceRecord setUserAgent(final String ua) {
-    return new PresenceRecord(aor, name, uri, ua, ttl);
+    return new PresenceRecord(aor, name, uri, ua, ttl, expires);
   }
   
   public PresenceRecord setTimeToLive(final int ttl) {
