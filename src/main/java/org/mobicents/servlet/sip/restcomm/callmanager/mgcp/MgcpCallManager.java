@@ -129,6 +129,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
         }
         invite.getSession().setAttribute("CALL", call);
         invite.send();
+        call.updateInitialInvite(invite);
       } else if(SipServletResponse.SC_BUSY_HERE == status || SipServletResponse.SC_BUSY_EVERYWHERE == status) {
         call.busy();
       } else {
@@ -163,7 +164,7 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
 	final SipSession session = response.getSession();
 	if(request.getMethod().equals("INVITE") && response.getStatus() == SipServletResponse.SC_OK) {
 	  final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
-	  call.established(response.getRequest(), response);
+	  call.established(response);
 	}
   }
 

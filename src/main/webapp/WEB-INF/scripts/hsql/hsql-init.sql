@@ -116,7 +116,7 @@ CREATE TABLE "restcomm_clients" (
 "account_sid" VARCHAR(34) NOT NULL,
 "api_version" VARCHAR(10) NOT NULL,
 "friendly_name" VARCHAR(64) NOT NULL,
-"login" VARCHAR(64) NOT NULL UNIQUE,
+"login" VARCHAR(64) NOT NULL,
 "password" VARCHAR(64) NOT NULL,
 "status" INT NOT NULL,
 "uri" LONGVARCHAR NOT NULL

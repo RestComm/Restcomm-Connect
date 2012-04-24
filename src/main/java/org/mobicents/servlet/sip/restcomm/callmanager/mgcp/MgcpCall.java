@@ -60,6 +60,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     IDLE.addTransition(QUEUED);
     QUEUED.addTransition(IN_PROGRESS);
     QUEUED.addTransition(FAILED);
+    QUEUED.addTransition(CANCELLED);
     RINGING.addTransition(IN_PROGRESS);
     RINGING.addTransition(FAILED);
     RINGING.addTransition(CANCELLED);
@@ -162,8 +163,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     }
   }
   
-  public void busy() {
+  public synchronized void busy() {
     assertState(QUEUED);
+    cleanup();
     setState(BUSY);
     fireStatusChanged();
   }
@@ -176,22 +178,24 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       if(remoteConference != null) {
         remoteConference.removeParticipant(this);
       }
-      setState(COMPLETED);
-      fireStatusChanged();
     } finally {
       cleanup();
+      setState(COMPLETED);
+      fireStatusChanged();
     }
   }
   
   @Override public synchronized void cancel() throws CallException {
     assertState(QUEUED);
-    if(Direction.OUTBOUND_DIAL == direction) {
+    if(Direction.OUTBOUND_DIAL == getDirection()) {
       final SipServletRequest cancel = initialInvite.createCancel();
       try {
         cancel.send();
+        cleanup();
         setState(CANCELLED);
         fireStatusChanged();
       } catch(final IOException exception) {
+    	cleanup();
     	setState(FAILED);
     	fireStatusChanged();
         throw new CallException(exception);
@@ -204,10 +208,10 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
     try {
       ok.send();
-      setState(CANCELLED);
-      fireStatusChanged();
     } finally {
       cleanup();
+      setState(CANCELLED);
+      fireStatusChanged();
     }
   }
   
@@ -230,38 +234,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       initialInvite.setContent(offer, "application/sdp");
       initialInvite.send();
     } catch(final Exception exception) {
-      setState(FAILED);
-      fireStatusChanged();
-      final StringBuilder buffer = new StringBuilder();
-      buffer.append("There was an error while dialing out from ");
-      buffer.append(initialInvite.getFrom().toString()).append(" to ");
-      buffer.append(initialInvite.getTo().toString());
-      throw new CallException(exception);
-    }
-  }
-
-  @Override public synchronized void dial(final long timeout) throws CallException {
-    assertState(QUEUED);
-    direction = Direction.OUTBOUND_DIAL;
-    // Try to negotiate media with a packet relay end point.
-    try {
-	  relayEndpoint = session.getPacketRelayEndpoint();
-      userAgentConnection = session.createConnection(relayEndpoint);
-      userAgentConnection.addObserver(this);
-      userAgentConnection.connect(ConnectionMode.SendRecv);
-      long start = System.currentTimeMillis();
-      wait(timeout);
-      long end = System.currentTimeMillis();
-      if(end < start + timeout) {
-        final byte[] offer = userAgentConnection.getLocalDescriptor().toString().getBytes();
-        initialInvite.setContent(offer, "application/sdp");
-        initialInvite.send();
-        wait((start + timeout) - end);
-        if(Call.Status.IN_PROGRESS != getStatus()) {
-          cleanup();
-        }
-      }
-    } catch(final Exception exception) {
+      cleanup();
       setState(FAILED);
       fireStatusChanged();
       final StringBuilder buffer = new StringBuilder();
@@ -279,10 +252,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     relayOutboundConnection.connect(ConnectionMode.SendRecv);
   }
   
-  public synchronized void established(final SipServletRequest initialInvite,
-      final SipServletResponse successResponse) throws IOException {
+  public synchronized void established(final SipServletResponse successResponse) throws IOException {
     assertState(QUEUED);
-    this.initialInvite = initialInvite;
     final byte[] answer = successResponse.getRawContent();
     final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
     userAgentConnection.modify(remoteDescriptor);
@@ -290,12 +261,18 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     ack.send();
   }
   
-  public void failed() {
+  public synchronized void failed() {
     final List<State> possibleStates = new ArrayList<State>();
     possibleStates.add(QUEUED);
     possibleStates.add(RINGING);
     possibleStates.add(IN_PROGRESS);
     assertState(possibleStates);
+    final State currentState = getState();
+    if(QUEUED.equals(currentState) || RINGING.equals(currentState)) {
+      cleanup();
+    } else if(IN_PROGRESS.equals(currentState)) {
+      terminate();
+    }
     setState(FAILED);
     fireStatusChanged();
   }
@@ -356,9 +333,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     if(remoteConference != null) {
       remoteConference.removeParticipant(this);
     }
+    terminate();
 	setState(COMPLETED);
 	fireStatusChanged();
-	terminate();
   }
   
   @Override public boolean isMuted() {
@@ -434,6 +411,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     try {
       busy.send();
     } catch(final IOException exception) {
+      cleanup();
       setState(FAILED);
       fireStatusChanged();
       LOGGER.error(exception);
@@ -449,7 +427,10 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   @Override public synchronized void stopMedia() {
+    assertState(IN_PROGRESS);
     ivrEndpoint.stop();
+    try { wait(); }
+  	catch(final InterruptedException ignored) { }
   }
   
   private void terminate() {
@@ -468,6 +449,10 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
     try { wait(); }
     catch(final InterruptedException ignored) { }
     muted = false;
+  }
+  
+  public synchronized void updateInitialInvite(final SipServletRequest initialInvite) {
+    this.initialInvite = initialInvite;
   }
 
   @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {
@@ -517,7 +502,9 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
       setExpires(480);
       setState(IN_PROGRESS);
       fireStatusChanged();
-      notify(); 
+      if(Direction.INBOUND == getDirection()) {
+        notify();
+      }
     } else if(connection == remoteInboundConnection) {
       remoteOutboundConnection.modify(connection.getLocalDescriptor());
     } else if(connection == remoteOutboundConnection) {
@@ -546,13 +533,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
 
   @Override public synchronized void failed(final MgcpConnection connection) {
-	setState(FAILED);
-	fireStatusChanged();
-	final StringBuilder buffer = new StringBuilder();
-  	buffer.append("The call to recipient ").append(getRecipient())
-  	    .append(" from sender ").append(getOriginator())
-  	    .append(" could not be completed.");
-  	LOGGER.error(buffer.toString());
+	failed();
   	notify();
   }
 

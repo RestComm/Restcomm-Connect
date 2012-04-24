@@ -100,7 +100,9 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 	bridge.addParticipant(call);
 	outboundCall = callManager.createCall(sender, recipient);
     outboundCall.addObserver(this);
-    outboundCall.dial(TimeUtils.SECOND_IN_MILLIS * timeout);
+    outboundCall.dial();
+    try { synchronized(this) { wait(TimeUtils.SECOND_IN_MILLIS * timeout); } }
+    catch(final InterruptedException ignored) { }
     if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
       bridge.stopBackgroundMusic();
       bridge.addParticipant(outboundCall);
@@ -115,6 +117,9 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
         outboundCall.removeObserver(this);
         outboundCall.hangup();
       }
+    } else if(Call.Status.QUEUED == outboundCall.getStatus()) {
+      outboundCall.removeObserver(this);
+      outboundCall.cancel();
     }
     call.removeObserver(this);
     conferenceCenter.removeConference(name);
@@ -435,7 +440,8 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   
   @Override synchronized public void onStatusChanged(final Call call) {
     final Call.Status status = call.getStatus();
-    if(Call.Status.CANCELLED == status || Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
+    if((Call.Status.IN_PROGRESS == call.getStatus() && Call.Direction.OUTBOUND_DIAL == call.getDirection()) ||
+        Call.Status.CANCELLED == status || Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
       notify();
     }
   }

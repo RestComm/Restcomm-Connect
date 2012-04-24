@@ -29,7 +29,6 @@ public interface Call {
   public void answer() throws CallException;
   public void cancel() throws CallException;
   public void dial() throws CallException;
-  public void dial(long timeout) throws CallException;
   public String getDigits();
   public Direction getDirection();
   public String getForwardedFrom();
