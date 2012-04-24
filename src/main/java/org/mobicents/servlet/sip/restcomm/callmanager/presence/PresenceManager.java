@@ -18,11 +18,14 @@ package org.mobicents.servlet.sip.restcomm.callmanager.presence;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
@@ -33,6 +36,7 @@ import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
 import org.mobicents.servlet.sip.restcomm.util.DigestAuthentication;
 import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 
@@ -41,12 +45,10 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
  */
 @ThreadSafe public final class PresenceManager extends SipServlet {
   private static final long serialVersionUID = 1L;
-  private final DaoManager daos;
+  private DaoManager daos;
   
   public PresenceManager() {
     super();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    daos = services.get(DaoManager.class);
   }
   
   private String createNonce() {
@@ -74,15 +76,75 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
   }
 
   @Override protected void doRegister(final SipServletRequest request) throws ServletException, IOException {
-    
+    final String header = request.getHeader("Proxy-Authorization");
+    if(header == null) {
+      createAuthenticateResponse(request).send();
+    } else {
+      final String method = request.getMethod();
+      try {
+        if(isPermitted(header, method)) {
+          register(request);
+        } else {
+          createAuthenticateResponse(request).send();
+        }
+      } catch(final Exception exception) {
+        throw new ServletException(exception);
+      }
+    }
   }
-
-  @Override public void destroy() {
-    
+  
+  public int getContactCount(final SipServletRequest request) throws ServletParseException {
+    final ListIterator<Address> contacts = request.getAddressHeaders("Contact");
+    int counter = 0;
+    while(contacts.hasNext()) {
+      contacts.next();
+      counter++;
+    }
+    return counter;
+  }
+  
+  private int getExpires(final SipServletRequest request) {
+	final String header = request.getHeader("Expires");
+	if(header != null) {
+	  return Integer.parseInt(header);
+	} else {
+	  return 3600;
+	}
   }
 
   @Override public void init(final ServletConfig configuration) throws ServletException {
-    
+    final ServiceLocator services = ServiceLocator.getInstance();
+    daos = services.get(DaoManager.class);
+  }
+  
+  private void register(final SipServletRequest request) throws ServletParseException {
+	final String aor = request.getTo().getURI().toString();
+    final ListIterator<Address> contacts = request.getAddressHeaders("Contact");
+    while(contacts.hasNext()) {
+      final Address contact = contacts.next();
+      final String name = contact.getDisplayName();
+      final String uri = contact.getURI().toString();
+      int expires = contact.getExpires();
+      if(expires == -1) {
+        expires = getExpires(request);
+      }
+      final String ua = request.getHeader("User-Agent");
+      final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
+      if(expires == 0 && contact.isWildcard()) {
+        dao.removePresenceRecords(aor);
+      } else {
+        if(expires == 0) {
+          dao.removePresenceRecord(uri);
+        } else {
+          final PresenceRecord record = new PresenceRecord(aor, name, uri, ua, expires);
+          if(dao.hasPresenceRecord(aor)) {
+            dao.updatePresenceRecord(record);
+          } else {
+            dao.addPresenceRecord(record);
+          }
+        }
+      }
+    }
   }
   
   private boolean isPermitted(final String header, final String method) {

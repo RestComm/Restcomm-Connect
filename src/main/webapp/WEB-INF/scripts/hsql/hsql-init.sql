@@ -122,6 +122,14 @@ CREATE TABLE "restcomm_clients" (
 "uri" LONGVARCHAR NOT NULL
 );
 
+CREATE TABLE "restcomm_presence_records" (
+"address_of_record" LONGVARCHAR NOT NULL,
+"display_name" VARCHAR(255) NOT NULL,
+"uri" LONGVARCHAR NOT NULL,
+"user_agent" LONGVARCHAR NOT NULL,
+"ttl" INT NOT NULL
+);
+
 CREATE TABLE "restcomm_short_codes" (
 "sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATE NOT NULL,

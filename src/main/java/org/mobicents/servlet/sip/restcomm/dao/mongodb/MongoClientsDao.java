@@ -21,9 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.Client;
 
+import org.joda.time.DateTime;
+
+import org.mobicents.servlet.sip.restcomm.Client;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;

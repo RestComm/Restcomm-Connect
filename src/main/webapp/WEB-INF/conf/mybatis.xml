@@ -22,6 +22,7 @@
     <mapper url="file://${sql}/incoming-phone-numbers.xml"/>
     <mapper url="file://${sql}/notifications.xml"/>
     <mapper url="file://${sql}/outgoing-caller-ids.xml"/>
+    <mapper url="file://${sql}/presence-records.xml"/>
     <mapper url="file://${sql}/recordings.xml"/>
     <mapper url="file://${sql}/sand-boxes.xml"/>
     <mapper url="file://${sql}/short-codes.xml"/>

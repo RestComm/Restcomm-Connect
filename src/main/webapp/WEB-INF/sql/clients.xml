@@ -31,6 +31,6 @@
   </delete>
   
   <update id="updateClient" parameterType="map">
-    UPDATE "restcomm_clients" SET "friendly_name"=#{friendly_name}, "password"=#{password}, "status"=#{status}} WHERE "sid"=#{sid};
+    UPDATE "restcomm_clients" SET "friendly_name"=#{friendly_name}, "password"=#{password}, "status"=#{status} WHERE "sid"=#{sid};
   </update>
 </mapper>
