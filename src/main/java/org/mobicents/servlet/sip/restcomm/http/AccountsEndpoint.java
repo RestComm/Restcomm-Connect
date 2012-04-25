@@ -16,13 +16,21 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@Path("/Accounts")
 @ThreadSafe public final class AccountsEndpoint {
   public AccountsEndpoint() {
     super();
+  }
+  
+  @GET public String get() {
+    return "Hello World!";
   }
 }

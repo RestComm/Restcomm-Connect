@@ -14,13 +14,25 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.http;
+package org.mobicents.servlet.sip.restcomm.http.security;
+
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.credential.SimpleCredentialsMatcher;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AuthenticationFilter {
+@ThreadSafe public final class CredentialsMatcher extends SimpleCredentialsMatcher {
+  public CredentialsMatcher() {
+    super();
+  }
 
+  @Override public boolean doCredentialsMatch(final AuthenticationToken token, final AuthenticationInfo info) {
+    final String tokenCredentials = new String((char[])token.getCredentials());
+    final String accountCredentials = new String((char[])info.getCredentials());
+    return accountCredentials.equals(tokenCredentials);
+  }
 }
