@@ -22,8 +22,6 @@ import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -61,10 +59,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeSmsFallbackMethod(application.getSmsFallbackMethod(), writer);
     writeSmsStatusCallback(application.getSmsStatusCallback(), writer);
     writeUri(application.getUri(), writer);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
   
   private void writeSmsStatusCallback(final URI smsStatusCallback, final HierarchicalStreamWriter writer) {

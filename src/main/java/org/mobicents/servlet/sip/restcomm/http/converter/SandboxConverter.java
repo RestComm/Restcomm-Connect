@@ -21,8 +21,6 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -55,10 +53,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeStatusCallback(sandbox.getStatusCallback(), writer);
     writeStatusCallbackMethod(sandbox.getStatusCallbackMethod(), writer);
     writeUri(sandbox.getUri(), writer);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
   
   private void writeApplicationSid(final Sid applicationSid, final HierarchicalStreamWriter writer) {

@@ -21,8 +21,6 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -62,10 +60,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeSmsApplicationSid(incomingPhoneNumber.getSmsApplicationSid(), writer);
     writeApiVersion(incomingPhoneNumber.getApiVersion(), writer);
     writeUri(incomingPhoneNumber.getUri(), writer);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
   
   private void writeSmsApplicationSid(final Sid smsApplicationSid, final HierarchicalStreamWriter writer) {

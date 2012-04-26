@@ -213,7 +213,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     builder.setDuration(recording.getDuration());
     builder.setPrice(new BigDecimal(0.00));
     final StringBuilder buffer = new StringBuilder();
-    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(context.getApiVersion()).append("/Accounts/");
     buffer.append(context.getAccountSid().toString()).append("/Transcriptions/");
     buffer.append(sid.toString());
     final URI uri = URI.create(buffer.toString());
@@ -303,7 +303,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     builder.setDuration(duration);
     builder.setApiVersion(context.getApiVersion());
     final StringBuilder buffer = new StringBuilder();
-    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(context.getApiVersion()).append("/Accounts/");
     buffer.append(context.getAccountSid().toString()).append("/Recordings/");
     buffer.append(sid.toString());
     final URI uri = URI.create(buffer.toString());

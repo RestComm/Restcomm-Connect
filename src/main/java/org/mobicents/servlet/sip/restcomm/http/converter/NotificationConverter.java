@@ -24,8 +24,6 @@ import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -61,10 +59,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeResponseHeaders(notification.getResponseHeaders(), writer);
     writeResponseBody(notification.getResponseBody(), writer);
     writeUri(notification.getUri(), writer);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
   
   private void writeErrorCode(final int errorCode, final HierarchicalStreamWriter writer) {

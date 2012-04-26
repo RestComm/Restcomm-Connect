@@ -222,7 +222,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
     builder.setPrice(new BigDecimal(0.00));
     builder.setApiVersion(context.getApiVersion());
     final StringBuilder buffer = new StringBuilder();
-    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(context.getApiVersion()).append("/Accounts/");
     buffer.append(context.getAccountSid().toString()).append("/SMS/Messages/");
     buffer.append(sid.toString());
     final URI uri = URI.create(buffer.toString());

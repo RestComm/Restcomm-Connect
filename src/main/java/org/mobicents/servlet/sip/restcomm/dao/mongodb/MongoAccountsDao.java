@@ -134,12 +134,14 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 	final Sid sid = readSid(object.get("sid"));
 	final DateTime dateCreated = readDateTime(object.get("date_created"));
 	final DateTime dateUpdated = readDateTime(object.get("date_updated"));
+	final String emailAddress = readString(object.get("email_address"));
 	final String friendlyName = readString(object.get("friendly_name"));
 	final Account.Type type = readAccountType((String)object.get("type"));
 	final Account.Status status = readAccountStatus((String)object.get("status"));
 	final String authToken = readString(object.get("auth_token"));
+	final String role = readString(object.get("role"));
 	final URI uri = readUri(object.get("uri"));
-    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+    return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, type, status, authToken, role, uri);
   }
   
   private DBObject toDbObject(final Account account) {
@@ -147,10 +149,12 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     object.put("sid", writeSid(account.getSid()));
     object.put("date_created", writeDateTime(account.getDateCreated()));
     object.put("date_updated", writeDateTime(account.getDateUpdated()));
+    object.put("email_address", account.getEmailAddress());
     object.put("friendly_name", account.getFriendlyName());
     object.put("type", writeAccountType(account.getType()));
     object.put("status", writeAccountStatus(account.getStatus()));
     object.put("auth_token", account.getAuthToken());
+    object.put("role", account.getRole());
     object.put("uri", writeUri(account.getUri()));
     return object;
   }

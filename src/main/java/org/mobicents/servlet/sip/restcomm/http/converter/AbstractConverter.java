@@ -40,7 +40,9 @@ public abstract class AbstractConverter implements Converter {
   @Override public abstract void marshal(final Object object, HierarchicalStreamWriter writer,
       MarshallingContext context);
 
-  @Override public abstract Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context);
+  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
+    return null;
+  }
   
   protected void writeAccountSid(final Sid accountSid, final HierarchicalStreamWriter writer) {
     writer.startNode("AccountSid");

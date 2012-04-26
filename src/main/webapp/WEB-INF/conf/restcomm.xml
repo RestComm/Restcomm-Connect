@@ -11,6 +11,8 @@
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
 	<runtime-settings>
+		<api-version>2012-04-24</api-version>
+
 		<beep-audio-file>${restcomm:home}/audio/beep.wav</beep-audio-file>
 		<reject-audio-file>${restcomm:home}/audio/reject.wav</reject-audio-file>
 		<silence-audio-file>${restcomm:home}/audio/one-second-silence.wav</silence-audio-file>
@@ -24,6 +26,30 @@
 		<outbound-proxy-user></outbound-proxy-user>
 		<outbound-proxy-password></outbound-proxy-password>
 		<outbound-proxy-uri></outbound-proxy-uri>
+		
+		<!-- 
+			Each permission is represented as three columns Domain:Action:Target
+			Possible actions are Create, Read, Modify, Delete.
+		-->
+		<security-roles>
+			<role name="Developer">
+			  <permission>RestComm:*:Accounts</permission>
+			  <permission>RestComm:*:Applications</permission>
+			  <permission>RestComm:*:AvailablePhoneNumbers</permission>
+			  <permission>RestComm:*:Calls</permission>
+			  <permission>RestComm:*:Clients</permission>
+			  <permission>RestComm:*:Conferences</permission>
+			  <permission>RestComm:*:Faxes</permission>
+			  <permission>RestComm:*:IncomingPhoneNumbers</permission>
+			  <permission>RestComm:*:Notifications</permission>
+			  <permission>RestComm:*:OutgoingCallerIds</permission>
+			  <permission>RestComm:*:Recordings</permission>
+			  <permission>RestComm:*:Sandboxes</permission>
+			  <permission>RestComm:*:ShortCodes</permission>
+			  <permission>RestComm:*:SmsMessages</permission>
+			  <permission>RestComm:*:Transcriptions</permission>
+			</role>
+		</security-roles>
 	</runtime-settings>
 
 	<dao-manager class="org.mobicents.servlet.sip.restcomm.dao.mybatis.MybatisDaoManager">

@@ -143,12 +143,14 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 	final Sid sid = readSid(map.get("sid"));
 	final DateTime dateCreated = readDateTime(map.get("date_created"));
 	final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+	final String emailAddress = readString(map.get("email_address"));
 	final String friendlyName = readString(map.get("friendly_name"));
 	final Account.Type type = readAccountType(map.get("type"));
 	final Account.Status status = readAccountStatus(map.get("status"));
 	final String authToken = readString(map.get("auth_token"));
+	final String role = readString(map.get("role"));
 	final URI uri = readUri(map.get("uri"));
-    return new Account(sid, dateCreated, dateUpdated, friendlyName, type, status, authToken, uri);
+    return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, type, status, authToken, role, uri);
   }
   
   private Map<String, Object> toMap(final Account account) {
@@ -156,10 +158,12 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     map.put("sid", writeSid(account.getSid()));
     map.put("date_created", writeDateTime(account.getDateCreated()));
     map.put("date_updated", writeDateTime(account.getDateUpdated()));
+    map.put("email_address", account.getEmailAddress());
     map.put("friendly_name", account.getFriendlyName());
     map.put("type", writeAccountType(account.getType()));
     map.put("status", writeAccountStatus(account.getStatus()));
     map.put("auth_token", account.getAuthToken());
+    map.put("role", account.getRole());
     map.put("uri", writeUri(account.getUri()));
     return map;
   }

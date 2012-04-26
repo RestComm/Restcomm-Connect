@@ -20,8 +20,6 @@ import org.mobicents.servlet.sip.restcomm.ShortCode;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -52,10 +50,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeSmsFallbackUrl(shortCode.getSmsFallbackUrl(), writer);
     writeSmsFallbackMethod(shortCode.getSmsFallbackMethod(), writer);
     writeUri(shortCode.getUri(), writer);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
   
   private void writeShortCode(final String shortCode, final HierarchicalStreamWriter writer) {

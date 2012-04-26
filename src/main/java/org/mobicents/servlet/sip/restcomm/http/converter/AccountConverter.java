@@ -20,8 +20,6 @@ import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -58,10 +56,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     final StringBuilder buffer = new StringBuilder();
     buffer.append("/").append(apiVersion).append("/Accounts/").append(account.getSid().toString());
     return buffer.toString();
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
   
   private void writeAuthToken(final Account account, final HierarchicalStreamWriter writer) {

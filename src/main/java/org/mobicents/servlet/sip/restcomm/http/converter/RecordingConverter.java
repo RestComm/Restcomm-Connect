@@ -20,8 +20,6 @@ import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -48,9 +46,5 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeDuration(recording.getDuration(), writer);
     writeApiVersion(recording.getApiVersion(), writer);
     writeUri(recording.getUri(), writer);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
 }

@@ -29,22 +29,27 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final Sid sid;
   private final DateTime dateCreated;
   private final DateTime dateUpdated;
+  private final String emailAddress;
   private final String friendlyName;
   private final Type type;
   private final Status status;
   private final String authToken;
+  private final String role;
   private final URI uri;
   
-  public Account(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
-      final Type type, final Status status, final String authToken, final URI uri) {
+  public Account(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String emailAddress,
+      final String friendlyName, final Type type, final Status status, final String authToken, final String role,
+      final URI uri) {
     super();
     this.sid = sid;
     this.dateCreated = dateCreated;
     this.dateUpdated = dateUpdated;
+    this.emailAddress = emailAddress;
     this.friendlyName = friendlyName;
     this.type = type;
     this.status = status;
     this.authToken = authToken;
+    this.role = role;
     this.uri = uri;
   }
 
@@ -58,6 +63,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   
   public DateTime getDateUpdated() {
     return dateUpdated;
+  }
+  
+  public String getEmailAddress() {
+    return emailAddress;
   }
   
   public String getFriendlyName() {
@@ -76,28 +85,36 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return authToken;
   }
   
+  public String getRole() {
+    return role;
+  }
+  
   public URI getUri() {
     return uri;
   }
   
+  public Account setEmailAddress(final String emailAddress) {
+    return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, type, status, authToken, role, uri);
+  }
+  
   public Account setFriendlyName(final String friendlyName) {
-    return new Account(sid, dateCreated, DateTime.now(), friendlyName, type, status, authToken, uri);
+    return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, type, status, authToken, role, uri);
   }
   
   public Account setType(final Type type) {
-    return new Account(sid, dateCreated, DateTime.now(), friendlyName, type, status, authToken, uri);
+    return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, type, status, authToken, role, uri);
   }
   
   public Account setStatus(final Status status) {
-    return new Account(sid, dateCreated, DateTime.now(), friendlyName, type, status, authToken, uri);
+    return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, type, status, authToken, role, uri);
   }
   
   public Account setAuthToken(final String authToken) {
-    return new Account(sid, dateCreated, DateTime.now(), friendlyName, type, status, authToken, uri);
+    return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, type, status, authToken, role, uri);
   }
   
-  public Account setUri(final URI uri) {
-    return new Account(sid, dateCreated, DateTime.now(), friendlyName, type, status, authToken, uri);
+  public Account setRole(final String role) {
+    return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, type, status, authToken, role, uri);
   }
   
   public enum Status {

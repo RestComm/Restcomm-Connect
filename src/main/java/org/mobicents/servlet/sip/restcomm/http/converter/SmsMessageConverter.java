@@ -21,8 +21,6 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.SmsMessage;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
@@ -54,10 +52,6 @@ public class SmsMessageConverter extends AbstractConverter {
     writePrice(smsMessage.getPrice(), writer);
     writeApiVersion(smsMessage.getApiVersion(), writer);
     writeUri(smsMessage.getUri(), writer);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
-    return null;
   }
   
   private void writeBody(final String body, final HierarchicalStreamWriter writer) {
