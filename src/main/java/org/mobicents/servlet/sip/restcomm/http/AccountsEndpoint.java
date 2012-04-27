@@ -81,7 +81,7 @@ import com.thoughtworks.xstream.XStream;
     final String authToken = new Md5Hash(password).toString();
     final String role = data.getFirst("Role");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append("/2012-04-24/Accounts/").append(sid.toString());
+    buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
     final URI uri = URI.create(buffer.toString());
     return new Account(sid, now, now, emailAddress, friendlyName, type, status, authToken, role, uri);
   }

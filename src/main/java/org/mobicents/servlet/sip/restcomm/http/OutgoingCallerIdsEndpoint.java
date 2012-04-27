@@ -79,7 +79,8 @@ import com.thoughtworks.xstream.XStream;
       friendlyName = data.getFirst("FriendlyName");
     }
     final StringBuilder buffer = new StringBuilder();
-    buffer.append("/2012-04-24/Accounts/").append(accountSid).append("/OutgoingCallerIds/").append(sid.toString());
+    buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(accountSid.toString())
+        .append("/OutgoingCallerIds/").append(sid.toString());
     final URI uri = URI.create(buffer.toString());
     return new OutgoingCallerId(sid, now, now, friendlyName, accountSid,
         phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164), uri);
@@ -127,7 +128,7 @@ import com.thoughtworks.xstream.XStream;
     try { secure(new Sid(accountSid), "RestComm:Modify:OutgoingCallerIds"); } 
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     if(data.containsKey("FriendlyName")) {
-       OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
+      OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
       if(outgoingCallerId != null) {
         outgoingCallerId = outgoingCallerId.setFriendlyName(data.getFirst("FriendlyName"));
         dao.updateOutgoingCallerId(outgoingCallerId);
