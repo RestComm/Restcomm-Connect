@@ -49,6 +49,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.insert(namespace + "addClient", toMap(client));
+      session.commit();
     } finally {
       session.close();
     }
@@ -106,6 +107,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.delete(selector, sid.toString());
+      session.commit();
     } finally {
       session.close();
     }
@@ -115,6 +117,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.update(namespace + "updateClient", toMap(client));
+      session.commit();
     } finally {
       session.close();
     }

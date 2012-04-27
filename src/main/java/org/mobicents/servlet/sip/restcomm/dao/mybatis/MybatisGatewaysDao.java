@@ -45,6 +45,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.insert(namespace + "addGateway", toMap(gateway));
+      session.commit();
     } finally {
       session.close();
     }
@@ -71,6 +72,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.delete(namespace + "removeGateway", name);
+      session.commit();
     } finally {
       session.close();
     }
@@ -80,6 +82,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.update(namespace + "updateGateway", toMap(gateway));
+      session.commit();
     } finally {
       session.close();
     }

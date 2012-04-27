@@ -24,13 +24,17 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class EFaxService implements FaxService {
+@ThreadSafe public final class EFaxService implements FaxService, Runnable {
   public EFaxService() {
     super();
   }
   
   @Override public void configure(final Configuration configuration) {
     
+  }
+  
+  @Override public void run() {
+	    
   }
 
   @Override public void start() throws RuntimeException {

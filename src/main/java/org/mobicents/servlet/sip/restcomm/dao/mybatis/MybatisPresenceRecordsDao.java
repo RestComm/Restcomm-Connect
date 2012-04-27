@@ -46,6 +46,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.insert(namespace + "addPresenceRecord", toMap(record));
+      session.commit();
     } finally {
       session.close();
     }
@@ -98,13 +99,20 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.delete(selector, parameter);
+      session.commit();
     } finally {
       session.close();
     }
   }
 
   @Override public void updatePresenceRecord(final PresenceRecord record) {
-    
+    final SqlSession session = sessions.openSession();
+    try {
+      session.update(namespace + "updatePresenceRecord", toMap(record));
+      session.commit();
+    } finally {
+      session.close();
+    }
   }
   
   private Map<String, Object> toMap(final PresenceRecord record) {

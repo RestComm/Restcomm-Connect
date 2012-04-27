@@ -49,6 +49,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.insert(namespace + "addOutgoingCallerId", toMap(outgoingCallerId));
+      session.commit();
     } finally {
       session.close();
     }
@@ -87,18 +88,18 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
   }
 
   @Override public void removeOutgoingCallerId(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.delete(namespace + "removeOutgoingCallerId", sid.toString());
-    } finally {
-      session.close();
-    }
+    removeOutgoingCallerIds(namespace + "removeOutgoingCallerId", sid);
   }
   
   @Override public void removeOutgoingCallerIds(final Sid accountSid) {
+    removeOutgoingCallerIds(namespace + "removeOutgoingCallerIds", accountSid);
+  }
+  
+  private void removeOutgoingCallerIds(final String selector, final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      session.delete(namespace + "removeOutgoingCallerIds", accountSid.toString());
+      session.delete(selector, sid.toString());
+      session.commit();
     } finally {
       session.close();
     }
@@ -108,6 +109,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.update(namespace + "updateOutgoingCallerId", toMap(outgoingCallerId));
+      session.commit();
     } finally {
       session.close();
     }

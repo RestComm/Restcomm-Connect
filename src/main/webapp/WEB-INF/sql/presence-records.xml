@@ -29,7 +29,7 @@
     DELETE FROM "restcomm_presence_records" WHERE "address_of_record"=#{address_of_record};
   </delete>
   
-  <update id="updateClient" parameterType="map">
+  <update id="updatePresenceRecord" parameterType="map">
     UPDATE "restcomm_presence_records" SET "ttl"=#{ttl}, "expires"=#{expires} WHERE "address_of_record"=#{address_of_record} AND "uri"=#{uri};
   </update>
 </mapper>

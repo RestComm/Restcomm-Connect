@@ -78,7 +78,7 @@ import com.thoughtworks.xstream.XStream;
   }
   
   @Path("/{sid}")
-  @DELETE Response deleteClient(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  @DELETE public Response deleteClient(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
     try { secure(new Sid(accountSid), "RestComm:Delete:Clients"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     dao.removeClient(new Sid(sid));
@@ -86,7 +86,7 @@ import com.thoughtworks.xstream.XStream;
   }
   
   @Path("/{sid}")
-  @GET Response getClient(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  @GET public Response getClient(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
     try { secure(new Sid(accountSid), "RestComm:Read:Clients"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final Client client = dao.getClient(new Sid(sid));
@@ -97,7 +97,7 @@ import com.thoughtworks.xstream.XStream;
     }
   }
   
-  @GET Response getClients(@PathParam("accountSid") String accountSid) {
+  @GET public Response getClients(@PathParam("accountSid") String accountSid) {
     try { secure(new Sid(accountSid), "RestComm:Read:Clients"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Client> clients = dao.getClients(new Sid(accountSid));

@@ -47,6 +47,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.insert(namespace + "addAvailablePhoneNumber", toMap(availablePhoneNumber));
+      session.commit();
     } finally {
       session.close();
     }
@@ -121,6 +122,7 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final SqlSession session = sessions.openSession();
     try {
       session.delete(namespace + "removeAvailablePhoneNumber", phoneNumber);
+      session.commit();
     } finally {
       session.close();
     }

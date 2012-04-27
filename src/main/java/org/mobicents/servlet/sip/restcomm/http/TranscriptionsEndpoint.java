@@ -59,7 +59,7 @@ import com.thoughtworks.xstream.XStream;
   }
   
   @Path("/{sid}")
-  @DELETE Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  @DELETE public Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
     try { secure(new Sid(accountSid), "RestComm:Delete:Transcriptions"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     dao.removeTranscription(new Sid(sid));
@@ -67,7 +67,7 @@ import com.thoughtworks.xstream.XStream;
   }
   
   @Path("/{sid}")
-  @GET Response getTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  @GET public Response getTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
     try { secure(new Sid(accountSid), "RestComm:Read:Transcriptions"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final Transcription transcription = dao.getTranscription(new Sid(sid));
@@ -78,7 +78,7 @@ import com.thoughtworks.xstream.XStream;
     }
   }
   
-  @GET Response getTranscriptions(@PathParam("accountSid") String accountSid) {
+  @GET public Response getTranscriptions(@PathParam("accountSid") String accountSid) {
     try { secure(new Sid(accountSid), "RestComm:Read:Transcriptions"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
