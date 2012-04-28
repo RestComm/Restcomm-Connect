@@ -28,6 +28,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -183,18 +184,34 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
 	}
   }
   
-  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  @Override public synchronized void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
-    if(Call.Status.RINGING == call.getStatus()) {
-      try {
-		call.answer();
-	  } catch(final CallException exception) {
+    final Call.Status status = call.getStatus();
+    try {
+      if(Call.Status.RINGING == status) {
+        call.answer();
+      } else if(Call.Status.QUEUED == status) {
+        call.addObserver(new CallObserver() {
+		    @Override public void onStatusChanged(Call call) {
+			  synchronized(RcmlTagStrategy.this) {
+				call.removeObserver(this);
+			    notify();
+			  }
+			}
+        });
+        call.dial();
+        try { wait(); } catch(final InterruptedException ignored) { }
+        if(Call.Status.IN_PROGRESS != call.getStatus()) {
+          interpreter.finish();
+          throw new TagStrategyException("The call is " + call.getStatus().toString());
+        }
+      }
+    } catch(final CallException exception) {
 		interpreter.failed();
 		interpreter.notify(context, Notification.ERROR, 12400);
 	    throw new TagStrategyException(exception);
-	  }
-    }
+	}
   }
   
   protected List<URI> pause(final int seconds) {

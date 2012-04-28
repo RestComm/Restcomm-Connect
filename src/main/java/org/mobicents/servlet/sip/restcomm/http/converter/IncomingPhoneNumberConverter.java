@@ -64,13 +64,17 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   
   private void writeSmsApplicationSid(final Sid smsApplicationSid, final HierarchicalStreamWriter writer) {
     writer.startNode("SmsApplicationSid");
-    writer.setValue(smsApplicationSid.toString());
+    if(smsApplicationSid != null) {
+      writer.setValue(smsApplicationSid.toString());
+    }
     writer.endNode();
   }
   
   private void writeVoiceApplicationSid(final Sid voiceApplicationSid, final HierarchicalStreamWriter writer) {
     writer.startNode("VoiceApplicationSid");
-    writer.setValue(voiceApplicationSid.toString());
+    if(voiceApplicationSid != null) {
+      writer.setValue(voiceApplicationSid.toString());
+    }
     writer.endNode();
   }
 }

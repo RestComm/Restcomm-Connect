@@ -80,7 +80,7 @@ public abstract class AbstractEndpoint {
   protected URI getUrl(final String name, final MultivaluedMap<String, String> data) {
     URI uri = null;
     if(data.containsKey(name)) {
-      URI.create(data.getFirst(name));
+      uri = URI.create(data.getFirst(name));
     }
     return uri;
   }

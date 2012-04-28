@@ -80,6 +80,21 @@ import org.mobicents.servlet.sip.restcomm.callmanager.Call;
     this.voiceFallbackMethod = application.getVoiceFallbackMethod();
   }
   
+  public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI voiceUrl,
+      final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
+      final Call call) {
+    super();
+    this.application = null;
+    this.incomingPhoneNumber = null;
+    this.call = call;
+    this.accountSid = accountSid;
+    this.apiVersion = apiVersion;
+    this.voiceUrl = voiceUrl;
+    this.voiceMethod = voiceMethod;
+    this.voiceFallbackUrl = voiceFallbackUrl;
+    this.voiceFallbackMethod = voiceFallbackMethod;
+  }
+  
   public Sid getAccountSid() {
     return accountSid;
   }

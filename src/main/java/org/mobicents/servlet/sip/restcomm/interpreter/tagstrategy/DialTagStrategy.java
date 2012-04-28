@@ -26,6 +26,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -37,6 +41,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceObserver;
+import org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceRecord;
+import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -44,7 +50,10 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Client;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Number;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Uri;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Beep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.CallerId;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.EndConferenceOnExit;
@@ -65,7 +74,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;
   private final PhoneNumberUtil phoneNumberUtil;
-  
+  private volatile boolean forking;
   private Call outboundCall;
   
   private URI action;
@@ -76,6 +85,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   private PhoneNumber callerId;
   private URI ringbackTone;
   private boolean record;
+  private Sid recordingSid;
   
   public DialTagStrategy() {
     super();
@@ -85,33 +95,33 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     conferenceCenter = services.get(ConferenceCenter.class);
     phoneNumberUtil = PhoneNumberUtil.getInstance();
     ringbackTone = URI.create("file://" + configuration.getString("ringback-audio-file"));
+    forking = false;
   }
   
-  private void bridge(final Call call, final PhoneNumber to) throws CallManagerException, CallException {
-    final String sender = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
-	final String recipient = phoneNumberUtil.format(to, PhoneNumberFormat.E164);
-	final String name = new StringBuilder().append(sender).append(":").append(recipient).toString();
-	final Conference bridge = conferenceCenter.getConference(name);
+  private synchronized void bridge(final Call call, final PhoneNumber to) throws CallManagerException, CallException {
+    final String caller = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
+	final String callee = phoneNumberUtil.format(to, PhoneNumberFormat.E164);
+	final Conference bridge = conferenceCenter.getConference(call.getSid().toString());
 	final List<URI> ringbackAudioFiles = new ArrayList<URI>();
 	ringbackAudioFiles.add(ringbackTone);
 	bridge.setBackgroundMusic(ringbackAudioFiles);
 	bridge.playBackgroundMusic();
 	call.addObserver(this);
 	bridge.addParticipant(call);
-	outboundCall = callManager.createCall(sender, recipient);
+	outboundCall = callManager.createExternalCall(caller, callee);
     outboundCall.addObserver(this);
     outboundCall.dial();
-    try { synchronized(this) { wait(TimeUtils.SECOND_IN_MILLIS * timeout); } }
+    try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
     catch(final InterruptedException ignored) { }
     if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
       bridge.stopBackgroundMusic();
       bridge.addParticipant(outboundCall);
       if(record) {
-        final Sid sid = Sid.generate(Sid.Type.RECORDING);
-        final URI destination = toRecordingPath(sid);
+        recordingSid = Sid.generate(Sid.Type.RECORDING);
+        final URI destination = toRecordingPath(recordingSid);
         bridge.recordAudio(destination, TimeUtils.SECOND_IN_MILLIS * timeLimit);
       }
-      try { synchronized(this) { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); } }
+      try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
       catch(final InterruptedException ignored) { }
       if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
         outboundCall.removeObserver(this);
@@ -122,18 +132,35 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
       outboundCall.cancel();
     }
     call.removeObserver(this);
-    conferenceCenter.removeConference(name);
+    conferenceCenter.removeConference(call.getSid().toString());
+  }
+  
+  private void conference(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+    final RcmlTag tag) throws TagStrategyException {
+    final String name = tag.getText();
+    final boolean muted = getMuted(interpreter, context, tag);
+    final boolean beep = getBeep(interpreter, context, tag);
+    final boolean startConferenceOnEnter = getStartConferenceOnEnter(interpreter, context, tag);
+    final boolean endConferenceOnExit = getEndConferenceOnExit(interpreter, context, tag);
+    final URI waitUrl = getWaitUrl(interpreter, context, tag);
+    final String waitMethod = getWaitMethod(interpreter, context, tag);
+    final int maxParticipants = getMaxParticipants(interpreter, context, tag);
+    join(name, muted, beep, startConferenceOnEnter, endConferenceOnExit, waitUrl,
+        waitMethod, maxParticipants, context.getCall());
   }
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
 	try {
 	  final Call call = context.getCall();
+	  final DateTime start = DateTime.now();
 	  final String text = tag.getText();
+	  String dialStatus = null;
 	  if(text != null && !text.isEmpty()) {
 	    try {
 		  final PhoneNumber to = phoneNumberUtil.parse(text, "US");
 		  bridge(call, to);
+		  dialStatus = outboundCall.getStatus().toString();
 		} catch(final NumberParseException exception) {
 		  interpreter.notify(context, Notification.WARNING, 13223);
 		}
@@ -141,24 +168,85 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
 	    final List<Tag> children = tag.getChildren();
 	    if(hasConferenceTag(children)) {
 	      final RcmlTag conference = (RcmlTag)getConferenceTag(children);
-	      final String name = conference.getText();
-	      final boolean muted = getMuted(interpreter, context, conference);
-	      final boolean beep = getBeep(interpreter, context, conference);
-	      final boolean startConferenceOnEnter = getStartConferenceOnEnter(interpreter, context, conference);
-	      final boolean endConferenceOnExit = getEndConferenceOnExit(interpreter, context, conference);
-	      final URI waitUrl = getWaitUrl(interpreter, context, conference);
-	      final String waitMethod = getWaitMethod(interpreter, context, conference);
-	      final int maxParticipants = getMaxParticipants(interpreter, context, conference);
-	      join(name, muted, beep, startConferenceOnEnter, endConferenceOnExit, waitUrl,
-	          waitMethod, maxParticipants, call);
+	      conference(interpreter, context, conference);
+	      dialStatus = "completed";
 	    } else {
-	      
+	      final List<Call> calls = getCalls(children);
+	      fork(call, calls);
+	      dialStatus = outboundCall.getStatus().toString();
 	    }
+	  }
+	  final DateTime finish = DateTime.now();
+	  if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
+	    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+	    parameters.add(new BasicNameValuePair("DialCallStatus", dialStatus));
+	    if(outboundCall != null) {
+	      parameters.add(new BasicNameValuePair("DialCallSid", outboundCall.getSid().toString()));
+	    }
+	    parameters.add(new BasicNameValuePair("DialCallDuration",
+	        Long.toString(finish.minus(start.getMillis()).getMillis() / TimeUtils.SECOND_IN_MILLIS)));
+	    if(record) {
+	      parameters.add(new BasicNameValuePair("RecordingUrl", toRecordingPath(recordingSid).toString()));
+	    }
+	    interpreter.load(action, method, parameters);
+        interpreter.redirect();
 	  }
     } catch(final Exception exception) {
       interpreter.failed();
   	  interpreter.notify(context, Notification.ERROR, 12400);
       throw new TagStrategyException(exception);
+    }
+  }
+  
+  private synchronized void fork(final Call call, final List<Call> calls) throws CallException {
+    final Conference bridge = conferenceCenter.getConference(call.getSid().toString());
+	final List<URI> ringbackAudioFiles = new ArrayList<URI>();
+	ringbackAudioFiles.add(ringbackTone);
+	bridge.setBackgroundMusic(ringbackAudioFiles);
+	bridge.playBackgroundMusic();
+	call.addObserver(this);
+	bridge.addParticipant(call);
+	forking = true;
+    for(final Call forkedCall : calls) {
+      if(Call.Status.QUEUED == forkedCall.getStatus()) {
+    	forkedCall.addObserver(this);
+        forkedCall.dial();
+      }
+    }
+    try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
+    catch(final InterruptedException ignored) { }
+    for(final Call forkedCall : calls) {
+      if(forkedCall != outboundCall) {
+        forkedCall.removeObserver(this);
+        if(Call.Status.QUEUED == forkedCall.getStatus()) {
+          forkedCall.cancel();
+        } else if(Call.Status.IN_PROGRESS == forkedCall.getStatus()) {
+          forkedCall.hangup();
+        }
+      }
+    }
+    forking = false;
+    if(outboundCall != null) {
+      if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
+        bridge.stopBackgroundMusic();
+        bridge.addParticipant(outboundCall);
+        if(record) {
+          recordingSid = Sid.generate(Sid.Type.RECORDING);
+          final URI destination = toRecordingPath(recordingSid);
+          bridge.recordAudio(destination, TimeUtils.SECOND_IN_MILLIS * timeLimit);
+        }
+        try { synchronized(this) { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); } }
+        catch(final InterruptedException ignored) { }
+        if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
+          outboundCall.removeObserver(this);
+          outboundCall.hangup();
+        }
+      } else if(Call.Status.QUEUED == outboundCall.getStatus()) {
+        outboundCall.removeObserver(this);
+        outboundCall.cancel();
+      }
+      call.removeObserver(this);
+      conferenceCenter.removeConference(call.getSid().toString());
     }
   }
   
@@ -176,6 +264,46 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     } else {
       return true;
     }
+  }
+  
+  private List<Call> getCalls(final List<Tag> tags) throws CallManagerException {
+    final String caller = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
+    final List<Call> calls = new ArrayList<Call>();
+    for(final Tag tag : tags) {
+      if(Client.NAME.equals(tag.getName())) {
+        calls.addAll(getClients(caller, tag));
+      } else if(Uri.NAME.equals(tag.getName())) {
+        final String uri = tag.getText();
+        if(uri != null) {
+          calls.add(callManager.createCall(caller, uri));
+        }
+      } else if(Number.NAME.equals(tag.getName())) {
+        final String number = tag.getText();
+        if(number != null) {
+          try { 
+			final PhoneNumber callee = phoneNumberUtil.parse(number, "US");
+			calls.add(callManager.createExternalCall(caller,
+			    phoneNumberUtil.format(callee, PhoneNumberFormat.E164)));
+		  } catch (NumberParseException ignored) { }
+        }
+      }
+    }
+    return calls;
+  }
+  
+  private List<Call> getClients(final String caller, final Tag client) throws CallManagerException {
+    final List<Call> calls = new ArrayList<Call>();
+    final String user = client.getText();
+    if(user != null) {
+      final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
+      final List<PresenceRecord> records = dao.getPresenceRecordsByUser(user);
+      for(final PresenceRecord record : records) {
+        if(record.getExpires().isAfterNow()) {
+          calls.add(callManager.createCall(caller, record.getUri()));
+        }
+      }
+    }
+    return calls;
   }
   
   private Tag getConferenceTag(final List<Tag> tags) {
@@ -440,9 +568,16 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
   
   @Override synchronized public void onStatusChanged(final Call call) {
     final Call.Status status = call.getStatus();
-    if((Call.Status.IN_PROGRESS == call.getStatus() && Call.Direction.OUTBOUND_DIAL == call.getDirection()) ||
-        Call.Status.CANCELLED == status || Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
-      notify();
+    if(forking) {
+      if(Call.Status.IN_PROGRESS == call.getStatus()) {
+        outboundCall = call;
+        notify();
+      }
+    } else {
+      if((Call.Status.IN_PROGRESS == call.getStatus() && Call.Direction.OUTBOUND_DIAL == call.getDirection()) ||
+          Call.Status.CANCELLED == status || Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
+        notify();
+      }
     }
   }
   

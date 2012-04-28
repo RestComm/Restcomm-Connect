@@ -7,10 +7,10 @@
   <insert id="addIncomingPhoneNumber" parameterType="map">
     INSERT INTO "restcomm_incoming_phone_numbers" ("sid", "date_created", "date_updated", "friendly_name", "account_sid", "phone_number", "api_version",
     "voice_caller_id_lookup", "voice_url", "voice_method", "voice_fallback_url", "voice_fallback_method", "status_callback", "status_callback_method",
-    "voice_application_sid", "sms_url", "sms_method", "sms_fallback_url", "sms_fallback_method", "sms_application_sid", "url") VALUES(#{sid},
+    "voice_application_sid", "sms_url", "sms_method", "sms_fallback_url", "sms_fallback_method", "sms_application_sid", "uri") VALUES(#{sid},
     #{date_created}, #{date_updated}, #{friendly_name}, #{account_sid}, #{phone_number}, #{api_version}, #{voice_caller_id_lookup},
     #{voice_url}, #{voice_method}, #{voice_fallback_url}, #{voice_fallback_method}, #{status_callback}, #{status_callback_method},
-    #{voice_application_sid}, #{sms_url}, #{sms_method}, #{sms_fallback_url}, #{sms_fallback_method}, #{sms_application_sid}, #{url});
+    #{voice_application_sid}, #{sms_url}, #{sms_method}, #{sms_fallback_url}, #{sms_fallback_method}, #{sms_application_sid}, #{uri});
   </insert>
   
   <select id="getIncomingPhoneNumber" parameterType="string" resultType="hashmap">

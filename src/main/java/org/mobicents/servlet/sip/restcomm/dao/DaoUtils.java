@@ -147,10 +147,18 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   }
   
   public static String writeSid(final Sid sid) {
-    return sid.toString();
+    if(sid != null) {
+      return sid.toString();
+    } else {
+      return null;
+    }
   }
   
   public static String writeUri(final URI uri) {
-    return uri.toString();
+    if(uri != null) {
+      return uri.toString();
+    } else {
+      return null;
+    }
   }
 }

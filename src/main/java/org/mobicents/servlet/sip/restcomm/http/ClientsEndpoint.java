@@ -130,7 +130,9 @@ import com.thoughtworks.xstream.XStream;
     try { validate(data); } catch(final NullPointerException exception) { 
     	return status(BAD_REQUEST).entity(exception.getMessage()).build();
     }
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(createFrom(new Sid(accountSid), data))).build();
+    final Client client = createFrom(new Sid(accountSid), data);
+    dao.addClient(client);
+    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(client)).build();
   }
   
   @Path("/{sid}")

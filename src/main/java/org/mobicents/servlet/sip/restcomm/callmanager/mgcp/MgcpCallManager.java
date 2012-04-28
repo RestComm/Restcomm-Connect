@@ -48,6 +48,10 @@ import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -71,13 +75,23 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
     super();
   }
   
-  @Override public Call createCall(final String from, final String to) throws CallManagerException {
+  @Override public Call createExternalCall(final String from, final String to) throws CallManagerException {
     final SipURI fromUri = sipFactory.createSipURI(from, proxyUri.getHost());
     final SipURI toUri = sipFactory.createSipURI(to, proxyUri.getHost());
     return createCall(fromUri, toUri);
   }
   
-  @Override public Call createCall(URI from, URI to) throws CallManagerException {
+  @Override public Call createCall(final String from, final String to) throws CallManagerException {
+    try {
+      final URI fromUri = sipFactory.createURI(from);
+      final URI toUri = sipFactory.createURI(to);
+      return createCall(fromUri, toUri);
+    } catch(final Exception exception) {
+      throw new CallManagerException(exception);
+    }
+  }
+  
+  private Call createCall(URI from, URI to) throws CallManagerException {
     final SipServletRequest invite = invite(from, to);
     final MgcpServer server = servers.getMediaServer();
     final MgcpCall call = new MgcpCall(invite, server);
@@ -175,7 +189,14 @@ public final class MgcpCallManager extends SipServlet implements CallManager {
   private IncomingPhoneNumber getIncomingPhoneNumber(final SipServletRequest invite) {
     final SipURI uri = (SipURI)invite.getTo().getURI();
     final String phoneNumber = uri.getUser();
-    return incomingPhoneNumbersDao.getIncomingPhoneNumber(phoneNumber);
+	try {
+	  final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+	  final String to = phoneNumberUtil.format(phoneNumberUtil.parse(phoneNumber, "US"),
+	      PhoneNumberFormat.E164);
+	  return incomingPhoneNumbersDao.getIncomingPhoneNumber(to);
+	} catch(final NumberParseException ignored) {
+	  return null;
+	}
   }
   
   private Application getVoiceApplication(final IncomingPhoneNumber incomingPhoneNumber) {

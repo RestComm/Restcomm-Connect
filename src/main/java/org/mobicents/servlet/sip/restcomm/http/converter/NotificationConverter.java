@@ -81,7 +81,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   
   private void writeMessageText(final String messageText, final HierarchicalStreamWriter writer) {
     writer.startNode("MessageText");
-    writer.setValue(messageText);
+    if(messageText != null) {
+      writer.setValue(messageText);
+    }
     writer.endNode();
   }
   
@@ -105,19 +107,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   
   private void writeRequestVariables(final String requestVariables, final HierarchicalStreamWriter writer) {
     writer.startNode("RequestVariables");
-    writer.setValue(requestVariables);
+    if(requestVariables != null) {
+      writer.setValue(requestVariables);
+    }
     writer.endNode();
   }
   
   private void writeResponseHeaders(final String responseHeaders, final HierarchicalStreamWriter writer) {
     writer.startNode("ResponseHeaders");
-    writer.setValue(responseHeaders);
+    if(responseHeaders != null) {
+      writer.setValue(responseHeaders);
+    }
     writer.endNode();
   }
   
   private void writeResponseBody(final String responseBody, final HierarchicalStreamWriter writer) {
     writer.startNode("ResponseBody");
-    writer.setValue(responseBody);
+    if(responseBody != null) {
+      writer.setValue(responseBody);
+    }
     writer.endNode();
   }
 }

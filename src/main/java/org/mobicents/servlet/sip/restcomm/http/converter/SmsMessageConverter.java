@@ -56,7 +56,9 @@ public class SmsMessageConverter extends AbstractConverter {
   
   private void writeBody(final String body, final HierarchicalStreamWriter writer) {
     writer.startNode("Body");
-    writer.setValue(body);
+    if(body != null) {
+      writer.setValue(body);
+    }
     writer.endNode();
   }
   

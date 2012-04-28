@@ -119,7 +119,9 @@ import com.thoughtworks.xstream.XStream;
     try { validate(data); } catch(final NullPointerException exception) { 
     	return status(BAD_REQUEST).entity(exception.getMessage()).build();
     }
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(createFrom(new Sid(accountSid), data))).build();
+    final OutgoingCallerId outgoingCallerId = createFrom(new Sid(accountSid), data);
+    dao.addOutgoingCallerId(outgoingCallerId);
+    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(outgoingCallerId)).build();
   }
   
   @Path("/{sid}")

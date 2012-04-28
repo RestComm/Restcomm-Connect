@@ -20,6 +20,8 @@ import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
+import java.math.BigDecimal;
+import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -37,7 +39,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.sip.restcomm.http.converter.SmsMessageConverter;
-import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
+import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
+
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -47,14 +52,14 @@ import com.thoughtworks.xstream.XStream;
 @Path("/Accounts/{accountSid}/SMS/Messages")
 @NotThreadSafe public final class SmsMessagesEndpoint extends AbstractEndpoint {
   private final SmsMessagesDao dao;
-  private final SpeechSynthesizer synthesizer;
+  private final SmsAggregator aggregator;
   private final XStream xstream;
 
   public SmsMessagesEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getSmsMessagesDao();
-    synthesizer = services.get(SpeechSynthesizer.class);
+    aggregator = services.get(SmsAggregator.class);
     xstream = new XStream();
     xstream.alias("SMSMessages", List.class);
     xstream.alias("SMSMessage", SmsMessage.class);
@@ -83,7 +88,50 @@ import com.thoughtworks.xstream.XStream;
   @POST public Response putSmsMessage(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
     try { secure(new Sid(accountSid), "RestComm:Create:SmsMessages"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    // Send SMS Message.
-    return null;
+    try {
+      validate(data);
+      final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+      final String sender = phoneNumberUtil.format(phoneNumberUtil.parse(data.getFirst("From"), "US"), PhoneNumberFormat.E164);
+      final String recipient = phoneNumberUtil.format(phoneNumberUtil.parse(data.getFirst("To"), "US"), PhoneNumberFormat.E164);
+      final String body = data.getFirst("Body");
+      aggregator.send(sender, recipient, body, null);
+      dao.addSmsMessage(sms(new Sid(accountSid), getApiVersion(data), sender, recipient, body, SmsMessage.Status.SENT,
+          SmsMessage.Direction.OUTBOUND_API));
+      return ok().build();
+    } catch(final Exception exception) { 
+      return status(BAD_REQUEST).entity(exception.getMessage()).build();
+    }
+  }
+  
+  private SmsMessage sms(final Sid accountSid, final String apiVersion, final String sender, final String recipient, final String body,
+      final SmsMessage.Status status, final SmsMessage.Direction direction) {
+    final SmsMessage.Builder builder = SmsMessage.builder();
+    final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
+    builder.setSid(sid);
+    builder.setAccountSid(accountSid);
+    builder.setSender(sender);
+    builder.setRecipient(recipient);
+    builder.setBody(body);
+    builder.setStatus(status);
+    builder.setDirection(direction);
+    builder.setPrice(new BigDecimal(0.00));
+    builder.setApiVersion(apiVersion);
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append(apiVersion).append("/Accounts/");
+    buffer.append(accountSid.toString()).append("/SMS/Messages/");
+    buffer.append(sid.toString());
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
+    return builder.build();
+  }
+  
+  private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
+    if(!data.containsKey("From")) {
+      throw new NullPointerException("From can not be null.");
+    } else if(!data.containsKey("To")) {
+      throw new NullPointerException("To can not be null.");
+    } else if(!data.containsKey("Body")) {
+      throw new NullPointerException("Body can not be null.");
+    }
   }
 }

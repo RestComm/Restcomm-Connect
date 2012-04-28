@@ -65,10 +65,14 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
           final SendServiceSoap_BindingStub service = (SendServiceSoap_BindingStub)locator.getSendServiceSoap();
           service.setHeader(header);
   	      service.sendMessage(request.getTo(), request.getBody(), MessageType.Text);
-  	      request.getObserver().succeeded();
+  	      if(request.getObserver() != null) {
+  	        request.getObserver().succeeded();
+  	      }
         } catch(final Exception exception) {
           logger.error(exception);
-          request.getObserver().failed();
+          if(request.getObserver() != null) {
+            request.getObserver().failed();
+          }
         }
       }
     }

@@ -106,25 +106,33 @@ public abstract class AbstractConverter implements Converter {
   
   protected void writeSmsFallbackUrl(final URI smsFallbackUrl, final HierarchicalStreamWriter writer) {
     writer.startNode("SmsFallbackUrl");
-    writer.setValue(smsFallbackUrl.toString());
+    if(smsFallbackUrl != null) {
+      writer.setValue(smsFallbackUrl.toString());
+    }
     writer.endNode();
   }
   
   protected void writeSmsFallbackMethod(final String smsFallbackMethod, final HierarchicalStreamWriter writer) {
     writer.startNode("SmsFallbackMethod");
-    writer.setValue(smsFallbackMethod);
+    if(smsFallbackMethod != null) {
+      writer.setValue(smsFallbackMethod);
+    }
     writer.endNode();
   }
   
   protected void writeSmsUrl(final URI smsUrl, final HierarchicalStreamWriter writer) {
     writer.startNode("SmsUrl");
-    writer.setValue(smsUrl.toString());
+    if(smsUrl != null) {
+      writer.setValue(smsUrl.toString());
+    }
     writer.endNode();
   }
   
   protected void writeSmsMethod(final String smsMethod, final HierarchicalStreamWriter writer) {
     writer.startNode("SmsMethod");
-    writer.setValue(smsMethod);
+    if(smsMethod != null) {
+      writer.setValue(smsMethod);
+    }
     writer.endNode();
   }
   
@@ -136,13 +144,17 @@ public abstract class AbstractConverter implements Converter {
   
   protected void writeStatusCallback(final URI statusCallback, final HierarchicalStreamWriter writer) {
     writer.startNode("StatusCallback");
-    writer.setValue(statusCallback.toString());
+    if(statusCallback != null) {
+      writer.setValue(statusCallback.toString());
+    }
     writer.endNode();
   }
   
   protected void writeStatusCallbackMethod(final String statusCallbackMethod, final HierarchicalStreamWriter writer) {
     writer.startNode("StatusCallbackMethod");
-    writer.setValue(statusCallbackMethod);
+    if(statusCallbackMethod != null) {
+      writer.setValue(statusCallbackMethod);
+    }
     writer.endNode();
   }
   
@@ -166,25 +178,33 @@ public abstract class AbstractConverter implements Converter {
   
   protected void writeVoiceFallbackMethod(final String voiceFallbackMethod, final HierarchicalStreamWriter writer) {
     writer.startNode("VoiceFallbackMethod");
-    writer.setValue(voiceFallbackMethod);
+    if(voiceFallbackMethod != null) {
+      writer.setValue(voiceFallbackMethod);
+    }
     writer.endNode();
   }
   
   protected void writeVoiceFallbackUrl(final URI voiceFallbackUri, final HierarchicalStreamWriter writer) {
     writer.startNode("VoiceFallbackUrl");
-    writer.setValue(voiceFallbackUri.toString());
+    if(voiceFallbackUri != null) {
+      writer.setValue(voiceFallbackUri.toString());
+    }
     writer.endNode();
   }
   
   protected void writeVoiceMethod(final String voiceMethod, final HierarchicalStreamWriter writer) {
     writer.startNode("VoiceMethod");
-    writer.setValue(voiceMethod);
+    if(voiceMethod != null) {
+      writer.setValue(voiceMethod);
+    }
     writer.endNode();
   }
   
   protected void writeVoiceUrl(final URI voiceUrl, final HierarchicalStreamWriter writer) {
     writer.startNode("VoiceUrl");
-    writer.setValue(voiceUrl.toString());
+    if(voiceUrl != null) {
+      writer.setValue(voiceUrl.toString());
+    }
     writer.endNode();
   }
 }

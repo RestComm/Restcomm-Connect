@@ -59,7 +59,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   
   private void writeTranscriptionText(final String transcriptionText, final HierarchicalStreamWriter writer) {
     writer.startNode("TranscriptionText");
-    writer.setValue(transcriptionText);
+    if(transcriptionText != null) {
+      writer.setValue(transcriptionText);
+    }
     writer.endNode();
   }
 }

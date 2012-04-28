@@ -63,7 +63,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   
   private void writeSmsStatusCallback(final URI smsStatusCallback, final HierarchicalStreamWriter writer) {
     writer.startNode("SmsStatusCallback");
-    writer.setValue(smsStatusCallback.toString());
+    if(smsStatusCallback != null) {
+      writer.setValue(smsStatusCallback.toString());
+    }
     writer.endNode();
   }
 }
