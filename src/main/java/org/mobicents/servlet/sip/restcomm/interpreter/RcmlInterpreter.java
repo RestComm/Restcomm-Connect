@@ -327,7 +327,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   }
   
   private void checkContentType(final String type) throws InterpreterException {
-    if(!"text/xml".equals(type) && !"application/xml".equals(type) && !"text/html".equals(type)) {
+    if(!type.contains("text/xml") && !type.contains("application/xml") && !type.contains("text/html")) {
       throw new InterpreterException("Invalid content type " + type);
     }
   }
