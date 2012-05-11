@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm-docs</artifactId>
-		<version>1.0.0.ALPHA</version>
+		<version>1.0.0.BETA2-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm-docs-sources-mobicents</artifactId>
@@ -19,7 +19,7 @@
 		<ctf.version>${project.version}</ctf.version>
 		<author.email.ivelin>ivelin.atanasoff.ivanov (at) gmail.com</author.email.ivelin>
 		<author.email.jean>jean.deruelle (at) gmail.com</author.email.jean>
-		<author.email.georges>quintan.thomas (at) gmail.com</author.email.georges>
+		<author.email.georges>quintana.thomas (at) gmail.com</author.email.georges>
 	</properties>
 
 	<build>

@@ -7,19 +7,19 @@
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm-docs</artifactId>
-		<version>1.0.0.ALPHA</version>
+		<version>1.0.0.BETA2-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm-docs-sources-jbcp</artifactId>
+	<artifactId>restcomm-docs-sources-telscale</artifactId>
 
 	<properties>
-		<platform.name>JBoss Communications</platform.name>
-		<short.platform.name>JBCP RestComm</short.platform.name>
-		<cmd.platform.name>jbcp-restcomm</cmd.platform.name>
+		<platform.name>TelScale</platform.name>
+		<short.platform.name>TelScale RestComm</short.platform.name>
+		<cmd.platform.name>telscale-restcomm</cmd.platform.name>
 		<ctf.version>${project.version}</ctf.version>
 		<author.email.ivelin>ivelin.atanasoff.ivanov (at) gmail.com</author.email.ivelin>
 		<author.email.jean>jean.deruelle (at) gmail.com</author.email.jean>
-		<author.email.georges>quintan.thomas (at) gmail.com</author.email.georges>
+		<author.email.georges>quintana.thomas (at) gmail.com</author.email.georges>
 	</properties>
 
 	<build>
