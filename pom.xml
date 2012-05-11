@@ -6,7 +6,50 @@
 	<version>1.0.0.BETA2-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>RestComm</name>
-	<description>A Mobicents Restful Communications Framework</description>
+	<description>A Restful Communications Framework</description>
+	<url>http://www.restcomm.org</url>
+
+	<developers>
+		<developer>
+			<id>thomas</id>
+			<name>Thomas Quintan</name>
+			<email>thomas.quintana@gmail.com</email>
+			<organization>TeleStax, Inc.</organization>
+			<organizationUrl>http://www.telestax.com/</organizationUrl>		
+			<timezone>0</timezone>
+		</developer>				
+		<developer>
+			<id>jean.deruelle</id>
+			<name>Jean Deruelle</name>
+			<email>jean.deruelle@gmail.com</email>
+			<organization>TeleStax, Inc</organization>
+			<organizationUrl>http://www.telestax.com/</organizationUrl>
+			<roles>
+				<role>SIP Servlets Project Lead</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>		
+	</developers>
+	<licenses>
+		<license>
+			<name>GNU LESSER GENERAL PUBLIC LICENSE</name>
+			<url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<distributionManagement>
+	    <repository>
+	      <id>mobicents-releases-repository</id>
+	      <name>Mobicents Releases Repository</name>
+	      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+	    </repository>
+	    <snapshotRepository>
+	      <id>mobicents-snapshots-repository</id>
+	      <name>Mobicents Snapshots Repository</name>
+	      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+	    </snapshotRepository>
+	  </distributionManagement>
 
 	<properties>
 		<log4j.version>1.2.16</log4j.version>
@@ -242,7 +285,108 @@
 		</plugins>
 	</build>
 
+<profiles>
+		<profile>
+                        <id>set-git-hash</id>
+                        <build>
+		        <plugins>
+		                <plugin>
+		                  <groupId>org.codehaus.mojo</groupId>
+		                  <artifactId>buildnumber-maven-plugin</artifactId>
+		                  <version>1.0</version>
+		                  <executions>
+		                	<execution>
+				              <phase>validate</phase>
+				              <goals>
+				              	<goal>create</goal>
+				              </goals>
+				        </execution>
+		                  </executions>
+		                  <configuration>
+		                    <doCheck>false</doCheck>
+		                    <doUpdate>false</doUpdate>
+		                  </configuration>
+		                </plugin>
+                        </plugins>
+                        </build>
+                </profile>
+		<profile>
+			<id>maven-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-release-plugin</artifactId>						
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>generate-javadoc</id>
+			<build>
+				<plugins>
+			      <plugin>
+			        <groupId>org.apache.maven.plugins</groupId>
+			        <artifactId>maven-javadoc-plugin</artifactId>
+			        <version>2.7</version>
+			        <configuration>
+			          <nohelp>true</nohelp>
+			        </configuration>
+		            <executions>
+		              <execution>
+		                <id>attach-javadoc</id>
+						<phase>verify</phase>
+		                <goals>
+		                  <goal>jar</goal>
+		                </goals>
+		              </execution>
+		            </executions>
+			      </plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+                      <id>release-sign-artifacts</id>
+                      <activation>
+                        <property>
+                          <name>performRelease</name>
+                          <value>true</value>
+                        </property>
+                      </activation>
+                      <build>
+                        <plugins>
+                          <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-gpg-plugin</artifactId>
+                            <executions>
+                              <execution>
+                                <id>sign-artifacts</id>
+                                <phase>install</phase>
+                                <goals>
+                                  <goal>sign</goal>
+                                </goals>
+                              </execution>
+                            </executions>
+                          </plugin>
+                        </plugins>
+                      </build>
+                    </profile>
+</profiles>
+
 	<repositories>
+		<repository>
+			  <id>mobicents-public-repository-group</id>
+			  <name>Mobicens Public Maven Repository Group</name>
+			  <url>https://oss.sonatype.org/content/groups/public</url>
+			  <layout>default</layout>
+			  <releases>
+			    <enabled>true</enabled>
+			    <updatePolicy>never</updatePolicy>
+			  </releases>
+			  <snapshots>
+			    <enabled>true</enabled>
+			    <updatePolicy>never</updatePolicy>
+			  </snapshots>
+		</repository>
 		<repository>
 			<id>jboss-public-repository-group</id>
 			<name>JBoss Public Maven Repository Group</name>
@@ -260,6 +404,20 @@
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
+			  <id>mobicents-public-repository-group</id>
+			  <name>Mobicens Public Maven Repository Group</name>
+			  <url>https://oss.sonatype.org/content/groups/public</url>
+			  <layout>default</layout>
+			  <releases>
+			    <enabled>true</enabled>
+			    <updatePolicy>never</updatePolicy>
+			  </releases>
+			  <snapshots>
+			    <enabled>true</enabled>
+			    <updatePolicy>never</updatePolicy>
+			  </snapshots>
+		</pluginRepository>
+		<pluginRepository>
 			<id>jboss-public-repository-group</id>
 			<name>JBoss Public Maven Repository Group</name>
 			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
@@ -274,4 +432,10 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
+	
+	<scm>
+                <connection>scm:git:https://code.google.com/p/restcomm/</connection>
+                <developerConnection>scm:git:https://code.google.com/p/restcomm/</developerConnection>
+                <url>https://code.google.com/p/restcomm/</url>
+        </scm>
 </project>
