@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>1.0.0.ALPHA</version>
+	<version>1.0.0.BETA1</version>
 	<packaging>war</packaging>
 	<name>RestComm</name>
 	<description>A Mobicents Restful Communications Framework</description>
@@ -186,6 +186,14 @@
 		    <version>1.0.0</version>
 		    <scope>system</scope>
 		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Esendex.jar</systemPath>
+		</dependency>
+		
+		<dependency>
+		    <groupId>net.interfaxx</groupId>
+		    <artifactId>interfax</artifactId>
+		    <version>1.0.0</version>
+		    <scope>system</scope>
+		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Interfax.jar</systemPath>
 		</dependency>
 		
 		<dependency>

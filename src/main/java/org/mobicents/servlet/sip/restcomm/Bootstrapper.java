@@ -31,6 +31,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.fax.FaxService;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
@@ -92,6 +93,7 @@ public final class Bootstrapper {
       services.set(CallManager.class, callManager);
       services.set(ConferenceCenter.class, getConferenceCenter(serverManager));
       services.set(DaoManager.class, getDaoManager(configuration));
+      services.set(FaxService.class, getFaxService(configuration));
       services.set(SmsAggregator.class, getSmsAggregator(configuration));
       services.set(SpeechRecognizer.class, getSpeechRecognizer(configuration));
       services.set(SpeechSynthesizer.class, getSpeechSynthesizer(configuration));
@@ -118,6 +120,14 @@ public final class Bootstrapper {
     daoManager.configure(configuration.subset("dao-manager"));
     daoManager.start();
     return daoManager;
+  }
+  
+  private static FaxService getFaxService(final Configuration configuration) throws ObjectInstantiationException {
+    final String classpath = configuration.getString("fax-service[@class]");
+    final FaxService faxService = (FaxService)ObjectFactory.getInstance().getObjectInstance(classpath);
+    faxService.configure(configuration.subset("fax-service"));
+    faxService.start();
+    return faxService;
   }
   
   private static SmsAggregator getSmsAggregator(final Configuration configuration) throws ObjectInstantiationException {

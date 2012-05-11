@@ -25,5 +25,5 @@ import org.mobicents.servlet.sip.restcomm.LifeCycle;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface FaxService extends Configurable, LifeCycle {
-  public void send(String from, String to, URI content, FaxServiceObserver observer);
+  public void send(String from, String to, URI content, FaxServiceObserver observer) throws FaxServiceException;
 }

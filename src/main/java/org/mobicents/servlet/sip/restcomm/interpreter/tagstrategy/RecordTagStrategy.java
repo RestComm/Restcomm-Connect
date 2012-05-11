@@ -38,6 +38,7 @@ import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.Transcription;
 import org.mobicents.servlet.sip.restcomm.Transcription.Status;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizerObserver;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
@@ -59,7 +60,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRecognizerObserver {
+@NotThreadSafe public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRecognizerObserver {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private static final Logger logger = Logger.getLogger(RecordTagStrategy.class);
   private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1,12}");
@@ -122,6 +123,7 @@ public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRe
     } catch(final Exception exception) {
       interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);
+      logger.error(exception);
       throw new TagStrategyException(exception);
     }
   }

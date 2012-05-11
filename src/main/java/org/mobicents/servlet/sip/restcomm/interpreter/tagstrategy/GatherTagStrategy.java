@@ -23,8 +23,10 @@ import java.util.regex.Pattern;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
@@ -41,7 +43,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class GatherTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public final class GatherTagStrategy extends RcmlTagStrategy {
+  private static final Logger logger = Logger.getLogger(GatherTagStrategy.class);
   private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1}");
   
   private URI action;
@@ -76,6 +79,7 @@ public final class GatherTagStrategy extends RcmlTagStrategy {
     } catch(final Exception exception) {
       interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);
+      logger.error(exception);
       throw new TagStrategyException(exception);
     }
   }

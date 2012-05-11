@@ -17,6 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -26,7 +27,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class PauseTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public final class PauseTagStrategy extends RcmlTagStrategy {
   private int length;
   
   public PauseTagStrategy() {

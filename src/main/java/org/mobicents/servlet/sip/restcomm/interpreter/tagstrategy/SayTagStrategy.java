@@ -20,7 +20,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.Notification;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -31,7 +33,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class SayTagStrategy extends RcmlTagStrategy  {
+@NotThreadSafe public final class SayTagStrategy extends RcmlTagStrategy  {
+  private static final Logger logger = Logger.getLogger(SayTagStrategy.class);
+
   private String gender;
   private String language;
   private int loop;
@@ -58,6 +62,7 @@ public final class SayTagStrategy extends RcmlTagStrategy  {
 	} catch(final CallException exception) {
 	  interpreter.failed();
 	  interpreter.notify(context, Notification.ERROR, 12400);
+	  logger.error(exception);
 	  throw new TagStrategyException(exception);
 	}
   }

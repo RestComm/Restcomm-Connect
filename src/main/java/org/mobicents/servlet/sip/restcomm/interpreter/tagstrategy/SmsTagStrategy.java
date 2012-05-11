@@ -35,6 +35,7 @@ import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.SmsMessage;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
@@ -55,7 +56,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregatorObserver {
+@NotThreadSafe public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregatorObserver {
   private static final Logger logger = Logger.getLogger(SmsTagStrategy.class);
   private final PhoneNumberUtil phoneNumberUtil;
   private final SmsAggregator smsAggregator;
@@ -99,6 +100,7 @@ public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregat
 	} catch(final Exception exception) {
 	  interpreter.failed();
 	  interpreter.notify(context, Notification.ERROR, 12400);
+	  logger.error(exception);
 	  throw new TagStrategyException(exception);
 	}
   }

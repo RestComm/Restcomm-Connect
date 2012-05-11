@@ -20,5 +20,6 @@ package org.mobicents.servlet.sip.restcomm.fax;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface FaxServiceObserver {
-
+  public void succeeded();
+  public void failed();
 }

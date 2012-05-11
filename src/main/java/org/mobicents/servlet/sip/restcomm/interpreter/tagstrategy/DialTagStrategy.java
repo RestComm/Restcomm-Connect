@@ -28,11 +28,13 @@ import java.util.List;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
@@ -70,7 +72,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class DialTagStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
+@NotThreadSafe public final class DialTagStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
+  private static final Logger logger = Logger.getLogger(DialTagStrategy.class);
+
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;
   private final PhoneNumberUtil phoneNumberUtil;
@@ -194,6 +198,7 @@ public final class DialTagStrategy extends RcmlTagStrategy implements CallObserv
     } catch(final Exception exception) {
       interpreter.failed();
   	  interpreter.notify(context, Notification.ERROR, 12400);
+  	  logger.error(exception);
       throw new TagStrategyException(exception);
     }
   }

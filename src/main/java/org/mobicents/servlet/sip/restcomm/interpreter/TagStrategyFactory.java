@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.DialTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.FaxTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.GatherTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.HangupTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.PauseTagStrategy;
@@ -30,6 +31,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.RejectTagStrat
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.SayTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.SmsTagStrategy;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Dial;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Fax;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Gather;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Hangup;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
@@ -57,6 +59,7 @@ public final class TagStrategyFactory {
     STRATEGIES.put(Redirect.NAME, RedirectTagStrategy.class);
     STRATEGIES.put(Reject.NAME, RejectTagStrategy.class);
     STRATEGIES.put(Pause.NAME, PauseTagStrategy.class);
+    STRATEGIES.put(Fax.NAME, FaxTagStrategy.class);
   }
   
   public TagStrategyFactory() {

@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.fax.FaxService;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
@@ -43,6 +44,8 @@ public final class Janitor {
     mgcpServerManager.shutdown();
     final DaoManager daoManager = services.get(DaoManager.class);
     daoManager.shutdown();
+    final FaxService faxService = services.get(FaxService.class);
+    faxService.shutdown();
     final SmsAggregator smsAggregator = services.get(SmsAggregator.class);
     smsAggregator.shutdown();
     final SpeechRecognizer speechRecognizer = services.get(SpeechRecognizer.class);

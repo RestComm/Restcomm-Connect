@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
@@ -35,7 +37,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class RejectTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public final class RejectTagStrategy extends RcmlTagStrategy {
+  private static final Logger logger = Logger.getLogger(RejectTagStrategy.class);
+
   private final List<URI> rejectAudioFile;
   
   private String reason;
@@ -60,6 +64,7 @@ public final class RejectTagStrategy extends RcmlTagStrategy {
         } catch(final Exception exception) {
           interpreter.failed();
     	  interpreter.notify(context, Notification.ERROR, 12400);
+    	  logger.error(exception);
     	  throw new TagStrategyException(exception);
     	}
         call.hangup();
