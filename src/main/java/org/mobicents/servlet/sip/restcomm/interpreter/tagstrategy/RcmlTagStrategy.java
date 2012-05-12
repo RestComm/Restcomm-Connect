@@ -44,8 +44,13 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Language;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Length;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Loop;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StatusCallback;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Timeout;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -155,6 +160,30 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Voice;
       return "POST";
     }
     return attribute.getValue();
+  }
+  
+  protected PhoneNumber getPhoneNumber(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag, final String attributeName) {
+    final Attribute attribute = tag.getAttribute(attributeName);
+    String value = null;
+    if(attribute != null) {
+      value = attribute.getValue();
+    } else {
+      value = context.getCall().getOriginator();
+    }
+    try { return PhoneNumberUtil.getInstance().parse(value, "US"); }
+    catch(final NumberParseException ignored) { }
+    return null;
+  }
+  
+  protected URI getStatusCallback(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) {
+    final Attribute attribute = tag.getAttribute(StatusCallback.NAME);
+    if(attribute != null) {
+      final String value = attribute.getValue();
+      return URI.create(value);
+    }
+    return null;
   }
   
   protected Integer getTimeout(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,

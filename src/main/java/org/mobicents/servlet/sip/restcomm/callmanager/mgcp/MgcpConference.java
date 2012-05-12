@@ -64,11 +64,12 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   private MgcpIvrEndpoint ivrEndpoint;
   private MgcpConnection ivrOutboundConnection;
   private MgcpConnection ivrInboundConnection;
-  
-  private final List<URI> alertAudioFile;
+
+  private final URI alertAudioFile;
   private List<URI> musicAudioFiles;
   private boolean backgroundMusic;
   private boolean recordAudio;
+  private boolean playingAudio;
 
   public MgcpConference(final String name, final MgcpServer server) {
     super(INIT);
@@ -81,11 +82,9 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     this.observers = new ArrayList<ConferenceObserver>();
     this.server = server;
     this.session = server.createMediaSession();
-    this.alertAudioFile = new ArrayList<URI>();
     final ServiceLocator services = ServiceLocator.getInstance();
     final Configuration configuration = services.get(Configuration.class);
-    final URI uri = URI.create("file://" + configuration.getString("alert-audio-file"));
-    alertAudioFile.add(uri);
+    alertAudioFile = URI.create("file://" + configuration.getString("alert-audio-file"));
     musicAudioFiles = null;
     backgroundMusic = false;
     recordAudio = false;
@@ -102,24 +101,18 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     observers.add(observer);
   }
   
-  public synchronized void alert() {
+  @Override public synchronized void alert() {
     assertState(IN_PROGRESS);
-    ivrEndpoint.play(alertAudioFile, 1);
-    try { wait(); }
-    catch(final InterruptedException ignored) {
-      ivrEndpoint.stop();
-    }
+    play(alertAudioFile);
   }
   
   private void cleanup() {
-    try {
     for(final MgcpCall call : calls.values()) {
       final MgcpCall mgcpCall = (MgcpCall)call;
       mgcpCall.leave(this);
     }
     calls.clear();
     session.destroyConnection(ivrOutboundConnection);
-    }catch(Exception exception) {exception.printStackTrace();}
     try { wait(); }
     catch(final InterruptedException ignored) { }
     ivrOutboundConnection.removeObserver(this);
@@ -156,11 +149,14 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   
   @Override public synchronized void play(final URI audio) {
     assertState(IN_PROGRESS);
-    final List<URI> uri = new ArrayList<URI>();
-    uri.add(audio);
-    ivrEndpoint.play(uri, 1);
-    try { wait(); }
-    catch(final InterruptedException ignored) { ivrEndpoint.stop(); }
+    if(!playingAudio) {
+      playingAudio = true;
+      final List<URI> uri = new ArrayList<URI>();
+      uri.add(audio);
+      ivrEndpoint.play(uri, 1);
+      try { wait(); }
+      catch(final InterruptedException ignored) { ivrEndpoint.stop(); }
+    }
   }
 
   @Override public synchronized void playBackgroundMusic() {
@@ -205,7 +201,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
   
   @Override public Status getStatus() {
-    return Status.valueOf(getState().getName());
+    return Status.getValueOf(getState().getName());
   }
   
   @Override public synchronized void removeParticipant(final Call call) {
@@ -285,6 +281,9 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
       playBackgroundMusic();
     } else if(recordAudio) {
       recordAudio = false;
+    } else if(playingAudio) {
+      playingAudio = false;
+      notify();
     } else {
       notify();
     }

@@ -65,7 +65,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
 	  final Call call = context.getCall();
 	  try {
       call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
-	  }catch(final Exception exception) {
+	  } catch(final Exception exception) {
 	    exception.printStackTrace();
 	  }
       // Redirect to action URI.;

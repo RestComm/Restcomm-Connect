@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Say>Calling Thomas Quintana, Please hold.</Say>
-	<Dial action="hello-world.xml" callerId="+19549376176"><Number>19549376176</Number></Dial>
+	<Say>Joining the demo conference room, please wait.</Say>
+	<Dial callerId="+19549376176"><Conference>test</Conference></Dial>
 </Response>

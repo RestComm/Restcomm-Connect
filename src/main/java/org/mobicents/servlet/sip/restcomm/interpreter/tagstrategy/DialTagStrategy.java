@@ -558,9 +558,11 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
       if(muted) { call.mute(); }
     }
     call.addObserver(this);
+    conference.addObserver(this);
     conference.addParticipant(call);
     try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
     catch(final InterruptedException ignored) { }
+    conference.removeObserver(this);
     call.removeObserver(this);
     if(endConferenceOnExit) {
       conferenceCenter.removeConference(name);

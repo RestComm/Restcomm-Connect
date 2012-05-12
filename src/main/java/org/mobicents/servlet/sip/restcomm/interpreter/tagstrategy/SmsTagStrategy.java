@@ -31,6 +31,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -42,13 +43,10 @@ import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
-import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.From;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StatusCallback;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
 
-import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
@@ -129,30 +127,6 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
       interpreter.notify(context, Notification.WARNING, 14101);
       return null;
     }
-  }
-  
-  private PhoneNumber getPhoneNumber(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag, final String attributeName) {
-    final Attribute attribute = tag.getAttribute(attributeName);
-    String value = null;
-    if(attribute != null) {
-      value = attribute.getValue();
-    } else {
-      value = context.getCall().getOriginator();
-    }
-    try { return phoneNumberUtil.parse(value, "US"); }
-    catch(final NumberParseException ignored) { }
-    return null;
-  }
-  
-  private URI getStatusCallback(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) {
-    final Attribute attribute = tag.getAttribute(StatusCallback.NAME);
-    if(attribute != null) {
-      final String value = attribute.getValue();
-      return URI.create(value);
-    }
-    return null;
   }
   
   private void handleSmsMessage(final boolean success) {
