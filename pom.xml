@@ -1,10 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm</artifactId>
 	<version>1.0.0.BETA2-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A Restful Communications Framework</description>
 	<url>http://www.restcomm.org</url>
@@ -15,9 +16,9 @@
 			<name>Thomas Quintan</name>
 			<email>thomas.quintana@gmail.com</email>
 			<organization>TeleStax, Inc.</organization>
-			<organizationUrl>http://www.telestax.com/</organizationUrl>		
+			<organizationUrl>http://www.telestax.com/</organizationUrl>
 			<timezone>0</timezone>
-		</developer>				
+		</developer>
 		<developer>
 			<id>jean.deruelle</id>
 			<name>Jean Deruelle</name>
@@ -28,7 +29,18 @@
 				<role>SIP Servlets Project Lead</role>
 			</roles>
 			<timezone>+1</timezone>
-		</developer>		
+		</developer>
+		<developer>
+			<id>george.vagenas</id>
+			<name>George Vagenas</name>
+			<email>george.vagenas@telestax.com</email>
+			<organization>TeleStax, Inc</organization>
+			<organizationUrl>http://www.telestax.com/</organizationUrl>
+			<roles>
+				<role>SIP Testing Project Lead</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
 	</developers>
 	<licenses>
 		<license>
@@ -38,18 +50,30 @@
 		</license>
 	</licenses>
 
+	<modules>
+    <module>restcomm.docs</module>
+    <module>restcomm.api</module>
+    <module>restcomm.main</module>
+    <module>restcomm.media</module>
+    <module>restcomm.dao</module>
+    <module>restcomm.rcml</module>
+    <module>restcomm.testsuite</module>
+    <module>restcomm.extras</module>
+    <module>restcomm.commons</module>
+  </modules>
+
 	<distributionManagement>
-	    <repository>
-	      <id>mobicents-releases-repository</id>
-	      <name>Mobicents Releases Repository</name>
-	      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-	    </repository>
-	    <snapshotRepository>
-	      <id>mobicents-snapshots-repository</id>
-	      <name>Mobicents Snapshots Repository</name>
-	      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-	    </snapshotRepository>
-	  </distributionManagement>
+		<repository>
+			<id>mobicents-releases-repository</id>
+			<name>Mobicents Releases Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<id>mobicents-snapshots-repository</id>
+			<name>Mobicents Snapshots Repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 	<properties>
 		<log4j.version>1.2.16</log4j.version>
@@ -73,201 +97,203 @@
 		<mybatis.version>3.0.6</mybatis.version>
 		<jodatime.version>2.0</jodatime.version>
 		<libphonenumber.version>4.3</libphonenumber.version>
-		<arquillian.version>1.0.0.Alpha4</arquillian.version>
+		<arquillian.version>1.0.0.Final</arquillian.version>
 		<junit.version>4.8.2</junit.version>
 	</properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
-			<scope>provided</scope>
-		</dependency>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>${log4j.version}</version>
+				<scope>provided</scope>
+			</dependency>
 
-		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<version>${commons-configuration.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
+			<dependency>
+				<groupId>commons-configuration</groupId>
+				<artifactId>commons-configuration</artifactId>
+				<version>${commons-configuration.version}</version>
+			</dependency>
 
-	    <dependency>
-			<groupId>jain</groupId>
-			<artifactId>jain-mgcp-ri</artifactId>
-			<version>${jain.mgcp.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.mobicents.protocols.mgcp</groupId>
-			<artifactId>mgcp-impl</artifactId>
-			<version>${mobicents.mgcp.impl.version}</version>
-		</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
-			<version>${javamail.version}</version>
-		</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>${servletapi.version}</version>
-			<scope>provided</scope>
-		</dependency>
+			<dependency>
+				<groupId>jain</groupId>
+				<artifactId>jain-mgcp-ri</artifactId>
+				<version>${jain.mgcp.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>sip-servlets-spec</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		
-		<dependency>
-  			<groupId>org.apache.shiro</groupId>
-  			<artifactId>shiro-core</artifactId>
-  			<version>${shirocore.version}</version>
-		</dependency>
-		
-		<dependency>
-  			<groupId>org.apache.shiro</groupId>
-  			<artifactId>shiro-web</artifactId>
-  			<version>${shiroweb.version}</version>
-		</dependency>
-		
-		<dependency>
-	        <groupId>com.sun.jersey</groupId>
-	        <artifactId>jersey-server</artifactId>
-	        <version>${jersey.version}</version>
-	    </dependency>
-	    
-	    <dependency>
-	        <groupId>com.sun.jersey</groupId>
-	        <artifactId>jersey-client</artifactId>
-	        <version>${jersey.version}</version>
-	    </dependency>
+			<dependency>
+				<groupId>org.mobicents.protocols.mgcp</groupId>
+				<artifactId>mgcp-impl</artifactId>
+				<version>${mobicents.mgcp.impl.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>stax</groupId>
-			<artifactId>stax-api</artifactId>
-			<version>${staxapi.version}</version>
-			<scope>provided</scope>
-		</dependency>
+			<dependency>
+				<groupId>javax.mail</groupId>
+				<artifactId>mail</artifactId>
+				<version>${javamail.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>stax</groupId>
-			<artifactId>stax</artifactId>
-			<version>${staximpl.version}</version>
-			<scope>provided</scope>
-		</dependency>
+			<dependency>
+				<groupId>javax.servlet</groupId>
+				<artifactId>servlet-api</artifactId>
+				<version>${servletapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
 
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>${httpclient.version}</version>
-		</dependency>
-		
-		<dependency>
-    		<groupId>axis</groupId>
-    		<artifactId>axis</artifactId>
-    		<version>${axis.version}</version>
-    		<scope>provided</scope>
-		</dependency>
-		
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>${gson.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>com.thoughtworks.xstream</groupId>
-			<artifactId>xstream</artifactId>
-			<version>${xstream.version}</version>
-		</dependency>
-            
-		
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongo-java-driver</artifactId>
-			<version>${mongodb.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.mybatis</groupId>
-			<artifactId>mybatis</artifactId>
-			<version>${mybatis.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-			<version>${jodatime.version}</version>
-		</dependency>
-		
-		<dependency>
-                <groupId>com.googlecode.libphonenumber</groupId>
-                <artifactId>libphonenumber</artifactId>
-                <version>${libphonenumber.version}</version>
-        </dependency>
-		
-		<dependency>
-		    <groupId>com.esendex</groupId>
-		    <artifactId>esendex</artifactId>
-		    <version>1.0.0</version>
-		    <scope>system</scope>
-		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Esendex.jar</systemPath>
-		</dependency>
-		
-		<dependency>
-		    <groupId>net.interfaxx</groupId>
-		    <artifactId>interfax</artifactId>
-		    <version>1.0.0</version>
-		    <scope>system</scope>
-		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Interfax.jar</systemPath>
-		</dependency>
-		
-		<dependency>
-		    <groupId>com.ispeech</groupId>
-		    <artifactId>ispeech</artifactId>
-		    <version>1.0.1</version>
-		    <scope>system</scope>
-		    <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/ispeech-java-sdk.jar</systemPath>
-		</dependency>
+			<dependency>
+				<groupId>org.mobicents.servlet.sip</groupId>
+				<artifactId>sip-servlets-spec</artifactId>
+				<version>${sipservletapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
 
-		<dependency>
-			<groupId>org.jboss.arquillian</groupId>
-			<artifactId>arquillian-junit</artifactId>
-			<version>${arquillian.version}</version>
-			<scope>test</scope>
-		</dependency>
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-core</artifactId>
+				<version>${shirocore.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>org.jboss.arquillian.container</groupId>
-			<artifactId>arquillian-jbossas-remote-6</artifactId>
-			<version>${arquillian.version}</version>
-			<scope>test</scope>
-		</dependency>
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-web</artifactId>
+				<version>${shiroweb.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-server</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-client</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>stax</groupId>
+				<artifactId>stax-api</artifactId>
+				<version>${staxapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>stax</groupId>
+				<artifactId>stax</artifactId>
+				<version>${staximpl.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclient.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>axis</groupId>
+				<artifactId>axis</artifactId>
+				<version>${axis.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.code.gson</groupId>
+				<artifactId>gson</artifactId>
+				<version>${gson.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.thoughtworks.xstream</groupId>
+				<artifactId>xstream</artifactId>
+				<version>${xstream.version}</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongo-java-driver</artifactId>
+				<version>${mongodb.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mybatis</groupId>
+				<artifactId>mybatis</artifactId>
+				<version>${mybatis.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>joda-time</groupId>
+				<artifactId>joda-time</artifactId>
+				<version>${jodatime.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.googlecode.libphonenumber</groupId>
+				<artifactId>libphonenumber</artifactId>
+				<version>${libphonenumber.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.esendex</groupId>
+				<artifactId>esendex</artifactId>
+				<version>1.0.0</version>
+				<scope>system</scope>
+				<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Esendex.jar</systemPath>
+			</dependency>
+
+			<dependency>
+				<groupId>net.interfaxx</groupId>
+				<artifactId>interfax</artifactId>
+				<version>1.0.0</version>
+				<scope>system</scope>
+				<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Interfax.jar</systemPath>
+			</dependency>
+
+			<dependency>
+				<groupId>com.ispeech</groupId>
+				<artifactId>ispeech</artifactId>
+				<version>1.0.1</version>
+				<scope>system</scope>
+				<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/ispeech-java-sdk.jar</systemPath>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jboss.arquillian</groupId>
+				<artifactId>arquillian-junit</artifactId>
+				<version>${arquillian.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jboss.arquillian.container</groupId>
+				<artifactId>arquillian-jbossas-remote-6</artifactId>
+				<version>${arquillian.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<finalName>restcomm</finalName>
@@ -276,7 +302,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g />
+						<g/>
 					</compilerArguments>
 					<source>1.6</source>
 					<target>1.6</target>
@@ -285,37 +311,37 @@
 		</plugins>
 	</build>
 
-<profiles>
+	<profiles>
 		<profile>
-                        <id>set-git-hash</id>
-                        <build>
-		        <plugins>
-		                <plugin>
-		                  <groupId>org.codehaus.mojo</groupId>
-		                  <artifactId>buildnumber-maven-plugin</artifactId>
-		                  <version>1.0</version>
-		                  <executions>
-		                	<execution>
-				              <phase>validate</phase>
-				              <goals>
-				              	<goal>create</goal>
-				              </goals>
-				        </execution>
-		                  </executions>
-		                  <configuration>
-		                    <doCheck>false</doCheck>
-		                    <doUpdate>false</doUpdate>
-		                  </configuration>
-		                </plugin>
-                        </plugins>
-                        </build>
-                </profile>
+			<id>set-git-hash</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>buildnumber-maven-plugin</artifactId>
+						<version>1.0</version>
+						<executions>
+							<execution>
+								<phase>validate</phase>
+								<goals>
+									<goal>create</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>maven-release</id>
 			<build>
 				<plugins>
 					<plugin>
-						<artifactId>maven-release-plugin</artifactId>						
+						<artifactId>maven-release-plugin</artifactId>
 					</plugin>
 				</plugins>
 			</build>
@@ -324,68 +350,68 @@
 			<id>generate-javadoc</id>
 			<build>
 				<plugins>
-			      <plugin>
-			        <groupId>org.apache.maven.plugins</groupId>
-			        <artifactId>maven-javadoc-plugin</artifactId>
-			        <version>2.7</version>
-			        <configuration>
-			          <nohelp>true</nohelp>
-			        </configuration>
-		            <executions>
-		              <execution>
-		                <id>attach-javadoc</id>
-						<phase>verify</phase>
-		                <goals>
-		                  <goal>jar</goal>
-		                </goals>
-		              </execution>
-		            </executions>
-			      </plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.7</version>
+						<configuration>
+							<nohelp>true</nohelp>
+						</configuration>
+						<executions>
+							<execution>
+								<id>attach-javadoc</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
 				</plugins>
 			</build>
 		</profile>
 		<profile>
-                      <id>release-sign-artifacts</id>
-                      <activation>
-                        <property>
-                          <name>performRelease</name>
-                          <value>true</value>
-                        </property>
-                      </activation>
-                      <build>
-                        <plugins>
-                          <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-gpg-plugin</artifactId>
-                            <executions>
-                              <execution>
-                                <id>sign-artifacts</id>
-                                <phase>install</phase>
-                                <goals>
-                                  <goal>sign</goal>
-                                </goals>
-                              </execution>
-                            </executions>
-                          </plugin>
-                        </plugins>
-                      </build>
-                    </profile>
-</profiles>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>install</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<repositories>
 		<repository>
-			  <id>mobicents-public-repository-group</id>
-			  <name>Mobicens Public Maven Repository Group</name>
-			  <url>https://oss.sonatype.org/content/groups/public</url>
-			  <layout>default</layout>
-			  <releases>
-			    <enabled>true</enabled>
-			    <updatePolicy>never</updatePolicy>
-			  </releases>
-			  <snapshots>
-			    <enabled>true</enabled>
-			    <updatePolicy>never</updatePolicy>
-			  </snapshots>
+			<id>mobicents-public-repository-group</id>
+			<name>Mobicens Public Maven Repository Group</name>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
 		</repository>
 		<repository>
 			<id>jboss-public-repository-group</id>
@@ -404,18 +430,18 @@
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
-			  <id>mobicents-public-repository-group</id>
-			  <name>Mobicens Public Maven Repository Group</name>
-			  <url>https://oss.sonatype.org/content/groups/public</url>
-			  <layout>default</layout>
-			  <releases>
-			    <enabled>true</enabled>
-			    <updatePolicy>never</updatePolicy>
-			  </releases>
-			  <snapshots>
-			    <enabled>true</enabled>
-			    <updatePolicy>never</updatePolicy>
-			  </snapshots>
+			<id>mobicents-public-repository-group</id>
+			<name>Mobicens Public Maven Repository Group</name>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
 		</pluginRepository>
 		<pluginRepository>
 			<id>jboss-public-repository-group</id>
@@ -432,10 +458,10 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
-	
+
 	<scm>
-                <connection>scm:git:https://code.google.com/p/restcomm/</connection>
-                <developerConnection>scm:git:https://code.google.com/p/restcomm/</developerConnection>
-                <url>https://code.google.com/p/restcomm/</url>
-        </scm>
+		<connection>scm:git:https://code.google.com/p/restcomm/</connection>
+		<developerConnection>scm:git:https://code.google.com/p/restcomm/</developerConnection>
+		<url>https://code.google.com/p/restcomm/</url>
+	</scm>
 </project>
