@@ -18,7 +18,7 @@ package org.mobicents.servlet.sip.restcomm.dao;
 
 import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.Gateway;
+import org.mobicents.servlet.sip.restcomm.entities.Gateway;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

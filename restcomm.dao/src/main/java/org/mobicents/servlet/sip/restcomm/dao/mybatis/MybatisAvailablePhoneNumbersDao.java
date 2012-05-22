@@ -16,6 +16,10 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDouble;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readInteger;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +27,9 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-
-import org.mobicents.servlet.sip.restcomm.AvailablePhoneNumber;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.sip.restcomm.entities.AvailablePhoneNumber;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

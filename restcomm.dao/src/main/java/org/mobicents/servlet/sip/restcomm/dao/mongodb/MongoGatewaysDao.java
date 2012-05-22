@@ -16,22 +16,23 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readBoolean;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
+import org.mobicents.servlet.sip.restcomm.entities.Gateway;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.log4j.Logger;
-
-import org.mobicents.servlet.sip.restcomm.Gateway;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

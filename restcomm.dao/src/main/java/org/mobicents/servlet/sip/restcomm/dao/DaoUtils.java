@@ -21,10 +21,9 @@ import java.net.URI;
 import java.util.Date;
 
 import org.joda.time.DateTime;
-
-import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.Account;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

@@ -19,9 +19,8 @@ package org.mobicents.servlet.sip.restcomm.dao;
 import java.util.List;
 
 import org.joda.time.DateTime;
-
-import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.entities.Notification;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

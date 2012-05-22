@@ -16,8 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao;
 
-import org.mobicents.servlet.sip.restcomm.SandBox;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.entities.SandBox;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

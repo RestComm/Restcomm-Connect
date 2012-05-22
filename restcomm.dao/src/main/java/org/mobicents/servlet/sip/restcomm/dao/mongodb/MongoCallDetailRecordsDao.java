@@ -16,12 +16,16 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readBigDecimal;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readInteger;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readSid;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readUri;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeBigDecimal;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeDateTime;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeSid;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeUri;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -30,11 +34,17 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.CallDetailRecord;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

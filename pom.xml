@@ -51,15 +51,16 @@
 	</licenses>
 
 	<modules>
-    <module>restcomm.docs</module>
-    <module>restcomm.api</module>
-    <module>restcomm.main</module>
-    <module>restcomm.media</module>
-    <module>restcomm.dao</module>
-    <module>restcomm.rcml</module>
-    <module>restcomm.testsuite</module>
-    <module>restcomm.extras</module>
-    <module>restcomm.commons</module>
+		<!-- <module>restcomm.docs</module> -->
+		<module>restcomm.api</module>
+		<!-- <module>restcomm.core</module> -->
+		<!-- <module>restcomm.media</module> -->
+		<module>restcomm.dao</module>
+		<module>restcomm.rcml</module>
+		<!-- <module>restcomm.testsuite</module> -->
+		<module>restcomm.extras</module>
+		<module>restcomm.commons</module>
+    <module>restcomm.media.api</module>
   </modules>
 
 	<distributionManagement>
@@ -248,29 +249,29 @@
 				<version>${libphonenumber.version}</version>
 			</dependency>
 
-			<dependency>
-				<groupId>com.esendex</groupId>
-				<artifactId>esendex</artifactId>
-				<version>1.0.0</version>
-				<scope>system</scope>
-				<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Esendex.jar</systemPath>
-			</dependency>
+			<!-- <dependency> -->
+			<!-- <groupId>com.esendex</groupId> -->
+			<!-- <artifactId>esendex</artifactId> -->
+			<!-- <version>1.0.0</version> -->
+			<!-- <scope>system</scope> -->
+			<!-- <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Esendex.jar</systemPath> -->
+			<!-- </dependency> -->
 
-			<dependency>
-				<groupId>net.interfaxx</groupId>
-				<artifactId>interfax</artifactId>
-				<version>1.0.0</version>
-				<scope>system</scope>
-				<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Interfax.jar</systemPath>
-			</dependency>
+			<!-- <dependency> -->
+			<!-- <groupId>net.interfaxx</groupId> -->
+			<!-- <artifactId>interfax</artifactId> -->
+			<!-- <version>1.0.0</version> -->
+			<!-- <scope>system</scope> -->
+			<!-- <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/Interfax.jar</systemPath> -->
+			<!-- </dependency> -->
 
-			<dependency>
-				<groupId>com.ispeech</groupId>
-				<artifactId>ispeech</artifactId>
-				<version>1.0.1</version>
-				<scope>system</scope>
-				<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/ispeech-java-sdk.jar</systemPath>
-			</dependency>
+			<!-- <dependency> -->
+			<!-- <groupId>com.ispeech</groupId> -->
+			<!-- <artifactId>ispeech</artifactId> -->
+			<!-- <version>1.0.1</version> -->
+			<!-- <scope>system</scope> -->
+			<!-- <systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/ispeech-java-sdk.jar</systemPath> -->
+			<!-- </dependency> -->
 
 			<dependency>
 				<groupId>org.jboss.arquillian</groupId>

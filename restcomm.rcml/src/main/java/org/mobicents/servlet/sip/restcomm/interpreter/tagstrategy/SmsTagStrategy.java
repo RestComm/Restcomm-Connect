@@ -29,18 +29,16 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-
 import org.joda.time.DateTime;
-
-import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
-import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;

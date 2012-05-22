@@ -19,7 +19,7 @@ package org.mobicents.servlet.sip.restcomm.dao;
 import java.util.List;
 
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.SmsMessage;
+import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

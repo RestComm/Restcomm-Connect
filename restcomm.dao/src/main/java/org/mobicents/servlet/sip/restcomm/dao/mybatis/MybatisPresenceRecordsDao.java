@@ -16,6 +16,11 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readInteger;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeDateTime;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,12 +28,10 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

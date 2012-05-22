@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm;
+package org.mobicents.servlet.sip.restcomm.entities;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -22,6 +22,7 @@ import java.net.URI;
 
 import org.joda.time.DateTime;
 
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 

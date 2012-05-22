@@ -16,6 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readBoolean;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +26,9 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-
-import org.mobicents.servlet.sip.restcomm.Gateway;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.sip.restcomm.entities.Gateway;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

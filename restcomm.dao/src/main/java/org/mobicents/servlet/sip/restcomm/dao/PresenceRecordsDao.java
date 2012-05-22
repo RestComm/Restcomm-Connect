@@ -18,7 +18,7 @@ package org.mobicents.servlet.sip.restcomm.dao;
 
 import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceRecord;
+import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

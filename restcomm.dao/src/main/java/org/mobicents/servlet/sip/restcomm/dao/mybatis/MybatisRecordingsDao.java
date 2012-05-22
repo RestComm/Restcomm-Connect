@@ -16,6 +16,15 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDouble;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readSid;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readUri;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeDateTime;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeSid;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeUri;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,14 +33,11 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-
 import org.joda.time.DateTime;
-
-import org.mobicents.servlet.sip.restcomm.Recording;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.sip.restcomm.entities.Recording;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

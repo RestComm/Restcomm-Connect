@@ -16,22 +16,24 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDouble;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readInteger;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
+import org.mobicents.servlet.sip.restcomm.entities.AvailablePhoneNumber;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.log4j.Logger;
-
-import org.mobicents.servlet.sip.restcomm.AvailablePhoneNumber;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
