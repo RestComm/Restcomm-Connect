@@ -7,7 +7,7 @@
   <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
   <classpathentry kind="var" path="M2_REPO/jain/jain-mgcp-ri/1.0/jain-mgcp-ri-1.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/protocols/mgcp/mgcp-impl/2.0.0.GA/mgcp-impl-2.0.0.GA.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/sip-servlets-spec/1.1.12/sip-servlets-spec-1.1.12.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/sip-servlets-spec/1.7.0.FINAL/sip-servlets-spec-1.7.0.FINAL.jar" sourcepath="M2_REPO/org/mobicents/servlet/sip/sip-servlets-spec/1.7.0.FINAL/sip-servlets-spec-1.7.0.FINAL-sources.jar"/>
   <classpathentry kind="src" path="/restcomm.api"/>
   <classpathentry kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.7/commons-configuration-1.7.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar"/>

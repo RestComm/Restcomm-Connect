@@ -25,20 +25,20 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
+import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpConferenceCenter;
+import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.fax.FaxService;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
-import org.mobicents.servlet.sip.restcomm.mgcp.MgcpConferenceCenter;
-import org.mobicents.servlet.sip.restcomm.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Bootstrapper extends BootstrapperAbstract {
+public final class Bootstrapper {
   public static final Logger logger = Logger.getLogger(Bootstrapper.class);
   
   private Bootstrapper() {
