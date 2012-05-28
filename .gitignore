@@ -1,5 +1,7 @@
 target/
 acapela/*.wav
+*.class
+bin/
 /.settings
 /.classpath
 *.class

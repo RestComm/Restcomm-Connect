@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Record action="hello-world-sms.xml" finishOnKey="#" timeout="15" transcribe="true"/>
-</Response>
