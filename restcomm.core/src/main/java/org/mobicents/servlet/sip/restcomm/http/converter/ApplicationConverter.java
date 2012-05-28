@@ -18,8 +18,8 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 
 import java.net.URI;
 
-import org.mobicents.servlet.sip.restcomm.Application;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.Application;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;

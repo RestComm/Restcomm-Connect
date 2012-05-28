@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-  <classpathentry kind="src" path="src/test/java" output="target/test-classes" including="**/*.java"/>
   <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
   <classpathentry kind="output" path="target/classes"/>
   <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
@@ -16,8 +15,14 @@
   <classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpcore/4.1/httpcore-4.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.4/commons-codec-1.4.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/googlecode/libphonenumber/libphonenumber/4.3/libphonenumber-4.3.jar"/>
-  <classpathentry kind="src" path="/restcomm.dao"/>
+  <classpathentry kind="src" path="/restcomm.media.api"/>
   <classpathentry kind="src" path="/restcomm.api"/>
-  <classpathentry kind="src" path="/restcomm.extras"/>
+  <classpathentry kind="src" path="/restcomm.dao"/>
+  <classpathentry kind="var" path="M2_REPO/org/mybatis/mybatis/3.0.6/mybatis-3.0.6.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mongodb/mongo-java-driver/2.7.2/mongo-java-driver-2.7.2.jar"/>
   <classpathentry kind="src" path="/restcomm.commons"/>
+  <classpathentry kind="src" path="/restcomm.extras"/>
+  <classpathentry kind="lib" path="/data/devWorkspace/eclipse/eclipseMSS/localWorkspace/restcomm/restcomm.extras/lib/ispeech-java-sdk.jar"/>
+  <classpathentry kind="lib" path="/data/devWorkspace/eclipse/eclipseMSS/localWorkspace/restcomm/restcomm.extras/lib/Interfax.jar"/>
+  <classpathentry kind="lib" path="/data/devWorkspace/eclipse/eclipseMSS/localWorkspace/restcomm/restcomm.extras/lib/Esendex.jar"/>
 </classpath>

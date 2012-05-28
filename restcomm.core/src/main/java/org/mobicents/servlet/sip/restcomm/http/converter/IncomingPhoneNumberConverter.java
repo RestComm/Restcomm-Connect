@@ -16,9 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
-import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;

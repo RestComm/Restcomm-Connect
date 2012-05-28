@@ -35,13 +35,12 @@ import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.DomainPermission;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-
-import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.entities.Account;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

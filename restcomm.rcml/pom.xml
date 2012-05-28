@@ -49,11 +49,11 @@
 			<version>${libphonenumber.version}</version>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.mobicents.servlet.sip</groupId> -->
-<!-- 			<artifactId>restcomm.dao</artifactId> -->
-<!-- 			<version>${project.version}</version> -->
-<!-- 		</dependency> -->
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.media.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
@@ -61,15 +61,21 @@
 			<version>${project.version}</version>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.mobicents.servlet.sip</groupId> -->
-<!-- 			<artifactId>restcomm.extras</artifactId> -->
-<!-- 			<version>${project.version}</version> -->
-<!-- 		</dependency> -->
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.extras</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

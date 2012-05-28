@@ -21,11 +21,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.mobicents.servlet.sip.restcomm.Application;
-import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.entities.Application;
+import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

@@ -21,13 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
-import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**

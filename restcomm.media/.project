@@ -5,6 +5,10 @@
   <projects>
     <project>restcomm.api</project>
     <project>restcomm.media.api</project>
+    <project>restcomm.commons</project>
+    <project>restcomm.dao</project>
+    <project>restcomm.rcml</project>
+    <project>restcomm.extras</project>
   </projects>
   <buildSpec>
     <buildCommand>

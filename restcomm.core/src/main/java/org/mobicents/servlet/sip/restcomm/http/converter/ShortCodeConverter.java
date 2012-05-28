@@ -16,8 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
-import org.mobicents.servlet.sip.restcomm.ShortCode;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.ShortCode;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;

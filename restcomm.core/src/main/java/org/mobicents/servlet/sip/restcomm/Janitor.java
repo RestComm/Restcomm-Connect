@@ -17,19 +17,18 @@
 package org.mobicents.servlet.sip.restcomm;
 
 import org.apache.log4j.Logger;
-
 import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
-import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.fax.FaxService;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
+import org.mobicents.servlet.sip.restcomm.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Janitor {
+public final class Janitor extends JanitorAbstract{
   public static final Logger logger = Logger.getLogger(Janitor.class);
   
   private Janitor() {

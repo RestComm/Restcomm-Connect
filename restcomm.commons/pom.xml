@@ -31,12 +31,20 @@
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>restcomm.api</artifactId>
 			<version>${project.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>${httpclient.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>${servletapi.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>

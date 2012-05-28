@@ -16,8 +16,10 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 
@@ -28,13 +30,12 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;

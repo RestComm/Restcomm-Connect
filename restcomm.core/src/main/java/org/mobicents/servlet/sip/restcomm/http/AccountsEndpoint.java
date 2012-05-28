@@ -16,6 +16,15 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+
 import java.net.URI;
 
 import javax.ws.rs.Consumes;
@@ -25,23 +34,20 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.Account;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.entities.Account;
 import org.mobicents.servlet.sip.restcomm.http.converter.AccountConverter;
 
 import com.thoughtworks.xstream.XStream;

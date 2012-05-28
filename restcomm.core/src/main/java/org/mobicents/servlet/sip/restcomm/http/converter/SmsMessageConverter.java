@@ -17,8 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
 import org.joda.time.DateTime;
-
-import org.mobicents.servlet.sip.restcomm.SmsMessage;
+import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;

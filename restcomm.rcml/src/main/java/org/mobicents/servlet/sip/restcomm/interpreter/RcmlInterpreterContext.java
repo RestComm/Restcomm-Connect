@@ -22,12 +22,11 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
-
-import org.mobicents.servlet.sip.restcomm.Application;
-import org.mobicents.servlet.sip.restcomm.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.entities.Application;
+import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

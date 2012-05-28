@@ -36,7 +36,7 @@ import javax.servlet.sip.TimerService;
 
 import org.apache.log4j.Logger;
 
-import org.mobicents.servlet.sip.restcomm.Gateway;
+import org.mobicents.servlet.sip.restcomm.entities.Gateway;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;

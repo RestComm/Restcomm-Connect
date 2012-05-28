@@ -36,26 +36,24 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
-
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
-import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
+import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
+import org.mobicents.servlet.sip.restcomm.xml.RcmlDocumentBuilder;
 import org.mobicents.servlet.sip.restcomm.xml.RcmlDocumentBuilderException;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagIterator;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
-import org.mobicents.servlet.sip.restcomm.xml.RcmlDocument;
-import org.mobicents.servlet.sip.restcomm.xml.RcmlDocumentBuilder;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 
@@ -233,7 +231,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
 	builder.setSid(sid);
     builder.setAccountSid(context.getAccountSid());
-    builder.setCallSid(context.getCall().getSid());
+    builder.setCallSid((Sid) context.getCall().getSid());
     builder.setApiVersion(context.getApiVersion());
     builder.setLog(log);
     builder.setErrorCode(errorCode);

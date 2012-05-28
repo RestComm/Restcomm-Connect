@@ -16,9 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -34,16 +37,15 @@ import javax.ws.rs.core.Response;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
+import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.http.converter.SmsMessageConverter;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-
 import com.thoughtworks.xstream.XStream;
 
 /**

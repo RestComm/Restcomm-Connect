@@ -20,7 +20,7 @@ import javax.servlet.sip.ServletTimer;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.TimerListener;
 
-import org.mobicents.servlet.sip.restcomm.Gateway;
+import org.mobicents.servlet.sip.restcomm.entities.Gateway;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**

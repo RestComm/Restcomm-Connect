@@ -16,11 +16,6 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,25 +24,24 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-
 import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallManager;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallManagerException;
-import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
-import org.mobicents.servlet.sip.restcomm.callmanager.Conference;
-import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceCenter;
-import org.mobicents.servlet.sip.restcomm.callmanager.ConferenceObserver;
-import org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
-import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.media.api.CallException;
+import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
+import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
+import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
+import org.mobicents.servlet.sip.restcomm.media.api.Conference;
+import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
+import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
@@ -68,6 +62,11 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StartConferenceOnE
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitMethod;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

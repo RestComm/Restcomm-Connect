@@ -53,8 +53,8 @@
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
 		<module>restcomm.api</module>
-		<!-- <module>restcomm.core</module> -->
-		<!-- <module>restcomm.media</module> -->
+<!-- 		<module>restcomm.core</module> -->
+		<module>restcomm.media</module>
 		<module>restcomm.dao</module>
 		<module>restcomm.rcml</module>
 		<!-- <module>restcomm.testsuite</module> -->

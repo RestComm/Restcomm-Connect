@@ -17,10 +17,10 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**

@@ -16,9 +16,13 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.util.List;
@@ -34,12 +38,12 @@ import javax.ws.rs.core.Response;
 
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.Client;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.entities.Client;
 import org.mobicents.servlet.sip.restcomm.http.converter.ClientConverter;
 
 import com.thoughtworks.xstream.XStream;

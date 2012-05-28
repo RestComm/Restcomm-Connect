@@ -19,9 +19,9 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 import java.net.URI;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.fax.FaxService;
 import org.mobicents.servlet.sip.restcomm.fax.FaxServiceException;
 import org.mobicents.servlet.sip.restcomm.fax.FaxServiceObserver;

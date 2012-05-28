@@ -19,9 +19,8 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 import java.net.URI;
 
 import org.joda.time.DateTime;
-
-import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.Notification;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;

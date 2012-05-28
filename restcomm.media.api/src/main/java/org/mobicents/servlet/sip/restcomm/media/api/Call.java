@@ -19,6 +19,8 @@ package org.mobicents.servlet.sip.restcomm.media.api;
 import java.net.URI;
 import java.util.List;
 
+import org.mobicents.servlet.sip.restcomm.Sid;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -30,7 +32,7 @@ public interface Call {
   public String getDigits();
   public Direction getDirection();
   public String getForwardedFrom();
-  public SidIntf getSid();
+  public Sid getSid();
   public String getOriginator();
   public String getOriginatorName();
   public String getRecipient();
