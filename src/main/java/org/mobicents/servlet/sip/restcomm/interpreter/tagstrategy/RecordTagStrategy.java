@@ -97,12 +97,14 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
     final Call call = context.getCall();
     try {
       if(playBeep) {
-        call.play(beepAudioFile, 1);
+        play(call, beepAudioFile, 1);
       }
       // Record something.
       final Sid sid = Sid.generate(Sid.Type.RECORDING);
       final URI path = toRecordingPath(sid);
-      call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
+      if(Call.Status.IN_PROGRESS == call.getStatus()) {
+        call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
+      }
       final double duration = WavUtils.getAudioDuration(path);
       if(duration > 0) {
         recording = recording(sid, duration);

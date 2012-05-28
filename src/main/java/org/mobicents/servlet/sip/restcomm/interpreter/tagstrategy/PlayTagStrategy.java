@@ -55,7 +55,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
     	}
     	interpreter.finish();
       } else {
-        call.play(announcement, loop);
+        play(call, announcement, loop);
       }
     } catch(final CallException exception) {
       interpreter.failed();

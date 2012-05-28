@@ -91,6 +91,16 @@
 	</sms-aggregator>
 	
 	<!--
+		The Fax Service is used to send and receive faxes on behalf of RestComm.
+	-->
+	<fax-service class="org.mobicents.servlet.sip.restcomm.fax.InterFaxService">
+		<user></user>
+		<password></password>
+		<maximum-file-size>4194304</maximum-file-size>
+		<timeout>60</timeout>
+	</fax-service>
+	
+	<!--
 		The Speech Recognizer is responsible for turning speech in to text.
 	-->
 	<speech-recognizer class="org.mobicents.servlet.sip.restcomm.asr.ISpeechRecognizer">

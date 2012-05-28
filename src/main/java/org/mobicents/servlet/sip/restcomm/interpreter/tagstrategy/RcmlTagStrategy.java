@@ -251,6 +251,13 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     return silence;
   }
   
+  protected void play(final Call call, final List<URI> announcements, final int iterations)
+      throws CallException {
+    if(Call.Status.IN_PROGRESS == call.getStatus()) {
+      call.play(announcements, iterations);
+    }
+  }
+  
   protected URI resolveIfNotAbsolute(final URI base, final String uri) {
     return resolveIfNotAbsolute(base, URI.create(uri));
   }

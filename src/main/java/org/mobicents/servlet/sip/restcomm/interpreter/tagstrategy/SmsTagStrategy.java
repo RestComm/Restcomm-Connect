@@ -37,6 +37,7 @@ import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
@@ -81,20 +82,22 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     this.context = context;
 	// Send the text message.
 	try {
-	  final SmsMessagesDao dao = daos.getSmsMessagesDao();
-	  sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
-	  dao.addSmsMessage(sms);
-	  smsAggregator.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
-	      phoneNumberUtil.format(to, PhoneNumberFormat.E164), body, this);
-	  sms = sms.setStatus(SmsMessage.Status.SENDING);
-	  dao.updateSmsMessage(sms);
-	  if(action != null) {
-	    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-	    parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
-	    parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
-	    interpreter.load(action, method, parameters);
-	    interpreter.redirect();
-      }
+	  if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
+	    final SmsMessagesDao dao = daos.getSmsMessagesDao();
+	    sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
+	    dao.addSmsMessage(sms);
+	    smsAggregator.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
+	        phoneNumberUtil.format(to, PhoneNumberFormat.E164), body, this);
+	    sms = sms.setStatus(SmsMessage.Status.SENDING);
+	    dao.updateSmsMessage(sms);
+	    if(action != null) {
+	      final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+	      parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
+	      parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
+	      interpreter.load(action, method, parameters);
+	      interpreter.redirect();
+        }
+	  }
 	} catch(final Exception exception) {
 	  interpreter.failed();
 	  interpreter.notify(context, Notification.ERROR, 12400);

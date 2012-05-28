@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.fax.FaxService;
 import org.mobicents.servlet.sip.restcomm.fax.FaxServiceException;
 import org.mobicents.servlet.sip.restcomm.fax.FaxServiceObserver;
@@ -57,9 +58,11 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     try {
-      final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-      faxService.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
-          phoneNumberUtil.format(to, PhoneNumberFormat.E164), uri, this);
+      if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        faxService.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
+            phoneNumberUtil.format(to, PhoneNumberFormat.E164), uri, this);
+      }
     } catch(final FaxServiceException exception) {
       interpreter.failed();
   	  interpreter.notify(context, Notification.ERROR, 12400);

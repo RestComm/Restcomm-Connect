@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.callmanager.Call;
+import org.mobicents.servlet.sip.restcomm.callmanager.CallException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -64,8 +65,10 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
 	  final List<URI> announcements = getAnnouncements(interpreter, context, tag);
 	  final Call call = context.getCall();
 	  try {
-      call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
-	  } catch(final Exception exception) {
+	    if(Call.Status.IN_PROGRESS == call.getStatus()) {
+          call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
+	    }
+	  } catch(final CallException exception) {
 	    exception.printStackTrace();
 	  }
       // Redirect to action URI.;

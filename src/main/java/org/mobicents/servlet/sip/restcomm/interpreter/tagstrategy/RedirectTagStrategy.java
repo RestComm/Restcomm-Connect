@@ -21,6 +21,7 @@ import java.net.URI;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.Notification;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.sip.restcomm.callmanager.Call;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
@@ -45,8 +46,10 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
     // Redirect the interpreter to the new RCML resource.
     if(uri != null) {
       try {
-        interpreter.load(uri, method);
-        interpreter.redirect();
+        if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
+          interpreter.load(uri, method);
+          interpreter.redirect();
+        }
       } catch(final InterpreterException exception) {
         interpreter.failed();
         interpreter.notify(context, Notification.ERROR, 12400);
