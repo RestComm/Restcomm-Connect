@@ -113,9 +113,9 @@
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
-		<application>EVAL_1434125</application>
-		<login>EVAL_VAAS</login>
-		<password>zd8icg9b</password>
+		<application></application>
+		<login></login>
+		<password></password>
 		<speakers>
 		  <belgium-french>
 		    <female>justine8k</female>
