@@ -1,42 +1,41 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <classpath>
   <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
   <classpathentry kind="output" path="target/classes"/>
   <classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.5/servlet-api-2.5.jar"/>
-  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.5.5/slf4j-api-1.5.5.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-log4j12/1.5.5/slf4j-log4j12-1.5.5.jar"/>
-  <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/sip-servlets-spec/1.7.0.FINAL/sip-servlets-spec-1.7.0.FINAL.jar" sourcepath="M2_REPO/org/mobicents/servlet/sip/sip-servlets-spec/1.7.0.FINAL/sip-servlets-spec-1.7.0.FINAL-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/apache/shiro/shiro-core/1.2.0/shiro-core-1.2.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.8.3/commons-beanutils-1.8.3.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/apache/shiro/shiro-web/1.2.0/shiro-web-1.2.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/sun/jersey/jersey-server/1.9.1/jersey-server-1.9.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/asm/asm/3.1/asm-3.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/sun/jersey/jersey-core/1.9.1/jersey-core-1.9.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/sun/jersey/jersey-client/1.9.1/jersey-client-1.9.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/thoughtworks/xstream/xstream/1.4.2/xstream-1.4.2.jar"/>
-  <classpathentry kind="var" path="M2_REPO/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c.jar"/>
-  <classpathentry kind="src" path="/restcomm.api"/>
-  <classpathentry kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.7/commons-configuration-1.7.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.8.3/commons-beanutils-1.8.3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.4/commons-codec-1.4.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.7/commons-configuration-1.7.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-digester/commons-digester/1.8.1/commons-digester-1.8.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.6/commons-lang-2.6.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar" sourcepath="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-digester/commons-digester/1.8.1/commons-digester-1.8.1.jar"/>
-  <classpathentry kind="src" path="/restcomm.extras"/>
-  <classpathentry kind="src" path="/restcomm.dao"/>
-  <classpathentry kind="var" path="M2_REPO/joda-time/joda-time/2.0/joda-time-2.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mybatis/mybatis/3.0.6/mybatis-3.0.6.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mongodb/mongo-java-driver/2.7.2/mongo-java-driver-2.7.2.jar"/>
-  <classpathentry kind="src" path="/restcomm.rcml"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpclient/4.1.1/httpclient-4.1.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpcore/4.1/httpcore-4.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.4/commons-codec-1.4.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/googlecode/libphonenumber/libphonenumber/4.3/libphonenumber-4.3.jar"/>
-  <classpathentry kind="src" path="/restcomm.media.api"/>
-  <classpathentry kind="src" path="/restcomm.commons"/>
-  <classpathentry kind="src" path="/restcomm.media"/>
   <classpathentry kind="var" path="M2_REPO/jain/jain-mgcp-ri/1.0/jain-mgcp-ri-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/sun/jersey/jersey-client/1.9.1/jersey-client-1.9.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/sun/jersey/jersey-core/1.9.1/jersey-core-1.9.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/sun/jersey/jersey-server/1.9.1/jersey-server-1.9.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/joda-time/joda-time/2.0/joda-time-2.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/libphonenumber/libphonenumber/4.3/libphonenumber-4.3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/protocols/mgcp/mgcp-impl/2.0.0.GA/mgcp-impl-2.0.0.GA.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mongodb/mongo-java-driver/2.7.2/mongo-java-driver-2.7.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mybatis/mybatis/3.0.6/mybatis-3.0.6.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.api/1.0.0.BETA2-SNAPSHOT/restcomm.api-1.0.0.BETA2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.commons/1.0.0.BETA2-SNAPSHOT/restcomm.commons-1.0.0.BETA2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.dao/1.0.0.BETA2-SNAPSHOT/restcomm.dao-1.0.0.BETA2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.extras/1.0.0.BETA2-SNAPSHOT/restcomm.extras-1.0.0.BETA2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.media/1.0.0.BETA2-SNAPSHOT/restcomm.media-1.0.0.BETA2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.media.api/1.0.0.BETA2-SNAPSHOT/restcomm.media.api-1.0.0.BETA2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.rcml/1.0.0.BETA2-SNAPSHOT/restcomm.rcml-1.0.0.BETA2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/shiro/shiro-core/1.2.0/shiro-core-1.2.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/shiro/shiro-web/1.2.0/shiro-web-1.2.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/sip-servlets-spec/1.7.0.FINAL/sip-servlets-spec-1.7.0.FINAL.jar" sourcepath="M2_REPO/org/mobicents/servlet/sip/sip-servlets-spec/1.7.0.FINAL/sip-servlets-spec-1.7.0.FINAL-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.5.5/slf4j-api-1.5.5.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-log4j12/1.5.5/slf4j-log4j12-1.5.5.jar"/>
+  <classpathentry kind="var" path="M2_REPO/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/thoughtworks/xstream/xstream/1.4.2/xstream-1.4.2.jar"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 </classpath>

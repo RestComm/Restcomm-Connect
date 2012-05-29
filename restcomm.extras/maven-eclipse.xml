@@ -1,8 +1,0 @@
-<project default="copy-resources">
-  <target name="init"/>
-  <target name="copy-resources" depends="init">
-    <copy todir="target/classes/data/devWorkspace/eclipse/eclipseMSS/localWorkspace/restcomm/restcomm.extras/target/lib" filtering="false">
-      <fileset dir="lib" includes="" excludes="**/*.java"/>
-    </copy>
-  </target>
-</project>
