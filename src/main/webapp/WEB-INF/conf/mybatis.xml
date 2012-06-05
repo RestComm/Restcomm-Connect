@@ -7,11 +7,15 @@
   <environments default="production">
     <environment id="production">
       <transactionManager type="JDBC"/>
-        <dataSource type="JNDI">
-          <property name="data_source" value="java:restcomm"/>
-        </dataSource>
+      <dataSource type="POOLED">
+        <property name="driver" value="org.hsqldb.jdbcDriver"/>
+        <property name="url" value="jdbc:hsqldb:file:${data}/restcomm;ifexists=true;hsqldb.write_delay=false;shutdown=true"/>
+        <property name="username" value="sa"/>
+        <property name="password" value=""/>
+      </dataSource>
     </environment>
   </environments>
+  
   
   <mappers>
     <mapper url="file://${sql}/accounts.xml"/>
