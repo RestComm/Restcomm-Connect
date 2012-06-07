@@ -423,7 +423,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.CallObserver;
   }
   
   @Override public synchronized void setExpires(final int minutes) {
-    initialInvite.setExpires(minutes);
+    initialInvite.getApplicationSession().setExpires(minutes);
   }
   
   @Override public synchronized void stopMedia() {

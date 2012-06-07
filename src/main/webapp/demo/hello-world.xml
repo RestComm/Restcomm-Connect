@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Say>Joining the demo conference room, please wait.</Say>
-	<Dial callerId="+19549376176"><Conference>test</Conference></Dial>
+	<Say>Welcome to RestComm, a TeleStax sponsored project.</Say>
+	<Say language="de">Willkommen bei RestComm einem TeleStax geförderten Projektes.</Say>
+	<Say language="fr">Bienvenue à RestComm projet un TeleStax parrainé.</Say>
 </Response>
