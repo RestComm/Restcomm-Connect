@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.mobicents.servlet.sip</groupId>
+		<artifactId>restcomm</artifactId>
+		<version>1.0.0.BETA2-SNAPSHOT</version>
+	</parent>
+
+	<groupId>org.mobicents.servlet.sip</groupId>
+	<artifactId>restcomm.core</artifactId>
+	<version>1.0.0.BETA2-SNAPSHOT</version>
+	<packaging>war</packaging>
+	<name>restcomm.core</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>${servletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>sip-servlets-spec</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+			<version>${shirocore.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
+			<version>${shiroweb.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>${xstream.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.extras</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.rcml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.media</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+	</dependencies>
+</project>
