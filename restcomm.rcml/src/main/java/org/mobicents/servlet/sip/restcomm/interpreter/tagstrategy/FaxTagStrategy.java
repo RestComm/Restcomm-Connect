@@ -21,17 +21,14 @@ import java.net.URI;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-<<<<<<< HEAD:src/main/java/org/mobicents/servlet/sip/restcomm/interpreter/tagstrategy/FaxTagStrategy.java
-import org.mobicents.servlet.sip.restcomm.callmanager.Call;
-=======
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
->>>>>>> 5c8a458cd1ea70d73523eab653e8cd1c8bbc89f1:restcomm.rcml/src/main/java/org/mobicents/servlet/sip/restcomm/interpreter/tagstrategy/FaxTagStrategy.java
 import org.mobicents.servlet.sip.restcomm.fax.FaxService;
 import org.mobicents.servlet.sip.restcomm.fax.FaxServiceException;
 import org.mobicents.servlet.sip.restcomm.fax.FaxServiceObserver;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.From;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
