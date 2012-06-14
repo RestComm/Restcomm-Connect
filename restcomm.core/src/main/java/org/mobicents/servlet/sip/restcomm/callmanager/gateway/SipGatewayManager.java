@@ -100,8 +100,10 @@ public final class SipGatewayManager extends SipServlet {
 				final SipApplicationSession application = response.getApplicationSession();
 				final Gateway gateway = (Gateway)application.getAttribute(Gateway.class.getName());
 				final Address contact = response.getAddressHeader("Contact");
-				final long expires = contact.getExpires() * 1000;
+				long expires = contact.getExpires() * 1000;
 				clock.createTimer(application, expires, false, "REGISTER");
+				// Issue http://code.google.com/p/restcomm/issues/detail?id=66
+				expires = expires + (30 * 1000);
 				application.setExpires(TimeUtils.millisToMinutes(expires));
 				if(logger.isDebugEnabled()) {
 					final StringBuilder buffer = new StringBuilder();

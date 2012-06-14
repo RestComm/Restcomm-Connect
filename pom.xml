@@ -14,16 +14,19 @@
         <developers>
                 <developer>
                         <id>thomas</id>
-                        <name>Thomas Quintan</name>
-                        <email>thomas.quintana@gmail.com</email>
+                        <name>Thomas Quintana</name>
+                        <email>thomas.quintana@telestax.com</email>
                         <organization>TeleStax, Inc.</organization>
                         <organizationUrl>http://www.telestax.com/</organizationUrl>
+                        <roles>
+                                <role>RestComm Project Lead</role>
+                        </roles>
                         <timezone>0</timezone>
                 </developer>
                 <developer>
                         <id>jean.deruelle</id>
                         <name>Jean Deruelle</name>
-                        <email>jean.deruelle@gmail.com</email>
+                        <email>jean.deruelle@telestax.com</email>
                         <organization>TeleStax, Inc</organization>
                         <organizationUrl>http://www.telestax.com/</organizationUrl>
                         <roles>
