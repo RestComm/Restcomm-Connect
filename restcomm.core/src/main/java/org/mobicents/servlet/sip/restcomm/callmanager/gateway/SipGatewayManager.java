@@ -41,7 +41,6 @@ import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.From;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -155,14 +154,13 @@ public final class SipGatewayManager extends SipServlet {
 			final String aor = buffer.toString();
 			//Issue http://code.google.com/p/restcomm/issues/detail?id=65
 			SipServletRequest register = null;
-			if (response != null){
-				register = response.getSession().createRequest(response.getRequest().getMethod());
+			if(response != null){
+			  register = response.getSession().createRequest(response.getRequest().getMethod());
 			} else {
-				register = sipFactory.createRequest(application, "REGISTER", aor, aor);
+			  register = sipFactory.createRequest(application, "REGISTER", aor, aor);
 			}
-
 			if(authentication != null && response != null) {
-				register.addAuthHeader(response, authentication);
+			  register.addAuthHeader(response, authentication);
 			}
 			register.addAddressHeader("Contact", createContactHeader(gateway, expires), false);
 			register.addHeader("User-Agent", userAgent);
