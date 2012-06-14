@@ -16,7 +16,7 @@
 		If you find a typographical error in this manual, or if you have
 		thought of a way to make this manual better, we would love to hear
 		from you! Please submit a report in Bugzilla:
-		<ulink url="http://bugzilla.redhat.com/bugzilla/">http://bugzilla.redhat.com/bugzilla/</ulink>
+		<ulink url="http://http://code.google.com/p/restcomm/issues/">http://http://code.google.com/p/restcomm/issues/</ulink>
 		against the product
 		<application>${product.name}</application>
 		, or contact the authors.

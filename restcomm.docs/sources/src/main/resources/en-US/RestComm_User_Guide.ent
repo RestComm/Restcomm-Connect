@@ -16,4 +16,4 @@
 <!ENTITY SSS_MSS4T_ZIP "${mss4t.release.zip}">
 <!ENTITY VERSION "${version}">
 <!ENTITY YEAR "${year}">
-<!ENTITY HOLDER "Red Hat, Inc">
+<!ENTITY HOLDER "Telestax, Inc">
