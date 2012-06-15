@@ -30,15 +30,17 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final String proxy;
   private final Boolean register;
   private final String user;
+  private final int ttl;
 
   public Gateway(final String name, final String password, final String proxy,
-      final Boolean register, final String user) {
+      final Boolean register, final String user, final int ttl) {
     super();
     this.name = name;
     this.password = password;
     this.proxy = proxy;
     this.register = register;
     this.user = user;
+    this.ttl = ttl;
   }
   
   public String getName() {
@@ -61,20 +63,28 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     return register;
   }
   
+  public int getTtl() {
+    return ttl;
+  }
+  
   public Gateway setPassword(final String password) {
-    return new Gateway(name, password, proxy, register, user);
+    return new Gateway(name, password, proxy, register, user, ttl);
   }
   
   public Gateway setProxy(final String proxy) {
-    return new Gateway(name, password, proxy, register, user);
+    return new Gateway(name, password, proxy, register, user, ttl);
   }
   
   public Gateway setRegister(final boolean register) {
-    return new Gateway(name, password, proxy, register, user);
+    return new Gateway(name, password, proxy, register, user, ttl);
   }
   
   public Gateway setUser(final String user) {
-    return new Gateway(name, password, proxy, register, user);
+    return new Gateway(name, password, proxy, register, user, ttl);
+  }
+  
+  public Gateway setTtl(final int ttl) {
+    return new Gateway(name, password, proxy, register, user, ttl);
   }
   
   @Override public String toString() {
@@ -83,7 +93,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     buffer.append("User: ").append(user).append("\n");
     buffer.append("Password: ").append(password).append("\n");
     buffer.append("Proxy: ").append(proxy).append("\n");
-    buffer.append("Register: ").append(register);
+    buffer.append("Register: ").append(register).append("\n");
+    buffer.append("Time To Live: ").append(ttl);
     return buffer.toString();
   }
 }

@@ -37,7 +37,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 	  final SipApplicationSession application = timer.getApplicationSession();
 	  final SipGatewayManager manager = (SipGatewayManager)application.getAttribute(SipGatewayManager.class.getName());
 	  final Gateway gateway = (Gateway)application.getAttribute(Gateway.class.getName());
-	  manager.register(gateway, SipGatewayManager.defaultRegistrationTtl);
+	  manager.register(gateway, gateway.getTtl());
 	}
   }
 }

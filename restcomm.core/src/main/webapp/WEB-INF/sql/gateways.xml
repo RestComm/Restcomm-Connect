@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.GatewaysDao">
   <insert id="addGateway" parameterType="map">
-    INSERT INTO "restcomm_gateways" ("name", "password", "proxy", "register", "user")
-    VALUES (#{name}, #{password}, #{proxy}, #{register}, #{user});
+    INSERT INTO "restcomm_gateways" ("name", "password", "proxy", "register", "user", "ttl")
+    VALUES (#{name}, #{password}, #{proxy}, #{register}, #{user}, #{ttl});
   </insert>
   
   <select id="getGateways" resultType="hashmap">
@@ -19,6 +19,6 @@
   
   <update id="updateGateway" parameterType="map">
     UPDATE "restcomm_gateways" SET "password"=#{password}, "proxy"=#{proxy}, "register"=#{register},
-    "user"=#{user} WHERE "name"=#{name};
+    "user"=#{user}, "ttl"=#{ttl} WHERE "name"=#{name};
   </update>
 </mapper>

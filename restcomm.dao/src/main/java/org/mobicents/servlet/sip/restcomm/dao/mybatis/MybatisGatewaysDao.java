@@ -16,8 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readBoolean;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,7 +94,8 @@ import org.mobicents.servlet.sip.restcomm.entities.Gateway;
     final String proxy = readString(map.get("proxy"));
     final Boolean register = readBoolean(map.get("register"));
     final String user = readString(map.get("user"));
-    return new Gateway(name, password, proxy, register, user);
+    final Integer ttl = readInteger(map.get("ttl"));
+    return new Gateway(name, password, proxy, register, user, ttl);
   }
   
   private Map<String, Object> toMap(final Gateway gateway) {
@@ -105,6 +105,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Gateway;
     map.put("proxy", gateway.getProxy());
     map.put("register", gateway.register());
     map.put("user", gateway.getUser());
+    map.put("ttl", gateway.getTtl());
     return map;
   }
 }

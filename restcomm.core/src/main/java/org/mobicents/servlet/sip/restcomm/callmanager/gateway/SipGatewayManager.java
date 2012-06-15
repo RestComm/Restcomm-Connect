@@ -69,14 +69,6 @@ public final class SipGatewayManager extends SipServlet {
 		return contact;
 	}
 
-	@Override public void destroy() {
-		for(final Gateway gateway : gateways) {
-			if(gateway.register()) {
-				register(gateway, 0);
-			}
-		}
-	}
-
 	@Override protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
 		final String method = response.getRequest().getMethod();
 		if("REGISTER".equalsIgnoreCase(method)) {
@@ -180,7 +172,7 @@ public final class SipGatewayManager extends SipServlet {
 	public void start() {
 		for(final Gateway gateway : gateways) {
 			if(gateway.register()) {
-				register(gateway, defaultRegistrationTtl);
+				register(gateway, gateway.getTtl());
 			}
 		}
 	}

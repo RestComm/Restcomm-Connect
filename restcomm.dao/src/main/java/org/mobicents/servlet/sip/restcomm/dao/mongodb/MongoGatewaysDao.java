@@ -16,8 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readBoolean;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +86,7 @@ import com.mongodb.WriteResult;
     object.put("proxy", gateway.getProxy());
     object.put("user", gateway.getUser());
     object.put("register", gateway.register());
+    object.put("ttl", gateway.getTtl());
     return object;
   }
   
@@ -96,6 +96,7 @@ import com.mongodb.WriteResult;
     final String proxy = readString(object.get("proxy"));
     final String user = readString(object.get("user"));
     final Boolean register = readBoolean(object.get("register"));
-    return new Gateway(name, password, proxy, register, user);
+    final Integer ttl = readInteger(object.get("ttl"));
+    return new Gateway(name, password, proxy, register, user, ttl);
   }
 }

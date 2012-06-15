@@ -231,5 +231,6 @@ CREATE TABLE "restcomm_gateways" (
 "user" VARCHAR(255),
 "password" VARCHAR(255),
 "proxy" LONGVARCHAR NOT NULL,
-"register" BOOLEAN NOT NULL
+"register" BOOLEAN NOT NULL,
+"ttl" INT NOT NULL
 );
