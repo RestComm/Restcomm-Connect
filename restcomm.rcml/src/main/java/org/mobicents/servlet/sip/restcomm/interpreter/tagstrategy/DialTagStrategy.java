@@ -563,7 +563,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     catch(final InterruptedException ignored) { }
     conference.removeObserver(this);
     call.removeObserver(this);
-    if(endConferenceOnExit) {
+    if(endConferenceOnExit || conference.getNumberOfParticipants() == 0) {
       conferenceCenter.removeConference(name);
     } else {
       if(Call.Status.IN_PROGRESS == call.getStatus()) {
