@@ -23,9 +23,9 @@
 		
 		<recordings-path>${restcomm:home}/recordings</recordings-path>
 		
-		<outbound-proxy-user>13055872294</outbound-proxy-user>
-		<outbound-proxy-password>0121</outbound-proxy-password>
-		<outbound-proxy-uri>softswitch1.speechbucket.com</outbound-proxy-uri>
+		<outbound-proxy-user></outbound-proxy-user>
+		<outbound-proxy-password></outbound-proxy-password>
+		<outbound-proxy-uri></outbound-proxy-uri>
 		
 		<!-- 
 			Each permission is represented as three columns Domain:Action:Target
@@ -73,9 +73,9 @@
 	-->
 	<media-server-manager>
 		<mgcp-server name="Mobicents Media Server">
-			<local-address>192.168.1.106</local-address>
+			<local-address>127.0.0.1</local-address>
 			<local-port>2727</local-port>
-			<remote-address>192.168.1.106</remote-address>
+			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
 		</mgcp-server>
 	</media-server-manager>
@@ -93,8 +93,8 @@
 		The Fax Service is used to send and receive faxes on behalf of RestComm.
 	-->
 	<fax-service class="org.mobicents.servlet.sip.restcomm.fax.InterFaxService">
-		<user>thomasquintana</user>
-		<password>Delta2637</password>
+		<user></user>
+		<password></password>
 		<maximum-file-size>4194304</maximum-file-size>
 		<timeout>60</timeout>
 	</fax-service>
@@ -103,7 +103,7 @@
 		The Speech Recognizer is responsible for turning speech in to text.
 	-->
 	<speech-recognizer class="org.mobicents.servlet.sip.restcomm.asr.ISpeechRecognizer">
-		<api-key production="false">1da57e282a615ddd2661c58d50524486</api-key>
+		<api-key production="false"></api-key>
 	</speech-recognizer>
 	
 	<!--
@@ -112,9 +112,9 @@
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
-		<application>EVAL_1434125</application>
-		<login>EVAL_VAAS</login>
-		<password>zd8icg9b</password>
+		<application></application>
+		<login></login>
+		<password></password>
 		<speakers>
 		  <belgium-french>
 		    <female>justine8k</female>
