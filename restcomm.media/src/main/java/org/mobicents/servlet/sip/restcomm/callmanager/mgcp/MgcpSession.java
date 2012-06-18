@@ -32,7 +32,6 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
   
   private final List<MgcpConnection> connections;
   private final List<MgcpEndpoint> endpoints;
-  private final List<MgcpLink> links;
   
   public MgcpSession(final int id, final MgcpServer server) {
     super();
@@ -40,7 +39,6 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
     this.server = server;
     this.connections = new ArrayList<MgcpConnection>();
     this.endpoints = new ArrayList<MgcpEndpoint>();
-    this.links = new ArrayList<MgcpLink>();
   }
   
   public MgcpConnection createConnection(final MgcpEndpoint endpoint) {
@@ -55,12 +53,6 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
     return connection;
   }
   
-  public MgcpLink createLink(final MgcpEndpoint firstEndpoint, final MgcpEndpoint secondEndpoint) {
-    final MgcpLink link = new MgcpLink(server, this, firstEndpoint, secondEndpoint);
-    links.add(link);
-    return link;
-  }
-  
   public void destroyConnection(final MgcpConnection connection) {
     if(connections.remove(connection)) {
       connection.disconnect();
@@ -72,19 +64,6 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
       connection.disconnect();
     }
     connections.clear();
-  }
-  
-  public void destroyLink(final MgcpLink link) {
-    if(links.remove(link)) {
-      link.disconnect();
-    }
-  }
-  
-  private void destroyLinks() {
-    for(final MgcpLink link : links) {
-      link.disconnect();
-    }
-    links.clear();
   }
   
   public MgcpConferenceEndpoint getConferenceEndpoint() {
@@ -111,7 +90,6 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 
   public void release() {
     destroyConnections();
-    destroyLinks();
     releaseEndpoints();
   }
   

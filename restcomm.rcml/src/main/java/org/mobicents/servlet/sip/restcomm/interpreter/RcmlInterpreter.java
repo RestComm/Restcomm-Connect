@@ -308,6 +308,9 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
           try { tag.accept(this); }
           catch(final VisitorException ignored) { /* Handled in tag strategy. */ }
           tag.setHasBeenVisited(true);
+          // Make sure the call is still in progress.
+          final Call call = context.getCall();
+          if(Call.Status.IN_PROGRESS != call.getStatus()) { setState(FINISHED); }
           // Handle any state changes caused by executing the tag.
           final State state = getState();
           if(state.equals(REDIRECTED)) {
