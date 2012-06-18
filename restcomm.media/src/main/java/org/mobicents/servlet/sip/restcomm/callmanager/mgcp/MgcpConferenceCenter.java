@@ -37,17 +37,13 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
     this.conferences = new HashMap<String, MgcpConference>();
   }
   
-  @Override public Conference getConference(final String name) {
+  @Override public synchronized Conference getConference(final String name) {
     MgcpConference conference = conferences.get(name);
     if(conference == null) {
-      synchronized(this) {
-        if(conference == null) {
-          final MgcpServer server = serverManager.getMediaServer();
-          conference = new MgcpConference(name, server);
-          conference.start();
-          conferences.put(name, conference);
-        }
-      }
+      final MgcpServer server = serverManager.getMediaServer();
+      conference = new MgcpConference(name, server);
+      conference.start();
+      conferences.put(name, conference);
     }
     return conference;
   }

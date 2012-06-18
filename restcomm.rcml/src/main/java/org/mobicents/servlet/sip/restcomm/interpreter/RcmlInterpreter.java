@@ -304,7 +304,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
           // Make sure we're ready to execute the next tag.
           assertState(READY);
           setState(EXECUTING);
-          }
           // Try to execute the next tag.
           try { tag.accept(this); }
           catch(final VisitorException ignored) { /* Handled in tag strategy. */ }
@@ -320,11 +319,12 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
           } else if(state.equals(FINISHED) || state.equals(FAILED)) {
             break;
           } else {
-          setState(READY);
+            setState(READY);
+          }
         }
       }
+      cleanup(context);
     }
-    cleanup(context);
   }
   
   private void checkContentType(final String type) throws InterpreterException {
