@@ -17,8 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpListener;
@@ -81,7 +81,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     this.server = server;
     this.session = session;
     this.endpoint = endpoint;
-    this.observers = Collections.synchronizedList(new ArrayList<MgcpConnectionObserver>());
+    this.observers = new CopyOnWriteArrayList<MgcpConnectionObserver>();
   }
   
   public MgcpConnection(final MgcpServer server, final MgcpSession session, final MgcpEndpoint endpoint,
