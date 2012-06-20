@@ -16,16 +16,23 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import java.lang.reflect.Type;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.OutgoingCallerId;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class OutgoingCallerIdConverter extends AbstractConverter {
+@ThreadSafe public final class OutgoingCallerIdConverter extends AbstractConverter
+    implements JsonSerializer<OutgoingCallerId> {
   public OutgoingCallerIdConverter() {
     super();
   }
@@ -45,5 +52,18 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeDateCreated(outgoingCallerId.getDateCreated(), writer);
     writeDateUpdated(outgoingCallerId.getDateUpdated(), writer);
     writeUri(outgoingCallerId.getUri(), writer);
+  }
+  
+  @Override public JsonElement serialize(final OutgoingCallerId outgoingCallerId, final Type type,
+      final JsonSerializationContext context) {
+  	final JsonObject object = new JsonObject();
+  	writeSid(outgoingCallerId.getSid(), object);
+    writeAccountSid(outgoingCallerId.getAccountSid(), object);
+    writeFriendlyName(outgoingCallerId.getFriendlyName(), object);
+    writePhoneNumber(outgoingCallerId.getPhoneNumber(), object);
+    writeDateCreated(outgoingCallerId.getDateCreated(), object);
+    writeDateUpdated(outgoingCallerId.getDateUpdated(), object);
+    writeUri(outgoingCallerId.getUri(), object);
+  	return object;
   }
 }

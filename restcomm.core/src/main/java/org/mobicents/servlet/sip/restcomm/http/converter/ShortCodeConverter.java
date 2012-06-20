@@ -16,16 +16,23 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import java.lang.reflect.Type;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.ShortCode;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class ShortCodeConverter extends AbstractConverter {
+@ThreadSafe public final class ShortCodeConverter extends AbstractConverter
+    implements JsonSerializer<ShortCode> {
   public ShortCodeConverter() {
     super();
   }
@@ -52,9 +59,31 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeUri(shortCode.getUri(), writer);
   }
   
+  @Override public JsonElement serialize(final ShortCode shortCode, final Type type,
+      final JsonSerializationContext context) {
+  	final JsonObject object = new JsonObject();
+  	writeSid(shortCode.getSid(), object);
+    writeDateCreated(shortCode.getDateCreated(), object);
+    writeDateUpdated(shortCode.getDateUpdated(), object);
+    writeFriendlyName(shortCode.getFriendlyName(), object);
+    writeAccountSid(shortCode.getAccountSid(), object);
+    writeShortCode(Integer.toString(shortCode.getShortCode()), object);
+    writeApiVersion(shortCode.getApiVersion(), object);
+    writeSmsUrl(shortCode.getSmsUrl(), object);
+    writeSmsMethod(shortCode.getSmsMethod(), object);
+    writeSmsFallbackUrl(shortCode.getSmsFallbackUrl(), object);
+    writeSmsFallbackMethod(shortCode.getSmsFallbackMethod(), object);
+    writeUri(shortCode.getUri(), object);
+  	return object;
+  }
+  
   private void writeShortCode(final String shortCode, final HierarchicalStreamWriter writer) {
     writer.startNode("ShortCode");
     writer.setValue(shortCode);
     writer.endNode();
+  }
+  
+  private void writeShortCode(final String shortCode, final JsonObject object) {
+    object.addProperty("short_code", shortCode);
   }
 }

@@ -16,16 +16,23 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import java.lang.reflect.Type;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Client;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public class ClientConverter extends AbstractConverter {
+@ThreadSafe public class ClientConverter extends AbstractConverter
+    implements JsonSerializer<Client> {
   public ClientConverter() {
     super();
   }
@@ -50,15 +57,39 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeUri(client.getUri(), writer);
   }
   
+  @Override public JsonElement serialize(final Client client, final Type type,
+    final JsonSerializationContext context) {
+    final JsonObject object = new JsonObject();
+	writeSid(client.getSid(), object);
+	writeDateCreated(client.getDateCreated(), object);
+	writeDateUpdated(client.getDateUpdated(), object);
+	writeAccountSid(client.getAccountSid(), object);
+	writeApiVersion(client.getApiVersion(), object);
+	writeFriendlyName(client.getFriendlyName(), object);
+	writeLogin(client.getLogin(), object);
+	writePassword(client.getPassword(), object);
+	writeStatus(client.getStatus().toString(), object);
+	writeUri(client.getUri(), object);
+    return object;
+  }
+  
   protected void writeLogin(final String login, final HierarchicalStreamWriter writer) {
     writer.startNode("Login");
     writer.setValue(login);
     writer.endNode();
   }
   
+  protected void writeLogin(final String login, final JsonObject object) {
+    object.addProperty("login", login);
+  }
+  
   protected void writePassword(final String password, final HierarchicalStreamWriter writer) {
     writer.startNode("Password");
     writer.setValue(password);
     writer.endNode();
+  }
+  
+  protected void writePassword(final String password, final JsonObject object) {
+    object.addProperty("password", password);
   }
 }
