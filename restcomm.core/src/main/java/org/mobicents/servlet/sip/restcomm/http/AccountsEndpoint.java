@@ -16,17 +16,16 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
 
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -34,6 +33,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -41,16 +41,18 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.entities.Account;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.AccountConverter;
-
-import com.thoughtworks.xstream.XStream;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -58,15 +60,23 @@ import com.thoughtworks.xstream.XStream;
 @Path("/Accounts")
 @ThreadSafe public final class AccountsEndpoint extends AbstractEndpoint {
   private final AccountsDao dao;
+  private final Gson gson;
   private final XStream xstream;
   
   public AccountsEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getAccountsDao();
+    final AccountConverter converter = new AccountConverter("2012-04-24");
+    final GsonBuilder builder = new GsonBuilder();
+    builder.registerTypeAdapter(Account.class, converter);
+    builder.setPrettyPrinting();
+    gson = builder.create();
     xstream = new XStream();
+    xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.alias("Account", Account.class);
-    xstream.registerConverter(new AccountConverter("2012-04-24"));
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   private Account createFrom(final MultivaluedMap<String, String> data) {
@@ -100,16 +110,32 @@ import com.thoughtworks.xstream.XStream;
     return ok().build();
   }
   
-  @Path("/{accountSid}")
-  @GET public Response getAccount(@PathParam("accountSid") String accountSid) {
+  private Response getAccount(final String accountSid, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:Accounts"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final Account account = findAccount(new Sid(accountSid));
     if(account == null) {
       return status(NOT_FOUND).build();
     } else {
-      return ok(xstream.toXML(account), APPLICATION_XML).build();
+      if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(account);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(account), APPLICATION_JSON).build();
+      } else {
+        return null;
+      }
     }
+  }
+  
+  @Path("/{accountSid}")
+  @GET public Response getAccountXml(@PathParam("accountSid") String accountSid) {
+    return getAccount(accountSid, APPLICATION_XML_TYPE);
+  }
+  
+  @Path("/{accountSid}.json")
+  @GET public Response getAccountJson(@PathParam("accountSid") String accountSid) {
+    return getAccount(accountSid, APPLICATION_JSON_TYPE);
   }
   
   private Account findAccount(final Sid sid) {
@@ -135,7 +161,8 @@ import com.thoughtworks.xstream.XStream;
     } else {
       return status(UNAUTHORIZED).build();
     }
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(account)).build();
+    final RestCommResponse response = new RestCommResponse(account);
+    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(response)).build();
   }
   
   @Path("/{accountSid}")

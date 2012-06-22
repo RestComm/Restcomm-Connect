@@ -16,37 +16,42 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
 import java.util.List;
 
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.shiro.authz.AuthorizationException;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.entities.Client;
+import org.mobicents.servlet.sip.restcomm.entities.ClientList;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.ClientConverter;
-
-import com.thoughtworks.xstream.XStream;
+import org.mobicents.servlet.sip.restcomm.http.converter.ClientListConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -54,16 +59,24 @@ import com.thoughtworks.xstream.XStream;
 @Path("/Accounts/{accountSid}/Clients")
 @ThreadSafe public final class ClientsEndpoint extends AbstractEndpoint {
   private final ClientsDao dao;
+  private final Gson gson;
   private final XStream xstream;
 
   public ClientsEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getClientsDao();
+    final ClientConverter converter = new ClientConverter();
+    final GsonBuilder builder = new GsonBuilder();
+    builder.registerTypeAdapter(Client.class, converter);
+    builder.setPrettyPrinting();
+    gson = builder.create();
     xstream = new XStream();
-    xstream.alias("Clients", List.class);
+    xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.alias("Client", Client.class);
-    xstream.registerConverter(new ClientConverter());
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new ClientListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   private Client createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -89,23 +102,40 @@ import com.thoughtworks.xstream.XStream;
     return ok().build();
   }
   
-  @Path("/{sid}")
-  @GET public Response getClient(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  public Response getClient(String accountSid, String sid, MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:Clients"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final Client client = dao.getClient(new Sid(sid));
     if(client == null) {
       return status(NOT_FOUND).build();
     } else {
-      return ok(xstream.toXML(client), APPLICATION_XML).build();
+	  if(APPLICATION_XML_TYPE == responseType) {
+		final RestCommResponse response = new RestCommResponse(client);
+		return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(client), APPLICATION_JSON).build();
+      } else {
+        return null;
+      }
     }
+  }
+  
+  @Path("/{sid}")
+  @GET public Response getClientXml(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+    return getClient(accountSid, sid, APPLICATION_XML_TYPE);
+  }
+  
+  @Path("/{sid}.json")
+  @GET public Response getClientJson(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+    return getClient(accountSid, sid, APPLICATION_JSON_TYPE);
   }
   
   @GET public Response getClients(@PathParam("accountSid") String accountSid) {
     try { secure(new Sid(accountSid), "RestComm:Read:Clients"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Client> clients = dao.getClients(new Sid(accountSid));
-    return ok(xstream.toXML(clients), APPLICATION_XML).build();
+    final RestCommResponse response = new RestCommResponse(new ClientList(clients));
+    return ok(xstream.toXML(response), APPLICATION_XML).build();
   }
   
   private String getFriendlyName(final String login, final MultivaluedMap<String, String> data) {

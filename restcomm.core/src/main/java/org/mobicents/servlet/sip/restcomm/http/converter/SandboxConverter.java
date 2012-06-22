@@ -16,17 +16,24 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import java.lang.reflect.Type;
+
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.SandBox;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class SandboxConverter extends AbstractConverter {
+@ThreadSafe public final class SandboxConverter extends AbstractConverter
+    implements JsonSerializer<SandBox> {
   public SandboxConverter() {
     super();
   }
@@ -55,15 +62,43 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeUri(sandbox.getUri(), writer);
   }
   
+  @Override public JsonElement serialize(final SandBox sandbox, final Type type,
+      final JsonSerializationContext context) {
+  	final JsonObject object = new JsonObject();
+  	writeDateCreated(sandbox.getDateCreated(), object);
+    writeDateUpdated(sandbox.getDateUpdated(), object);
+    writePin(sandbox.getPin(), object);
+    writeAccountSid(sandbox.getAccountSid(), object);
+    writePhoneNumber(sandbox.getPhoneNumber(), object);
+    writeApplicationSid(sandbox.getApplicationSid(), object);
+    writeApiVersion(sandbox.getApiVersion(), object);
+    writeVoiceUrl(sandbox.getVoiceUrl(), object);
+    writeVoiceMethod(sandbox.getVoiceMethod(), object);
+    writeSmsUrl(sandbox.getSmsUrl(), object);
+    writeSmsMethod(sandbox.getSmsMethod(), object);
+    writeStatusCallback(sandbox.getStatusCallback(), object);
+    writeStatusCallbackMethod(sandbox.getStatusCallbackMethod(), object);
+    writeUri(sandbox.getUri(), object);
+  	return object;
+  }
+  
   private void writeApplicationSid(final Sid applicationSid, final HierarchicalStreamWriter writer) {
     writer.startNode("ApplicationSid");
     writer.setValue(applicationSid.toString());
     writer.endNode();
   }
   
+  private void writeApplicationSid(final Sid applicationSid, final JsonObject object) {
+    object.addProperty("application_sid", applicationSid.toString());
+  }
+  
   private void writePin(final String pin, final HierarchicalStreamWriter writer) {
     writer.startNode("Pin");
     writer.setValue(pin);
     writer.endNode();
+  }
+  
+  private void writePin(final String pin, final JsonObject object) {
+    object.addProperty("pin", pin);
   }
 }

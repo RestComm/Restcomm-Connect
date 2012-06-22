@@ -16,16 +16,23 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import java.lang.reflect.Type;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Recording;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class RecordingConverter extends AbstractConverter {
+@ThreadSafe public final class RecordingConverter extends AbstractConverter
+    implements JsonSerializer<Recording> {
   public RecordingConverter() {
     super();
   }
@@ -46,5 +53,19 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeDuration(recording.getDuration(), writer);
     writeApiVersion(recording.getApiVersion(), writer);
     writeUri(recording.getUri(), writer);
+  }
+  
+  @Override public JsonElement serialize(final Recording recording, final Type type,
+      final JsonSerializationContext context) {
+  	final JsonObject object = new JsonObject();
+  	writeSid(recording.getSid(), object);
+    writeDateCreated(recording.getDateCreated(), object);
+    writeDateUpdated(recording.getDateUpdated(), object);
+    writeAccountSid(recording.getAccountSid(), object);
+    writeCallSid(recording.getCallSid(), object);
+    writeDuration(recording.getDuration(), object);
+    writeApiVersion(recording.getApiVersion(), object);
+    writeUri(recording.getUri(), object);
+  	return object;
   }
 }
