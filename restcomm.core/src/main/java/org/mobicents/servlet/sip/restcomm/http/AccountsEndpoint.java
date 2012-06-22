@@ -21,11 +21,12 @@ import com.google.gson.GsonBuilder;
 
 import com.thoughtworks.xstream.XStream;
 
-import java.net.URI;
-
 import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
+
+import java.net.URI;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
