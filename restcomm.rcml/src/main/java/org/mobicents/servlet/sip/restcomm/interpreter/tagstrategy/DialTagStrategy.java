@@ -18,66 +18,33 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.log4j.Logger;
-
-import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
-import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
-import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.media.api.Call;
-import org.mobicents.servlet.sip.restcomm.media.api.CallException;
-import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
-import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
-import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
-import org.mobicents.servlet.sip.restcomm.media.api.Conference;
-import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
-import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
-import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Client;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Number;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Uri;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Beep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.CallerId;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.EndConferenceOnExit;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.HangupOnStar;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.MaxParticipants;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Muted;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Record;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.RingbackTone;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StartConferenceOnEnter;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitMethod;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public final class DialTagStrategy extends RcmlTagStrategy {
-  private static final Logger logger = Logger.getLogger(DialTagStrategy.class);
-  
-  private final PhoneNumberUtil phoneNumberUtil;
-  
   private URI action;
   private String method;
   private int timeout;
@@ -86,66 +53,30 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
   private PhoneNumber callerId;
   private URI ringbackTone;
   private boolean record;
-  private Sid recordingSid;
   
   public DialTagStrategy() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     final Configuration configuration = services.get(Configuration.class);
-    phoneNumberUtil = PhoneNumberUtil.getInstance();
     ringbackTone = URI.create("file://" + configuration.getString("ringback-audio-file"));
   }
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-	try {
-	  final Call call = context.getCall();
-	  final DateTime start = DateTime.now();
-	  final String text = tag.getText();
-	  String dialStatus = null;
-	  if(text != null && !text.isEmpty()) {
-	    final BridgeSubStrategy strategy = new BridgeSubStrategy(timeout, timeLimit, callerId, ringbackTone, record);
-		strategy.initialize(interpreter, context, tag);
-		strategy.execute(interpreter, context, tag);
-//		dialStatus = outboundCall.getStatus().toString();
+    RcmlTagStrategy strategy = null;
+    final String text = tag.getText();
+	if(text != null && !text.isEmpty()) {
+	  strategy = new BridgeSubStrategy(action, method, timeout, timeLimit, callerId, ringbackTone, record);
+	} else {
+	  final List<Tag> children = tag.getChildren();
+	  if(hasConferenceTag(children)) {
+	    strategy = new ConferenceSubStrategy(action, method, timeLimit, record);
 	  } else {
-	    final List<Tag> children = tag.getChildren();
-	    if(hasConferenceTag(children)) {
-	      final RcmlTag conference = (RcmlTag)getConferenceTag(children);
-	      final ConferenceSubStrategy strategy = new ConferenceSubStrategy(timeLimit, record);
-	      strategy.initialize(interpreter, context, conference);
-		  strategy.execute(interpreter, context, conference);
-//	      conference(interpreter, context, conference);
-	      dialStatus = "completed";
-	    } else {
-	      final ForkSubStrategy strategy = new ForkSubStrategy(timeout, timeLimit, callerId, ringbackTone, record);
-	      strategy.initialize(interpreter, context, tag);
-		  strategy.execute(interpreter, context, tag);
-//	      fork(call, calls);
-//	      dialStatus = outboundCall.getStatus().toString();
-	    }
+	    strategy = new ForkSubStrategy(action, method, timeout, timeLimit, callerId, ringbackTone, record);
 	  }
-	  final DateTime finish = DateTime.now();
-	  if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
-	    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-	    parameters.add(new BasicNameValuePair("DialCallStatus", dialStatus));
-	    if(/* outboundCall */ null != null) {
-	      parameters.add(new BasicNameValuePair("DialCallSid", null /* outboundCall.getSid().toString() */));
-	    }
-	    parameters.add(new BasicNameValuePair("DialCallDuration",
-	        Long.toString(finish.minus(start.getMillis()).getMillis() / TimeUtils.SECOND_IN_MILLIS)));
-	    if(record) {
-	      parameters.add(new BasicNameValuePair("RecordingUrl", toRecordingPath(recordingSid).toString()));
-	    }
-	    interpreter.load(action, method, parameters);
-        interpreter.redirect();
-	  }
-    } catch(final Exception exception) {
-      interpreter.failed();
-  	  interpreter.notify(context, Notification.ERROR, 12400);
-  	  logger.error(exception);
-      throw new TagStrategyException(exception);
-    }
+	  strategy.initialize(interpreter, context, tag);
+	  strategy.execute(interpreter, context, tag);
+	}
   }
   
   private Tag getConferenceTag(final List<Tag> tags) {
@@ -185,7 +116,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
       value = context.getCall().getOriginator();
     }
     try { 
-      callerId = phoneNumberUtil.parse(value, "US");
+      callerId = PhoneNumberUtil.getInstance().parse(value, "US");
     } catch(final NumberParseException ignored) {
       interpreter.notify(context, Notification.WARNING, 13214);
     }
