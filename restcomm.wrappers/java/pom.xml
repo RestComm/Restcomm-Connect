@@ -14,11 +14,6 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-  <scm>
-    <url>git@github.com:twilio/twilio-java.git</url>
-    <connection>scm:git:git@github.com:twilio/twilio-java.git</connection>
-    <developerConnection>scm:git:git@github.com:twilio/twilio-java.git</developerConnection>
-  </scm>
   <developers>
     <developer>
       <id>support</id>
