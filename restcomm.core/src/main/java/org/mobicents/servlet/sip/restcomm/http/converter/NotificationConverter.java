@@ -48,6 +48,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
     final Notification notification = (Notification)object;
+    writer.startNode("Notification");
     writeSid(notification.getSid(), writer);
     writeDateCreated(notification.getDateCreated(), writer);
     writeDateUpdated(notification.getDateUpdated(), writer);
@@ -65,6 +66,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeResponseHeaders(notification.getResponseHeaders(), writer);
     writeResponseBody(notification.getResponseBody(), writer);
     writeUri(notification.getUri(), writer);
+    writer.endNode();
   }
   
   @Override public JsonElement serialize(final Notification notification, final Type type,

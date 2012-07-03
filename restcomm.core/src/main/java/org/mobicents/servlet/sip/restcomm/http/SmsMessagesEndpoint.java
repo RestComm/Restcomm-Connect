@@ -40,8 +40,12 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
+import org.mobicents.servlet.sip.restcomm.entities.SmsMessageList;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.SmsMessageConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.SmsMessageListConverter;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -62,10 +66,12 @@ import com.thoughtworks.xstream.XStream;
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getSmsMessagesDao();
     aggregator = services.get(SmsAggregator.class);
+    final SmsMessageConverter converter = new SmsMessageConverter();
     xstream = new XStream();
-    xstream.alias("SMSMessages", List.class);
-    xstream.alias("SMSMessage", SmsMessage.class);
-    xstream.registerConverter(new SmsMessageConverter());
+    xstream.alias("RestcommResponse", RestCommResponse.class);
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new SmsMessageListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   @Path("/{sid}")
@@ -76,7 +82,8 @@ import com.thoughtworks.xstream.XStream;
     if(smsMessage == null) {
       return status(NOT_FOUND).build();
     } else {
-      return ok(xstream.toXML(smsMessage), APPLICATION_XML).build();
+      final RestCommResponse response = new RestCommResponse(smsMessage);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
     }
   }
   
@@ -84,7 +91,8 @@ import com.thoughtworks.xstream.XStream;
     try { secure(new Sid(accountSid), "RestComm:Read:SmsMessages"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<SmsMessage> smsMessages = dao.getSmsMessages(new Sid(accountSid));
-    return ok(xstream.toXML(smsMessages), APPLICATION_XML).build();
+    final RestCommResponse response = new RestCommResponse(new SmsMessageList(smsMessages));
+    return ok(xstream.toXML(response), APPLICATION_XML).build();
   }
   
   @POST public Response putSmsMessage(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {

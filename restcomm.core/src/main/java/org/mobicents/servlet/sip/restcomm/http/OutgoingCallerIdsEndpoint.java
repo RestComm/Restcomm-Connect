@@ -44,7 +44,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
 import org.mobicents.servlet.sip.restcomm.entities.OutgoingCallerId;
+import org.mobicents.servlet.sip.restcomm.entities.OutgoingCallerIdList;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.OutgoingCallerIdConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.OutgoingCallerIdListConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -64,10 +68,12 @@ import com.thoughtworks.xstream.XStream;
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getOutgoingCallerIdsDao();
+    final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter();
     xstream = new XStream();
-    xstream.alias("OutgoingCallerIds", List.class);
-    xstream.alias("OutgoingCallerId", OutgoingCallerId.class);
-    xstream.registerConverter(new OutgoingCallerIdConverter());
+    xstream.alias("RestcommResponse", RestCommResponse.class);
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new OutgoingCallerIdListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   private OutgoingCallerId createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -105,7 +111,8 @@ import com.thoughtworks.xstream.XStream;
     if(outgoingCallerId == null) {
       return status(NOT_FOUND).build();
     } else {
-      return ok(xstream.toXML(outgoingCallerId), APPLICATION_XML).build();
+      final RestCommResponse response = new RestCommResponse(outgoingCallerId);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
     }
   }
   
@@ -113,7 +120,8 @@ import com.thoughtworks.xstream.XStream;
     try { secure(new Sid(accountSid), "RestComm:Read:OutgoingCallerIds"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<OutgoingCallerId> outgoingCallerIds = dao.getOutgoingCallerIds(new Sid(accountSid));
-    return ok(xstream.toXML(outgoingCallerIds), APPLICATION_XML).build();
+    final RestCommResponse response = new RestCommResponse(new OutgoingCallerIdList(outgoingCallerIds));
+    return ok(xstream.toXML(response), APPLICATION_XML).build();
   }
 
   @POST public Response putOutgoingCallerId(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
@@ -124,7 +132,8 @@ import com.thoughtworks.xstream.XStream;
     }
     final OutgoingCallerId outgoingCallerId = createFrom(new Sid(accountSid), data);
     dao.addOutgoingCallerId(outgoingCallerId);
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(outgoingCallerId)).build();
+    final RestCommResponse response = new RestCommResponse(outgoingCallerId);
+    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(response)).build();
   }
   
   @Path("/{sid}")

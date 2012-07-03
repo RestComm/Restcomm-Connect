@@ -9,8 +9,11 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
@@ -32,6 +35,8 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
   private final ConferenceCenter conferenceCenter;
   private final PhoneNumberUtil phoneNumberUtil;
   
+  private final URI action;
+  private final String method;
   private final int timeout;
   private final int timeLimit;
   private final PhoneNumber callerId;
@@ -40,13 +45,15 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
   private Sid recordingSid;
   private Call outboundCall;
   
-  public BridgeSubStrategy(final int timeout, final int timeLimit, final PhoneNumber callerId,
+  public BridgeSubStrategy(final URI action, final String method, final int timeout, final int timeLimit, final PhoneNumber callerId,
       final URI ringbackTone, final boolean record) {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     this.callManager = services.get(CallManager.class);
     this.conferenceCenter = services.get(ConferenceCenter.class);
     this.phoneNumberUtil = PhoneNumberUtil.getInstance();
+    this.action = action;
+    this.method = method;
     this.timeout = timeout;
     this.timeLimit = timeLimit;
     this.callerId = callerId;
@@ -72,6 +79,7 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
 	call.addObserver(this);
 	bridge.addParticipant(call);
 	try {
+	  final DateTime start = DateTime.now();
 	  outboundCall = callManager.createExternalCall(caller, callee);
 	  outboundCall.addObserver(this);
 	  outboundCall.dial();
@@ -97,6 +105,19 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
       }
       call.removeObserver(this);
       conferenceCenter.removeConference(room);
+      final DateTime finish = DateTime.now();
+      if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
+  	    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+  	    parameters.add(new BasicNameValuePair("DialCallStatus", outboundCall.getStatus().toString()));
+  	    parameters.add(new BasicNameValuePair("DialCallSid", outboundCall.getSid().toString()));
+  	    parameters.add(new BasicNameValuePair("DialCallDuration",
+  	        Long.toString(finish.minus(start.getMillis()).getMillis() / TimeUtils.SECOND_IN_MILLIS)));
+  	    if(record) {
+  	      parameters.add(new BasicNameValuePair("RecordingUrl", toRecordingPath(recordingSid).toString()));
+  	    }
+  	    interpreter.load(action, method, parameters);
+        interpreter.redirect();
+  	  }
 	} catch(final Exception exception) {
       interpreter.notify(context, Notification.ERROR, 12400);
       logger.error(exception);

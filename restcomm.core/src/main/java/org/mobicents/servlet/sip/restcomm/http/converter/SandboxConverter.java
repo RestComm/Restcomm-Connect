@@ -46,6 +46,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
     final SandBox sandbox = (SandBox)object;
+    writer.startNode("RestCommSandbox");
     writeDateCreated(sandbox.getDateCreated(), writer);
     writeDateUpdated(sandbox.getDateUpdated(), writer);
     writePin(sandbox.getPin(), writer);
@@ -60,6 +61,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeStatusCallback(sandbox.getStatusCallback(), writer);
     writeStatusCallbackMethod(sandbox.getStatusCallbackMethod(), writer);
     writeUri(sandbox.getUri(), writer);
+    writer.endNode();
   }
   
   @Override public JsonElement serialize(final SandBox sandbox, final Type type,

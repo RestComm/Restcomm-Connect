@@ -45,6 +45,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
     final ShortCode shortCode = (ShortCode)object;
+    writer.startNode("ShortCode");
     writeSid(shortCode.getSid(), writer);
     writeDateCreated(shortCode.getDateCreated(), writer);
     writeDateUpdated(shortCode.getDateUpdated(), writer);
@@ -57,6 +58,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeSmsFallbackUrl(shortCode.getSmsFallbackUrl(), writer);
     writeSmsFallbackMethod(shortCode.getSmsFallbackMethod(), writer);
     writeUri(shortCode.getUri(), writer);
+    writer.endNode();
   }
   
   @Override public JsonElement serialize(final ShortCode shortCode, final Type type,

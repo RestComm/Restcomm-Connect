@@ -75,7 +75,6 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
-    xstream.alias("Account", Account.class);
     xstream.registerConverter(converter);
     xstream.registerConverter(new RestCommResponseConverter());
   }

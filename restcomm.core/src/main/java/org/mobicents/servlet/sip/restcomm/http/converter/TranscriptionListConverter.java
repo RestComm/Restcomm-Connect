@@ -16,9 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
-import org.apache.http.annotation.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.entities.Account;
-import org.mobicents.servlet.sip.restcomm.entities.AccountList;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.Transcription;
+import org.mobicents.servlet.sip.restcomm.entities.TranscriptionList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
@@ -26,22 +26,22 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AccountListConverter extends AbstractConverter {
-  public AccountListConverter() {
+@ThreadSafe public final class TranscriptionListConverter extends AbstractConverter {
+  public TranscriptionListConverter() {
     super();
   }
 
   @SuppressWarnings("rawtypes")
   @Override public boolean canConvert(final Class klass) {
-    return AccountList.class.equals(klass);
+    return TranscriptionList.class.equals(klass);
   }
 
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
-    final AccountList list = (AccountList)object;
-    writer.startNode("Accounts");
-    for(final Account account : list.getAccounts()) {
-      context.convertAnother(account);
+    final TranscriptionList list = (TranscriptionList)object;
+    writer.startNode("Transcriptions");
+    for(final Transcription transcription : list.getTranscriptions()) {
+      context.convertAnother(transcription);
     }
     writer.endNode();
   }

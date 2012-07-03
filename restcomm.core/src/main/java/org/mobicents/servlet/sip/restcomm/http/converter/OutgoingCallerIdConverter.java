@@ -45,6 +45,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
     final OutgoingCallerId outgoingCallerId = (OutgoingCallerId)object;
+    writer.startNode("OutgoingCallerId");
     writeSid(outgoingCallerId.getSid(), writer);
     writeAccountSid(outgoingCallerId.getAccountSid(), writer);
     writeFriendlyName(outgoingCallerId.getFriendlyName(), writer);
@@ -52,6 +53,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeDateCreated(outgoingCallerId.getDateCreated(), writer);
     writeDateUpdated(outgoingCallerId.getDateUpdated(), writer);
     writeUri(outgoingCallerId.getUri(), writer);
+    writer.endNode();
   }
   
   @Override public JsonElement serialize(final OutgoingCallerId outgoingCallerId, final Type type,

@@ -46,6 +46,7 @@ public class SmsMessageConverter extends AbstractConverter
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
     final SmsMessage smsMessage = (SmsMessage)object;
+    writer.startNode("SMSMessage");
     writeSid(smsMessage.getSid(), writer);
     writeDateCreated(smsMessage.getDateCreated(), writer);
     writeDateUpdated(smsMessage.getDateUpdated(), writer);
@@ -59,6 +60,7 @@ public class SmsMessageConverter extends AbstractConverter
     writePrice(smsMessage.getPrice(), writer);
     writeApiVersion(smsMessage.getApiVersion(), writer);
     writeUri(smsMessage.getUri(), writer);
+    writer.endNode();
   }
   
   @Override public JsonElement serialize(final SmsMessage smsMessage, final Type type,

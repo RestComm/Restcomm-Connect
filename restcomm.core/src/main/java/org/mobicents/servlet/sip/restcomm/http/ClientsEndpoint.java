@@ -73,7 +73,6 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
-    xstream.alias("Client", Client.class);
     xstream.registerConverter(converter);
     xstream.registerConverter(new ClientListConverter());
     xstream.registerConverter(new RestCommResponseConverter());
@@ -166,7 +165,8 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     }
     final Client client = createFrom(new Sid(accountSid), data);
     dao.addClient(client);
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(client)).build();
+    final RestCommResponse response = new RestCommResponse(client);
+    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(response)).build();
   }
   
   @Path("/{sid}")

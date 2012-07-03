@@ -47,6 +47,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
     final Transcription transcription = (Transcription)object;
+    writer.startNode("Transcription");
     writeSid(transcription.getSid(), writer);
     writeDateCreated(transcription.getDateCreated(), writer);
     writeDateUpdated(transcription.getDateUpdated(), writer);
@@ -57,6 +58,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeTranscriptionText(transcription.getTranscriptionText(), writer);
     writePrice(transcription.getPrice(), writer);
     writeUri(transcription.getUri(), writer);
+    writer.endNode();
   }
   
   @Override public JsonElement serialize(final Transcription transcription, final Type type,

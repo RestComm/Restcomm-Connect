@@ -43,7 +43,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumberList;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.IncomingPhoneNumberConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.IncomingPhoneNumberListConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -63,10 +67,12 @@ import com.thoughtworks.xstream.XStream;
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getIncomingPhoneNumbersDao();
+    final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter();
     xstream = new XStream();
-    xstream.alias("IncomingPhoneNumbers", List.class);
-    xstream.alias("IncomingPhoneNumber", IncomingPhoneNumber.class);
-    xstream.registerConverter(new IncomingPhoneNumberConverter());
+    xstream.alias("RestcommResponse", RestCommResponse.class);
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new IncomingPhoneNumberListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -127,7 +133,8 @@ import com.thoughtworks.xstream.XStream;
     if(incomingPhoneNumber == null) {
       return status(NOT_FOUND).build();
     } else {
-      return ok(xstream.toXML(incomingPhoneNumber), APPLICATION_XML).build();
+      final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
     }
   }
   
@@ -135,7 +142,8 @@ import com.thoughtworks.xstream.XStream;
     try { secure(new Sid(accountSid), "RestComm:Read:IncomingPhoneNumbers"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbers(new Sid(accountSid));
-    return ok(xstream.toXML(incomingPhoneNumbers), APPLICATION_XML).build();
+    final RestCommResponse response = new RestCommResponse(new IncomingPhoneNumberList(incomingPhoneNumbers));
+    return ok(xstream.toXML(response), APPLICATION_XML).build();
   }
   
   @POST public Response putIncomingPhoneNumber(@PathParam("accountSid") String accountSid,
@@ -147,7 +155,8 @@ import com.thoughtworks.xstream.XStream;
     }
     final IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data);
     dao.addIncomingPhoneNumber(incomingPhoneNumber);
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(incomingPhoneNumber)).build();
+    final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
+    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(response)).build();
   }
   
   @Path("/{sid}")

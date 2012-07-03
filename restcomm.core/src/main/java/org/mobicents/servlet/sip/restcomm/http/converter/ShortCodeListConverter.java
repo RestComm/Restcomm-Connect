@@ -16,32 +16,33 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
-import org.apache.http.annotation.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.entities.Account;
-import org.mobicents.servlet.sip.restcomm.entities.AccountList;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.entities.ShortCode;
+import org.mobicents.servlet.sip.restcomm.entities.ShortCodeList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AccountListConverter extends AbstractConverter {
-  public AccountListConverter() {
+@ThreadSafe public final class ShortCodeListConverter extends AbstractConverter {
+  public ShortCodeListConverter() {
     super();
   }
 
   @SuppressWarnings("rawtypes")
   @Override public boolean canConvert(final Class klass) {
-    return AccountList.class.equals(klass);
+    return ShortCodeList.class.equals(klass);
   }
 
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
-    final AccountList list = (AccountList)object;
-    writer.startNode("Accounts");
-    for(final Account account : list.getAccounts()) {
-      context.convertAnother(account);
+    final ShortCodeList list = (ShortCodeList)object;
+    writer.startNode("ShortCodes");
+    for(final ShortCode shortCode : list.getShortCodes()) {
+     context.convertAnother(shortCode);
     }
     writer.endNode();
   }

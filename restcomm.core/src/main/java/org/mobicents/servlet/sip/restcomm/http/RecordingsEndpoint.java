@@ -37,7 +37,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Recording;
+import org.mobicents.servlet.sip.restcomm.entities.RecordingList;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.RecordingConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.RecordingListConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -53,10 +57,12 @@ import com.thoughtworks.xstream.XStream;
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getRecordingsDao();
+    final RecordingConverter converter = new RecordingConverter();
     xstream = new XStream();
-    xstream.alias("Recordings", List.class);
-    xstream.alias("Recording", Recording.class);
-    xstream.registerConverter(new RecordingConverter());
+    xstream.alias("RestcommResponse", RestCommResponse.class);
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new RecordingListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   @Path("/{sid}")
@@ -76,7 +82,8 @@ import com.thoughtworks.xstream.XStream;
       }
     } else {
       final Recording recording = dao.getRecording(new Sid(sid));
-      return ok(xstream.toXML(recording), APPLICATION_XML).build();
+      final RestCommResponse response = new RestCommResponse(recording);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
     }
   }
   
@@ -84,6 +91,7 @@ import com.thoughtworks.xstream.XStream;
     try { secure(new Sid(accountSid), "RestComm:Read:Recordings"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Recording> recordings = dao.getRecordings(new Sid(accountSid));
-    return ok(xstream.toXML(recordings), APPLICATION_XML).build();
+    final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
+    return ok(xstream.toXML(response), APPLICATION_XML).build();
   }
 }

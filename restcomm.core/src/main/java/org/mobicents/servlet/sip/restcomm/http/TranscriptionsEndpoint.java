@@ -36,8 +36,12 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.entities.Transcription;
+import org.mobicents.servlet.sip.restcomm.entities.TranscriptionList;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.TranscriptionConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.TranscriptionListConverter;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -53,10 +57,12 @@ import com.thoughtworks.xstream.XStream;
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getTranscriptionsDao();
+    final TranscriptionConverter converter = new TranscriptionConverter();
     xstream = new XStream();
-    xstream.alias("Transcriptions", List.class);
-    xstream.alias("Transcription", Transcription.class);
-    xstream.registerConverter(new TranscriptionConverter());
+    xstream.alias("RestcommResponse", RestCommResponse.class);
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new TranscriptionListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   @Path("/{sid}")
@@ -75,7 +81,8 @@ import com.thoughtworks.xstream.XStream;
     if(transcription == null) {
       return status(NOT_FOUND).build();
     } else {
-      return ok(xstream.toXML(transcription), APPLICATION_XML).build();
+      final RestCommResponse response = new RestCommResponse(transcription);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
     }
   }
   
@@ -83,6 +90,7 @@ import com.thoughtworks.xstream.XStream;
     try { secure(new Sid(accountSid), "RestComm:Read:Transcriptions"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
-    return ok(xstream.toXML(transcriptions), APPLICATION_XML).build();
+    final RestCommResponse response = new RestCommResponse(new TranscriptionList(transcriptions));
+    return ok(xstream.toXML(response), APPLICATION_XML).build();
   }
 }

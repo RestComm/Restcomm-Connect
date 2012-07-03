@@ -4,6 +4,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
@@ -18,6 +21,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
+import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Beep;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.EndConferenceOnExit;
@@ -30,6 +34,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
 public final class ConferenceSubStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
   private final ConferenceCenter conferenceCenter;
   
+  private final URI action;
+  private final String method;
   private final int timeLimit;
   private final boolean record;
   private Sid recordingSid;
@@ -42,10 +48,12 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
   private String waitMethod;
   private int maxParticipants;
 
-  public ConferenceSubStrategy(final int timeLimit, final boolean record) {
+  public ConferenceSubStrategy(final URI action, final String method, final int timeLimit, final boolean record) {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     this.conferenceCenter = services.get(ConferenceCenter.class);
+    this.action = action;
+    this.method = method;
     this.timeLimit = timeLimit;
     this.record = record;
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
@@ -58,6 +66,7 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     final StringBuilder buffer = new StringBuilder();
     buffer.append(context.getAccountSid().toString()).append(":").append(name);
     final String room = buffer.toString();
+    final DateTime start = DateTime.now();
     final Conference conference = conferenceCenter.getConference(room);
     if(!startConferenceOnEnter) {
       if(!call.isMuted()) {
@@ -90,6 +99,18 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
         conference.removeParticipant(call);
       }
     }
+    final DateTime finish = DateTime.now();
+    if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
+      final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+      parameters.add(new BasicNameValuePair("DialCallStatus", "completed"));
+      parameters.add(new BasicNameValuePair("DialCallDuration",
+          Long.toString(finish.minus(start.getMillis()).getMillis() / TimeUtils.SECOND_IN_MILLIS)));
+      if(record) {
+        parameters.add(new BasicNameValuePair("RecordingUrl", toRecordingPath(recordingSid).toString()));
+      }
+      interpreter.load(action, method, parameters);
+      interpreter.redirect();
+    }
   }
   
   private boolean getBeep(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -106,6 +127,16 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     } else {
       return true;
     }
+  }
+  
+  private Tag getConferenceTag(final List<Tag> tags) {
+    final String name = org.mobicents.servlet.sip.restcomm.xml.rcml.Conference.NAME;
+    for(final Tag tag : tags) {
+      if(name.equals(tag.getName())) {
+        return tag;
+      }
+    }
+    return null;
   }
   
   private boolean getEndConferenceOnExit(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -209,14 +240,15 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
   
   @Override public synchronized void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    name = tag.getText();
-    muted = getMuted(interpreter, context, tag);
-    beep = getBeep(interpreter, context, tag);
-    startConferenceOnEnter = getStartConferenceOnEnter(interpreter, context, tag);
-    endConferenceOnExit = getEndConferenceOnExit(interpreter, context, tag);
-    waitUrl = getWaitUrl(interpreter, context, tag);
-    waitMethod = getWaitMethod(interpreter, context, tag);
-    maxParticipants = getMaxParticipants(interpreter, context, tag);
+	final RcmlTag conference = (RcmlTag)getConferenceTag(tag.getChildren());
+    name = conference.getText();
+    muted = getMuted(interpreter, context, conference);
+    beep = getBeep(interpreter, context, conference);
+    startConferenceOnEnter = getStartConferenceOnEnter(interpreter, context, conference);
+    endConferenceOnExit = getEndConferenceOnExit(interpreter, context, conference);
+    waitUrl = getWaitUrl(interpreter, context, conference);
+    waitMethod = getWaitMethod(interpreter, context, conference);
+    maxParticipants = getMaxParticipants(interpreter, context, conference);
   }
 
   @Override public synchronized void onStatusChanged(final Call call) {

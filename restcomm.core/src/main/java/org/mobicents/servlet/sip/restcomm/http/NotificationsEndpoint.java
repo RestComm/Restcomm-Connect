@@ -36,7 +36,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.entities.NotificationList;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.NotificationConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.NotificationListConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -52,10 +56,12 @@ import com.thoughtworks.xstream.XStream;
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getNotificationsDao();
+    final NotificationConverter converter = new NotificationConverter();
     xstream = new XStream();
-    xstream.alias("Notifications", List.class);
-    xstream.alias("Notification", Notification.class);
-    xstream.registerConverter(new NotificationConverter());
+    xstream.alias("RestcommResponse", RestCommResponse.class);
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new NotificationListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
   @Path("/{sid}")
@@ -66,7 +72,8 @@ import com.thoughtworks.xstream.XStream;
     if(notification == null) {
       return status(NOT_FOUND).build();
     } else {
-      return ok(xstream.toXML(notification), APPLICATION_XML).build();
+      final RestCommResponse response = new RestCommResponse(notification);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
     }
   }
   
@@ -74,6 +81,7 @@ import com.thoughtworks.xstream.XStream;
     try { secure(new Sid(accountSid), "RestComm:Read:Notifications"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
-    return ok(xstream.toXML(notifications), APPLICATION_XML).build();
+    final RestCommResponse response = new RestCommResponse(new NotificationList(notifications));
+    return ok(xstream.toXML(response), APPLICATION_XML).build();
   }
 }

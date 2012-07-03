@@ -16,9 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
-import org.apache.http.annotation.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.entities.Account;
-import org.mobicents.servlet.sip.restcomm.entities.AccountList;
+import org.mobicents.servlet.sip.restcomm.entities.SandBox;
+import org.mobicents.servlet.sip.restcomm.entities.SandBoxList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
@@ -26,22 +25,22 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AccountListConverter extends AbstractConverter {
-  public AccountListConverter() {
+public final class SandBoxListConverter extends AbstractConverter {
+  public SandBoxListConverter() {
     super();
   }
 
   @SuppressWarnings("rawtypes")
   @Override public boolean canConvert(final Class klass) {
-    return AccountList.class.equals(klass);
+    return SandBoxList.class.equals(klass);
   }
 
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
-    final AccountList list = (AccountList)object;
-    writer.startNode("Accounts");
-    for(final Account account : list.getAccounts()) {
-      context.convertAnother(account);
+    final SandBoxList list = (SandBoxList)object;
+    writer.startNode("RestCommSandboxes");
+    for(final SandBox sandbox : list.getSandBoxes()) {
+      context.convertAnother(sandbox);
     }
     writer.endNode();
   }
