@@ -45,10 +45,10 @@ public class TwilioRestClient {
 	private static final String VERSION = "3.0";
 
 	/** The endpoint. */
-	private String endpoint = "https://api.twilio.com";
+	private String endpoint = "http://127.0.0.1:8008/restcomm";
 
 	/** The Constant DEFAULT_VERSION. */
-	public static final String DEFAULT_VERSION = "2010-04-01";
+	public static final String DEFAULT_VERSION = "2012-04-24";
 
 	/** The account sid. */
 	private String accountSid;
