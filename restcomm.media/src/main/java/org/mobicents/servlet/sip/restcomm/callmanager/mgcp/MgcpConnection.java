@@ -114,19 +114,18 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   }
   
   public void disconnect() throws MgcpConnectionException {
-    final List<State> possibleStates = new ArrayList<State>();
-    possibleStates.add(HALF_OPEN);
-    possibleStates.add(OPEN);
-    assertState(possibleStates);
-    try {
-      final CallIdentifier callId = new CallIdentifier(Integer.toString(session.getId()));
-      final DeleteConnection dlcx = new DeleteConnection(this, callId, endpoint.getId(), connectionId);
-      server.sendCommand(dlcx, this);
-      setState(DISCONNECTED);
-    } catch(final MgcpServerException exception) {
-      setState(FAILED);
-      fireFailed();
-      throw new MgcpConnectionException(exception);
+    final State state = getState();
+    if(HALF_OPEN.equals(state) || OPEN.equals(state)) {
+      try {
+        final CallIdentifier callId = new CallIdentifier(Integer.toString(session.getId()));
+        final DeleteConnection dlcx = new DeleteConnection(this, callId, endpoint.getId(), connectionId);
+        server.sendCommand(dlcx, this);
+        setState(DISCONNECTED);
+      } catch(final MgcpServerException exception) {
+        setState(FAILED);
+        fireFailed();
+        throw new MgcpConnectionException(exception);
+      }
     }
   }
   

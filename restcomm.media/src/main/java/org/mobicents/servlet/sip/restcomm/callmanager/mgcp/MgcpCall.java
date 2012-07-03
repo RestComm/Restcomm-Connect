@@ -498,7 +498,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
       possibleStates.add(QUEUED);
       possibleStates.add(RINGING);
       assertState(possibleStates);
-      setExpires(480);
+      setExpires(0);
       setState(IN_PROGRESS);
       fireStatusChanged();
       if(Direction.INBOUND == getDirection()) {

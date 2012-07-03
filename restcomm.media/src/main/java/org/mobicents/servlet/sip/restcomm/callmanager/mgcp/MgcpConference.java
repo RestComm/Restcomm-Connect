@@ -21,9 +21,10 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
@@ -77,8 +78,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     addState(COMPLETE);
     addState(FAILED);
     this.name = name;
-    this.calls = new HashMap<Sid, MgcpCall>();
-    this.observers = new ArrayList<ConferenceObserver>();
+    this.calls = new ConcurrentHashMap<Sid, MgcpCall>();
+    this.observers = new CopyOnWriteArrayList<ConferenceObserver>();
     this.server = server;
     this.session = server.createMediaSession();
     final ServiceLocator services = ServiceLocator.getInstance();
@@ -92,8 +93,10 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   @Override public synchronized void addParticipant(final Call call) {
     assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
-    mgcpCall.join(this);
-    calls.put(call.getSid(), mgcpCall);
+    if(!calls.containsKey(call.getSid())) {
+      mgcpCall.join(this);
+      calls.put(call.getSid(), mgcpCall);
+    }
   }
   
   @Override public synchronized void addObserver(final ConferenceObserver observer) {
