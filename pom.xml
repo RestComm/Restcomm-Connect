@@ -65,6 +65,7 @@
                 <module>restcomm.extras</module>
                 <module>restcomm.commons</module>
                 <module>restcomm.media.api</module>
+                <module>twilio-java-sdk</module>
         </modules>
 
         <distributionManagement>
@@ -95,7 +96,7 @@
                 <shirocore.version>1.2.0</shirocore.version>
                 <shiroweb.version>1.2.0</shiroweb.version>
                 <jersey.version>1.9.1</jersey.version>
-                <httpclient.version>4.1.1</httpclient.version>
+                <httpclient.version>4.1.2</httpclient.version>
                 <axis.version>1.3</axis.version>
                 <gson.version>2.1</gson.version>
                 <xstream.version>1.4.2</xstream.version>

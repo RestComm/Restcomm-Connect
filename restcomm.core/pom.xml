@@ -10,9 +10,7 @@
 		<version>1.0.0.BETA2-SNAPSHOT</version>
 	</parent>
 
-	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm.core</artifactId>
-	<version>1.0.0.BETA2-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>restcomm.core</name>
 	<url>http://maven.apache.org</url>
