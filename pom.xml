@@ -65,6 +65,7 @@
                 <module>restcomm.extras</module>
                 <module>restcomm.commons</module>
                 <module>restcomm.media.api</module>
+                <module>twilio-java-sdk</module>
         </modules>
 
         <distributionManagement>
