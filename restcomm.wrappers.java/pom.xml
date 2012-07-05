@@ -2,6 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.mobicents.servlet.sip</groupId>
+<<<<<<< HEAD
     <artifactId>restcomm</artifactId>
     <version>1.0.0.BETA2-SNAPSHOT</version>
   </parent>
@@ -72,6 +73,66 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+=======
+    <artifactId>twilio-java-sdk</artifactId>
+    <version>3.3.10-SNAPSHOT</version>
+  </parent>
+  <packaging>jar</packaging>
+  <name>twilio-java-sdk</name>
+  <description>Java helper library for Twilio services</description>
+  <url>http://www.twilio.com</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>http://www.opensource.org/licenses/mit-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>support</id>
+      <name>Twilio Support</name>
+      <email>help@twilio.com</email>
+      <organization>Twilio, Inc.</organization>
+      <organizationUrl>https://www.twilio.com</organizationUrl>
+      <timezone>-7</timezone>
+    </developer>
+  </developers>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding> 
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.1.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>1.9.3</version>
+      <scope>compile</scope>
+    </dependency>
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.1</version>
+>>>>>>> branch 'master' of https://quintana.thomas@code.google.com/p/restcomm/
       <scope>test</scope>
     </dependency>
   </dependencies>
