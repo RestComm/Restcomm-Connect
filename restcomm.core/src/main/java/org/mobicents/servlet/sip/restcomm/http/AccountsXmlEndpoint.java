@@ -39,12 +39,12 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   }
   
   @Path("/{accountSid}.json")
-  @GET public Response getAccountAsJson(@PathParam("accountSid") String accountSid) {
+  @GET public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {
     return getAccount(accountSid, APPLICATION_JSON_TYPE);
   }
   
   @Path("/{accountSid}")
-  @GET public Response getAccountAsXml(@PathParam("accountSid") String accountSid) {
+  @GET public Response getAccountAsXml(@PathParam("accountSid") final String accountSid) {
     return getAccount(accountSid, APPLICATION_XML_TYPE);
   }
   
@@ -59,14 +59,14 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   
   @Path("/{accountSid}.json")
   @Consumes(APPLICATION_FORM_URLENCODED)
-  @PUT public Response updateAccountAsJson(@PathParam("accountSid") String accountSid,
+  @PUT public Response updateAccountAsJson(@PathParam("accountSid") final String accountSid,
       final MultivaluedMap<String, String> data) {
     return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
   }
   
   @Path("/{accountSid}")
   @Consumes(APPLICATION_FORM_URLENCODED)
-  @PUT public Response updateAccountAsXml(@PathParam("accountSid") String accountSid,
+  @PUT public Response updateAccountAsXml(@PathParam("accountSid") final String accountSid,
       final MultivaluedMap<String, String> data) {
     return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
   }
