@@ -132,8 +132,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
   
   private void handleSmsMessage(final boolean success) {
     if(success) {
-      sms = sms.setDateSent(DateTime.now());
-      sms = sms.setStatus(SmsMessage.Status.SENT);
+      sms = sms.setDateSent(DateTime.now()).setStatus(SmsMessage.Status.SENT);
     } else {
       sms = sms.setStatus(SmsMessage.Status.FAILED);
     }

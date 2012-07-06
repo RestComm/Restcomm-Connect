@@ -16,24 +16,24 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import com.thoughtworks.xstream.XStream;
 
 import java.util.List;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
@@ -43,21 +43,23 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
 import org.mobicents.servlet.sip.restcomm.http.converter.TranscriptionConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.TranscriptionListConverter;
 
-import com.thoughtworks.xstream.XStream;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Accounts/{accountSid}/Transcriptions")
-@ThreadSafe public final class TranscriptionsEndpoint extends AbstractEndpoint {
-  private final TranscriptionsDao dao;
-  private final XStream xstream;
+@NotThreadSafe public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
+  protected final TranscriptionsDao dao;
+  protected final Gson gson;
+  protected final XStream xstream;
   
   public TranscriptionsEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getTranscriptionsDao();
     final TranscriptionConverter converter = new TranscriptionConverter();
+    final GsonBuilder builder = new GsonBuilder();
+    builder.registerTypeAdapter(Transcription.class, converter);
+    builder.setPrettyPrinting();
+    gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
@@ -65,32 +67,36 @@ import com.thoughtworks.xstream.XStream;
     xstream.registerConverter(new RestCommResponseConverter());
   }
   
-  @Path("/{sid}")
-  @DELETE public Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
-    try { secure(new Sid(accountSid), "RestComm:Delete:Transcriptions"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    dao.removeTranscription(new Sid(sid));
-    return ok().build();
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  protected Response getTranscription(final String accountSid, final String sid,
+      final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:Transcriptions"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final Transcription transcription = dao.getTranscription(new Sid(sid));
     if(transcription == null) {
       return status(NOT_FOUND).build();
     } else {
-      final RestCommResponse response = new RestCommResponse(transcription);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
+      if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(transcription), APPLICATION_JSON).build();
+      } else if(APPLICATION_XML_TYPE == responseType) {
+    	final RestCommResponse response = new RestCommResponse(transcription);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      }  else {
+        return null;
+      }
     }
   }
   
-  @GET public Response getTranscriptions(@PathParam("accountSid") String accountSid) {
+  protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:Transcriptions"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
-    final RestCommResponse response = new RestCommResponse(new TranscriptionList(transcriptions));
-    return ok(xstream.toXML(response), APPLICATION_XML).build();
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(transcriptions), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(new TranscriptionList(transcriptions));
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    }  else {
+      return null;
+    }
   }
 }

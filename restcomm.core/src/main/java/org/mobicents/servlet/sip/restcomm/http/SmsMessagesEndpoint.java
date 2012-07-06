@@ -16,25 +16,29 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
+import com.thoughtworks.xstream.XStream;
 
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
+
+import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
@@ -47,19 +51,17 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
 import org.mobicents.servlet.sip.restcomm.http.converter.SmsMessageConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.SmsMessageListConverter;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
-
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.thoughtworks.xstream.XStream;
+import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorException;
+import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Accounts/{accountSid}/SMS/Messages")
-@NotThreadSafe public final class SmsMessagesEndpoint extends AbstractEndpoint {
-  private final SmsMessagesDao dao;
-  private final SmsAggregator aggregator;
-  private final XStream xstream;
+@NotThreadSafe public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
+  protected final SmsMessagesDao dao;
+  protected final Gson gson;
+  protected final SmsAggregator aggregator;
+  protected final XStream xstream;
 
   public SmsMessagesEndpoint() {
     super();
@@ -67,6 +69,10 @@ import com.thoughtworks.xstream.XStream;
     dao = services.get(DaoManager.class).getSmsMessagesDao();
     aggregator = services.get(SmsAggregator.class);
     final SmsMessageConverter converter = new SmsMessageConverter();
+    final GsonBuilder builder = new GsonBuilder();
+    builder.registerTypeAdapter(SmsMessage.class, converter);
+    builder.setPrettyPrinting();
+    gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
@@ -74,42 +80,96 @@ import com.thoughtworks.xstream.XStream;
     xstream.registerConverter(new RestCommResponseConverter());
   }
   
-  @Path("/{sid}")
-  @GET public Response getSmsMessage(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  protected Response getSmsMessage(final  String accountSid, final String sid,
+      final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:SmsMessages"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final SmsMessage smsMessage = dao.getSmsMessage(new Sid(sid));
     if(smsMessage == null) {
       return status(NOT_FOUND).build();
     } else {
-      final RestCommResponse response = new RestCommResponse(smsMessage);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
+      if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(smsMessage), APPLICATION_JSON).build();
+      } else if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(smsMessage);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else {
+        return null;
+      }
     }
   }
   
-  @GET public Response getSmsMessages(@PathParam("accountSid") String accountSid) {
+  protected Response getSmsMessages(final String accountSid, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:SmsMessages"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<SmsMessage> smsMessages = dao.getSmsMessages(new Sid(accountSid));
-    final RestCommResponse response = new RestCommResponse(new SmsMessageList(smsMessages));
-    return ok(xstream.toXML(response), APPLICATION_XML).build();
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(smsMessages), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(new SmsMessageList(smsMessages));
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    } else {
+      return null;
+    }
   }
   
-  @POST public Response putSmsMessage(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
+  private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
+    final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+    if(data.containsKey("From")) {
+      final String from = data.getFirst("From");
+      data.remove("From");
+      try {
+        data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
+      } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+    } else if(data.containsKey("To")) {
+      final String to = data.getFirst("To");
+      data.remove("To");
+      try {
+        data.putSingle("To", phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
+      } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+    } else if(data.containsKey("Body")) {
+      final String body = data.getFirst("Body");
+      if(body.getBytes().length > 160) {
+        data.remove("Body");
+        data.putSingle("Body", body.substring(0, 159));
+      }
+    }
+  }
+  
+  protected Response putSmsMessage(final String accountSid, final MultivaluedMap<String, String> data,
+      final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Create:SmsMessages"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    try {
-      validate(data);
-      final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-      final String sender = phoneNumberUtil.format(phoneNumberUtil.parse(data.getFirst("From"), "US"), PhoneNumberFormat.E164);
-      final String recipient = phoneNumberUtil.format(phoneNumberUtil.parse(data.getFirst("To"), "US"), PhoneNumberFormat.E164);
-      final String body = data.getFirst("Body");
-      aggregator.send(sender, recipient, body, null);
-      dao.addSmsMessage(sms(new Sid(accountSid), getApiVersion(data), sender, recipient, body, SmsMessage.Status.SENT,
-          SmsMessage.Direction.OUTBOUND_API));
-      return ok().build();
-    } catch(final Exception exception) { 
+    try { validate(data); normalize(data); } catch(final RuntimeException exception) { 
       return status(BAD_REQUEST).entity(exception.getMessage()).build();
+    }
+    final String sender = data.getFirst("From");
+    final String recipient = data.getFirst("To");
+    final String body = data.getFirst("Body");
+    final SmsMessage message = sms(new Sid(accountSid), getApiVersion(data), sender, recipient, body, SmsMessage.Status.SENDING,
+        SmsMessage.Direction.OUTBOUND_API);
+    dao.addSmsMessage(message);
+    try {
+      aggregator.send(sender, recipient, body, new SmsAggregatorObserver() {
+        @Override public void succeeded() {
+          final DateTime now = DateTime.now();
+	      dao.updateSmsMessage(message.setDateSent(now).setStatus(SmsMessage.Status.SENT));
+	    }
+
+	    @Override public void failed() {
+	      dao.updateSmsMessage(message.setStatus(SmsMessage.Status.FAILED));
+	    }
+      });
+    } catch(final SmsAggregatorException exception) {
+      return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+    }
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(message), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(message);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    } else {
+      return null;
     }
   }
   
@@ -135,7 +195,7 @@ import com.thoughtworks.xstream.XStream;
     return builder.build();
   }
   
-  private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
+  private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
     if(!data.containsKey("From")) {
       throw new NullPointerException("From can not be null.");
     } else if(!data.containsKey("To")) {

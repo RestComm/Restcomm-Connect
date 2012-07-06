@@ -16,31 +16,32 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
+import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
 import java.util.List;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
 import org.mobicents.servlet.sip.restcomm.entities.OutgoingCallerId;
@@ -50,25 +51,23 @@ import org.mobicents.servlet.sip.restcomm.http.converter.OutgoingCallerIdConvert
 import org.mobicents.servlet.sip.restcomm.http.converter.OutgoingCallerIdListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.thoughtworks.xstream.XStream;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Accounts/{accountSid}/OutgoingCallerIds")
-@ThreadSafe public final class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
-  private final OutgoingCallerIdsDao dao;
-  private final XStream xstream;
+@NotThreadSafe public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
+  protected final OutgoingCallerIdsDao dao;
+  protected final Gson gson;
+  protected final XStream xstream;
   
   public OutgoingCallerIdsEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getOutgoingCallerIdsDao();
     final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter();
+    final GsonBuilder builder = new GsonBuilder();
+    builder.registerTypeAdapter(OutgoingCallerId.class, converter);
+    builder.setPrettyPrinting();
+    gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
@@ -95,36 +94,41 @@ import com.thoughtworks.xstream.XStream;
         phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164), uri);
   }
   
-  @Path("/{sid}")
-  @DELETE public Response deleteOutgoingCallerId(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
-	try { secure(new Sid(accountSid), "RestComm:Delete:OutgoingCallerIds"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    dao.removeOutgoingCallerId(new Sid(sid));
-    return ok().build();
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getCallerId(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  protected Response getCallerId(final String accountSid, final String sid,
+      final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:OutgoingCallerIds"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
     if(outgoingCallerId == null) {
       return status(NOT_FOUND).build();
     } else {
-      final RestCommResponse response = new RestCommResponse(outgoingCallerId);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
+      if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
+      } else if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(outgoingCallerId);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else {
+        return null;
+      }
     }
   }
   
-  @GET public Response getCallerIds(@PathParam("accountSid") String accountSid) {
+  protected Response getCallerIds(final String accountSid, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:OutgoingCallerIds"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<OutgoingCallerId> outgoingCallerIds = dao.getOutgoingCallerIds(new Sid(accountSid));
-    final RestCommResponse response = new RestCommResponse(new OutgoingCallerIdList(outgoingCallerIds));
-    return ok(xstream.toXML(response), APPLICATION_XML).build();
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(outgoingCallerIds), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(new OutgoingCallerIdList(outgoingCallerIds));
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    } else {
+      return null;
+    }
   }
 
-  @POST public Response putOutgoingCallerId(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
+  protected Response putOutgoingCallerId(final String accountSid, final MultivaluedMap<String, String> data,
+      final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Create:OutgoingCallerIds"); } 
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     try { validate(data); } catch(final NullPointerException exception) { 
@@ -132,23 +136,38 @@ import com.thoughtworks.xstream.XStream;
     }
     final OutgoingCallerId outgoingCallerId = createFrom(new Sid(accountSid), data);
     dao.addOutgoingCallerId(outgoingCallerId);
-    final RestCommResponse response = new RestCommResponse(outgoingCallerId);
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(response)).build();
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(outgoingCallerId);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    } else {
+      return null;
+    }
   }
   
-  @Path("/{sid}")
-  @PUT public Response updateOutgoingCallerId(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid,
-      final MultivaluedMap<String, String> data) {
+  protected Response updateOutgoingCallerId(final String accountSid, final String sid,
+      final MultivaluedMap<String, String> data, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Modify:OutgoingCallerIds"); } 
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    if(data.containsKey("FriendlyName")) {
-      OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
-      if(outgoingCallerId != null) {
-        outgoingCallerId = outgoingCallerId.setFriendlyName(data.getFirst("FriendlyName"));
-        dao.updateOutgoingCallerId(outgoingCallerId);
+    OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
+    if(outgoingCallerId == null) {
+      return status(NOT_FOUND).build();
+    } else {
+      if(data.containsKey("FriendlyName")) {
+        final String friendlyName = data.getFirst("FriendlyName");
+        outgoingCallerId = outgoingCallerId.setFriendlyName(friendlyName);
+      }
+      dao.updateOutgoingCallerId(outgoingCallerId);
+      if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
+      } else if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(outgoingCallerId);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else {
+        return null;
       }
     }
-    return ok().build();
   }
   
   private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {

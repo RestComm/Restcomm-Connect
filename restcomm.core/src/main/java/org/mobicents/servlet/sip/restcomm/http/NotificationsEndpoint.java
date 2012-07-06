@@ -16,23 +16,23 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 
 import java.util.List;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
@@ -42,21 +42,23 @@ import org.mobicents.servlet.sip.restcomm.http.converter.NotificationConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.NotificationListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
-import com.thoughtworks.xstream.XStream;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Accounts/{accountSid}/Notifications")
-@ThreadSafe public final class NotificationsEndpoint extends AbstractEndpoint {
-  private final NotificationsDao dao;
-  private final XStream xstream;
+@NotThreadSafe public abstract class NotificationsEndpoint extends AbstractEndpoint {
+  protected final NotificationsDao dao;
+  protected final Gson gson;
+  protected final XStream xstream;
   
   public NotificationsEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getNotificationsDao();
     final NotificationConverter converter = new NotificationConverter();
+    final GsonBuilder builder = new GsonBuilder();
+    builder.registerTypeAdapter(Notification.class, converter);
+    builder.setPrettyPrinting();
+    gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
@@ -64,24 +66,36 @@ import com.thoughtworks.xstream.XStream;
     xstream.registerConverter(new RestCommResponseConverter());
   }
   
-  @Path("/{sid}")
-  @GET public Response getNotification(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  protected Response getNotification(final String accountSid, final String sid,
+      final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:Notifications"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final Notification notification = dao.getNotification(new Sid(sid));
     if(notification == null) {
       return status(NOT_FOUND).build();
     } else {
-      final RestCommResponse response = new RestCommResponse(notification);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
+      if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(notification), APPLICATION_JSON).build();
+      } else if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(notification);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else {
+        return null;
+      }
     }
   }
   
-  @GET public Response getNotifications(@PathParam("accountSid") String accountSid) {
+  protected Response getNotifications(final String accountSid, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:Notifications"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
-    final RestCommResponse response = new RestCommResponse(new NotificationList(notifications));
-    return ok(xstream.toXML(response), APPLICATION_XML).build();
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(notifications), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(new NotificationList(notifications));
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    } else {
+      return null;
+    }
   }
 }
