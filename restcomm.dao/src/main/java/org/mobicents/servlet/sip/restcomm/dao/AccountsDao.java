@@ -26,12 +26,8 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
  */
 public interface AccountsDao {
   public void addAccount(Account account);
-  public void addSubAccount(Sid primaryAccountSid, Account subAccount);
   public Account getAccount(Sid sid);
-  public Account getSubAccount(Sid sid);
-  public List<Account> getSubAccounts(Sid primaryAccountSid);
+  public List<Account> getAccounts(Sid primaryAccountSid);
   public void removeAccount(Sid sid);
-  public void removeSubAccount(Sid sid);
   public void updateAccount(Account account);
-  public void updateSubAccount(Account account);
 }

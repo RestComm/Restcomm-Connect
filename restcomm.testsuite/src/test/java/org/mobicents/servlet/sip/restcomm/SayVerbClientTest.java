@@ -1,5 +1,7 @@
 package org.mobicents.servlet.sip.restcomm;
 
+import static org.junit.Assert.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,11 +24,11 @@ public final class SayVerbClientTest {
     final Account account = client.getAccount();
     final CallFactory factory = account.getCallFactory();
     final Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("To", "+15126002188");
-    parameters.put("From", "(512) 600-2188");
-    parameters.put("Url", "http://192.168.1.106:8080/restcomm/tests/SayVerb");
+    parameters.put("To", "+13055872294");
+    parameters.put("From", "(305) 587-2294");
+    parameters.put("Url", "http://192.168.1.106:8080/restcomm/tests/dial-say-verb-test");
     final Call call = factory.create(parameters);
-    wait(5 * 1000);
-    call.hangup();
+    final String status = call.getStatus();
+    assertTrue("in-progress".equals(status));
   }
 }

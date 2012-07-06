@@ -269,7 +269,7 @@ public abstract class AbstractConverter implements Converter {
   }
   
   protected void writeUri(final URI uri, final JsonObject object) {
-    object.addProperty("uri", uri.toString());
+    object.addProperty("uri", uri.toString() + ".json");
   }
   
   protected void writeVoiceCallerIdLookup(final boolean voiceCallerIdLookup, final HierarchicalStreamWriter writer) {

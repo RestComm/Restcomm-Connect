@@ -63,25 +63,9 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
       session.close();
     }
   }
-  
-  @Override public void addSubAccount(final Sid primaryAccountSid, final Account subAccount) {
-	final Map<String, Object> parameters = toMap(subAccount);
-	parameters.put("account_sid", primaryAccountSid.toString());
-    final SqlSession session = sessions.openSession();
-    try {
-      session.insert(namespace + "addSubAccount", parameters);
-      session.commit();
-    } finally {
-      session.close();
-    }
-  }
 
   @Override public Account getAccount(final Sid sid) {
     return getAccount(namespace + "getAccount", sid);
-  }
-  
-  @Override public Account getSubAccount(final Sid sid) {
-    return getAccount(namespace + "getSubAccount", sid);
   }
   
   private Account getAccount(final String selector, final Sid sid) {
@@ -99,11 +83,11 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
     }
   }
   
-  @Override public List<Account> getSubAccounts(final Sid primaryAccountSid) {
+  @Override public List<Account> getAccounts(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getSubAccounts", primaryAccountSid.toString());
+      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getAccounts", accountSid.toString());
       final List<Account> accounts = new ArrayList<Account>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {
@@ -120,10 +104,6 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
     removeAccount(namespace + "removeAccount", sid);
   }
   
-  @Override public void removeSubAccount(final Sid sid) {
-    removeAccount(namespace + "removeSubAccount", sid);
-  }
-  
   private void removeAccount(final String selector, final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
@@ -136,10 +116,6 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
 
   @Override public void updateAccount(final Account account) {
     updateAccount(namespace + "updateAccount", account);
-  }
-
-  @Override public void updateSubAccount(final Account account) {
-    updateAccount(namespace + "updateSubAccount", account);
   }
   
   private void updateAccount(final String selector, final Account account) {
@@ -158,12 +134,14 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
 	final DateTime dateUpdated = readDateTime(map.get("date_updated"));
 	final String emailAddress = readString(map.get("email_address"));
 	final String friendlyName = readString(map.get("friendly_name"));
+	final Sid accountSid = readSid(map.get("account_sid"));
 	final Account.Type type = readAccountType(map.get("type"));
 	final Account.Status status = readAccountStatus(map.get("status"));
 	final String authToken = readString(map.get("auth_token"));
 	final String role = readString(map.get("role"));
 	final URI uri = readUri(map.get("uri"));
-    return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, type, status, authToken, role, uri);
+    return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, accountSid,
+        type, status, authToken, role, uri);
   }
   
   private Map<String, Object> toMap(final Account account) {
@@ -173,6 +151,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
     map.put("date_updated", writeDateTime(account.getDateUpdated()));
     map.put("email_address", account.getEmailAddress());
     map.put("friendly_name", account.getFriendlyName());
+    map.put("account_sid", writeSid(account.getSid()));
     map.put("type", writeAccountType(account.getType()));
     map.put("status", writeAccountStatus(account.getStatus()));
     map.put("auth_token", account.getAuthToken());

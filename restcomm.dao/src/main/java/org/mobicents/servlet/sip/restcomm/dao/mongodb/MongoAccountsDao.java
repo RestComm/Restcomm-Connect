@@ -52,12 +52,10 @@ import com.mongodb.WriteResult;
 @ThreadSafe public final class MongoAccountsDao implements AccountsDao {
   private static final Logger logger = Logger.getLogger(MongoAccountsDao.class);
   private final DBCollection accounts;
-  private final DBCollection subAccounts;
 
   public MongoAccountsDao(final DB database) {
     super();
     accounts = database.getCollection("restcomm_accounts");
-    subAccounts = database.getCollection("restcomm_sub_accounts");
   }
 
   @Override public void addAccount(final Account account) {
@@ -66,22 +64,9 @@ import com.mongodb.WriteResult;
       logger.error(result.getLastError().getErrorMessage());
     }
   }
-  
-  @Override public void addSubAccount(final Sid primaryAccountSid, final Account subAccount) {
-    final DBObject object = toDbObject(subAccount);
-    object.put("account_sid", primaryAccountSid.toString());
-    final WriteResult result = subAccounts.insert(object);
-    if(!result.getLastError().ok()) {
-      logger.error(result.getLastError().getErrorMessage());
-    }
-  }
 
   @Override public Account getAccount(final Sid sid) {
     return getAccount(accounts, sid);
-  }
-  
-  @Override public Account getSubAccount(final Sid sid) {
-    return getAccount(subAccounts, sid);
   }
   
   private Account getAccount(final DBCollection collection, final Sid sid) {
@@ -95,23 +80,19 @@ import com.mongodb.WriteResult;
     }
   }
   
-  @Override public List<Account> getSubAccounts(final Sid sid) {
+  @Override public List<Account> getAccounts(final Sid sid) {
     final BasicDBObject query = new BasicDBObject();
     query.put("account_sid", sid.toString());
-    final List<Account> accounts = new ArrayList<Account>();
-    final DBCursor results = subAccounts.find(query);
+    final List<Account> result = new ArrayList<Account>();
+    final DBCursor results = accounts.find(query);
     while(results.hasNext()) {
-      accounts.add(toAccount(results.next()));
+      result.add(toAccount(results.next()));
     }
-    return accounts;
+    return result;
   }
 
   @Override public void removeAccount(final Sid sid) {
     removeAccount(accounts, sid);
-  }
-  
-  @Override public void removeSubAccount(final Sid sid) {
-    removeAccount(subAccounts, sid);
   }
   
   
@@ -126,10 +107,6 @@ import com.mongodb.WriteResult;
 
   @Override public void updateAccount(final Account account) {
     updateAccount(accounts, account);
-  }
-
-  @Override public void updateSubAccount(final Account account) {
-    updateAccount(subAccounts, account);
   }
   
   private void updateAccount(final DBCollection collection, final Account account) {
@@ -147,12 +124,14 @@ import com.mongodb.WriteResult;
 	final DateTime dateUpdated = readDateTime(object.get("date_updated"));
 	final String emailAddress = readString(object.get("email_address"));
 	final String friendlyName = readString(object.get("friendly_name"));
+	final Sid accountSid = readSid(object.get("account_sid"));
 	final Account.Type type = readAccountType((String)object.get("type"));
 	final Account.Status status = readAccountStatus((String)object.get("status"));
 	final String authToken = readString(object.get("auth_token"));
 	final String role = readString(object.get("role"));
 	final URI uri = readUri(object.get("uri"));
-    return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, type, status, authToken, role, uri);
+    return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, accountSid,
+        type, status, authToken, role, uri);
   }
   
   private DBObject toDbObject(final Account account) {
@@ -162,6 +141,7 @@ import com.mongodb.WriteResult;
     object.put("date_updated", writeDateTime(account.getDateUpdated()));
     object.put("email_address", account.getEmailAddress());
     object.put("friendly_name", account.getFriendlyName());
+    object.put("account_sid", writeSid(account.getAccountSid()));
     object.put("type", writeAccountType(account.getType()));
     object.put("status", writeAccountStatus(account.getStatus()));
     object.put("auth_token", account.getAuthToken());

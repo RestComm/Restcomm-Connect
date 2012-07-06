@@ -1,19 +1,3 @@
-/*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
- */
 package org.mobicents.servlet.sip.restcomm.http;
 
 import com.google.gson.Gson;
@@ -21,22 +5,16 @@ import com.google.gson.GsonBuilder;
 
 import com.thoughtworks.xstream.XStream;
 
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
@@ -47,28 +25,25 @@ import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.entities.Account;
+import org.mobicents.servlet.sip.restcomm.entities.AccountList;
 import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.AccountConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 
-/**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
- */
-@Path("/Accounts")
-@ThreadSafe public final class AccountsEndpoint extends AbstractEndpoint {
+public abstract class AccountsEndpoint extends AbstractEndpoint {
   private final AccountsDao dao;
   private final Gson gson;
   private final XStream xstream;
-  
+
   public AccountsEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getAccountsDao();
-    final AccountConverter converter = new AccountConverter("2012-04-24");
+    final AccountConverter converter = new AccountConverter(getApiVersion(null));
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Account.class, converter);
     builder.setPrettyPrinting();
@@ -76,10 +51,11 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
+    xstream.registerConverter(new AccountListConverter());
     xstream.registerConverter(new RestCommResponseConverter());
   }
   
-  private Account createFrom(final MultivaluedMap<String, String> data) {
+  private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
     validate(data);
     final Sid sid = Sid.generate(Sid.Type.ACCOUNT);
     final DateTime now = DateTime.now();
@@ -99,21 +75,15 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     final StringBuilder buffer = new StringBuilder();
     buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
     final URI uri = URI.create(buffer.toString());
-    return new Account(sid, now, now, emailAddress, friendlyName, type, status, authToken, role, uri);
+    return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken,
+        role, uri);
   }
   
-  @Path("/{accountSid}")
-  @DELETE public Response deleteAccount(@PathParam("accountSid") String accountSid) {
-    try { secure(new Sid(accountSid), "RestComm:Delete:Accounts"); }
+  protected Response getAccount(final String accountSid, final MediaType responseType) {
+    final Sid sid = new Sid(accountSid);
+    try { secure(sid, "RestComm:Read:Accounts"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    dao.removeAccount(new Sid(accountSid));
-    return ok().build();
-  }
-  
-  private Response getAccount(final String accountSid, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Accounts"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final Account account = findAccount(new Sid(accountSid));
+    final Account account = dao.getAccount(sid);
     if(account == null) {
       return status(NOT_FOUND).build();
     } else {
@@ -128,61 +98,49 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     }
   }
   
-  @Path("/{accountSid}")
-  @GET public Response getAccountXml(@PathParam("accountSid") String accountSid) {
-    return getAccount(accountSid, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{accountSid}.json")
-  @GET public Response getAccountJson(@PathParam("accountSid") String accountSid) {
-    return getAccount(accountSid, APPLICATION_JSON_TYPE);
-  }
-  
-  private Account findAccount(final Sid sid) {
-    Account account = dao.getAccount(sid);
-    if(account == null) {
-      account = dao.getSubAccount(sid);
-    }
-    return account;
-  }
-  
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @POST public Response putAccount(final MultivaluedMap<String, String> data) {
+  protected Response getAccounts(final MediaType responseType) {
     final Subject subject = SecurityUtils.getSubject();
+    final Sid sid = new Sid((String)subject.getPrincipal());
+    try { secure(sid, "RestComm:Read:Accounts"); }
+	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
+    final Account account = dao.getAccount(sid);
+    if(account == null) {
+      return status(NOT_FOUND).build();
+    } else {
+      final List<Account> accounts = new ArrayList<Account>();
+      accounts.add(account);
+      accounts.addAll(dao.getAccounts(sid));
+      if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(accounts), APPLICATION_JSON).build();
+      } else {
+        return null;
+      }
+    }
+  }
+  
+  protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
+    final Subject subject = SecurityUtils.getSubject();
+    final Sid sid = new Sid((String)subject.getPrincipal());
     Account account = null;
-    try { account = createFrom(data); } catch(final NullPointerException exception) {
+    try { account = createFrom(sid, data); } catch(final NullPointerException exception) {
       return status(BAD_REQUEST).entity(exception.getMessage()).build();
     }
-    if(subject.hasRole("Administrator")) {
+    if(subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts"))) {
       dao.addAccount(account);
-    } else if(subject.isPermitted("RestComm:Create:Accounts")) {
-      final Sid accountSid = new Sid((String)subject.getPrincipal());
-      dao.addSubAccount(accountSid, account);
     } else {
       return status(UNAUTHORIZED).build();
     }
-    final RestCommResponse response = new RestCommResponse(account);
-    return status(CREATED).type(APPLICATION_XML).entity(xstream.toXML(response)).build();
-  }
-  
-  @Path("/{accountSid}")
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @PUT public Response updateAccount(@PathParam("accountSid") String accountSid,
-      final MultivaluedMap<String, String> data) {
-    final Subject subject = SecurityUtils.getSubject();
-    final Sid sid = new Sid(accountSid);
-    if(subject.hasRole("Administrator")) {
-      update(sid, data);
-    } else if(subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts")) {
-      final String friendlyName = data.getFirst("FriendlyName");
-      Account.Status status = null;
-      try { status = Account.Status.getValueOf(data.getFirst("Status")); }
-      catch(final IllegalArgumentException ignored) { }
-      update(sid, friendlyName, status);
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(account), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(account);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
     } else {
-      return status(UNAUTHORIZED).build();
+      return null;
     }
-    return ok().build();
   }
   
   private Account update(final Account account, final MultivaluedMap<String, String> data) {
@@ -202,37 +160,28 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     return result;
   }
   
-  private void update(final Sid sid, final MultivaluedMap<String, String> data) {
+  protected Response updateAccount(String accountSid, final MultivaluedMap<String, String> data,
+      final MediaType responseType) {
+    final Sid sid = new Sid(accountSid);
     Account account = dao.getAccount(sid);
-    if(account != null) {
-      dao.updateAccount(update(account, data));
+    if(account == null) {
+      return status(NOT_FOUND).build();
     } else {
-      account = dao.getSubAccount(sid);
-      if(account != null) {
-        dao.updateSubAccount(update(account, data));
+      account = update(account, data);
+      final Subject subject = SecurityUtils.getSubject();
+      if(subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) &&
+          subject.isPermitted("RestComm:Modify:Accounts"))) {
+        dao.updateAccount(account);
+      } else {
+        return status(UNAUTHORIZED).build();
       }
-    }
-  }
-  
-  private Account update(final Account account, final String friendlyName, final Account.Status status) {
-    Account result = account;
-    if(friendlyName != null) {
-      result = result.setFriendlyName(friendlyName);
-    }
-    if(status != null) {
-      result = result.setStatus(status);
-    }
-    return result;
-  }
-  
-  private void update(final Sid sid, final String friendlyName, final Account.Status status) {
-    Account account = dao.getAccount(sid);
-    if(account != null) {
-      dao.updateAccount(update(account, friendlyName, status));
-    } else {
-      account = dao.getSubAccount(sid);
-      if(account != null) {
-        dao.updateSubAccount(update(account, friendlyName, status));
+      if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(account), APPLICATION_JSON).build();
+      } else if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(account);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else {
+        return null;
       }
     }
   }
