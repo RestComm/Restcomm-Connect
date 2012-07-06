@@ -24,8 +24,8 @@
 		
 		<recordings-path>${restcomm:home}/recordings</recordings-path>
 		
-		<outbound-proxy-user>13055872294</outbound-proxy-user>
-		<outbound-proxy-password>restcomm</outbound-proxy-password>
+		<outbound-proxy-user></outbound-proxy-user>
+		<outbound-proxy-password></outbound-proxy-password>
 		<outbound-proxy-uri>softswitch1.speechbucket.com</outbound-proxy-uri>
 		
 		<!-- 
@@ -94,8 +94,8 @@
 		The Fax Service is used to send and receive faxes on behalf of RestComm.
 	-->
 	<fax-service class="org.mobicents.servlet.sip.restcomm.fax.InterFaxService">
-		<user>thomasquintana</user>
-		<password>R3stC0mm</password>
+		<user></user>
+		<password></password>
 		<maximum-file-size>4194304</maximum-file-size>
 		<timeout>60</timeout>
 	</fax-service>
@@ -104,7 +104,7 @@
 		The Speech Recognizer is responsible for turning speech in to text.
 	-->
 	<speech-recognizer class="org.mobicents.servlet.sip.restcomm.asr.ISpeechRecognizer">
-		<api-key production="false">1da57e282a615ddd2661c58d50524486</api-key>
+		<api-key production="false"></api-key>
 	</speech-recognizer>
 	
 	<!--
@@ -113,9 +113,9 @@
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
-		<application>EVAL_1434125</application>
-		<login>EVAL_VAAS</login>
-		<password>zd8icg9b</password>
+		<application></application>
+		<login></login>
+		<password></password>
 		<speakers>
 		  <belgium-french>
 		    <female>justine8k</female>
