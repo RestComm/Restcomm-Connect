@@ -20,3 +20,4 @@ SET WRITE_DELAY 10
 SET SCHEMA PUBLIC
 INSERT INTO "restcomm_accounts" VALUES('ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','2012-04-24','administrator@company.com','Default Administrator Account',NULL,'Full','active','77f8c12cc7b8f8423e5c38b035249166','Administrator','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf')
 INSERT INTO "restcomm_incoming_phone_numbers" VALUES('PNc96bd38c7fd7413c99cab286bb73df5b','2012-04-28','2012-04-28','(305) 587-2294','ACae6e420f425248d6a26948c17a9e2acf','+13055872294','2012-04-24',FALSE,'http://192.168.1.106:8080/restcomm/demo/hello-world.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNc96bd38c7fd7413c99cab286bb73df5b')
+INSERT INTO "restcomm_gateways" VALUES('Speech Bucket, Inc.','3055872294','0121','softswitch1.speechbucket.com',TRUE,30)

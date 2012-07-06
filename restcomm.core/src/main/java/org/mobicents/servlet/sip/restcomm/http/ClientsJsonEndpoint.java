@@ -16,13 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import static javax.ws.rs.core.MediaType.*;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -31,18 +30,18 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Accounts.json")
-@ThreadSafe public final class AccountsJsonEndpoint extends AccountsEndpoint {
-  public AccountsJsonEndpoint() {
+@Path("/Accounts/{accountSid}/Clients.json")
+@ThreadSafe public final class ClientsJsonEndpoint extends ClientsEndpoint {
+  public ClientsJsonEndpoint() {
     super();
   }
   
-  @GET public Response getAccounts() {
-    return getAccounts(APPLICATION_JSON_TYPE);
+  @GET public Response getClients(@PathParam("accountSid") final String accountSid) {
+    return getClients(accountSid, APPLICATION_JSON_TYPE);
   }
   
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @POST public Response putAccount(final MultivaluedMap<String, String> data) {
-    return putAccount(data, APPLICATION_JSON_TYPE);
+  @POST public Response putClient(@PathParam("accountSid") final String accountSid,
+      final MultivaluedMap<String, String> data) {
+    return putClient(accountSid, data, APPLICATION_JSON_TYPE);
   }
 }

@@ -26,6 +26,7 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -35,7 +36,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class AbstractEndpoint {
+@NotThreadSafe public abstract class AbstractEndpoint {
   protected final String baseRecordingsPath;
   
   public AbstractEndpoint() {
