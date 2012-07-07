@@ -74,9 +74,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
 	  } else {
 	    strategy = new ForkSubStrategy(action, method, timeout, timeLimit, callerId, ringbackTone, record);
 	  }
-	  strategy.initialize(interpreter, context, tag);
-	  strategy.execute(interpreter, context, tag);
 	}
+	strategy.initialize(interpreter, context, tag);
+	strategy.execute(interpreter, context, tag);
   }
   
   private Tag getConferenceTag(final List<Tag> tags) {
@@ -117,8 +117,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
     }
     try { 
       callerId = PhoneNumberUtil.getInstance().parse(value, "US");
-    } catch(final NumberParseException ignored) {
+    } catch(final NumberParseException exception) {
       interpreter.notify(context, Notification.WARNING, 13214);
+      throw new TagStrategyException(exception);
     }
   }
   

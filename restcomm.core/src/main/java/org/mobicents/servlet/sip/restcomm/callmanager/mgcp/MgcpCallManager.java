@@ -126,29 +126,33 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 }
 
 	 @Override protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
-		 final SipServletRequest request = response.getRequest();
-		 final MgcpCall call = (MgcpCall)request.getSession().getAttribute("CALL");
-		 final String method = request.getMethod();
-		 if("INVITE".equalsIgnoreCase(method)) {
-			 final int status = response.getStatus();
-			 if(SipServletResponse.SC_UNAUTHORIZED == status || SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED == status) {
-				 final SipServletRequest invite = invite(request.getFrom().getURI(), request.getTo().getURI());
-				 final AuthInfo authorization = sipFactory.createAuthInfo();
-				 final String realm = response.getChallengeRealms().next(); 
-				 authorization.addAuthInfo(status, realm, proxyUser, proxyPassword);
-				 invite.addAuthHeader(response, authorization);
-				 if(request.getContentLength() > 0) {
-					 invite.setContent(request.getContent(), request.getContentType());
-				 }
-				 invite.getSession().setAttribute("CALL", call);
-				 invite.send();
-				 call.updateInitialInvite(invite);
-			 } else if(SipServletResponse.SC_BUSY_HERE == status || SipServletResponse.SC_BUSY_EVERYWHERE == status) {
-				 call.busy();
-			 } else {
-				 call.failed();
-			 }
-		 }
+	   final SipServletRequest request = response.getRequest();
+	   final MgcpCall call = (MgcpCall)request.getSession().getAttribute("CALL");
+	   final String method = request.getMethod();
+	   final int status = response.getStatus();
+	   if("INVITE".equalsIgnoreCase(method)) {
+		 if(SipServletResponse.SC_UNAUTHORIZED == status || SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED == status) {
+		   final SipServletRequest invite = invite(request.getFrom().getURI(), request.getTo().getURI());
+	       final AuthInfo authorization = sipFactory.createAuthInfo();
+	 	   final String realm = response.getChallengeRealms().next(); 
+		   authorization.addAuthInfo(status, realm, proxyUser, proxyPassword);
+		   invite.addAuthHeader(response, authorization);
+		   if(request.getContentLength() > 0) {
+		     invite.setContent(request.getContent(), request.getContentType());
+		   }
+		   invite.getSession().setAttribute("CALL", call);
+		   invite.send();
+	  	   call.updateInitialInvite(invite);
+	     } else if(SipServletResponse.SC_BUSY_HERE == status || SipServletResponse.SC_BUSY_EVERYWHERE == status) {
+		   call.busy();
+	     } else {
+	       call.failed();
+ 	     }
+	   }
+	   if(SipServletResponse.SC_REQUEST_TERMINATED == status) {
+		 final SipServletRequest ack = response.createAck();
+		 ack.send();
+	   }   
 	 }
 
 	 @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {

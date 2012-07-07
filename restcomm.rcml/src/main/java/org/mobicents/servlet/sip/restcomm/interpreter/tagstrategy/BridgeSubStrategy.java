@@ -62,7 +62,7 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
   }
 
-  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
 	final PhoneNumber to = getTo(interpreter, context, tag);
@@ -72,6 +72,7 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
 	buffer.append(context.getAccountSid().toString()).append(":").append(call.getSid().toString());
 	final String room = buffer.toString();
 	final Conference bridge = conferenceCenter.getConference(room);
+	bridge.addObserver(this);
 	final List<URI> ringbackAudioFiles = new ArrayList<URI>();
 	ringbackAudioFiles.add(ringbackTone);
 	bridge.setBackgroundMusic(ringbackAudioFiles);
@@ -85,7 +86,7 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
 	  outboundCall.dial();
       try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
       catch(final InterruptedException ignored) { }
-      if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
+      if(Call.Status.IN_PROGRESS == call.getStatus() && Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
         bridge.stopBackgroundMusic();
         bridge.addParticipant(outboundCall);
         if(record) {
@@ -102,8 +103,12 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
       } else if(Call.Status.QUEUED == outboundCall.getStatus()) {
         outboundCall.removeObserver(this);
         outboundCall.cancel();
+      } else if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
+        outboundCall.removeObserver(this);
+        outboundCall.hangup();
       }
       call.removeObserver(this);
+      bridge.removeObserver(this);
       conferenceCenter.removeConference(room);
       final DateTime finish = DateTime.now();
       if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
