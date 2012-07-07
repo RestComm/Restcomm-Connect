@@ -62,7 +62,7 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
   }
 
-  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
 	final PhoneNumber to = getTo(interpreter, context, tag);

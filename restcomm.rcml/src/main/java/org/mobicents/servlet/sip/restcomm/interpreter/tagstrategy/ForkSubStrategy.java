@@ -74,7 +74,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
     this.forking = false;
   }
 
-  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     final StringBuilder buffer = new StringBuilder();
