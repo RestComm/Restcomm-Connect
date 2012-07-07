@@ -69,7 +69,7 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     final DateTime start = DateTime.now();
     final Conference conference = conferenceCenter.getConference(room);
     if(!startConferenceOnEnter) {
-      if(!call.isMuted()) {
+      if(Call.Status.IN_PROGRESS == call.getStatus() && !call.isMuted()) {
         call.mute();
       }
       if(conference.getNumberOfParticipants() == 0) {
@@ -83,16 +83,18 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     } else {
       conference.stopBackgroundMusic();
       if(beep) { conference.alert(); }
-      if(muted) { call.mute(); }
+      if(Call.Status.IN_PROGRESS == call.getStatus() && muted) { call.mute(); }
     }
-    call.addObserver(this);
-    conference.addObserver(this);
-    conference.addParticipant(call);
-    try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
-    catch(final InterruptedException ignored) { }
-    conference.removeObserver(this);
-    call.removeObserver(this);
-    if(endConferenceOnExit || conference.getNumberOfParticipants() == 0) {
+    if(Call.Status.IN_PROGRESS == call.getStatus()) {
+      call.addObserver(this);
+      conference.addObserver(this);
+      conference.addParticipant(call);
+      try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
+      catch(final InterruptedException ignored) { }
+      conference.removeObserver(this);
+      call.removeObserver(this);
+    }
+    if(endConferenceOnExit) {
       conferenceCenter.removeConference(room);
     } else {
       if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
