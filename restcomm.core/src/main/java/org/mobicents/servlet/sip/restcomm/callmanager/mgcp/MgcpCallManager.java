@@ -148,7 +148,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	     } else {
 	       call.failed();
  	     }
-	   } else if ("CANCEL".equalsIgnoreCase(method)) {
+	   } else if("CANCEL".equalsIgnoreCase(method)) {
 	     if(SipServletResponse.SC_REQUEST_TERMINATED == status) {
 		   final SipServletRequest ack = response.createAck();
 		   ack.send();
