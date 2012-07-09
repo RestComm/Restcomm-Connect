@@ -1,0 +1,7 @@
+Testsuite instructions
+^^^^^^^^^^^^^^^^^^^^^^
+
+1. Build the restcomm.war
+2. copy the exploded restcomm.war to the resources/ folder
+3. Modify restcomm.war and media-server as needed
+4. Modify testsuite.properties appropriate
