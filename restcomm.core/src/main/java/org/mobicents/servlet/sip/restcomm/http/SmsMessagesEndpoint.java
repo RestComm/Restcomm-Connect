@@ -115,24 +115,20 @@ import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
   
   private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
     final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-    if(data.containsKey("From")) {
-      final String from = data.getFirst("From");
-      data.remove("From");
-      try {
-        data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
-      } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
-    } else if(data.containsKey("To")) {
-      final String to = data.getFirst("To");
-      data.remove("To");
-      try {
-        data.putSingle("To", phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
-      } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
-    } else if(data.containsKey("Body")) {
-      final String body = data.getFirst("Body");
-      if(body.getBytes().length > 160) {
-        data.remove("Body");
-        data.putSingle("Body", body.substring(0, 159));
-      }
+    final String from = data.getFirst("From");
+    data.remove("From");
+    try {
+      data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
+    } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+    final String to = data.getFirst("To");
+    data.remove("To");
+    try {
+      data.putSingle("To", phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
+    } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+    final String body = data.getFirst("Body");
+    if(body.getBytes().length > 160) {
+      data.remove("Body");
+      data.putSingle("Body", body.substring(0, 159));
     }
   }
   

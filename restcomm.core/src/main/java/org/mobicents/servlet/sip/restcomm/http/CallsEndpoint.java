@@ -16,64 +16,111 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
+import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
 
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
+import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordListConverter;
+import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
-
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Accounts/{accountSid}/Calls")
-@ThreadSafe public final class CallsEndpoint extends AbstractEndpoint {
+@NotThreadSafe public abstract class CallsEndpoint extends AbstractEndpoint {
   private final CallManager callManager;
+  private final CallDetailRecordsDao dao;
   private final InterpreterExecutor executor;
+  protected final Gson gson;
+  protected final XStream xstream;
 
   public CallsEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     callManager = services.get(CallManager.class);
+    dao = services.get(DaoManager.class).getCallDetailRecordsDao();
     executor = services.get(InterpreterExecutor.class);
+    CallDetailRecordConverter converter = new CallDetailRecordConverter();
+    final GsonBuilder builder = new GsonBuilder();
+    builder.registerTypeAdapter(CallDetailRecord.class, converter);
+    builder.setPrettyPrinting();
+    gson = builder.create();
+    xstream = new XStream();
+    xstream.alias("RestcommResponse", RestCommResponse.class);
+    xstream.registerConverter(converter);
+    xstream.registerConverter(new CallDetailRecordListConverter());
+    xstream.registerConverter(new RestCommResponseConverter());
   }
   
-  @POST public Response putClient(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
+  private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
+	  final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+	  final String from = data.getFirst("From");
+	  data.remove("From");
+	  try {
+	    data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
+	  } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+	  final String to = data.getFirst("To");
+	  data.remove("To");
+	  try {
+	    data.putSingle("To", phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
+	  } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+	  URI.create(data.getFirst("Url"));
+  }
+  
+  protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data,
+      final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Create:Calls"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    try {
-      validate(data);
-      final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-      final String from = phoneNumberUtil.format(phoneNumberUtil.parse(data.getFirst("From"), "US"), PhoneNumberFormat.E164);
-      final String to = phoneNumberUtil.format(phoneNumberUtil.parse(data.getFirst("To"), "US"), PhoneNumberFormat.E164);
-      final Call call = callManager.createExternalCall(from, to);
-      final URI url = URI.create(data.getFirst("Url"));
-      executor.submit(new Sid(accountSid), getApiVersion(data), url, getMethod("VoiceMethod", data), null, null, call);
-      return ok().build();
-    } catch(final Exception exception) { 
+    try { validate(data); normalize(data); }
+    catch(final RuntimeException exception) {
       return status(BAD_REQUEST).entity(exception.getMessage()).build();
+    }
+    final String from = data.getFirst("From");
+    final String to = data.getFirst("To");
+    Call call = null;
+    try { call = callManager.createExternalCall(from, to); }
+    catch(final CallManagerException exception) {
+      return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+    }
+    final URI url = URI.create(data.getFirst("Url"));
+    executor.submit(new Sid(accountSid), getApiVersion(data), url, getMethod("VoiceMethod", data), null, null, call);
+    if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(call), APPLICATION_JSON).build();
+    } else if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(call);
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    } else {
+      return null;
     }
   }
   
-  private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
+  private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
     if(!data.containsKey("From")) {
       throw new NullPointerException("From can not be null.");
     } else if(!data.containsKey("To")) {
