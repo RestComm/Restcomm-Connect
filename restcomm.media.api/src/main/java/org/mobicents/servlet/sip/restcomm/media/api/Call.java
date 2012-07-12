@@ -19,6 +19,8 @@ package org.mobicents.servlet.sip.restcomm.media.api;
 import java.net.URI;
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.Sid;
 
 /**
@@ -29,6 +31,9 @@ public interface Call {
   public void answer() throws CallException;
   public void cancel() throws CallException;
   public void dial() throws CallException;
+  public DateTime getDateCreated();
+  public DateTime getDateStarted();
+  public DateTime getDatedEnded();
   public String getDigits();
   public Direction getDirection();
   public String getForwardedFrom();

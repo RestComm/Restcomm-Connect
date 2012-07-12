@@ -19,6 +19,7 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 import java.math.BigDecimal;
 import java.net.URI;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -35,6 +36,12 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public abstract class AbstractConverter implements Converter {
+  protected final Configuration configuration;
+  
+  public AbstractConverter(final Configuration configuration) {
+    super();
+    this.configuration = configuration;
+  }
   
   @SuppressWarnings("rawtypes")
   @Override public abstract boolean canConvert(Class klass);
@@ -114,6 +121,16 @@ public abstract class AbstractConverter implements Converter {
   
   protected void writeFriendlyName(final String friendlyName, final JsonObject object) {
     object.addProperty("friendly_name", friendlyName);
+  }
+  
+  protected void writeFrom(final String from, final HierarchicalStreamWriter writer) {
+    writer.startNode("From");
+    writer.setValue(from);
+    writer.endNode();
+  }
+  
+  protected void writeFrom(final String from, final JsonObject object) {
+    object.addProperty("from", from);
   }
   
   protected void writePhoneNumber(final String phoneNumber, final HierarchicalStreamWriter writer) {
@@ -250,6 +267,16 @@ public abstract class AbstractConverter implements Converter {
     } else {
       object.add("status_callback_method", JsonNull.INSTANCE);
     }
+  }
+	  
+  protected void writeTo(final String to, final HierarchicalStreamWriter writer) {
+    writer.startNode("To");
+    writer.setValue(to);
+    writer.endNode();
+  }
+  
+  protected void writeTo(final String to, final JsonObject object) {
+    object.addProperty("to", to);
   }
   
   protected void writeType(final String type, final HierarchicalStreamWriter writer) {

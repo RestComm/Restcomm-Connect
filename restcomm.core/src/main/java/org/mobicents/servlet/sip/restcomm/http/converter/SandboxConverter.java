@@ -18,6 +18,7 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 
 import java.lang.reflect.Type;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.SandBox;
@@ -34,8 +35,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  */
 @ThreadSafe public final class SandboxConverter extends AbstractConverter
     implements JsonSerializer<SandBox> {
-  public SandboxConverter() {
-    super();
+  public SandboxConverter(final Configuration configuration) {
+    super(configuration);
   }
   
   @SuppressWarnings("rawtypes")

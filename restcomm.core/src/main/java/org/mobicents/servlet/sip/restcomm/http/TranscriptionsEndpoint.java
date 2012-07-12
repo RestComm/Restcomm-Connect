@@ -55,7 +55,7 @@ import org.mobicents.servlet.sip.restcomm.http.converter.TranscriptionListConver
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getTranscriptionsDao();
-    final TranscriptionConverter converter = new TranscriptionConverter();
+    final TranscriptionConverter converter = new TranscriptionConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Transcription.class, converter);
     builder.setPrettyPrinting();
@@ -63,8 +63,8 @@ import org.mobicents.servlet.sip.restcomm.http.converter.TranscriptionListConver
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new TranscriptionListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new TranscriptionListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   protected Response getTranscription(final String accountSid, final String sid,

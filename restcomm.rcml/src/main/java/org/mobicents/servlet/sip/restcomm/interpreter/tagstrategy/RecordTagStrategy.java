@@ -215,8 +215,10 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
     builder.setRecordingSid(recording.getSid());
     builder.setDuration(recording.getDuration());
     builder.setPrice(new BigDecimal(0.00));
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append(context.getApiVersion()).append("/Accounts/");
+    buffer.append(rootUri).append(context.getApiVersion()).append("/Accounts/");
     buffer.append(context.getAccountSid().toString()).append("/Transcriptions/");
     buffer.append(sid.toString());
     final URI uri = URI.create(buffer.toString());

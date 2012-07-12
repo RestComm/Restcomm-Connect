@@ -26,18 +26,22 @@ import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Account;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class AccountConverter extends AbstractConverter implements JsonSerializer<Account> {
   private final String apiVersion;
+  private final String rootUri;
   
-  public AccountConverter(final String apiVersion) {
-    super();
-    this.apiVersion = apiVersion;
+  public AccountConverter(final Configuration configuration) {
+    super(configuration);
+    this.apiVersion = configuration.getString("api-version");
+    rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
   }
   
   @SuppressWarnings("rawtypes")
@@ -76,9 +80,9 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
     return object;
   }
   
-  private String toPrefix(final Account account) {
+  private String prefix(final Account account) {
     final StringBuilder buffer = new StringBuilder();
-    buffer.append("/").append(apiVersion).append("/Accounts/").append(account.getSid().toString());
+    buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(account.getSid().toString());
     return buffer.toString();
   }
   
@@ -94,92 +98,92 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
   
   private void writeAvailablePhoneNumbers(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("AvailablePhoneNumbers");
-    writer.setValue(toPrefix(account) + "/AvailablePhoneNumbers");
+    writer.setValue(prefix(account) + "/AvailablePhoneNumbers");
     writer.endNode();
   }
   
   private void writeAvailablePhoneNumbers(final Account account, final JsonObject object) {
-    object.addProperty("available_phone_numbers", toPrefix(account) + "/AvailablePhoneNumbers.json");
+    object.addProperty("available_phone_numbers", prefix(account) + "/AvailablePhoneNumbers.json");
   }
   
   private void writeCalls(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("Calls");
-    writer.setValue(toPrefix(account) + "/Calls");
+    writer.setValue(prefix(account) + "/Calls");
     writer.endNode();
   }
   
   private void writeCalls(final Account account, final JsonObject object) {
-    object.addProperty("calls", toPrefix(account) + "/Calls.json");
+    object.addProperty("calls", prefix(account) + "/Calls.json");
   }
   
   private void writeConferences(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("Conferences");
-    writer.setValue(toPrefix(account) + "/Conferences");
+    writer.setValue(prefix(account) + "/Conferences");
     writer.endNode();
   }
   
   private void writeConferences(final Account account, final JsonObject object) {
-    object.addProperty("conferences", toPrefix(account) + "/Conferences.json");
+    object.addProperty("conferences", prefix(account) + "/Conferences.json");
   }
   
   private void writeIncomingPhoneNumbers(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("IncomingPhoneNumbers");
-    writer.setValue(toPrefix(account) + "/IncomingPhoneNumbers");
+    writer.setValue(prefix(account) + "/IncomingPhoneNumbers");
     writer.endNode();
   }
   
   private void writeIncomingPhoneNumbers(final Account account, final JsonObject object) {
-    object.addProperty("incoming_phone_numbers", toPrefix(account) + "/IncomingPhoneNumbers.json");
+    object.addProperty("incoming_phone_numbers", prefix(account) + "/IncomingPhoneNumbers.json");
   }
   
   private void writeNotifications(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("Notifications");
-    writer.setValue(toPrefix(account) + "/Notifications");
+    writer.setValue(prefix(account) + "/Notifications");
     writer.endNode();
   }
   
   private void writeNotifications(final Account account, final JsonObject object) {
-    object.addProperty("notifications", toPrefix(account) + "/Notifications.json");
+    object.addProperty("notifications", prefix(account) + "/Notifications.json");
   }
   
   private void writeOutgoingCallerIds(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("OutgoingCallerIds");
-    writer.setValue(toPrefix(account) + "/OutgoingCallerIds");
+    writer.setValue(prefix(account) + "/OutgoingCallerIds");
     writer.endNode();
   }
   
   private void writeOutgoingCallerIds(final Account account, final JsonObject object) {
-    object.addProperty("outgoing_caller_ids", toPrefix(account) + "/OutgoingCallerIds.json");
+    object.addProperty("outgoing_caller_ids", prefix(account) + "/OutgoingCallerIds.json");
   }
   
   private void writeRecordings(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("Recordings");
-    writer.setValue(toPrefix(account) + "/Recordings");
+    writer.setValue(prefix(account) + "/Recordings");
     writer.endNode();
   }
   
   private void writeRecordings(final Account account, final JsonObject object) {
-    object.addProperty("recordings", toPrefix(account) + "/Recordings.json");
+    object.addProperty("recordings", prefix(account) + "/Recordings.json");
   }
   
   private void writeSandBox(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("Sandbox");
-    writer.setValue(toPrefix(account) + "/Sandbox");
+    writer.setValue(prefix(account) + "/Sandbox");
     writer.endNode();
   }
   
   private void writeSandBox(final Account account, final JsonObject object) {
-    object.addProperty("sandbox", toPrefix(account) + "/Sandbox.json");
+    object.addProperty("sandbox", prefix(account) + "/Sandbox.json");
   }
   
   private void writeSmsMessages(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("SMSMessages");
-    writer.setValue(toPrefix(account) + "/SMSMessages");
+    writer.setValue(prefix(account) + "/SMSMessages");
     writer.endNode();
   }
   
   private void writeSmsMessages(final Account account, final JsonObject object) {
-    object.addProperty("sms_messages", toPrefix(account) + "/SMS/Messages.json");
+    object.addProperty("sms_messages", prefix(account) + "/SMS/Messages.json");
   }
   
   private void writeSubResourceUris(final Account account, final HierarchicalStreamWriter writer) {
@@ -214,11 +218,11 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
   
   private void writeTranscriptions(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("Transcriptions");
-    writer.setValue(toPrefix(account) + "/Transcriptions");
+    writer.setValue(prefix(account) + "/Transcriptions");
     writer.endNode();
   }
   
   private void writeTranscriptions(final Account account, final JsonObject object) {
-    object.addProperty("transcriptions", toPrefix(account) + "/Transcriptions.json");
+    object.addProperty("transcriptions", prefix(account) + "/Transcriptions.json");
   }
 }

@@ -46,6 +46,7 @@ import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.ClientConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.ClientListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -59,7 +60,7 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getClientsDao();
-    final ClientConverter converter = new ClientConverter();
+    final ClientConverter converter = new ClientConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Client.class, converter);
     builder.setPrettyPrinting();
@@ -67,8 +68,8 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new ClientListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new ClientListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   private Client createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -79,8 +80,10 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     final String password = data.getFirst("Password");
     final String friendlyName = getFriendlyName(login, data);
     final int status = getStatus(data);
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append("/").append(apiVersion).append("/Accounts/").append(accountSid.toString())
+    buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
         .append("/Clients/").append(sid.toString());
     final URI uri = URI.create(buffer.toString());
     return new Client(sid, now, now, accountSid, apiVersion, friendlyName, login, password, status, uri);

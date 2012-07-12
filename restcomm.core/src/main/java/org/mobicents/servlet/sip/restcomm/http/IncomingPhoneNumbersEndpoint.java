@@ -49,6 +49,7 @@ import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.IncomingPhoneNumberConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.IncomingPhoneNumberListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -62,7 +63,7 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getIncomingPhoneNumbersDao();
-    final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter();
+    final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(IncomingPhoneNumber.class, converter);
     builder.setPrettyPrinting();
@@ -70,8 +71,8 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new IncomingPhoneNumberListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new IncomingPhoneNumberListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -98,8 +99,10 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
     builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
     builder.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append("/").append(apiVersion).append("/Accounts/").append(accountSid.toString())
+    buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
         .append("/IncomingPhoneNumbers/").append(sid.toString());
     builder.setUri(URI.create(buffer.toString()));
     return builder.build();

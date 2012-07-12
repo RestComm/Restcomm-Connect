@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumberList;
@@ -27,8 +28,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class IncomingPhoneNumberListConverter extends AbstractConverter {
-  public IncomingPhoneNumberListConverter() {
-    super();
+  public IncomingPhoneNumberListConverter(final Configuration configuration) {
+    super(configuration);
   }
 
   @SuppressWarnings("rawtypes")

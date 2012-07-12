@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.http.annotation.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Account;
 import org.mobicents.servlet.sip.restcomm.entities.AccountList;
@@ -27,8 +28,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class AccountListConverter extends AbstractConverter {
-  public AccountListConverter() {
-    super();
+  public AccountListConverter(final Configuration configuration) {
+    super(configuration);
   }
 
   @SuppressWarnings("rawtypes")

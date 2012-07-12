@@ -19,6 +19,7 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Client;
 import org.mobicents.servlet.sip.restcomm.entities.ClientList;
@@ -27,8 +28,8 @@ import org.mobicents.servlet.sip.restcomm.entities.ClientList;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class ClientListConverter extends AbstractConverter {
-  public ClientListConverter() {
-    super();
+  public ClientListConverter(final Configuration configuration) {
+    super(configuration);
   }
 
   @SuppressWarnings("rawtypes")

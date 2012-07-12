@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.entities.SmsMessageList;
@@ -27,8 +28,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class SmsMessageListConverter extends AbstractConverter {
-  public SmsMessageListConverter() {
-    super();
+  public SmsMessageListConverter(final Configuration configuration) {
+    super(configuration);
   }
 
   @SuppressWarnings("rawtypes")

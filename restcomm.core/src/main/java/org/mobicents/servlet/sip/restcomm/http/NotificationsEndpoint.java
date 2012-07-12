@@ -54,7 +54,7 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getNotificationsDao();
-    final NotificationConverter converter = new NotificationConverter();
+    final NotificationConverter converter = new NotificationConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Notification.class, converter);
     builder.setPrettyPrinting();
@@ -62,8 +62,8 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new NotificationListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new NotificationListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   protected Response getNotification(final String accountSid, final String sid,

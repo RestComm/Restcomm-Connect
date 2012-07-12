@@ -19,15 +19,17 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecordList;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class CallDetailRecordListConverter extends AbstractConverter {
-  public CallDetailRecordListConverter() {
-    super();
+  public CallDetailRecordListConverter(final Configuration configuration) {
+    super(configuration);
   }
 
   @SuppressWarnings("rawtypes")
@@ -37,6 +39,11 @@ import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
 
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
       final MarshallingContext context) {
-    
+    final CallDetailRecordList list = (CallDetailRecordList)object;
+    writer.startNode("Calls");
+    for(final CallDetailRecord cdr : list.getCallDetailRecords()) {
+      context.convertAnother(cdr);
+    }
+    writer.endNode();
   }
 }

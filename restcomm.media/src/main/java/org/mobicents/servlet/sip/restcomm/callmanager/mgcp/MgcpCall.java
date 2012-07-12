@@ -30,6 +30,7 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
@@ -88,6 +89,9 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
   private MgcpConnection remoteOutboundConnection;
   private MgcpConnection remoteInboundConnection;
   
+  private DateTime dateCreated;
+  private DateTime dateStarted;
+  private DateTime dateEnded;
   private volatile String digits;
   private volatile boolean muted;
   
@@ -107,6 +111,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
     this.server = server;
     this.session = server.createMediaSession();
     this.observers = new ArrayList<CallObserver>();
+    this.dateCreated = DateTime.now();
   }
   
   public MgcpCall(final SipServletRequest initialInvite, final MgcpServer server) {
@@ -180,6 +185,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
     } finally {
       cleanup();
       setState(COMPLETED);
+      dateEnded = DateTime.now();
       fireStatusChanged();
     }
   }
@@ -293,6 +299,18 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
     }
   }
   
+  @Override public DateTime getDateCreated() {
+    return dateCreated;
+  }
+
+  @Override public DateTime getDateStarted() {
+    return dateStarted;
+  }
+
+  @Override public DateTime getDatedEnded() {
+    return dateEnded;
+  }
+  
   @Override public String getDigits() {
     return digits;
   }
@@ -333,6 +351,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
       remoteConference.removeParticipant(this);
     }
     terminate();
+    dateEnded = DateTime.now();
 	setState(COMPLETED);
 	fireStatusChanged();
   }
@@ -500,6 +519,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
       assertState(possibleStates);
       setExpires(0);
       setState(IN_PROGRESS);
+      dateStarted = DateTime.now();
       fireStatusChanged();
       if(Direction.INBOUND == getDirection()) {
         notify();

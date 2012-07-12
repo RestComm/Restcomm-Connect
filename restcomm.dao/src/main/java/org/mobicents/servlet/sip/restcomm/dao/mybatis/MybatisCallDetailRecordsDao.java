@@ -162,12 +162,14 @@ import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
     final DateTime endTime = readDateTime(map.get("end_time"));
     final Integer duration = readInteger(map.get("duration"));
     final BigDecimal price = readBigDecimal(map.get("price"));
+    final String direction = readString(map.get("direction"));
     final String answeredBy = readString(map.get("answered_by"));
+    final String apiVersion = readString(map.get("api_version"));
     final String forwardedFrom = readString(map.get("forwarded_from"));
     final String callerName = readString(map.get("caller_name"));
     final URI uri = readUri(map.get("uri"));
     return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
-        startTime, endTime, duration, price, answeredBy, forwardedFrom, callerName, uri);
+        startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
   }
   
   private Map<String, Object> toMap(final CallDetailRecord cdr) {
@@ -185,7 +187,9 @@ import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
     map.put("end_time", writeDateTime(cdr.getEndTime()));
     map.put("duration", cdr.getDuration());
     map.put("price", writeBigDecimal(cdr.getPrice()));
+    map.put("direction", cdr.getDirection());
     map.put("answered_by", cdr.getAnsweredBy());
+    map.put("api_version", cdr.getApiVersion());
     map.put("forwarded_from", cdr.getForwardedFrom());
     map.put("caller_name", cdr.getCallerName());
     map.put("uri", writeUri(cdr.getUri()));

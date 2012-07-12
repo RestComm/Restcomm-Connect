@@ -37,17 +37,21 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class AbstractEndpoint {
+  protected final Configuration configuration;
   protected final String baseRecordingsPath;
+  
+  private final String defaultApiVersion;
   
   public AbstractEndpoint() {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
-    final Configuration configuration = services.get(Configuration.class);
+    configuration = services.get(Configuration.class);
     baseRecordingsPath = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-path"), "/");
+    defaultApiVersion = configuration.getString("api-version");
   }
   
   protected String getApiVersion(final MultivaluedMap<String, String> data) {
-    String apiVersion = "2012-04-24";
+    String apiVersion = defaultApiVersion;
     if(data != null && data.containsKey("ApiVersion")) {
      apiVersion = data.getFirst("ApiVersion");
     }

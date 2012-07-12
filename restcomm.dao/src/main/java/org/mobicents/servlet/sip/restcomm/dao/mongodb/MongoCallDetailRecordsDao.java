@@ -169,12 +169,14 @@ import com.mongodb.WriteResult;
     final DateTime endTime = readDateTime(object.get("end_time"));
     final Integer duration = readInteger(object.get("duration"));
     final BigDecimal price = readBigDecimal(object.get("price"));
+    final String direction = readString(object.get("direction"));
     final String answeredBy = readString(object.get("answered_by"));
+    final String apiVersion = readString(object.get("api_version"));
     final String forwardedFrom = readString(object.get("forwarded_from"));
     final String callerName = readString(object.get("caller_name"));
     final URI uri = readUri(object.get("uri"));
     return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, recipient, sender, phoneNumberSid,
-        status, startTime, endTime, duration, price, answeredBy, forwardedFrom, callerName, uri);
+        status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
   }
   
   private DBObject toDbObject(final CallDetailRecord cdr) {
@@ -192,7 +194,9 @@ import com.mongodb.WriteResult;
     object.put("end_time", writeDateTime(cdr.getEndTime()));
     object.put("duration", cdr.getDuration());
     object.put("price", writeBigDecimal(cdr.getPrice()));
+    object.put("direction", cdr.getDirection());
     object.put("answered_by", cdr.getAnsweredBy());
+    object.put("api_version", cdr.getApiVersion());
     object.put("forwarded_from", cdr.getForwardedFrom());
     object.put("caller_name", cdr.getCallerName());
     object.put("uri", writeUri(cdr.getUri()));

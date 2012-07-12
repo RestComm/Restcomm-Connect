@@ -49,6 +49,7 @@ import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -62,7 +63,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getAccountsDao();
-    final AccountConverter converter = new AccountConverter(getApiVersion(null));
+    final AccountConverter converter = new AccountConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Account.class, converter);
     builder.setPrettyPrinting();
@@ -70,8 +71,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new AccountListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new AccountListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -91,8 +92,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     final String password = data.getFirst("Password");
     final String authToken = new Md5Hash(password).toString();
     final String role = data.getFirst("Role");
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
+    buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
     final URI uri = URI.create(buffer.toString());
     return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken,
         role, uri);

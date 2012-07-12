@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.entities.SandBox;
 import org.mobicents.servlet.sip.restcomm.entities.SandBoxList;
 
@@ -26,8 +27,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SandBoxListConverter extends AbstractConverter {
-  public SandBoxListConverter() {
-    super();
+  public SandBoxListConverter(final Configuration configuration) {
+    super(configuration);
   }
 
   @SuppressWarnings("rawtypes")

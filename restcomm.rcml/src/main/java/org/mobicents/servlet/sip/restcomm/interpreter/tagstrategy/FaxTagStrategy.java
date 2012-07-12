@@ -58,8 +58,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     try {
+      final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
       if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         faxService.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
             phoneNumberUtil.format(to, PhoneNumberFormat.E164), uri, this);
       }

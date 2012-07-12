@@ -19,6 +19,7 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 import java.lang.reflect.Type;
 import java.net.URI;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
@@ -36,8 +37,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  */
 @ThreadSafe public final class NotificationConverter extends AbstractConverter
     implements JsonSerializer<Notification> {
-  public NotificationConverter() {
-    super();
+  public NotificationConverter(final Configuration configuration) {
+    super(configuration);
   }
   
   @SuppressWarnings("rawtypes")

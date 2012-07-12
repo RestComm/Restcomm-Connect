@@ -18,6 +18,7 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 
 import java.lang.reflect.Type;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 
@@ -34,8 +35,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  */
 public class SmsMessageConverter extends AbstractConverter
     implements JsonSerializer<SmsMessage> {
-  public SmsMessageConverter() {
-    super();
+  public SmsMessageConverter(final Configuration configuration) {
+    super(configuration);
   }
   
   @SuppressWarnings("rawtypes")
@@ -116,25 +117,5 @@ public class SmsMessageConverter extends AbstractConverter
   
   private void writeDirection(final String direction, final JsonObject object) {
     object.addProperty("direction", direction);
-  }
-  
-  private void writeFrom(final String from, final HierarchicalStreamWriter writer) {
-    writer.startNode("From");
-    writer.setValue(from);
-    writer.endNode();
-  }
-  
-  private void writeFrom(final String from, final JsonObject object) {
-    object.addProperty("from", from);
-  }
-  
-  private void writeTo(final String to, final HierarchicalStreamWriter writer) {
-    writer.startNode("To");
-    writer.setValue(to);
-    writer.endNode();
-  }
-  
-  private void writeTo(final String to, final JsonObject object) {
-    object.addProperty("to", to);
   }
 }

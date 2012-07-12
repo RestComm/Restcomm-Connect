@@ -18,6 +18,7 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 
 import java.lang.reflect.Type;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Recording;
 
@@ -33,8 +34,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  */
 @ThreadSafe public final class RecordingConverter extends AbstractConverter
     implements JsonSerializer<Recording> {
-  public RecordingConverter() {
-    super();
+  public RecordingConverter(final Configuration configuration) {
+    super(configuration);
   }
   
   @SuppressWarnings("rawtypes")

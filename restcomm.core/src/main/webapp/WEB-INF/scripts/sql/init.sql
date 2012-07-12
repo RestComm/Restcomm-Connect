@@ -94,7 +94,9 @@ CREATE TABLE "restcomm_call_detail_records" (
 "end_time" DATE,
 "duration" INT,
 "price" VARCHAR(8),
+"direction" VARCHAR(13) NOT NULL,
 "answered_by" VARCHAR(7) NOT NULL,
+"api_version" VARCHAR(10) NOT NULL,
 "forwarded_from" VARCHAR(15),
 "caller_name" VARCHAR(30) NOT NULL,
 "uri" LONGVARCHAR NOT NULL

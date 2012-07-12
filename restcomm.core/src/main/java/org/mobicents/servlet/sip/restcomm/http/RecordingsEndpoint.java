@@ -55,7 +55,7 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getRecordingsDao();
-    final RecordingConverter converter = new RecordingConverter();
+    final RecordingConverter converter = new RecordingConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Recording.class, converter);
     builder.setPrettyPrinting();
@@ -63,8 +63,8 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new RecordingListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new RecordingListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   protected Response getRecording(final String accountSid, final String sid,

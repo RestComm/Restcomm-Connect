@@ -50,6 +50,7 @@ import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.OutgoingCallerIdConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.OutgoingCallerIdListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -63,7 +64,7 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getOutgoingCallerIdsDao();
-    final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter();
+    final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(OutgoingCallerId.class, converter);
     builder.setPrettyPrinting();
@@ -71,8 +72,8 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new OutgoingCallerIdListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new OutgoingCallerIdListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   private OutgoingCallerId createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -86,8 +87,10 @@ import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConvert
     if(data.containsKey("FriendlyName")) {
       friendlyName = data.getFirst("FriendlyName");
     }
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(accountSid.toString())
+    buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(accountSid.toString())
         .append("/OutgoingCallerIds/").append(sid.toString());
     final URI uri = URI.create(buffer.toString());
     return new OutgoingCallerId(sid, now, now, friendlyName, accountSid,

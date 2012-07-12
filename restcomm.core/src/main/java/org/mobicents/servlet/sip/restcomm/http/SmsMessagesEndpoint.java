@@ -53,6 +53,7 @@ import org.mobicents.servlet.sip.restcomm.http.converter.SmsMessageListConverter
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorException;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -68,7 +69,7 @@ import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
     final ServiceLocator services = ServiceLocator.getInstance();
     dao = services.get(DaoManager.class).getSmsMessagesDao();
     aggregator = services.get(SmsAggregator.class);
-    final SmsMessageConverter converter = new SmsMessageConverter();
+    final SmsMessageConverter converter = new SmsMessageConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(SmsMessage.class, converter);
     builder.setPrettyPrinting();
@@ -76,8 +77,8 @@ import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new SmsMessageListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new SmsMessageListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   protected Response getSmsMessage(final  String accountSid, final String sid,
@@ -182,8 +183,10 @@ import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
     builder.setDirection(direction);
     builder.setPrice(new BigDecimal(0.00));
     builder.setApiVersion(apiVersion);
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append(apiVersion).append("/Accounts/");
+    buffer.append(rootUri).append(apiVersion).append("/Accounts/");
     buffer.append(accountSid.toString()).append("/SMS/Messages/");
     buffer.append(sid.toString());
     final URI uri = URI.create(buffer.toString());

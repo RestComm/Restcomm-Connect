@@ -24,6 +24,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 import com.thoughtworks.xstream.XStream;
 
+import java.math.BigDecimal;
 import java.net.URI;
 
 import javax.ws.rs.core.MediaType;
@@ -38,7 +39,6 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
@@ -49,13 +49,14 @@ import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
+import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class CallsEndpoint extends AbstractEndpoint {
   private final CallManager callManager;
-  private final CallDetailRecordsDao dao;
+  private final DaoManager daos;
   private final InterpreterExecutor executor;
   protected final Gson gson;
   protected final XStream xstream;
@@ -64,9 +65,9 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     callManager = services.get(CallManager.class);
-    dao = services.get(DaoManager.class).getCallDetailRecordsDao();
+    daos = services.get(DaoManager.class);
     executor = services.get(InterpreterExecutor.class);
-    CallDetailRecordConverter converter = new CallDetailRecordConverter();
+    CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(CallDetailRecord.class, converter);
     builder.setPrettyPrinting();
@@ -74,8 +75,8 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new CallDetailRecordListConverter());
-    xstream.registerConverter(new RestCommResponseConverter());
+    xstream.registerConverter(new CallDetailRecordListConverter(configuration));
+    xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
   private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
@@ -93,9 +94,10 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
 	  URI.create(data.getFirst("Url"));
   }
   
-  protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data,
+  protected Response putCall(final String sid, final MultivaluedMap<String, String> data,
       final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Create:Calls"); }
+    final Sid accountSid = new Sid(sid);
+    try { secure(accountSid, "RestComm:Create:Calls"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     try { validate(data); normalize(data); }
     catch(final RuntimeException exception) {
@@ -109,15 +111,54 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
       return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
     }
     final URI url = URI.create(data.getFirst("Url"));
-    executor.submit(new Sid(accountSid), getApiVersion(data), url, getMethod("VoiceMethod", data), null, null, call);
+    executor.submit(new Sid(sid), getApiVersion(data), url, getMethod("VoiceMethod", data), null, null, call);
+    final CallDetailRecord cdr = toCallDetailRecord(accountSid, call);
+    daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
     if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(call), APPLICATION_JSON).build();
+      return ok(gson.toJson(cdr), APPLICATION_JSON).build();
     } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(call);
+      final RestCommResponse response = new RestCommResponse(cdr);
       return ok(xstream.toXML(response), APPLICATION_XML).build();
     } else {
       return null;
     }
+  }
+  
+  private Integer getDuration(final Call call) {
+	if(call.getDateStarted() != null && call.getDatedEnded() != null) {
+	  final long start = call.getDateStarted().getMillis();
+	  final long end = call.getDatedEnded().getMillis();
+      return (int)((end - start) / 1000);
+	} else {
+	  return null;
+	}
+  }
+  
+  private CallDetailRecord toCallDetailRecord(final Sid accountSid, final Call call) {
+	final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+	builder.setSid(call.getSid());
+	builder.setDateCreated(call.getDateCreated());
+	builder.setAccountSid(accountSid);
+	builder.setTo(call.getRecipient());
+	builder.setFrom(call.getOriginator());
+	builder.setStatus(call.getStatus().toString());
+	builder.setStartTime(call.getDateStarted());
+	builder.setEndTime(call.getDatedEnded());
+	builder.setDuration(getDuration(call));
+	builder.setPrice(new BigDecimal(0.00));
+	builder.setDirection(call.getDirection().toString());
+	builder.setApiVersion(getApiVersion(null));
+	builder.setForwardedFrom(call.getForwardedFrom());
+	builder.setCallerName(call.getOriginatorName());
+    final StringBuilder buffer = new StringBuilder();
+    String rootUri = configuration.getString("root-uri");
+    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+    buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/");
+    buffer.append(accountSid.toString()).append("/Calls/").append(call.getSid());
+    buffer.toString();
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
+    return builder.build();
   }
   
   private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -41,14 +42,17 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   private final DateTime endTime;
   private final Integer duration;
   private final BigDecimal price;
+  private final String direction;
   private final String answeredBy;
+  private final String apiVersion;
   private final String forwardedFrom;
   private final String callerName;
   private final URI uri;
 
   public CallDetailRecord(final Sid sid, final Sid parentCallSid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
       final String to, final String from , final Sid phoneNumberSid, final String status, final DateTime startTime, final DateTime endTime,
-      final Integer duration, final BigDecimal price, final String answeredBy, final String forwardedFrom, final String callerName, final URI uri) {
+      final Integer duration, final BigDecimal price, final String direction, final String answeredBy, final String apiVersion,
+      final String forwardedFrom, final String callerName, final URI uri) {
     super();
     this.sid = sid;
     this.parentCallSid = parentCallSid;
@@ -63,10 +67,16 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     this.endTime = endTime;
     this.duration = duration;
     this.price = price;
+    this.direction = direction;
     this.answeredBy = answeredBy;
+    this.apiVersion = apiVersion;
     this.forwardedFrom = forwardedFrom;
     this.callerName = callerName;
     this.uri = uri;
+  }
+  
+  public static Builder builder() {
+    return new Builder();
   }
 
   public Sid getSid() {
@@ -120,9 +130,17 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   public BigDecimal getPrice() {
     return price;
   }
+  
+  public String getDirection() {
+    return direction;
+  }
 
   public String getAnsweredBy() {
     return answeredBy;
+  }
+  
+  public String getApiVersion() {
+    return apiVersion;
   }
 
   public String getForwardedFrom() {
@@ -139,31 +157,154 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
   
   public CallDetailRecord setStatus(final String status) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, answeredBy, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
   }
   
   public CallDetailRecord setStartTime(final DateTime startTime) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, answeredBy, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
   }
   
   public CallDetailRecord setEndTime(final DateTime endTime) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, answeredBy, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
   }
   
   public CallDetailRecord setDuration(final Integer duration) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, answeredBy, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
   }
   
   public CallDetailRecord setPrice(final BigDecimal price) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, answeredBy, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
   }
   
   public CallDetailRecord setAnsweredBy(final String answeredBy) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, answeredBy, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+  }
+  
+  @NotThreadSafe public static final class Builder {
+    private Sid sid;
+    private Sid parentCallSid;
+    private DateTime dateCreated;
+    private DateTime dateUpdated;
+    private Sid accountSid;
+    private String to;
+    private String from;
+    private Sid phoneNumberSid;
+    private String status;
+    private DateTime startTime;
+    private DateTime endTime;
+    private Integer duration;
+    private BigDecimal price;
+    private String direction;
+    private String answeredBy;
+    private String apiVersion;
+    private String forwardedFrom;
+    private String callerName;
+    private URI uri;
+
+    private Builder() {
+      super();
+      sid = null;
+      parentCallSid = null;
+      dateCreated = null;
+      dateUpdated = DateTime.now();
+      accountSid = null;
+      to = null;
+      from = null;
+      phoneNumberSid = null;
+      status = null;
+      startTime = null;
+      endTime = null;
+      duration = null;
+      price = null;
+      direction = null;
+      answeredBy = null;
+      apiVersion = null;
+      forwardedFrom = null;
+      callerName = null;
+      uri = null;
+    }
+    
+    public CallDetailRecord build() {
+      return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid,
+          to, from, phoneNumberSid, status, startTime, endTime, duration, price, direction,
+          answeredBy, apiVersion, forwardedFrom, callerName, uri);
+    }
+
+	public void setSid(final Sid sid) {
+		this.sid = sid;
+	}
+
+	public void setParentCallSid(final Sid parentCallSid) {
+		this.parentCallSid = parentCallSid;
+	}
+
+	public void setDateCreated(final DateTime dateCreated) {
+		this.dateCreated = dateCreated;
+	}
+
+	public void setAccountSid(final Sid accountSid) {
+		this.accountSid = accountSid;
+	}
+
+	public void setTo(final String to) {
+		this.to = to;
+	}
+
+	public void setFrom(final String from) {
+		this.from = from;
+	}
+
+	public void setPhoneNumberSid(final Sid phoneNumberSid) {
+		this.phoneNumberSid = phoneNumberSid;
+	}
+
+	public void setStatus(final String status) {
+		this.status = status;
+	}
+
+	public void setStartTime(final DateTime startTime) {
+		this.startTime = startTime;
+	}
+
+	public void setEndTime(final DateTime endTime) {
+		this.endTime = endTime;
+	}
+
+	public void setDuration(final Integer duration) {
+		this.duration = duration;
+	}
+
+	public void setPrice(final BigDecimal price) {
+		this.price = price;
+	}
+
+	public void setDirection(final String direction) {
+		this.direction = direction;
+	}
+
+	public void setAnsweredBy(final String answeredBy) {
+		this.answeredBy = answeredBy;
+	}
+
+	public void setApiVersion(final String apiVersion) {
+		this.apiVersion = apiVersion;
+	}
+
+	public void setForwardedFrom(final String forwardedFrom) {
+		this.forwardedFrom = forwardedFrom;
+	}
+
+	public void setCallerName(final String callerName) {
+		this.callerName = callerName;
+	}
+
+	public void setUri(final URI uri) {
+		this.uri = uri;
+	}
   }
 }
