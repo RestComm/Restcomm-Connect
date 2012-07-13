@@ -112,10 +112,12 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
     this.session = server.createMediaSession();
     this.observers = new ArrayList<CallObserver>();
     this.dateCreated = DateTime.now();
+    this.direction = Direction.INBOUND;
   }
   
   public MgcpCall(final SipServletRequest initialInvite, final MgcpServer server) {
     this(server);
+    this.direction = Direction.OUTBOUND_DIAL;
     this.initialInvite = initialInvite;
     setState(QUEUED);
   }
@@ -126,7 +128,6 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
   
   public synchronized void alert(final SipServletRequest request) throws IOException {
     assertState(IDLE);
-	direction = Direction.INBOUND;
 	final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
 	try {
 	  ringing.send();
@@ -227,7 +228,6 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
   
   @Override public synchronized void dial() throws CallException {
     assertState(QUEUED);
-    direction = Direction.OUTBOUND_DIAL;
     // Try to negotiate media with a packet relay end point.
     try {
 	  relayEndpoint = session.getPacketRelayEndpoint();

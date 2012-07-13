@@ -88,17 +88,17 @@ CREATE TABLE "restcomm_call_detail_records" (
 "account_sid" VARCHAR(34) NOT NULL,
 "sender" VARCHAR(15) NOT NULL,
 "recipient" VARCHAR(15) NOT NULL,
-"phone_number_sid" VARCHAR(34) NOT NULL,
+"phone_number_sid" VARCHAR(34),
 "status" VARCHAR(11) NOT NULL,
 "start_time" DATE,
 "end_time" DATE,
 "duration" INT,
 "price" VARCHAR(8),
 "direction" VARCHAR(13) NOT NULL,
-"answered_by" VARCHAR(7) NOT NULL,
+"answered_by" VARCHAR(7),
 "api_version" VARCHAR(10) NOT NULL,
 "forwarded_from" VARCHAR(15),
-"caller_name" VARCHAR(30) NOT NULL,
+"caller_name" VARCHAR(30),
 "uri" LONGVARCHAR NOT NULL
 );
 

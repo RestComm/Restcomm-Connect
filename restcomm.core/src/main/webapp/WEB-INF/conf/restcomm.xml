@@ -28,7 +28,7 @@
 		
 		<outbound-proxy-user></outbound-proxy-user>
 		<outbound-proxy-password></outbound-proxy-password>
-		<outbound-proxy-uri></outbound-proxy-uri>
+		<outbound-proxy-uri>softswitch1.speechbucket.com</outbound-proxy-uri>
 		
 		<!-- 
 			Each permission is represented as three columns Domain:Action:Target

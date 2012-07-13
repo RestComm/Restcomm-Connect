@@ -79,6 +79,10 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
+  protected Response getCalls(final String accountSid, final MediaType responseType) {
+    return null;
+  }
+  
   private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
 	  final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
 	  final String from = data.getFirst("From");

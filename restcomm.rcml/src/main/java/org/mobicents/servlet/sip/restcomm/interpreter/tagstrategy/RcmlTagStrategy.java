@@ -220,14 +220,6 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
       if(Call.Status.RINGING == status) {
         call.answer();
       } else if(Call.Status.QUEUED == status) {
-        call.addObserver(new CallObserver() {
-		    @Override public void onStatusChanged(Call call) {
-			  synchronized(RcmlTagStrategy.this) {
-				call.removeObserver(this);
-			    notify();
-			  }
-			}
-        });
         call.dial();
         try { wait(); } catch(final InterruptedException ignored) { }
         if(Call.Status.IN_PROGRESS != call.getStatus()) {

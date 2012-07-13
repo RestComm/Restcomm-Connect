@@ -34,7 +34,7 @@ import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecordList;
 
   @SuppressWarnings("rawtypes")
   @Override public boolean canConvert(final Class klass) {
-    return CallDetailRecord.class.equals(klass);
+    return CallDetailRecordList.class.equals(klass);
   }
 
   @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
