@@ -91,19 +91,25 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 }
 
 	 private Call createCall(URI from, URI to) throws CallManagerException {
-		 final SipServletRequest invite = invite(from, to);
-		 final MgcpServer server = servers.getMediaServer();
-		 final MgcpCall call = new MgcpCall(invite, server);
-		 invite.getSession().setAttribute("CALL", call);
-		 return call;
+	   SipServletRequest invite = null;
+	   try { invite = invite(from, to); }
+	   catch(final ServletException exception) {
+	     throw new CallManagerException(exception);
+	   }
+	   final MgcpServer server = servers.getMediaServer();
+	   final MgcpCall call = new MgcpCall(invite, server);
+	   invite.getSession().setAttribute("CALL", call);
+	   return call;
 	 }
 
-	 private SipServletRequest invite(final URI from, final URI to) {
+	 private SipServletRequest invite(final URI from, final URI to) throws ServletException {
 		 final SipApplicationSession application = sipFactory.createApplicationSession();
 		 final SipServletRequest invite = sipFactory.createRequest(application, "INVITE", from, to);
 		 if(proxyUri != null) {
 			 invite.pushRoute(proxyUri);
 		 }
+		 final SipSession session = invite.getSession();
+		 session.setHandler("SipCallManager");
 		 return invite;
 	 }
 

@@ -57,6 +57,7 @@ public final class InterpreterExecutor implements LifeCycle {
     final RcmlInterpreterContext context = new RcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
         voiceMethod, voiceFallbackUrl, voiceFallbackMethod, call);
     final RcmlInterpreter interpreter = new RcmlInterpreter(context);
+    interpreter.initialize();
     executor.submit(interpreter);
   }
   

@@ -174,9 +174,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
   }
   
   private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
-    if(!data.containsKey("AccountSid")) {
-      throw new NullPointerException("Account Sid can not be null.");
-    } else if(!data.containsKey("PhoneNumber")){
+    if(!data.containsKey("PhoneNumber")){
       throw new NullPointerException("Phone number can not be null.");
     }
     try { PhoneNumberUtil.getInstance().parse(data.getFirst("PhoneNumber"), "US"); }

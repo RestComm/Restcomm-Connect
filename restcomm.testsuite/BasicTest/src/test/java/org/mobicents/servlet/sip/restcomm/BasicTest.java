@@ -34,87 +34,68 @@ import com.twilio.sdk.resource.instance.Call;
  */
 @RunWith(Arquillian.class)
 public class BasicTest {
+  private static final String applications = "/home/thomas/Applications";
+  private static final String projects = "/home/thomas/Projects";
 
-	@ArquillianResource
-	private Deployer deployer;
+  @ArquillianResource private Deployer deployer;
 
-	//TODO: Find a better way to start/stop MMS
-	static String resourcesDir = "/data/devWorkspace/eclipse/eclipseMSS/localWorkspace/restcomm/restcomm.testsuite/resources/";
+  @BeforeClass public static void beforeClass(){
+    // using ProcessBuilder to spawn an process
+	final ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", applications + "/mms-server/bin/run.sh");
 
-	@BeforeClass
-	public static void beforeClass(){
-		// using ProcessBuilder to spawn an process
-		ProcessBuilder pb = new ProcessBuilder( "/bin/bash", "-c", resourcesDir+"/mobicents-media-server/bin/run.sh");
+	// set up the working directory.
+	// Note the method is called "directory" not "setDirectory"
+	builder.directory(new File( applications + "/mms-server/bin/" ));
 
-		// set up the working directory.
-		// Note the method is called "directory" not "setDirectory"
-		pb.directory( new File( resourcesDir+"/mobicents-media-server/bin/" ) );
-
-		// merge child's error and normal output streams.
-		// Note it is not called setRedirectErrorStream.
-		pb.redirectErrorStream( true );
+	// merge child's error and normal output streams.
+	// Note it is not called setRedirectErrorStream.
+	builder.redirectErrorStream(true);
 		
-		try {
-			Process proc = pb.start();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	try {
+	  builder.start();
+	} catch(final IOException exception) {
+	  exception.printStackTrace();
 	}
+  }
 
-	@AfterClass
-	public static void afterClass(){
-		/*
-		 *In order to kill the previously create process and its childs create a kill.sh script that will contain the following:
-		 *    #!/bin/bash
-		 *    pkill -f run.sh
-		 */
-		
-		try {
-			Process proc = new ProcessBuilder("/bin/bash", resourcesDir+"/kill.sh").start();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+  @AfterClass public static void afterClass(){
+    /*
+     * In order to kill the previously create process and its childs create a kill.sh script that will contain the following:
+     *    #!/bin/bash
+     *    pkill -f run.sh
+     */
+	try {
+	  new ProcessBuilder("/bin/bash", applications + "/mms-server/bin/kill.sh").start();
+	} catch(final IOException exception) {
+	  exception.printStackTrace();
 	}
+  }
 
-	@Deployment (name="restcomm", managed=false, testable=false)
-	public static WebArchive createTestArchive()
-	{
-		MavenDependencyResolver resolver = DependencyResolvers
-				.use(MavenDependencyResolver.class)
-				.loadMetadataFromPom("pom.xml");
+  @Deployment(name="restcomm", managed=false, testable=false)
+    public static WebArchive createTestArchive() {
+    DependencyResolvers.use(MavenDependencyResolver.class).loadMetadataFromPom("pom.xml");
+    final File directory = new File(projects + "/RestComm/restcomm/restcomm.core/target/restcomm/");
+    // Load archive from exploded directory
+    WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
+    archive.as(ExplodedImporter.class).importDirectory(directory);
+    System.out.println(archive.toString());
+    return archive;
+  }
 
-		File srcDir = new File(resourcesDir+"/restcomm.war/");
+  @Test public void testSayVerb() throws InterruptedException, TwilioRestException {
+    // Deploy application archive to the container.
+    deployer.deploy("restcomm");
 
-		//Load archive from WAR file. Place WAR file src/test/resources directory
-		//		WebArchive archive = ShrinkWrap.create(ZipImporter.class, "restcomm.war")
-		//				.importFrom(new File("src/test/resources/restcomm.war")).as(WebArchive.class);
-
-		//Load archive from exploded directory
-		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-		archive.as(ExplodedImporter.class).importDirectory(srcDir);
-
-		//		System.out.println(archive.toString(true));
-		return archive;
-	}
-
-	@Test 
-	public void testSayVerb() throws InterruptedException, TwilioRestException {
-
-		//Deploy application archive to the container.
-		deployer.deploy("restcomm");
-
-		//		assertTrue(true);
-
-		final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-				"77f8c12cc7b8f8423e5c38b035249166");
-		final Account account = client.getAccount();
-		final CallFactory factory = account.getCallFactory();
-		final Map<String, String> parameters = new HashMap<String, String>();
-		parameters.put("To", "+15126002188");
-		parameters.put("From", "(512) 600-2188");
-		parameters.put("Url", "http://192.168.1.106:8080/restcomm/tests/SayVerb");
-		final Call call = factory.create(parameters);
-		wait(5 * 1000);
-		call.hangup();
-	}
+	final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+        "77f8c12cc7b8f8423e5c38b035249166");
+	final Account account = client.getAccount();
+	final CallFactory factory = account.getCallFactory();
+	final Map<String, String> parameters = new HashMap<String, String>();
+	parameters.put("To", "+15126002188");
+	parameters.put("From", "(512) 600-2188");
+	parameters.put("Url", "http://192.168.1.106:8080/restcomm/tests/SayVerb");
+	final Call call = factory.create(parameters);
+	wait(5 * 1000);
+	call.hangup();
+  }
 }
