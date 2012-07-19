@@ -45,7 +45,7 @@ public class TwilioRestClient {
 	private static final String VERSION = "3.0";
 
 	/** The endpoint. */
-	private String endpoint = "http://23.21.70.233:8080/restcomm";
+	private String endpoint = "http://127.0.0.1:8080/restcomm";
 
 	/** The Constant DEFAULT_VERSION. */
 	public static final String DEFAULT_VERSION = "2012-04-24";
