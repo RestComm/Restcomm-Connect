@@ -54,7 +54,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class RcmlTagStrategy implements TagStrategy {
+@NotThreadSafe public abstract class RcmlTagStrategy implements CallObserver, TagStrategy {
   protected final Configuration configuration;
   protected final DaoManager daos;
   protected final String homeDirectory;
@@ -220,16 +220,10 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
       if(Call.Status.RINGING == status) {
         call.answer();
       } else if(Call.Status.QUEUED == status) {
-    	final RcmlTagStrategy lock = this;
-        call.addObserver(new CallObserver() {
-          @Override public void onStatusChanged(final Call call) {
-            synchronized(lock) {
-              notify();
-            }
-		  }
-        });
+        call.addObserver(this);
         call.dial();
         try { wait(); } catch(final InterruptedException ignored) { }
+        call.removeObserver(this);
         if(Call.Status.IN_PROGRESS != call.getStatus()) {
           interpreter.finish();
           throw new TagStrategyException("The call is " + call.getStatus().toString());
@@ -248,6 +242,10 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
       silence.add(silenceAudioFile);
     }
     return silence;
+  }
+  
+  @Override public synchronized void onStatusChanged(final Call call) {
+    notify();
   }
   
   protected void play(final Call call, final List<URI> announcements, final int iterations)
