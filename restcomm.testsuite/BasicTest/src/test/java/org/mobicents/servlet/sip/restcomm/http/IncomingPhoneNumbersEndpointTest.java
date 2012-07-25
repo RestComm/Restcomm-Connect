@@ -67,7 +67,7 @@ public class IncomingPhoneNumbersEndpointTest {
     // deployer.deploy("restcomm");
     // Create a new client.
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-        "77f8c12cc7b8f8423e5c38b035249166", "http://192.168.1.106:8080/restcomm");
+        "77f8c12cc7b8f8423e5c38b035249166");
     final Account account = client.getAccount();
     final IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
     final Map<String, String> parameters = new HashMap<String, String>();
