@@ -135,6 +135,13 @@
 			<version>1.7.0.FINAL</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>twilio-java-sdk</artifactId>
+			<version>3.3.10-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
 
 		<!-- Axis Dependencies -->
 

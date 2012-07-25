@@ -17,20 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.http;
 
 import static org.junit.Assert.*;
-
-import java.io.File;
-
-import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.DependencyResolvers;
-import org.jboss.shrinkwrap.resolver.api.maven.MavenDependencyResolver;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.resource.instance.Account;
@@ -38,28 +25,13 @@ import com.twilio.sdk.resource.instance.Account;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@RunWith(Arquillian.class)
-public class ClientsEndpointTest {
-  @ArquillianResource private Deployer deployer;
-  private static final String projects = "/home/thomas/Projects";
-
+// @RunWith(Arquillian.class)
+public class ClientsEndpointTest extends AbstractEndpointTest {
   public ClientsEndpointTest() {
     super();
   }
   
-  @Deployment(name="restcomm", managed=false, testable=false)
-    public static WebArchive createTestArchive() {
-    DependencyResolvers.use(MavenDependencyResolver.class).loadMetadataFromPom("pom.xml");
-    final File directory = new File(projects + "/RestComm/restcomm/restcomm.core/target/restcomm/");
-    // Load archive from exploded directory.
-    WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-    archive.as(ExplodedImporter.class).importDirectory(directory);
-    return archive;
-  }
-  
   @Test public void test() {
-	// Deploy RestComm.
-    deployer.deploy("restcomm");
     // Create a new client.
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
         "77f8c12cc7b8f8423e5c38b035249166");
