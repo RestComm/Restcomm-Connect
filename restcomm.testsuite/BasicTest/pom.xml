@@ -13,14 +13,14 @@
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>BasicTest</artifactId>
 	<version>1.0.0.BETA2-SNAPSHOT</version>
-	<name>BasicTest</name>
+	<name>testsuite</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<dependencies>
-		
+
 	</dependencies>
 
 </project>

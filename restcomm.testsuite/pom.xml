@@ -101,13 +101,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.twilio.sdk</groupId>
-			<artifactId>twilio-java-sdk</artifactId>
-			<version>3.3.9</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>coyote</artifactId>
 			<version>6.0.33</version>

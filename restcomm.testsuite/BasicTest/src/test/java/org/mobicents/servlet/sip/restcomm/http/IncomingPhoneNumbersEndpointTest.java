@@ -43,9 +43,9 @@ import com.twilio.sdk.resource.instance.IncomingPhoneNumber;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-// @RunWith(Arquillian.class)
+@RunWith(Arquillian.class)
 public class IncomingPhoneNumbersEndpointTest {
-  // @ArquillianResource private Deployer deployer;
+  @ArquillianResource private Deployer deployer;
   private static final String projects = "/home/thomas/Projects";
 
   public IncomingPhoneNumbersEndpointTest() {
@@ -64,7 +64,7 @@ public class IncomingPhoneNumbersEndpointTest {
   
   @Test public void test() throws TwilioRestException {
 	// Deploy RestComm.
-    // deployer.deploy("restcomm");
+    deployer.deploy("restcomm");
     // Create a new client.
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
         "77f8c12cc7b8f8423e5c38b035249166");
