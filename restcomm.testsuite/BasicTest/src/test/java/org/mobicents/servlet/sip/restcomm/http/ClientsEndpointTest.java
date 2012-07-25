@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -27,29 +29,26 @@ import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.DependencyResolvers;
 import org.jboss.shrinkwrap.resolver.api.maven.MavenDependencyResolver;
-
-import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.resource.instance.Account;
-import com.twilio.sdk.resource.list.RecordingList;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
-public class RecordingsEndpointTests {
+public class ClientsEndpointTest {
   @ArquillianResource private Deployer deployer;
   private static final String projects = "/home/thomas/Projects";
-  
-  public RecordingsEndpointTests() {
+
+  public ClientsEndpointTest() {
     super();
   }
   
   @Deployment(name="restcomm", managed=false, testable=false)
-  public static WebArchive createTestArchive() {
+    public static WebArchive createTestArchive() {
     DependencyResolvers.use(MavenDependencyResolver.class).loadMetadataFromPom("pom.xml");
     final File directory = new File(projects + "/RestComm/restcomm/restcomm.core/target/restcomm/");
     // Load archive from exploded directory.
@@ -59,13 +58,11 @@ public class RecordingsEndpointTests {
   }
   
   @Test public void test() {
-    // Deploy RestComm.
+	// Deploy RestComm.
     deployer.deploy("restcomm");
     // Create a new client.
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
         "77f8c12cc7b8f8423e5c38b035249166");
     final Account account = client.getAccount();
-    final RecordingList recordings = account.getRecordings();
-    assertTrue(recordings.getTotal() == 0);
   }
 }

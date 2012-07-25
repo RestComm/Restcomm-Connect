@@ -40,11 +40,11 @@ import com.twilio.sdk.resource.list.NotificationList;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
-public class NotificationsEndpointTests {
+public class NotificationsEndpointTest {
   @ArquillianResource private Deployer deployer;
   private static final String projects = "/home/thomas/Projects";
 
-  public NotificationsEndpointTests() {
+  public NotificationsEndpointTest() {
     super();
   }
   

@@ -16,11 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -31,24 +27,24 @@ import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.DependencyResolvers;
 import org.jboss.shrinkwrap.resolver.api.maven.MavenDependencyResolver;
+
+import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.twilio.sdk.TwilioRestClient;
-import com.twilio.sdk.TwilioRestException;
-import com.twilio.sdk.resource.factory.IncomingPhoneNumberFactory;
 import com.twilio.sdk.resource.instance.Account;
-import com.twilio.sdk.resource.instance.IncomingPhoneNumber;
+import com.twilio.sdk.resource.list.RecordingList;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
-public class IncomingPhoneNumbersEndpointTests {
+public class RecordingsEndpointTest {
   @ArquillianResource private Deployer deployer;
   private static final String projects = "/home/thomas/Projects";
-
-  public IncomingPhoneNumbersEndpointTests() {
+  
+  public RecordingsEndpointTest() {
     super();
   }
   
@@ -62,18 +58,14 @@ public class IncomingPhoneNumbersEndpointTests {
     return archive;
   }
   
-  @Test public void test() throws TwilioRestException {
-	// Deploy RestComm.
+  @Test public void test() {
+    // Deploy RestComm.
     deployer.deploy("restcomm");
     // Create a new client.
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
         "77f8c12cc7b8f8423e5c38b035249166");
     final Account account = client.getAccount();
-    final IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
-    final Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("PhoneNumber", "+12223334444");
-    final IncomingPhoneNumber incomingPhoneNumber = factory.create(parameters);
-    assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
-    assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+12223334444"));
+    final RecordingList recordings = account.getRecordings();
+    assertTrue(recordings.getTotal() == 0);
   }
 }

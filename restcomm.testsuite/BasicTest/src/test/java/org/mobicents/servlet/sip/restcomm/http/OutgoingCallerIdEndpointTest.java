@@ -18,7 +18,7 @@ package org.mobicents.servlet.sip.restcomm.http;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.resource.instance.Account;
-import com.twilio.sdk.resource.list.TranscriptionList;
+import com.twilio.sdk.resource.list.OutgoingCallerIdList;
 
 import java.io.File;
 
@@ -40,16 +40,16 @@ import org.junit.runner.RunWith;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
-public final class TranscriptionsEndpointTests {
+public class OutgoingCallerIdEndpointTest {
   @ArquillianResource private Deployer deployer;
   private static final String projects = "/home/thomas/Projects";
-  
-  public TranscriptionsEndpointTests() {
+
+  public OutgoingCallerIdEndpointTest() {
     super();
   }
   
   @Deployment(name="restcomm", managed=false, testable=false)
-    public static WebArchive createTestArchive() {
+  public static WebArchive createTestArchive() {
     DependencyResolvers.use(MavenDependencyResolver.class).loadMetadataFromPom("pom.xml");
     final File directory = new File(projects + "/RestComm/restcomm/restcomm.core/target/restcomm/");
     // Load archive from exploded directory.
@@ -57,15 +57,15 @@ public final class TranscriptionsEndpointTests {
     archive.as(ExplodedImporter.class).importDirectory(directory);
     return archive;
   }
-
+  
   @Test public void test() {
     // Deploy RestComm.
     deployer.deploy("restcomm");
     // Create a new client.
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-            "77f8c12cc7b8f8423e5c38b035249166");
+        "77f8c12cc7b8f8423e5c38b035249166");
     final Account account = client.getAccount();
-    final TranscriptionList transcriptions = account.getTranscriptions();
-    assertTrue(transcriptions.getTotal() == 0);
+    final OutgoingCallerIdList outgoingCallerIds = account.getOutgoingCallerIds();
+    assertTrue(outgoingCallerIds.getTotal() == 0);
   }
 }

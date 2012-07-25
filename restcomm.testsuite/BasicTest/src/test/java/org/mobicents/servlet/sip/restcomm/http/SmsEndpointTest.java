@@ -16,9 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import com.twilio.sdk.TwilioRestClient;
-import com.twilio.sdk.resource.instance.Account;
-import com.twilio.sdk.resource.list.OutgoingCallerIdList;
+import static org.junit.Assert.*;
 
 import java.io.File;
 
@@ -31,25 +29,27 @@ import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.DependencyResolvers;
 import org.jboss.shrinkwrap.resolver.api.maven.MavenDependencyResolver;
-
-import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.twilio.sdk.TwilioRestClient;
+import com.twilio.sdk.resource.instance.Account;
+import com.twilio.sdk.resource.list.SmsList;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
-public class OutgoingCallerIdEndpointTests {
+public class SmsEndpointTest {
   @ArquillianResource private Deployer deployer;
   private static final String projects = "/home/thomas/Projects";
 
-  public OutgoingCallerIdEndpointTests() {
+  public SmsEndpointTest() {
     super();
   }
   
   @Deployment(name="restcomm", managed=false, testable=false)
-  public static WebArchive createTestArchive() {
+    public static WebArchive createTestArchive() {
     DependencyResolvers.use(MavenDependencyResolver.class).loadMetadataFromPom("pom.xml");
     final File directory = new File(projects + "/RestComm/restcomm/restcomm.core/target/restcomm/");
     // Load archive from exploded directory.
@@ -57,7 +57,7 @@ public class OutgoingCallerIdEndpointTests {
     archive.as(ExplodedImporter.class).importDirectory(directory);
     return archive;
   }
-  
+
   @Test public void test() {
     // Deploy RestComm.
     deployer.deploy("restcomm");
@@ -65,7 +65,7 @@ public class OutgoingCallerIdEndpointTests {
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
         "77f8c12cc7b8f8423e5c38b035249166");
     final Account account = client.getAccount();
-    final OutgoingCallerIdList outgoingCallerIds = account.getOutgoingCallerIds();
-    assertTrue(outgoingCallerIds.getTotal() == 0);
+    final SmsList messages = account.getSmsMessages();
+    assertTrue(messages.getTotal() == 0);
   }
 }
