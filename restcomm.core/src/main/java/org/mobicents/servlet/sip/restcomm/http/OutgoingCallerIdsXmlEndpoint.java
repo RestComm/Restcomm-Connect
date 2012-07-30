@@ -42,12 +42,23 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     super();
   }
   
-  @Path("/{sid}")
-  @DELETE public Response deleteOutgoingCallerId(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+  private Response deleteOutgoingCallerId(String accountSid, String sid) {
 	try { secure(new Sid(accountSid), "RestComm:Delete:OutgoingCallerIds"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     dao.removeOutgoingCallerId(new Sid(sid));
     return ok().build();
+  }
+  
+  @Path("/{sid}.json")
+  @DELETE public Response deleteOutgoingCallerIdAsJson(@PathParam("accountSid") String accountSid,
+      @PathParam("sid") String sid) {
+    return deleteOutgoingCallerId(accountSid, sid);
+  }
+  
+  @Path("/{sid}")
+  @DELETE public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid,
+      @PathParam("sid") String sid) {
+    return deleteOutgoingCallerId(accountSid, sid);
   }
   
   @Path("/{sid}.json")
