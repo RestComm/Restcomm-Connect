@@ -20,8 +20,8 @@
 // Administrator Account
 var account = {
 	  "sid" : "ACae6e420f425248d6a26948c17a9e2acf",
-	  "date_created" : "2012-04-24",
-	  "date_updated" : "2012-04-24",
+	  "date_created" : ISODate("2012-04-24"),
+	  "date_updated" : ISODate("2012-04-24"),
 	  "email_address" : "administrator@company.com",
 	  "friendly_name" : "Default Administrator Account",
 	  "type" : "Full",
@@ -33,8 +33,8 @@ var account = {
 // Demo Incoming Phone Number
 var ipn = {
       "sid" : "PNc96bd38c7fd7413c99cab286bb73df5b",
-      "date_created" : "2012-04-28",
-      "date_updated" : "2012-04-28",
+      "date_created" : ISODate("2012-04-28"),
+      "date_updated" : ISODate("2012-04-28"),
       "friendly_name" : "234",
       "account_sid" : "ACae6e420f425248d6a26948c17a9e2acf",
       "phone_number" : "+1234",
@@ -50,5 +50,5 @@ var ipn = {
     };
 
 // Insert the objects in to the database.
-db.restcomm.insert(account);
-db.restcomm.insert(ipn);
+db.restcomm_accounts.insert(account);
+db.restcomm_incoming_phone_numbers.insert(ipn);
