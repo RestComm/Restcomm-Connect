@@ -139,7 +139,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     public static Status getValueOf(final String text) {
       Status[] values = values();
       for(final Status value : values) {
-        if(value.text.equals(text)) {
+        if(value.toString().equals(text)) {
           return value;
         }
       }

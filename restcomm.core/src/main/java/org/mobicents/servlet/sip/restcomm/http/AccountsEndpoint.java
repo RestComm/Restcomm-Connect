@@ -151,6 +151,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
       return status(BAD_REQUEST).entity(exception.getMessage()).build();
     }
     if(subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts"))) {
+      final Account parent = dao.getAccount(sid);
+      if(!subject.hasRole("Administrator") || !data.containsKey("Role")) {
+        account = account.setRole(parent.getRole());
+      }
       dao.addAccount(account);
     } else {
       return status(UNAUTHORIZED).build();
@@ -170,14 +174,12 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     if(data.containsKey("FriendlyName")) {
       result = result.setFriendlyName(data.getFirst("FriendlyName"));
     }
-    if(data.containsKey("Type")) {
-      result = result.setType(Account.Type.valueOf(data.getFirst("Type")));
-    }
     if(data.containsKey("Status")) {
-      result = result.setStatus(Account.Status.valueOf(data.getFirst("Status")));
+      result = result.setStatus(Account.Status.getValueOf(data.getFirst("Status")));
     }
-    if(data.containsKey("AuthToken")) {
-      result = result.setAuthToken(data.getFirst("AuthToken"));
+    if(data.containsKey("Password")) {
+      final String hash = new Md5Hash(data.getFirst("Password")).toString();
+      result = result.setAuthToken(hash);
     }
     return result;
   }
@@ -213,8 +215,6 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
       throw new NullPointerException("Email address can not be null.");
     } else if(!data.containsKey("Password")) {
       throw new NullPointerException("Password can not be null.");
-    } else if(!data.containsKey("Role")) {
-      throw new NullPointerException("Role can not be null.");
     }
   }
 }
