@@ -19,14 +19,8 @@ package org.mobicents.servlet.sip.restcomm.sms;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.esendex.sdk.ems.soapinterface.EsendexHeader;
-import com.esendex.sdk.ems.soapinterface.MessageType;
-import com.esendex.sdk.ems.soapinterface.SendServiceLocator;
-import com.esendex.sdk.ems.soapinterface.SendServiceSoap_BindingStub;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
