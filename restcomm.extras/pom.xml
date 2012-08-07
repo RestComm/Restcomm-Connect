@@ -54,13 +54,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>axis</groupId>
-			<artifactId>axis</artifactId>
-			<version>${axis.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.ispeech</groupId>
 			<artifactId>ispeech</artifactId>
 			<version>1.0.1</version>
@@ -68,21 +61,21 @@
 			<systemPath>${project.basedir}/lib/ispeech-java-sdk.jar</systemPath>
 		</dependency>
 
-		<dependency>
-			<groupId>net.interfaxx</groupId>
-			<artifactId>interfax</artifactId>
-			<version>1.0.0</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/Interfax.jar</systemPath>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>net.interfaxx</groupId> -->
+<!-- 			<artifactId>interfax</artifactId> -->
+<!-- 			<version>1.0.0</version> -->
+<!-- 			<scope>system</scope> -->
+<!-- 			<systemPath>${project.basedir}/lib/Interfax.jar</systemPath> -->
+<!-- 		</dependency> -->
 
-		<dependency>
-			<groupId>com.esendex</groupId>
-			<artifactId>esendex</artifactId>
-			<version>1.0.0</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/Esendex.jar</systemPath>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.esendex</groupId> -->
+<!-- 			<artifactId>esendex</artifactId> -->
+<!-- 			<version>1.0.0</version> -->
+<!-- 			<scope>system</scope> -->
+<!-- 			<systemPath>${project.basedir}/lib/Esendex.jar</systemPath> -->
+<!-- 		</dependency> -->
 
 	</dependencies>
 

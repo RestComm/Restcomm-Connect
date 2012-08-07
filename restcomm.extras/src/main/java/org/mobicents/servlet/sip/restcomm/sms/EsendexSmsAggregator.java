@@ -19,14 +19,8 @@ package org.mobicents.servlet.sip.restcomm.sms;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.esendex.sdk.ems.soapinterface.EsendexHeader;
-import com.esendex.sdk.ems.soapinterface.MessageType;
-import com.esendex.sdk.ems.soapinterface.SendServiceLocator;
-import com.esendex.sdk.ems.soapinterface.SendServiceSoap_BindingStub;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
-
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -60,11 +54,13 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
       catch(final InterruptedException ignored) { }
       if(request != null) {
         try {
-          final EsendexHeader header = new EsendexHeader(user, password, account);
-  	      final SendServiceLocator locator = new SendServiceLocator();
-          final SendServiceSoap_BindingStub service = (SendServiceSoap_BindingStub)locator.getSendServiceSoap();
-          service.setHeader(header);
-  	      service.sendMessage(request.getTo(), request.getBody(), MessageType.Text);
+        	final EsendexService service = new EsendexService(user, password, account);
+        	service.sendMessage(request.getTo(), request.getBody());
+//          final EsendexHeader header = new EsendexHeader(user, password, account);
+//  	      final SendServiceLocator locator = new SendServiceLocator();
+//          final SendServiceSoap_BindingStub service = (SendServiceSoap_BindingStub)locator.getSendServiceSoap();
+//          service.setHeader(header);
+//  	      service.sendMessage(request.getTo(), request.getBody(), MessageType.Text);
   	      if(request.getObserver() != null) {
   	        request.getObserver().succeeded();
   	      }
