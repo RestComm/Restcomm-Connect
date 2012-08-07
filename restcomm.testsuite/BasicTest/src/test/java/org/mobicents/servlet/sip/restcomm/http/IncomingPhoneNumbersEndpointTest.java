@@ -37,9 +37,37 @@ public class IncomingPhoneNumbersEndpointTest extends AbstractEndpointTest {
     super();
   }
   
-  @Test public void test() throws TwilioRestException {
+  @Test public void createIncomingPhoneNumber() throws TwilioRestException {
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-        "77f8c12cc7b8f8423e5c38b035249166");
+        "77f8c12cc7b8f8423e5c38b035249166", "http://192.168.1.106:8080/restcomm");
+	// Create incoming phone number.
+    final Account account = client.getAccount();
+    final IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
+    final Map<String, String> parameters = new HashMap<String, String>();
+    parameters.put("PhoneNumber", "+12223334444");
+    parameters.put("VoiceUrl", "http://192.168.1.106:8080/restcomm/demo/hello-world.xml");
+    parameters.put("VoiceMethod", "POST");
+    parameters.put("VoiceFallbackUrl", "http://192.168.1.106:8080/restcomm/demo/hello-world.xml");
+    parameters.put("VoiceFallbackMethod", "POST");
+    parameters.put("StatusCallback", "http://192.168.1.106:8080/restcomm/demo/hello-world.xml");
+    parameters.put("StatusCallbackMethod", "POST");
+    parameters.put("VoiceCallerIdLookup", "false");
+    // parameters.put("VoiceApplicationSid", "");
+    parameters.put("SmsUrl", "http://192.168.1.106:8080/restcomm/demo/hello-world.xml");
+    parameters.put("SmsMethod", "POST");
+    parameters.put("SmsFallbackUrl", "http://192.168.1.106:8080/restcomm/demo/hello-world.xml");
+    parameters.put("SmsFallbackMethod", "POST");
+    // parameters.put("SmsApplicationSid", "");
+    final IncomingPhoneNumber incomingPhoneNumber = factory.create(parameters);
+    assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
+    assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+12223334444"));
+    assertTrue(incomingPhoneNumber.getVoiceUrl().equals("http://192.168.1.106:8080/restcomm/demo/hello-world.xml"));
+  }
+  
+  @Test public void deleteIncomingPhoneNumber() throws TwilioRestException {
+    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+        "77f8c12cc7b8f8423e5c38b035249166", "http://192.168.1.106:8080/restcomm");
+    // Create incoming phone number.
     final Account account = client.getAccount();
     final IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
     final Map<String, String> parameters = new HashMap<String, String>();
@@ -47,5 +75,37 @@ public class IncomingPhoneNumbersEndpointTest extends AbstractEndpointTest {
     final IncomingPhoneNumber incomingPhoneNumber = factory.create(parameters);
     assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
     assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+12223334444"));
+    // Delete the new incoming phone number.
+    incomingPhoneNumber.setRequestAccountSid("ACae6e420f425248d6a26948c17a9e2acf");
+    incomingPhoneNumber.delete();
+  }
+  
+  @Test public void getIncomingPhoneNumber() throws TwilioRestException {
+    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+        "77f8c12cc7b8f8423e5c38b035249166", "http://192.168.1.106:8080/restcomm");
+    // Get incoming phone number.
+    final Account account = client.getAccount();
+    final IncomingPhoneNumber ipn = account.getIncomingPhoneNumber("PNc96bd38c7fd7413c99cab286bb73df5b");
+    assertTrue("ACae6e420f425248d6a26948c17a9e2acf".equals(ipn.getAccountSid()));
+    assertTrue("(305) 587-2294".equals(ipn.getFriendlyName()));
+    assertTrue("+13055872294".equals(ipn.getPhoneNumber()));
+    assertTrue("http://192.168.1.106:8080/restcomm/demo/hello-world.xml".equals(ipn.getVoiceUrl()));
+    assertTrue("POST".equals(ipn.getVoiceMethod()));
+    assertTrue("2012-04-24".equals(ipn.getApiVersion()));
+  }
+  
+  @Test public void updateIncomingPhoneNumber() throws TwilioRestException {
+    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+        "77f8c12cc7b8f8423e5c38b035249166", "http://192.168.1.106:8080/restcomm");
+    // Create incoming phone number.
+    final Account account = client.getAccount();
+    final IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
+    final Map<String, String> parameters = new HashMap<String, String>();
+    parameters.put("PhoneNumber", "+12223334444");
+    final IncomingPhoneNumber incomingPhoneNumber = factory.create(parameters);
+    assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
+    assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+12223334444"));
+    // Update incoming phone number.
+    
   }
 }
