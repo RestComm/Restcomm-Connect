@@ -79,15 +79,25 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 final SipURI toUri = sipFactory.createSipURI(to, proxyUri.getHost());
 		 return createCall(fromUri, toUri);
 	 }
+	 
+	@Override public Call createUserAgentCall(final String from, final String to) throws CallManagerException {
+	  try {
+	    final SipURI fromUri = sipFactory.createSipURI(from, proxyUri.getHost());
+        final URI toUri = sipFactory.createURI(to);
+        return createCall(fromUri, toUri);
+	   } catch(final Exception exception) {
+   	     throw new CallManagerException(exception);
+   	   }  
+	}
 
 	 @Override public Call createCall(final String from, final String to) throws CallManagerException {
-		 try {
-			 final URI fromUri = sipFactory.createURI(from);
-			 final URI toUri = sipFactory.createURI(to);
-			 return createCall(fromUri, toUri);
-		 } catch(final Exception exception) {
-			 throw new CallManagerException(exception);
-		 }
+	   try {
+		 final URI fromUri = sipFactory.createURI(from);
+		 final URI toUri = sipFactory.createURI(to);
+		 return createCall(fromUri, toUri);
+	   } catch(final Exception exception) {
+		 throw new CallManagerException(exception);
+	   }
 	 }
 
 	 private Call createCall(URI from, URI to) throws CallManagerException {
@@ -105,9 +115,15 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 private SipServletRequest invite(final URI from, final URI to) throws ServletException {
 		 final SipApplicationSession application = sipFactory.createApplicationSession();
 		 final SipServletRequest invite = sipFactory.createRequest(application, "INVITE", from, to);
-		 if(proxyUri != null) {
-			 invite.pushRoute(proxyUri);
+		 final StringBuilder buffer = new StringBuilder();
+		 buffer.append(((SipURI)to).getHost());
+		 final int port = ((SipURI)to).getPort();
+		 if(port > -1) {
+		   buffer.append(":");
+		   buffer.append(port);
 		 }
+		 final SipURI destination = sipFactory.createSipURI(null, buffer.toString());
+		 invite.pushRoute(destination);
 		 final SipSession session = invite.getSession();
 		 session.setHandler("SipCallManager");
 		 return invite;

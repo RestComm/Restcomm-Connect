@@ -21,5 +21,6 @@ package org.mobicents.servlet.sip.restcomm.media.api;
  */
 public interface CallManager {
   public Call createExternalCall(String from, String to) throws CallManagerException;
+  public Call createUserAgentCall(String from, String to) throws CallManagerException;
   public Call createCall(String from, String to) throws CallManagerException;
 }

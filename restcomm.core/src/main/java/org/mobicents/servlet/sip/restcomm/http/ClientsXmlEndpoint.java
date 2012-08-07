@@ -84,13 +84,25 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   }
   
   @Path("/{sid}.json")
-  @PUT public Response updateClientAsJson(@PathParam("accountSid") final String accountSid,
+  @POST public Response updateClientAsJsonPost(@PathParam("accountSid") final String accountSid,
+      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+    return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
+  }
+  
+  @Path("/{sid}.json")
+  @PUT public Response updateClientAsJsonPut(@PathParam("accountSid") final String accountSid,
       @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
     return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
   }
   
   @Path("/{sid}")
-  @PUT public Response updateClientAsXml(@PathParam("accountSid") final String accountSid,
+  @POST public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid,
+      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+    return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
+  }
+  
+  @Path("/{sid}")
+  @PUT public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid,
       @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
     return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
   }

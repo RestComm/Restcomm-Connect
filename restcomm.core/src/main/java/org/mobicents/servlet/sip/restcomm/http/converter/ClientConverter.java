@@ -56,6 +56,11 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writeLogin(client.getLogin(), writer);
     writePassword(client.getPassword(), writer);
     writeStatus(client.getStatus().toString(), writer);
+    writeVoiceUrl(client.getVoiceUrl(), writer);
+    writeVoiceMethod(client.getVoiceMethod(), writer);
+    writeVoiceFallbackUrl(client.getVoiceFallbackUrl(), writer);
+    writeVoiceFallbackMethod(client.getVoiceFallbackMethod(), writer);
+    writeVoiceApplicationSid(client.getVoiceApplicationSid(), writer);
     writeUri(client.getUri(), writer);
     writer.endNode();
   }
@@ -72,6 +77,11 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 	writeLogin(client.getLogin(), object);
 	writePassword(client.getPassword(), object);
 	writeStatus(client.getStatus().toString(), object);
+	writeVoiceUrl(client.getVoiceUrl(), object);
+    writeVoiceMethod(client.getVoiceMethod(), object);
+    writeVoiceFallbackUrl(client.getVoiceFallbackUrl(), object);
+    writeVoiceFallbackMethod(client.getVoiceFallbackMethod(), object);
+    writeVoiceApplicationSid(client.getVoiceApplicationSid(), object);
 	writeUri(client.getUri(), object);
     return object;
   }

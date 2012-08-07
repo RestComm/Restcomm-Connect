@@ -132,9 +132,15 @@ import com.mongodb.WriteResult;
     final String login = readString(object.get("login"));
     final String password = readString(object.get("password"));
     final int status = readInteger(object.get("status"));
+    final URI voiceUrl = readUri(object.get("voice_url"));
+    final String voiceMethod = readString(object.get("voice_method"));
+    final URI voiceFallbackUrl = readUri(object.get("voice_fallback_url"));
+    final String voiceFallbackMethod = readString(object.get("voice_fallback_method"));
+    final Sid voiceApplicationSid = readSid(object.get("voice_application_sid"));
     final URI uri = readUri(object.get("uri"));
     return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion,
-        friendlyName, login, password, status, uri);
+        friendlyName, login, password, status, voiceUrl, voiceMethod, voiceFallbackUrl,
+        voiceFallbackMethod, voiceApplicationSid, uri);
   }
   
   private DBObject toDbObject(final Client client) {
@@ -148,6 +154,11 @@ import com.mongodb.WriteResult;
     object.put("login", client.getLogin());
     object.put("password", client.getPassword());
     object.put("status", client.getStatus());
+    object.put("voice_url", writeUri(client.getVoiceUrl()));
+    object.put("voice_method", client.getVoiceMethod());
+    object.put("voice_fallback_url", writeUri(client.getVoiceFallbackUrl()));
+    object.put("voice_fallback_method", client.getVoiceFallbackMethod());
+    object.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
     object.put("uri", writeUri(client.getUri()));
     return object;
   }

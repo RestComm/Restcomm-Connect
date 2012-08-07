@@ -299,6 +299,22 @@ public abstract class AbstractConverter implements Converter {
     object.addProperty("uri", uri.toString() + ".json");
   }
   
+  protected void writeVoiceApplicationSid(final Sid voiceApplicationSid, final HierarchicalStreamWriter writer) {
+    writer.startNode("VoiceApplicationSid");
+    if(voiceApplicationSid != null) {
+      writer.setValue(voiceApplicationSid.toString());
+    }
+    writer.endNode();
+  }
+  
+  protected void writeVoiceApplicationSid(final Sid voiceApplicationSid, final JsonObject object) {
+    if(voiceApplicationSid != null) {
+      object.addProperty("voice_application_sid", voiceApplicationSid.toString());
+    } else {
+      object.add("voice_application_sid", JsonNull.INSTANCE);
+    }
+  }
+  
   protected void writeVoiceCallerIdLookup(final boolean voiceCallerIdLookup, final HierarchicalStreamWriter writer) {
     writer.startNode("VoiceCallerIdLookup");
     writer.setValue(Boolean.toString(voiceCallerIdLookup));

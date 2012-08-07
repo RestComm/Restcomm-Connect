@@ -112,6 +112,11 @@ CREATE TABLE "restcomm_clients" (
 "login" VARCHAR(64) NOT NULL,
 "password" VARCHAR(64) NOT NULL,
 "status" INT NOT NULL,
+"voice_url" LONGVARCHAR,
+"voice_method" VARCHAR(4),
+"voice_fallback_url" LONGVARCHAR,
+"voice_fallback_method" VARCHAR(4),
+"voice_application_sid" VARCHAR(34),
 "uri" LONGVARCHAR NOT NULL
 );
 

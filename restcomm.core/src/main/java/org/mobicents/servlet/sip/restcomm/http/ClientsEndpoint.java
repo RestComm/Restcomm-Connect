@@ -33,8 +33,6 @@ import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
 
-import org.joda.time.DateTime;
-
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
@@ -73,20 +71,27 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
   }
   
   private Client createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+    final Client.Builder builder = Client.builder();
     final Sid sid = Sid.generate(Sid.Type.CLIENT);
-    final DateTime now = DateTime.now();
-    final String apiVersion = getApiVersion(data);
-    final String login = data.getFirst("Login");
-    final String password = data.getFirst("Password");
-    final String friendlyName = getFriendlyName(login, data);
-    final int status = getStatus(data);
+    builder.setSid(sid);
+    builder.setApiVersion(getApiVersion(data));
+    builder.setFriendlyName(getFriendlyName(data.getFirst("Login"), data));
+    builder.setAccountSid(accountSid);
+    builder.setLogin(data.getFirst("Login"));
+    builder.setPassword(data.getFirst("Password"));
+    builder.setStatus(getStatus(data));
+    builder.setVoiceUrl(getUrl("VoiceUrl", data));
+    builder.setVoiceMethod(getMethod("VoiceMethod", data));
+    builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+    builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+    builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
     String rootUri = configuration.getString("root-uri");
     rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
-    buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
+    buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
         .append("/Clients/").append(sid.toString());
-    final URI uri = URI.create(buffer.toString());
-    return new Client(sid, now, now, accountSid, apiVersion, friendlyName, login, password, status, uri);
+    builder.setUri(URI.create(buffer.toString()));
+    return builder.build();
   }
   
   protected Response getClient(final String accountSid, final String sid, final MediaType responseType) {
@@ -162,14 +167,18 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     try { secure(new Sid(accountSid), "RestComm:Modify:Clients"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     final Client client = dao.getClient(new Sid(sid));
-    dao.updateClient(update(client, data));
-    if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(client);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(client), APPLICATION_JSON).build();
+    if(client == null) {
+      return status(NOT_FOUND).build();
     } else {
-      return null;
+      dao.updateClient(update(client, data));
+      if(APPLICATION_XML_TYPE == responseType) {
+        final RestCommResponse response = new RestCommResponse(client);
+        return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(client), APPLICATION_JSON).build();
+      } else {
+        return null;
+      }
     }
   }
   
@@ -191,6 +200,21 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     }
     if(data.containsKey("Status")) {
       result = result.setStatus(getStatus(data));
+    }
+    if(data.containsKey("VoiceUrl")) {
+      result = result.setVoiceUrl(getUrl("VoiceUrl", data));
+    }
+    if(data.containsKey("VoiceMethod")) {
+      result = result.setVoiceMethod(getMethod("VoiceMethod", data));
+    }
+    if(data.containsKey("VoiceFallbackUrl")) {
+      result = result.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+    }
+    if(data.containsKey("VoiceFallbackMethod")) {
+      result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+    }
+    if(data.containsKey("VoiceApplicationSid")) {
+      result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
     }
     return result;
   }

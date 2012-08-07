@@ -40,11 +40,17 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   private final String login;
   private final String password;
   private final Integer status;
+  private final URI voiceUrl;
+  private final String voiceMethod;
+  private final URI voiceFallbackUrl;
+  private final String voiceFallbackMethod;
+  private final Sid voiceApplicationSid;
   private final URI uri;
   
   public Client(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
       final String apiVersion, final String friendlyName, final String login, final String password,
-      final Integer status, final URI uri) {
+      final Integer status, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
+      String voiceFallbackMethod, final Sid voiceApplicationSid, final URI uri) {
     super();
     this.sid = sid;
     this.dateCreated = dateCreated;
@@ -55,6 +61,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     this.login = login;
     this.password = password;
     this.status = status;
+    this.voiceUrl = voiceUrl;
+    this.voiceMethod = voiceMethod;
+    this.voiceFallbackUrl = voiceFallbackUrl;
+    this.voiceFallbackMethod = voiceFallbackMethod;
+    this.voiceApplicationSid = voiceApplicationSid;
     this.uri = uri;
   }
   
@@ -97,21 +108,69 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
   public Integer getStatus() {
     return status;
   }
+  
+  public URI getVoiceUrl() {
+    return voiceUrl;
+  }
+  
+  public String getVoiceMethod() {
+    return voiceMethod;
+  }
+  
+  public URI getVoiceFallbackUrl() {
+    return voiceFallbackUrl;
+  }
+  
+  public String getVoiceFallbackMethod() {
+    return voiceFallbackMethod;
+  }
+  
+  public Sid getVoiceApplicationSid() {
+    return voiceApplicationSid;
+  }
 
   public URI getUri() {
 	return uri;
   }
   
   public Client setFriendlyName(final String friendlyName) {
-    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status, uri);
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
   }
   
   public Client setPassword(final String password) {
-    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status, uri);
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+	    voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
   }
   
   public Client setStatus(final int status) {
-    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status, uri);
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+  }
+  
+  public Client setVoiceUrl(final URI voiceUrl) {
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+  }
+  
+  public Client setVoiceMethod(final String voiceMethod) {
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+  }
+  
+  public Client setVoiceFallbackUrl(final URI voiceFallbackUrl) {
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+  }
+  
+  public Client setVoiceFallbackMethod(final String voiceFallbackMethod) {
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+  }
+  
+  public Client setVoiceApplicationSid(final Sid voiceApplicationSid) {
+    return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+        voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
   }
   
   @NotThreadSafe public final static class Builder {
@@ -122,6 +181,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     private String login;
     private String password;
     private int status;
+    private URI voiceUrl;
+    private String voiceMethod;
+    private URI voiceFallbackUrl;
+    private String voiceFallbackMethod;
+    private Sid voiceApplicationSid;
     private URI uri;
 	  
     private Builder() {
@@ -130,7 +194,8 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     
     public Client build() {
       final DateTime now = DateTime.now();
-      return new Client(sid, now, now, accountSid, apiVersion, friendlyName, login, password, status, uri);
+      return new Client(sid, now, now, accountSid, apiVersion, friendlyName, login, password, status,
+          voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
     }
     
     public void setSid(final Sid sid) {
@@ -159,6 +224,26 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
     
     public void setStatus(final int status) {
       this.status = status;
+    }
+    
+    public void setVoiceUrl(final URI voiceUrl) {
+      this.voiceUrl = voiceUrl;
+    }
+    
+    public void setVoiceMethod(final String voiceMethod) {
+      this.voiceMethod = voiceMethod;
+    }
+    
+    public void setVoiceFallbackUrl(final URI voiceFallbackUrl) {
+      this.voiceFallbackUrl = voiceFallbackUrl;
+    }
+    
+    public void setVoiceFallbackMethod(final String voiceFallbackMethod) {
+      this.voiceFallbackMethod = voiceFallbackMethod;
+    }
+    
+    public void setVoiceApplicationSid(final Sid voiceApplicationSid) {
+      this.voiceApplicationSid = voiceApplicationSid;
     }
     
     public void setUri(final URI uri) {

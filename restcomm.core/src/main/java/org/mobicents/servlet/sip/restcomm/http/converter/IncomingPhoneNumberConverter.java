@@ -115,20 +115,4 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
       object.add("sms_application_sid", JsonNull.INSTANCE);
     }
   }
-  
-  private void writeVoiceApplicationSid(final Sid voiceApplicationSid, final HierarchicalStreamWriter writer) {
-    writer.startNode("VoiceApplicationSid");
-    if(voiceApplicationSid != null) {
-      writer.setValue(voiceApplicationSid.toString());
-    }
-    writer.endNode();
-  }
-  
-  private void writeVoiceApplicationSid(final Sid voiceApplicationSid, final JsonObject object) {
-    if(voiceApplicationSid != null) {
-      object.addProperty("voice_application_sid", voiceApplicationSid.toString());
-    } else {
-      object.add("voice_application_sid", JsonNull.INSTANCE);
-    }
-  }
 }

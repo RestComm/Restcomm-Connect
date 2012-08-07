@@ -139,9 +139,15 @@ import org.mobicents.servlet.sip.restcomm.entities.Client;
     final String login = readString(map.get("login"));
     final String password = readString(map.get("password"));
     final int status = readInteger(map.get("status"));
+    final URI voiceUrl = readUri(map.get("voice_url"));
+    final String voiceMethod = readString(map.get("voice_method"));
+    final URI voiceFallbackUrl = readUri(map.get("voice_fallback_url"));
+    final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
+    final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
     final URI uri = readUri(map.get("uri"));
     return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion,
-        friendlyName, login, password, status, uri);
+        friendlyName, login, password, status, voiceUrl, voiceMethod, voiceFallbackUrl,
+        voiceFallbackMethod, voiceApplicationSid, uri);
   }
   
   private Map<String, Object> toMap(final Client client) {
@@ -155,6 +161,11 @@ import org.mobicents.servlet.sip.restcomm.entities.Client;
     map.put("login", client.getLogin());
     map.put("password", client.getPassword());
     map.put("status", client.getStatus());
+    map.put("voice_url", writeUri(client.getVoiceUrl()));
+    map.put("voice_method", client.getVoiceMethod());
+    map.put("voice_fallback_url", writeUri(client.getVoiceFallbackUrl()));
+    map.put("voice_fallback_method", client.getVoiceFallbackMethod());
+    map.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
     map.put("uri", writeUri(client.getUri()));
     return map;
   }

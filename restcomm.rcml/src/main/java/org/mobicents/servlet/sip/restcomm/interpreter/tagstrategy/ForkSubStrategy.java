@@ -197,9 +197,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
       final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
       final List<PresenceRecord> records = dao.getPresenceRecordsByUser(user);
       for(final PresenceRecord record : records) {
-        if(record.getExpires().isAfterNow()) {
-          calls.add(callManager.createCall(caller, record.getUri()));
-        }
+        calls.add(callManager.createUserAgentCall(caller, record.getUri()));
       }
     }
     return calls;
