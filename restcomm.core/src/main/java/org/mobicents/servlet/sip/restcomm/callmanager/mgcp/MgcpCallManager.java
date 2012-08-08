@@ -31,15 +31,15 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.URI;
 
 import org.apache.commons.configuration.Configuration;
+
 import org.mobicents.servlet.sip.restcomm.BootstrapException;
 import org.mobicents.servlet.sip.restcomm.Bootstrapper;
 import org.mobicents.servlet.sip.restcomm.Janitor;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.entities.Application;
+import org.mobicents.servlet.sip.restcomm.entities.Client;
 import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
@@ -67,8 +67,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 	 private static InterpreterExecutor executor;
 
-	 private static ApplicationsDao applicationsDao;
-	 private static IncomingPhoneNumbersDao incomingPhoneNumbersDao;
+	 private static DaoManager daos;
 
 	 public MgcpCallManager() {
 		 super();
@@ -180,19 +179,45 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 	 @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {
 		 try {
-			 final IncomingPhoneNumber incomingPhoneNumber = getIncomingPhoneNumber(request);
-			 if(incomingPhoneNumber != null) {
-				 final Application application = getVoiceApplication(incomingPhoneNumber);
-				 // Initialize the call.
-				 final MgcpServer server = servers.getMediaServer();
-				 final MgcpCall call = new MgcpCall(server);
-				 request.getSession().setAttribute("CALL", call);
-				 call.alert(request);
-				 // Hand the call to the interpreter for processing.
-				 executor.submit(application, incomingPhoneNumber, call);
+			 // Create the call.
+			 final MgcpServer server = servers.getMediaServer();
+			 final MgcpCall call = new MgcpCall(server);
+			 request.getSession().setAttribute("CALL", call);
+			 call.alert(request);
+			 // Schedule the RCML script to execute for this call.
+			 Application application = null;
+			 final SipURI from = (SipURI)request.getFrom().getURI();
+			 final Client client = getClient(from.getUser());
+			 if(client != null) {
+		       final Sid applicationSid = client.getVoiceApplicationSid();
+		       if(applicationSid != null) {
+		         application = getVoiceApplication(applicationSid);
+		         executor.submit(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
+		             application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
+		             call);
+		       } else {
+		         executor.submit(client.getAccountSid(), client.getApiVersion(), client.getVoiceUrl(), client.getVoiceMethod(),
+		             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), call);
+		       }
 			 } else {
+			   final SipURI uri = (SipURI)request.getTo().getURI();
+			   final IncomingPhoneNumber incomingPhoneNumber = getIncomingPhoneNumber(uri.getUser());
+			   if(incomingPhoneNumber != null) {
+			     final Sid applicationSid = incomingPhoneNumber.getVoiceApplicationSid();
+			     if(applicationSid != null) {
+			       application = getVoiceApplication(applicationSid);
+			       executor.submit(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
+				       application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
+				       call);
+			     } else {
+			       executor.submit(incomingPhoneNumber.getAccountSid(), incomingPhoneNumber.getApiVersion(),
+			           incomingPhoneNumber.getVoiceUrl(), incomingPhoneNumber.getVoiceMethod(), incomingPhoneNumber.getVoiceFallbackUrl(),
+			           incomingPhoneNumber.getVoiceFallbackMethod(), call);
+			     }
+			   } else {
 				 final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
 				 notFound.send();
+			   }
 			 }
 		 } catch(final InterpreterException exception) {
 			 throw new ServletException(exception);
@@ -211,27 +236,24 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 @Override public final void destroy() {
 		 Janitor.cleanup();
 	 }
+	 
+	 private Client getClient(final String name) {
+       return daos.getClientsDao().getClient(name);
+	 }
 
-	 private IncomingPhoneNumber getIncomingPhoneNumber(final SipServletRequest invite) {
-		 final SipURI uri = (SipURI)invite.getTo().getURI();
-		 final String phoneNumber = uri.getUser();
+	 private IncomingPhoneNumber getIncomingPhoneNumber(final String phoneNumber) {
 		 try {
 			 final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
 			 final String to = phoneNumberUtil.format(phoneNumberUtil.parse(phoneNumber, "US"),
 					 PhoneNumberFormat.E164);
-			 return incomingPhoneNumbersDao.getIncomingPhoneNumber(to);
+			 return daos.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(to);
 		 } catch(final NumberParseException ignored) {
 			 return null;
 		 }
 	 }
 
-	 private Application getVoiceApplication(final IncomingPhoneNumber incomingPhoneNumber) {
-		 final Sid applicationSid = incomingPhoneNumber.getVoiceApplicationSid();
-		 if(applicationSid != null) {
-			 return applicationsDao.getApplication(applicationSid);
-		 } else {
-			 return null;
-		 }
+	 private Application getVoiceApplication(final Sid applicationSid) {
+	   return daos.getApplicationsDao().getApplication(applicationSid);
 	 }
 
 	 @Override public final void init(final ServletConfig config) throws ServletException {
@@ -246,9 +268,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 final ServiceLocator services = ServiceLocator.getInstance();
 		 executor = services.get(InterpreterExecutor.class);
 		 servers = services.get(MgcpServerManager.class);
-		 final DaoManager daos = services.get(DaoManager.class);
-		 applicationsDao = daos.getApplicationsDao();
-		 incomingPhoneNumbersDao = daos.getIncomingPhoneNumbersDao();
+		 daos = services.get(DaoManager.class);
 		 final Configuration configuration = services.get(Configuration.class);
 		 proxyUser = configuration.getString("outbound-proxy-user");
 		 proxyPassword = configuration.getString("outbound-proxy-password");
