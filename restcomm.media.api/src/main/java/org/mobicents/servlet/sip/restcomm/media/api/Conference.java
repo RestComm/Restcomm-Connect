@@ -26,7 +26,6 @@ import java.util.List;
 public interface Conference {
   public void addParticipant(Call participant);
   public void addObserver(ConferenceObserver observer);
-  public void alert();
   public String getName();
   public int getNumberOfParticipants();
   public Collection<Call> getParticipants();

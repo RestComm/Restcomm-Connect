@@ -26,10 +26,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
-import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
@@ -65,7 +63,6 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   private MgcpConnection ivrOutboundConnection;
   private MgcpConnection ivrInboundConnection;
 
-  private final URI alertAudioFile;
   private List<URI> musicAudioFiles;
   private boolean backgroundMusic;
   private boolean recordAudio;
@@ -82,9 +79,6 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     this.observers = new CopyOnWriteArrayList<ConferenceObserver>();
     this.server = server;
     this.session = server.createMediaSession();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    final Configuration configuration = services.get(Configuration.class);
-    alertAudioFile = URI.create("file://" + configuration.getString("alert-audio-file"));
     musicAudioFiles = null;
     backgroundMusic = false;
     recordAudio = false;
@@ -101,11 +95,6 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   
   @Override public synchronized void addObserver(final ConferenceObserver observer) {
     observers.add(observer);
-  }
-  
-  @Override public synchronized void alert() {
-    assertState(IN_PROGRESS);
-    play(alertAudioFile);
   }
   
   private void cleanup() {

@@ -16,7 +16,8 @@
 		<beep-audio-file>${restcomm:home}/audio/beep.wav</beep-audio-file>
 		<reject-audio-file>${restcomm:home}/audio/reject.wav</reject-audio-file>
 		<silence-audio-file>${restcomm:home}/audio/one-second-silence.wav</silence-audio-file>
-		<alert-audio-file>${restcomm:home}/audio/alert.wav</alert-audio-file>
+		<alert-on-enter-file>${restcomm:home}/audio/alert.wav</alert-on-enter-file>
+		<alert-on-exit-file>${restcomm:home}/audio/alert.wav</alert-on-exit-file>
 		<ringback-audio-file>${restcomm:home}/audio/ringing.wav</ringback-audio-file>
 		<conference-music-file>${restcomm:home}/music/classical/MARKOVICHAMP-Borghestral.wav</conference-music-file>
 		
