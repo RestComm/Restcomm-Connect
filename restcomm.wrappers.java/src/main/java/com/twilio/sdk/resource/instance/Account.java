@@ -10,6 +10,7 @@ import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.resource.InstanceResource;
 import com.twilio.sdk.resource.factory.ApplicationFactory;
 import com.twilio.sdk.resource.factory.CallFactory;
+import com.twilio.sdk.resource.factory.ClientFactory;
 import com.twilio.sdk.resource.factory.IncomingPhoneNumberFactory;
 import com.twilio.sdk.resource.factory.OutgoingCallerIdFactory;
 import com.twilio.sdk.resource.factory.SmsFactory;
@@ -17,6 +18,7 @@ import com.twilio.sdk.resource.list.ApplicationList;
 import com.twilio.sdk.resource.list.AuthorizedConnectAppList;
 import com.twilio.sdk.resource.list.AvailablePhoneNumberList;
 import com.twilio.sdk.resource.list.CallList;
+import com.twilio.sdk.resource.list.ClientList;
 import com.twilio.sdk.resource.list.ConferenceList;
 import com.twilio.sdk.resource.list.ConnectAppList;
 import com.twilio.sdk.resource.list.IncomingPhoneNumberList;
@@ -240,6 +242,27 @@ public class Account extends InstanceResource {
 	 */
 	public CallFactory getCallFactory() {
 		return this.getCalls();
+	}
+	
+	public Client getClient(final String sid) {
+	  final Client client = new Client(this.getClient(), sid);
+	  client.setRequestAccountSid(this.getRequestAccountSid());
+	  return client;
+	}
+	
+	public ClientList getClients(final Map<String, String> filters) {
+		final ClientList clients = new ClientList(this.getClient(), filters);
+		clients.setRequestAccountSid(this.getRequestAccountSid());
+		
+		return clients;
+	}
+	
+	public ClientList getClients() {
+		return this.getClients(new HashMap<String, String>());
+	}
+	
+	public ClientFactory getClientFactory() {
+		return this.getClients();
 	}
 
 	/**
