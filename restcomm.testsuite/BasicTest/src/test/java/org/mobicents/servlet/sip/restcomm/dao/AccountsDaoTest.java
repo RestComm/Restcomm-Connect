@@ -13,15 +13,15 @@ public final class AccountsDaoTest {
     super();
   }
   
-  @Before public static void before() {
+  @Before public void before() {
     
   }
   
-  @After public static void after() {
+  @After public void after() {
     
   }
   
   @Test public void test() {
-    
+    assertTrue(true);
   }
 }

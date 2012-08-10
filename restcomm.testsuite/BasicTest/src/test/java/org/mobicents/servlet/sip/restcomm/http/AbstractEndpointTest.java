@@ -18,33 +18,35 @@ package org.mobicents.servlet.sip.restcomm.http;
 
 import java.io.File;
 
-import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.DependencyResolvers;
 import org.jboss.shrinkwrap.resolver.api.maven.MavenDependencyResolver;
+import org.junit.runner.RunWith;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@RunWith(Arquillian.class)
 public abstract class AbstractEndpointTest {
-  @ArquillianResource protected Deployer deployer;
-  private static final String projects = "/home/thomas/Projects";
-  
-  public AbstractEndpointTest() {
-    super();
-  }
-  
-  @Deployment(name="restcomm", managed=false, testable=false)
-  public static WebArchive createTestArchive() {
-    DependencyResolvers.use(MavenDependencyResolver.class).loadMetadataFromPom("pom.xml");
-    final File directory = new File(projects + "/RestComm/restcomm/restcomm.core/target/restcomm/");
-    // Load archive from exploded directory.
-    WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-    archive.as(ExplodedImporter.class).importDirectory(directory);
-    return archive;
-  }
+	//  @ArquillianResource 
+	//  protected Deployer deployer;
+
+//	private static final String projects = "/data/devWorkspace/eclipse/eclipseMSS/localWorkspace/restcomm/restcomm.core/target/restcomm";
+	private static final String projects = "../../restcomm.core/target/restcomm";
+	public AbstractEndpointTest() {
+		super();
+	}
+
+	@Deployment(testable=false)
+	public static WebArchive createTestArchive() {
+		final File directory = new File(projects);
+		// Load archive from exploded directory.
+		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
+		archive.as(ExplodedImporter.class).importDirectory(directory);
+		return archive;
+	}
 }

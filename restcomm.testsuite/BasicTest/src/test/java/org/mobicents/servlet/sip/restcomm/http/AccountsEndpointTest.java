@@ -33,43 +33,49 @@ import com.twilio.sdk.resource.instance.Account;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public class AccountsEndpointTest extends AbstractEndpointTest {
-  public AccountsEndpointTest() {
-    super();
-  }
-  
-  @Test public void createSubAccount() throws TwilioRestException {
-    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-        "77f8c12cc7b8f8423e5c38b035249166");
-    final Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("EmailAddress", "user@company.com");
-    parameters.put("Password", "1234");
-    final Account account = client.getAccounts().create(parameters);
-    System.out.println("Created a new sub-account with SID " + account.getSid());
-    assertTrue("user@company.com".equals(account.getFriendlyName()));
-    assertTrue("81dc9bdb52d04dc20036dbd8313ed055".equals(account.getAuthToken()));
-  }
 
-  @Test public void getAccount() {
-    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-        "77f8c12cc7b8f8423e5c38b035249166");
-    final Account account = client.getAccount();
-    assertTrue("ACae6e420f425248d6a26948c17a9e2acf".equals(account.getSid()));
-    assertTrue("Default Administrator Account".equals(account.getFriendlyName()));
-    assertTrue("active".equals(account.getStatus()));
-    assertTrue("77f8c12cc7b8f8423e5c38b035249166".equals(account.getAuthToken()));
-  }
-  
-  @Test public void updateAccount() throws TwilioRestException {
-    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-        "77f8c12cc7b8f8423e5c38b035249166");
-    final Account account = client.getAccount();
-    final Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("FriendlyName", "Administrator Account");
-    parameters.put("Password", "1234");
-    parameters.put("Status", "closed");
-    account.update(parameters);
-    assertTrue("Administrator Account".equals(account.getFriendlyName()));
-    assertTrue("81dc9bdb52d04dc20036dbd8313ed055".equals(account.getAuthToken()));
-    assertTrue("closed".equals(account.getStatus()));
-  }
+	final String endpoint = "http://127.0.0.1:8888/restcomm";
+	
+	public AccountsEndpointTest() {
+		super();
+	}
+
+	@Test public void createSubAccount() throws TwilioRestException {
+		final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
+		final Map<String, String> parameters = new HashMap<String, String>();
+		parameters.put("EmailAddress", "user@company.com");
+		parameters.put("Password", "1234");
+		final Account account = client.getAccounts().create(parameters);
+		System.out.println("Created a new sub-account with SID " + account.getSid());
+		assertTrue("user@company.com".equals(account.getFriendlyName()));
+		assertTrue("81dc9bdb52d04dc20036dbd8313ed055".equals(account.getAuthToken()));
+		assertTrue(account.close());
+	}
+
+	@Test public void getAccount() throws TwilioRestException {
+		final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
+		final Account account = client.getAccount();
+		assertTrue("ACae6e420f425248d6a26948c17a9e2acf".equals(account.getSid()));
+		assertTrue("Default Administrator Account".equals(account.getFriendlyName()));
+		assertTrue("active".equals(account.getStatus()));
+		assertTrue("77f8c12cc7b8f8423e5c38b035249166".equals(account.getAuthToken()));
+		assertTrue(account.close());
+	}
+
+	@Test public void updateAccount() throws TwilioRestException {
+		final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
+		final Account account = client.getAccount();
+		final Map<String, String> parameters = new HashMap<String, String>();
+		parameters.put("FriendlyName", "Administrator Account");
+		parameters.put("Password", "1234");
+		parameters.put("Status", "closed");
+		account.update(parameters);
+		assertTrue("Administrator Account".equals(account.getFriendlyName()));
+		assertTrue("81dc9bdb52d04dc20036dbd8313ed055".equals(account.getAuthToken()));
+		assertTrue("closed".equals(account.getStatus()));
+		assertTrue(account.close());
+	}
 }

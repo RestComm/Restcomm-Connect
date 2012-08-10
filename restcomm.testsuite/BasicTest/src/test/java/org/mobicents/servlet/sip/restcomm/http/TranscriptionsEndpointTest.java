@@ -16,27 +16,28 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.resource.instance.Account;
 import com.twilio.sdk.resource.list.TranscriptionList;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-// @RunWith(Arquillian.class)
-public final class TranscriptionsEndpointTest extends AbstractEndpointTest {
-  public TranscriptionsEndpointTest() {
-    super();
-  }
 
-  @Test public void test() {
-    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-            "77f8c12cc7b8f8423e5c38b035249166");
-    final Account account = client.getAccount();
-    final TranscriptionList transcriptions = account.getTranscriptions();
-    assertTrue(transcriptions.getTotal() == 0);
-  }
+public final class TranscriptionsEndpointTest extends AbstractEndpointTest {
+	public TranscriptionsEndpointTest() {
+		super();
+	}
+
+	@Test public void testTranscriptions() {
+		final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+				"77f8c12cc7b8f8423e5c38b035249166", "http://127.0.0.1:8888/restcomm");
+		final Account account = client.getAccount();
+		TranscriptionList transcriptions = account.getTranscriptions();
+		assertTrue(transcriptions.getTotal() == 0);
+	}
 }

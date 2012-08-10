@@ -34,7 +34,7 @@ public class SmsEndpointTest extends AbstractEndpointTest {
 
   @Test public void test() {
     final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-        "77f8c12cc7b8f8423e5c38b035249166");
+        "77f8c12cc7b8f8423e5c38b035249166", "http://127.0.0.1:8888/restcomm");
     final Account account = client.getAccount();
     final SmsList messages = account.getSmsMessages();
     assertTrue(messages.getTotal() == 0);
