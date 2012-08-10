@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import com.twilio.sdk.TwilioRestClient;
+import com.twilio.sdk.resource.instance.Account;
+import com.twilio.sdk.resource.list.ClientList;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -33,8 +35,10 @@ public class ClientsEndpointTest extends AbstractEndpointTest {
 	}
 
 	@Test public void createClientTest() {
-		final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+		final TwilioRestClient twilioClient = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
 				"77f8c12cc7b8f8423e5c38b035249166", "http://127.0.0.1:8888/restcomm");
-		assertTrue(client.getEndpoint().equalsIgnoreCase("http://127.0.0.1:8888/restcomm"));
+		final Account account = twilioClient.getAccount();
+		final ClientList clients = account.getClients();
+		assertTrue(clients.getTotal() == 0);
 	}
 }
