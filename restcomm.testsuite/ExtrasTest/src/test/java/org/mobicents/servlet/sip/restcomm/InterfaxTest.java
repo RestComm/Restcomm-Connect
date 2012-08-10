@@ -3,11 +3,11 @@
  */
 package org.mobicents.servlet.sip.restcomm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import java.io.*;
+import java.io.File;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.apache.http.HttpResponse;
 import org.junit.Before;
