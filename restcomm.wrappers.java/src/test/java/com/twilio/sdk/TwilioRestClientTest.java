@@ -3,6 +3,7 @@ package com.twilio.sdk;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -57,7 +58,7 @@ public class TwilioRestClientTest {
 	 *
 	 * @throws TwilioRestException the twilio rest exception
 	 */
-	@Test
+	@Test @Ignore //Ignored cause it needs restcomm instance to be running in order to pass
 	public void testRequest() throws TwilioRestException {
 		TwilioRestClient client = new TwilioRestClient(
 				"ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
