@@ -22,18 +22,15 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.entities.Application;
-import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class RcmlInterpreterContext {
-  private final Application application;
-  private final IncomingPhoneNumber incomingPhoneNumber;
   private final Call call;
   
   private final Sid accountSid;
@@ -43,48 +40,10 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
   private final URI voiceFallbackUrl;
   private final String voiceFallbackMethod;
   
-  public RcmlInterpreterContext(final Application application, final IncomingPhoneNumber incomingPhoneNumber,
-      final Call call) {
-    super();
-    this.application = application;
-    this.incomingPhoneNumber = incomingPhoneNumber;
-    this.call = call;
-    if(application != null) {
-      this.accountSid = application.getAccountSid();
-      this.apiVersion = application.getApiVersion();
-      this.voiceUrl = application.getVoiceUrl();
-      this.voiceMethod = application.getVoiceMethod();
-      this.voiceFallbackUrl = application.getVoiceFallbackUrl();
-      this.voiceFallbackMethod = application.getVoiceFallbackMethod();
-    } else {
-      this.accountSid = incomingPhoneNumber.getAccountSid();
-      this.apiVersion = incomingPhoneNumber.getApiVersion();
-      this.voiceUrl = incomingPhoneNumber.getVoiceUrl();
-      this.voiceMethod = incomingPhoneNumber.getVoiceMethod();
-      this.voiceFallbackUrl = incomingPhoneNumber.getVoiceFallbackUrl();
-      this.voiceFallbackMethod = incomingPhoneNumber.getVoiceFallbackMethod();
-    }
-  }
-  
-  public RcmlInterpreterContext(final Application application, final Call call) {
-    super();
-    this.application = application;
-    this.incomingPhoneNumber = null;
-    this.call = call;
-    this.accountSid = application.getAccountSid();
-    this.apiVersion = application.getApiVersion();
-    this.voiceUrl = application.getVoiceUrl();
-    this.voiceMethod = application.getVoiceMethod();
-    this.voiceFallbackUrl = application.getVoiceFallbackUrl();
-    this.voiceFallbackMethod = application.getVoiceFallbackMethod();
-  }
-  
   public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI voiceUrl,
       final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
       final Call call) {
     super();
-    this.application = null;
-    this.incomingPhoneNumber = null;
     this.call = call;
     this.accountSid = accountSid;
     this.apiVersion = apiVersion;
@@ -100,14 +59,6 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
   
   public String getApiVersion() {
     return apiVersion;
-  }
-  
-  public Application getApplication() {
-    return application;
-  }
-  
-  public IncomingPhoneNumber getIncomingPhoneNumber() {
-    return incomingPhoneNumber;
   }
   
   public Call getCall() {

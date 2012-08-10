@@ -91,20 +91,14 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
     try {
       final DateTime start = DateTime.now();
 	  final List<Call> calls = getCalls(tag.getChildren());
-	  logger.info("************** 1 **************");
 	  fork(calls);
-	  logger.info("************** 2 **************");
 	  try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
       catch(final InterruptedException ignored) { }
-	  logger.info("************** 3 **************");
 	  select(calls);
-	  logger.info("************** 4 **************");
 	  if(Call.Status.IN_PROGRESS == call.getStatus() && (outboundCall != null &&
 	      Call.Status.IN_PROGRESS == outboundCall.getStatus())) {
-		logger.info("************** 5 **************");
-        bridge.addParticipant(outboundCall);
         bridge.stopBackgroundMusic();
-        logger.info("************** 6 **************");
+        bridge.addParticipant(outboundCall);
         if(record) {
           recordingSid = Sid.generate(Sid.Type.RECORDING);
           final URI destination = toRecordingPath(recordingSid);

@@ -52,9 +52,9 @@ public final class SipGatewayManager extends SipServlet {
 
 	public static final int defaultRegistrationTtl = 1800;
 
+	private ServletConfig configuration;
 	private TimerService clock;
 	private SipFactory sipFactory;
-	private SipURI outboundInterface;
 	private List<Gateway> gateways;
 
 	public SipGatewayManager() {
@@ -63,6 +63,7 @@ public final class SipGatewayManager extends SipServlet {
 
 	private Address createContactHeader(final Gateway gateway, final int expires) throws ServletParseException {
 		final StringBuilder buffer = new StringBuilder();
+		final SipURI outboundInterface = getOutboundInterface(configuration);
 		buffer.append("sip:").append(gateway.getUser()).append("@").append(outboundInterface.getHost());
 		final Address contact = sipFactory.createAddress(buffer.toString());
 		contact.setExpires(expires);
@@ -127,9 +128,9 @@ public final class SipGatewayManager extends SipServlet {
 		final ServiceLocator services = ServiceLocator.getInstance();
 		final DaoManager daos = services.get(DaoManager.class);
 		final GatewaysDao dao = daos.getGatewaysDao();
+		configuration = config;
 		gateways = dao.getGateways();
 		clock = (TimerService)config.getServletContext().getAttribute(TIMER_SERVICE);
-		outboundInterface = getOutboundInterface(config);
 		sipFactory = (SipFactory)context.getAttribute(SIP_FACTORY);
 	}
 

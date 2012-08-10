@@ -23,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.entities.Application;
-import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 
 /**
@@ -56,14 +54,6 @@ public final class InterpreterExecutor implements LifeCycle {
       final Call call) {
     final RcmlInterpreterContext context = new RcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
         voiceMethod, voiceFallbackUrl, voiceFallbackMethod, call);
-    final RcmlInterpreter interpreter = new RcmlInterpreter(context);
-    interpreter.initialize();
-    executor.submit(interpreter);
-  }
-  
-  public void submit(final Application application, final IncomingPhoneNumber incomingPhoneNumber, final Call call)
-      throws InterpreterException {
-	final RcmlInterpreterContext context = new RcmlInterpreterContext(application, incomingPhoneNumber, call);
     final RcmlInterpreter interpreter = new RcmlInterpreter(context);
     interpreter.initialize();
     executor.submit(interpreter);

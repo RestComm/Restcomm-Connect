@@ -47,6 +47,9 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
   private URI waitUrl;
   private String waitMethod;
   private int maxParticipants;
+  
+  private URI alertOnEnterAudioFile;
+  private URI alertOnExitAudioFile;
 
   public ConferenceSubStrategy(final URI action, final String method, final int timeLimit, final boolean record) {
     super();
@@ -58,6 +61,8 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     this.record = record;
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
     waitUrl = URI.create("file://" + configuration.getString("conference-music-file"));
+    alertOnEnterAudioFile = URI.create("file://" + configuration.getString("alert-on-enter-file"));
+    alertOnExitAudioFile = URI.create("file://" + configuration.getString("alert-on-exit-file"));
   }
 
   @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
@@ -82,7 +87,7 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
       }
     } else {
       conference.stopBackgroundMusic();
-      if(beep) { conference.alert(); }
+      if(beep) { conference.play(alertOnEnterAudioFile); }
       if(Call.Status.IN_PROGRESS == call.getStatus() && muted) { call.mute(); }
     }
     if(Call.Status.IN_PROGRESS == call.getStatus()) {
@@ -100,6 +105,7 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
       if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
         conference.removeParticipant(call);
       }
+      if(beep) { conference.play(alertOnExitAudioFile); }
     }
     final DateTime finish = DateTime.now();
     if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
