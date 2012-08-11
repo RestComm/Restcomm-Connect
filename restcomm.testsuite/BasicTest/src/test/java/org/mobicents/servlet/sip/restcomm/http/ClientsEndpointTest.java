@@ -18,10 +18,16 @@ package org.mobicents.servlet.sip.restcomm.http;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 
 import com.twilio.sdk.TwilioRestClient;
+import com.twilio.sdk.TwilioRestException;
+import com.twilio.sdk.resource.factory.ClientFactory;
 import com.twilio.sdk.resource.instance.Account;
+import com.twilio.sdk.resource.instance.Client;
 import com.twilio.sdk.resource.list.ClientList;
 
 /**
@@ -30,15 +36,45 @@ import com.twilio.sdk.resource.list.ClientList;
 // @RunWith(Arquillian.class)
 public class ClientsEndpointTest extends AbstractEndpointTest {
 	
+	public String endpoint = "http://127.0.0.1:8888/restcomm";
+	
 	public ClientsEndpointTest() {
 		super();
 	}
 
-	@Test public void createClientTest() {
+	@Test
+	public void checkClientTest() {
 		final TwilioRestClient twilioClient = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-				"77f8c12cc7b8f8423e5c38b035249166", "http://127.0.0.1:8888/restcomm");
+				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
 		final Account account = twilioClient.getAccount();
 		final ClientList clients = account.getClients();
 		assertTrue(clients.getTotal() == 0);
+	}
+	
+	@Test
+	public void createClientTest() throws TwilioRestException{
+		final TwilioRestClient twilioClient = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
+		final Account account = twilioClient.getAccount();
+		final ClientFactory clientFactory = account.getClientFactory();
+		final Map<String, String> parameters = new HashMap<String, String>();
+		parameters.put("Login","rest");
+		parameters.put("Password","comm");
+		parameters.put("FriendlyName", "Restcomm User");
+		parameters.put("VoiceUrl", endpoint+"/demo/hello-world.xml");
+		parameters.put("VoiceMethod", "POST");
+		parameters.put("VoiceFallbackUrl", endpoint+"/demo/hello-world.xml");
+		parameters.put("VoiceFallbackMethod", "POST");
+		parameters.put("StatusCallback", endpoint+"/demo/hello-world.xml");
+		parameters.put("StatusCallbackMethod", "POST");
+		parameters.put("VoiceCallerIdLookup", "false");
+
+		//Create client
+		Client client = clientFactory.create(parameters);
+		
+		assertTrue(client.getFriendlyName().equalsIgnoreCase("Restcomm User"));
+		assertTrue(client.getLogin().equalsIgnoreCase("rest"));
+		assertTrue(client.getPassword().equalsIgnoreCase("comm"));
+		
 	}
 }
