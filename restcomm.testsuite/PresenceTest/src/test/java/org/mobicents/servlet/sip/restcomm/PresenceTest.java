@@ -18,6 +18,7 @@ import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mobicents.api.annotations.GetDeployableContainer;
 import org.jboss.arquillian.container.mss.extension.ContainerManagerTool;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.spi.client.container.LifecycleException;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.junit.After;
@@ -39,7 +40,7 @@ public class PresenceTest extends AbstractEndpointTest {
 
 	private Logger logger = Logger.getLogger(PresenceTest.class);
 	public String endpoint = "http://127.0.0.1:8888/restcomm";
-	
+
 	@ArquillianResource
 	private Deployer deployer;
 
@@ -52,6 +53,7 @@ public class PresenceTest extends AbstractEndpointTest {
 
 	@GetDeployableContainer
 	private ContainerManagerTool containerManager = null;
+	private static Client client;
 
 	private static SipStackTool sipStackTool;
 
@@ -68,6 +70,9 @@ public class PresenceTest extends AbstractEndpointTest {
 		sipPhone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5070, "sip:RestcommUser@there.com");
 		sipCall = sipPhone.createSipCall();
 		sipCall.listenForIncomingCall();
+		if(client == null){
+			client = createClient();
+		}
 	}
 
 	@After
@@ -77,44 +82,43 @@ public class PresenceTest extends AbstractEndpointTest {
 		if(sipCall != null)	sipCall.disposeNoBye();
 		if(sipPhone != null) sipPhone.dispose();
 		if(receiver != null) receiver.dispose();
-		logger.info("About to un-deploy the application");
-		deployer.undeploy(super.testArchive);
 	}
 
-	private void createClient() throws TwilioRestException{
-		final TwilioRestClient twilioClient = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
-		final Account account = twilioClient.getAccount();
-		final ClientFactory clientFactory = account.getClientFactory();
-		final Map<String, String> parameters = new HashMap<String, String>();
-		parameters.put("Login","rest");
-		parameters.put("Password","comm");
-		parameters.put("FriendlyName", "Restcomm User");
-		parameters.put("VoiceUrl", endpoint+"/demo/hello-world.xml");
-		parameters.put("VoiceMethod", "POST");
-		parameters.put("VoiceFallbackUrl", endpoint+"/demo/hello-world.xml");
-		parameters.put("VoiceFallbackMethod", "POST");
-		parameters.put("StatusCallback", endpoint+"/demo/hello-world.xml");
-		parameters.put("StatusCallbackMethod", "POST");
-		parameters.put("VoiceCallerIdLookup", "false");
+	private Client createClient() throws TwilioRestException{
+			final TwilioRestClient twilioClient = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+					"77f8c12cc7b8f8423e5c38b035249166", endpoint);
+			final Account account = twilioClient.getAccount();
+			final ClientFactory clientFactory = account.getClientFactory();
+			final Map<String, String> parameters = new HashMap<String, String>();
+			parameters.put("Login","rest");
+			parameters.put("Password","comm");
+			parameters.put("FriendlyName", "Restcomm User");
+			parameters.put("VoiceUrl", endpoint+"/demo/hello-world.xml");
+			parameters.put("VoiceMethod", "POST");
+			parameters.put("VoiceFallbackUrl", endpoint+"/demo/hello-world.xml");
+			parameters.put("VoiceFallbackMethod", "POST");
+			parameters.put("StatusCallback", endpoint+"/demo/hello-world.xml");
+			parameters.put("StatusCallbackMethod", "POST");
+			parameters.put("VoiceCallerIdLookup", "false");
 
-		//Create client
-		Client client = clientFactory.create(parameters);
+			//Create client
+			return clientFactory.create(parameters);
 	}
-	
+
 	@Test
-	public void registerClient() throws ParseException, TwilioRestException{
-		logger.info("About to deploy the application");
-		deployer.deploy(testArchive);
-		
-		//Create Client
-		createClient();
-		
+	public void registerClient() throws ParseException, TwilioRestException{	
 		//Register
 		SipURI requestURI = receiver.getAddressFactory().createSipURI(null,"127.0.0.1:5070");
 		assertTrue(sipPhone.register(requestURI, "rest", "comm", "sip:127.0.0.1:5080", TIMEOUT, TIMEOUT));
-		
 	}
-	
+
+	//Issue: http://code.google.com/p/restcomm/issues/detail?id=84
+	@Test
+	public void registerClientWithTransport() throws ParseException, TwilioRestException, LifecycleException{
+		//Register
+		SipURI requestURI = receiver.getAddressFactory().createSipURI(null,"127.0.0.1:5070");
+		assertTrue(sipPhone.register(requestURI, "rest", "comm", "sip:127.0.0.1:5080;transport=udp", TIMEOUT, TIMEOUT));
+	}
+
 
 }

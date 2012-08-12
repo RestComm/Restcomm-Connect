@@ -40,7 +40,7 @@ public abstract class AbstractEndpointTest {
 		super();
 	}
 
-	@Deployment(name = testArchive, testable=false, managed=false)
+	@Deployment(name = testArchive, testable=false)//, managed=false)
 	public static WebArchive createTestArchive() {
 		File directory = null;
 		try{
