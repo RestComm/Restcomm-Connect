@@ -170,7 +170,7 @@
 	<modules>
 		<module>BasicTest</module>
 		<!-- <module>ExtrasTest</module> -->
-    <module>PresenceTest</module>
+<!--     <module>PresenceTest</module> -->
   </modules>
 
 	<build>
