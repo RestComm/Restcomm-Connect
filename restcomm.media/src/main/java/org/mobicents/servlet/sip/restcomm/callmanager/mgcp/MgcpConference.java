@@ -140,6 +140,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   
   @Override public synchronized void play(final URI audio) {
     assertState(IN_PROGRESS);
+    if(audio.getPath().equals("")) return;
     if(!playingAudio) {
       playingAudio = true;
       final List<URI> uri = new ArrayList<URI>();
