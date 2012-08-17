@@ -99,7 +99,7 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
       conference.removeObserver(this);
       call.removeObserver(this);
     }
-    if(endConferenceOnExit) {
+    if(endConferenceOnExit || (conference.getNumberOfParticipants() == 0)) {
       conferenceCenter.removeConference(room);
     } else {
       if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
