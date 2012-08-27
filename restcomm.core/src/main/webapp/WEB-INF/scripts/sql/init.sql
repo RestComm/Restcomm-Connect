@@ -4,7 +4,7 @@ CREATE TABLE "restcomm_accounts" (
 "date_updated" DATE NOT NULL,
 "email_address" LONGVARCHAR NOT NULL,
 "friendly_name" VARCHAR(64) NOT NULL,
-"account_sid" VARCHAR(34) NOT NULL,
+"account_sid" VARCHAR(34),
 "type" VARCHAR(8) NOT NULL,
 "status" VARCHAR(16) NOT NULL,
 "auth_token" VARCHAR(32) NOT NULL,
