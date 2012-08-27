@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
         <modelVersion>4.0.0</modelVersion>
 
         <groupId>org.mobicents.servlet.sip</groupId>
@@ -65,8 +64,9 @@
                 <module>restcomm.extras</module>
                 <module>restcomm.commons</module>
                 <module>restcomm.media.api</module>
-                <module>restcomm.wrappers.java</module> 
-        </modules>
+                <module>restcomm.wrappers.java</module>
+    <module>restcomm.demo</module>
+  </modules>
 
         <distributionManagement>
                 <repository>
@@ -86,7 +86,7 @@
                 <slf4j.version>1.5.5</slf4j.version>
                 <commons-configuration.version>1.7</commons-configuration.version>
                 <jain.mgcp.version>1.0</jain.mgcp.version>
-                <mobicents.mgcp.impl.version>2.0.0.GA</mobicents.mgcp.impl.version>
+                <mobicents.mgcp.impl.version>2.0.1.GA</mobicents.mgcp.impl.version>
                 <javamail.version>1.4</javamail.version>
                 <servletapi.version>2.5</servletapi.version>
                 <!-- <sipservletapi.version>1.1.12</sipservletapi.version> -->
@@ -309,7 +309,7 @@
                                 <artifactId>maven-compiler-plugin</artifactId>
                                 <configuration>
                                         <compilerArguments>
-                                                <g />
+                                                <g/>
                                         </compilerArguments>
                                         <source>1.6</source>
                                         <target>1.6</target>
