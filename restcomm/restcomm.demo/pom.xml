@@ -3,7 +3,7 @@
   <parent>
     <artifactId>restcomm</artifactId>
     <groupId>org.mobicents.servlet.sip</groupId>
-    <version>1.0.0.BETA2-SNAPSHOT</version>
+    <version>1.0.0.TelScale-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>restcomm.demo</artifactId>

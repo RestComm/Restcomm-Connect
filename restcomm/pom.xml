@@ -4,7 +4,7 @@
 
         <groupId>org.mobicents.servlet.sip</groupId>
         <artifactId>restcomm</artifactId>
-        <version>1.0.0.BETA2-SNAPSHOT</version>
+        <version>1.0.0.TelScale-SNAPSHOT</version>
         <packaging>pom</packaging>
         <name>RestComm</name>
         <description>A Restful Communications Framework</description>
@@ -309,7 +309,7 @@
                                 <artifactId>maven-compiler-plugin</artifactId>
                                 <configuration>
                                         <compilerArguments>
-                                                <g/>
+                                                <g />
                                         </compilerArguments>
                                         <source>1.6</source>
                                         <target>1.6</target>
