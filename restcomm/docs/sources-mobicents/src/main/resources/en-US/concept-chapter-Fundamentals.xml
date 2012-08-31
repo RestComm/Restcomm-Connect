@@ -1,0 +1,96 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: ittsss -->
+<chapter id="Fundamentals_RestComm">
+	<title>Fundamentals of the RestComm</title>
+	<para>CTF starts by CDI enable your application providing all the
+		advantages of CDI. While CTF can do more than that, just by adding the
+		CTF listener in the web.xml or sip.xml of your application, you will
+		be able to inject beans, produce beans and make use of the CDI
+		contexts and scopes as you wish.</para>
+	<para>
+		So for example, you can develop a sip registar module and make it
+		available in the classpath of any application. From there you can
+		inject the registar module and delegate registration request to it.
+	</para>
+	<para>The SipRegistar could be like this:</para>
+	<programlisting language="Java" role="JAVA">
+       <![CDATA[
+	@ApplicationScoped
+	public class SipRegistar {
+	
+		private static Logger logger = Logger.getLogger(SipRegistar.class);
+		private static final String CONTACT_HEADER = "Contact";
+		@Produces HashMap<String, String> users = new HashMap<String, String>();
+
+		public void handleRegister(SipServletRequest req) throws ServletException,
+				IOException {
+			if(logger.isInfoEnabled()) {
+				logger.info("Received register request: " + req.getTo());
+			}
+			int response = SipServletResponse.SC_OK;
+			SipServletResponse resp = req.createResponse(response);		
+			Address address = req.getAddressHeader(CONTACT_HEADER);
+			String fromURI = req.getFrom().getURI().toString();
+			int expires = address.getExpires();
+			if(expires < 0) {
+				expires = req.getExpires();
+			}
+			if(expires == 0) {
+				users.remove(fromURI);
+				if(logger.isInfoEnabled()) {
+					logger.info("User " + fromURI + " unregistered");
+				}
+			} else {
+				resp.setAddressHeader(CONTACT_HEADER, address);
+				users.put(fromURI, address.getURI().toString());
+				if(logger.isInfoEnabled()) {
+					logger.info("User " + fromURI + 
+						" registered with an Expire time of " + expires);
+				}
+			}				
+			resp.send();
+		}
+	}
+]]>
+</programlisting>
+	<para>Then in your application you can delegate all sip registration
+		request to the SipRegistar module by doing:</para>
+	<programlisting language="Java" role="JAVA">
+       <![CDATA[
+	
+	@Inject
+	SipRegistar sipRegistar;
+	
+	public void processRegister(@Observe @Register SipServletRequest req){
+		sipRegistar.handleRegister(req);
+	}
+]]>
+</programlisting>
+	<para>What is actually happening, is that CTF will replace the
+		AnnotationProcessor, in the case of Tomcat 6.x, or InstanceManager in
+		the case of JBoss Web (JBoss AS5) and Tomcat 7.x with CTF version of
+		AnnotationProcessor or InstanceManager that allows CTF to bootstrap
+		and enable your converged application for dependency injection and
+		contextual lifecycle management.</para>
+	<para>Being the fundamental feature of the framework, CTF will
+		"CDI-enable" a converged application providing:</para>
+	<itemizedlist id="RestComm_Features">
+		<title>RestComm Features</title>
+		<listitem>
+			<para>Java EE 6 integration and providing a unified, contextual,
+				programming model for Java Web and Converged Telco Applications.
+			</para>
+		</listitem>
+		<listitem>
+			<para>Development of reusable (across different applications) sip
+				modules and flexibility through the component based approach</para>
+		</listitem>
+		<listitem>
+			<para>Clean and simple programming model.</para>
+		</listitem>
+	</itemizedlist>
+</chapter>

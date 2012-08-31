@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.mobicents.servlet.sip</groupId>
+		<artifactId>restcomm</artifactId>
+		<version>1.0.0.BETA2-SNAPSHOT</version>
+	</parent>
+
+	<groupId>org.mobicents.servlet.sip</groupId>
+	<artifactId>restcomm.extras</artifactId>
+	<version>1.0.0.BETA2-SNAPSHOT</version>
+	<name>restcomm.extras</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>${log4j.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>${commons-configuration.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${httpclient.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.ispeech</groupId>
+			<artifactId>ispeech</artifactId>
+			<version>1.0.1</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/ispeech-java-sdk.jar</systemPath>
+		</dependency>
+
+<!-- 		<dependency> -->
+<!-- 			<groupId>net.interfaxx</groupId> -->
+<!-- 			<artifactId>interfax</artifactId> -->
+<!-- 			<version>1.0.0</version> -->
+<!-- 			<scope>system</scope> -->
+<!-- 			<systemPath>${project.basedir}/lib/Interfax.jar</systemPath> -->
+<!-- 		</dependency> -->
+
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.esendex</groupId> -->
+<!-- 			<artifactId>esendex</artifactId> -->
+<!-- 			<version>1.0.0</version> -->
+<!-- 			<scope>system</scope> -->
+<!-- 			<systemPath>${project.basedir}/lib/Esendex.jar</systemPath> -->
+<!-- 		</dependency> -->
+
+	</dependencies>
+
+</project>

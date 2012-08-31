@@ -1,0 +1,10 @@
+target/
+acapela/*.wav
+*.class
+*.nocommit
+bin/
+/.settings
+/.classpath
+*.class
+logs
+bin
