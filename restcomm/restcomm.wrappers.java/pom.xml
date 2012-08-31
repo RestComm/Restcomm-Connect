@@ -3,10 +3,10 @@
   <parent>
     <groupId>org.mobicents.servlet.sip</groupId>
     <artifactId>restcomm</artifactId>
-    <version>1.0.0.TelScale-SNAPSHOT</version>
+    <version>1.0.0.BETA2-SNAPSHOT</version>
   </parent>
   <artifactId>twilio-java-sdk</artifactId> 
-  <version>1.0.0.TelScale-SNAPSHOT</version>
+  <version>3.3.10-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>twilio-java-sdk</name>
   <description>Java helper library for Twilio services</description>

@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>1.0.0.TelScale-SNAPSHOT</version>
+		<version>1.0.0.BETA2-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm.commons</artifactId>
-	<version>1.0.0.TelScale-SNAPSHOT</version>
+	<version>1.0.0.BETA2-SNAPSHOT</version>
 	<name>restcomm.commons</name>
 	<url>http://maven.apache.org</url>
 

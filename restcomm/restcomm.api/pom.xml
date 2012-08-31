@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>1.0.0.TelScale-SNAPSHOT</version>
+		<version>1.0.0.BETA2-SNAPSHOT</version>
 	</parent>
 	<artifactId>restcomm.api</artifactId>
 	<name>restcomm.api</name>
