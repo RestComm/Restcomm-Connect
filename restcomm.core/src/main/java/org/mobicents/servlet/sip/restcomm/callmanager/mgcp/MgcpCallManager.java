@@ -44,6 +44,7 @@ import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
 
@@ -183,7 +184,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			 final MgcpServer server = servers.getMediaServer();
 			 final MgcpCall call = new MgcpCall(server);
 			 request.getSession().setAttribute("CALL", call);
-			 call.alert(request);
+//			 call.alert(request);
+			 call.trying(request);
 			 // Schedule the RCML script to execute for this call.
 			 Application application = null;
 			 final SipURI from = (SipURI)request.getFrom().getURI();
@@ -221,7 +223,11 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			 }
 		 } catch(final InterpreterException exception) {
 			 throw new ServletException(exception);
-		 }
+		 } catch (InterruptedException e) {
+			throw new ServletException(e);
+		} catch (CallException e) {
+			throw new ServletException(e);
+		} 
 	 }
 
 	 @Override protected void doSuccessResponse(final SipServletResponse response) throws ServletException, IOException {

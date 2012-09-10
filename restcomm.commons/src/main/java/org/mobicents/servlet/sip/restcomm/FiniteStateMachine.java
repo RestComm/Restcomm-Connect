@@ -39,7 +39,7 @@ public class FiniteStateMachine {
   
   protected synchronized void assertState(final State state) throws IllegalStateException {
     if(!this.state.equals(state)) {
-      throw new IllegalStateException("Illegal state: " + state.getName());
+      throw new IllegalStateException("Illegal state: " + this.state.getName());
     }
   }
   
@@ -52,7 +52,15 @@ public class FiniteStateMachine {
     throw new IllegalStateException("Illegal state: " + state.getName());
   }
   
-  public State getState() {
+  protected synchronized void assertStateNot(final Collection<State> states) throws IllegalStateException {
+    for(final State state : states) {
+      if(this.state.equals(state)) {
+        throw new IllegalStateException("Illegal state: " + state.getName());
+      }
+    }
+  }
+  
+  public synchronized State getState() {
     return state;
   }
   

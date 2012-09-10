@@ -90,7 +90,8 @@ public interface Call {
     BUSY("busy"),
     FAILED("failed"),
     NO_ANSWER("no-answer"),
-    CANCELLED("cancelled");
+    CANCELLED("cancelled"),
+    TRYING("trying");
 
     private final String text;
     
