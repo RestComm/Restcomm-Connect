@@ -186,6 +186,7 @@
 						<exclude>**/IncomingPhoneNumbersEndpointTest.java</exclude>
 						<exclude>**/ClientsEndpointTest.java</exclude>
 						<exclude>**/PresenceTest.java</exclude>
+            <exclude>**/MediaTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
