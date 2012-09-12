@@ -16,10 +16,11 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -32,6 +33,22 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 @ThreadSafe public final class CallsXmlEndpoint extends CallsEndpoint {
   public CallsXmlEndpoint() {
     super();
+  }
+  
+  @Path("/{sid}.json")
+  @GET public Response getCallAsJson(@PathParam("accountSid") final String accountSid,
+      @PathParam("sid") final String sid) {
+    return getCall(accountSid, sid, APPLICATION_JSON_TYPE);
+  }
+  
+  @Path("/{sid}")
+  @GET public Response getCallAsXml(@PathParam("accountSid") final String accountSid,
+      @PathParam("sid") final String sid) {
+    return getCall(accountSid, sid, APPLICATION_XML_TYPE);
+  }
+  
+  @GET public Response getCalls(@PathParam("accountSid") final String accountSid) {
+    return getCalls(accountSid, APPLICATION_XML_TYPE);
   }
   
   @POST public Response putCall(@PathParam("accountSid") final String accountSid,

@@ -26,9 +26,11 @@ import com.thoughtworks.xstream.XStream;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
+
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
@@ -39,8 +41,10 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecordList;
 import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordListConverter;
@@ -79,8 +83,38 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
   
+  protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
+    try { secure(new Sid(accountSid), "RestComm:Read:Calls"); }
+    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
+    final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
+    final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(sid));
+    if(cdr == null) {
+      return status(NOT_FOUND).build();
+    } else {
+	  if(APPLICATION_XML_TYPE == responseType) {
+		final RestCommResponse response = new RestCommResponse(cdr);
+		return ok(xstream.toXML(response), APPLICATION_XML).build();
+      } else if(APPLICATION_JSON_TYPE == responseType) {
+        return ok(gson.toJson(cdr), APPLICATION_JSON).build();
+      } else {
+        return null;
+      }
+    }
+  }
+  
   protected Response getCalls(final String accountSid, final MediaType responseType) {
-    return null;
+    try { secure(new Sid(accountSid), "RestComm:Read:Calls"); }
+    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
+    final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
+    final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(new Sid(accountSid));
+    if(APPLICATION_XML_TYPE == responseType) {
+      final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
+      return ok(xstream.toXML(response), APPLICATION_XML).build();
+    } else if(APPLICATION_JSON_TYPE == responseType) {
+      return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
+    } else {
+      return null;
+    }
   }
   
   private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {

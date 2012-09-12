@@ -17,6 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.http;
 
 import static javax.ws.rs.core.MediaType.*;
+
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -32,6 +34,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 @ThreadSafe public final class CallsJsonEndpoint extends CallsEndpoint {
   public CallsJsonEndpoint() {
     super();
+  }
+  
+  @GET public Response getCalls(@PathParam("accountSid") final String accountSid) {
+    return getCalls(accountSid, APPLICATION_JSON_TYPE);
   }
   
   @POST public Response putCall(@PathParam("accountSid") final String accountSid,
