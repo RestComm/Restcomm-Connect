@@ -113,7 +113,7 @@
 	<!--
 		The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway.
 	-->
-	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.AcapelaSpeechSynthesizer">
+	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.acapela.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
 		<application></application>

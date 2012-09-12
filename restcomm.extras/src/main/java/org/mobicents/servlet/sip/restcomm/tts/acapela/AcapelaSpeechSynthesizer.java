@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.tts;
+package org.mobicents.servlet.sip.restcomm.tts.acapela;
 
 import java.io.IOException;
 import java.net.URI;
@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -35,12 +34,14 @@ import org.apache.http.message.BasicNameValuePair;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.cache.DiskCache;
+import org.mobicents.servlet.sip.restcomm.tts.AbstractSpeechSynthesizer;
+import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizerException;
 import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AcapelaSpeechSynthesizer implements SpeechSynthesizer {
+@ThreadSafe public final class AcapelaSpeechSynthesizer extends AbstractSpeechSynthesizer {
   private static final String clientVersion = "0-01";
   private static final String environment = "RESTCOMM_1.0.0";
   private static final String protocolVersion = "2";
@@ -79,7 +80,6 @@ import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
     defaultParameters.add(new BasicNameValuePair("req_asw_redirect_url", null));
   }
   
-  private Configuration configuration;
   private String application;
   private String login;
   private String password;
@@ -90,16 +90,6 @@ import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
   
   public AcapelaSpeechSynthesizer() {
     super();
-  }
-  
-  public String buildKey(final String text, final String gender, final String language) {
-    final StringBuilder key = new StringBuilder();
-    key.append(language).append(":").append(gender).append(":").append(text);
-    return key.toString();
-  }
-  
-  @Override public void configure(final Configuration configuration) {
-    this.configuration = configuration;
   }
   
   public URI getSpeech(final String text, final String gender, final String language)
@@ -214,10 +204,6 @@ import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
     men.put("es", configuration.getString("speakers.spanish.male"));
     men.put("sv", configuration.getString("speakers.swedish.male"));
     men.put("tr", configuration.getString("speakers.turkish.male"));
-  }
-  
-  @Override public void shutdown() {
-    // Nothing to do.
   }
 
   @Override public void start() throws RuntimeException {

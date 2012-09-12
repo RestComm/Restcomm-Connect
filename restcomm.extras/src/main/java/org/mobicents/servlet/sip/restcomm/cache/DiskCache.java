@@ -22,14 +22,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -54,7 +51,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
   
   private String buildPath(final String key, final String extension) {
 	final StringBuilder buffer = new StringBuilder();
-	buffer.append(location).append(hash(key)).append(".").append(extension.toLowerCase());
+	buffer.append(location).append(key).append(".").append(extension.toLowerCase());
     return buffer.toString();
   }
   
@@ -74,16 +71,6 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
     } else {
       return null;
     }
-  }
-  
-  private String hash(final String key) {
-    MessageDigest messageDigest = null;
-	try {
-	  messageDigest = MessageDigest.getInstance("SHA-256");
-	} catch(final NoSuchAlgorithmException ignored) { }
-	messageDigest.update(key.getBytes());
-	final byte[] hash = messageDigest.digest();
-	return new String(HexadecimalUtils.toHex(hash));
   }
   
   private String getFileExtension(final URI uri) {
