@@ -170,9 +170,10 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
       final String value = attribute.getValue();
       if("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
         return Boolean.parseBoolean(value);
+      } else {
+        interpreter.notify(context, Notification.ERROR, 21503);
       }
     }
-    interpreter.notify(context, Notification.ERROR, 21503);
     return false;
   }
   

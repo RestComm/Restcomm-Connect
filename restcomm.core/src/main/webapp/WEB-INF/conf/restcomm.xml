@@ -210,4 +210,18 @@
 		  </turkish>
 		</speakers>
 	</speech-synthesizer>
+	
+	<!--
+	  <speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.att.ATTSpeechSynthesizer">
+        <host>127.0.0.1</host>
+        <port>7001</port>
+        <directory>${restcomm:home}/cache/att</directory>
+        <speakers>
+          <english>
+            <female>crystal8</female>
+            <male>mike8</male>
+          </english>
+        </speakers>
+      </speech-synthesizer>
+	-->
 </restcomm>

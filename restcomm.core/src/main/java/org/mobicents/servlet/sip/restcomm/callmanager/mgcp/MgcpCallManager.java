@@ -60,6 +60,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 	 private static SipFactory sipFactory;
 
+	 private static Configuration configuration;
 	 private static String proxyUser;
 	 private static String proxyPassword;
 	 private static SipURI proxyUri;
@@ -196,10 +197,11 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		         application = getVoiceApplication(applicationSid);
 		         executor.submit(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
 		             application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
-		             call);
+		             application.getStatusCallback(), application.getStatusCallbackMethod(), call);
 		       } else {
 		         executor.submit(client.getAccountSid(), client.getApiVersion(), client.getVoiceUrl(), client.getVoiceMethod(),
-		             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), call);
+		             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), application.getStatusCallback(),
+		             application.getStatusCallbackMethod(), call);
 		       }
 			 } else {
 			   final SipURI uri = (SipURI)request.getTo().getURI();
@@ -210,11 +212,12 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			       application = getVoiceApplication(applicationSid);
 			       executor.submit(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
 				       application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
-				       call);
+				       application.getStatusCallback(), application.getStatusCallbackMethod(), call);
 			     } else {
 			       executor.submit(incomingPhoneNumber.getAccountSid(), incomingPhoneNumber.getApiVersion(),
 			           incomingPhoneNumber.getVoiceUrl(), incomingPhoneNumber.getVoiceMethod(), incomingPhoneNumber.getVoiceFallbackUrl(),
-			           incomingPhoneNumber.getVoiceFallbackMethod(), call);
+			           incomingPhoneNumber.getVoiceFallbackMethod(), application.getStatusCallback(), application.getStatusCallbackMethod(),
+			           call);
 			     }
 			   } else {
 				 final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
@@ -275,7 +278,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 executor = services.get(InterpreterExecutor.class);
 		 servers = services.get(MgcpServerManager.class);
 		 daos = services.get(DaoManager.class);
-		 final Configuration configuration = services.get(Configuration.class);
+		 configuration = services.get(Configuration.class);
 		 proxyUser = configuration.getString("outbound-proxy-user");
 		 proxyPassword = configuration.getString("outbound-proxy-password");
 		 final String uri = configuration.getString("outbound-proxy-uri");

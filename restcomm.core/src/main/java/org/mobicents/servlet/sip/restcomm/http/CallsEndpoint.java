@@ -149,7 +149,9 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
       return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
     }
     final URI url = URI.create(data.getFirst("Url"));
-    executor.submit(new Sid(sid), getApiVersion(data), url, getMethod("VoiceMethod", data), null, null, call);
+    final Integer timeout = data.getFirst("Timeout") != null ? Integer.parseInt(data.getFirst("Timeout")) : null;
+    executor.submit(new Sid(sid), getApiVersion(data), url, getMethod("VoiceMethod", data), null, null, null, null,
+        timeout, call);
     final CallDetailRecord cdr = toCallDetailRecord(accountSid, call);
     daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
     if(APPLICATION_JSON_TYPE == responseType) {

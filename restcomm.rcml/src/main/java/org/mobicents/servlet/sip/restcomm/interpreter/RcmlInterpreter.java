@@ -124,6 +124,23 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
     if(Call.Status.IN_PROGRESS == call.getStatus()) {
       call.hangup();
     }
+    final URI uri = context.getStatusCallback();
+    if(uri != null) {
+      final String method = context.getStatusCallbackMethod();
+      final HttpUriRequest request = request(uri, method, EMPTY_NAME_VALUE_PAIRS);
+      final HttpClient client = new DefaultHttpClient();
+      try {
+        final HttpResponse response = client.execute(request);
+        final int status = response.getStatusLine().getStatusCode();
+        if(status != HttpStatus.SC_OK) {
+          /* FIX ME! */
+        } 
+      } catch(final Exception exception) {
+    	/* FIX ME! */
+    	throw new InterpreterException(exception);
+      }
+    }
+    /* FIX ME! */
     finish();
   }
   

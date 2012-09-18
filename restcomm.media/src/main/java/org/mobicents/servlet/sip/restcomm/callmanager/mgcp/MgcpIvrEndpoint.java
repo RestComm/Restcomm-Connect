@@ -237,7 +237,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 					final Map<String, String> parameters = parseAdvancedAudioParameters(response.getParms());
 					// Process parameters.
 					final int returnCode = Integer.parseInt(parameters.get("rc"));
-					if(returnCode == 100 || returnCode == 326 || returnCode == 328) {
+					if(returnCode == 100 || returnCode == 326 || returnCode == 327 || returnCode == 328) {
 						final State currentState = getState();
 						if(currentState.equals(PLAY_COLLECT) || currentState.equals(PLAY_RECORD)) {
 							if(returnCode == 100) {

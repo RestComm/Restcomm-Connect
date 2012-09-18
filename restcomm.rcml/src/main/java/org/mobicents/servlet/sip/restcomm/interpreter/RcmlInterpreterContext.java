@@ -39,10 +39,20 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
   private final String voiceMethod;
   private final URI voiceFallbackUrl;
   private final String voiceFallbackMethod;
+  private final URI statusCallback;
+  private final String statusCallbackMethod;
+  private final Integer timeout;
   
   public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI voiceUrl,
       final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
-      final Call call) {
+      final URI statusCallback, final String statusCallbackMethod, final Call call) {
+	  this(accountSid, apiVersion, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod,
+	      statusCallback, statusCallbackMethod, null, call);
+  }
+  
+  public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI voiceUrl,
+      final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
+	  final URI statusCallback, final String statusCallbackMethod, final Integer timeout, final Call call) {
     super();
     this.call = call;
     this.accountSid = accountSid;
@@ -51,6 +61,9 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
     this.voiceMethod = voiceMethod;
     this.voiceFallbackUrl = voiceFallbackUrl;
     this.voiceFallbackMethod = voiceFallbackMethod;
+    this.statusCallback = statusCallback;
+    this.statusCallbackMethod = statusCallbackMethod;
+    this.timeout = timeout;
   }
   
   public Sid getAccountSid() {
@@ -93,5 +106,17 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
   
   public String getVoiceFallbackMethod() {
     return voiceFallbackMethod;
+  }
+  
+  public URI getStatusCallback() {
+    return statusCallback;
+  }
+  
+  public String getStatusCallbackMethod() {
+    return statusCallbackMethod;
+  }
+  
+  public Integer getTimeout() {
+    return timeout;
   }
 }
