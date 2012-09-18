@@ -17,6 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.http.converter;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
@@ -89,7 +90,28 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
   @Override public JsonElement serialize(final CallDetailRecord cdr, Type type,
       final JsonSerializationContext context) {
-    return null;
+	final JsonObject object = new JsonObject();
+	writeSid(cdr.getSid(), object);
+	writeDateCreated(cdr.getDateCreated(), object);
+	writeDateUpdated(cdr.getDateUpdated(), object);
+	writeParentCallSid(cdr.getParentCallSid(), object);
+	writeAccountSid(cdr.getAccountSid(), object);
+	writeTo(cdr.getTo(), object);
+	writeFrom(cdr.getFrom(), object);
+	writePhoneNumberSid(cdr.getPhoneNumberSid(), object);
+	writeStatus(cdr.getStatus(), object);
+	writeStartTime(cdr.getStartTime(), object);
+	writeEndTime(cdr.getEndTime(), object);
+	writeDuration(cdr.getDuration(), object);
+	writePrice(cdr.getPrice(), object);
+	writeDirection(cdr.getDirection(), object);
+	writeAnsweredBy(cdr.getAnsweredBy(), object);
+	writeApiVersion(cdr.getApiVersion(), object);
+	writeForwardedFrom(cdr.getForwardedFrom(), object);
+	writeCallerName(cdr.getCallerName(), object);
+	writeUri(cdr.getUri(), object);
+	writeSubResources(cdr, object);
+	return object;
   }
   
   private void writeAnsweredBy(final String answeredBy, final HierarchicalStreamWriter writer) {
@@ -100,6 +122,10 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     writer.endNode();
   }
   
+  private void writeAnsweredBy(final String answeredBy, final JsonObject object) {
+    object.addProperty("answered_by", answeredBy);
+  }
+  
   private void writeCallerName(final String callerName, final HierarchicalStreamWriter writer) {
     writer.startNode("CallerName");
     if(callerName != null) {
@@ -108,10 +134,18 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     writer.endNode();
   }
   
+  private void writeCallerName(final String callerName, final JsonObject object) {
+    object.addProperty("caller_name", callerName);
+  }
+  
   private void writeDirection(final String direction, final HierarchicalStreamWriter writer) {
     writer.startNode("Direction");
     writer.setValue(direction);
     writer.endNode();
+  }
+  
+  private void writeDirection(final String direction, final JsonObject object) {
+    object.addProperty("direction", direction);
   }
   
   private void writeDuration(final Integer duration, final HierarchicalStreamWriter writer) {
@@ -122,12 +156,20 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     writer.endNode();
   }
   
+  private void writeDuration(final Integer duration, final JsonObject object) {
+    object.addProperty("duration", duration);
+  }
+  
   private void writeForwardedFrom(final String forwardedFrom, final HierarchicalStreamWriter writer) {
     writer.startNode("ForwardedFrom");
     if(forwardedFrom != null) {
       writer.setValue(forwardedFrom);
     }
     writer.endNode();
+  }
+  
+  private void writeForwardedFrom(final String forwardedFrom, final JsonObject object) {
+    object.addProperty("forwarded_from", forwardedFrom);
   }
   
   private void writeParentCallSid(final Sid sid, final HierarchicalStreamWriter writer) {
@@ -138,12 +180,20 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 	writer.endNode();
   }
   
+  private void writeParentCallSid(final Sid sid, final JsonObject object) {
+    object.addProperty("parent_call_sid", sid.toString());
+  }
+  
   private void writePhoneNumberSid(final Sid sid, final HierarchicalStreamWriter writer) {
     writer.startNode("PhoneNumberSid");
     if(sid != null) {
       writer.setValue(sid.toString());
     }
     writer.endNode();
+  }
+  
+  private void writePhoneNumberSid(final Sid sid, final JsonObject object) {
+    object.addProperty("phone_number_sid", sid.toString());
   }
   
   private void writeEndTime(final DateTime endTime, final HierarchicalStreamWriter writer) {
@@ -154,6 +204,10 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     writer.endNode();
   }
   
+  private void writeEndTime(final DateTime endTime, final JsonObject object) {
+    object.addProperty("end_time", endTime.toString());
+  }
+  
   private void writeStartTime(final DateTime startTime, final HierarchicalStreamWriter writer) {
     writer.startNode("StartTime");
     if(startTime != null) {
@@ -162,10 +216,18 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     writer.endNode();
   }
   
+  private void writeStartTime(final DateTime startTime, final JsonObject object) {
+    object.addProperty("start_time", startTime.toString());
+  }
+  
   private void writeNotifications(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
     writer.startNode("Notifications");
     writer.setValue(prefix(cdr) + "/Notifications");
     writer.endNode();
+  }
+  
+  private void writeNotifications(final CallDetailRecord cdr, final JsonObject object) {
+    object.addProperty("notifications", prefix(cdr) + "/Notifications");
   }
   
   private void writeRecordings(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
@@ -174,10 +236,21 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     writer.endNode();
   }
   
+  private void writeRecordings(final CallDetailRecord cdr, final JsonObject object) {
+    object.addProperty("recordings", prefix(cdr) + "/Recordings");
+  }
+  
   private void writeSubResources(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
     writer.startNode("SubresourceUris");
     writeNotifications(cdr, writer);
     writeRecordings(cdr, writer);
     writer.endNode();
+  }
+  
+  private void writeSubResources(final CallDetailRecord cdr, final JsonObject object) {
+    final JsonObject other = new JsonObject();
+    writeNotifications(cdr, other);
+    writeRecordings(cdr, other);
+    object.add("subresource_uris", other);
   }
 }
