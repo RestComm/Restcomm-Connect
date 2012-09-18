@@ -222,7 +222,9 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
       } else if(Call.Status.QUEUED == status) {
         call.addObserver(this);
         call.dial();
-        try { wait(context.getTimeout()); }
+        //Issue 95: http://code.google.com/p/restcomm/issues/detail?id=95
+//        try { wait(context.getTimeout()); }
+        try { wait(); }
         catch(final InterruptedException ignored) { }
         call.removeObserver(this);
         if(Call.Status.IN_PROGRESS != call.getStatus()) {
