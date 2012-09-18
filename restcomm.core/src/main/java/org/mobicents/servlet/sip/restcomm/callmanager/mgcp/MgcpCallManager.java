@@ -77,8 +77,9 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 	 @Override public Call createExternalCall(final String from, final String to) throws CallManagerException {
 		 try{
-			 final SipURI fromUri = sipFactory.createSipURI(from, proxyUri.getHost());
-			 final SipURI toUri = sipFactory.createSipURI(to, proxyUri.getHost());
+			 String uri = proxyUri.toString().replaceFirst("sip:", "");
+			 final SipURI fromUri = sipFactory.createSipURI(from, uri);
+			 final SipURI toUri = sipFactory.createSipURI(to, uri);
 			 return createCall(fromUri, toUri);
 		 } catch (final Exception exception){
 			 throw new CallManagerException(exception);
@@ -87,7 +88,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 
 	@Override public Call createUserAgentCall(final String from, final String to) throws CallManagerException {
 	  try {
-	    final SipURI fromUri = sipFactory.createSipURI(from, proxyUri.getHost());
+		  String uri = proxyUri.toString().replaceFirst("sip:", "");
+	    final SipURI fromUri = sipFactory.createSipURI(from, uri);
         final URI toUri = sipFactory.createURI(to);
         return createCall(fromUri, toUri);
 	   } catch(final Exception exception) {
