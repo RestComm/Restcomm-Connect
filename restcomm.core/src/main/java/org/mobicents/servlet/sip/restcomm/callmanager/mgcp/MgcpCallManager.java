@@ -200,8 +200,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		             application.getStatusCallback(), application.getStatusCallbackMethod(), call);
 		       } else {
 		         executor.submit(client.getAccountSid(), client.getApiVersion(), client.getVoiceUrl(), client.getVoiceMethod(),
-		             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), application.getStatusCallback(),
-		             application.getStatusCallbackMethod(), call);
+		             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), null, null, call);
 		       }
 			 } else {
 			   final SipURI uri = (SipURI)request.getTo().getURI();
@@ -216,8 +215,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			     } else {
 			       executor.submit(incomingPhoneNumber.getAccountSid(), incomingPhoneNumber.getApiVersion(),
 			           incomingPhoneNumber.getVoiceUrl(), incomingPhoneNumber.getVoiceMethod(), incomingPhoneNumber.getVoiceFallbackUrl(),
-			           incomingPhoneNumber.getVoiceFallbackMethod(), application.getStatusCallback(), application.getStatusCallbackMethod(),
-			           call);
+			           incomingPhoneNumber.getVoiceFallbackMethod(), incomingPhoneNumber.getStatusCallback(),
+			           incomingPhoneNumber.getStatusCallbackMethod(), call);
 			     }
 			   } else {
 				 final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);

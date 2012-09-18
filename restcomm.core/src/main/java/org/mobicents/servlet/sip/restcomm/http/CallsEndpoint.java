@@ -148,10 +148,16 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     catch(final CallManagerException exception) {
       return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
     }
-    final URI url = URI.create(data.getFirst("Url"));
-    final Integer timeout = data.getFirst("Timeout") != null ? Integer.parseInt(data.getFirst("Timeout")) : null;
-    executor.submit(new Sid(sid), getApiVersion(data), url, getMethod("VoiceMethod", data), null, null, null, null,
-        timeout, call);
+    final String version = getApiVersion(data);
+    final URI url = getUrl("Url", data);
+    final String method = getMethod("Method", data);
+    final URI fallback = getUrl("Fallback", data);
+    final String fallbackMethod = getMethod("FallbackMethod", data);
+    final URI callback = getUrl("Callback", data);
+    final String callbackMethod = getMethod("CallbackMethod", data);
+    final Integer timeout = getTimeout(data);
+    executor.submit(accountSid, version, url, method, fallback, fallbackMethod, callback,
+        callbackMethod, timeout, call);
     final CallDetailRecord cdr = toCallDetailRecord(accountSid, call);
     daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
     if(APPLICATION_JSON_TYPE == responseType) {
@@ -172,6 +178,14 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 	} else {
 	  return null;
 	}
+  }
+  
+  private Integer getTimeout(final MultivaluedMap<String, String> data) {
+    Integer result = 60;
+    if(data.containsKey("Timeout")) {
+      result = Integer.parseInt(data.getFirst("Timeout"));
+    }
+    return result;
   }
   
   private CallDetailRecord toCallDetailRecord(final Sid accountSid, final Call call) {
