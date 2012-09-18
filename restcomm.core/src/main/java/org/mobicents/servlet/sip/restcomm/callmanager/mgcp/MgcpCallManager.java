@@ -76,9 +76,13 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 }
 
 	 @Override public Call createExternalCall(final String from, final String to) throws CallManagerException {
-		 final SipURI fromUri = sipFactory.createSipURI(from, proxyUri.getHost());
-		 final SipURI toUri = sipFactory.createSipURI(to, proxyUri.getHost());
-		 return createCall(fromUri, toUri);
+		 try{
+			 final SipURI fromUri = sipFactory.createSipURI(from, proxyUri.getHost());
+			 final SipURI toUri = sipFactory.createSipURI(to, proxyUri.getHost());
+			 return createCall(fromUri, toUri);
+		 } catch (final Exception exception){
+			 throw new CallManagerException(exception);
+		 }
 	 }
 	 
 	@Override public Call createUserAgentCall(final String from, final String to) throws CallManagerException {
