@@ -223,8 +223,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
         call.addObserver(this);
         call.dial();
         //Issue 95: http://code.google.com/p/restcomm/issues/detail?id=95
-//        try { wait(context.getTimeout()); }
-        try { wait(); }
+        try { wait(context.getTimeout() * 1000); }
         catch(final InterruptedException ignored) { }
         call.removeObserver(this);
         if(Call.Status.IN_PROGRESS != call.getStatus()) {
