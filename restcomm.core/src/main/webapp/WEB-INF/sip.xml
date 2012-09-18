@@ -22,6 +22,10 @@
 						<var>request.method</var>
 						<value>INVITE</value>
 					</equal>
+					<equal>
+						<var>request.method</var>
+						<value>OPTIONS</value>
+					</equal>
 				</or>
 			</pattern>
 		</servlet-mapping>

@@ -151,12 +151,12 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     final String version = getApiVersion(data);
     final URI url = getUrl("Url", data);
     final String method = getMethod("Method", data);
-    final URI fallback = getUrl("Fallback", data);
+    final URI fallbackUrl = getUrl("FallbackUrl", data);
     final String fallbackMethod = getMethod("FallbackMethod", data);
-    final URI callback = getUrl("Callback", data);
-    final String callbackMethod = getMethod("CallbackMethod", data);
+    final URI callback = getUrl("StatusCallback", data);
+    final String callbackMethod = getMethod("StatusCallbackMethod", data);
     final Integer timeout = getTimeout(data);
-    executor.submit(accountSid, version, url, method, fallback, fallbackMethod, callback,
+    executor.submit(accountSid, version, url, method, fallbackUrl, fallbackMethod, callback,
         callbackMethod, timeout, call);
     final CallDetailRecord cdr = toCallDetailRecord(accountSid, call);
     daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);

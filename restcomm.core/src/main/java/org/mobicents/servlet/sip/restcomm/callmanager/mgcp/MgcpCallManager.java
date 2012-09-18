@@ -88,7 +88,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
         return createCall(fromUri, toUri);
 	   } catch(final Exception exception) {
    	     throw new CallManagerException(exception);
-   	   }  
+   	   }
 	}
 
 	 @Override public Call createCall(final String from, final String to) throws CallManagerException {
@@ -232,7 +232,12 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		} 
 	 }
 
-	 @Override protected void doSuccessResponse(final SipServletResponse response) throws ServletException, IOException {
+	 @Override protected void doOptions(final SipServletRequest request)
+	     throws ServletException, IOException {
+		request.createResponse(SipServletResponse.SC_OK).send();
+	}
+
+	@Override protected void doSuccessResponse(final SipServletResponse response) throws ServletException, IOException {
 		 final SipServletRequest request = response.getRequest();
 		 final SipSession session = response.getSession();
 		 if(request.getMethod().equals("INVITE") && response.getStatus() == SipServletResponse.SC_OK) {
