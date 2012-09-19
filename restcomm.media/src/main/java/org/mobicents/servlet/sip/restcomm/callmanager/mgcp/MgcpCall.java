@@ -313,9 +313,15 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 
 	public synchronized void established(final SipServletResponse successResponse) throws IOException {
 		assertState(QUEUED);
-		final byte[] answer = successResponse.getRawContent();
-		final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
-		userAgentConnection.modify(remoteDescriptor);
+		byte[] answer = successResponse.getRawContent();
+		if (answer!=null){
+			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
+			userAgentConnection.modify(remoteDescriptor);
+		} else {
+			answer = initialInvite.getRawContent();
+			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
+			userAgentConnection.modify(remoteDescriptor);
+		}
 		final SipServletRequest ack = successResponse.createAck();
 		ack.send();
 	}
