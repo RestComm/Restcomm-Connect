@@ -23,7 +23,10 @@
 		<appender-ref ref="rolling-file" />
 		<appender-ref ref="console" />
 	</root>
+	<logger name="org.mobicents">
+		<level value="DEBUG" />
+	</logger>
 	<logger name="org.mobicents.servlet.sip.annotations">
-		<level value="info" />
+		<level value="INFO" />
 	</logger>
 </log4j:configuration>
