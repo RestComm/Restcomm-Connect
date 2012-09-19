@@ -181,8 +181,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
   }
   
   private void writeParentCallSid(final Sid sid, final JsonObject object) {
-	  if(sid!=null)
-		  object.addProperty("parent_call_sid", sid.toString());
+    object.addProperty("parent_call_sid", sid.toString());
   }
   
   private void writePhoneNumberSid(final Sid sid, final HierarchicalStreamWriter writer) {
@@ -194,8 +193,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
   }
   
   private void writePhoneNumberSid(final Sid sid, final JsonObject object) {
-    if(sid!=null)
-    	object.addProperty("phone_number_sid", sid.toString());
+    object.addProperty("phone_number_sid", sid.toString());
   }
   
   private void writeEndTime(final DateTime endTime, final HierarchicalStreamWriter writer) {
@@ -207,8 +205,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
   }
   
   private void writeEndTime(final DateTime endTime, final JsonObject object) {
-	  if(endTime!=null)
-		  object.addProperty("end_time", endTime.toString());
+    object.addProperty("end_time", endTime.toString());
   }
   
   private void writeStartTime(final DateTime startTime, final HierarchicalStreamWriter writer) {
@@ -220,8 +217,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
   }
   
   private void writeStartTime(final DateTime startTime, final JsonObject object) {
-    if(startTime!=null)
-    	object.addProperty("start_time", startTime.toString());
+    object.addProperty("start_time", startTime.toString());
   }
   
   private void writeNotifications(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
