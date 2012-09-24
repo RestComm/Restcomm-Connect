@@ -44,6 +44,8 @@ import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.RcmlTagStrategy;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.SayTagStrategy;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
@@ -307,6 +309,18 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   
   public void run() {
     while(getState().equals(READY)) {
+       //Pre-Cache SAY tags
+    	if (configuration.getString("pre-cache-outbound").equalsIgnoreCase("1")){
+        	TagIterator cacheIterator = resource.iterator();
+            while(cacheIterator.hasNext()){
+          	  final RcmlTag tag = (RcmlTag)cacheIterator.next();
+                if(!tag.hasBeenVisited() && tag.isVerb()) {
+              	  try {
+      				precache(tag);
+      			} catch (VisitorException e) {}
+                }
+            }	
+    	}
       // Start executing the document.
       TagIterator iterator = resource.iterator();
       while(iterator.hasNext()) {
@@ -372,4 +386,17 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	  } catch(final Exception exception) { /* Handled in tag strategy. */ }
     }
   }
+  
+  public void precache(final Tag tag) throws VisitorException {
+	  if(tag instanceof RcmlTag) {
+		  final RcmlTag rcmlTag = (RcmlTag)tag;
+		  try {
+		    final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
+		    if (strategy instanceof SayTagStrategy) {
+		    	((RcmlTagStrategy) strategy).precache(this, context, rcmlTag);
+		    }
+		  } catch(final Exception exception) { /* Handled in tag strategy. */ }
+	    }
+	  }
+  
 }

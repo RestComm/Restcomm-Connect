@@ -279,6 +279,14 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     return synthesizer.synthesize(text, gender, language);
   }
   
+  public void precache(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+	      final RcmlTag tag){
+	  String gender = this.getGender(interpreter, context, tag);
+	  String language = this.getLanguage(interpreter, context, tag);
+	  String text = tag.getText();
+	  say(gender, language, text);
+  }
+  
   protected URI toRecordingPath(final Sid sid) {
     final StringBuilder buffer = new StringBuilder();
     buffer.append("file://").append(baseRecordingsPath).append(sid.toString()).append(".wav");
