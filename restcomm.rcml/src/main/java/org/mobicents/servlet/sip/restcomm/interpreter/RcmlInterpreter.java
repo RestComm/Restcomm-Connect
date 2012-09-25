@@ -310,7 +310,8 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
   public void run() {
     while(getState().equals(READY)) {
        //Pre-Cache SAY tags
-    	if (configuration.getString("pre-cache-outbound").equalsIgnoreCase("1")){
+       //Issue 105: http://code.google.com/p/restcomm/issues/detail?id=105
+    	if (configuration.getString("pre-cache-outbound").equalsIgnoreCase("true")){
         	TagIterator cacheIterator = resource.iterator();
             while(cacheIterator.hasNext()){
           	  final RcmlTag tag = (RcmlTag)cacheIterator.next();

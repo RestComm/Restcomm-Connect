@@ -27,7 +27,7 @@
 		
 		<!-- <root-uri>http://127.0.0.1:5080/restcomm</root-uri> -->
 		
-		<pre-cache-outbound>1</pre-cache-outbound>
+		<pre-cache-outbound>true</pre-cache-outbound>
 		
 		<outbound-proxy-user></outbound-proxy-user>
 		<outbound-proxy-password></outbound-proxy-password>
