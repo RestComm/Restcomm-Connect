@@ -159,6 +159,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 	public synchronized void playCollect(final List<URI> prompts, final int maxNumberOfDigits, final int minNumberOfDigits,
 			final long firstDigitTimer, final long interDigitTimer, final String patterns) {
 		assertState(IDLE);
+		//Issue 106: http://code.google.com/p/restcomm/issues/detail?id=106
+		digits = null;
 		// Create the signal parameters.
 		final AdvancedAudioParametersBuilder builder = new AdvancedAudioParametersBuilder();
 		for(final URI prompt : prompts) {
