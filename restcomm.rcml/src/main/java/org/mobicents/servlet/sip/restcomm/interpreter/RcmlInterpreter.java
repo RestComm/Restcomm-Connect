@@ -309,6 +309,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	}
 
 	public void run() {
+		initialize();
 		while(getState().equals(READY)) {
 			//Pre-Cache SAY tags
 			//Issue 105: http://code.google.com/p/restcomm/issues/detail?id=105

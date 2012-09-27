@@ -54,9 +54,7 @@ public final class InterpreterExecutor implements LifeCycle {
       final URI statusCallback, final String statusCallbackMethod, final Call call) {
     final RcmlInterpreterContext context = new RcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
         voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, call);
-    final RcmlInterpreter interpreter = new RcmlInterpreter(context);
-    interpreter.initialize();
-    executor.submit(interpreter);
+    executor.submit(new RcmlInterpreter(context));
   }
   
   public void submit(final Sid accountSid, final String apiVersion, final URI voiceUrl,
@@ -66,8 +64,6 @@ public final class InterpreterExecutor implements LifeCycle {
     final RcmlInterpreterContext context = new RcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
 	    voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, timeout,
 	    call);
-	final RcmlInterpreter interpreter = new RcmlInterpreter(context);
-	interpreter.initialize();
-	executor.submit(interpreter);
+	executor.submit(new RcmlInterpreter(context));
   }
 }
