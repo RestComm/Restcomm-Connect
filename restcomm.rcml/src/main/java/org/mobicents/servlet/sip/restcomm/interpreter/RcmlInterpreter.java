@@ -57,6 +57,7 @@ import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.TagIterator;
 import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
@@ -341,9 +342,11 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 					tag.setHasBeenVisited(true);
 					// Make sure the call is still in progress.
 					final Call call = context.getCall();
-					if(Call.Status.RINGING != call.getStatus() && 
-					    Call.Status.IN_PROGRESS != call.getStatus())
-					{ setState(FINISHED); }
+					if(!(tag instanceof Pause)){
+						if(Call.Status.RINGING != call.getStatus() && 
+							    Call.Status.IN_PROGRESS != call.getStatus())
+							{ setState(FINISHED); }
+					}
 					// Handle any state changes caused by executing the tag.
 					final State state = getState();
 					if(state.equals(REDIRECTED)) {
