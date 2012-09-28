@@ -59,6 +59,7 @@ import org.mobicents.servlet.sip.restcomm.xml.TagVisitor;
 import org.mobicents.servlet.sip.restcomm.xml.VisitorException;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -318,7 +319,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 					TagIterator cacheIterator = resource.iterator();
 					while(cacheIterator.hasNext()){
 						final RcmlTag tag = (RcmlTag)cacheIterator.next();
-						if(!tag.hasBeenVisited() && tag.isVerb()) {
+						if(!tag.hasBeenVisited() && tag.isVerb() && (tag instanceof Say)) {
 							try {
 								precache(tag);
 							} catch (VisitorException e) {}
