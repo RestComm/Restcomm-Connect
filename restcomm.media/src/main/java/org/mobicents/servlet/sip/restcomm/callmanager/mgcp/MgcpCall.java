@@ -147,17 +147,13 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			initialInvite = request;
 			setState(TRYING);
 			fireStatusChanged();
-			
+			// Establish a connection between the user agent and the media server.
 			relayEndpoint = session.getPacketRelayEndpoint();
 			final byte[] offer = initialInvite.getRawContent();
 			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
 			userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
 			userAgentConnection.addObserver(this);
 			userAgentConnection.connect(ConnectionMode.SendRecv);
-			wait();
-			relayOutboundConnection = session.createConnection(relayEndpoint);
-			relayOutboundConnection.addObserver(this);
-			relayOutboundConnection.connect(ConnectionMode.SendRecv);
 			wait();
 			alert(request);
 		} catch(final IOException exception){
@@ -169,15 +165,13 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		}
 	}
 	
-	public synchronized void alert(final SipServletRequest request) throws IOException, CallException {
+	private synchronized void alert(final SipServletRequest request) throws IOException, CallException {
 		assertState(TRYING);
 		final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
 		try {
 			ringing.send();
-//			initialInvite = request;
 			setState(RINGING);
 			fireStatusChanged();
-			answer();
 		} catch(final IOException exception) {
 			cleanup();
 			setState(FAILED);
@@ -190,14 +184,11 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	@Override public synchronized void answer() throws CallException {
 		assertState(RINGING);
 		try {
-			// Try to negotiate media with a packet relay end point.
-//			relayEndpoint = session.getPacketRelayEndpoint();
-//			final byte[] offer = initialInvite.getRawContent();
-//			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
-//			userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
-//			userAgentConnection.addObserver(this);
-//			userAgentConnection.connect(ConnectionMode.SendRecv);
-//			wait();
+			// Establish the media path way.
+			relayOutboundConnection = session.createConnection(relayEndpoint);
+			relayOutboundConnection.addObserver(this);
+			relayOutboundConnection.connect(ConnectionMode.SendRecv);
+			wait();
 			// Send the response back to the caller.
 			final byte[] answer = userAgentConnection.getLocalDescriptor().toString().getBytes();
 			final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
@@ -258,7 +249,6 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	}
 
 	public synchronized void cancel(final SipServletRequest request) throws IOException {
-//		assertState(RINGING);
 		final List<State> possibleStates = new ArrayList<State>();
 		possibleStates.add(QUEUED);
 		possibleStates.add(RINGING);
@@ -305,10 +295,6 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 
 	public synchronized void established() {
 		LOGGER.debug("ACK received");
-//		assertState(RINGING);
-//		relayOutboundConnection = session.createConnection(relayEndpoint);
-//		relayOutboundConnection.addObserver(this);
-//		relayOutboundConnection.connect(ConnectionMode.SendRecv);
 	}
 
 	public synchronized void established(final SipServletResponse successResponse) throws IOException {

@@ -191,8 +191,6 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			 final MgcpServer server = servers.getMediaServer();
 			 final MgcpCall call = new MgcpCall(server);
 			 request.getSession().setAttribute("CALL", call);
-//			 call.alert(request);
-//			 call.trying(request);
 			 // Schedule the RCML script to execute for this call.
 			 Application application = null;
 			 final SipURI from = (SipURI)request.getFrom().getURI();
