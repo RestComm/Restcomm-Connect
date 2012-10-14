@@ -25,6 +25,7 @@ import org.mobicents.servlet.sip.restcomm.LifeCycle;
 public interface DaoManager extends Configurable, LifeCycle{
   public AccountsDao getAccountsDao();
   public ApplicationsDao getApplicationsDao();
+  public AnnouncementsDao getAnnouncementsDao();
   public AvailablePhoneNumbersDao getAvailablePhoneNumbersDao();
   public CallDetailRecordsDao getCallDetailRecordsDao();
   public ClientsDao getClientsDao();

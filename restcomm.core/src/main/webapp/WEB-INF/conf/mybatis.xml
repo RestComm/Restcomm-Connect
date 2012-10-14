@@ -33,5 +33,6 @@
     <mapper url="file://${sql}/sms-messages.xml"/>
     <mapper url="file://${sql}/transcriptions.xml"/>
     <mapper url="file://${sql}/gateways.xml"/>
+    <mapper url="file://${sql}/announcements.xml"/>
   </mappers>
 </configuration>

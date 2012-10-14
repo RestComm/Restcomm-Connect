@@ -12,6 +12,16 @@ CREATE TABLE "restcomm_accounts" (
 "uri" LONGVARCHAR NOT NULL
 );
 
+CREATE TABLE "restcomm_announcements" (
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"date_created" DATE NOT NULL,
+"account_sid" VARCHAR(34),
+"gender" VARCHAR(8) NOT NULL,
+"language" VARCHAR(16) NOT NULL,
+"text" VARCHAR(32) NOT NULL,
+"uri" LONGVARCHAR NOT NULL
+);
+
 CREATE TABLE "restcomm_available_phone_numbers" (
 "friendly_name" VARCHAR(64) NOT NULL,
 "phone_number" VARCHAR(15) NOT NULL PRIMARY KEY,

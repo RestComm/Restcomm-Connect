@@ -41,6 +41,7 @@
 			<role name="Developer">
 			  <permission>RestComm:*:Accounts</permission>
 			  <permission>RestComm:*:Applications</permission>
+			  <permission>RestComm:*:Announcements</permission>
 			  <permission>RestComm:Read:AvailablePhoneNumbers</permission>
 			  <permission>RestComm:*:Calls</permission>
 			  <permission>RestComm:*:Clients</permission>
