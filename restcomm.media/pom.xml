@@ -36,9 +36,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.mobicents.protocols.mgcp</groupId>
-			<artifactId>mgcp-impl</artifactId>
+			<groupId>org.mobicents.media.client</groupId>
+			<artifactId>mgcp-driver</artifactId>
 			<version>${mobicents.mgcp.impl.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>apache-xerces</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>

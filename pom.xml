@@ -86,7 +86,8 @@
                 <slf4j.version>1.5.5</slf4j.version>
                 <commons-configuration.version>1.7</commons-configuration.version>
                 <jain.mgcp.version>1.0</jain.mgcp.version>
-                <mobicents.mgcp.impl.version>2.0.1.GA</mobicents.mgcp.impl.version>
+                <!-- <mobicents.mgcp.impl.version>2.0.1.GA</mobicents.mgcp.impl.version> -->
+                <mobicents.mgcp.impl.version>3.0.0.CR1</mobicents.mgcp.impl.version>
                 <javamail.version>1.4</javamail.version>
                 <servletapi.version>2.5</servletapi.version>
                 <!-- <sipservletapi.version>1.1.12</sipservletapi.version> -->
@@ -142,8 +143,8 @@
                         </dependency>
 
                         <dependency>
-                                <groupId>org.mobicents.protocols.mgcp</groupId>
-                                <artifactId>mgcp-impl</artifactId>
+                                <groupId>org.mobicents.media.client</groupId>
+                                <artifactId>mgcp-driver</artifactId>
                                 <version>${mobicents.mgcp.impl.version}</version>
                         </dependency>
 
