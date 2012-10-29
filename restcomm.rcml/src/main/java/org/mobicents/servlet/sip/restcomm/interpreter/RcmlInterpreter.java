@@ -359,8 +359,8 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 					}
 				}
 			}
-			cleanup(context);
 		}
+		cleanup(context);
 	}
 
 	private void checkContentType(final String type) throws InterpreterException {
