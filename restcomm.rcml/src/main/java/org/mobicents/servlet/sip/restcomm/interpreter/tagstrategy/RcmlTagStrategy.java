@@ -228,7 +228,6 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
         call.removeObserver(this);
         if(Call.Status.IN_PROGRESS != call.getStatus()) {
           call.cancel();
-          interpreter.finish();
         }
       }
     } catch(final CallException exception) {

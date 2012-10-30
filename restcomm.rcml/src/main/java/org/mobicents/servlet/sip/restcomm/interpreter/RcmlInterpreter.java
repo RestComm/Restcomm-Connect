@@ -128,6 +128,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		final Call call = context.getCall();
 		if(Call.Status.IN_PROGRESS == call.getStatus()) {
 			call.hangup();
+			finish();
 		}
 		final URI uri = context.getStatusCallback();
 		if(uri != null) {
@@ -140,7 +141,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 				throw new InterpreterException(exception);
 			}
 		}
-		finish();
 	}
 
 	public void failed() {
@@ -359,8 +359,8 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 					}
 				}
 			}
+			cleanup(context);
 		}
-		cleanup(context);
 	}
 
 	private void checkContentType(final String type) throws InterpreterException {
