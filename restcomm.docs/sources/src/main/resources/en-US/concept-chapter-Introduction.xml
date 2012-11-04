@@ -3,10 +3,10 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
 %BOOK_ENTITIES;
 ]>
-<chapter id="Introduction_to_the_RestComm">
+<chapter>
 	<title>Introduction to &SHORT_PLATFORM_NAME;</title>
 	<para>&SHORT_PLATFORM_NAME;
-		is a Communications Platform to rapidly build voice and text messaging
+		is a Communications Platform to rapidly build fax, voice, and text messaging
 		applications, using your existing web development skills.
 	</para>
 	<para>
@@ -16,145 +16,176 @@
 		simple and effective APIs and 100% Open Source built on the next
 		generation Cloud Communications platform &PLATFORM_NAME;.
 	</para>
-	<formalpara id="RestComm_Container_Support">
-		<title>Container Support</title>
-		<para>&SHORT_PLATFORM_NAME;
-			supports &PLATFORM_NAME;
-			Sip Servlets (JBoss AS5 - Tomcat 6.x - Tomcat 7.x)
-		</para>
-	</formalpara>
-	<formalpara id="RestComm_Media_Server_Support">
-		<title>Media Server Support</title>
-		<para>&SHORT_PLATFORM_NAME;
-			supports Mobicents Media Server 2.0.0.GA
-		</para>
-	</formalpara>
 	<section>
 		<title>How it Works</title>
-		<para>In order to demonstrate how &SHORT_PLATFORM_NAME; works we will create a new application that will
-		instruct &SHORT_PLATFORM_NAME; to answer a phone call, say "Hello World" and finally hangup the call.</para>
-		<formalpara id="RestComm_Application">
-			<title>RestComm Application</title>
-			<para>Before moving forward we will define a RestComm Application as a set of XML documents that instruct
-				the RestComm platform when handling phone calls. Applications are defined in the application repository and each
-				application has a name and the following properties:</para>
-			    <table>
-				   <title>Application Properties</title>
-				   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
-					<colspec colname='c1' />
-					<colspec colname='c2' />
-					<thead>
-						<row>
-							<entry align="center">Name</entry>
-							<entry align="center">Description</entry>
-						</row>
-					</thead>
-					<tbody>
-						<row>
-							<entry>enpoint</entry>
-							<entry>The endpoint or phone number to which the application will bind. (ex. +14445556666)</entry>
-						</row>
-						<row>
-							<entry>request-method </entry>
-							<entry>The HTTP method used to request the application's entry point.</entry>
-						</row>
-						<row>
-							<entry>uri</entry>
-							<entry>The HTTP URI to the application's entry point.</entry>
-						</row>
-					</tbody>
-				</tgroup>
-			    </table>
-		</formalpara>
-		<para>An application's entry point is defined as the first XML document that will be executed when a phone call to the
-			endpoint is received. In our demo application there will only be one XML document which is also our application's
-			entry point. Below is the XML document that &SHORT_PLATFORM_NAME; will fetch via the HTTP protocol to handle new
-		    incoming calls for our demonstration.</para>
-		<programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Say&gt;Hello World&lt;/Say&gt;
-	            &lt;Hangup /&gt;
-            &lt;/Response&gt;
-		</programlisting>
+		<para>In order to demonstrate how &SHORT_PLATFORM_NAME; works we will go over an application that
+		instructs &SHORT_PLATFORM_NAME; to answer a phone call, say "Hello World" and finally hang up the
+		call.</para>
 		<note>
-			<para>A more thorough explantion of the &SHORT_PLATFORM_NAME; Markup Language is available in Chapter 4. &SHORT_PLATFORM_NAME;
+			<para>A more thorough explanation of the &SHORT_PLATFORM_NAME; Markup Language is available in Chapter 3. &SHORT_PLATFORM_NAME;
 		    Markup Language</para>
 		</note>
-		<para>When a phone call is recieved and our application is triggered &SHORT_PLATFORM_NAME; executes our application as depicted below.</para>
+		<para>In this particular example, the first thing that must happen is that RestComm receives a call.</para>
 		<mediaobject>
 			<imageobject>
-				<imagedata fileref="images/how-restcomm-works.png"/>
+				<imagedata fileref="images/restcomm-inbound-1.png"/>
+			</imageobject>
+		</mediaobject>
+		<para>After RestComm can confirm that the call is destined for an application that it handles. RestComm calls
+		out to your application for instructions on how to handle the new incoming call. Keep in mind that when RestComm
+		calls out to your application it provides useful information such as from what number the call was dialed, to
+		what number the call is destined, caller ID information, etc.</para>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/restcomm-inbound-2.png"/>
+			</imageobject>
+		</mediaobject>
+		<para>Once your application responds with instructions on how to handle the call, RestComm gets busy executing the
+		provided instruction set.</para>
+		<programlisting role="XML">
+		&lt;Response&gt;
+		  &lt;Say&gt;Hello World!&lt;/Say&gt;
+		&lt;/Response&gt;
+		</programlisting>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/restcomm-inbound-3.png"/>
+			</imageobject>
+		</mediaobject>
+		<para>In this case RestComm synthesizes the text to speech, says "Hello World!" to the caller and hangs up.</para>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/restcomm-inbound-4.png"/>
 			</imageobject>
 		</mediaobject>
 	</section>
 	<section>
-                <title>Architecture</title>
-                <para>In this section we will briefly explain the architecture for RestComm and how it all fits togther. RestComm has been designed
-                from the ground up to be extensible so that it can cover as many use cases as possible. Below is a domain model of the most important
-                concepts in the RestComm architecture. Note: Please keep in mind that until RestComm reaches version 1.0.0.Final any or every part
-                of the system architecture may change.</para>
-                <mediaobject>
-                        <imageobject>
-                                <imagedata fileref="images/architecture.png"/>
-                        </imageobject>
-                </mediaobject>
-                <section id="RestComm_Media_Architecture_Environment">
-                        <title>Environment</title>
-                        <para>The environment provides resources to the interpreter that are necessary for execution of RestComm applications.
-                        Every service provided by an environment resource can be re-implemented by overriding the proper interfaces and
-                        configuring RestComm to use the new implementation. This allows for easy integration with existing software
-                        infrastructures.</para>
-                </section>
-                <section id="RestComm_Application_Repository">
-                        <title>Application Repository</title>
-                        <para>The application repository as the name implies acts as a repository where application definitions can be stored
-                        and retrieved. Each application definition is stored and retrieved based on the value of the application's end point
-                        Therefore, all end points MUST consist of unique values. The default application repository loads applications that
-                        have been defined in the <filename>restcomm.xml</filename> file but other implementations can be provided that would
-                        for example, use a relational database or a NoSQL data store as the default application repository. In order to use a
-                        custom implementation override <literal>org.mobicents.servlet.sip.restcomm.applicationindex.ApplicationIndex</literal>
-                        and in the <filename>restcomm.xml</filename> file edit the application-index class attribute to use the new implementation.
-                        </para>
-                </section>
-                <section id="RestComm_Call_Manager">
-                        <title>Call Manager</title>
-                        <para>The call manager is responsible for managing calls. When ever an incoming call reaches RestComm the entry point is
-                        at the call manager where the call is turned over to the interpreter for execution. The call manager also provides a
-                        reference to the conference center that the interpreter should use to interact with conference calls.</para>
-                        <formalpara id="RestComm_Call">
-                                <title>Call</title>
-                                <para>A call handles all of the signaling and media providing an easy abstraction to work with from inside the interpreter</para>
-                        </formalpara>
-                        <formalpara id="RestComm_ConferenceCenter">
-                                <title>Conference Center</title>
-                                <para>A conference center manages the life cycle of all the ongoing conferences that are accessible to the interpreter.</para>
-                        </formalpara>
-                        <formalpara id="RestComm_Conference">
-                                <title>Conference</title>
-                                <para>A conference manages the calls that have joined.</para>
-                        </formalpara>
-                </section>
-                <section id="RestComm_SMS_Aggregator">
-                        <title>SMS Aggregator</title>
-                        <para>Usually connecting directly in to tier-1 carriers in order to send SMS text messages doesn't make sense for most organizations
-                        so they use SMS aggregators to connect to the wireless networks. Connecting to SMS aggregators is dependent on the aggregator of choice
-                        and how the organization exposes their services to the world. Therefore, RestComm will ship with a handful of default SMS aggregators
-                        but we welcome contributions which integrate aggregators not currently provided. In order to provide a way to test outbound text
-                        messaging for free with RestComm the default SMS aggregator uses a free service provided by carriers called Email 2 SMS.
-                        The service is limited in that the text messages sent via this method have no priority or delivery guarantee and text messages can
-                        only be sent to one carrier network that is pre-configured in the <filename>restcomm.xml</filename> file. In order to use a
-                        custom implementation override <literal>org.mobicents.servlet.sip.restcomm.sms.SmsAggregator</literal>
-                        and in the <filename>restcomm.xml</filename> file edit the sms-aggregator class attribute to use the new implementation.</para>
-                </section>
-                <section id="RestComm_Storage">
-                        <title>Storage</title>
-                        <para>The storage resource provides a place to store audio recordings and to cache downloaded audio files in order to avoid
-                        degredation of audio quality during play back.</para> 
-                        <note><para>All objects stored by the storage resource MUST be accessible via HTTP.</para></note> 
-                        <para>The default storage implementation uses the local file system as the storage
-                        location. In order to use a custom implementation override
-                        <literal>org.mobicents.servlet.sip.restcomm.storage.Storage</literal>
-                        and in the <filename>restcomm.xml</filename> file edit the storage class attribute to use the new implementation.</para>
-                </section>
-        </section>
+      <title>Getting Started</title>
+      <para>Okay... Lets get started! In this chapter we will go over the steps necessary to deploy and run RestComm on
+      the local host for development. First we will discuss how to get started using the binary distribution and for
+      those more adventurous of you we will then cover building from the source code.
+      </para>
+      <section>
+        <title>Requirements</title>
+        <para>RestComm is built as a SIP Servlet Application and has a couple of dependencies which are listed below.</para>
+        <formalpara>
+		  <title>Container (Required)</title>
+		  <para>&SHORT_PLATFORM_NAME; supports &PLATFORM_NAME; Sip Servlets (JBoss AS5 - Tomcat 6.x - Tomcat 7.x)</para>
+	    </formalpara>
+	    <formalpara>
+		  <title>Media Server (Required)</title>
+		  <para>&SHORT_PLATFORM_NAME; supports Mobicents Media Server 3.0.0</para>
+	    </formalpara>
+      </section>
+    </section>
+    <section>
+		<title>Using a binary distribution</title>
+		<para>The easiest way to get started with RestComm is to download and unzip a binary distribution
+		that includes Mobicents Sip Servlet Container + Mobicents Media Server + RestComm to your local machine.</para>
+		<formalpara>
+			<title>JBoss AS Binary Distribution</title>
+			<para>In the next few steps we will deploy the RestComm binary that comes with the JBoss container. This
+			process is very simple, it only requires a few steps:
+				First, we download the zip file.
+				Second, we unzip it.
+				Third, we launch the Mobicents Media Server.
+				Fourth and finally, we launch the JBoss container that already has RestComm pre-deployed.</para>
+		</formalpara>
+		<para>We will start by downloading the latest binary snapshot and unzipping it to the curring working directory.</para>
+		<screen>
+		~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-jboss-1.0.0.BETA2-SNAPSHOT.zip
+		~]$ unzip restcomm-saas-jboss-1.0.0.BETA2-SNAPSHOT.zip
+		</screen>
+		<para>Okay now lets start the Mobicents Media Server and the JBoss Container.</para>
+		<screen>
+		~]$ cd restcomm-saas-jboss-1.0.0.BETA2-SNAPSHOT/mobicents-media-server/bin/
+		~]$ chmod +x run.sh
+		~]$ ./run.sh &amp;
+		~]$ cd ../../bin
+		~]$ ./run.sh &amp;
+		</screen>
+		<formalpara>
+			<title>Tomcat Binary Distribution</title>
+			<para>For those of you who need a more light-weight container we will also cover using a Tomcat based distribution in the
+			following steps.</para>
+		</formalpara>
+		<screen>
+		~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-tomcat-1.0.0.BETA2-SNAPSHOT.zip
+		~]$ unzip restcomm-saas-tomcat-1.0.0.BETA2-SNAPSHOT.zip
+		</screen>
+		<para>Okay now lets start the Mobicents Media Server and the Tomcat Container.</para>
+		<screen>
+		~]$ cd restcomm-saas-tomcat-1.0.0.BETA2-SNAPSHOT/mobicents-media-server/bin/
+		~]$ chmod +x run.sh
+		~]$ ./run.sh &amp;
+		~]$ cd ../../bin
+		~]$ ./startup.sh
+		</screen>
+	</section>
+	<section>
+		<title>Building from source code</title>
+		<para>In this section we will download the source code from the Git repository build RestComm and deploy it. This
+		process has a few steps which we will explain as we execute them. Finally, we highly recommend using the containers
+		supplied with the binary downloads as they have several extra libs in the lib folder to resolve database driver
+		dependencies.</para>
+		<para>We will start by downloading the source code from the Git repo on Google Code.</para>
+		<screen>
+		~]$ git clone https://code.google.com/p/restcomm/
+		</screen>
+		<para>Once we have the code we will build it using maven and run the regression test suite.</para>
+		<screen>
+		~]$ cd restcomm
+		~]$ mvn clean install
+		~]$ cd restcomm.core
+		~]$ mvn clean install
+		</screen>
+		<para>The compiled distribution will be located in the <filename>restcomm</filename> directory and the archived WAR
+		file wile be located in the <filename>restcomm.war</filename> file. Both of these will be located in the 
+		<filename>target</filename> directory inside the <filename>restcomm.core</filename> directory which should be
+		the current working directory. To deploy the war file you would first remove restcomm if it's already deployed in the
+		container and then redeploy it by copying the WAR file to the appropriate directory.</para>
+		<formalpara>
+			<title>Deploying RestComm to the JBoss Container</title>
+			<para>In order to deploy RestComm to the JBoss Container we will first remove the version that comes pre-deployed
+			and then we will copy our <filename>restcomm</filename> directory with the compiled distribution to the
+			<filename>deploy</filename> directory.</para>
+		</formalpara>
+		<screen>
+		~]$ rm -r $JBOSS_HOME/server/default/deploy
+		~]$ cp -r target/restcomm $JBOSS_HOME/server/default/deploy/restcomm.war
+		</screen>
+		<formalpara>
+			<title>Deploying RestComm to the Tomcat Container</title>
+			<para>In order to deploy RestComm to the Tomcat Container we will first remove the version that comes pre-deployed
+			and then we will copy our <filename>restcomm</filename> directory with the compiled distribution to the
+			<filename>webapps</filename> directory.</para>
+		</formalpara>
+		<screen>
+		~]$ rm -r $TOMCAT_HOME/webapps/restcomm
+		~]$ cp -r target/restcomm $TOMCAT_HOME/webapps/restcomm
+		</screen>
+	</section>
+	<section>
+		<title>Binding the Demo Application to a Phone Number.</title>
+		<para>Now we have RestComm deployed and we're ready to bind a phone number to the demo application and finally call the
+		phone number to see what happens. In order to interact with RestComm we have provided a set of Restful APIs which are
+		very similar to Twilio's Restful APIs. You will learn more about these APIs in a later chapter. We will be using Curl
+		to interact with these APIs through out the rest of this guide.</para>
+		<note>
+			<para>There are wrapper libraries available to interact with RestComm and facilitate interaction for many of the
+			popular development platforms.</para>
+		</note>
+		<para>With the following Curl command we will bind the demo application located @
+		http://127.0.0.1:8080/restcomm/demo/hello-world.xml to phone number 1234.</para>
+		<screen>
+		~]$ curl --data "PhoneNumber=1234&amp;VoiceUrl=http://127.0.0.1:8080/restcomm/demo/hello-world.xml&amp;VoiceMethod=POST"
+http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+		</screen>
+	</section>
+	<section>
+		<title>Making the First Call!</title>
+		<para>Finally, spin up your favorite softphone and dial sip:1234@127.0.0.1:5080</para>
+	</section>
+	<para>Keep in mind that before you continue you should configure your ASR, Fax, SMS, and TTS plugins in order to have
+	everything function as you would expect it to.</para>
 </chapter>
