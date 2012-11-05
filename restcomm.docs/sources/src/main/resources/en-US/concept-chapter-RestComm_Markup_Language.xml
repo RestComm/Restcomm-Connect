@@ -7,7 +7,106 @@
 <chapter>
 	<title>RestComm Markup Language</title>
 	<para>The RestComm Markup Language (RCML) is composed of a set of XML tags that can be used to instruct
-		RestComm on how to handle an on-going phone call.</para>
+		RestComm on how to handle an on-going phone call. RestComm applications are built by combining these
+		XML verbs and nouns in a way that is sensible for a given set of application requirements. In this
+		chapter we will discuss what a request from RestComm to your application looks like as well as what the
+		response from your application should look like. Then, we will dive in to how each verb and noun in the
+		XML instruction set is used.</para>
+	<section>
+		<title>RestComm Request</title>
+		<formalpara>
+			<title>How RestComm Passes Data to Your Application</title>
+			<para>The way RestComm passes data to you application depends on the request method for the given
+			URI. If the request method is GET then the data is passed in the query string or the part after
+			the question mark. If the request method is POST then the data is sent a multi-part form data just
+			like when a browser submits a form.</para>
+		</formalpara>
+		<formalpara>
+			<title>RestComm Voice Request</title>
+			<para>Any time RestComm makes a request to you applications it will include the following data
+			as request parameters.</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Parameter</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>CallSid</entry>
+						<entry>The unique identifier for this call.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>Your account id.</entry>
+					</row>
+					<row>
+						<entry>From</entry>
+						<entry>The phone number of the originator of the call.</entry>
+					</row>
+					<row>
+						<entry>To</entry>
+						<entry>The phone number of the call recipient.</entry>
+					</row>
+					<row>
+						<entry>CallStatus</entry>
+						<entry>The status of the call. The possible values are queued, ringing, in-progress, completed, busy, failed, and no-answer.</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>The version of the RestComm API used to handle this call.</entry>
+					</row>
+					<row>
+						<entry>Direction</entry>
+						<entry>The direction of the call. The possible values are inbound and outbound-dial.</entry>
+					</row>
+					<row>
+						<entry>CallerName</entry>
+						<entry>The caller ID for the caller in the case of inbound calls.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</section>
+	<section>
+		<title>Your Response</title>
+		<para>In your response to the request from RestComm you want to provide RCML that will instruct RestComm on how
+		to handle the current call.</para>
+		<formalpara>
+			<title>MIME Types</title>
+			<para>RestComm supports the MIME types described in the table below.</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Supported MIME Types</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Parameter</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>text/xml,
+						application/xml</entry>
+						<entry>RestComm interprets the returned document as an XML instruction set.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<note>
+			<para>When your application returns the RCML document the root element of the document must
+			always be &lt;Response&gt; or the parser will complain.</para>
+		</note>
+	</section>
 	<section>
 		<title>Say</title>
 		<para>The &lt;Say&gt; verb is used to synthesize text to speech and play it to the remote party.</para>
@@ -68,9 +167,9 @@
 	    	<para>For an example of how to use the &lt;Say&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Say&gt;Hello World&lt;/Say&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Say&gt;Hello World&lt;/Say&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -139,9 +238,9 @@
 	    	<para>For an example of how to use the &lt;Play&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Play&gt;http://foobar.com/demo.wav&lt;/Play&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Play&gt;http://foobar.com/demo.wav&lt;/Play&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -254,9 +353,9 @@
 	    	<para>For an example of how to use the &lt;Gather&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Gather/&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Gather/&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -434,9 +533,9 @@
 	    	<para>For an example of how to use the &lt;Record&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Record maxLength="30"/&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Record maxLength="30"/&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -571,9 +670,9 @@
 	    	<para>For an example of how to use the &lt;Sms&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Sms&gt;Hello World!&lt;/Sms&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Sms&gt;Hello World!&lt;/Sms&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -609,11 +708,6 @@
 					<entry>timeout</entry>
 					<entry>positive integer</entry>
 					<entry>30 seconds</entry>
-				</row>
-				<row>
-					<entry>hangupOnStar</entry>
-					<entry>true, false</entry>
-					<entry>false</entry>
 				</row>
 				<row>
 					<entry>timeLimit</entry>
@@ -710,10 +804,6 @@
 	    	<para>The 'timeout' attribute sets the limit in seconds that &lt;Dial&gt; waits for the called party to answer the call.</para>
 	    </formalpara>
 	    <formalpara>
-	    	<title>hangupOnStar</title>
-	    	<para>The 'hangupOnStar' attribute lets the calling party hang up on the called party by pressing the '*' key on his phone.</para>
-	    </formalpara>
-	    <formalpara>
 	    	<title>timelimit</title>
 	    	<para>The 'timeLimit' attribute sets the maximum duration of the &lt;Dial&gt; in seconds.</para>
 	    </formalpara>
@@ -734,9 +824,9 @@
 	    	<para>For an example of how to use the &lt;Dial&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Dial&gt;1-444-555-666&lt;/Dial&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Dial&gt;1-444-555-666&lt;/Dial&gt;
+		&lt;/Response&gt;
 		</programlisting>
 		<section>
 			<title>Number</title>
@@ -790,11 +880,11 @@
 	    	<para>For an example of how to use the &lt;Number&gt; noun see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Dial&gt;
-	                &lt;Number sendDigits="wwww1234"&gt;1-444-555-6666&lt;/Number&gt;
-	            &lt;/Dial&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Dial&gt;
+				&lt;Number sendDigits="wwww1234"&gt;1-444-555-6666&lt;/Number&gt;
+			&lt;/Dial&gt;
+		&lt;/Response&gt;
 		</programlisting>
 		</section>
 		<section>
@@ -807,11 +897,11 @@
 	    		<para>For an example of how to use the &lt;Client&gt; none see below.</para>
 	    	</formalpara>
 	    	<programlisting role="XML">
-				&lt;Response&gt;
-	            	&lt;Dial&gt;
-	                	&lt;Client&gt;thomas&lt;/Client&gt;
-	            	&lt;/Dial&gt;
-            	&lt;/Response&gt;
+			&lt;Response&gt;
+				&lt;Dial&gt;
+					&lt;Client&gt;thomas&lt;/Client&gt;
+				&lt;/Dial&gt;
+			&lt;/Response&gt;
 			</programlisting>
 		</section>
 		<section>
@@ -915,9 +1005,9 @@
 		    	<para>For an example of how to use the &lt;Conference&gt; noun see below.</para>
 		    </formalpara>
 		    <programlisting role="XML">
-				&lt;Response&gt;
-		            &lt;Conference&gt;1234&lt;/Conference&gt;
-	            &lt;/Response&gt;
+			&lt;Response&gt;
+				&lt;Conference&gt;1234&lt;/Conference&gt;
+			&lt;/Response&gt;
 			</programlisting>
 		</section>
 	</section>
@@ -933,9 +1023,9 @@
 	    	<para>For an example of how to use the &lt;Hangup&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Hangup/&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Hangup/&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -978,9 +1068,9 @@
 	    	<para>For an example of how to use the &lt;Redirect&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Redirect&gt;http://foobar.com/instructions&lt;/Redirect&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Redirect&gt;http://foobar.com/instructions&lt;/Redirect&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -1025,9 +1115,9 @@
 	    	<para>For an example of how to use the &lt;Reject&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Redirect reason="busy"/&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Redirect reason="busy"/&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -1069,9 +1159,9 @@
 	    	<para>For an example of how to use the &lt;Pause&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-			&lt;Response&gt;
-	            &lt;Pause length="5"/&gt;
-            &lt;/Response&gt;
+		&lt;Response&gt;
+			&lt;Pause length="5"/&gt;
+		&lt;/Response&gt;
 		</programlisting>
 	</section>
 </chapter>
