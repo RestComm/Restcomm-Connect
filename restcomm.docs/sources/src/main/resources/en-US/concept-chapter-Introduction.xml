@@ -151,7 +151,7 @@
 			<filename>deploy</filename> directory.</para>
 		</formalpara>
 		<screen>
-		~]$ rm -r $JBOSS_HOME/server/default/deploy
+		~]$ rm -r $JBOSS_HOME/server/default/deploy/restcomm.war
 		~]$ cp -r target/restcomm $JBOSS_HOME/server/default/deploy/restcomm.war
 		</screen>
 		<formalpara>

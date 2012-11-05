@@ -10,7 +10,7 @@
 	calls, text messages, and recordings. Through the Restful API you can also start outbound calls and send text messages.</para>
 	<formalpara>
 		<title>Resource Encoding</title>
-		<para>When a client makes a request to RestComm for a resource the client has the option to pick which encoding
+		<para>When an HTTP client makes a request to RestComm for a resource the HTTP client has the option to pick which encoding
 		is used for the response. Currently, RestComm supports XML and JSON encoding. The default encoding is XML but
 		to receive the resource in JSON just append .json to the end of the resource name.</para>
 	</formalpara>
@@ -169,6 +169,11 @@
 		<formalpara>
 			<title>IncomingPhoneNumber Resource URI</title>
 			<para>/2012-04-24/Accounts/{AccountSid}/IncomingPhoneNumbers/{IncomingPhoneNumberSid}</para>
+		</formalpara>
+		<formalpara>
+			<title>Binding a Phone Number to an Application</title>
+			<para>When using RestComm the way to bind a phone number to an application is be creating
+			a new IncomingPhoneNumber resource and providing the VoiceUrl to your application.</para>
 		</formalpara>
 		<table frame='all'>
 			<title>Resource Properties</title>

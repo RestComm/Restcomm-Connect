@@ -353,9 +353,17 @@
 	    	<para>For an example of how to use the &lt;Gather&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
-		&lt;Response&gt;
-			&lt;Gather/&gt;
-		&lt;/Response&gt;
+			&lt;Response&gt;
+				&lt;Gather action="handle-user-input.php" numDigits="1"&gt;
+					&lt;Say&gt;Welcome to TPS.&lt;/Say&gt;
+					&lt;Say&gt;For store hours, press 1.&lt;/Say&gt;
+					&lt;Say&gt;To speak to an agent, press 2.&lt;/Say&gt;
+					&lt;Say&gt;To check your package status, press 3.&lt;/Say&gt;
+				&lt;/Gather&gt;
+				&lt;!-- If customer doesn't input anything, prompt and try again. --&gt;
+				&lt;Say&gt;Sorry, I didn't get your response.&lt;/Say&gt;
+				&lt;Redirect&gt;handle-incoming-call.xml&lt;/Redirect&gt;
+			&lt;/Response&gt;
 		</programlisting>
 	</section>
 	<section>
@@ -397,7 +405,7 @@
 				</row>
 				<row>
 					<entry>maxLength</entry>
-					<entry>integer greater than 1</entry>
+					<entry>integer greater than 1 with the number of seconds to wait</entry>
 					<entry>3600 (1 hour)</entry>
 				</row>
 				<row>
@@ -742,29 +750,6 @@
 	    	will finish and RestComm will move on to the next RCML verb in the document. If there is no next verb, RestComm will end the
 	    	phone call.</para>
 	    </formalpara>
-	    <table>
-		   <title>Request Parameters</title>
-		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
-			<colspec colname='c1' />
-			<colspec colname='c2' />
-			<thead>
-				<row>
-					<entry align="center">Parameter</entry>
-					<entry align="center">Description</entry>
-				</row>
-			</thead>
-			<tbody>
-				<row>
-					<entry>SmsSid</entry>
-					<entry>The Sid for the Sms message.</entry>
-				</row>
-				<row>
-					<entry>SmsStatus</entry>
-					<entry>The current status of the Sms message. Either 'sent' or 'failed'.</entry>
-				</row>
-			</tbody>
-		</tgroup>
-	    </table>
 	    <formalpara>
 	    	<title>method</title>
 	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action' URL via HTTP GET
@@ -844,7 +829,7 @@
 				</row>
 				<row>
 					<entry>timeout</entry>
-					<entry>positive integer</entry>
+					<entry>positive integer in seconds</entry>
 					<entry>30 seconds</entry>
 				</row>
 				<row>
@@ -1136,7 +1121,7 @@
 		    <formalpara>
 		    	<title>maxParticipants</title>
 		    	<para>This attribute indicates the maximum number of participants you want to allow within a named conference room. The default
-		    	maximum number of participants is 100. The value must be a positive integer less than or equal to 100.</para>
+		    	maximum number of participants is 40. The value must be a positive integer less than or equal to 100.</para>
 		    </formalpara>
 		    <formalpara>
 		    	<title>Examples</title>
@@ -1144,7 +1129,9 @@
 		    </formalpara>
 		    <programlisting role="XML">
 			&lt;Response&gt;
-				&lt;Conference&gt;1234&lt;/Conference&gt;
+				&lt;Dial&gt;
+					&lt;Conference&gt;1234&lt;/Conference&gt;
+				&lt;/Dial&gt;
 			&lt;/Response&gt;
 			</programlisting>
 		</section>
@@ -1272,7 +1259,7 @@
 	    </formalpara>
 	    <programlisting role="XML">
 		&lt;Response&gt;
-			&lt;Redirect reason="busy"/&gt;
+			&lt;Reject reason="busy"/&gt;
 		&lt;/Response&gt;
 		</programlisting>
 	</section>

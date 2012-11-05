@@ -10,6 +10,11 @@
 	for RestComm and it's respective plug-ins. In order to make RestComm easy to manage all of the configuration is done
 	in only one file. The file is located at <filename>RESTCOMM_HOME/WEB-INF/conf/restcomm.xml</filename> and is composed
 	of the sections that follow.</para>
+	<note>
+		<para>RestComm provides a default set of plug-ins for the storage engine, fax service, SMS aggregator, automatic
+		speech recognition, and speech synthesis. All these services are pluggable and RestComm is not limited to any
+		service provider or software platform whom's services it consumes.</para>
+	</note>	
 	<section>
 		<title>Runtime Settings</title>
 		<para>
@@ -86,6 +91,7 @@
 						<entry>outbound-proxy-uri</entry>
 						<entry>
 						  The SIP URI to the outbound proxy. Note: Do not prepend 'sip:' to the proxy uri.
+						  If necessary the port can be included, for example thomas@localhost:5080
 						</entry>
 					</row>
 				</tbody>
@@ -221,14 +227,9 @@
 		
 		<para>
 		  The media server manager is responsible for all the media servers managed by RestComm. The media server manager
-		  is also responsible for load-balancing connections to the media servers that it manages. Currently, load-balancing
-		  uses a naive round-robin implementation but in future implementations the algorithm will be based on media server
-		  load.
-		  
-		  When configuring the media server manager multiple media server can be defined. Below is a description of settings
-		  for each media server.
+		  is also responsible for load-balancing connections to the media servers that it manages. When configuring the
+		  media server manager multiple media servers can be defined. Below is a description of settings for each media server.
 		</para>
-		
 		<table frame='all'>
 			<title>Media Server Manager Settings</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
@@ -260,6 +261,10 @@
 				</tbody>
 			</tgroup>
 		</table>
+		<note>
+			<para>Currently, load-balancing uses a naive round-robin implementation but in future implementations the algorithm
+			will be based on media server load.</para>
+		</note>
 	</section>
 	<section>
 		<title>SMS Aggregator</title>
