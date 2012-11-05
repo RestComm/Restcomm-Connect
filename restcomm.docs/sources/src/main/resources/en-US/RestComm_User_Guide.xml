@@ -10,8 +10,8 @@
 	<!--<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Getting_Started.xml" /> -->
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Configuration.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-RestComm_Markup_Language.xml"/>
-	<!--<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Advantages.xml" />
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Fundamentals.xml" /> -->
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Restful-API.xml" />
+	<!--<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Fundamentals.xml" /> -->
 	<!--<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="task-chapter-getting_started.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="task-chapter-examples.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Conclusion.xml" />

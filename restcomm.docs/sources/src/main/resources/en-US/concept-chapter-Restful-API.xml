@@ -1,0 +1,840 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: ittsss -->
+<chapter>
+	<title>Restful APIs</title>
+	<para>The RestComm Restufl APIs are very similar to Twilio's and allow you to query meta-data about your account, phone numbers,
+	calls, text messages, and recordings. Through the Restful API you can also start outbound calls and send text messages.</para>
+	<formalpara>
+		<title>Resource Encoding</title>
+		<para>When a client makes a request to RestComm for a resource the client has the option to pick which encoding
+		is used for the response. Currently, RestComm supports XML and JSON encoding. The default encoding is XML but
+		to receive the resource in JSON just append .json to the end of the resource name.</para>
+	</formalpara>
+	<section>
+		<title>Accounts</title>
+		<para>Accounts and subaccounts are useful for things like segmenting phone numbers and usage data for your users and
+		controlling access to data.</para>
+		<formalpara>
+			<title>Account Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this account.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this account was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this account was last updated.</entry>
+					</row>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A description of this account, up to 64 characters long. By default
+						the FriendlyName is your email address.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>The status of this account. Possible values are active, suspended, and closed.</entry>
+					</row>
+					<row>
+						<entry>AuthToken</entry>
+						<entry>The authorization token for this account. This should not be shared.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this account, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of an Account resource, including the properties above.</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP POST/PUT</title>
+				<para>Modifies an Account resource and returns the representation, including the properties above. Below
+				you will find a list of optional parameters.</para>
+			</formalpara>
+			<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Parameter</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A description of this account, up to 64 characters long.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>The status of this account. Possible values are active, suspended, and closed.</entry>
+					</row>
+					<row>
+						<entry>Password</entry>
+						<entry>A password that will be used to generate the AuthToken for the new Account resource.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		</section>
+		<section>
+			<title>Account List Resource</title>
+			<formalpara>
+				<title>Account List Resource URI</title>
+				<para>/2012-04-24/Accounts</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the Sub-Account resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+				<formalpara>
+					<title>HTTP POST</title>
+					<para>Creates a new Sub-Account and returns the representation of the Sub-Account resource, including
+					the properties above. Below you will find a list of required and optional parameters.</para>
+				</formalpara>
+				<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>EmailAddress(Required)</entry>
+							<entry>The email address to use for this account.</entry>
+						</row>
+						<row>
+							<entry>FriendlyName</entry>
+							<entry>A description of this account, up to 64 characters long. Default, is your email address.</entry>
+						</row>
+						<row>
+							<entry>Status</entry>
+							<entry>The status of this account. Default is active, possible values are active, suspended, and closed.</entry>
+						</row>
+						<row>
+							<entry>Password(Required)</entry>
+							<entry>A password that will be used to generate the AuthToken for the new Account resource.</entry>
+						</row>
+						<row>
+							<entry>Role(Required)</entry>
+							<entry>The security role that this Account resource will use. If no role is provided then
+							the role of the account resource creating this will be inherited to the new Account resource
+							and may compromise the system.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			</section>
+		</section>
+	</section>
+	<section>
+		<title>IncomingPhoneNumbers</title>
+		<para>An IncomingPhoneNumber instance resource represents a RestComm phone number.</para>
+		<formalpara>
+			<title>IncomingPhoneNumber Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/IncomingPhoneNumbers/{IncomingPhoneNumberSid}</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this incoming phone number.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this incoming phone number was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this incoming phone number was last updated.</entry>
+					</row>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A formatted version of this phone number.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>The unique id of the Account that owns this phone number.</entry>
+					</row>
+					<row>
+						<entry>PhoneNumber</entry>
+						<entry>The incoming phone number in E.164 format ex. +2223334444</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>Calls to this phone number will create a new RCML session with this API version.</entry>
+					</row>
+					<row>
+						<entry>VoiceCallerIdLookup</entry>
+						<entry>Look up the caller's caller-ID name. Either true or false.</entry>
+					</row>
+					<row>
+						<entry>VoiceUrl</entry>
+						<entry>The URL RestComm will request when this phone number receives a call.</entry>
+					</row>
+					<row>
+						<entry>VoiceMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the above Url. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackUrl</entry>
+						<entry>The URL that RestComm will request if execution of VoiceUrl fails for any reason.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>StatusCallback</entry>
+						<entry>The URL that RestComm will request to pass status parameters (such as the call state) to your
+						application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallbackMethod</entry>
+						<entry>The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>SmsUrl</entry>
+						<entry>The URL that RestComm will request when receiving an incoming SMS message to this number.
+						This may not be supported. Please consult with your DID provider.</entry>
+					</row>
+					<row>
+						<entry>SmsMethod</entry>
+						<entry>The HTTP method RestComm will use when making requests to the SmsUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>SmsFallbackUrl</entry>
+						<entry>The URL that RestComm will request if SmsUrl fail for any reason. Please see SmsUrl
+						as this feature may not be supported.</entry>
+					</row>
+					<row>
+						<entry>SmsFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when making requests to SmsFallbackUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this incoming phone number, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of an IncomingPhoneNumber resource, including the properties above.</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP POST/PUT</title>
+				<para>Modifies an IncomingPhoneNumber resource and returns the representation, including the properties above. Below
+				you will find a list of optional parameters.</para>
+			</formalpara>
+			<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Parameter</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A formatted version of this phone number.</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>Calls to this phone number will create a new RCML session with this API version.</entry>
+					</row>
+					<row>
+						<entry>VoiceCallerIdLookup</entry>
+						<entry>Look up the caller's caller-ID name. Either true or false.</entry>
+					</row>
+					<row>
+						<entry>VoiceUrl</entry>
+						<entry>The URL RestComm will request when this phone number receives a call.</entry>
+					</row>
+					<row>
+						<entry>VoiceMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the above Url. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackUrl</entry>
+						<entry>The URL that RestComm will request if execution of VoiceUrl fails for any reason.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>StatusCallback</entry>
+						<entry>The URL that RestComm will request to pass status parameters (such as the call state) to your
+						application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallbackMethod</entry>
+						<entry>The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>SmsUrl</entry>
+						<entry>The URL that RestComm will request when receiving an incoming SMS message to this number.
+						This may not be supported. Please consult with your DID provider.</entry>
+					</row>
+					<row>
+						<entry>SmsMethod</entry>
+						<entry>The HTTP method RestComm will use when making requests to the SmsUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>SmsFallbackUrl</entry>
+						<entry>The URL that RestComm will request if SmsUrl fail for any reason. Please see SmsUrl
+						as this feature may not be supported.</entry>
+					</row>
+					<row>
+						<entry>SmsFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when making requests to SmsFallbackUrl. Either GET or POST.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+			<formalpara>
+				<title>HTTP DELETE</title>
+				<para>Releases an IncomingPhoneNumber from the user's Account.</para>
+			</formalpara>
+		</section>
+		<section>
+			<title>IncomingPhoneNumber List Resource</title>
+			<formalpara>
+				<title>IncomingPhoneNumber List Resource URI</title>
+				<para>/2012-04-24/Accounts/{AccountSid}/IncomingPhoneNumbers</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the IncomingPhoneNumber resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+				<formalpara>
+					<title>HTTP POST</title>
+					<para>Creates a new IncomingPhoneNumber and returns the representation of the resource, including
+					the properties above. Below you will find a list of required and optional parameters.</para>
+				</formalpara>
+				<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Parameter</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>PhoneNumber(Required)</entry>
+						<entry>The phone number you want to provision.</entry>
+					</row>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A formatted version of this phone number.</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>Calls to this phone number will create a new RCML session with this API version.</entry>
+					</row>
+					<row>
+						<entry>VoiceCallerIdLookup</entry>
+						<entry>Look up the caller's caller-ID name. Either true or false.</entry>
+					</row>
+					<row>
+						<entry>VoiceUrl</entry>
+						<entry>The URL RestComm will request when this phone number receives a call.</entry>
+					</row>
+					<row>
+						<entry>VoiceMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the above Url. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackUrl</entry>
+						<entry>The URL that RestComm will request if execution of VoiceUrl fails for any reason.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>StatusCallback</entry>
+						<entry>The URL that RestComm will request to pass status parameters (such as the call state) to your
+						application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallbackMethod</entry>
+						<entry>The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>SmsUrl</entry>
+						<entry>The URL that RestComm will request when receiving an incoming SMS message to this number.
+						This may not be supported. Please consult with your DID provider.</entry>
+					</row>
+					<row>
+						<entry>SmsMethod</entry>
+						<entry>The HTTP method RestComm will use when making requests to the SmsUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>SmsFallbackUrl</entry>
+						<entry>The URL that RestComm will request if SmsUrl fail for any reason. Please see SmsUrl
+						as this feature may not be supported.</entry>
+					</row>
+					<row>
+						<entry>SmsFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when making requests to SmsFallbackUrl. Either GET or POST.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+			</section>
+		</section>
+	</section>
+	<section>
+		<title>Calls</title>
+		<para>A Call represents a connection between a phone or user agent and RestComm. This may be inbound
+		or outbound. The Calls list resource represents the set of phone calls originated and terminated from
+		an account.</para>
+		<formalpara>
+			<title>Call Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/Calls/{CallSid}</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this call.</entry>
+					</row>
+					<row>
+						<entry>ParentCallSid</entry>
+						<entry>A string that uniquely identifies the call that created this leg.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this call was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this call was last updated.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>The unique id of the Account that created this call.</entry>
+					</row>
+					<row>
+						<entry>To</entry>
+						<entry>The phone number or identifier that will be the recipient of this call.</entry>
+					</row>
+					<row>
+						<entry>From</entry>
+						<entry>The phone number or identifier that originated this call.</entry>
+					</row>
+					<row>
+						<entry>PhoneNumberSid</entry>
+						<entry>If the call was inbound, this is the Sid of the IncomingPhoneNumber that received the call.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>A string representing the status of the call. Possible values are queued, ringing, in-progress, completed,
+						failed, busy and no-answer.</entry>
+					</row>
+					<row>
+						<entry>StartTime</entry>
+						<entry>The start time of the call. Empty if the call has not yet been started.</entry>
+					</row>
+					<row>
+						<entry>EndTime</entry>
+						<entry>The end time of the call. Empty if the call has not ended..</entry>
+					</row>
+					<row>
+						<entry>Duration</entry>
+						<entry>The length of the call in seconds.</entry>
+					</row>
+					<row>
+						<entry>Direction</entry>
+						<entry>A string describing the direction of the call. Possible values are inbound, outbound-api,
+						and outbound-dial</entry>
+					</row>
+					<row>
+						<entry>CallerName</entry>
+						<entry>If this call was an incoming call, the caller's name. Empty otherwise.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this account, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<formalpara>
+			<title>Supported Methods</title>
+			<para></para>
+		</formalpara>
+	</section>
+	<section>
+		<title>SMS Messages</title>
+		<para>An SMS Message resource represents an inbound or outbound SMS message.</para>
+		<formalpara>
+			<title>Account Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/SMS/Messages/{SMSMessageSid}</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this SMS Message.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this SMS Message was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this SMS Message was last updated.</entry>
+					</row>
+					<row>
+						<entry>DateSent</entry>
+						<entry>The date that the SMS was sent or received by RestComm.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>The unique id of the Account that sent or received this SMS message.</entry>
+					</row>
+					<row>
+						<entry>From</entry>
+						<entry>The phone number or short code that initiated the message.</entry>
+					</row>
+					<row>
+						<entry>To</entry>
+						<entry>The phone number or short code that received the message.</entry>
+					</row>
+					<row>
+						<entry>Body</entry>
+						<entry>The text body of the SMS message. Up to 160 characters long.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>The status of this SMS message. Possible values are queued, sending, sent, failed, and received.</entry>
+					</row>
+					<row>
+						<entry>Direction</entry>
+						<entry>The direction of this SMS message. Possible values are incoming, outbound-api, outbound-call.</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>The API version RestComm used to handle the SMS message.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this account, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<formalpara>
+			<title>Supported Methods</title>
+			<para></para>
+		</formalpara>
+	</section>
+	<section>
+		<title>Recordings</title>
+		<para>Recordings are generated when you use the &lt;Record&gt; verb. Those recordings are hosted with RestComm for you to retrieve.
+		The Recordings list resource represents the set of an account's recordings.</para>
+		<formalpara>
+			<title>Account Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/Recordings/{RecordingSid}</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this recording.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this recording was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this recording was last updated.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>The unique id of the Account that created this recording.</entry>
+					</row>
+					<row>
+						<entry>CallSid</entry>
+						<entry>The unique id of the call during which the recording was made.</entry>
+					</row>
+					<row>
+						<entry>Duration</entry>
+						<entry>The length of the recording, in seconds.</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>The API version in use during the recording.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this account, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<formalpara>
+			<title>Supported Methods</title>
+			<para></para>
+		</formalpara>
+	</section>
+	<section>
+		<title>Transcriptions</title>
+		<para>A Transcription resource represents a transcription of a recording. A transcription is a text version of
+		a recording produced using automatic speech recognition.</para>
+		<formalpara>
+			<title>Account Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/Transcriptions/{TranscriptionSid}</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this transcription.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this transcription was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this transcription was last updated.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>The unique id of the Account that created this transcription.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>A string representing the status of the transcription. Possible values are in-progress, completed,
+						and failed.</entry>
+					</row>
+					<row>
+						<entry>RecordingSid</entry>
+						<entry>The unique id of the Recording this Transcription was made of.</entry>
+					</row>
+					<row>
+						<entry>Duration</entry>
+						<entry>The duration of the transcribed audio, in seconds.</entry>
+					</row>
+					<row>
+						<entry>TranscriptionText</entry>
+						<entry>The text content of the transcription.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this account, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<formalpara>
+			<title>Supported Methods</title>
+			<para></para>
+		</formalpara>
+	</section>
+	<section>
+		<title>Notifications</title>
+		<para>A Notification resource represents a single log entry made by RestComm while handling your calls or your use of the
+		Restful APIs. It is very useful for debugging purposes. The Notifications list resource represents the set of notifications
+		generated for an account.</para>
+		<formalpara>
+			<title>Account Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/Notifications/{NotificationSid}</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this transcription.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this transcription was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this transcription was last updated.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>The unique id of the Account that created this transcription.</entry>
+					</row>
+					<row>
+						<entry>CallSid</entry>
+						<entry>CallSid is the unique id of the call during which the notification was generated. Empty if the
+						notification was generated by the Restful APIs without regard to a specific phone call.</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>The RestComm API version in use when this notification was generated. May be empty for events
+						that don't have a specific API version.</entry>
+					</row>
+					<row>
+						<entry>Log</entry>
+						<entry>An integer log level corresponding to the type of notification: 0 is ERROR, 1 is WARNING.</entry>
+					</row>
+					<row>
+						<entry>ErrorCode</entry>
+						<entry>A unique error code for the error condition. You can lookup errors, in our Error Dictionary.</entry>
+					</row>
+					<row>
+						<entry>MoreInfo</entry>
+						<entry>A URL for more information about the error condition. The URL is a page in our Error Dictionary.</entry>
+					</row>
+					<row>
+						<entry>MessageText</entry>
+						<entry>The text for the notification.</entry>
+					</row>
+					<row>
+						<entry>MessageDate</entry>
+						<entry>The date the notification was actually generated</entry>
+					</row>
+					<row>
+						<entry>RequestUrl</entry>
+						<entry>The URL of the resource that caused the notification to be generated.</entry>
+					</row>
+					<row>
+						<entry>RequestMethod</entry>
+						<entry>The HTTP method in use for the request that caused the notification to be generated.</entry>
+					</row>
+					<row>
+						<entry>RequestVariables</entry>
+						<entry>The HTTP GET or POST variables that RestComm generated and sent to your server. Also, if the
+						notification was generated by the Restful APIs, this field will include any HTTP POST or PUT variables
+						you sent.</entry>
+					</row>
+					<row>
+						<entry>ResponseHeaders</entry>
+						<entry>The HTTP headers returned by your server.</entry>
+					</row>
+					<row>
+						<entry>ResponseBody</entry>
+						<entry>The HTTP body returned by your server.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this account, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<formalpara>
+			<title>Supported Methods</title>
+			<para></para>
+		</formalpara>
+	</section>
+</chapter>
