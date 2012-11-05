@@ -109,7 +109,9 @@
 	</section>
 	<section>
 		<title>Say</title>
-		<para>The &lt;Say&gt; verb is used to synthesize text to speech and play it to the remote party.</para>
+		<para>The &lt;Say&gt; verb is used to synthesize text to speech and play it to the remote party.
+		The voices supported depends on the TTS Service provider plug-in. Below are the voices for our default
+		TTS service provider plug-in which uses Acapela Voice as a Service.</para>
 		<table>
 		   <title>Say Attributes</title>
 		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -131,7 +133,8 @@
 				</row>
 				<row>
 					<entry>language</entry>
-					<entry>en, es, fr, de</entry>
+					<entry>bf, bp, en, en-gb,cf, cs, dan, fi es, fr, de, el,
+					it, nl, no, pl, pt, ru, ar, ca, sv, tr</entry>
 					<entry>en</entry>
 				</row>
 				<row>
@@ -150,8 +153,11 @@
 	    <formalpara>
 	    	<title>language</title>
 	    	<para>The 'language' attribute allows you pick a specific language for speech synthesis.
-	    		RestComm currently supports languages 'en' (English), 'es' (Spanish), 'fr' (French),
-	    		and 'de' (German).</para>
+	    		RestComm currently supports languages 'bf' (Belgium-French), 'bp' (Brazilian-Portugues), 'en' (English),
+	    		'en-gb' (British-English), 'cf' (Canadian-French), 'cs' (Czech), 'dan' (Dannish), 'fi' (Finnish), 'es' (Spanish),
+	    		'fr' (French), 'de' (German), 'el' (Greek), 'it' (Italian), 'nl' (Netherlands-Dutch), 'no' (Norwegian),
+	    		'pl' (Polish), 'pt' (Portuguese), 'ru' (Russian), 'ar' (Saudi-Arabia Arabic), 'ca' (Spain Catalan),
+	    		'sv' (Swedish), and 'tr' (Turkish).</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>loop</title>
