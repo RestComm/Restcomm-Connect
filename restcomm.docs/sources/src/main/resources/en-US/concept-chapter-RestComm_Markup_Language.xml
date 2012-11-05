@@ -539,6 +539,144 @@
 		</programlisting>
 	</section>
 	<section>
+		<title>Fax</title>
+		<para>The &lt;Fax&gt; verb sends a fax to some a fax machine.</para>
+		<table>
+		   <title>Fax Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>to</entry>
+					<entry>phone number</entry>
+					<entry>see below</entry>
+				</row>
+				<row>
+					<entry>from</entry>
+					<entry>phone number</entry>
+					<entry>see below</entry>
+				</row>
+				<row>
+					<entry>action</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>none</entry>
+				</row>
+				<row>
+					<entry>method</entry>
+					<entry>GET, POST</entry>
+					<entry>POST</entry>
+				</row>
+				<row>
+					<entry>statusCallback</entry>
+					<entry>relative or absolute URL</entry>
+					<entry>none</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+		<formalpara>
+	    	<title>to</title>
+	    	<para>The 'to' attribute takes a valid E.164 phone number as a value. RestComm will send a fax to this number.
+	    	When sending a fax during an incoming call, 'to' defaults to the caller. When sending an fax during an outgoing call,
+	    	'to' defaults to the called party. The value of 'to' must be a valid phone number.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>from</title>
+	    	<para>The 'from' attribute takes a valid E.164 phone number as an argument. When sending a fax during an incoming call,
+	    	'from' defaults to the calling party. When sending a fax during an outgoing call, 'from' defaults to the called party.
+	    	The value of 'from' must be a valid phone number.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>action</title>
+	    	<para>The 'action' attribute takes a URL as an argument. After processing the &lt;Fax&gt; verb, RestComm will make a GET
+	    	or POST request to this URL with the form parameters 'FaxStatus' and 'FaxSid'. Using an 'action' URL, your application
+	    	can receive synchronous notification that the message was successfully enqueued. If you provide an 'action' URL, RestComm
+	    	will use the RCML received in your response to the 'action' URL request to continue the current call. Any RCML verbs
+	    	occuring after a &lt;Fax&gt; which specifies an 'action' attribute are unreachable. If no 'action' is provided, &lt;Fax&gt;
+	    	will finish and RestComm will move on to the next RCML verb in the document. If there is no next verb, RestComm will end the
+	    	phone call.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>FaxSid</entry>
+					<entry>The Sid for the Sms message.</entry>
+				</row>
+				<row>
+					<entry>FaxStatus</entry>
+					<entry>The current status of the Sms message. Either 'sent' or 'failed'.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>method</title>
+	    	<para>The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action' URL via HTTP GET
+	    	or POST. This attribute is modeled after the HTML form 'method' attribute.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>statusCallback</title>
+	    	<para>The 'statusCallback' attribute takes a URL as an argument. When the fax is actually sent, or if sending fails,
+	    	RestComm will make an asynchronous POST request to this URL with the parameters 'FaxStatus' and 'FaxSid'.
+	    	Note, 'statusCallback' always uses HTTP POST to request the given url.</para>
+	    </formalpara>
+	    <table>
+		   <title>Request Parameters</title>
+		   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<thead>
+				<row>
+					<entry align="center">Parameter</entry>
+					<entry align="center">Description</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>FaxSid</entry>
+					<entry>The Sid for the fax message.</entry>
+				</row>
+				<row>
+					<entry>FaxStatus</entry>
+					<entry>The current status of the fax. Either 'sent' or 'failed'.</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The &lt;Fax&gt; verb can not have any other verbs or nouns nested.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the &lt;Fax&gt; verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+		&lt;Response&gt;
+			&lt;Fax&gt;This is a test fax.&lt;/Fax&gt;
+		&lt;/Response&gt;
+		</programlisting>
+	</section>
+	<section>
 		<title>Sms</title>
 		<para>The &lt;Sms&gt; verb sends an SMS message to a phone number during a phone call.</para>
 		<table>
@@ -592,7 +730,7 @@
 	    <formalpara>
 	    	<title>from</title>
 	    	<para>The 'from' attribute takes a valid E.164 phone number as an argument. When sending an SMS during an incoming call,
-	    	'from' defaults to the called party. When sending an SMS during an outgoing call, 'from' defaults to the calling party.</para>
+	    	'from' defaults to the calling party. When sending an SMS during an outgoing call, 'from' defaults to the called party.</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>action</title>
@@ -1007,6 +1145,24 @@
 		    <programlisting role="XML">
 			&lt;Response&gt;
 				&lt;Conference&gt;1234&lt;/Conference&gt;
+			&lt;/Response&gt;
+			</programlisting>
+		</section>
+		<section>
+			<title>Uri</title>
+			<para>The &lt;Uri&gt; noun specifies a SIP URI to dial. You can use multiple &lt;Uri&gt; nouns within
+			a &lt;Dial&gt; verb to simultaneously attempt a connection with many user agents at once. The first
+			user agent to accept the incoming connection is connected to the call and the other connection attempts
+			are canceled.</para>
+			<formalpara>
+	    		<title>Examples</title>
+	    		<para>For an example of how to use the &lt;Uri&gt; none see below.</para>
+	    	</formalpara>
+	    	<programlisting role="XML">
+			&lt;Response&gt;
+				&lt;Dial&gt;
+					&lt;Uri&gt;sip:thomas@127.0.0.1:5080&lt;/Uri&gt;
+				&lt;/Dial&gt;
 			&lt;/Response&gt;
 			</programlisting>
 		</section>
