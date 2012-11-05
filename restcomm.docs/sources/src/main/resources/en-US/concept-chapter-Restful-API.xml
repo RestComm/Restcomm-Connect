@@ -531,16 +531,92 @@
 				</tbody>
 			</tgroup>
 		</table>
-		<formalpara>
-			<title>Supported Methods</title>
-			<para></para>
-		</formalpara>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of a Call resource, including the properties above.</para>
+			</formalpara>
+		</section>
+		<section>
+			<title>Call List Resource</title>
+			<formalpara>
+				<title>Call List Resource URI</title>
+				<para>/2012-04-24/Accounts/{AccountSid}/Calls</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the Call resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+				<formalpara>
+					<title>HTTP POST</title>
+					<para>Makes a new Call and returns the representation of the Call resource, including
+					the properties above. Below you will find a list of required and optional parameters.</para>
+				</formalpara>
+				<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>From(Required)</entry>
+							<entry>The phone number to use as the caller id.</entry>
+						</row>
+						<row>
+							<entry>To(Required)</entry>
+							<entry>The phone number to call.</entry>
+						</row>
+						<row>
+							<entry>Url(Required)</entry>
+							<entry>The fully qualified URL that should be executed when the call connects.</entry>
+						</row>
+						<row>
+							<entry>Method</entry>
+							<entry>The HTTP method RestComm should use when making its request to the above Url. Defaults to POST.</entry>
+						</row>
+						<row>
+							<entry>FallbackUrl</entry>
+							<entry>The URL that RestComm will request if execution of Url fails for any reason.</entry>
+						</row>
+						<row>
+							<entry>FallbackMethod</entry>
+							<entry>The HTTP method that RestComm should use to request the FallbackUrl. Must be either GET or POST.
+							Defaults to POST.</entry>
+						</row>
+						<row>
+							<entry>StatusCallback</entry>
+							<entry>A URL that RestComm will request when the call ends to notify your app.</entry>
+						</row>
+						<row>
+							<entry>StatusCallbackMethod</entry>
+							<entry>The HTTP method RestComm should use when requesting the above StatusCallback. Defaults to POST.</entry>
+						</row>
+						<row>
+							<entry>Timeout</entry>
+							<entry>The number of seconds that RestComm should allow the phone to ring before
+							assuming there is no answer. The default is 60 seconds.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			</section>
+		</section>
 	</section>
 	<section>
 		<title>SMS Messages</title>
 		<para>An SMS Message resource represents an inbound or outbound SMS message.</para>
 		<formalpara>
-			<title>Account Resource URI</title>
+			<title>SMS Message Resource URI</title>
 			<para>/2012-04-24/Accounts/{AccountSid}/SMS/Messages/{SMSMessageSid}</para>
 		</formalpara>
 		<table frame='all'>
@@ -606,19 +682,70 @@
 				</tbody>
 			</tgroup>
 		</table>
-		<formalpara>
-			<title>Supported Methods</title>
-			<para></para>
-		</formalpara>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of an SMS Message resource, including the properties above.</para>
+			</formalpara>
+		</section>
+		<section>
+			<title>SMS Message List Resource</title>
+			<formalpara>
+				<title>SMS Message List Resource URI</title>
+				<para>/2012-04-24/Accounts/{AccountSid}/SMS/Messages</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the Call resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+				<formalpara>
+					<title>HTTP POST</title>
+					<para>Sends a new SMS Message and returns the representation of the SMS Message resource, including
+					the properties above. Below you will find a list of required and optional parameters.</para>
+				</formalpara>
+				<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>From(Required)</entry>
+							<entry>A phone number that is enabled for SMS. </entry>
+						</row>
+						<row>
+							<entry>To(Required)</entry>
+							<entry>The destination phone number in E.164 format.</entry>
+						</row>
+						<row>
+							<entry>Body(Required)</entry>
+							<entry>The text of the message you want to send, limited to 160 characters.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			</section>
+		</section>
 	</section>
 	<section>
 		<title>Recordings</title>
 		<para>Recordings are generated when you use the &lt;Record&gt; verb. Those recordings are hosted with RestComm for you to retrieve.
 		The Recordings list resource represents the set of an account's recordings.</para>
 		<formalpara>
-			<title>Account Resource URI</title>
+			<title>Recording Resource URI</title>
 			<para>/2012-04-24/Accounts/{AccountSid}/Recordings/{RecordingSid}</para>
 		</formalpara>
+		<para>To download the audio file just append .wav after the RecordingSid.</para>
 		<table frame='all'>
 			<title>Resource Properties</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
@@ -666,17 +793,39 @@
 				</tbody>
 			</tgroup>
 		</table>
-		<formalpara>
-			<title>Supported Methods</title>
-			<para></para>
-		</formalpara>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of a Recording resource, including the properties above.</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP DELETE</title>
+				<para>Removes the recording from the account.</para>
+			</formalpara>
+		</section>
+		<section>
+			<title>Recording List Resource</title>
+			<formalpara>
+				<title>Recording List Resource URI</title>
+				<para>/2012-04-24/Accounts/{AccountSid}/Recordings</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the Recording resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+			</section>
+		</section>
 	</section>
 	<section>
 		<title>Transcriptions</title>
 		<para>A Transcription resource represents a transcription of a recording. A transcription is a text version of
 		a recording produced using automatic speech recognition.</para>
 		<formalpara>
-			<title>Account Resource URI</title>
+			<title>Transcription Resource URI</title>
 			<para>/2012-04-24/Accounts/{AccountSid}/Transcriptions/{TranscriptionSid}</para>
 		</formalpara>
 		<table frame='all'>
@@ -731,10 +880,32 @@
 				</tbody>
 			</tgroup>
 		</table>
-		<formalpara>
-			<title>Supported Methods</title>
-			<para></para>
-		</formalpara>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of a Transcription resource, including the properties above.</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP DELETE</title>
+				<para>Removes the Transcription from the account.</para>
+			</formalpara>
+		</section>
+		<section>
+			<title>Transcription List Resource</title>
+			<formalpara>
+				<title>Transcription List Resource URI</title>
+				<para>/2012-04-24/Accounts/{AccountSid}/Transcriptions</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the Transcription resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+			</section>
+		</section>
 	</section>
 	<section>
 		<title>Notifications</title>
@@ -742,7 +913,7 @@
 		Restful APIs. It is very useful for debugging purposes. The Notifications list resource represents the set of notifications
 		generated for an account.</para>
 		<formalpara>
-			<title>Account Resource URI</title>
+			<title>Notification Resource URI</title>
 			<para>/2012-04-24/Accounts/{AccountSid}/Notifications/{NotificationSid}</para>
 		</formalpara>
 		<table frame='all'>
@@ -832,9 +1003,27 @@
 				</tbody>
 			</tgroup>
 		</table>
-		<formalpara>
-			<title>Supported Methods</title>
-			<para></para>
-		</formalpara>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of a Notification resource, including the properties above.</para>
+			</formalpara>
+		</section>
+		<section>
+			<title>Notification List Resource</title>
+			<formalpara>
+				<title>Notification List Resource URI</title>
+				<para>/2012-04-24/Accounts/{AccountSid}/Notifications</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the Notification resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+			</section>
+		</section>
 	</section>
 </chapter>
