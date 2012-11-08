@@ -22,6 +22,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipApplicationSessionEvent;
+import javax.servlet.sip.SipApplicationSessionListener;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
@@ -55,7 +57,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
  /**
   * @author quintana.thomas@gmail.com (Thomas Quintana)
   */
- public final class MgcpCallManager extends SipServlet implements CallManager {
+ public final class MgcpCallManager extends SipServlet implements SipApplicationSessionListener,
+     CallManager {
 	 private static final long serialVersionUID = 4758133818077979879L;
 
 	 private static SipFactory sipFactory;
@@ -115,7 +118,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	   }
 	   final MgcpServer server = servers.getMediaServer();
 	   final MgcpCall call = new MgcpCall(invite, server);
-	   invite.getSession().setAttribute("CALL", call);
+	   invite.getApplicationSession().setAttribute("CALL", call);
 	   return call;
 	 }
 
@@ -137,26 +140,35 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 }
 
 	 @Override protected final void doAck(final SipServletRequest request) throws ServletException, IOException {
-		 final SipSession session = request.getSession();
+		 final SipApplicationSession session = request.getApplicationSession();
 		 final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
 		 call.established();
 	 }
 
 	 @Override protected final void doBye(final SipServletRequest request) throws ServletException, IOException {
-		 final SipSession session = request.getSession();
+		 final SipApplicationSession session = request.getApplicationSession();
 		 final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
 		 call.bye(request);
 	 }
 
 	 @Override protected final void doCancel(final SipServletRequest request) throws ServletException, IOException {
-		 final SipSession session = request.getSession();
+		 final SipApplicationSession session = request.getApplicationSession();
 		 final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
 		 call.cancel(request);
 	 }
 
-	 @Override protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
+    @Override protected void doProvisionalResponse(SipServletResponse response) throws ServletException, IOException {
+       final SipServletRequest request = response.getRequest();
+ 	   final MgcpCall call = (MgcpCall)request.getApplicationSession().getAttribute("CALL");
+ 	   final int status = response.getStatus();
+ 	   if(SipServletResponse.SC_RINGING == status || SipServletResponse.SC_SESSION_PROGRESS == status) {
+ 		   call.ringing();
+ 	   }
+	}
+
+	@Override protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
 	   final SipServletRequest request = response.getRequest();
-	   final MgcpCall call = (MgcpCall)request.getSession().getAttribute("CALL");
+	   final MgcpCall call = (MgcpCall)request.getApplicationSession().getAttribute("CALL");
 	   final String method = request.getMethod();
 	   final int status = response.getStatus();
 	   if("INVITE".equalsIgnoreCase(method)) {
@@ -169,7 +181,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		   if(request.getContentLength() > 0) {
 		     invite.setContent(request.getContent(), request.getContentType());
 		   }
-		   invite.getSession().setAttribute("CALL", call);
+		   invite.getApplicationSession().setAttribute("CALL", call);
 		   invite.send();
 	  	   call.updateInitialInvite(invite);
 	     } else if(SipServletResponse.SC_BUSY_HERE == status || SipServletResponse.SC_BUSY_EVERYWHERE == status) {
@@ -190,7 +202,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			 // Create the call.
 			 final MgcpServer server = servers.getMediaServer();
 			 final MgcpCall call = new MgcpCall(server);
-			 request.getSession().setAttribute("CALL", call);
+			 request.getApplicationSession().setAttribute("CALL", call);
 			 // Schedule the RCML script to execute for this call.
 			 Application application = null;
 			 final SipURI from = (SipURI)request.getFrom().getURI();
@@ -251,7 +263,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 	@Override protected void doSuccessResponse(final SipServletResponse response) throws ServletException, IOException {
 		 final SipServletRequest request = response.getRequest();
-		 final SipSession session = response.getSession();
+		 final SipApplicationSession session = response.getApplicationSession();
 		 if(request.getMethod().equals("INVITE") && response.getStatus() == SipServletResponse.SC_OK) {
 			 final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
 			 call.established(response);
@@ -302,4 +314,16 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			 proxyUri = sipFactory.createSipURI(null, uri);
 		 }
 	 }
+
+	@Override public void sessionCreated(final SipApplicationSessionEvent event) { }
+
+	@Override public void sessionDestroyed(final SipApplicationSessionEvent event) { }
+
+	@Override public void sessionExpired(final SipApplicationSessionEvent event) {
+      final SipApplicationSession session = event.getApplicationSession();
+      final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
+      call.failed();
+	}
+
+	@Override public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) { }
  }

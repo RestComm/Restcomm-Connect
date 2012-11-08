@@ -84,8 +84,12 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
 	  outboundCall = callManager.createExternalCall(caller, callee);
 	  outboundCall.addObserver(this);
 	  outboundCall.dial();
-      try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
-      catch(final InterruptedException ignored) { }
+      try { 
+        wait();
+        if(Call.Status.RINGING == outboundCall.getStatus()) {
+          wait(TimeUtils.SECOND_IN_MILLIS * timeout);
+        }
+      } catch(final InterruptedException ignored) { }
       if(Call.Status.IN_PROGRESS == call.getStatus() && Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
         bridge.stopBackgroundMusic();
         bridge.addParticipant(outboundCall);

@@ -59,6 +59,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	static {
 		IDLE.addTransition(RINGING);
 		IDLE.addTransition(QUEUED);
+		QUEUED.addTransition(RINGING);
 		QUEUED.addTransition(IN_PROGRESS);
 		QUEUED.addTransition(FAILED);
 		QUEUED.addTransition(CANCELLED);
@@ -117,7 +118,6 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		addState(FAILED);
 		addState(NO_ANSWER);
 		addState(CANCELLED);
-		
 		addState(TRYING);
 		
 		this.sid = Sid.generate(Sid.Type.CALL);
@@ -298,7 +298,10 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	}
 
 	public synchronized void established(final SipServletResponse successResponse) throws IOException {
-		assertState(QUEUED);
+		final List<State> possibleStates = new ArrayList<State>();
+		possibleStates.add(QUEUED);
+		possibleStates.add(RINGING);
+		assertState(possibleStates);
 		byte[] answer = successResponse.getRawContent();
 		if (answer!=null){
 			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
@@ -480,6 +483,12 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			fireStatusChanged();
 			LOGGER.error(exception);
 		}
+	}
+	
+	public void ringing() {
+	  assertState(QUEUED);
+	  setState(RINGING);
+	  fireStatusChanged();
 	}
 
 	@Override public synchronized void removeObserver(CallObserver observer) {

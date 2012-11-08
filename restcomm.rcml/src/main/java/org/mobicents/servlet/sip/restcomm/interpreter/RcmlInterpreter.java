@@ -123,24 +123,20 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		configuration = services.get(Configuration.class);
 		daos = services.get(DaoManager.class);
 	}
+	
+	private void checkContentType(final String type) throws InterpreterException {
+		if(!type.contains("text/xml") && !type.contains("application/xml") && !type.contains("text/html")) {
+			throw new InterpreterException("Invalid content type " + type);
+		}
+	}
 
-	private void cleanup(final RcmlInterpreterContext context) {
+	private void cleanup() {
 		final Call call = context.getCall();
 		if(Call.Status.IN_PROGRESS == call.getStatus()) {
 			call.hangup();
 			finish();
 		}
-		final URI uri = context.getStatusCallback();
-		if(uri != null) {
-			final String method = context.getStatusCallbackMethod();
-			final HttpUriRequest request = request(uri, method, EMPTY_NAME_VALUE_PAIRS);
-			final HttpClient client = new DefaultHttpClient();
-			try {
-				client.execute(request);
-			} catch(final Exception exception) {
-				throw new InterpreterException(exception);
-			}
-		}
+		sendStatusCallback();
 	}
 
 	public void failed() {
@@ -359,13 +355,33 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 					}
 				}
 			}
-			cleanup(context);
+			cleanup();
 		}
 	}
-
-	private void checkContentType(final String type) throws InterpreterException {
-		if(!type.contains("text/xml") && !type.contains("application/xml") && !type.contains("text/html")) {
-			throw new InterpreterException("Invalid content type " + type);
+	
+	public void precache(final Tag tag) throws VisitorException {
+		if(tag instanceof RcmlTag) {
+			final RcmlTag rcmlTag = (RcmlTag)tag;
+			try {
+				final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
+				if (strategy instanceof SayTagStrategy) {
+					((RcmlTagStrategy) strategy).precache(this, context, rcmlTag);
+				}
+			} catch(final Exception exception) { /* Handled in tag strategy. */ }
+		}
+	}
+	
+	public void sendStatusCallback() {
+		final URI uri = context.getStatusCallback();
+		if(uri != null) {
+			final String method = context.getStatusCallbackMethod();
+			final HttpUriRequest request = request(uri, method, EMPTY_NAME_VALUE_PAIRS);
+			final HttpClient client = new DefaultHttpClient();
+			try {
+				client.execute(request);
+			} catch(final Exception exception) {
+				throw new InterpreterException(exception);
+			}
 		}
 	}
 
@@ -397,17 +413,4 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 			} catch(final Exception exception) { /* Handled in tag strategy. */ }
 		}
 	}
-
-	public void precache(final Tag tag) throws VisitorException {
-		if(tag instanceof RcmlTag) {
-			final RcmlTag rcmlTag = (RcmlTag)tag;
-			try {
-				final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
-				if (strategy instanceof SayTagStrategy) {
-					((RcmlTagStrategy) strategy).precache(this, context, rcmlTag);
-				}
-			} catch(final Exception exception) { /* Handled in tag strategy. */ }
-		}
-	}
-
 }

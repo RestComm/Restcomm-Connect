@@ -215,7 +215,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
   @Override public synchronized void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
-    final Call.Status status = call.getStatus();
+    Call.Status status = call.getStatus();
     try {
       if(Call.Status.RINGING == status) {
         call.answer();
@@ -223,10 +223,20 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
         call.addObserver(this);
         call.dial();
         //Issue 95: http://code.google.com/p/restcomm/issues/detail?id=95
-        try { wait(context.getTimeout() * 1000); }
+        try {
+          // Wait for state change to ringing before starting the timeout period.
+          wait();
+          // If the call is ringing on the remote side then wait for timeout period.
+          status = call.getStatus();
+          if(Call.Status.RINGING == status) {
+            interpreter.sendStatusCallback();
+            wait(context.getTimeout() * 1000);
+          }
+        }
         catch(final InterruptedException ignored) { }
         call.removeObserver(this);
-        if(Call.Status.IN_PROGRESS != call.getStatus()) {
+        if(Call.Status.IN_PROGRESS != call.getStatus() &&
+            Call.Status.FAILED != call.getStatus()) {
           call.cancel();
         }
       }
