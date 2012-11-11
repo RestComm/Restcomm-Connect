@@ -88,7 +88,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Recording;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getRecordings", accountSid.toString());
+      final List<Map<String, Object>> results = session.selectList(namespace + "getRecordings", accountSid.toString());
       final List<Recording> recordings = new ArrayList<Recording>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {
