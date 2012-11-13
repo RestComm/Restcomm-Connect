@@ -55,7 +55,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Gateway;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getGateways");
+      final List<Map<String, Object>> results = session.selectList(namespace + "getGateways");
       final List<Gateway> gateways = new ArrayList<Gateway>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {

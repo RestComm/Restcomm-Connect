@@ -91,7 +91,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Transcription;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getTranscriptions", accountSid.toString());
+      final List<Map<String, Object>> results = session.selectList(namespace + "getTranscriptions", accountSid.toString());
       final List<Transcription> transcriptions = new ArrayList<Transcription>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {
