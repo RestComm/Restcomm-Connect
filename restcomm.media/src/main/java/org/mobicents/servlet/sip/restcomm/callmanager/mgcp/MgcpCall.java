@@ -231,7 +231,10 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	}
 
 	@Override public synchronized void cancel() throws CallException {
-		assertState(QUEUED);
+	    final List<State> possibleStates = new ArrayList<State>();
+	    possibleStates.add(QUEUED);
+	    possibleStates.add(RINGING);
+		assertState(possibleStates);
 		if(Direction.OUTBOUND_DIAL == getDirection()) {
 			final SipServletRequest cancel = initialInvite.createCancel();
 			try {
@@ -485,10 +488,16 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		}
 	}
 	
-	public void ringing() {
-	  assertState(QUEUED);
-	  setState(RINGING);
-	  fireStatusChanged();
+	public synchronized void ringing() {
+	  final List<State> possibleStates = new ArrayList<State>();
+	  possibleStates.add(QUEUED);
+	  possibleStates.add(RINGING);
+	  assertState(possibleStates);
+	  final State state = getState();
+	  if(QUEUED.equals(state)) {
+	    setState(RINGING);
+	    fireStatusChanged();
+	  }
 	}
 
 	@Override public synchronized void removeObserver(CallObserver observer) {

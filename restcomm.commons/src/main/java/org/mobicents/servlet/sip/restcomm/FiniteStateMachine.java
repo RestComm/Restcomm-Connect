@@ -39,7 +39,10 @@ public class FiniteStateMachine {
   
   protected synchronized void assertState(final State state) throws IllegalStateException {
     if(!this.state.equals(state)) {
-      throw new IllegalStateException("Illegal state: " + this.state.getName());
+      final StringBuilder buffer = new StringBuilder();
+      buffer.append("Illegal state exception. The current state should be ").append(state.getName())
+          .append(" but the current state is ").append(this.state.getName());
+      throw new IllegalStateException(buffer.toString());
     }
   }
   
@@ -49,7 +52,13 @@ public class FiniteStateMachine {
         return;
       }
     }
-    throw new IllegalStateException("Illegal state: " + state.getName());
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("Illegal state exception. The current state should be one of the following states ");
+    for(final State state : states) {
+      buffer.append(state.getName()).append(",");
+    }
+    buffer.append(" but the current state is ").append(state.getName());
+    throw new IllegalStateException(buffer.toString());
   }
   
   protected synchronized void assertStateNot(final Collection<State> states) throws IllegalStateException {

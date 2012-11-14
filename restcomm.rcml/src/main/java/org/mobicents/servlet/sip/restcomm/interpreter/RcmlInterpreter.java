@@ -134,7 +134,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		final Call call = context.getCall();
 		if(Call.Status.IN_PROGRESS == call.getStatus()) {
 			call.hangup();
-			finish();
 		}
 		sendStatusCallback();
 	}
@@ -160,11 +159,10 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	}
 
 	public void finish() {
-		final List<State> possibleStates = new ArrayList<State>();
-		possibleStates.add(READY);
-		possibleStates.add(EXECUTING);
-		assertState(possibleStates);
-		setState(FINISHED);
+		final State state = getState();
+		if(!FINISHED.equals(state) && !FAILED.equals(state)) {
+		  setState(FINISHED);
+		}
 	}
 
 	public URI getCurrentResourceUri() {
@@ -339,9 +337,8 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 					// Make sure the call is still in progress.
 					final Call call = context.getCall();
 					if(!(tag instanceof Pause)){
-						if(Call.Status.RINGING != call.getStatus() && 
-							    Call.Status.IN_PROGRESS != call.getStatus())
-							{ setState(FINISHED); }
+						if((Call.Status.RINGING != call.getStatus() && Call.Status.IN_PROGRESS != call.getStatus()))
+						{ setState(FINISHED); }
 					}
 					// Handle any state changes caused by executing the tag.
 					final State state = getState();
@@ -356,6 +353,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 				}
 			}
 			cleanup();
+			finish();
 		}
 	}
 	

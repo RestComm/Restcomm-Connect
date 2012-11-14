@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 1. Introduction to TelScale RestComm</title><link rel="stylesheet" type="text/css" href="css/telestax_org.css"/><meta name="generator" content="DocBook XSL Stylesheets V1.76.1"/><link rel="home" href="index.html" title="RestComm User Guide"/><link rel="up" href="index.html" title="RestComm User Guide"/><link rel="prev" href="pr01.html" title="Preface"/><link rel="next" href="ch02.html" title="Chapter 2. Configuration"/><meta xmlns:d="http://docbook.org/ns/docbook" xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" http-equiv="Content-Type" content="text/html; charset=UTF-8"/></head><body><p xmlns:d="http://docbook.org/ns/docbook" id="title"><a href="http://www.telestax.com" class="site_href"><strong>TeleStax.org</strong></a><a href="http://www.telestax.com/" class="doc_href"><strong>Community Documentation</strong></a></p><ul xmlns:d="http://docbook.org/ns/docbook" class="docnav"><li class="previous"><a accesskey="p" href="pr01.html"><strong>Prev</strong></a></li><li class="next"><a accesskey="n" href="ch02.html"><strong>Next</strong></a></li></ul><div class="chapter" title="Chapter 1. Introduction to TelScale RestComm"><div class="titlepage"><div><div><h2 class="title"><a id="d0e322"/>Chapter 1. Introduction to TelScale RestComm</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="ch01.html#d0e332">1.1. How it Works</a></span></dt><dt><span class="section"><a href="ch01.html#d0e362">1.2. Getting Started</a></span></dt><dd><dl><dt><span class="section"><a href="ch01.html#d0e367">1.2.1. Requirements</a></span></dt></dl></dd><dt><span class="section"><a href="ch01.html#d0e382">1.3. Using a binary distribution</a></span></dt><dt><span class="section"><a href="ch01.html#d0e411">1.4. Building from source code</a></span></dt><dt><span class="section"><a href="ch01.html#d0e464">1.5. Binding the Demo Application to a Phone Number.</a></span></dt><dt><span class="section"><a href="ch01.html#d0e476">1.6. Making the First Call!</a></span></dt></dl></div><p>TelScale RestComm
+		is a Communications Platform to rapidly build fax, voice, and text messaging
+		applications, using your existing web development skills.
+	</p><p>
+		It's a complete turnkey Telco 2.0 SaaS solution ready to deploy in
+		your cloud based on the
+		<a class="ulink" href="www.twilio.com">Twilio</a>
+		simple and effective APIs and 100% Open Source built on the next
+		generation Cloud Communications platform TelScale.
+	</p><div class="section" title="1.1. How it Works"><div class="titlepage"><div><div><h2 class="title"><a id="d0e332"/>1.1. How it Works</h2></div></div></div><p>In order to demonstrate how TelScale RestComm works we will go over an application that
+		instructs TelScale RestComm to answer a phone call, say "Hello World" and finally hang up the
+		call.</p><div xmlns:d="http://docbook.org/ns/docbook" xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h2>Note</h2><p>A more thorough explanation of the TelScale RestComm Markup Language is available in Chapter 3. TelScale RestComm
+		    Markup Language</p></div><p>In this particular example, the first thing that must happen is that RestComm receives a call.</p><div class="mediaobject"><img src="images/restcomm-inbound-1.png"/></div><p>After RestComm can confirm that the call is destined for an application that it handles. RestComm calls
+		out to your application for instructions on how to handle the new incoming call. Keep in mind that when RestComm
+		calls out to your application it provides useful information such as from what number the call was dialed, to
+		what number the call is destined, caller ID information, etc.</p><div class="mediaobject"><img src="images/restcomm-inbound-2.png"/></div><p>Once your application responds with instructions on how to handle the call, RestComm gets busy executing the
+		provided instruction set.</p><pre xmlns="" xmlns:d="http://docbook.org/ns/docbook" xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" class="">
+		&lt;Response&gt;
+		  &lt;Say&gt;Hello World!&lt;/Say&gt;
+		&lt;/Response&gt;
+		</pre><div class="mediaobject"><img src="images/restcomm-inbound-3.png"/></div><p>In this case RestComm synthesizes the text to speech, says "Hello World!" to the caller and hangs up.</p><div class="mediaobject"><img src="images/restcomm-inbound-4.png"/></div></div><div class="section" title="1.2. Getting Started"><div class="titlepage"><div><div><h2 class="title"><a id="d0e362"/>1.2. Getting Started</h2></div></div></div><p>Okay... Lets get started! In this chapter we will go over the steps necessary to deploy and run RestComm on
+      the local host for development. First we will discuss how to get started using the binary distribution and for
+      those more adventurous of you we will then cover building from the source code.
+      </p><div class="section" title="1.2.1. Requirements"><div class="titlepage"><div><div><h3 class="title"><a id="d0e367"/>1.2.1. Requirements</h3></div></div></div><p>RestComm is built as a SIP Servlet Application and has a couple of dependencies which are listed below.</p><p title="Container (Required)"><strong>Container (Required). </strong>TelScale RestComm supports TelScale Sip Servlets (JBoss AS5 - Tomcat 6.x - Tomcat 7.x)</p><p title="Media Server (Required)"><strong>Media Server (Required). </strong>TelScale RestComm supports Mobicents Media Server 3.0.0</p></div></div><div class="section" title="1.3. Using a binary distribution"><div class="titlepage"><div><div><h2 class="title"><a id="d0e382"/>1.3. Using a binary distribution</h2></div></div></div><p>The easiest way to get started with RestComm is to download and unzip a binary distribution
+		that includes Mobicents Sip Servlet Container + Mobicents Media Server + RestComm to your local machine.</p><p title="JBoss AS Binary Distribution"><strong>JBoss AS Binary Distribution. </strong>In the next few steps we will deploy the RestComm binary that comes with the JBoss container. This
+			process is very simple, it only requires a few steps:
+				First, we download the zip file.
+				Second, we unzip it.
+				Third, we launch the Mobicents Media Server.
+				Fourth and finally, we launch the JBoss container that already has RestComm pre-deployed.</p><p>We will start by downloading the latest binary snapshot and unzipping it to the curring working directory.</p><pre class="screen">
+		~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-jboss-1.0.0.BETA2-SNAPSHOT.zip
+		~]$ unzip restcomm-saas-jboss-1.0.0.BETA2-SNAPSHOT.zip
+		</pre><p>Okay now lets start the Mobicents Media Server and the JBoss Container.</p><pre class="screen">
+		~]$ cd restcomm-saas-jboss-1.0.0.BETA2-SNAPSHOT/mobicents-media-server/bin/
+		~]$ chmod +x run.sh
+		~]$ ./run.sh &amp;
+		~]$ cd ../../bin
+		~]$ ./run.sh &amp;
+		</pre><p title="Tomcat Binary Distribution"><strong>Tomcat Binary Distribution. </strong>For those of you who need a more light-weight container we will also cover using a Tomcat based distribution in the
+			following steps.</p><pre class="screen">
+		~]$ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-tomcat-1.0.0.BETA2-SNAPSHOT.zip
+		~]$ unzip restcomm-saas-tomcat-1.0.0.BETA2-SNAPSHOT.zip
+		</pre><p>Okay now lets start the Mobicents Media Server and the Tomcat Container.</p><pre class="screen">
+		~]$ cd restcomm-saas-tomcat-1.0.0.BETA2-SNAPSHOT/mobicents-media-server/bin/
+		~]$ chmod +x run.sh
+		~]$ ./run.sh &amp;
+		~]$ cd ../../bin
+		~]$ ./startup.sh
+		</pre></div><div class="section" title="1.4. Building from source code"><div class="titlepage"><div><div><h2 class="title"><a id="d0e411"/>1.4. Building from source code</h2></div></div></div><p>In this section we will download the source code from the Git repository build RestComm and deploy it. This
+		process has a few steps which we will explain as we execute them. Finally, we highly recommend using the containers
+		supplied with the binary downloads as they have several extra libs in the lib folder to resolve database driver
+		dependencies.</p><p>We will start by downloading the source code from the Git repo on Google Code.</p><pre class="screen">
+		~]$ git clone https://code.google.com/p/restcomm/
+		</pre><p>Once we have the code we will build it using maven and run the regression test suite.</p><pre class="screen">
+		~]$ cd restcomm
+		~]$ mvn clean install
+		~]$ cd restcomm.core
+		~]$ mvn clean install
+		</pre><p>The compiled distribution will be located in the <code class="filename">restcomm</code> directory and the archived WAR
+		file wile be located in the <code class="filename">restcomm.war</code> file. Both of these will be located in the 
+		<code class="filename">target</code> directory inside the <code class="filename">restcomm.core</code> directory which should be
+		the current working directory. To deploy the war file you would first remove restcomm if it's already deployed in the
+		container and then redeploy it by copying the WAR file to the appropriate directory.</p><p title="Deploying RestComm to the JBoss Container"><strong>Deploying RestComm to the JBoss Container. </strong>In order to deploy RestComm to the JBoss Container we will first remove the version that comes pre-deployed
+			and then we will copy our <code class="filename">restcomm</code> directory with the compiled distribution to the
+			<code class="filename">deploy</code> directory.</p><pre class="screen">
+		~]$ rm -r $JBOSS_HOME/server/default/deploy/restcomm.war
+		~]$ cp -r target/restcomm $JBOSS_HOME/server/default/deploy/restcomm.war
+		</pre><p title="Deploying RestComm to the Tomcat Container"><strong>Deploying RestComm to the Tomcat Container. </strong>In order to deploy RestComm to the Tomcat Container we will first remove the version that comes pre-deployed
+			and then we will copy our <code class="filename">restcomm</code> directory with the compiled distribution to the
+			<code class="filename">webapps</code> directory.</p><pre class="screen">
+		~]$ rm -r $TOMCAT_HOME/webapps/restcomm
+		~]$ cp -r target/restcomm $TOMCAT_HOME/webapps/restcomm
+		</pre></div><div class="section" title="1.5. Binding the Demo Application to a Phone Number."><div class="titlepage"><div><div><h2 class="title"><a id="d0e464"/>1.5. Binding the Demo Application to a Phone Number.</h2></div></div></div><p>Now we have RestComm deployed and we're ready to bind a phone number to the demo application and finally call the
+		phone number to see what happens. In order to interact with RestComm we have provided a set of Restful APIs which are
+		very similar to Twilio's Restful APIs. You will learn more about these APIs in a later chapter. We will be using Curl
+		to interact with these APIs through out the rest of this guide.</p><div xmlns:d="http://docbook.org/ns/docbook" xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h2>Note</h2><p>There are wrapper libraries available to interact with RestComm and facilitate interaction for many of the
+			popular development platforms.</p></div><p>With the following Curl command we will bind the demo application located @
+		http://127.0.0.1:8080/restcomm/demo/hello-world.xml to phone number 1234.</p><pre class="screen">
+		~]$ curl --data "PhoneNumber=1234&amp;VoiceUrl=http://127.0.0.1:8080/restcomm/demo/hello-world.xml&amp;VoiceMethod=POST"
+http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+		</pre></div><div class="section" title="1.6. Making the First Call!"><div class="titlepage"><div><div><h2 class="title"><a id="d0e476"/>1.6. Making the First Call!</h2></div></div></div><p>Finally, spin up your favorite softphone and dial sip:1234@127.0.0.1:5080</p></div><p>Keep in mind that before you continue you should configure your ASR, Fax, SMS, and TTS plugins in order to have
+	everything function as you would expect it to.</p></div><ul xmlns:d="http://docbook.org/ns/docbook" class="docnav"><li class="previous"><a accesskey="p" href="pr01.html"><strong>Prev</strong>Preface</a></li><li class="up"><a accesskey="u" href="#"><strong>Up</strong></a></li><li class="home"><a accesskey="h" href="index.html"><strong>Home</strong></a></li><li class="next"><a accesskey="n" href="ch02.html"><strong>Next</strong>Chapter 2. Configuration</a></li></ul></body></html>

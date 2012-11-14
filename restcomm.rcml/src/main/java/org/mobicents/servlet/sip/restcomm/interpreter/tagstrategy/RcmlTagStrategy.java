@@ -217,7 +217,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     final Call call = context.getCall();
     Call.Status status = call.getStatus();
     try {
-      if(Call.Status.RINGING == status) {
+      if(Call.Status.RINGING == status && Call.Direction.INBOUND == call.getDirection()) {
         call.answer();
       } else if(Call.Status.QUEUED == status) {
         call.addObserver(this);
@@ -228,15 +228,15 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
           wait();
           // If the call is ringing on the remote side then wait for timeout period.
           status = call.getStatus();
-          if(Call.Status.RINGING == status) {
+          if(Call.Status.RINGING.equals(status)) {
             interpreter.sendStatusCallback();
             wait(context.getTimeout() * 1000);
           }
         }
         catch(final InterruptedException ignored) { }
         call.removeObserver(this);
-        if(Call.Status.IN_PROGRESS != call.getStatus() &&
-            Call.Status.FAILED != call.getStatus()) {
+        status = call.getStatus();
+        if(Call.Status.IN_PROGRESS != status && Call.Status.FAILED != status) {
           call.cancel();
         }
       }
