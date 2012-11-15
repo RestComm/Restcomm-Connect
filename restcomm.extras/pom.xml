@@ -60,19 +60,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.ispeech</groupId>
-			<artifactId>ispeech</artifactId>
+			<groupId>com.iSpeech</groupId>
+			<artifactId>iSpeech</artifactId>
 			<version>1.0.1</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/ispeech-java-sdk.jar</systemPath>
 		</dependency>
 
 		<dependency>
 			<groupId>it.sauronsoftware</groupId>
 			<artifactId>jave</artifactId>
 			<version>1.0.2</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/jave-1.0.2.jar</systemPath>
 		</dependency>
 
 		<dependency>
@@ -89,5 +85,12 @@
 		</dependency>
 
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>project</id>
+			<url>file:///${basedir}/lib</url>
+		</repository>
+	</repositories>
 
 </project>
