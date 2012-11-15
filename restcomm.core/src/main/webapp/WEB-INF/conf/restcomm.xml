@@ -116,6 +116,7 @@
 	<!--
 		The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway.
 	-->
+	<!-- 
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.acapela.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
@@ -213,7 +214,8 @@
 		  </turkish>
 		</speakers>
 	</speech-synthesizer>
-	
+	 -->
+	 
 	<!--
 	  <speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.att.ATTSpeechSynthesizer">
         <host>127.0.0.1</host>
@@ -227,10 +229,10 @@
         </speakers>
       </speech-synthesizer>
 	-->
-	<!-- 
+	<!-- TTS-API.COM -->
 	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.ttsapi.TtsApiSynthesizer">
 		<cache-path>${restcomm:home}/cache/ttsapi</cache-path>
 		<service-root>http://tts-api.com/tts.mp3</service-root>	
 	</speech-synthesizer>
-	 -->
+	
 </restcomm>
