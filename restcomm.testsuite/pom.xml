@@ -15,7 +15,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		
+
 		<tomcat.version>6.0.35</tomcat.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>1.0.0-ALPHA2-SNAPSHOT</mss.arquillian.version>
@@ -155,7 +155,7 @@
 			<version>3.3.10-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>restcomm.api</artifactId>
@@ -178,9 +178,10 @@
 
 	<modules>
 		<module>BasicTest</module>
-		<module>ExtrasTest</module>
+		<!-- <module>ExtrasTest</module> -->
 		<module>PresenceTest</module>
-		<module>MediaTests</module>
+		<!-- Media tests are not running until MediaServer emebedded is used -->
+		<!-- <module>MediaTests</module> -->
 	</modules>
 
 	<build>
@@ -190,16 +191,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.12.1</version>
 				<configuration>
-				<!-- 
-					<excludes>
-						<exclude>**/AccountsEndpointTest.java</exclude>
-						<exclude>**/IncomingPhoneNumbersEndpointTest.java</exclude>
-						<exclude>**/ClientsEndpointTest.java</exclude>
-						<exclude>**/PresenceTest.java</exclude>
-						<exclude>**/MediaTest.java</exclude>
-						<exclude>**/AnnouncementEndpointTest.java</exclude>
-					</excludes>
-					 -->
+					<argLine>-Xms512m -Xmx512m</argLine>
 				</configuration>
 			</plugin>
 		</plugins>

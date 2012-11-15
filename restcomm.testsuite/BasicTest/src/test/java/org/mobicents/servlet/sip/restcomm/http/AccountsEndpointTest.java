@@ -65,7 +65,6 @@ public class AccountsEndpointTest extends AbstractTest {
 		System.out.println("Created a new sub-account with SID " + account.getSid());
 		assertTrue("user@company.com".equals(account.getFriendlyName()));
 		assertTrue("81dc9bdb52d04dc20036dbd8313ed055".equals(account.getAuthToken()));
-		assertTrue(account.close());
 	}
 
 	@Test 
@@ -74,6 +73,5 @@ public class AccountsEndpointTest extends AbstractTest {
 		assertTrue("Default Administrator Account".equals(account.getFriendlyName()));
 		assertTrue("active".equals(account.getStatus()));
 		assertTrue("77f8c12cc7b8f8423e5c38b035249166".equals(account.getAuthToken()));
-		assertTrue(account.close());
 	}
 }
