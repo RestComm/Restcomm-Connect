@@ -180,8 +180,7 @@
 		<module>BasicTest</module>
 		<!-- <module>ExtrasTest</module> -->
 		<module>PresenceTest</module>
-		<!-- Media tests are not running until MediaServer emebedded is used -->
-		<!-- <module>MediaTests</module> -->
+		<module>MediaTests</module>
 	</modules>
 
 	<build>
@@ -191,7 +190,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.12.1</version>
 				<configuration>
-					<argLine>-Xms512m -Xmx512m</argLine>
+					<argLine>-Xms512m -Xmx1024m -XX:MaxPermSize=1024m</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
