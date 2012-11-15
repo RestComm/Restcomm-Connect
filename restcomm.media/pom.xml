@@ -48,6 +48,10 @@
 					<groupId>apache-xerces</groupId>
 					<artifactId>xercesImpl</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>sun-jaxb</groupId>
+					<artifactId>jaxb-api</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
