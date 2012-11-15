@@ -27,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.arquillian.mediaserver.api.annotations.Mediaserver;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.TwilioRestException;
@@ -41,6 +42,7 @@ import com.twilio.sdk.resource.instance.IncomingPhoneNumber;
  * 
  */
 @RunWith(Arquillian.class)
+@Mediaserver(IVR=5,CONF=5,RELAY=5)
 public class MediaTest extends AbstractTest {
 
 	private Logger logger = Logger.getLogger(MediaTest.class);
