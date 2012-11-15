@@ -34,14 +34,9 @@ public class TtsApiSynthesizerTest {
 		ttsapi.configure(conf);
 		ttsapi.start();
 		URI ttsURI = ttsapi.synthesize("Hello World. How are you");
-//		URI wavURI = ConvertMp3ToWav.convert(ttsURI);
+
 		File ttsFile = new File(ttsURI);
-//		File wavFile = new File(wavURI);
-		System.out.println(ttsURI);
-		
-//		System.out.println(wavFile);
 		assertTrue(ttsFile.exists());
-//		assertTrue(wavFile.exists());
-//		assertTrue(ttsFile.delete());
+		assertTrue(ttsFile.delete());
 	}
 }
