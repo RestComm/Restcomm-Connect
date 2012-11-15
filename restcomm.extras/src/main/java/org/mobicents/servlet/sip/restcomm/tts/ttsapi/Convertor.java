@@ -14,6 +14,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.io.FileUtils;
@@ -24,7 +26,7 @@ import org.apache.commons.io.FileUtils;
 
 public class Convertor {
 
-	public static URI convert(URI source) throws Exception{
+	public static List<URI> convert(URI source) throws Exception{
 //		File sourceFile = new File
 		URL sourceURL = source.toURL();
 		File sourceFile = File.createTempFile("source", ".mp3");
@@ -35,11 +37,15 @@ public class Convertor {
 		targetFile.deleteOnExit();
 		AudioAttributes audio = new AudioAttributes();
 		audio.setCodec("pcm_s16le");
+		audio.setSamplingRate(8000);
 		EncodingAttributes attrs = new EncodingAttributes();
 		attrs.setFormat("wav");
 		attrs.setAudioAttributes(audio);
 		Encoder encoder = new Encoder();
 		encoder.encode(sourceFile, targetFile, attrs);
-		return targetFile.toURI();
+		List<URI> result = new ArrayList<URI>();
+		result.add(sourceFile.toURI());
+		result.add(targetFile.toURI());
+		return result;
 	}	
 }

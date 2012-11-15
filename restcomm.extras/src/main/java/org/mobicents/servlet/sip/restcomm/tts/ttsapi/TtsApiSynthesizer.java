@@ -1,11 +1,13 @@
 package org.mobicents.servlet.sip.restcomm.tts.ttsapi;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
@@ -58,8 +60,15 @@ public class TtsApiSynthesizer extends AbstractSpeechSynthesizer {
 
 			         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 			         URI source = URI.create(reader.readLine());
-			         URI mediaURI = Convertor.convert(source);
-			         return cache.put(buildKey(text, "men", "en"), mediaURI);
+			         ArrayList<URI> result = (ArrayList<URI>) Convertor.convert(source);
+			         URI mediaURI = result.get(1);
+			         URI cacheURI = cache.put(buildKey(text, "men", "en"), mediaURI); 
+			         
+			         for(URI fileURI: result){
+			        	 (new File(fileURI)).delete();
+			         }
+			         return cacheURI;
+			         
 				} else {
 					final StringBuilder buffer = new StringBuilder();
 					buffer.append("Error to access TTS-API service");
