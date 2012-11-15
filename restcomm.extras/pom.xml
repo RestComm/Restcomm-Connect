@@ -52,12 +52,12 @@
 			<artifactId>restcomm.commons</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		
+
 		<dependency>
-        	<groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>${gson.version}</version>
-        </dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>${gson.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.ispeech</groupId>
@@ -67,21 +67,26 @@
 			<systemPath>${project.basedir}/lib/ispeech-java-sdk.jar</systemPath>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>net.interfaxx</groupId> -->
-<!-- 			<artifactId>interfax</artifactId> -->
-<!-- 			<version>1.0.0</version> -->
-<!-- 			<scope>system</scope> -->
-<!-- 			<systemPath>${project.basedir}/lib/Interfax.jar</systemPath> -->
-<!-- 		</dependency> -->
+		<dependency>
+			<groupId>it.sauronsoftware</groupId>
+			<artifactId>jave</artifactId>
+			<version>1.0.2</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/jave-1.0.2.jar</systemPath>
+		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>com.esendex</groupId> -->
-<!-- 			<artifactId>esendex</artifactId> -->
-<!-- 			<version>1.0.0</version> -->
-<!-- 			<scope>system</scope> -->
-<!-- 			<systemPath>${project.basedir}/lib/Esendex.jar</systemPath> -->
-<!-- 		</dependency> -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>1.3.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+			<version>4.10</version>
+		</dependency>
 
 	</dependencies>
 

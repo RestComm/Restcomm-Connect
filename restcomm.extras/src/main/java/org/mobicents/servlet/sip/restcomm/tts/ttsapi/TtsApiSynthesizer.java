@@ -28,7 +28,7 @@ import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizerException;
 
 public class TtsApiSynthesizer extends AbstractSpeechSynthesizer {
 
-	private static final String soundFileType = "MP3";
+	private static final String soundFileType = "WAV";
 	private URI serviceRoot;
 	private DiskCache cache;
 
@@ -57,7 +57,8 @@ public class TtsApiSynthesizer extends AbstractSpeechSynthesizer {
 					InputStream stream = entity.getContent();
 
 			         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-			         URI mediaURI = URI.create(reader.readLine());
+			         URI source = URI.create(reader.readLine());
+			         URI mediaURI = Convertor.convert(source);
 			         return cache.put(buildKey(text, "men", "en"), mediaURI);
 				} else {
 					final StringBuilder buffer = new StringBuilder();
