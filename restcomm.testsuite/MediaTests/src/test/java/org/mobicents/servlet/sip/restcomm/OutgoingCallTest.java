@@ -84,8 +84,8 @@ public class OutgoingCallTest extends AbstractTest {
 		Map<String, String> parameters = new HashMap<String, String>();
 		parameters.put("From", "+18765");
 		parameters.put("To", "4321");
-		parameters.put("Url", "http://restcomm-demo.appspot.com/app/voice/restcomm3.xml");
-		//		parameters.put("Url", "http://127.0.0.1:8888/restcomm/demo/hello-world.xml");
+		//		parameters.put("Url", "http://restcomm-demo.appspot.com/app/voice/restcomm3.xml");
+		parameters.put("Url", endpoint+"/demo/hello-world.xml");
 		parameters.put("VoiceMethod", "POST");
 
 		Call outgoingCall = callFactory.create(parameters);

@@ -63,7 +63,8 @@ public class MediaTest extends AbstractTest {
 	private static Account account;
 	private static IncomingPhoneNumber incomingPhoneNumber;
 	private String uri = "sip:+14321@127.0.0.1:5070";
-
+	private static String appURL;
+	
 	@BeforeClass
 	public static void beforeClass(){
 		sipStackTool = new SipStackTool("MediaTest");
@@ -104,21 +105,22 @@ public class MediaTest extends AbstractTest {
 	}
 
 	private void createPhoneNumber() throws TwilioRestException{
+		appURL = endpoint+"/demo/hello-world.xml";
 		IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
 		Map<String, String> parameters = new HashMap<String, String>();
 		parameters.put("PhoneNumber", "+14321");
-		parameters.put("VoiceUrl", "http://restcomm-demo.appspot.com/app/voice/restcomm2.xml");
-		//		parameters.put("VoiceUrl", endpoint+"/demo/hello-world.xml");
+//		parameters.put("VoiceUrl", "http://restcomm-demo.appspot.com/app/voice/restcomm2.xml");
+				parameters.put("VoiceUrl", appURL);
 		parameters.put("VoiceMethod", "POST");
-		parameters.put("VoiceFallbackUrl", endpoint+"/demo/hello-world.xml");
+		parameters.put("VoiceFallbackUrl", appURL);
 		parameters.put("VoiceFallbackMethod", "POST");
-		parameters.put("StatusCallback", endpoint+"/demo/hello-world.xml");
+		parameters.put("StatusCallback", appURL);
 		parameters.put("StatusCallbackMethod", "POST");
 		parameters.put("VoiceCallerIdLookup", "false");
 		// parameters.put("VoiceApplicationSid", "");
-		parameters.put("SmsUrl", endpoint+"/demo/hello-world.xml");
+		parameters.put("SmsUrl", appURL);
 		parameters.put("SmsMethod", "POST");
-		parameters.put("SmsFallbackUrl", endpoint+"/demo/hello-world.xml");
+		parameters.put("SmsFallbackUrl", appURL);
 		parameters.put("SmsFallbackMethod", "POST");
 		//		URLEncodedUtils. format(parameters, "UTF-8");
 		incomingPhoneNumber = factory.create(parameters);
@@ -130,7 +132,7 @@ public class MediaTest extends AbstractTest {
 	public void sendByeAfterAck() throws ParseException, TwilioRestException, ClassNotFoundException{	
 		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
 		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
-		assertTrue(incomingPhoneNumber.getVoiceUrl().equals("http://restcomm-demo.appspot.com/app/voice/restcomm2.xml"));
+		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
 
 		byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
 		String body = new String(bodyByte);
@@ -153,7 +155,7 @@ public class MediaTest extends AbstractTest {
 	public void sendCancel() throws ParseException, TwilioRestException{	
 		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
 		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
-		assertTrue(incomingPhoneNumber.getVoiceUrl().equals("http://restcomm-demo.appspot.com/app/voice/restcomm2.xml"));
+		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
 
 		byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
 		String body = new String(bodyByte);
@@ -178,7 +180,7 @@ public class MediaTest extends AbstractTest {
 	public void sendByeAfterAckMany() throws ParseException, TwilioRestException{	
 		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
 		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
-		assertTrue(incomingPhoneNumber.getVoiceUrl().equals("http://restcomm-demo.appspot.com/app/voice/restcomm2.xml"));
+		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
 
 		byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
 		String body = new String(bodyByte);
@@ -213,7 +215,7 @@ public class MediaTest extends AbstractTest {
 	public void sendBye() throws ParseException, TwilioRestException{	
 		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
 		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
-		assertTrue(incomingPhoneNumber.getVoiceUrl().equals("http://restcomm-demo.appspot.com/app/voice/restcomm2.xml"));
+		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
 
 		byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
 		String body = new String(bodyByte);
@@ -240,7 +242,7 @@ public class MediaTest extends AbstractTest {
 	public void testManyCalls() throws ParseException, TwilioRestException{	
 		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
 		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
-		assertTrue(incomingPhoneNumber.getVoiceUrl().equals("http://restcomm-demo.appspot.com/app/voice/restcomm2.xml"));
+		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
 
 		byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
 		String body = new String(bodyByte);
