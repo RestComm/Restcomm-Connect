@@ -66,7 +66,7 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
 		final SqlSession session = sessions.openSession();
 		try {
 			@SuppressWarnings("unchecked")
-			final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getAnnouncements", accountSid.toString());
+			final List<Map<String, Object>> results = session.selectList(namespace + "getAnnouncements", accountSid.toString());
 			final List<Announcement> announcements = new ArrayList<Announcement>();
 			if(results != null && !results.isEmpty()) {
 				for(final Map<String, Object> result : results) {

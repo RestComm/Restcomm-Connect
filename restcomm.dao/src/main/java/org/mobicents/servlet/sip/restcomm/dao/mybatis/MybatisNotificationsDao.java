@@ -96,7 +96,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Notification;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(selector, input);
+      final List<Map<String, Object>> results = session.selectList(selector, input);
       final List<Notification> notifications = new ArrayList<Notification>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {

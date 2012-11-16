@@ -16,27 +16,47 @@
  */
 package org.mobicents.servlet.sip.restcomm.http;
 
+import java.net.URL;
+
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.resource.instance.Account;
 import com.twilio.sdk.resource.list.OutgoingCallerIdList;
 
 import static org.junit.Assert.*;
+
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mobicents.servlet.sip.restcomm.AbstractTest;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-// @RunWith(Arquillian.class)
-public class OutgoingCallerIdEndpointTest extends AbstractEndpointTest {
-  public OutgoingCallerIdEndpointTest() {
-    super();
-  }
-  
-  @Test public void test() {
-    final TwilioRestClient client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-        "77f8c12cc7b8f8423e5c38b035249166", "http://127.0.0.1:8888/restcomm");
-    final Account account = client.getAccount();
-    final OutgoingCallerIdList outgoingCallerIds = account.getOutgoingCallerIds();
-    assertTrue(outgoingCallerIds.getTotal() == 0);
-  }
+@RunWith(Arquillian.class)
+public class OutgoingCallerIdEndpointTest extends AbstractTest {
+
+	@ArquillianResource
+	URL deploymentUrl;
+	String endpoint;
+
+	private TwilioRestClient client;
+	private Account account;
+
+	@Before
+	public void setUp(){
+		endpoint = super.getEndpoint(deploymentUrl.toString());
+		if(client==null)
+			client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+					"77f8c12cc7b8f8423e5c38b035249166", endpoint);
+		if(account==null)
+			account = client.getAccount();
+	}
+
+	@Test 
+	public void test() {
+		OutgoingCallerIdList outgoingCallerIds = account.getOutgoingCallerIds();
+		assertTrue(outgoingCallerIds.getTotal() == 0);
+	}
 }

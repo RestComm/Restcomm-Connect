@@ -79,7 +79,7 @@ import org.mobicents.servlet.sip.restcomm.entities.OutgoingCallerId;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getOutgoingCallerIds", accountSid.toString());
+      final List<Map<String, Object>> results = session.selectList(namespace + "getOutgoingCallerIds", accountSid.toString());
       final List<OutgoingCallerId> outgoingCallerIds = new ArrayList<OutgoingCallerId>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {
