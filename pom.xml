@@ -55,7 +55,7 @@
 	</licenses>
 
 	<modules>
-		<module>restcomm.docs</module>
+		<!-- <module>restcomm.docs</module> -->
 		<module>restcomm.api</module>
 		<module>restcomm.core</module>
 		<module>restcomm.media</module>
