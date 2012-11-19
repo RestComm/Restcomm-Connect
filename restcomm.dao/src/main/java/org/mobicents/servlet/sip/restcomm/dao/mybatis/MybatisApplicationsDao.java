@@ -80,7 +80,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Application;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(namespace + "getApplications", accountSid.toString());
+      final List<Map<String, Object>> results = session.selectList(namespace + "getApplications", accountSid.toString());
       final List<Application> applications = new ArrayList<Application>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {

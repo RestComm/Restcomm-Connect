@@ -67,7 +67,7 @@ import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
     final SqlSession session = sessions.openSession();
     try {
       @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> results = (List<Map<String, Object>>)session.selectList(selector, parameter);
+      final List<Map<String, Object>> results = session.selectList(selector, parameter);
       final List<PresenceRecord> records = new ArrayList<PresenceRecord>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {

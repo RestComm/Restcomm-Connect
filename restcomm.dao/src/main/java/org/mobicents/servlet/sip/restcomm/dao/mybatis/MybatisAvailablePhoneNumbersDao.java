@@ -61,9 +61,9 @@ import org.mobicents.servlet.sip.restcomm.entities.AvailablePhoneNumber;
     try {
       List<Map<String, Object>> results = null;
       if(parameter == null) {
-        results = (List<Map<String, Object>>)session.selectList(selector);
+        results = session.selectList(selector);
       } else {
-        results = (List<Map<String, Object>>)session.selectList(selector, parameter);
+        results = session.selectList(selector, parameter);
       }
       final List<AvailablePhoneNumber> availablePhoneNumbers = new ArrayList<AvailablePhoneNumber>();
       if(results != null && !results.isEmpty()) {

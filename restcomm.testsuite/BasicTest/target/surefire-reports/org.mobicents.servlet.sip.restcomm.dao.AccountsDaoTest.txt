@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: org.mobicents.servlet.sip.restcomm.dao.AccountsDaoTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.05 sec
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 sec

@@ -15,6 +15,11 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<tomcat.version>6.0.35</tomcat.version>
+		<arquillian.version>1.0.3.Final</arquillian.version>
+		<mss.arquillian.version>1.0.0-ALPHA2-SNAPSHOT</mss.arquillian.version>
+		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
 	</properties>
 
 	<dependencies>
@@ -77,14 +82,21 @@
 		<dependency>
 			<groupId>org.jboss.arquillian.junit</groupId>
 			<artifactId>arquillian-junit-container</artifactId>
-			<version>1.0.1.Final</version>
+			<version>${arquillian.version}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.jboss.shrinkwrap.resolver</groupId>
 			<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-			<version>1.1.0-alpha-3</version>
+			<version>${shrinkwrap.resolver.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+			<version>${shrinkwrap.resolver.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -98,20 +110,20 @@
 		<dependency>
 			<groupId>org.mobicents.arquillian.container</groupId>
 			<artifactId>mss-tomcat-embedded-6</artifactId>
-			<version>1.0.0-ALPHA1</version>
+			<version>${mss.arquillian.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>coyote</artifactId>
-			<version>6.0.33</version>
+			<version>${tomcat.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>jasper</artifactId>
-			<version>6.0.33</version>
+			<version>${tomcat.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -119,21 +131,21 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip.containers</groupId>
 			<artifactId>sip-servlets-catalina</artifactId>
-			<version>1.7.0.FINAL</version>
+			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip.containers</groupId>
 			<artifactId>sip-servlets-tomcat-jboss4</artifactId>
-			<version>1.7.0.FINAL</version>
+			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-application-router</artifactId>
-			<version>1.7.0.FINAL</version>
+			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -143,10 +155,6 @@
 			<version>3.3.10-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
-
-		<!-- Axis Dependencies -->
-		<!-- <dependency> <groupId>axis</groupId> <artifactId>axis</artifactId> 
-			<version>1.3</version> <scope>test</scope> </dependency> -->
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
@@ -170,9 +178,10 @@
 
 	<modules>
 		<module>BasicTest</module>
+		<!-- The ExtrasTests tests need account setup for SMS and FAX -->
 		<!-- <module>ExtrasTest</module> -->
-		<!-- <module>PresenceTest</module> -->
-		<!--<module>MediaTests</module> -->
+		<module>PresenceTest</module>
+ 		<!-- <module>MediaTests</module> -->
 	</modules>
 
 	<build>
@@ -180,16 +189,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.12.1</version>
+				<version>2.12.4</version>
 				<configuration>
-					<excludes>
-						<exclude>**/AccountsEndpointTest.java</exclude>
-						<exclude>**/IncomingPhoneNumbersEndpointTest.java</exclude>
-						<exclude>**/ClientsEndpointTest.java</exclude>
-						<exclude>**/PresenceTest.java</exclude>
-						<exclude>**/MediaTest.java</exclude>
-						<exclude>**/AnnouncementEndpointTest.java</exclude>
-					</excludes>
+					<argLine>-Xms512m -Xmx1024m -XX:MaxPermSize=1024m</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
