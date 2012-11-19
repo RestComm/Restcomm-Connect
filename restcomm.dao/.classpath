@@ -16,5 +16,5 @@
   <classpathentry kind="var" path="M2_REPO/org/mybatis/mybatis/3.0.6/mybatis-3.0.6.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.api/1.0.0.BETA2-SNAPSHOT/restcomm.api-1.0.0.BETA2-SNAPSHOT.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/servlet/sip/restcomm.commons/1.0.0.BETA2-SNAPSHOT/restcomm.commons-1.0.0.BETA2-SNAPSHOT.jar"/>
-  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 </classpath>

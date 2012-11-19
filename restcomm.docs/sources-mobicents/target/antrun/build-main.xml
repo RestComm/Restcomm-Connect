@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<project name="maven-antrun-" default="main"  >
-<target name="main">
-  <delete includeemptydirs="true" failonerror="false">
-    <fileset dir="/home/thomas/Projects/RestComm/restcomm/restcomm.docs/sources-mobicents/src"/>
-  </delete>
-</target>
-</project>
