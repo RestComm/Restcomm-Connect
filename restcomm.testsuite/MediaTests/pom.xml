@@ -36,7 +36,7 @@
 				<version>2.12.4</version>
 				<configuration>
 					<forkMode>once</forkMode>
-					<argLine>-Xms1024m -Xmx1536m -XX:MaxPermSize=1536m</argLine>
+					<argLine>-Xms512m -Xmx1024m -XX:MaxPermSize=1024m</argLine>
 					<includes>
 						<include>**/Testsuite.java</include>
 					</includes>

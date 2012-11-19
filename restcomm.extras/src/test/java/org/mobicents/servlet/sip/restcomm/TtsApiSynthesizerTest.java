@@ -10,6 +10,7 @@ import java.net.URI;
 
 import org.apache.commons.configuration.BaseConfiguration;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mobicents.servlet.sip.restcomm.tts.ttsapi.TtsApiSynthesizer;
 
@@ -28,7 +29,7 @@ public class TtsApiSynthesizerTest {
 		conf.addProperty("cache-path",System.getProperty("java.io.tmpdir"));		
 	}
 	
-	@Test
+	@Test @Ignore
 	public void testSynthesizer() throws IllegalArgumentException, InputFormatException, EncoderException{
 		TtsApiSynthesizer ttsapi = new TtsApiSynthesizer();
 		ttsapi.configure(conf);
