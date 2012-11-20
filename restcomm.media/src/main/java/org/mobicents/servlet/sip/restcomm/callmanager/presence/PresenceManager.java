@@ -17,6 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.callmanager.presence;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
@@ -31,6 +33,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;
@@ -40,6 +43,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Client;
 import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.util.DigestAuthentication;
 import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
+import org.mobicents.servlet.sip.restcomm.util.IPUtils;
 
 
 /**
@@ -47,6 +51,7 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
  */
 @ThreadSafe public final class PresenceManager extends SipServlet {
   private static final long serialVersionUID = 1L;
+  private static final Logger logger = Logger.getLogger(PresenceManager.class);
   private DaoManager daos;
   
   public PresenceManager() {
@@ -129,7 +134,19 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
     while(contacts.hasNext()) {
       final Address contact = contacts.next();
       final String name = contact.getDisplayName();
-      final String uri = contact.getURI().toString();
+      // Do NAT resolution, only if necessary.
+      SipURI uri = (SipURI)contact.getURI();
+	  try {
+	    final InetAddress host = InetAddress.getByName(uri.getHost());
+		final String ip = host.getHostAddress();
+		if(!IPUtils.isRoutableAddress(ip)) {
+		  uri.setHost(request.getInitialRemoteAddr());
+		}
+		uri.setPort(request.getInitialRemotePort());
+	  } catch(final UnknownHostException exception) {
+	    logger.warn(exception);
+	    continue;
+	  }
       int expires = contact.getExpires();
       if(expires == -1) {
         expires = getExpires(request);
@@ -140,9 +157,9 @@ import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
         dao.removePresenceRecords(aor);
       } else {
         if(expires == 0) {
-          dao.removePresenceRecord(uri);
+          dao.removePresenceRecord(uri.toString());
         } else {
-          final PresenceRecord record = new PresenceRecord(aor, name, to.getUser(), uri, ua, expires);
+          final PresenceRecord record = new PresenceRecord(aor, name, to.getUser(), uri.toString(), ua, expires);
           if(dao.hasPresenceRecord(aor)) {
             dao.updatePresenceRecord(record);
           } else {

@@ -255,8 +255,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			throw new ServletException(e);
 		} 
 	 }
-
-	 @Override protected void doOptions(final SipServletRequest request)
+	 
+    @Override protected void doOptions(final SipServletRequest request)
 	     throws ServletException, IOException {
 		request.createResponse(SipServletResponse.SC_OK).send();
 	}
