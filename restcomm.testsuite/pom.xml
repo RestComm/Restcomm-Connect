@@ -181,7 +181,7 @@
 		<!-- The ExtrasTests tests need account setup for SMS and FAX -->
 		<!-- <module>ExtrasTest</module> -->
 		<module>PresenceTest</module>
- 		<!-- <module>MediaTests</module> -->
+ 		<module>MediaTests</module>
 	</modules>
 
 	<build>
