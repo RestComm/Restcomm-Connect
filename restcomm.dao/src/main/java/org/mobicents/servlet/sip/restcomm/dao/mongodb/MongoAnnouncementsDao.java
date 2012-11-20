@@ -1,34 +1,25 @@
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readBigDecimal;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDateTime;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readSid;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readUri;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeBigDecimal;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeDateTime;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeSid;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeUri;
-
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.AnnouncementsDao;
-import org.mobicents.servlet.sip.restcomm.entities.Announcement;
-import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import org.joda.time.DateTime;
+
+import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.sip.restcomm.dao.AnnouncementsDao;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.sip.restcomm.entities.Announcement;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>

@@ -87,7 +87,6 @@ import org.mobicents.servlet.sip.restcomm.entities.Client;
   @Override public List<Client> getClients(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(namespace + "getClients", accountSid.toString());
       final List<Client> clients = new ArrayList<Client>();
       if(results != null && !results.isEmpty()) {

@@ -55,7 +55,6 @@ import org.mobicents.servlet.sip.restcomm.entities.AvailablePhoneNumber;
     }
   }
   
-  @SuppressWarnings("unchecked")
   private List<AvailablePhoneNumber> getAvailablePhoneNumbers(final String selector, final Object parameter) {
     final SqlSession session = sessions.openSession();
     try {

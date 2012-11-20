@@ -54,6 +54,16 @@ import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
       session.close();
     }
   }
+  
+  @Override public boolean contains(final PresenceRecord record) {
+    final SqlSession session = sessions.openSession();
+    try {
+      final Integer result = (Integer)session.selectOne(namespace + "contains", toMap(record));
+      return result != null && result > 0;
+    } finally {
+      session.close();
+    }
+  }
 
   @Override public List<PresenceRecord> getPresenceRecords(final String aor) {
     return getPresenceRecords(namespace + "getPresenceRecords", aor);
@@ -66,7 +76,6 @@ import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
   private List<PresenceRecord> getPresenceRecords(final String selector, final String parameter) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(selector, parameter);
       final List<PresenceRecord> records = new ArrayList<PresenceRecord>();
       if(results != null && !results.isEmpty()) {

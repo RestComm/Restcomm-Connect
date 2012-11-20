@@ -81,7 +81,6 @@ import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
   @Override public List<SmsMessage> getSmsMessages(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(namespace + "getSmsMessages", accountSid.toString());
       final List<SmsMessage> smsMessages = new ArrayList<SmsMessage>();
       if(results != null && !results.isEmpty()) {

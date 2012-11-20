@@ -82,6 +82,15 @@ import com.mongodb.WriteResult;
 	query.put("address_of_record", aor);
     return collection.count(query) > 0;
   }
+  
+  @Override public boolean contains(final PresenceRecord record) {
+    final BasicDBObject query = new BasicDBObject();
+    query.put("display_name", record.getDisplayName());
+    query.put("address_of_record", record.getAddressOfRecord());
+	query.put("uri", record.getUri());
+	query.put("user_agent", record.getUserAgent());
+    return collection.count(query) > 0;
+  }
 
   @Override public void removePresenceRecord(final String uri) {
     final BasicDBObject query = new BasicDBObject();

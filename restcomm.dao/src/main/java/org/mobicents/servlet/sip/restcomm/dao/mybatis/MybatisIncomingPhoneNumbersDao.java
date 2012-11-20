@@ -87,7 +87,6 @@ import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
   @Override public List<IncomingPhoneNumber> getIncomingPhoneNumbers(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbers", accountSid.toString());
       final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
       if(results != null && !results.isEmpty()) {

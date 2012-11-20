@@ -106,8 +106,7 @@ import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
   private List<CallDetailRecord> getCallDetailRecords(final String selector, Object input) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-	  final List<Map<String, Object>> results = session.selectList(selector, input);
+      final List<Map<String, Object>> results = session.selectList(selector, input);
       final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
       if(results != null && !results.isEmpty()) {
         for(final Map<String, Object> result : results) {

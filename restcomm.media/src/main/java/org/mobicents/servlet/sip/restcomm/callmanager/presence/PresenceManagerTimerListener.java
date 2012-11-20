@@ -14,22 +14,32 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.dao;
+package org.mobicents.servlet.sip.restcomm.callmanager.presence;
 
-import java.util.List;
+import javax.servlet.sip.ServletTimer;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.TimerListener;
 
 import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface PresenceRecordsDao {
-  public void addPresenceRecord(PresenceRecord record);
-  public boolean contains(PresenceRecord record);
-  public List<PresenceRecord> getPresenceRecords(String aor);
-  public List<PresenceRecord> getPresenceRecordsByUser(String user);
-  public boolean hasPresenceRecord(String aor);
-  public void removePresenceRecord(String uri);
-  public void removePresenceRecords(String aor);
-  public void updatePresenceRecord(PresenceRecord record);
+public class PresenceManagerTimerListener implements TimerListener {
+  public PresenceManagerTimerListener() {
+    super();
+  }
+  
+  @Override public void timeout(final ServletTimer timer) {
+    final String type = (String)timer.getInfo();
+    final SipApplicationSession application = timer.getApplicationSession();
+	final PresenceManager manager = (PresenceManager)application.getAttribute(PresenceManager.class.getName());
+	final PresenceRecord record = (PresenceRecord)application.getAttribute(PresenceRecord.class.getName());
+	if("CLEANUP".equals(type)) {
+	  manager.cleanup(record);
+	  application.invalidate();
+	} else if("OPTIONS_PING".equals(type)) {
+	  manager.ping(record);
+	}
+  }
 }

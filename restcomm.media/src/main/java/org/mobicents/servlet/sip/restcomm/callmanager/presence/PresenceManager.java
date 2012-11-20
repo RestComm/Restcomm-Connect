@@ -20,18 +20,24 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TimerService;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
@@ -44,6 +50,7 @@ import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 import org.mobicents.servlet.sip.restcomm.util.DigestAuthentication;
 import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 import org.mobicents.servlet.sip.restcomm.util.IPUtils;
+import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 
 
 /**
@@ -53,9 +60,17 @@ import org.mobicents.servlet.sip.restcomm.util.IPUtils;
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(PresenceManager.class);
   private DaoManager daos;
+  private TimerService clock;
+  private ServletConfig config;
+  private SipFactory sipFactory;
   
   public PresenceManager() {
     super();
+  }
+  
+  public void cleanup(final PresenceRecord record) {
+    final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
+    dao.removePresenceRecord(record.getUri());
   }
   
   private String createNonce() {
@@ -82,6 +97,17 @@ import org.mobicents.servlet.sip.restcomm.util.IPUtils;
     return response;
   }
 
+  @Override protected void doErrorResponse(final SipServletResponse response)
+      throws ServletException, IOException {
+    final SipServletRequest request = response.getRequest();
+    final String method = request.getMethod();
+    if("OPTIONS".equals(method)) {
+      final SipApplicationSession application = response.getApplicationSession();
+      final PresenceRecord record = (PresenceRecord)application.getAttribute(PresenceRecord.class.getName());
+      cleanup(record);
+    }
+  }
+
   @Override protected void doRegister(final SipServletRequest request) throws ServletException, IOException {
     final String header = request.getHeader("Proxy-Authorization");
     if(header == null) {
@@ -103,7 +129,22 @@ import org.mobicents.servlet.sip.restcomm.util.IPUtils;
     }
   }
   
-  public int getContactCount(final SipServletRequest request) throws ServletParseException {
+  @Override protected void doSuccessResponse(final SipServletResponse response)
+      throws ServletException, IOException {
+    final SipServletRequest request = response.getRequest();
+    final String method = request.getMethod();
+    if("OPTIONS".equals(method)) {
+      final int status = response.getStatus();
+      if(SipServletResponse.SC_OK == status) {
+        final SipApplicationSession application = response.getApplicationSession();
+        final long timeout = 30 * 1000;
+        clock.createTimer(application, timeout, false, "OPTIONS_PING");
+        application.setExpires(TimeUtils.millisToMinutes(timeout));
+      }
+    }
+  }
+
+public int getContactCount(final SipServletRequest request) throws ServletParseException {
     final ListIterator<Address> contacts = request.getAddressHeaders("Contact");
     int counter = 0;
     while(contacts.hasNext()) {
@@ -121,10 +162,54 @@ import org.mobicents.servlet.sip.restcomm.util.IPUtils;
 	  return 3600;
 	}
   }
+  
+  private SipURI getOutboundInterface(final ServletConfig config) {
+	final ServletContext context = config.getServletContext();
+	SipURI result = null;
+	@SuppressWarnings("unchecked")
+	final List<SipURI> uris = (List<SipURI>)context.getAttribute(OUTBOUND_INTERFACES);
+	for(final SipURI uri : uris) {
+		final String transport = uri.getTransportParam();
+		if("udp".equalsIgnoreCase(transport)) {
+			result = uri;
+		}
+	}
+	return result;
+  }
 
-  @Override public void init(final ServletConfig configuration) throws ServletException {
+  @Override public void init(final ServletConfig config) throws ServletException {
+    this.config = config;
     final ServiceLocator services = ServiceLocator.getInstance();
     daos = services.get(DaoManager.class);
+    final ServletContext context = config.getServletContext();
+    clock = (TimerService)context.getAttribute(TIMER_SERVICE);
+    sipFactory = (SipFactory)context.getAttribute(SIP_FACTORY);
+  }
+  
+  public void ping(final PresenceRecord record) {
+    try {
+      final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
+      if(dao.contains(record)) {
+        final SipApplicationSession application = sipFactory.createApplicationSession();
+        application.setAttribute(PresenceManager.class.getName(), this);
+	    application.setAttribute(PresenceRecord.class.getName(), record);
+	    final SipURI outboundInterface = getOutboundInterface(config);
+	    StringBuilder buffer = new StringBuilder();
+	    buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
+	    final String from = buffer.toString();
+	    final String to = record.getUri();
+	    final SipServletRequest ping = sipFactory.createRequest(application, "OPTIONS", from, to);
+	    ping.addAddressHeader("Contact", sipFactory.createAddress(from), false);
+	    final SipURI uri = (SipURI)sipFactory.createURI(to);
+	    ping.pushRoute(uri);
+	    ping.setRequestURI(uri);
+	    final SipSession session = ping.getSession();
+	    session.setHandler("PresenceManager");
+	    ping.send();
+      }
+    } catch(final Exception exception) {
+      logger.error(exception);
+    }
   }
   
   private void register(final SipServletRequest request) throws ServletParseException {
@@ -164,6 +249,8 @@ import org.mobicents.servlet.sip.restcomm.util.IPUtils;
             dao.updatePresenceRecord(record);
           } else {
             dao.addPresenceRecord(record);
+            scheduleCleanup(record);
+            ping(record);
           }
         }
       }
@@ -191,6 +278,14 @@ import org.mobicents.servlet.sip.restcomm.util.IPUtils;
     } else {
       return false;
     }
+  }
+  
+  private void scheduleCleanup(final PresenceRecord record)  {
+    final SipApplicationSession application = sipFactory.createApplicationSession();
+    long timeout = TimeUtils.SECOND_IN_MILLIS * record.getTimeToLive();
+    clock.createTimer(application, timeout, false, "CLEANUP");
+    timeout += TimeUtils.SECOND_IN_MILLIS * 30;
+    application.setExpires(TimeUtils.millisToMinutes(timeout));
   }
   
   private Map<String, String> toMap(final String header) {

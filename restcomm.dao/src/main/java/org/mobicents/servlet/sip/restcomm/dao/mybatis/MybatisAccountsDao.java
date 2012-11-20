@@ -86,7 +86,6 @@ import org.mobicents.servlet.sip.restcomm.entities.Account;
   @Override public List<Account> getAccounts(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(namespace + "getAccounts", accountSid.toString());
       final List<Account> accounts = new ArrayList<Account>();
       if(results != null && !results.isEmpty()) {

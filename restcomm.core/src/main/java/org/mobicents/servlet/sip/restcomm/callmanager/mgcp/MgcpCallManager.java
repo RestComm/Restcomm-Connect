@@ -22,8 +22,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipApplicationSessionListener;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
@@ -57,8 +55,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
  /**
   * @author quintana.thomas@gmail.com (Thomas Quintana)
   */
- public final class MgcpCallManager extends SipServlet implements SipApplicationSessionListener,
-     CallManager {
+ public final class MgcpCallManager extends SipServlet implements CallManager {
 	 private static final long serialVersionUID = 4758133818077979879L;
 
 	 private static SipFactory sipFactory;
@@ -314,16 +311,4 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			 proxyUri = sipFactory.createSipURI(null, uri);
 		 }
 	 }
-
-	@Override public void sessionCreated(final SipApplicationSessionEvent event) { }
-
-	@Override public void sessionDestroyed(final SipApplicationSessionEvent event) { }
-
-	@Override public void sessionExpired(final SipApplicationSessionEvent event) {
-      final SipApplicationSession session = event.getApplicationSession();
-      final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
-      call.failed();
-	}
-
-	@Override public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) { }
  }

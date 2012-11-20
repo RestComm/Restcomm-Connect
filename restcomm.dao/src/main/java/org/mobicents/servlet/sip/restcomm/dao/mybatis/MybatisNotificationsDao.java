@@ -95,7 +95,6 @@ import org.mobicents.servlet.sip.restcomm.entities.Notification;
   private List<Notification> getNotifications(final String selector, final Object input) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(selector, input);
       final List<Notification> notifications = new ArrayList<Notification>();
       if(results != null && !results.isEmpty()) {

@@ -71,6 +71,12 @@
 		</servlet-class>
 		<load-on-startup>2</load-on-startup>
 	</servlet>
+	
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceManagerTimerListener
+		</listener-class>
+	</listener>
 
 	<listener>
 		<listener-class>

@@ -79,7 +79,6 @@ import org.mobicents.servlet.sip.restcomm.entities.Application;
   @Override public List<Application> getApplications(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(namespace + "getApplications", accountSid.toString());
       final List<Application> applications = new ArrayList<Application>();
       if(results != null && !results.isEmpty()) {

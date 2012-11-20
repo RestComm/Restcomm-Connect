@@ -52,7 +52,7 @@ public final class SipGatewayManager extends SipServlet {
 
 	public static final int defaultRegistrationTtl = 1800;
 
-	private ServletConfig configuration;
+	private ServletConfig config;
 	private TimerService clock;
 	private SipFactory sipFactory;
 	private List<Gateway> gateways;
@@ -63,7 +63,7 @@ public final class SipGatewayManager extends SipServlet {
 
 	private Address createContactHeader(final Gateway gateway, final int expires) throws ServletParseException {
 		final StringBuilder buffer = new StringBuilder();
-		final SipURI outboundInterface = getOutboundInterface(configuration);
+		final SipURI outboundInterface = getOutboundInterface(config);
 		buffer.append("sip:").append(gateway.getUser()).append("@").append(outboundInterface.getHost());
 		final Address contact = sipFactory.createAddress(buffer.toString());
 		contact.setExpires(expires);
@@ -96,7 +96,7 @@ public final class SipGatewayManager extends SipServlet {
 				long expires = contact.getExpires() * 1000;
 				clock.createTimer(application, expires, false, "REGISTER");
 				// Issue http://code.google.com/p/restcomm/issues/detail?id=66
-				expires = expires + (30 * 1000);
+				expires += TimeUtils.SECOND_IN_MILLIS * 30;
 				application.setExpires(TimeUtils.millisToMinutes(expires));
 				if(logger.isDebugEnabled()) {
 					final StringBuilder buffer = new StringBuilder();
@@ -128,7 +128,7 @@ public final class SipGatewayManager extends SipServlet {
 		final ServiceLocator services = ServiceLocator.getInstance();
 		final DaoManager daos = services.get(DaoManager.class);
 		final GatewaysDao dao = daos.getGatewaysDao();
-		configuration = config;
+		this.config = config;
 		gateways = dao.getGateways();
 		clock = (TimerService)config.getServletContext().getAttribute(TIMER_SERVICE);
 		sipFactory = (SipFactory)context.getAttribute(SIP_FACTORY);

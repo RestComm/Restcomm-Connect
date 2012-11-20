@@ -79,7 +79,6 @@ import org.mobicents.servlet.sip.restcomm.entities.ShortCode;
   @Override public List<ShortCode> getShortCodes(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> results = session.selectList(namespace + "getShortCodes", accountSid.toString());
       final List<ShortCode> shortCodes = new ArrayList<ShortCode>();
       if(results != null && !results.isEmpty()) {
