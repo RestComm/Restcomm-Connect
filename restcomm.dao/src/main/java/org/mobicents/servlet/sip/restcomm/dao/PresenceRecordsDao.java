@@ -25,9 +25,10 @@ import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
  */
 public interface PresenceRecordsDao {
   public void addPresenceRecord(PresenceRecord record);
-  public boolean contains(PresenceRecord record);
+  public PresenceRecord getPresenceRecordByUri(String uri);
   public List<PresenceRecord> getPresenceRecords(String aor);
   public List<PresenceRecord> getPresenceRecordsByUser(String user);
+  public boolean hasPresenceRecord(PresenceRecord record);
   public boolean hasPresenceRecord(String aor);
   public void removePresenceRecord(String uri);
   public void removePresenceRecords(String aor);

@@ -29,6 +29,8 @@
 		
 		<pre-cache-outbound>true</pre-cache-outbound>
 		
+		<!--  <external-ip></external-ip> -->
+		
 		<outbound-proxy-user></outbound-proxy-user>
 		<outbound-proxy-password></outbound-proxy-password>
 		<outbound-proxy-uri></outbound-proxy-uri>

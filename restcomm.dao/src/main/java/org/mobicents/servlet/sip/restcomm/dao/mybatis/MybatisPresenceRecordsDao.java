@@ -55,11 +55,16 @@ import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
     }
   }
   
-  @Override public boolean contains(final PresenceRecord record) {
+  @Override public PresenceRecord getPresenceRecordByUri(final String uri) {
     final SqlSession session = sessions.openSession();
     try {
-      final Integer result = (Integer)session.selectOne(namespace + "contains", toMap(record));
-      return result != null && result > 0;
+      @SuppressWarnings("unchecked")
+      final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getPresenceRecordByUri", uri);
+      if(result != null) {
+        return toPresenceRecord(result);
+      } else {
+        return null;
+      }
     } finally {
       session.close();
     }
@@ -89,10 +94,20 @@ import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
     }
   }
   
+  @Override public boolean hasPresenceRecord(final PresenceRecord record) {
+    final SqlSession session = sessions.openSession();
+    try {
+      final Integer result = (Integer)session.selectOne(namespace + "hasPresenceRecord", toMap(record));
+      return result != null && result > 0;
+    } finally {
+      session.close();
+    }
+  }
+  
   @Override public boolean hasPresenceRecord(final String aor) {
     final SqlSession session = sessions.openSession();
     try {
-      final Integer result = (Integer)session.selectOne(namespace + "hasPresenceRecord", aor);
+      final Integer result = (Integer)session.selectOne(namespace + "hasPresenceRecordByAor", aor);
       return result != null && result > 0;
     } finally {
       session.close();

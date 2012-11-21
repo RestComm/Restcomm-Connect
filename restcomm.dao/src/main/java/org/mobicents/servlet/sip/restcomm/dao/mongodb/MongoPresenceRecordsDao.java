@@ -16,26 +16,24 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDateTime;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readInteger;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeDateTime;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
-import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import org.joda.time.DateTime;
+
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
+import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -53,6 +51,17 @@ import com.mongodb.WriteResult;
     final WriteResult result = collection.insert(toDbObject(record));
     if(!result.getLastError().ok()) {
       logger.error(result.getLastError().getErrorMessage());
+    }
+  }
+  
+  @Override public PresenceRecord getPresenceRecordByUri(final String uri) {
+	final BasicDBObject query = new BasicDBObject();
+    query.put("uri", uri);
+	final DBObject result = collection.findOne(query);
+	if(result != null) {
+	  return toPresenceRecord(result);
+    } else {
+      return null;
     }
   }
 
@@ -83,7 +92,7 @@ import com.mongodb.WriteResult;
     return collection.count(query) > 0;
   }
   
-  @Override public boolean contains(final PresenceRecord record) {
+  @Override public boolean hasPresenceRecord(final PresenceRecord record) {
     final BasicDBObject query = new BasicDBObject();
     query.put("display_name", record.getDisplayName());
     query.put("address_of_record", record.getAddressOfRecord());

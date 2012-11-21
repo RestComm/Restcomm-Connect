@@ -72,7 +72,14 @@ import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
   
   public void cleanup(final PresenceRecord record) {
     final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
-    dao.removePresenceRecord(record.getUri());
+    if(dao.hasPresenceRecord(record)) {
+      final PresenceRecord updatedRecord = dao.getPresenceRecordByUri(record.getUri());
+      if(updatedRecord != null && updatedRecord.getExpires().isAfterNow()) {
+        scheduleCleanup(updatedRecord);
+      } else {
+        dao.removePresenceRecord(record.getUri());
+      }
+    }
   }
   
   private String createNonce() {
@@ -191,20 +198,19 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
       final PresenceManagerTimerListener listener = new PresenceManagerTimerListener();
       timers.register("CLEANUP", listener);
       timers.register("OPTIONS_PING", listener);
-    }
-	catch(final TooManyListenersException exception) { throw new ServletException(exception); }
+    } catch(final TooManyListenersException exception) { throw new ServletException(exception); }
   }
   
   public void ping(final PresenceRecord record) {
     try {
       final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
-      if(dao.contains(record)) {
+      if(dao.hasPresenceRecord(record)) {
         final SipApplicationSession application = sipFactory.createApplicationSession();
         application.setAttribute(PresenceManager.class.getName(), this);
 	    application.setAttribute(PresenceRecord.class.getName(), record);
 	    final SipURI outboundInterface = getOutboundInterface(config);
 	    StringBuilder buffer = new StringBuilder();
-	    buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
+	    buffer.append("ping").append("@").append(outboundInterface.getHost());
 	    final String from = buffer.toString();
 	    final String to = record.getUri();
 	    final SipServletRequest ping = sipFactory.createRequest(application, "OPTIONS", from, to);

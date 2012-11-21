@@ -35,13 +35,13 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TimerService;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.entities.Gateway;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.TimerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 
 /**
@@ -56,6 +56,7 @@ public final class SipGatewayManager extends SipServlet {
 
 	private ServletConfig config;
 	private TimerService clock;
+	private DaoManager daos;
 	private SipFactory sipFactory;
 	private List<Gateway> gateways;
 
@@ -65,7 +66,10 @@ public final class SipGatewayManager extends SipServlet {
 
 	private Address createContactHeader(final Gateway gateway, final int expires) throws ServletParseException {
 		final StringBuilder buffer = new StringBuilder();
-		final SipURI outboundInterface = getOutboundInterface(config);
+		SipURI outboundInterface = getExternalInterface();
+		if(outboundInterface == null) {
+		  outboundInterface = getLocalInterface(config);
+		}
 		buffer.append("sip:").append(gateway.getUser()).append("@").append(outboundInterface.getHost());
 		final Address contact = sipFactory.createAddress(buffer.toString());
 		contact.setExpires(expires);
@@ -110,8 +114,17 @@ public final class SipGatewayManager extends SipServlet {
 			}
 		}
 	}
+	
+	private SipURI getExternalInterface() {
+	  final String externalIp = ServiceLocator.getInstance().get(Configuration.class).getString("external-ip");
+	  if(externalIp != null && !externalIp.isEmpty()) {
+	    return sipFactory.createSipURI(null, externalIp);
+	  } else {
+	    return null;
+	  }
+	}
 
-	private SipURI getOutboundInterface(final ServletConfig config) {
+	private SipURI getLocalInterface(final ServletConfig config) {
 		final ServletContext context = config.getServletContext();
 		SipURI result = null;
 		@SuppressWarnings("unchecked")
@@ -126,16 +139,18 @@ public final class SipGatewayManager extends SipServlet {
 	}
 
 	@Override public void init(ServletConfig config) throws ServletException {
+		this.config = config;
 		final ServletContext context = config.getServletContext();
 		final ServiceLocator services = ServiceLocator.getInstance();
-		final DaoManager daos = services.get(DaoManager.class);
-		final GatewaysDao dao = daos.getGatewaysDao();
-		this.config = config;
-		gateways = dao.getGateways();
+		daos = services.get(DaoManager.class);
+		gateways = daos.getGatewaysDao().getGateways();
 		clock = (TimerService)config.getServletContext().getAttribute(TIMER_SERVICE);
 		sipFactory = (SipFactory)context.getAttribute(SIP_FACTORY);
-		try { services.get(TimerManager.class).register("REGISTER", new SipGatewayManagerTimerListener()); }
-		catch(final TooManyListenersException exception) { throw new ServletException(exception); }
+		final TimerManager timers = services.get(TimerManager.class);
+		try { 
+			final SipGatewayManagerTimerListener listener = new SipGatewayManagerTimerListener();
+			timers.register("REGISTER", listener);
+		} catch(final TooManyListenersException exception) { throw new ServletException(exception); }
 	}
 
 	public void register(final Gateway gateway, final int expires) {

@@ -9,9 +9,8 @@
     VALUES (#{address_of_record}, #{display_name}, #{user}, #{uri}, #{user_agent}, #{ttl}, #{expires});
   </insert>
   
-  <select id="contains" parameterType="map" resultType="int">
-    SELECT COUNT(*) FROM "restcomm_presence_records" WHERE "address_of_record"=#{address_of_record} AND 
-    "display_name"=#{display_name} AND "uri"=#{uri} AND "user_agent"=#{user_agent};
+  <select id="getPresenceRecordByUri" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_presence_records" WHERE "uri"=#{uri};
   </select>
   
   <select id="getPresenceRecords" parameterType="string" resultType="hashmap">
@@ -22,7 +21,12 @@
     SELECT * FROM "restcomm_presence_records" WHERE "user"=#{user};
   </select>
   
-  <select id="hasPresenceRecord" parameterType="string" resultType="int">
+  <select id="hasPresenceRecord" parameterType="map" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_presence_records" WHERE "address_of_record"=#{address_of_record} AND 
+    "display_name"=#{display_name} AND "uri"=#{uri} AND "user_agent"=#{user_agent};
+  </select>
+  
+  <select id="hasPresenceRecordByAor" parameterType="string" resultType="int">
     SELECT COUNT(*) FROM "restcomm_presence_records" WHERE "address_of_record"=#{address_of_record};
   </select>
   
