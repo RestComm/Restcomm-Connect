@@ -18,6 +18,7 @@ package org.mobicents.servlet.sip.restcomm.callmanager.gateway;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.TooManyListenersException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -38,6 +39,7 @@ import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.entities.Gateway;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.TimerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
@@ -132,6 +134,8 @@ public final class SipGatewayManager extends SipServlet {
 		gateways = dao.getGateways();
 		clock = (TimerService)config.getServletContext().getAttribute(TIMER_SERVICE);
 		sipFactory = (SipFactory)context.getAttribute(SIP_FACTORY);
+		try { services.get(TimerManager.class).register("REGISTER", new SipGatewayManagerTimerListener()); }
+		catch(final TooManyListenersException exception) { throw new ServletException(exception); }
 	}
 
 	public void register(final Gateway gateway, final int expires) {

@@ -85,6 +85,7 @@ public final class Bootstrapper {
       runtimeConfiguration.setProperty("home-directory", getRestCommPath(config));
       runtimeConfiguration.setProperty("root-uri", getRestCommUri(config));
       services.set(Configuration.class, runtimeConfiguration);
+      services.set(TimerManager.class, new TimerManager());
       services.set(InterpreterExecutor.class, new InterpreterExecutor());
       final MgcpServerManager serverManager = getMgcpServerManager(configuration);
       services.set(MgcpServerManager.class, serverManager);

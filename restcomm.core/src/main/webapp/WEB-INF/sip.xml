@@ -74,19 +74,13 @@
 	
 	<listener>
 		<listener-class>
-			org.mobicents.servlet.sip.restcomm.callmanager.presence.PresenceManagerTimerListener
+			org.mobicents.servlet.sip.restcomm.TimerManager
 		</listener-class>
 	</listener>
 
 	<listener>
 		<listener-class>
 			org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManagerBootstrapper
-		</listener-class>
-	</listener>
-
-	<listener>
-		<listener-class>
-			org.mobicents.servlet.sip.restcomm.callmanager.gateway.SipGatewayManagerTimerListener
 		</listener-class>
 	</listener>
 </sip-app>
