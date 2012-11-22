@@ -18,8 +18,8 @@ package org.mobicents.servlet.sip.restcomm.http.converter;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.entities.Gateway;
-import org.mobicents.servlet.sip.restcomm.entities.GatewayList;
+import org.mobicents.servlet.sip.restcomm.entities.Registration;
+import org.mobicents.servlet.sip.restcomm.entities.RegistrationList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
@@ -27,22 +27,22 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class GatewayListConverter extends AbstractConverter {
-  public GatewayListConverter(final Configuration configuration) {
-	super(configuration);
+@ThreadSafe public final class RegistrationListConverter extends AbstractConverter {
+  public RegistrationListConverter(final Configuration configuration) {
+    super(configuration);
   }
 
   @SuppressWarnings("rawtypes")
   @Override public boolean canConvert(final Class klass) {
-    return GatewayList.class.equals(klass);
+    return RegistrationList.class.equals(klass);
   }
 
-  @Override public void marshal(final Object object, HierarchicalStreamWriter writer,
-      MarshallingContext context) {
-    final GatewayList list = (GatewayList)object;
-    writer.startNode("Gateways");
-    for(final Gateway gateway : list.getGateways()) {
-      context.convertAnother(gateway);
+  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
+      final MarshallingContext context) {
+    final RegistrationList list = (RegistrationList)object;
+    writer.startNode("Registrations");
+    for(final Registration registration : list.getRegistrations()) {
+      context.convertAnother(registration);
     }
     writer.endNode();
   }

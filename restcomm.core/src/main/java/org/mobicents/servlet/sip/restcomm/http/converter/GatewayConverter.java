@@ -33,7 +33,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class GatewayConverter extends AbstractConverter implements JsonSerializer<Gateway> {
-  public GatewayConverter(Configuration configuration) {
+  public GatewayConverter(final Configuration configuration) {
     super(configuration);
   }
 
@@ -59,7 +59,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
     writer.endNode();
   }
 
-  @Override public JsonElement serialize(final Gateway gateway, Type type, JsonSerializationContext context) {
+  @Override public JsonElement serialize(final Gateway gateway, final Type type, final JsonSerializationContext context) {
     final JsonObject object = new JsonObject();
     writeSid(gateway.getSid(), object);
     writeDateCreated(gateway.getDateCreated(), object);
