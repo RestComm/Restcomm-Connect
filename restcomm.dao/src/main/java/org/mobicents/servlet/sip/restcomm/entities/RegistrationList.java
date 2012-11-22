@@ -14,19 +14,24 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.dao;
+package org.mobicents.servlet.sip.restcomm.entities;
 
 import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.entities.Gateway;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface GatewaysDao {
-  public void addGateway(Gateway gateway);
-  public List<Gateway> getGateways();
-  public void removeGateway(Sid name);
-  public void updateGateway(Gateway gateway);
+@NotThreadSafe public final class RegistrationList {
+  private final List<Registration> registrations;
+
+  public RegistrationList(final List<Registration> records) {
+    super();
+    this.registrations = records;
+  }
+  
+  public List<Registration> getRegistrations() {
+    return registrations;
+  }
 }

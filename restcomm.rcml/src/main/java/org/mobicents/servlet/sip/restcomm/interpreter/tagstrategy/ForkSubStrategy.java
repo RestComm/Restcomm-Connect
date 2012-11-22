@@ -11,9 +11,9 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
+import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
-import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
+import org.mobicents.servlet.sip.restcomm.entities.Registration;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -194,10 +194,10 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
     final List<Call> calls = new ArrayList<Call>();
     final String user = client.getText();
     if(user != null) {
-      final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
-      final List<PresenceRecord> records = dao.getPresenceRecordsByUser(user);
-      for(final PresenceRecord record : records) {
-        calls.add(callManager.createUserAgentCall(caller, record.getUri()));
+      final RegistrationsDao dao = daos.getRegistrationsDao();
+      final List<Registration> registrations = dao.getRegistrationsByUser(user);
+      for(final Registration registration : registrations) {
+        calls.add(callManager.createUserAgentCall(caller, registration.getLocation()));
       }
     }
     return calls;

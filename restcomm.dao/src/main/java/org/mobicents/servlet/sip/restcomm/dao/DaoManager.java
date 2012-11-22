@@ -32,7 +32,7 @@ public interface DaoManager extends Configurable, LifeCycle{
   public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao();
   public NotificationsDao getNotificationsDao();
   public OutgoingCallerIdsDao getOutgoingCallerIdsDao();
-  public PresenceRecordsDao getPresenceRecordsDao();
+  public RegistrationsDao getRegistrationsDao();
   public RecordingsDao getRecordingsDao();
   public SandBoxesDao getSandBoxesDao();
   public ShortCodesDao getShortCodesDao();

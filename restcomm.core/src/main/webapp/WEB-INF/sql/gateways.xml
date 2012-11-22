@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.GatewaysDao">
   <insert id="addGateway" parameterType="map">
-    INSERT INTO "restcomm_gateways" ("name", "password", "proxy", "register", "user", "ttl")
-    VALUES (#{name}, #{password}, #{proxy}, #{register}, #{user}, #{ttl});
+    INSERT INTO "restcomm_gateways" ("sid", "date_created", "date_updated", "friendly_name", "password", "proxy", "register", "user_name", "ttl",
+    uri) VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{password}, #{proxy}, #{register}, #{user_name}, #{ttl}, #{uri});
   </insert>
   
   <select id="getGateways" resultType="hashmap">
@@ -14,11 +14,11 @@
   </select>
   
   <delete id="removeGateway" parameterType="string">
-    DELETE FROM "restcomm_gateways" WHERE "name"=#{name};
+    DELETE FROM "restcomm_gateways" WHERE "sid"=#{sid};
   </delete>
   
   <update id="updateGateway" parameterType="map">
-    UPDATE "restcomm_gateways" SET "password"=#{password}, "proxy"=#{proxy}, "register"=#{register},
-    "user"=#{user}, "ttl"=#{ttl} WHERE "name"=#{name};
+    UPDATE "restcomm_gateways" SET "date_updated"=#{date_updated}, "friendly_name"=#{friendly_name}, "password"=#{password},
+    "proxy"=#{proxy}, "register"=#{register}, "user"=#{user}, "ttl"=#{ttl} WHERE "sid"=#{sid};
   </update>
 </mapper>

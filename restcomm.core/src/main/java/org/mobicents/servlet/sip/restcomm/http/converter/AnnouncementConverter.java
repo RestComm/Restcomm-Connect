@@ -5,7 +5,6 @@ import java.lang.reflect.Type;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Announcement;
-import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -20,13 +19,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 @ThreadSafe 
 public final class AnnouncementConverter extends AbstractConverter implements JsonSerializer<Announcement> {
-	  private final String apiVersion;
-	  private final String rootUri;
-	
 	public AnnouncementConverter(final Configuration configuration) {
 		super(configuration);
-	    apiVersion = configuration.getString("api-version");
-	    rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
 	}
 
 	@Override

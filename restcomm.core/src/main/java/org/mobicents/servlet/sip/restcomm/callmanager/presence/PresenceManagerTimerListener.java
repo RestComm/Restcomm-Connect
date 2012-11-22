@@ -20,7 +20,7 @@ import javax.servlet.sip.ServletTimer;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.TimerListener;
 
-import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
+import org.mobicents.servlet.sip.restcomm.entities.Registration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -34,12 +34,12 @@ public class PresenceManagerTimerListener implements TimerListener {
     final String type = (String)timer.getInfo();
     final SipApplicationSession application = timer.getApplicationSession();
 	final PresenceManager manager = (PresenceManager)application.getAttribute(PresenceManager.class.getName());
-	final PresenceRecord record = (PresenceRecord)application.getAttribute(PresenceRecord.class.getName());
+	final Registration registration = (Registration)application.getAttribute(Registration.class.getName());
 	if("CLEANUP".equals(type)) {
-	  manager.cleanup(record);
+	  manager.cleanup(registration);
 	  application.invalidate();
 	} else if("OPTIONS_PING".equals(type)) {
-	  manager.ping(record);
+	  manager.ping(registration);
 	}
   }
 }

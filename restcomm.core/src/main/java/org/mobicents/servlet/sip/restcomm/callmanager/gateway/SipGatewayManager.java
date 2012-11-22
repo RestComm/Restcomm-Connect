@@ -70,7 +70,7 @@ public final class SipGatewayManager extends SipServlet {
 		if(outboundInterface == null) {
 		  outboundInterface = getLocalInterface(config);
 		}
-		buffer.append("sip:").append(gateway.getUser()).append("@").append(outboundInterface.getHost());
+		buffer.append("sip:").append(gateway.getUserName()).append("@").append(outboundInterface.getHost());
 		final Address contact = sipFactory.createAddress(buffer.toString());
 		contact.setExpires(expires);
 		return contact;
@@ -85,7 +85,7 @@ public final class SipGatewayManager extends SipServlet {
 				final Gateway gateway = (Gateway)application.getAttribute(Gateway.class.getName());
 				final AuthInfo authentication = sipFactory.createAuthInfo();
 				final String realm = response.getChallengeRealms().next(); 
-				authentication.addAuthInfo(status, realm, gateway.getUser(), gateway.getPassword());
+				authentication.addAuthInfo(status, realm, gateway.getUserName(), gateway.getPassword());
 				register(gateway, defaultRegistrationTtl, authentication, response);
 			}
 		}
@@ -164,7 +164,7 @@ public final class SipGatewayManager extends SipServlet {
 			application.setAttribute(Gateway.class.getName(), gateway);
 			application.setAttribute(SipGatewayManager.class.getName(), this);
 			final StringBuilder buffer = new StringBuilder();
-			buffer.append("sip:").append(gateway.getUser()).append("@").append(gateway.getProxy());
+			buffer.append("sip:").append(gateway.getUserName()).append("@").append(gateway.getProxy());
 			final String aor = buffer.toString();
 			//Issue http://code.google.com/p/restcomm/issues/detail?id=65
 			SipServletRequest register = null;
@@ -192,7 +192,7 @@ public final class SipGatewayManager extends SipServlet {
 	public void start() {
 		for(final Gateway gateway : gateways) {
 			if(gateway.register()) {
-				register(gateway, gateway.getTtl());
+				register(gateway, gateway.getTimeToLive());
 			}
 		}
 	}

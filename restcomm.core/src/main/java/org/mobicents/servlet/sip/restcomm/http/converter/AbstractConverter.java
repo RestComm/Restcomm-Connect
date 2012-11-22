@@ -279,6 +279,16 @@ public abstract class AbstractConverter implements Converter {
     object.addProperty("to", to);
   }
   
+  protected void writeTimeToLive(final int timeToLive, final HierarchicalStreamWriter writer) {
+    writer.startNode("TimeToLive");
+    writer.setValue(Integer.toString(timeToLive));
+    writer.endNode();
+  }
+  
+  protected void writeTimeToLive(final int timeToLive, final JsonObject object) {
+    object.addProperty("time_to_live", timeToLive);
+  }
+  
   protected void writeType(final String type, final HierarchicalStreamWriter writer) {
     writer.startNode("Type");
     writer.setValue(type);
@@ -297,6 +307,16 @@ public abstract class AbstractConverter implements Converter {
   
   protected void writeUri(final URI uri, final JsonObject object) {
     object.addProperty("uri", uri.toString() + ".json");
+  }
+  
+  protected void writeUserName(final String userName, final HierarchicalStreamWriter writer) {
+    writer.startNode("UserName");
+    writer.setValue(userName);
+    writer.endNode();
+  }
+  
+  protected void writeUserName(final String userName, final JsonObject object) {
+    object.addProperty("user_name", userName);
   }
   
   protected void writeVoiceApplicationSid(final Sid voiceApplicationSid, final HierarchicalStreamWriter writer) {

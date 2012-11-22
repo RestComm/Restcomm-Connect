@@ -32,7 +32,7 @@ import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
-import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
+import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.sip.restcomm.dao.SandBoxesDao;
 import org.mobicents.servlet.sip.restcomm.dao.ShortCodesDao;
@@ -56,7 +56,7 @@ import com.mongodb.Mongo;
 	private IncomingPhoneNumbersDao incomingPhoneNumbersDao;
 	private NotificationsDao notificationsDao;
 	private OutgoingCallerIdsDao outgoingCallerIdsDao;
-	private PresenceRecordsDao presenceRecordsDao;
+	private RegistrationsDao presenceRecordsDao;
 	private RecordingsDao recordingsDao;
 	private SandBoxesDao sandBoxesDao;
 	private ShortCodesDao shortCodesDao;
@@ -110,7 +110,7 @@ import com.mongodb.Mongo;
 		return outgoingCallerIdsDao;
 	}
 
-	@Override public PresenceRecordsDao getPresenceRecordsDao() {
+	@Override public RegistrationsDao getRegistrationsDao() {
 		return presenceRecordsDao;
 	}
 
@@ -167,7 +167,7 @@ import com.mongodb.Mongo;
 		incomingPhoneNumbersDao = new MongoIncomingPhoneNumbersDao(database);
 		notificationsDao = new MongoNotificationsDao(database);
 		outgoingCallerIdsDao = new MongoOutgoingCallerIdsDao(database);
-		presenceRecordsDao = new MongoPresenceRecordsDao(database);
+		presenceRecordsDao = new MongoRegistrationsDao(database);
 		recordingsDao = new MongoRecordingsDao(database);
 		sandBoxesDao = new MongoSandBoxesDao(database);
 		shortCodesDao = new MongoShortCodesDao(database);

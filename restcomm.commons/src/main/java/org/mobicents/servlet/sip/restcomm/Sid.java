@@ -27,7 +27,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 @Immutable public final class Sid{
   private static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
   private final String id;
-  public enum Type {ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, NOTIFICATION, PHONE_NUMBER, RECORDING, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION};
+  public enum Type {ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION};
   
   public Sid(final String id) throws IllegalArgumentException {
     super();
@@ -76,6 +76,9 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
       case CONFERENCE: {
         return new Sid("CF" + uuid);
       }
+      case GATEWAY: {
+        return new Sid("GW" + uuid);
+      }
       case NOTIFICATION: {
         return new Sid("NO" + uuid);
       }
@@ -84,6 +87,9 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
       }
       case RECORDING: {
         return new Sid("RE" + uuid);
+      }
+      case REGISTRATION: {
+        return new Sid("RG" + uuid);
       }
       case SHORT_CODE: {
         return new Sid("SC" + uuid);

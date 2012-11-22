@@ -41,14 +41,16 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TimerService;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.TimerManager;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
+import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Client;
-import org.mobicents.servlet.sip.restcomm.entities.PresenceRecord;
+import org.mobicents.servlet.sip.restcomm.entities.Registration;
 import org.mobicents.servlet.sip.restcomm.util.DigestAuthentication;
 import org.mobicents.servlet.sip.restcomm.util.HexadecimalUtils;
 import org.mobicents.servlet.sip.restcomm.util.IPUtils;
@@ -70,14 +72,14 @@ import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
     super();
   }
   
-  public void cleanup(final PresenceRecord record) {
-    final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
-    if(dao.hasPresenceRecord(record)) {
-      final PresenceRecord updatedRecord = dao.getPresenceRecordByUri(record.getUri());
-      if(updatedRecord != null && updatedRecord.getExpires().isAfterNow()) {
-        scheduleCleanup(updatedRecord);
+  public void cleanup(final Registration registration) {
+    final RegistrationsDao dao = daos.getRegistrationsDao();
+    if(dao.hasRegistration(registration)) {
+      final Registration updatedRegistration = dao.getRegistrationByLocation(registration.getLocation());
+      if(updatedRegistration != null && updatedRegistration.getDateExpires().isAfterNow()) {
+        scheduleCleanup(updatedRegistration);
       } else {
-        dao.removePresenceRecord(record.getUri());
+        dao.removeRegistration(registration.getLocation());
       }
     }
   }
@@ -112,8 +114,8 @@ import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
     final String method = request.getMethod();
     if("OPTIONS".equals(method)) {
       final SipApplicationSession application = response.getApplicationSession();
-      final PresenceRecord record = (PresenceRecord)application.getAttribute(PresenceRecord.class.getName());
-      cleanup(record);
+      final Registration registration = (Registration)application.getAttribute(Registration.class.getName());
+      cleanup(registration);
     }
   }
 
@@ -201,18 +203,18 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
     } catch(final TooManyListenersException exception) { throw new ServletException(exception); }
   }
   
-  public void ping(final PresenceRecord record) {
+  public void ping(final Registration registration) {
     try {
-      final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
-      if(dao.hasPresenceRecord(record)) {
+      final RegistrationsDao dao = daos.getRegistrationsDao();
+      if(dao.hasRegistration(registration)) {
         final SipApplicationSession application = sipFactory.createApplicationSession();
         application.setAttribute(PresenceManager.class.getName(), this);
-	    application.setAttribute(PresenceRecord.class.getName(), record);
+	    application.setAttribute(Registration.class.getName(), registration);
 	    final SipURI outboundInterface = getOutboundInterface(config);
 	    StringBuilder buffer = new StringBuilder();
 	    buffer.append("ping").append("@").append(outboundInterface.getHost());
 	    final String from = buffer.toString();
-	    final String to = record.getUri();
+	    final String to = registration.getLocation();
 	    final SipServletRequest ping = sipFactory.createRequest(application, "OPTIONS", from, to);
 	    ping.addAddressHeader("Contact", sipFactory.createAddress(from), false);
 	    final SipURI uri = (SipURI)sipFactory.createURI(to);
@@ -229,43 +231,44 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
   
   private void register(final SipServletRequest request) throws ServletParseException {
     final SipURI to = (SipURI)request.getTo().getURI();
-	final String aor = to.toString();
+	final String addressOfRecord = to.toString();
     final ListIterator<Address> contacts = request.getAddressHeaders("Contact");
     while(contacts.hasNext()) {
       final Address contact = contacts.next();
-      final String name = contact.getDisplayName();
+      final String displayName = contact.getDisplayName();
       // Do NAT resolution, only if necessary.
-      SipURI uri = (SipURI)contact.getURI();
+      SipURI location = (SipURI)contact.getURI();
 	  try {
-	    final InetAddress host = InetAddress.getByName(uri.getHost());
+	    final InetAddress host = InetAddress.getByName(location.getHost());
 		final String ip = host.getHostAddress();
 		if(!IPUtils.isRoutableAddress(ip)) {
-		  uri.setHost(request.getInitialRemoteAddr());
+		  location.setHost(request.getInitialRemoteAddr());
 		}
-		uri.setPort(request.getInitialRemotePort());
+		location.setPort(request.getInitialRemotePort());
 	  } catch(final UnknownHostException exception) {
 	    logger.warn(exception);
 	    continue;
 	  }
-      int expires = contact.getExpires();
-      if(expires == -1) {
-        expires = getExpires(request);
+      int timeToLive = contact.getExpires();
+      if(timeToLive == -1) {
+        timeToLive = getExpires(request);
       }
-      final String ua = request.getHeader("User-Agent");
-      final PresenceRecordsDao dao = daos.getPresenceRecordsDao();
-      if(expires == 0 && contact.isWildcard()) {
-        dao.removePresenceRecords(aor);
+      final String userAgent = request.getHeader("User-Agent");
+      final RegistrationsDao dao = daos.getRegistrationsDao();
+      if(timeToLive == 0 && contact.isWildcard()) {
+        dao.removeRegistrations(addressOfRecord);
       } else {
-        if(expires == 0) {
-          dao.removePresenceRecord(uri.toString());
+        if(timeToLive == 0) {
+          dao.removeRegistration(location.toString());
         } else {
-          final PresenceRecord record = new PresenceRecord(aor, name, to.getUser(), uri.toString(), ua, expires);
-          if(dao.hasPresenceRecord(aor)) {
-            dao.updatePresenceRecord(record);
+          final Registration registration = new Registration(Sid.generate(Sid.Type.REGISTRATION), DateTime.now(),
+            DateTime.now(), addressOfRecord, displayName, to.getUser(), userAgent, timeToLive, location.toString());
+          if(dao.hasRegistration(addressOfRecord)) {
+            dao.updateRegistration(registration);
           } else {
-            dao.addPresenceRecord(record);
-            scheduleCleanup(record);
-            ping(record);
+            dao.addRegistration(registration);
+            scheduleCleanup(registration);
+            ping(registration);
           }
         }
       }
@@ -295,9 +298,9 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
     }
   }
   
-  private void scheduleCleanup(final PresenceRecord record)  {
+  private void scheduleCleanup(final Registration registration)  {
     final SipApplicationSession application = sipFactory.createApplicationSession();
-    long timeout = TimeUtils.SECOND_IN_MILLIS * record.getTimeToLive();
+    long timeout = TimeUtils.SECOND_IN_MILLIS * registration.getTimeToLive();
     clock.createTimer(application, timeout, false, "CLEANUP");
     timeout += TimeUtils.SECOND_IN_MILLIS * 30;
     application.setExpires(TimeUtils.millisToMinutes(timeout));

@@ -38,7 +38,7 @@ import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.OutgoingCallerIdsDao;
-import org.mobicents.servlet.sip.restcomm.dao.PresenceRecordsDao;
+import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.sip.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.sip.restcomm.dao.SandBoxesDao;
 import org.mobicents.servlet.sip.restcomm.dao.ShortCodesDao;
@@ -59,7 +59,7 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 	private IncomingPhoneNumbersDao incomingPhoneNumbersDao;
 	private NotificationsDao notificationsDao;
 	private OutgoingCallerIdsDao outgoingCallerIdsDao;
-	private PresenceRecordsDao presenceRecordsDao;
+	private RegistrationsDao presenceRecordsDao;
 	private RecordingsDao recordingsDao;
 	private SandBoxesDao sandBoxesDao;
 	private ShortCodesDao shortCodesDao;
@@ -109,7 +109,7 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 		return notificationsDao;
 	}
 
-	@Override public PresenceRecordsDao getPresenceRecordsDao() {
+	@Override public RegistrationsDao getRegistrationsDao() {
 		return presenceRecordsDao;
 	}
 
@@ -173,7 +173,7 @@ import org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao;
 		incomingPhoneNumbersDao = new MybatisIncomingPhoneNumbersDao(sessions);
 		notificationsDao = new MybatisNotificationsDao(sessions);
 		outgoingCallerIdsDao = new MybatisOutgoingCallerIdsDao(sessions);
-		presenceRecordsDao = new MybatisPresenceRecordsDao(sessions);
+		presenceRecordsDao = new MybatisRegistrationsDao(sessions);
 		recordingsDao = new MybatisRecordingsDao(sessions);
 		sandBoxesDao = new MybatisSandBoxesDao(sessions);
 		shortCodesDao = new MybatisShortCodesDao(sessions);

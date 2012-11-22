@@ -130,14 +130,17 @@ CREATE TABLE "restcomm_clients" (
 "uri" LONGVARCHAR NOT NULL
 );
 
-CREATE TABLE "restcomm_presence_records" (
+CREATE TABLE "restcomm_registrations" (
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"date_created" DATE NOT NULL,
+"date_updated" DATE NOT NULL,
+"date_expires" DATE NOT NULL,
 "address_of_record" LONGVARCHAR NOT NULL,
 "display_name" VARCHAR(255),
-"user" VARCHAR(64) NOT NULL,
-"uri" LONGVARCHAR NOT NULL,
+"user_name" VARCHAR(64) NOT NULL,
 "user_agent" LONGVARCHAR,
 "ttl" INT NOT NULL,
-"expires" DATE NOT NULL
+"location" LONGVARCHAR NOT NULL
 );
 
 CREATE TABLE "restcomm_short_codes" (
@@ -233,10 +236,14 @@ CREATE TABLE "restcomm_sand_boxes" (
 );
 
 CREATE TABLE "restcomm_gateways" (
-"name" VARCHAR(255) NOT NULL PRIMARY KEY,
-"user" VARCHAR(255),
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"date_created" DATE NOT NULL,
+"date_updated" DATE NOT NULL,
+"friendly_name" VARCHAR(64),
+"user_name" VARCHAR(255),
 "password" VARCHAR(255),
 "proxy" LONGVARCHAR NOT NULL,
 "register" BOOLEAN NOT NULL,
-"ttl" INT NOT NULL
+"ttl" INT NOT NULL,
+"uri" LONGVARCHAR NOT NULL
 );

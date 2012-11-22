@@ -18,15 +18,19 @@ package org.mobicents.servlet.sip.restcomm.dao;
 
 import java.util.List;
 
-import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.entities.Gateway;
+import org.mobicents.servlet.sip.restcomm.entities.Registration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface GatewaysDao {
-  public void addGateway(Gateway gateway);
-  public List<Gateway> getGateways();
-  public void removeGateway(Sid name);
-  public void updateGateway(Gateway gateway);
+public interface RegistrationsDao {
+  public void addRegistration(Registration registration);
+  public Registration getRegistrationByLocation(String location);
+  public List<Registration> getRegistrations(String aor);
+  public List<Registration> getRegistrationsByUser(String user);
+  public boolean hasRegistration(Registration registration);
+  public boolean hasRegistration(String aor);
+  public void removeRegistration(String uri);
+  public void removeRegistrations(String aor);
+  public void updateRegistration(Registration registration);
 }

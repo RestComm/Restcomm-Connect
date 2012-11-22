@@ -18,10 +18,13 @@ package org.mobicents.servlet.sip.restcomm.dao.mongodb;
 
 import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.entities.Gateway;
@@ -61,9 +64,9 @@ import com.mongodb.WriteResult;
     return gateways;
   }
 
-  @Override public void removeGateway(final String name) {
+  @Override public void removeGateway(final Sid sid) {
     final BasicDBObject query = new BasicDBObject();
-    query.put("name", name);
+    query.put("sid", sid);
     final WriteResult result = collection.remove(query);
     if(!result.getLastError().ok()) {
       logger.error(result.getLastError().getErrorMessage());
@@ -72,7 +75,7 @@ import com.mongodb.WriteResult;
 
   @Override public void updateGateway(final Gateway gateway) {
     final BasicDBObject query = new BasicDBObject();
-    query.put("name", gateway.getName());
+    query.put("sid", gateway.getSid().toString());
     final WriteResult result = collection.update(query, toDbObject(gateway));
     if(!result.getLastError().ok()) {
       logger.error(result.getLastError().getErrorMessage());
@@ -81,22 +84,30 @@ import com.mongodb.WriteResult;
   
   private DBObject toDbObject(final Gateway gateway) {
     final BasicDBObject object = new BasicDBObject();
-    object.put("name", gateway.getName());
+    object.put("sid", writeSid(gateway.getSid()));
+    object.put("date_created", writeDateTime(gateway.getDateCreated()));
+    object.put("date_updated", writeDateTime(gateway.getDateUpdated()));
+    object.put("friendly_name", gateway.getFriendlyName());
     object.put("password", gateway.getPassword());
     object.put("proxy", gateway.getProxy());
-    object.put("user", gateway.getUser());
+    object.put("user_name", gateway.getUserName());
     object.put("register", gateway.register());
-    object.put("ttl", gateway.getTtl());
+    object.put("ttl", gateway.getTimeToLive());
+    object.put("uri", writeUri(gateway.getUri()));
     return object;
   }
   
   private Gateway toGateway(final DBObject object) {
-    final String name = readString(object.get("name"));
+    final Sid sid = readSid(object.get("sid"));
+    final DateTime dateCreated = readDateTime(object.get("date_created"));
+    final DateTime dateUpdated = readDateTime(object.get("date_updated"));
+    final String friendlyName = readString(object.get("friendly_name"));
     final String password = readString(object.get("password"));
     final String proxy = readString(object.get("proxy"));
-    final String user = readString(object.get("user"));
+    final String userName = readString(object.get("user_name"));
     final Boolean register = readBoolean(object.get("register"));
-    final Integer ttl = readInteger(object.get("ttl"));
-    return new Gateway(name, password, proxy, register, user, ttl);
+    final Integer timeToLive = readInteger(object.get("ttl"));
+    final URI uri = readUri(object.get("uri"));
+    return new Gateway(sid, dateCreated, dateUpdated, friendlyName, password, proxy, register, userName, timeToLive, uri);
   }
 }

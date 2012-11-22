@@ -18,6 +18,7 @@ package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
 import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,8 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.sip.restcomm.entities.Gateway;
@@ -67,10 +70,10 @@ import org.mobicents.servlet.sip.restcomm.entities.Gateway;
     }
   }
 
-  @Override public void removeGateway(final String name) {
+  @Override public void removeGateway(final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      session.delete(namespace + "removeGateway", name);
+      session.delete(namespace + "removeGateway", sid.toString());
       session.commit();
     } finally {
       session.close();
@@ -88,23 +91,32 @@ import org.mobicents.servlet.sip.restcomm.entities.Gateway;
   }
   
   private Gateway toGateway(final Map<String, Object> map) {
-    final String name = readString(map.get("name"));
+    final Sid sid = readSid(map.get("sid"));
+    final DateTime dateCreated = readDateTime(map.get("date_created"));
+    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+    final String friendlName = readString(map.get("friendly_name"));
     final String password = readString(map.get("password"));
     final String proxy = readString(map.get("proxy"));
     final Boolean register = readBoolean(map.get("register"));
-    final String user = readString(map.get("user"));
-    final Integer ttl = readInteger(map.get("ttl"));
-    return new Gateway(name, password, proxy, register, user, ttl);
+    final String userAgent = readString(map.get("user_name"));
+    final Integer timeToLive = readInteger(map.get("ttl"));
+    final URI uri = readUri(map.get("uri"));
+    return new Gateway(sid, dateCreated, dateUpdated, friendlName, password, proxy,
+        register, userAgent, timeToLive, uri);
   }
   
   private Map<String, Object> toMap(final Gateway gateway) {
     final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("name", gateway.getName());
+    map.put("sid", writeSid(gateway.getSid()));
+    map.put("date_created", writeDateTime(gateway.getDateCreated()));
+    map.put("date_updated", writeDateTime(gateway.getDateUpdated()));
+    map.put("friendly_name", gateway.getFriendlyName());
     map.put("password", gateway.getPassword());
     map.put("proxy", gateway.getProxy());
     map.put("register", gateway.register());
-    map.put("user", gateway.getUser());
-    map.put("ttl", gateway.getTtl());
+    map.put("user_name", gateway.getUserName());
+    map.put("ttl", gateway.getTimeToLive());
+    map.put("uri", writeUri(gateway.getUri()));
     return map;
   }
 }
