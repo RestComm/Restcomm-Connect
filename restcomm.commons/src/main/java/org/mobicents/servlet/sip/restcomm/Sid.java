@@ -27,14 +27,16 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
 @Immutable public final class Sid{
   private static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
   private final String id;
-  public enum Type {ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION};
+  public enum Type {ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, INVALID,
+      NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION};
+  private static final Sid INVALID_SID = new Sid("IN00000000000000000000000000000000");
   
   public Sid(final String id) throws IllegalArgumentException {
     super();
     if(pattern.matcher(id).matches()) {
       this.id = id;
     } else {
-      throw new IllegalArgumentException(id + " is an invalid sid value.");
+      throw new IllegalArgumentException(id + " is an INVALID_SID sid value.");
     }
   }
 
@@ -78,6 +80,9 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
       }
       case GATEWAY: {
         return new Sid("GW" + uuid);
+      }
+      case INVALID: {
+        return INVALID_SID;
       }
       case NOTIFICATION: {
         return new Sid("NO" + uuid);

@@ -61,8 +61,7 @@ import org.mobicents.servlet.sip.restcomm.entities.SandBox;
   @Override public SandBox getSandBox(final Sid accountSid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-	  final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getSandBox", accountSid.toString());
+	  final Map<String, Object> result = session.selectOne(namespace + "getSandBox", accountSid.toString());
       if(result != null) {
         return toSandBox(result);
       } else {

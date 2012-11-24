@@ -72,8 +72,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Client;
   private Client getClient(final String selector, final String parameter) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-      final Map<String, Object> result = (Map<String, Object>)session.selectOne(selector, parameter);
+      final Map<String, Object> result = session.selectOne(selector, parameter);
       if(result != null) {
         return toClient(result);
       } else {

@@ -9,6 +9,10 @@
     uri) VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{password}, #{proxy}, #{register}, #{user_name}, #{ttl}, #{uri});
   </insert>
   
+  <select id="getGateway" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_gateways WHERE "sid=#{sid};
+  </select>
+  
   <select id="getGateways" resultType="hashmap">
     SELECT * FROM "restcomm_gateways";
   </select>

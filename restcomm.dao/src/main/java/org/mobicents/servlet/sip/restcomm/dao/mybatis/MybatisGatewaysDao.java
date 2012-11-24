@@ -53,6 +53,20 @@ import org.mobicents.servlet.sip.restcomm.entities.Gateway;
       session.close();
     }
   }
+  
+  @Override public Gateway getGateway(final Sid sid) {
+    final SqlSession session = sessions.openSession();
+    try {
+      final Map<String, Object> result = session.selectOne(namespace + "getGateway", sid.toString());
+      if(result != null) {
+        return toGateway(result);
+      } else {
+        return null;
+      }
+    } finally {
+      session.close();
+    }
+  }
 
   @Override public List<Gateway> getGateways() {
     final SqlSession session = sessions.openSession();

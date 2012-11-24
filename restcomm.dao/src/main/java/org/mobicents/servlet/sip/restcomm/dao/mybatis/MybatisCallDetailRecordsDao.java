@@ -67,8 +67,7 @@ import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
   @Override public CallDetailRecord getCallDetailRecord(final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-	  final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getCallDetailRecord", sid.toString());
+	  final Map<String, Object> result = session.selectOne(namespace + "getCallDetailRecord", sid.toString());
       if(result != null) {
         return toCallDetailRecord(result);
       } else {

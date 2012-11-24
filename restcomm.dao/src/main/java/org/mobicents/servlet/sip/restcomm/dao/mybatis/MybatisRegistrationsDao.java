@@ -56,8 +56,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Registration;
   @Override public Registration getRegistrationByLocation(final String location) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-      final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getRegistrationByLocation", location);
+      final Map<String, Object> result = session.selectOne(namespace + "getRegistrationByLocation", location);
       if(result != null) {
         return toPresenceRecord(result);
       } else {

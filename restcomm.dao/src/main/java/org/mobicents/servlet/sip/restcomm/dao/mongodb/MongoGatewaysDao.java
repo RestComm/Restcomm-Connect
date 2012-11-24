@@ -54,6 +54,13 @@ import com.mongodb.WriteResult;
       logger.error(result.getLastError().getErrorMessage());
     }
   }
+  
+  @Override public Gateway getGateway(final Sid sid) {
+    final BasicDBObject query = new BasicDBObject();
+    query.put("sid", sid.toString());
+    final DBObject result = collection.findOne(query);
+    return toGateway(result);
+  }
 
   @Override public List<Gateway> getGateways() {
     final List<Gateway> gateways = new ArrayList<Gateway>();
@@ -66,7 +73,7 @@ import com.mongodb.WriteResult;
 
   @Override public void removeGateway(final Sid sid) {
     final BasicDBObject query = new BasicDBObject();
-    query.put("sid", sid);
+    query.put("sid", sid.toString());
     final WriteResult result = collection.remove(query);
     if(!result.getLastError().ok()) {
       logger.error(result.getLastError().getErrorMessage());

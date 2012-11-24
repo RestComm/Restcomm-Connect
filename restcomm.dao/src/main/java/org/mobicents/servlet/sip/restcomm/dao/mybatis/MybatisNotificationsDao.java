@@ -64,8 +64,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Notification;
   @Override public Notification getNotification(final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-	  final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getNotification", sid.toString());
+	  final Map<String, Object> result = session.selectOne(namespace + "getNotification", sid.toString());
       if(result != null) {
         return toNotification(result);
       } else {

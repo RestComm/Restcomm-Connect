@@ -84,7 +84,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     recordAudio = false;
   }
   
-  @Override public synchronized void addParticipant(final Call call) {
+  @Override public void addParticipant(final Call call) {
     assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
     if(!calls.containsKey(call.getSid())) {
@@ -93,7 +93,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     }
   }
   
-  @Override public synchronized void addObserver(final ConferenceObserver observer) {
+  @Override public void addObserver(final ConferenceObserver observer) {
     observers.add(observer);
   }
   
@@ -196,14 +196,16 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     return Status.getValueOf(getState().getName());
   }
   
-  @Override public synchronized void removeParticipant(final Call call) {
+  @Override public void removeParticipant(final Call call) {
     assertState(IN_PROGRESS);
-    final MgcpCall mgcpCall = (MgcpCall)call;
-    mgcpCall.leave(this);
-    calls.remove(mgcpCall.getSid());
+    if(calls.containsKey(call.getSid())) {
+      final MgcpCall mgcpCall = (MgcpCall)call;
+      mgcpCall.leave(this);
+      calls.remove(mgcpCall.getSid());
+    }
   }
   
-  @Override public synchronized void removeObserver(final ConferenceObserver observer) {
+  @Override public void removeObserver(final ConferenceObserver observer) {
     observers.remove(observer);
   }
 

@@ -14,20 +14,32 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.dao;
+package org.mobicents.servlet.sip.restcomm.http;
 
-import java.util.List;
+import static javax.ws.rs.core.MediaType.*;
 
-import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.entities.Gateway;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface GatewaysDao {
-  public void addGateway(Gateway gateway);
-  public Gateway getGateway(Sid sid);
-  public List<Gateway> getGateways();
-  public void removeGateway(Sid sid);
-  public void updateGateway(Gateway gateway);
+@Path("/Management/Gateways.json")
+@ThreadSafe public class GatewaysJsonEndpoint extends GatewaysEndpoint {
+  public GatewaysJsonEndpoint() {
+    super();
+  }
+  
+  @GET public Response getClients() {
+    return getGateways(APPLICATION_JSON_TYPE);
+  }
+  
+  @POST public Response putClient(final MultivaluedMap<String, String> data) {
+    return putGateway(data, APPLICATION_JSON_TYPE);
+  }
 }

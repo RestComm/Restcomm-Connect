@@ -162,7 +162,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     }
   }
   
-  public Response updateClient(final String accountSid, final String sid,
+  protected Response updateClient(final String accountSid, final String sid,
       final MultivaluedMap<String, String> data, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Modify:Clients"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
@@ -190,7 +190,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     }
   }
   
-  public Client update(final Client client, final MultivaluedMap<String, String> data) {
+  private Client update(final Client client, final MultivaluedMap<String, String> data) {
     Client result = client;
     if(data.containsKey("FriendlyName")) {
       result = result.setFriendlyName(data.getFirst("FriendlyName"));

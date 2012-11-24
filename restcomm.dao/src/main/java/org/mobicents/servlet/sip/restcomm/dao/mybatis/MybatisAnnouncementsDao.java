@@ -50,8 +50,7 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
 	public Announcement getAnnouncement(Sid sid) {
 		final SqlSession session = sessions.openSession();
 		try {
-			@SuppressWarnings("unchecked")
-			final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getAnnouncement", sid.toString());
+			final Map<String, Object> result = session.selectOne(namespace + "getAnnouncement", sid.toString());
 			if(result != null) {
 				return toAnnouncement(result);
 			} else {

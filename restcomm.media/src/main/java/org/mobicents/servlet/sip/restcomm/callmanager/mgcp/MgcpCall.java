@@ -420,10 +420,10 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		remoteOutboundConnection.connect(ConnectionMode.Confrnce);
 		try {
 			wait();
+			remoteConference = conference;
 		} catch(final InterruptedException ignored) {
 			leave(conference);
 		}
-		remoteConference = conference;
 	}
 
 	public synchronized void leave(final MgcpConference conference) {

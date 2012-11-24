@@ -72,8 +72,7 @@ import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
   private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-      final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + selector, parameter);
+      final Map<String, Object> result = session.selectOne(namespace + selector, parameter);
       if(result != null) {
         return toIncomingPhoneNumber(result);
       } else {

@@ -48,7 +48,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
     return conference;
   }
 
-  @Override public Set<String> getConferenceNames() {
+  @Override public synchronized Set<String> getConferenceNames() {
     return conferences.keySet();
   }
 

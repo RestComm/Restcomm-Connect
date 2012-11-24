@@ -44,7 +44,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     this.limit = limit;
   }
   
-  public long get() {
+  public synchronized long get() {
     return count;
   }
   

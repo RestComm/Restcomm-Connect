@@ -63,8 +63,7 @@ import org.mobicents.servlet.sip.restcomm.entities.OutgoingCallerId;
   @Override public OutgoingCallerId getOutgoingCallerId(final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-      final Map<String, Object> result = (Map<String, Object>)session.selectOne(namespace + "getOutgoingCallerId", sid.toString());
+      final Map<String, Object> result = session.selectOne(namespace + "getOutgoingCallerId", sid.toString());
       if(result != null) {
         return toOutgoingCallerId(result);
       } else {

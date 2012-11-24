@@ -22,6 +22,7 @@ import java.net.URI;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -53,6 +54,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
     this.userName = userName;
     this.timeToLive = timeToLive;
     this.uri = uri;
+  }
+  
+  public static Builder builder() {
+    return new Builder();
   }
   
   public Sid getSid() {
@@ -115,24 +120,66 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.Immutable;
         timeToLive, uri);
   }
   
-  public Gateway setUser(final String userName) {
+  public Gateway setUserName(final String userName) {
     return new Gateway(sid, dateCreated, DateTime.now(), friendlyName, password, proxy, register, userName,
         timeToLive, uri);
   }
   
-  public Gateway setTtl(final int timeToLive) {
+  public Gateway setTimeToLive(final int timeToLive) {
     return new Gateway(sid, dateCreated, DateTime.now(), friendlyName, password, proxy, register, userName,
         timeToLive, uri);
   }
   
-  @Override public String toString() {
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append("Name: ").append(friendlyName).append("\n");
-    buffer.append("User: ").append(userName).append("\n");
-    buffer.append("Password: ").append(password).append("\n");
-    buffer.append("Proxy: ").append(proxy).append("\n");
-    buffer.append("Register: ").append(register).append("\n");
-    buffer.append("Time To Live: ").append(timeToLive);
-    return buffer.toString();
+  @NotThreadSafe public static final class Builder {
+    private Sid sid;
+    private String friendlyName;
+    private String password;
+    private String proxy;
+    private Boolean register;
+    private String userName;
+    private int timeToLive;
+    private URI uri;
+
+    private Builder() {
+      super();
+    }
+    
+    public Gateway build() {
+      final DateTime now = DateTime.now();
+      return new Gateway(sid, now, now, friendlyName, password, proxy, register, userName,
+        timeToLive, uri);
+    }
+    
+    public void setSid(final Sid sid) {
+      this.sid = sid;
+    }
+    
+    public void setFriendlyName(final String friendlyName) {
+      this.friendlyName = friendlyName;
+    }
+    
+    public void setPassword(final String password) {
+      this.password = password;
+    }
+    
+    public void setProxy(final String proxy) {
+      this.proxy = proxy;
+    }
+    
+    public void setRegister(final boolean register) {
+      this.register = register;
+    }
+    
+    public void setUserName(final String userName) {
+      this.userName = userName;
+    }
+    
+    public void setTimeToLive(final int timeToLive) {
+     this.timeToLive = timeToLive;
+    }
+    
+    public void setUri(final URI uri) {
+      this.uri = uri;
+    }
   }
 }

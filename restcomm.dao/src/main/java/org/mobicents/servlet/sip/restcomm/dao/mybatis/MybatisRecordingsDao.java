@@ -72,8 +72,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Recording;
   private Recording getRecording(final String selector, final Sid sid) {
     final SqlSession session = sessions.openSession();
     try {
-      @SuppressWarnings("unchecked")
-      final Map<String, Object> result = (Map<String, Object>)session.selectOne(selector, sid.toString());
+      final Map<String, Object> result = session.selectOne(selector, sid.toString());
       if(result != null) {
         return toRecording(result);
       } else {

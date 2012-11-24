@@ -173,7 +173,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
         voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
   }
   
-  @NotThreadSafe public final static class Builder {
+  @NotThreadSafe public static final class Builder {
     private Sid sid;
     private Sid accountSid;
     private String apiVersion;
