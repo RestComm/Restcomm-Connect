@@ -154,9 +154,15 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			initialInvite = request;
 			setState(TRYING);
 			fireStatusChanged();
+			// Make sure that we have an offer.
+			if(request.getContentLength() == 0 || !"application/sdp".equalsIgnoreCase(request.getContentType())) {
+			  final SipServletResponse response = request.createResponse(SipServletResponse.SC_BAD_REQUEST);
+			  response.send();
+			  throw new CallException("The remote client did not send an SDP offer with their INVITE request.");
+			}
 			// Establish a connection between the user agent and the media server.
 			relayEndpoint = session.getPacketRelayEndpoint();
-			final byte[] offer = patchMedia(request.getInitialRemoteAddr(), initialInvite.getRawContent());
+			final byte[] offer = patchMedia(request.getInitialRemoteAddr(), request.getRawContent());
 			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
 			userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
 			userAgentConnection.addObserver(this);
@@ -168,7 +174,8 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			setState(FAILED);
 			fireStatusChanged();
 			LOGGER.error(exception);
-			throw new CallException(exception);
+			if(exception instanceof CallException) { throw (CallException)exception; }
+			else { throw new CallException(exception); }
 		}
 	}
 	
@@ -197,7 +204,8 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			relayOutboundConnection.connect(ConnectionMode.SendRecv);
 			wait();
 			// Send the response back to the caller.
-			final byte[] answer = userAgentConnection.getLocalDescriptor().toString().getBytes();
+			final byte[] answer = patchMedia(server.getExternalAddress(),
+			    userAgentConnection.getLocalDescriptor().toString().getBytes());
 			final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
 			ok.setContent(answer, "application/sdp");
 			ok.send();
@@ -307,19 +315,28 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		LOGGER.debug("ACK received");
 	}
 
-	public synchronized void established(final SipServletResponse successResponse) throws IOException {
+	public synchronized void established(final SipServletResponse successResponse) throws CallException, IOException {
 		final List<State> possibleStates = new ArrayList<State>();
 		possibleStates.add(QUEUED);
 		possibleStates.add(RINGING);
 		assertState(possibleStates);
 		byte[] answer = successResponse.getRawContent();
-		if (answer!=null){
-			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
+		try {
+		  if(answer != null) {
+		    answer = patchMedia(successResponse.getInitialRemoteAddr(), successResponse.getRawContent());
+		    final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
 			userAgentConnection.modify(remoteDescriptor);
-		} else {
-			answer = initialInvite.getRawContent();
-			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
-			userAgentConnection.modify(remoteDescriptor);
+		  } else {
+		    terminate();
+			setState(FAILED);
+			fireStatusChanged();
+			throw new CallException("The remote client did not send an SDP answer with their 200 OK response.");
+		  }
+		} catch(final SdpException exception) {
+		  terminate();
+		  setState(FAILED);
+		  fireStatusChanged();
+		  throw new CallException(exception);
 		}
 		final SipServletRequest ack = successResponse.createAck();
 		ack.send();

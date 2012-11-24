@@ -263,7 +263,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 final SipApplicationSession session = response.getApplicationSession();
 		 if(request.getMethod().equals("INVITE") && response.getStatus() == SipServletResponse.SC_OK) {
 			 final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
-			 call.established(response);
+			 try { call.established(response); }
+			 catch(final CallException exception) { throw new ServletException(exception); }
 		 }
 	 }
 

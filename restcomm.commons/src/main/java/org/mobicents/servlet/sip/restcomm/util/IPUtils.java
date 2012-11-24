@@ -25,10 +25,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
  */
 @ThreadSafe public final class IPUtils {
   private static final Pattern LOOPBACK = Pattern.compile("(^127\\.0\\.0\\.1)");
-  private static final Pattern NON_ROUTABLE_CLASS_A = Pattern.compile("(^10\\.[0-2][0-5]{0,2}\\.[0-2][0-5]{0,2}\\.[0-2][0-5]{0,2})");
-  private static final Pattern NON_ROUTABLE_CLASS_B = Pattern.compile("(^172\\.1[6-9]\\.[0-2][0-5]{0,2}\\.[0-2][0-5]{0,2})|" +
-      "(^172\\.2[0-9]\\.[0-2][0-5]{0,2}\\.[0-2][0-5]{0,2})|(^172\\.3[0-1]\\.[0-2][0-5]{0,2}\\.[0-2][0-5]{0,2})");
-  private static final Pattern NON_ROUTABLE_CLASS_C = Pattern.compile("(^192\\.168\\.[0-2][0-5]{0,2}\\.[0-2][0-5]{0,2})");
+  private static final Pattern NON_ROUTABLE_CLASS_A = Pattern.compile("(^10\\.\\d{0,3}\\.\\d{0,3}\\.\\d{0,3})");
+  private static final Pattern NON_ROUTABLE_CLASS_B = Pattern.compile("(^172\\.1[6-9]\\.\\d{0,3}\\.\\d{0,3})|" +
+      "(^172\\.2[0-9]\\.\\d{0,3}\\.\\d{0,3})|(^172\\.3[0-1]\\.\\d{0,3}\\.\\d{0,3})");
+  private static final Pattern NON_ROUTABLE_CLASS_C = Pattern.compile("(^192\\.168\\.\\d{0,3}\\.\\d{0,3})");
   
   private IPUtils() {
     super();
