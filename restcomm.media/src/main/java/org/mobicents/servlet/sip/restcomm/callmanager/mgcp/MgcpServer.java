@@ -60,6 +60,8 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
   private final int localPort;
   private final InetAddress remoteIp;
   private final int remotePort;
+  // EC2 NAT stuff.
+  private final InetAddress externalIp;
   // JAIN MGCP stuff.
   private JainMgcpProvider mgcpProvider;
   private JainMgcpStack mgcpStack;
@@ -77,7 +79,7 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
   private Map<Integer, MgcpSession> mediaSessions;
 
   public MgcpServer(final String name, final InetAddress localIp, final int localPort,
-      final InetAddress remoteIp, final int remotePort) {
+      final InetAddress remoteIp, final int remotePort, final InetAddress externalIp) {
     // Initialize the finite state machine.
     super(SHUTDOWN);
     addState(RUNNING);
@@ -88,6 +90,7 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
     this.localPort = localPort;
     this.remoteIp = remoteIp;
     this.remotePort = remotePort;
+    this.externalIp = externalIp;
   }
   
   public void addNotifyListener(final JainMgcpListener listener) {
@@ -161,10 +164,17 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
     return domainName;
   }
   
+  public String getExternalAddress() {
+    assertState(RUNNING);
+    return externalIp.getHostAddress();
+  }
+  
   public String getName() {
 	assertState(RUNNING);
     return name;
   }
+
+  
 
   @Override public void processMgcpCommandEvent(final JainMgcpCommandEvent event) {
     if(getState() == RUNNING) {

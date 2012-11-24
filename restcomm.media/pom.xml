@@ -28,6 +28,12 @@
 			<version>${log4j.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>javax.sdp</groupId>
+			<artifactId>nist-sdp</artifactId>
+			<version>${jain.sdp.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>jain</groupId>

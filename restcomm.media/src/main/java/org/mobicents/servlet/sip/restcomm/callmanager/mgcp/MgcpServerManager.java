@@ -92,7 +92,12 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
           final int localPort = Integer.parseInt(configuration.getString(prefix + ".local-port"));
           final InetAddress remoteAddress = InetAddress.getByName(configuration.getString(prefix + ".remote-address"));
           final int remotePort = Integer.parseInt(configuration.getString(prefix + ".remote-port"));
-          final MgcpServer server = new MgcpServer(name, localAddress, localPort, remoteAddress, remotePort);
+          InetAddress externalAddress = localAddress;
+          final String address = configuration.getString(prefix + ".external-address");
+          if(address != null && !address.isEmpty()) {
+            externalAddress = InetAddress.getByName(address);
+          }
+          final MgcpServer server = new MgcpServer(name, localAddress, localPort, remoteAddress, remotePort, externalAddress);
           server.start();
           servers.add(server);
     	} catch(final UnknownHostException exception) {

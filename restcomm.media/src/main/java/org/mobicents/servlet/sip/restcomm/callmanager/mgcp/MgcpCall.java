@@ -20,10 +20,16 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sdp.Connection;
+import javax.sdp.SdpException;
+import javax.sdp.SdpFactory;
+import javax.sdp.SessionDescription;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -38,6 +44,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
+import org.mobicents.servlet.sip.restcomm.util.IPUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -149,19 +156,19 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			fireStatusChanged();
 			// Establish a connection between the user agent and the media server.
 			relayEndpoint = session.getPacketRelayEndpoint();
-			final byte[] offer = initialInvite.getRawContent();
+			final byte[] offer = patchMedia(request.getInitialRemoteAddr(), initialInvite.getRawContent());
 			final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(offer));
 			userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
 			userAgentConnection.addObserver(this);
 			userAgentConnection.connect(ConnectionMode.SendRecv);
 			wait();
 			alert(request);
-		} catch(final IOException exception){
+		} catch(final Exception exception){
 			cleanup();
 			setState(FAILED);
 			fireStatusChanged();
 			LOGGER.error(exception);
-			throw exception;
+			throw new CallException(exception);
 		}
 	}
 	
@@ -281,7 +288,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			userAgentConnection.addObserver(this);
 			userAgentConnection.connect(ConnectionMode.SendRecv);
 			wait();
-			final byte[] offer = userAgentConnection.getLocalDescriptor().toString().getBytes();
+			final byte[] offer = patchMedia(server.getExternalAddress(), userAgentConnection.getLocalDescriptor().toString().getBytes());
 			initialInvite.setContent(offer, "application/sdp");
 			initialInvite.send();
 		} catch(final Exception exception) {
@@ -450,6 +457,22 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			unmute();
 		}
 		muted = true;
+	}
+	
+	private byte[] patchMedia(final String realIp, final byte[] data)
+	    throws UnknownHostException, SdpException {
+	  final String text = new String(data);
+	  final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
+	  final Connection connection = sdp.getConnection();
+	  if(Connection.IN.equals(connection.getNetworkType()) &&
+	      Connection.IP4.equals(connection.getAddressType())) {
+	    final InetAddress address = InetAddress.getByName(connection.getAddress());
+	    final String ip = address.getHostAddress();
+	    if(!IPUtils.isRoutableAddress(ip)) {
+	      connection.setAddress(realIp);
+	    }
+	  }
+	  return sdp.toString().getBytes();
 	}
 
 	@Override public synchronized void play(final List<URI> announcements, final int iterations) throws CallException {
