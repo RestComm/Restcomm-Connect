@@ -246,9 +246,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			 }
 		 } catch(final InterpreterException exception) {
 			 throw new ServletException(exception);
-		 } catch (InterruptedException e) {
-			throw new ServletException(e);
-		} catch (CallException e) {
+		 } catch (CallException e) {
 			throw new ServletException(e);
 		} 
 	 }

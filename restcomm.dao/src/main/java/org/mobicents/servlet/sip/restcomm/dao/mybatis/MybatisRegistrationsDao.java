@@ -132,7 +132,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Registration;
   @Override public void updateRegistration(final Registration registration) {
     final SqlSession session = sessions.openSession();
     try {
-      session.update(namespace + "updatePresenceRecord", toMap(registration));
+      session.update(namespace + "updateRegistration", toMap(registration));
       session.commit();
     } finally {
       session.close();

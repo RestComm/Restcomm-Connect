@@ -30,14 +30,19 @@ import javax.sdp.Connection;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
+import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -64,21 +69,21 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	private static final State CANCELLED = new State(Status.CANCELLED.toString());
 	private static final State TRYING = new State(Status.TRYING.toString());
 	static {
+		IDLE.addTransition(TRYING);
 		IDLE.addTransition(RINGING);
 		IDLE.addTransition(QUEUED);
+		QUEUED.addTransition(BUSY);
 		QUEUED.addTransition(RINGING);
 		QUEUED.addTransition(IN_PROGRESS);
 		QUEUED.addTransition(FAILED);
 		QUEUED.addTransition(CANCELLED);
+		QUEUED.addTransition(COMPLETED);
 		RINGING.addTransition(IN_PROGRESS);
 		RINGING.addTransition(FAILED);
 		RINGING.addTransition(CANCELLED);
+		RINGING.addTransition(COMPLETED);
 		IN_PROGRESS.addTransition(COMPLETED);
 		IN_PROGRESS.addTransition(FAILED);
-
-		RINGING.addTransition(COMPLETED);
-		QUEUED.addTransition(COMPLETED);
-		IDLE.addTransition(TRYING);
 		TRYING.addTransition(RINGING);
 		TRYING.addTransition(QUEUED);
 		TRYING.addTransition(FAILED);
@@ -146,7 +151,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		observers.add(observer);
 	}
 
-	public synchronized void trying(final SipServletRequest request) throws IOException, InterruptedException, CallException {
+	public synchronized void trying(final SipServletRequest request) throws CallException {
 		assertState(IDLE);
 		final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
 		try{
@@ -174,24 +179,23 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			setState(FAILED);
 			fireStatusChanged();
 			LOGGER.error(exception);
-			if(exception instanceof CallException) { throw (CallException)exception; }
-			else { throw new CallException(exception); }
+			throw new CallException(exception);
 		}
 	}
 	
-	private synchronized void alert(final SipServletRequest request) throws IOException, CallException {
+	private synchronized void alert(final SipServletRequest request) throws CallException {
 		assertState(TRYING);
 		final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
 		try {
 			ringing.send();
 			setState(RINGING);
 			fireStatusChanged();
-		} catch(final IOException exception) {
+		} catch(final Exception exception) {
 			cleanup();
 			setState(FAILED);
 			fireStatusChanged();
 			LOGGER.error(exception);
-			throw exception;
+			throw new CallException(exception);
 		}
 	}
 	
@@ -474,6 +478,22 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			unmute();
 		}
 		muted = true;
+	}
+	
+	private void patchContactHeader(final SipServletMessage message) throws ServletParseException {
+	  final Address contact = message.getAddressHeader("Contact");
+	  if(contact != null) {
+		final SipURI uri = (SipURI)contact.getURI();
+		final String ip = uri.getHost();
+		if(!IPUtils.isRoutableAddress(ip)) {
+	      final ServiceLocator services = ServiceLocator.getInstance();
+	      final Configuration configuration = services.get(Configuration.class);
+	      final String realIp = configuration.getString("external-ip");
+	      if(realIp != null && !realIp.isEmpty()) {
+		    uri.setHost(realIp);
+	      }
+		}
+	  }
 	}
 	
 	private byte[] patchMedia(final String realIp, final byte[] data)

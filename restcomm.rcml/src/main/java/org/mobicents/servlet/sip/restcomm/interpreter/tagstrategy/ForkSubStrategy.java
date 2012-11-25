@@ -53,6 +53,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
   private final boolean record;
   private Sid recordingSid;
   
+  private List<Call> calls;
   private volatile boolean forking;
   private Call outboundCall;
 
@@ -90,11 +91,11 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
 	bridge.addParticipant(call);
     try {
       final DateTime start = DateTime.now();
-	  final List<Call> calls = getCalls(tag.getChildren());
+	  calls = getCalls(tag.getChildren());
 	  fork(calls);
 	  try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
       catch(final InterruptedException ignored) { }
-	  select(calls);
+	  cleanup(calls);
 	  if(Call.Status.IN_PROGRESS == call.getStatus() && (outboundCall != null &&
 	      Call.Status.IN_PROGRESS == outboundCall.getStatus())) {
         bridge.stopBackgroundMusic();
@@ -151,7 +152,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
     }
   }
   
-  private void select(final List<Call> calls) throws CallException {
+  private void cleanup(final List<Call> calls) throws CallException {
     for(final Call call : calls) {
       if(call != outboundCall) {
         call.removeObserver(this);
@@ -206,13 +207,21 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
   @Override public synchronized void onStatusChanged(final Call call) {
     final Call.Status status = call.getStatus();
     if(forking) {
-      if(Call.Status.IN_PROGRESS == call.getStatus()) {
+      if(Call.Status.IN_PROGRESS == call.getStatus() &&
+          Call.Direction.OUTBOUND_DIAL == call.getDirection()) {
         outboundCall = call;
+        notify();
+      } else {
+        for(final Call outboundCall : calls) {
+          final Call.Status outboundCallStatus = outboundCall.getStatus();
+          if(Call.Status.QUEUED == outboundCallStatus ||
+              Call.Status.RINGING == outboundCallStatus ||
+              Call.Status.IN_PROGRESS == outboundCallStatus) { return; }
+        }
         notify();
       }
     } else {
-      if((Call.Status.IN_PROGRESS == call.getStatus() && Call.Direction.OUTBOUND_DIAL == call.getDirection()) ||
-          Call.Status.CANCELLED == status || Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
+      if(Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
         notify();
       }
     }
