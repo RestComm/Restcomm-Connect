@@ -30,19 +30,16 @@ import javax.sdp.Connection;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
-import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -478,22 +475,6 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			unmute();
 		}
 		muted = true;
-	}
-	
-	private void patchContactHeader(final SipServletMessage message) throws ServletParseException {
-	  final Address contact = message.getAddressHeader("Contact");
-	  if(contact != null) {
-		final SipURI uri = (SipURI)contact.getURI();
-		final String ip = uri.getHost();
-		if(!IPUtils.isRoutableAddress(ip)) {
-	      final ServiceLocator services = ServiceLocator.getInstance();
-	      final Configuration configuration = services.get(Configuration.class);
-	      final String realIp = configuration.getString("external-ip");
-	      if(realIp != null && !realIp.isEmpty()) {
-		    uri.setHost(realIp);
-	      }
-		}
-	  }
 	}
 	
 	private byte[] patchMedia(final String realIp, final byte[] data)
