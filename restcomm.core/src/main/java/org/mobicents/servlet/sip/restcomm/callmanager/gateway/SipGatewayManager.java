@@ -149,8 +149,8 @@ public final class SipGatewayManager extends SipServlet {
 		final TimerManager timers = services.get(TimerManager.class);
 		try { 
 			final SipGatewayManagerTimerListener listener = new SipGatewayManagerTimerListener();
-			timers.register("REGISTER", listener);
-		} catch(final TooManyListenersException exception) { throw new ServletException(exception); }
+			if(!timers.isRegistered("REGISTER")) { timers.register("REGISTER", listener); }
+		} catch(final TooManyListenersException ignored) { }
 	}
 
 	public void register(final Gateway gateway, final int expires) {

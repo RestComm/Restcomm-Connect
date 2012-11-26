@@ -212,11 +212,10 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
 	    application.setAttribute(Registration.class.getName(), registration);
 	    final SipURI outboundInterface = getOutboundInterface(config);
 	    StringBuilder buffer = new StringBuilder();
-	    buffer.append("ping").append("@").append(outboundInterface.getHost());
+	    buffer.append("sip:ping").append("@").append(outboundInterface.getHost());
 	    final String from = buffer.toString();
 	    final String to = registration.getLocation();
 	    final SipServletRequest ping = sipFactory.createRequest(application, "OPTIONS", from, to);
-	    ping.addAddressHeader("Contact", sipFactory.createAddress(from), false);
 	    final SipURI uri = (SipURI)sipFactory.createURI(to);
 	    ping.pushRoute(uri);
 	    ping.setRequestURI(uri);
@@ -249,6 +248,10 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
 	    logger.warn(exception);
 	    continue;
 	  }
+	  final StringBuilder buffer = new StringBuilder();
+      buffer.append("sip:").append(location.getUser()).append("@")
+          .append(location.getHost()).append(":").append(location.getPort());
+	  final String formattedLocation = buffer.toString();
       int timeToLive = contact.getExpires();
       if(timeToLive == -1) {
         timeToLive = getExpires(request);
@@ -259,10 +262,10 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
         dao.removeRegistrations(addressOfRecord);
       } else {
         if(timeToLive == 0) {
-          dao.removeRegistration(location.toString());
+          dao.removeRegistration(formattedLocation);
         } else {
           final Registration registration = new Registration(Sid.generate(Sid.Type.REGISTRATION), DateTime.now(),
-            DateTime.now(), addressOfRecord, displayName, to.getUser(), userAgent, timeToLive, location.toString());
+            DateTime.now(), addressOfRecord, displayName, to.getUser(), userAgent, timeToLive, formattedLocation);
           if(dao.hasRegistration(addressOfRecord)) {
             dao.updateRegistration(registration);
           } else {
@@ -300,6 +303,8 @@ public int getContactCount(final SipServletRequest request) throws ServletParseE
   
   private void scheduleCleanup(final Registration registration)  {
     final SipApplicationSession application = sipFactory.createApplicationSession();
+    application.setAttribute(PresenceManager.class.getName(), this);
+    application.setAttribute(Registration.class.getName(), registration);
     long timeout = TimeUtils.SECOND_IN_MILLIS * registration.getTimeToLive();
     clock.createTimer(application, timeout, false, "CLEANUP");
     timeout += TimeUtils.SECOND_IN_MILLIS * 30;

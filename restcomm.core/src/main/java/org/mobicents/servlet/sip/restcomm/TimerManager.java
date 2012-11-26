@@ -34,6 +34,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   public TimerManager() {
     super();
     listeners = new ConcurrentHashMap<String, TimerListener>();
+    ServiceLocator.getInstance().set(TimerManager.class, this);
   }
   
   public void register(final String key, final TimerListener listener) throws TooManyListenersException {
@@ -44,6 +45,10 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
       buffer.append("There is already a listener registered for a key with the name ").append(key);
       throw new TooManyListenersException(buffer.toString());
     }
+  }
+  
+  public boolean isRegistered(final String key) {
+    return listeners.containsKey(key);
   }
 
   @Override public void timeout(final ServletTimer timer) {
