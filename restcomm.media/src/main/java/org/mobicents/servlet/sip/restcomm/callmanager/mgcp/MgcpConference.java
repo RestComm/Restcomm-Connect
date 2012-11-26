@@ -103,14 +103,6 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
       mgcpCall.leave(this);
     }
     calls.clear();
-    session.destroyConnection(ivrOutboundConnection);
-    try { wait(); }
-    catch(final InterruptedException ignored) { }
-    ivrOutboundConnection.removeObserver(this);
-    ivrOutboundConnection = null;
-    ivrInboundConnection.removeObserver(this);
-    ivrInboundConnection = null;
-    ivrEndpoint = null;
   }
   
   public void fireStatusChanged() {
@@ -227,11 +219,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
 
   @Override public synchronized void disconnected(final MgcpConnection connection) {
-    if(connection == ivrOutboundConnection) {
-      session.destroyConnection(ivrInboundConnection);
-    } else if(connection == ivrInboundConnection) {
-      notify();
-    }
+
   }
 
   @Override public synchronized void failed(final MgcpConnection connection) {
