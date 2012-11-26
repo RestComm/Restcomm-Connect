@@ -53,7 +53,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
   private final boolean record;
   private Sid recordingSid;
   
-  private List<Call> calls;
+  private List<Call> outboundCalls;
   private volatile boolean forking;
   private Call outboundCall;
 
@@ -91,11 +91,11 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
 	bridge.addParticipant(call);
     try {
       final DateTime start = DateTime.now();
-	  calls = getCalls(tag.getChildren());
-	  fork(calls);
+	  outboundCalls = getCalls(tag.getChildren());
+	  fork(outboundCalls);
 	  try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
       catch(final InterruptedException ignored) { }
-	  cleanup(calls);
+	  cleanup(outboundCalls);
 	  if(Call.Status.IN_PROGRESS == call.getStatus() && (outboundCall != null &&
 	      Call.Status.IN_PROGRESS == outboundCall.getStatus())) {
         bridge.stopBackgroundMusic();
@@ -113,7 +113,8 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
         }
       } else if(outboundCall != null) {
         outboundCall.removeObserver(this);
-	    if(Call.Status.QUEUED == outboundCall.getStatus()) {
+	    if(Call.Status.QUEUED == outboundCall.getStatus() ||
+	        Call.Status.RINGING == outboundCall.getStatus()) {
 	      outboundCall.cancel();
 	    } else if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
 	      outboundCall.hangup();
@@ -209,10 +210,12 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
     if(forking) {
       if(Call.Status.IN_PROGRESS == call.getStatus() &&
           Call.Direction.OUTBOUND_DIAL == call.getDirection()) {
-        outboundCall = call;
-        notify();
+    	if(outboundCall == null) {
+          outboundCall = call;
+          notify();
+    	}
       } else {
-        for(final Call outboundCall : calls) {
+        for(final Call outboundCall : outboundCalls) {
           final Call.Status outboundCallStatus = outboundCall.getStatus();
           if(Call.Status.QUEUED == outboundCallStatus ||
               Call.Status.RINGING == outboundCallStatus ||

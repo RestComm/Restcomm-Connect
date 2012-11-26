@@ -104,7 +104,8 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
           outboundCall.removeObserver(this);
           outboundCall.hangup();
         }
-      } else if(Call.Status.QUEUED == outboundCall.getStatus()) {
+      } else if(Call.Status.QUEUED == outboundCall.getStatus() ||
+          Call.Status.RINGING == outboundCall.getStatus()) {
         outboundCall.removeObserver(this);
         outboundCall.cancel();
       } else if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
@@ -146,9 +147,11 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
   }
   
   @Override public synchronized void onStatusChanged(final Call call) {
+	final Call.Direction direction = call.getDirection();
     final Call.Status status = call.getStatus();
-    if((Call.Status.IN_PROGRESS == call.getStatus() && Call.Direction.OUTBOUND_DIAL == call.getDirection()) ||
-        Call.Status.CANCELLED == status || Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
+    if((Call.Status.IN_PROGRESS == status && Call.Direction.OUTBOUND_DIAL == direction) ||
+    	(Call.Status.BUSY == status && Call.Direction.OUTBOUND_DIAL == direction) ||
+    	Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
 	  notify();
 	}
   }
