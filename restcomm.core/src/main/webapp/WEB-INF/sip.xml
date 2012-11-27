@@ -77,6 +77,12 @@
 			org.mobicents.servlet.sip.restcomm.TimerManager
 		</listener-class>
 	</listener>
+	
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpCallManager
+		</listener-class>
+	</listener>
 
 	<listener>
 		<listener-class>
