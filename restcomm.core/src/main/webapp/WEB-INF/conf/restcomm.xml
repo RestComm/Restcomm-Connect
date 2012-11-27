@@ -85,6 +85,9 @@
 		the Connection attribute in the SDP on behalf of the media server to the specified IP address.
 		Note: RestComm will only do NAT resolution when necessary so if your server already has a
 		routable IP address setting this parameter will have no effect.
+		
+		<max-response-time> - In milliseconds the maximum amount of time to wait for a response from
+		the media server before abandoning the request. This does NOT apply to RQNT/NOTIFY request/response.
 	-->
 	<media-server-manager>
 		<mgcp-server name="Mobicents Media Server">
@@ -92,6 +95,7 @@
 			<local-port>2727</local-port>
 			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
+			<response-timeout>500</response-timeout>
 			<!--  <external-address></external-address> -->
 		</mgcp-server>
 	</media-server-manager>

@@ -53,7 +53,7 @@ import org.mobicents.servlet.sip.restcomm.util.IPUtils;
  */
 @ThreadSafe public final class MgcpCall extends FiniteStateMachine
 implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
-	private static final Logger LOGGER = Logger.getLogger(MgcpCall.class);
+	private static final Logger logger = Logger.getLogger(MgcpCall.class);
 	// Call states.
 	private static final State IDLE = new State(Status.IDLE.toString());
 	private static final State QUEUED = new State(Status.QUEUED.toString());
@@ -147,6 +147,26 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	@Override public synchronized void addObserver(final CallObserver observer) {
 		observers.add(observer);
 	}
+	
+	private String mmsTimedOutException() {
+	  final StringBuilder buffer = new StringBuilder();
+	  buffer.append("The server @ ").append(server.getDomainName()).append(" failed to create a call with id ")
+	      .append(getSid().toString()).append("One or all of our requests failed to receive a response in time.");
+	  return buffer.toString();
+	}
+	
+	private void block(final int numberOfRequests) throws InterruptedException {
+      // ResponseTimeout * NumberOfRequests
+      wait(server.getResponseTimeout() * numberOfRequests);
+    }
+	
+	private void block(final int numberOfRequests, final State errorState) throws Exception {
+      // ResponseTimeout * NumberOfRequests
+      wait(server.getResponseTimeout() * numberOfRequests);
+      if(errorState.equals(getState())) {
+        throw new Exception(mmsTimedOutException());
+      }
+    }
 
 	public synchronized void trying(final SipServletRequest request) throws CallException {
 		assertState(IDLE);
@@ -169,13 +189,17 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
 			userAgentConnection.addObserver(this);
 			userAgentConnection.connect(ConnectionMode.SendRecv);
-			wait();
-			alert(request);
+			block(1);
+			if(MgcpConnection.OPEN.equals(userAgentConnection.getState())) {
+			  alert(request);
+			} else {
+			  throw new Exception(mmsTimedOutException());
+			}
 		} catch(final Exception exception){
 			cleanup();
 			setState(FAILED);
 			fireStatusChanged();
-			LOGGER.error(exception);
+			logger.error(exception);
 			throw new CallException(exception);
 		}
 	}
@@ -191,7 +215,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			cleanup();
 			setState(FAILED);
 			fireStatusChanged();
-			LOGGER.error(exception);
+			logger.error(exception);
 			throw new CallException(exception);
 		}
 	}
@@ -203,7 +227,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			relayOutboundConnection = session.createConnection(relayEndpoint);
 			relayOutboundConnection.addObserver(this);
 			relayOutboundConnection.connect(ConnectionMode.SendRecv);
-			wait();
+			block(6, RINGING);
 			// Send the response back to the caller.
 			final byte[] answer = patchMedia(server.getExternalAddress(),
 			    userAgentConnection.getLocalDescriptor().toString().getBytes());
@@ -214,7 +238,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		} catch(final Exception exception) {
 			fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
 			fireStatusChanged();
-			LOGGER.error(exception);
+			logger.error(exception);
 			throw new CallException(exception);
 		}
 	}
@@ -296,7 +320,10 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			userAgentConnection = session.createConnection(relayEndpoint);
 			userAgentConnection.addObserver(this);
 			userAgentConnection.connect(ConnectionMode.SendRecv);
-			wait();
+			block(1);
+			if(!MgcpConnection.HALF_OPEN.equals(userAgentConnection.getState())) {
+			  throw new Exception(mmsTimedOutException());
+			}
 			final byte[] offer = patchMedia(server.getExternalAddress(), userAgentConnection.getLocalDescriptor().toString().getBytes());
 			initialInvite.setContent(offer, "application/sdp");
 			initialInvite.send();
@@ -313,7 +340,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	}
 
 	public synchronized void established() {
-		LOGGER.debug("ACK received");
+		logger.debug("ACK received");
 	}
 
 	public synchronized void established(final SipServletResponse successResponse) throws CallException, IOException {
@@ -364,7 +391,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		try {
 			fail.send();
 		} catch(final IOException exception) {
-			LOGGER.error(exception);
+			logger.error(exception);
 		}
 		cleanup();
 		setState(FAILED);
@@ -444,9 +471,14 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		remoteOutboundConnection.addObserver(this);
 		remoteOutboundConnection.connect(ConnectionMode.Confrnce);
 		try {
-			wait();
-			remoteConference = conference;
-		} catch(final InterruptedException ignored) {
+			block(3);
+			if(MgcpConnection.OPEN.equals(remoteInboundConnection) &&
+			    MgcpConnection.OPEN.equals(remoteOutboundConnection)) {
+			  remoteConference = conference;
+			} else {
+			  throw new Exception(mmsTimedOutException());
+			}
+		} catch(final Exception ignored) {
 			leave(conference);
 		}
 	}
@@ -455,8 +487,15 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		assertState(IN_PROGRESS);
 		if(remoteOutboundConnection != null) {
 			session.destroyConnection(remoteOutboundConnection);
-			try { wait(); }
-			catch(final InterruptedException ignored) { }
+			try {
+			  block(2);
+			  if(!(MgcpConnection.DISCONNECTED.equals(relayInboundConnection) ||
+			      MgcpConnection.FAILED.equals(relayInboundConnection)) &&
+			      !(MgcpConnection.DISCONNECTED.equals(remoteOutboundConnection) ||
+			      MgcpConnection.FAILED.equals(remoteOutboundConnection))) {
+			    throw new Exception(mmsTimedOutException());
+			  }
+			} catch(final Exception exception) { logger.error(exception); }
 			remoteOutboundConnection.removeObserver(this);
 			remoteOutboundConnection = null;
 			if(remoteInboundConnection != null) {
@@ -470,7 +509,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 
 	@Override public synchronized void mute() {
 		relayOutboundConnection.modify(ConnectionMode.RecvOnly);
-		try { wait(); }
+		try { block(1); }
 		catch(final InterruptedException ignored) {
 			unmute();
 		}
@@ -525,7 +564,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			cleanup();
 			setState(FAILED);
 			fireStatusChanged();
-			LOGGER.error(exception);
+			logger.error(exception);
 		}
 	}
 	
@@ -562,14 +601,14 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		try {
 			bye.send();
 		} catch(final IOException exception) {
-			LOGGER.error(exception);
+			logger.error(exception);
 		}
 		cleanup();
 	}
 
 	@Override public synchronized void unmute() {
 		relayOutboundConnection.modify(ConnectionMode.SendRecv);
-		try { wait(); }
+		try { block(1); }
 		catch(final InterruptedException ignored) { }
 		muted = false;
 	}
@@ -588,7 +627,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	}
 
 	@Override public synchronized void halfOpen(final MgcpConnection connection) {
-		LOGGER.debug("halfOpen notification for connection: "+connection+", endpoint: "+connection.getEndpoint()
+		logger.debug("halfOpen notification for connection: "+connection+", endpoint: "+connection.getEndpoint()
 				+", state: "+connection.getState().getName());
 		final List<State> impossibleStates = new ArrayList<State>();
 		impossibleStates.add(COMPLETED);
@@ -614,7 +653,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	}
 
 	@Override public synchronized void open(final MgcpConnection connection) {
-		LOGGER.debug("open notification for connection: "+connection+", endpoint: "+connection.getEndpoint()
+		logger.debug("open notification for connection: "+connection+", endpoint: "+connection.getEndpoint()
 				+", state: "+connection.getState().getName());
 		final List<State> impossibleStates = new ArrayList<State>();
 		impossibleStates.add(COMPLETED);
@@ -639,8 +678,8 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			possibleStates.add(TRYING);
 			assertState(possibleStates);
 			setExpires(0);
-			setState(IN_PROGRESS);
 			dateStarted = DateTime.now();
+			setState(IN_PROGRESS);
 			fireStatusChanged();
 			if(Direction.INBOUND == getDirection()) {
 				notify();

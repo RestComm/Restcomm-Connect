@@ -46,11 +46,11 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
  */
 @NotThreadSafe public final class MgcpConnection extends FiniteStateMachine implements JainMgcpListener {
 	private static final Logger LOGGER = Logger.getLogger(MgcpConnection.class);
-	private static final State CREATED = new State("CREATED");
-	private static final State HALF_OPEN = new State("HALF_OPEN");
-	private static final State OPEN = new State("OPEN");
-	private static final State DISCONNECTED = new State("DISCONNECTED");
-	private static final State FAILED = new State("FAILED");
+	public static final State CREATED = new State("CREATED");
+	public static final State HALF_OPEN = new State("HALF_OPEN");
+	public static final State OPEN = new State("OPEN");
+	public static final State DISCONNECTED = new State("DISCONNECTED");
+	public static final State FAILED = new State("FAILED");
 	static {
 		CREATED.addTransition(HALF_OPEN);
 		CREATED.addTransition(OPEN);

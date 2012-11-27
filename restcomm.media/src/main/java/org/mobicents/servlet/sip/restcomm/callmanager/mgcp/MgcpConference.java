@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -40,6 +41,7 @@ import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
  */
 public final class MgcpConference extends FiniteStateMachine implements Conference, LifeCycle,
     MgcpConnectionObserver, MgcpIvrEndpointObserver {
+  private static final Logger logger = Logger.getLogger(MgcpConference.class);
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private static final State INIT = new State(Status.INIT.toString());
   private static final State IN_PROGRESS = new State(Status.IN_PROGRESS.toString());
@@ -214,6 +216,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     if(connection == ivrInboundConnection) {
       ivrOutboundConnection.modify(connection.getLocalDescriptor());
     } else if(connection == ivrOutboundConnection) {
+      setState(IN_PROGRESS);
+      fireStatusChanged();
       notify();
     }
   }
@@ -239,12 +243,24 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     ivrOutboundConnection = session.createConnection(ivrEndpoint);
     ivrOutboundConnection.addObserver(this);
     ivrOutboundConnection.connect(ConnectionMode.SendRecv);
+    block(3, INIT);
+    assertState(IN_PROGRESS);
+  }
+  
+  private void block(final int numberOfRequests, final State errorState) {
     try {
-      wait();
+      // ResponseTimeout * NumberOfRequests
+      wait(server.getResponseTimeout() * numberOfRequests);
+      if(errorState.equals(getState())) {
+    	final StringBuilder buffer = new StringBuilder();
+    	buffer.append("The server @ ").append(server.getDomainName()).append(" failed to create a conference. ")
+    		.append("One or all of our requests failed to receive a response in time.");
+        logger.warn(buffer.toString());
+        server.destroyMediaSession(session);
+        setState(FAILED);
+        fireStatusChanged();
+      }
     } catch(final InterruptedException ignored) { return; }
-    assertState(INIT);
-    setState(IN_PROGRESS);
-    fireStatusChanged();
   }
 
   @Override public synchronized void shutdown() {

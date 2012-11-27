@@ -53,12 +53,12 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 	private static final Logger LOGGER = Logger.getLogger(MgcpIvrEndpoint.class);
 	private static final PackageName PACKAGE_NAME = PackageName.factory("AU");
 	private static final RequestedEvent[] REQUESTED_EVENTS = new RequestedEvent[2];
-	private static final State IDLE = new State("IDLE");
-	private static final State PLAY = new State("PLAY");
-	private static final State PLAY_COLLECT = new State("PLAY_COLLECT");
-	private static final State PLAY_RECORD = new State("PLAY_RECORD");
-	private static final State STOP = new State("STOP");
-	private static final State FAILED = new State("FAILED");
+	public static final State IDLE = new State("IDLE");
+	public static final State PLAY = new State("PLAY");
+	public static final State PLAY_COLLECT = new State("PLAY_COLLECT");
+	public static final State PLAY_RECORD = new State("PLAY_RECORD");
+	public static final State STOP = new State("STOP");
+	public static final State FAILED = new State("FAILED");
 	static {
 		final RequestedAction[] action = new RequestedAction[] { RequestedAction.NotifyImmediately };
 		REQUESTED_EVENTS[0] = new RequestedEvent(new EventName(PACKAGE_NAME, MgcpEvent.factory("oc")), action);
