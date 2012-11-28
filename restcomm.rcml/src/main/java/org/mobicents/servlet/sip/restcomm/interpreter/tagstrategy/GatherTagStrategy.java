@@ -233,7 +233,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
     if(finishOnKey == null) {
       finishOnKey = "#";
     } else {
-      if(!finishOnKeyPattern.matcher(finishOnKey).matches()) {
+      if(!finishOnKey.isEmpty() && !finishOnKeyPattern.matcher(finishOnKey).matches()) {
     	interpreter.notify(context, Notification.WARNING, 13310);
     	finishOnKey = "#";
       }
