@@ -163,7 +163,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	private void block(final int numberOfRequests, final State errorState) throws Exception {
       // ResponseTimeout * NumberOfRequests
       wait(server.getResponseTimeout() * numberOfRequests);
-      if(!errorState.equals(getState())) {
+      if(errorState.equals(getState())) {
         throw new Exception(mmsTimedOutException());
       }
     }
@@ -234,7 +234,6 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			final SipServletResponse ok = initialInvite.createResponse(SipServletResponse.SC_OK);
 			ok.setContent(answer, "application/sdp");
 			ok.send();
-			wait();
 		} catch(final Exception exception) {
 			fail(SipServletResponse.SC_SERVER_INTERNAL_ERROR);
 			fireStatusChanged();
@@ -668,7 +667,6 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			ivrOutboundConnection = session.createConnection(ivrEndpoint);
 			ivrOutboundConnection.addObserver(this);
 			ivrOutboundConnection.connect(ConnectionMode.SendRecv);
-			notify();
 		} else if(connection == ivrInboundConnection) {
 			ivrOutboundConnection.modify(connection.getLocalDescriptor());
 		} if(connection == ivrOutboundConnection) {
