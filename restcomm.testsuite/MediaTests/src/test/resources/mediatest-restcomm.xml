@@ -27,7 +27,7 @@
 		
 		<!-- <root-uri>http://127.0.0.1:5080/restcomm</root-uri> -->
 		
-		<pre-cache-outbound>true</pre-cache-outbound>
+		<!--  <external-ip></external-ip> -->
 		
 		<outbound-proxy-user>8765</outbound-proxy-user>
 		<outbound-proxy-password></outbound-proxy-password>
@@ -70,13 +70,22 @@
 		The default way to control media servers is using the MGCP stack. The MGCP stack MUST have a name and
 		the following parameters:
 		
-		<stack-ip> - The local IP address for the MGCP stack.
+		<stack-address> - The local IP address for the MGCP stack.
 		
 		<stack-port> - The local port for the MGCP stack.
 		
-		<remote-ip> - The IP address for the media server.
+		<remote-address> - The IP address for the media server.
 		
 		<remote-port> - The port for the media server.
+		
+		<external-address> - Sometimes there is interest to use a different address in the SDP than
+		the IP address the media server is reporting. This parameter if set tells RestComm to patch
+		the Connection attribute in the SDP on behalf of the media server to the specified IP address.
+		Note: RestComm will only do NAT resolution when necessary so if your server already has a
+		routable IP address setting this parameter will have no effect.
+		
+		<max-response-time> - In milliseconds the maximum amount of time to wait for a response from
+		the media server before abandoning the request. This does NOT apply to RQNT/NOTIFY request/response.
 	-->
 	<media-server-manager>
 		<mgcp-server name="Mobicents Media Server">
@@ -84,6 +93,8 @@
 			<local-port>2727</local-port>
 			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
+			<response-timeout>500</response-timeout>
+			<!--  <external-address></external-address> -->
 		</mgcp-server>
 	</media-server-manager>
 
@@ -229,10 +240,10 @@
         </speakers>
       </speech-synthesizer>
 	-->
- 
-	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.ttsapi.TtsApiSynthesizer">
+	<!-- TTS-API.COM -->
+	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.ttsapi.TtsApiSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/ttsapi</cache-path>
 		<service-root>http://tts-api.com/tts.mp3</service-root>	
 	</speech-synthesizer>
-
+	
 </restcomm>
