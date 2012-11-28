@@ -163,7 +163,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	private void block(final int numberOfRequests, final State errorState) throws Exception {
       // ResponseTimeout * NumberOfRequests
       wait(server.getResponseTimeout() * numberOfRequests);
-      if(errorState.equals(getState())) {
+      if(!errorState.equals(getState())) {
         throw new Exception(mmsTimedOutException());
       }
     }
