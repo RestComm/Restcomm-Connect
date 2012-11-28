@@ -34,6 +34,7 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.URI;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.BootstrapException;
 import org.mobicents.servlet.sip.restcomm.Bootstrapper;
@@ -59,6 +60,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
   * @author quintana.thomas@gmail.com (Thomas Quintana)
   */
  public final class MgcpCallManager extends SipServlet implements CallManager, SipApplicationSessionListener {
+	 private static final Logger logger = Logger.getLogger(MgcpCallManager.class);
 	 private static final long serialVersionUID = 4758133818077979879L;
 
 	 private static SipFactory sipFactory;
@@ -322,6 +324,10 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	  final SipApplicationSession session = event.getApplicationSession();
       final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
       call.failed();
+      final StringBuilder buffer = new StringBuilder();
+      buffer.append("A call with ID ").append(call.getSid().toString())
+          .append(" was forcefully clean up after SipApplicationSession timed out.");
+      logger.warn(buffer.toString());
 	}
 
 	@Override public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) { }
