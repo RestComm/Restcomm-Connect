@@ -241,7 +241,7 @@
       </speech-synthesizer>
 	-->
 	<!-- TTS-API.COM -->
-	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.ttsapi.TtsApiSynthesizer">
+	<speech-synthesizer class="org.mobicents.servlet.sip.restcomm.tts.ttsapi.TtsApiSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/ttsapi</cache-path>
 		<service-root>http://tts-api.com/tts.mp3</service-root>	
 	</speech-synthesizer>
