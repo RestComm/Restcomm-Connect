@@ -98,7 +98,9 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     if(attribute == null) {
       return "man";
     }
-    final String gender = attribute.getValue();
+    String gender = attribute.getValue().toLowerCase();
+    if("female".equals(gender)) { gender = "woman"; }
+    if("male".equals(gender)) { gender = "man"; }
     if("man".equals(gender) || "woman".equals(gender)) {
       return gender;
     }
@@ -113,7 +115,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     }
     final ServiceLocator services = ServiceLocator.getInstance();
     final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
-    final String language = attribute.getValue();
+    final String language = attribute.getValue().toLowerCase();
     if(synthesizer.isSupported(language)) {
       return language;
     }
@@ -286,14 +288,6 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     final ServiceLocator services = ServiceLocator.getInstance();
     final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
     return synthesizer.synthesize(text, gender, language);
-  }
-  
-  public void precache(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-	      final RcmlTag tag){
-	  String gender = this.getGender(interpreter, context, tag);
-	  String language = this.getLanguage(interpreter, context, tag);
-	  String text = tag.getText();
-	  say(gender, language, text);
   }
   
   protected URI toRecordingPath(final Sid sid) {
