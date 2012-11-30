@@ -109,7 +109,7 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     }
     final DateTime finish = DateTime.now();
     if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
-      final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+      final List<NameValuePair> parameters = context.getRcmlRequestParameters();
       parameters.add(new BasicNameValuePair("DialCallStatus", "completed"));
       parameters.add(new BasicNameValuePair("DialCallDuration",
           Long.toString(finish.minus(start.getMillis()).getMillis() / TimeUtils.SECOND_IN_MILLIS)));

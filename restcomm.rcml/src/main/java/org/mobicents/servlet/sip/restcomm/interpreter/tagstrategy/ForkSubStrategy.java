@@ -125,7 +125,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
       conferenceCenter.removeConference(room);
       final DateTime finish = DateTime.now();
       if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
-	    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+	    final List<NameValuePair> parameters = context.getRcmlRequestParameters();
 	    parameters.add(new BasicNameValuePair("DialCallStatus", outboundCall.getStatus().toString()));
 	    parameters.add(new BasicNameValuePair("DialCallSid", outboundCall.getSid().toString()));
 	    parameters.add(new BasicNameValuePair("DialCallDuration",

@@ -17,6 +17,7 @@
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -24,19 +25,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -44,6 +39,9 @@ import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestDescriptor;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestExecutor;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpResponseDescriptor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
@@ -78,7 +76,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		EXECUTING.addTransition(FAILED);
 		REDIRECTED.addTransition(READY);
 	}
-	private static final List<NameValuePair> EMPTY_NAME_VALUE_PAIRS = new ArrayList<NameValuePair>(0);
 
 	// Configuration
 	private final Configuration configuration;
@@ -95,7 +92,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	//XML Resource URI.
 	private URI resourceUri;
 	// XML Resource request attributes.
-	private String requestVariables;
+	private String requestParameters;
 	// XML Resource request requestMethod.
 	private String requestMethod;
 	// XML Resource response body.
@@ -118,12 +115,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		configuration = services.get(Configuration.class);
 		daos = services.get(DaoManager.class);
 	}
-	
-	private void checkContentType(final String type) throws InterpreterException {
-		if(!type.contains("text/xml") && !type.contains("application/xml") && !type.contains("text/html")) {
-			throw new InterpreterException("Invalid content type " + type);
-		}
-	}
 
 	private void cleanup() {
 		final Call call = context.getCall();
@@ -136,21 +127,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	public void failed() {
 		assertState(EXECUTING);
 		setState(FAILED);
-	}
-
-	private HttpResponse fetch(final URI uri, final String method, List<NameValuePair> variables)
-			throws InterpreterException {
-		final HttpUriRequest request = request(uri, method, variables);
-		final HttpClient client = new DefaultHttpClient();
-		try {
-			return client.execute(request);
-		} catch(final ClientProtocolException exception) {
-			notify(context, Notification.ERROR, 11206, uri, method, getQueryString(getVariables(variables)));
-			throw new InterpreterException(exception);
-		} catch(final IOException exception) {
-			notify(context, Notification.ERROR, 11200, uri, method, getQueryString(getVariables(variables)));
-			throw new InterpreterException(exception);
-		}
 	}
 
 	public void finish() {
@@ -173,60 +149,89 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	}
 
 	public void initialize() throws InterpreterException {
-		try {
-			load(context.getVoiceUrl(), context.getVoiceMethod());
-		} catch(final InterpreterException exception) {
-			load(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod());
-		}
-		setState(READY);
+	  try {
+	    load(context.getVoiceUrl(), context.getVoiceMethod(),
+		    context.getRcmlRequestParameters());
+	  } catch(final InterpreterException exception) {
+		load(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod(), context.getRcmlRequestParameters());
+	  }
+	  setState(READY);
 	}
 
-	public void load(final URI uri, final String method) throws InterpreterException {
-		load(uri, method, EMPTY_NAME_VALUE_PAIRS);
-	}
-
-	public void load(final URI uri, final String method, List<NameValuePair> variables)
+	public void load(final URI uri, final String method, List<NameValuePair> parameters)
 			throws InterpreterException {
 		final List<State> possibleStates = new ArrayList<State>();
 		possibleStates.add(IDLE);
 		possibleStates.add(EXECUTING);
 		assertState(possibleStates);
 		// Load the XML resource for execution.
-		final String queryString = getQueryString(getVariables(variables));
-		try {
-			final HttpResponse response = fetch(uri, method, variables);
-			validate(uri, method, queryString, response);
-			final int status = response.getStatusLine().getStatusCode();
-			if(status == HttpStatus.SC_OK) {
-				final String body = StringUtils.toString(response.getEntity().getContent());
-				final RcmlDocument document = resourceBuilder.build(body);
-				validate(uri, method, queryString, document);
-				requestMethod = method;
-				requestVariables = queryString;
-				responseHeaders = HttpUtils.toString(response.getAllHeaders());
-				responseBody = body;
-				resource = resourceBuilder.build(body);
-				resourceUri = uri;
-			} else {
-				notify(context, Notification.ERROR, 11200, uri, method, queryString);
-			}
-		} catch(final IOException exception) {
-			notify(context, Notification.ERROR, 11200, uri, method, queryString);
-			throw new InterpreterException(exception);
-		} catch(final RcmlDocumentBuilderException exception) {
-			notify(context, Notification.ERROR, 12100, uri, method, queryString);
-			throw new InterpreterException(exception);
+		HttpRequestDescriptor request = null;
+		try { request = new HttpRequestDescriptor(uri, method, parameters); }
+		catch(final UnsupportedEncodingException ignored) { }
+		catch(final URISyntaxException exception) {
+		  notify(context, Notification.ERROR, 11100);
+		  throw new InterpreterException(exception);
 		}
+		resourceUri = request.getUri();
+		requestMethod = request.getMethod();
+		requestParameters = URLEncodedUtils.format(request.getParameters(), "UTF-8");
+		try {
+		  final HttpRequestExecutor executor = new HttpRequestExecutor();
+		  final HttpResponseDescriptor response = executor.execute(request);
+		  responseHeaders = HttpUtils.toString(response.getHeaders());
+		  if(HttpStatus.SC_OK == response.getStatusCode() && response.getContentLength() > 0) {
+		    final String contentType = response.getContentType();
+		    if(contentType.contains("text/xml") || contentType.contains("application/xml") ||
+		        contentType.contains("text/html")) {
+		      final String data = StringUtils.toString(response.getContent());
+			  responseBody = data;
+		      resource = resourceBuilder.build(data);
+		    } else if(contentType.contains("audio/wav") || contentType.contains("audio/wave") ||
+		        contentType.contains("audio/x-wav")) {
+		      resource = resourceBuilder.build(loadWav(response.getContent()));
+		    } else if(contentType.contains("text/plain")) { 
+		      final String data = StringUtils.toString(response.getContent());
+			  responseBody = data;
+			  resource = resourceBuilder.build(loadPlainText(data));
+		    } else {
+		      notify(context, Notification.ERROR, 12300);
+		      throw new InterpreterException("Invalid content type " + contentType);
+		    }
+			if(!"Response".equals(resource.getName())) {
+			  notify(context, Notification.ERROR, 12102);
+			  throw new InterpreterException("Invalid document root for document located @ " +
+			      request.getUri().toString());
+			}
+		  } else {
+			notify(context, Notification.ERROR, 11200);
+			throw new InterpreterException("Received an unsucessful response when requesting a document @ " +
+			    request.getUri().toString());
+		  }
+		} catch(final IOException exception) {
+		  notify(context, Notification.ERROR, 11200);
+		  throw new InterpreterException(exception);
+		} catch(final RcmlDocumentBuilderException exception) {
+		  notify(context, Notification.ERROR, 12100);
+		  throw new InterpreterException(exception);
+		} catch(final URISyntaxException exception) {
+		  notify(context, Notification.ERROR, 11100);
+		  throw new InterpreterException(exception);
+		}
+	}
+	
+	public String loadPlainText(final String text) {
+	  return new StringBuilder().append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+		  .append("<Response><Say>").append(text).append("</Say></Response>").toString();
+	}
+	
+	public String loadWav(final InputStream input) {
+	  return new StringBuilder().append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+	      .append("<Response><Play>").append("</Play></Response>").toString();
 	}
 
 	public void notify(final RcmlInterpreterContext context, final int log, final int errorCode) {
-		notify(context, log, errorCode, resourceUri, requestMethod, requestVariables, responseBody,
-				responseHeaders);
-	}
-
-	public void notify(final RcmlInterpreterContext context, final int log, final int errorCode,
-			final URI resourceUri, final String requestMethod, final String requestVariables) {
-		notify(context, log, errorCode, resourceUri, requestMethod, requestVariables, null, null);
+	    notify(context, log, errorCode, resourceUri, requestMethod, requestParameters, responseBody,
+		    responseHeaders);
 	}
 
 	public void notify(final RcmlInterpreterContext context, final int log, final int errorCode,
@@ -236,7 +241,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
 		builder.setSid(sid);
 		builder.setAccountSid(context.getAccountSid());
-		builder.setCallSid((Sid) context.getCall().getSid());
+		builder.setCallSid(context.getCall().getSid());
 		builder.setApiVersion(context.getApiVersion());
 		builder.setLog(log);
 		builder.setErrorCode(errorCode);
@@ -268,103 +273,65 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		setState(REDIRECTED);
 	}
 
-	private String getQueryString(final List<NameValuePair> variables) {
-		return URLEncodedUtils.format(variables, "UTF-8");
-	}
-
-	private List<NameValuePair> getVariables(final List<NameValuePair> variables) {
-		final List<NameValuePair> result = context.getRcmlRequestParameters();
-		result.addAll(variables);
-		return result;
-	}
-
-	private HttpUriRequest request(final URI uri, final String method, List<NameValuePair> variables)
-			throws InterpreterException {
-		final List<NameValuePair> allVariables = getVariables(variables);
-		final String queryString = getQueryString(allVariables);
-		HttpUriRequest request = null;
-		try {
-			if("GET".equalsIgnoreCase(method)) {
-				request = new HttpGet(URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(),
-						queryString, null));
-			} else if("POST".equalsIgnoreCase(method)) {
-				final HttpPost post = new HttpPost(uri);
-				post.setEntity(new UrlEncodedFormEntity(allVariables));
-				request = post;
-			}
-		} catch(final URISyntaxException exception) {
-			notify(context, Notification.ERROR, 11100, uri, method, queryString);
-			throw new InterpreterException(exception);
-		} catch(final UnsupportedEncodingException ignored) { }
-		return request;
-	}
-
 	public void run() {
-		initialize();
-		while(getState().equals(READY)) {
-			// Start executing the document.
-			TagIterator iterator = resource.iterator();
-			while(iterator.hasNext()) {
-				final RcmlTag tag = (RcmlTag)iterator.next();
-				if(!tag.hasBeenVisited() && tag.isVerb()) {
-					// Make sure we're ready to execute the next tag.
-					assertState(READY);
-					setState(EXECUTING);
-					// Try to execute the next tag.
-					try { tag.accept(this); }
-					catch(final VisitorException ignored) { /* Handled in tag strategy. */ }
-					tag.setHasBeenVisited(true);
-					// Make sure the call is still in progress.
-					final Call call = context.getCall();
-					if((Call.Status.RINGING != call.getStatus() && Call.Status.IN_PROGRESS != call.getStatus()))
-					{ finish(); }
-					// Handle any state changes caused by executing the tag.
-					final State state = getState();
-					if(state.equals(REDIRECTED)) {
-						iterator = resource.iterator();
-						setState(READY);
-					} else if(state.equals(FINISHED) || state.equals(FAILED)) {
-						break;
-					} else {
-						setState(READY);
-					}
-				}
+	  initialize();
+	  while(getState().equals(READY)) {
+	    // Start executing the document.
+	    TagIterator iterator = resource.iterator();
+	    while(iterator.hasNext()) {
+		  final RcmlTag tag = (RcmlTag)iterator.next();
+		  if(!tag.hasBeenVisited() && tag.isVerb()) {
+		    // Make sure we're ready to execute the next tag.
+			assertState(READY);
+			setState(EXECUTING);
+			// Try to execute the next tag.
+			try { tag.accept(this); }
+			catch(final VisitorException ignored) { /* Handled in tag strategy. */ }
+			tag.setHasBeenVisited(true);
+			// Make sure the call is still in progress.
+			final Call call = context.getCall();
+			if((Call.Status.RINGING != call.getStatus() && Call.Status.IN_PROGRESS != call.getStatus()))
+			{ finish(); }
+			// Handle any state changes caused by executing the tag.
+			final State state = getState();
+			if(state.equals(REDIRECTED)) {
+			  iterator = resource.iterator();
+			  setState(READY);
+			} else if(state.equals(FINISHED) || state.equals(FAILED)) {
+			  break;
+			} else {
+			  setState(READY);
 			}
-			cleanup();
-			finish();
+		  }
 		}
+		cleanup();
+		finish();
+	  }
 	}
 	
 	public void sendStatusCallback() {
-		final URI uri = context.getStatusCallback();
-		if(uri != null) {
-			final String method = context.getStatusCallbackMethod();
-			final HttpUriRequest request = request(uri, method, EMPTY_NAME_VALUE_PAIRS);
-			final HttpClient client = new DefaultHttpClient();
-			try {
-				client.execute(request);
-			} catch(final Exception exception) {
-				throw new InterpreterException(exception);
-			}
-		}
-	}
-
-	private void validate(final URI uri, final String method, final String queryString,
-			final HttpResponse response) throws InterpreterException {
+	  final URI uri = context.getStatusCallback();
+	  final String method = context.getStatusCallbackMethod();
+	  final List<NameValuePair> parameters = context.getRcmlRequestParameters();
+	  if(uri != null) {
 		try {
-			checkContentType(response.getFirstHeader("Content-Type").getValue());
-		} catch(final InterpreterException exception) {
-			notify(context, Notification.ERROR, 12300, uri, method, queryString);
-			throw new InterpreterException(exception);
+		  final HttpRequestExecutor executor = new HttpRequestExecutor();
+		  final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method,
+		      parameters);
+		  executor.execute(request);
+		} catch(final UnsupportedEncodingException exception) { }
+		  catch(final URISyntaxException exception) {
+		    notify(context, Notification.ERROR, 21609, uri, method, URLEncodedUtils.format(parameters, "UTF-8"),
+		        null, null);
+		} catch(final ClientProtocolException exception) {
+		  notify(context, Notification.ERROR, 11206, uri, method, URLEncodedUtils.format(parameters, "UTF-8"),
+		      null, null);
+		} catch(final IllegalArgumentException exception) { }
+		  catch(final IOException exception) {
+		    notify(context, Notification.ERROR, 11200, uri, method, URLEncodedUtils.format(parameters, "UTF-8"),
+			    null, null);
 		}
-	}
-
-	private void validate(final URI uri, final String method, final String queryString,
-			final Tag tag) throws InterpreterException {
-		if(!"Response".equals(tag.getName())) {
-			notify(context, Notification.ERROR, 12102, uri, method, queryString);
-			throw new InterpreterException();
-		}
+	  }
 	}
 
 	public void visit(final Tag tag) throws VisitorException {

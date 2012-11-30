@@ -16,20 +16,25 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.ArrayList;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
@@ -39,6 +44,8 @@ import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestDescriptor;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
@@ -46,10 +53,6 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.From;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
-
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -67,6 +70,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
   private URI statusCallback;
   
   private volatile SmsMessage sms;
+  
+  private RcmlInterpreter interpreter;
   private RcmlInterpreterContext context;
 	  
   public SmsTagStrategy() {
@@ -78,6 +83,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
+	this.interpreter = interpreter;
     this.context = context;
 	// Send the text message.
 	try {
@@ -90,7 +96,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 	    sms = sms.setStatus(SmsMessage.Status.SENDING);
 	    dao.updateSmsMessage(sms);
 	    if(action != null) {
-	      final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+	      final List<NameValuePair> parameters = context.getRcmlRequestParameters();
 	      parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
 	      parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
 	      interpreter.load(action, method, parameters);
@@ -140,17 +146,25 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     final SmsMessagesDao dao = daos.getSmsMessagesDao();
     dao.updateSmsMessage(sms);
     if(statusCallback != null) {
-      final List<NameValuePair> variables = context.getRcmlRequestParameters();
-	  variables.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
-	  variables.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
-	  final HttpPost post = new HttpPost(statusCallback);
-	  try { post.setEntity(new UrlEncodedFormEntity(variables)); }
-	  catch(final UnsupportedEncodingException ignored) { }
-	  final HttpClient client = new DefaultHttpClient();
+      final List<NameValuePair> parameters = context.getRcmlRequestParameters();
+	  parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
+	  parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
 	  try {
-	    client.execute(post);
-	  } catch(final Exception exception) {
-	    logger.error(exception);
+	    final HttpRequestExecutor executor = new HttpRequestExecutor();
+	    final HttpRequestDescriptor request = new HttpRequestDescriptor(statusCallback, "POST",
+	        parameters);
+	    executor.execute(request);
+	  } catch(final UnsupportedEncodingException exception) { }
+	    catch(final URISyntaxException exception) {
+	    interpreter.notify(context, Notification.WARNING, 14105, statusCallback, "POST", URLEncodedUtils.format(parameters, "UTF-8"),
+	        null, null);
+	  } catch(final ClientProtocolException exception) {
+		interpreter.notify(context, Notification.ERROR, 11206, statusCallback, "POST", URLEncodedUtils.format(parameters, "UTF-8"),
+	        null, null);
+	  } catch(final IllegalArgumentException exception) { }
+	    catch(final IOException exception) {
+	    interpreter.notify(context, Notification.ERROR, 11200, statusCallback, "POST", URLEncodedUtils.format(parameters, "UTF-8"),
+	        null, null);
 	  }
     }
   }

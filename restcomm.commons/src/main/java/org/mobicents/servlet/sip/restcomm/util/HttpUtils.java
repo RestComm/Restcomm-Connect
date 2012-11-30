@@ -20,11 +20,15 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -34,6 +38,21 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 @ThreadSafe public final class HttpUtils {
   private HttpUtils() {
     super();
+  }
+  
+  public static List<NameValuePair> toList(final String data)
+      throws UnsupportedEncodingException {
+    final List<NameValuePair> list = new ArrayList<NameValuePair>();
+    final String[] tokens = data.split("&");
+    for(final String token : tokens) {
+      final String[] parts = token.split("=");
+      if(parts.length == 1) {
+        list.add(new BasicNameValuePair(parts[0], null));
+      } else if(parts.length == 2) {
+        list.add(new BasicNameValuePair(parts[0], URLDecoder.decode(parts[1], "UTF-8")));
+      }
+    }
+    return list;
   }
   
   public static Map<String, String> toMap(final HttpEntity entity)

@@ -73,7 +73,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
       // Redirect to action URI.;
       final String digits = call.getDigits();
       if(digits != null && digits.length() > 0) {
-        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+        final List<NameValuePair> parameters = context.getRcmlRequestParameters();
         parameters.add(new BasicNameValuePair("Digits", digits));
         interpreter.load(action, method, parameters);
         interpreter.redirect();

@@ -47,7 +47,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
     if(uri != null) {
       try {
         if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
-          interpreter.load(uri, method);
+          interpreter.load(uri, method, context.getRcmlRequestParameters());
           interpreter.redirect();
         }
       } catch(final InterpreterException exception) {

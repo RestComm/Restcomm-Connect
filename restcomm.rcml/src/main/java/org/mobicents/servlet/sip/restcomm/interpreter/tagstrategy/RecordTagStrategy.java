@@ -16,18 +16,22 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
@@ -45,6 +49,8 @@ import org.mobicents.servlet.sip.restcomm.entities.Transcription.Status;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestDescriptor;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.WavUtils;
@@ -78,6 +84,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
   private boolean playBeep;
   
   private Recording recording;
+  
+  private RcmlInterpreter interpreter;
   private RcmlInterpreterContext context;
   
   public RecordTagStrategy() {
@@ -92,6 +100,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
+	this.interpreter = interpreter;
     this.context = context;
     final Call call = context.getCall();
     try {
@@ -114,7 +123,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
           speechRecognizer.recognize(path, transcribeLanguage, this);
         }
         // Redirect to action URI.
-        final List<NameValuePair> variables = new ArrayList<NameValuePair>();
+        final List<NameValuePair> variables = context.getRcmlRequestParameters();
         variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
         variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
         variables.add(new BasicNameValuePair("Digits", call.getDigits()));
@@ -228,7 +237,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
     final TranscriptionsDao dao = daos.getTranscriptionsDao();
     dao.addTranscription(transcription);
     if(transcribeCallback != null) {
-      final List<NameValuePair> variables = new ArrayList<NameValuePair>();
+      final List<NameValuePair> variables = context.getRcmlRequestParameters();
       variables.add(new BasicNameValuePair("TranscriptionText", transcription.getTranscriptionText()));
       variables.add(new BasicNameValuePair("TranscriptionStatus", transcription.getStatus().toString()));
       variables.add(new BasicNameValuePair("TranscriptionUrl", transcription.getUri().toString()));
@@ -321,17 +330,23 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
     handleTranscription(true, text);
   }
   
-  private void transcribeCallback(final URI uri, List<NameValuePair> additionalVariables) {
-    final List<NameValuePair> variables = context.getRcmlRequestParameters();
-    variables.addAll(additionalVariables);
-    final HttpPost post = new HttpPost(uri);
-    try { post.setEntity(new UrlEncodedFormEntity(variables)); }
-    catch(final UnsupportedEncodingException ignored) { }
-    final HttpClient client = new DefaultHttpClient();
-	try {
-	  client.execute(post);
-	} catch(final Exception exception) {
-	  logger.error(exception);
-	}
+  private void transcribeCallback(final URI uri, List<NameValuePair> parameters) {
+    try {
+	  final HttpRequestExecutor executor = new HttpRequestExecutor();
+	  final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, "POST",
+          parameters);
+      executor.execute(request);
+    } catch(final UnsupportedEncodingException exception) { }
+      catch(final URISyntaxException exception) {
+      interpreter.notify(context, Notification.ERROR, 11100, uri, "POST", URLEncodedUtils.format(parameters, "UTF-8"),
+          null, null);
+    } catch(final ClientProtocolException exception) {
+	  interpreter.notify(context, Notification.ERROR, 11206, uri, "POST", URLEncodedUtils.format(parameters, "UTF-8"),
+          null, null);
+    } catch(final IllegalArgumentException exception) { }
+      catch(final IOException exception) {
+      interpreter.notify(context, Notification.ERROR, 11200, uri, "POST", URLEncodedUtils.format(parameters, "UTF-8"),
+          null, null);
+    }
   }
 }
