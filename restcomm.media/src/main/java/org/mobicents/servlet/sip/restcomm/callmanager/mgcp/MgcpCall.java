@@ -489,10 +489,11 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			session.destroyConnection(remoteOutboundConnection);
 			try {
 			  block(2);
-			  if(!(MgcpConnection.DISCONNECTED.equals(relayInboundConnection) ||
-			      MgcpConnection.FAILED.equals(relayInboundConnection)) &&
-			      !(MgcpConnection.DISCONNECTED.equals(remoteOutboundConnection) ||
-			      MgcpConnection.FAILED.equals(remoteOutboundConnection))) {
+			  //Issue 138: http://code.google.com/p/restcomm/issues/detail?id=138
+			  if(!(MgcpConnection.DISCONNECTED.equals(relayInboundConnection.getState()) ||
+			      MgcpConnection.FAILED.equals(relayInboundConnection.getState())) &&
+			      !(MgcpConnection.DISCONNECTED.equals(remoteOutboundConnection.getState()) ||
+			      MgcpConnection.FAILED.equals(remoteOutboundConnection.getState()))) {
 			    throw new Exception(mmsTimedOutException());
 			  }
 			} catch(final Exception exception) { logger.error(exception); }
