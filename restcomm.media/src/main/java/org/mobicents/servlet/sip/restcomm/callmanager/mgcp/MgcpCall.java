@@ -150,8 +150,8 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	
 	private String mmsTimedOutException() {
 	  final StringBuilder buffer = new StringBuilder();
-	  buffer.append("The server @ ").append(server.getDomainName()).append(" failed to create a call with id ")
-	      .append(getSid().toString()).append("One or all of our requests failed to receive a response in time.");
+	  buffer.append("The server @ ").append(server.getDomainName()).append(" failed for Call-ID ")
+	      .append(initialInvite.getCallId()).append("One or all of our requests failed to receive a response in time.");
 	  return buffer.toString();
 	}
 	
@@ -471,8 +471,9 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		remoteOutboundConnection.connect(ConnectionMode.Confrnce);
 		try {
 			block(3);
-			if(MgcpConnection.OPEN.equals(remoteInboundConnection) &&
-			    MgcpConnection.OPEN.equals(remoteOutboundConnection)) {
+			//Issue 138: http://code.google.com/p/restcomm/issues/detail?id=138
+			if(MgcpConnection.OPEN.equals(remoteInboundConnection.getState()) &&
+			    MgcpConnection.OPEN.equals(remoteOutboundConnection.getState())) {
 			  remoteConference = conference;
 			} else {
 			  throw new Exception(mmsTimedOutException());
