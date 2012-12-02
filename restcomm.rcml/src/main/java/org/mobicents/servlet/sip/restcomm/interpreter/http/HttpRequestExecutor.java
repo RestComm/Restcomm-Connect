@@ -83,6 +83,7 @@ public final class HttpRequestExecutor {
       }
       builder.setContent(entity.getContent());
       builder.setContentLength(entity.getContentLength());
+      builder.setIsChuncked(entity.isChunked());
     }
     return builder.build();
   }

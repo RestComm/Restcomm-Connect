@@ -151,7 +151,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	private String mmsTimedOutException() {
 	  final StringBuilder buffer = new StringBuilder();
 	  buffer.append("The server @ ").append(server.getDomainName()).append(" failed for Call-ID ")
-	      .append(initialInvite.getCallId()).append("One or all of our requests failed to receive a response in time.");
+	      .append(initialInvite.getCallId()).append(" One or all of our requests failed to receive a response in time.");
 	  return buffer.toString();
 	}
 	

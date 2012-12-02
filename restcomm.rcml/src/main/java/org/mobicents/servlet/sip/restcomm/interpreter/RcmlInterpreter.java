@@ -29,6 +29,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
 
@@ -59,6 +60,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class RcmlInterpreter extends FiniteStateMachine implements Runnable, TagVisitor {
+	private static final Logger logger = Logger.getLogger(RcmlInterpreter.class);
 	// RcmlInterpreter states.
 	private static final State IDLE = new State("idle");
 	private static final State REDIRECTED = new State("redirected");
@@ -148,14 +150,21 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		return URI.create(buffer.toString());
 	}
 
-	public void initialize() throws InterpreterException {
+	public void initialize() {
 	  try {
 	    load(context.getVoiceUrl(), context.getVoiceMethod(),
 		    context.getRcmlRequestParameters());
+	    setState(READY);
 	  } catch(final InterpreterException exception) {
-		load(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod(), context.getRcmlRequestParameters());
+	    logger.warn(exception);
+	    try {
+		  load(context.getVoiceFallbackUrl(), context.getVoiceFallbackMethod(),
+		      context.getRcmlRequestParameters());
+		  setState(READY);
+	    } catch(final InterpreterException fallbackException) {
+	      logger.warn(exception);
+	    }
 	  }
-	  setState(READY);
 	}
 
 	public void load(final URI uri, final String method, List<NameValuePair> parameters)
@@ -179,7 +188,8 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 		  final HttpRequestExecutor executor = new HttpRequestExecutor();
 		  final HttpResponseDescriptor response = executor.execute(request);
 		  responseHeaders = HttpUtils.toString(response.getHeaders());
-		  if(HttpStatus.SC_OK == response.getStatusCode() && response.getContentLength() > 0) {
+		  if(HttpStatus.SC_OK == response.getStatusCode() &&
+		      (response.getContentLength() > 0 || response.isChunked())) {
 		    final String contentType = response.getContentType();
 		    if(contentType.contains("text/xml") || contentType.contains("application/xml") ||
 		        contentType.contains("text/html")) {
@@ -286,7 +296,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 			setState(EXECUTING);
 			// Try to execute the next tag.
 			try { tag.accept(this); }
-			catch(final VisitorException ignored) { /* Handled in tag strategy. */ }
+			catch(final VisitorException exception) { logger.warn(exception); }
 			tag.setHasBeenVisited(true);
 			// Make sure the call is still in progress.
 			final Call call = context.getCall();
@@ -304,9 +314,9 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 			}
 		  }
 		}
-		cleanup();
-		finish();
+	    finish();
 	  }
+	  cleanup();
 	}
 	
 	public void sendStatusCallback() {
@@ -341,7 +351,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 				final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
 				strategy.initialize(this, context, rcmlTag);
 				strategy.execute(this, context, rcmlTag);
-			} catch(final Exception exception) { /* Handled in tag strategy. */ }
+			} catch(final Exception exception) { throw new VisitorException(exception); }
 		}
 	}
 }

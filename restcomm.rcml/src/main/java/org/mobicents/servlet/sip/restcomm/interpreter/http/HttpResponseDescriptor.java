@@ -32,11 +32,13 @@ public final class HttpResponseDescriptor {
   private final long contentLength;
   private final String contentEncoding;
   private final String contentType;
+  private final boolean isChunked;
   private final Header[] headers;
   
   private HttpResponseDescriptor(final HttpRequestDescriptor requestDescriptor, final int statusCode,
       final String statusDescription, final InputStream content, final long contentLength,
-      final String contentEncoding, final String contentType, final Header[] headers) {
+      final String contentEncoding, final String contentType, final boolean isChunked,
+      final Header[] headers) {
     super();
     this.requestDescriptor = requestDescriptor;
     this.statusCode = statusCode;
@@ -45,6 +47,7 @@ public final class HttpResponseDescriptor {
     this.contentLength = contentLength;
     this.contentEncoding = contentEncoding;
     this.contentType = contentType;
+    this.isChunked = isChunked;
     this.headers = headers;
   }
   
@@ -75,6 +78,10 @@ public final class HttpResponseDescriptor {
   public String getContentType() {
 	return contentType;
   }
+  
+  public boolean isChunked() {
+    return isChunked;
+  }
 
   public Header[] getHeaders() {
 	return headers;
@@ -96,6 +103,7 @@ public final class HttpResponseDescriptor {
     private long contentLength;
     private String contentEncoding;
     private String contentType;
+    private boolean isChunked;
     private Header[] headers;
     
     private Builder() {
@@ -104,7 +112,7 @@ public final class HttpResponseDescriptor {
     
     public HttpResponseDescriptor build() {
       return new HttpResponseDescriptor(requestDescriptor, statusCode, statusDescription, content, contentLength,
-          contentEncoding, contentType, headers);
+          contentEncoding, contentType, isChunked, headers);
     }
     
     public void setStatusCode(final int statusCode) {
@@ -129,6 +137,10 @@ public final class HttpResponseDescriptor {
     
     public void setContentType(final String contentType) {
       this.contentType = contentType;
+    }
+    
+    public void setIsChuncked(final boolean isChunked) {
+      this.isChunked = isChunked;
     }
     
     public void setHeaders(final Header[] headers) {
