@@ -221,7 +221,11 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 		final String[] tokens = input.split(" ");
 		for(final String token : tokens) {
 			final String[] values = token.split("=");
-			parameters.put(values[0], values[1]);
+			if(values.length == 1) {
+			  parameters.put(values[0], null);
+			} else if(values.length == 2) {
+			  parameters.put(values[0], values[1]);
+			}
 		}
 		return parameters;
 	}

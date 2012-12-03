@@ -99,7 +99,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
       } else if(Pause.NAME.equals(name)) {
         announcements.addAll(getPause(interpreter, context, (RcmlTag)child));
       }
- 	  tag.setHasBeenVisited(true);
+ 	  ((RcmlTag)child).setHasBeenVisited(true);
  	}
     return announcements;
   }

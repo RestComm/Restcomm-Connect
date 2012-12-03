@@ -286,6 +286,7 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 	public void run() {
 	  initialize();
 	  while(getState().equals(READY)) {
+		final Call call = context.getCall();
 	    // Start executing the document.
 	    TagIterator iterator = resource.iterator();
 	    while(iterator.hasNext()) {
@@ -299,7 +300,6 @@ public final class RcmlInterpreter extends FiniteStateMachine implements Runnabl
 			catch(final VisitorException exception) { logger.warn(exception); }
 			tag.setHasBeenVisited(true);
 			// Make sure the call is still in progress.
-			final Call call = context.getCall();
 			if((Call.Status.RINGING != call.getStatus() && Call.Status.IN_PROGRESS != call.getStatus()))
 			{ finish(); }
 			// Handle any state changes caused by executing the tag.
