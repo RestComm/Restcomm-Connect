@@ -14,11 +14,12 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.fax;
 
 import java.net.URI;
 
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
@@ -28,7 +29,7 @@ import org.mobicents.servlet.sip.restcomm.fax.FaxServiceObserver;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.RcmlTagStrategy;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.From;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
@@ -59,10 +60,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
       final RcmlTag tag) throws TagStrategyException {
     try {
       final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-      if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
-        faxService.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
+      faxService.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
             phoneNumberUtil.format(to, PhoneNumberFormat.E164), uri, this);
-      }
     } catch(final FaxServiceException exception) {
       interpreter.failed();
   	  interpreter.notify(context, Notification.ERROR, 12400);

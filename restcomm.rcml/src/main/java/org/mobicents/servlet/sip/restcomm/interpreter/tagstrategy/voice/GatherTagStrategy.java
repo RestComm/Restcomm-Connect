@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -30,7 +30,6 @@ import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
-import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
@@ -63,21 +62,17 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
 	  // Collect some digits.
 	  final List<URI> announcements = getAnnouncements(interpreter, context, tag);
 	  final Call call = context.getCall();
-	  try {
-	    if(Call.Status.IN_PROGRESS == call.getStatus()) {
-          call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
-	    }
-	  } catch(final CallException exception) {
-	    exception.printStackTrace();
+	  if(Call.Status.IN_PROGRESS == call.getStatus()) {
+        call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
+        // Redirect to action URI.;
+        final String digits = call.getDigits();
+        if(digits != null && digits.length() > 0) {
+          final List<NameValuePair> parameters = context.getRcmlRequestParameters();
+          parameters.add(new BasicNameValuePair("Digits", digits));
+          interpreter.load(action, method, parameters);
+          interpreter.redirect();
+        }
 	  }
-      // Redirect to action URI.;
-      final String digits = call.getDigits();
-      if(digits != null && digits.length() > 0) {
-        final List<NameValuePair> parameters = context.getRcmlRequestParameters();
-        parameters.add(new BasicNameValuePair("Digits", digits));
-        interpreter.load(action, method, parameters);
-        interpreter.redirect();
-      }
     } catch(final Exception exception) {
       interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);

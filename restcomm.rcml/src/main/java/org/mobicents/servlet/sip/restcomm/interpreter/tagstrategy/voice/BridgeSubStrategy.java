@@ -1,4 +1,4 @@
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -78,8 +78,8 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
 	bridge.setBackgroundMusic(ringbackAudioFiles);
 	bridge.playBackgroundMusic();
 	call.addObserver(this);
-	bridge.addParticipant(call);
 	try {
+	  bridge.addParticipant(call);
 	  final DateTime start = DateTime.now();
 	  outboundCall = callManager.createExternalCall(caller, callee);
 	  outboundCall.addObserver(this);
@@ -129,6 +129,7 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
         interpreter.redirect();
   	  }
 	} catch(final Exception exception) {
+	  interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);
       logger.error(exception);
       throw new TagStrategyException(exception);

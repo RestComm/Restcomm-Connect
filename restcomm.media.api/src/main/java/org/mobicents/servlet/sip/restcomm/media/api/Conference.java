@@ -24,7 +24,7 @@ import java.util.List;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Conference {
-  public void addParticipant(Call participant);
+  public void addParticipant(Call participant)  throws ConferenceException;
   public void addObserver(ConferenceObserver observer);
   public String getName();
   public int getNumberOfParticipants();

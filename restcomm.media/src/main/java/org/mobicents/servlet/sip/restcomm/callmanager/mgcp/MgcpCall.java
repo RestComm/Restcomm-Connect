@@ -164,7 +164,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
       // ResponseTimeout * NumberOfRequests
       wait(server.getResponseTimeout() * numberOfRequests);
       if(errorState.equals(getState())) {
-        throw new Exception(mmsTimedOutException());
+        throw new CallException(mmsTimedOutException());
       }
     }
 
@@ -463,7 +463,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		return muted;
 	}
 
-	public synchronized void join(final MgcpConference conference) {
+	public synchronized void join(final MgcpConference conference) throws CallException {
 		assertState(IN_PROGRESS);
 		remoteEndpoint = conference.getConferenceEndpoint();
 		remoteOutboundConnection = session.createConnection(remoteEndpoint);
@@ -476,10 +476,11 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			    MgcpConnection.OPEN.equals(remoteOutboundConnection.getState())) {
 			  remoteConference = conference;
 			} else {
-			  throw new Exception(mmsTimedOutException());
+			  throw new CallException(mmsTimedOutException());
 			}
-		} catch(final Exception ignored) {
+		} catch(final Exception exception) {
 			leave(conference);
+			throw new CallException(exception);
 		}
 	}
 
@@ -494,7 +495,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			      MgcpConnection.FAILED.equals(relayInboundConnection.getState())) &&
 			      !(MgcpConnection.DISCONNECTED.equals(remoteOutboundConnection.getState()) ||
 			      MgcpConnection.FAILED.equals(remoteOutboundConnection.getState()))) {
-			    throw new Exception(mmsTimedOutException());
+			    throw new CallException(mmsTimedOutException());
 			  }
 			} catch(final Exception exception) { logger.error(exception); }
 			remoteOutboundConnection.removeObserver(this);

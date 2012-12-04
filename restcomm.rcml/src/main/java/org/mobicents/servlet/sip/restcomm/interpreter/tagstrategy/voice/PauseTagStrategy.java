@@ -14,13 +14,14 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
@@ -36,8 +37,11 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
   
   @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    try { wait(length * TimeUtils.SECOND_IN_MILLIS); }
-    catch(final InterruptedException ignored) { return; }
+	final Call.Status status = context.getCall().getStatus();
+    if(Call.Status.RINGING == status || Call.Status.IN_PROGRESS == status) {
+      try { wait(length * TimeUtils.SECOND_IN_MILLIS); }
+      catch(final InterruptedException ignored) { return; }
+    }
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,

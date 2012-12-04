@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -56,21 +56,21 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
       final RcmlTag tag) throws TagStrategyException {
     final Call call = context.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
-      if("rejected".equalsIgnoreCase(reason)) {
-    	try { 
+      try { 
+        if("rejected".equalsIgnoreCase(reason)) {
     	  super.initialize(interpreter, context, tag);
-    	  call.play(rejectAudioFile, 1);
-        } catch(final Exception exception) {
-          interpreter.failed();
-    	  interpreter.notify(context, Notification.ERROR, 12400);
-    	  logger.error(exception);
-    	  throw new TagStrategyException(exception);
-    	}
-        call.hangup();
-      } else if("busy".equalsIgnoreCase(reason)) {
-        call.reject();
-      }
-      interpreter.finish();
+    	  play(call, rejectAudioFile, 1);
+    	  call.hangup();
+        } else if("busy".equalsIgnoreCase(reason)) {
+          call.reject();
+        }
+        interpreter.finish();
+      } catch(final Exception exception) {
+        interpreter.failed();
+  	    interpreter.notify(context, Notification.ERROR, 12400);
+  	    logger.error(exception);
+  	    throw new TagStrategyException(exception);
+  	  }
     }
   }
   

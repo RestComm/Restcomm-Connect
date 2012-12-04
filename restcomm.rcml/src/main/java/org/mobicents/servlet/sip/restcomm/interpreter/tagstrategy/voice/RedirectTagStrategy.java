@@ -14,86 +14,75 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
-import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class PlayTagStrategy extends RcmlTagStrategy {
-  private static final Logger logger = Logger.getLogger(PlayTagStrategy.class);
+@NotThreadSafe public final class RedirectTagStrategy extends RcmlTagStrategy {
+  private static final Logger logger = Logger.getLogger(RedirectTagStrategy.class);
 
-  private int loop;
+  private String method;
   private URI uri;
 
-  public PlayTagStrategy() {
+  public RedirectTagStrategy() {
     super();
   }
-  
+
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final List<URI> announcement = new ArrayList<URI>();
-    announcement.add(uri);
-    try {
-      final Call call = context.getCall();
-      if(loop == 0) {
-    	while(Call.Status.IN_PROGRESS == call.getStatus()) {
-    	  call.play(announcement, 1);
-    	}
-    	interpreter.finish();
-      } else {
-        play(call, announcement, loop);
+    // Redirect the interpreter to the new RCML resource.
+    if(uri != null) {
+      try {
+        if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
+          interpreter.load(uri, method, context.getRcmlRequestParameters());
+          interpreter.redirect();
+        }
+      } catch(final InterpreterException exception) {
+        interpreter.failed();
+        interpreter.notify(context, Notification.ERROR, 12400);
+        logger.error(exception);
+        throw new TagStrategyException(exception);
       }
-    } catch(final CallException exception) {
-      interpreter.failed();
-      interpreter.notify(context, Notification.ERROR, 12400);
-      logger.error(exception);
-      throw new TagStrategyException(exception);
-    }
-  }
-  
-  private void initLoop(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) throws TagStrategyException {
-    loop = getLoop(interpreter, context, tag);
-    if(loop == -1) {
-      interpreter.notify(context, Notification.WARNING, 13410);
-      loop = 1;
-    }
-  }
-  
-  private void initUri(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) throws TagStrategyException {
-    try {
-      uri = getUri(interpreter, context, tag);
-      if(uri == null) {
-    	interpreter.failed();
-        interpreter.notify(context, Notification.ERROR, 13420);
-        throw new TagStrategyException("There is no resource to play.");
-      }
-    } catch(final IllegalArgumentException exception) {
-      interpreter.failed();
-      interpreter.notify(context, Notification.ERROR, 11100);
-      throw new TagStrategyException(tag.getText() + " is an invalid URI.");
     }
   }
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
     super.initialize(interpreter, context, tag);
-    initLoop(interpreter, context, tag);
+    initMethod(interpreter, context, tag);
     initUri(interpreter, context, tag);
+  }
+  
+  private void initMethod(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    method = getMethod(interpreter, context, tag);
+	if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+	  interpreter.notify(context, Notification.WARNING, 13710);
+	  method = "POST";
+	}
+  }
+  
+  private void initUri(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException {
+    try {
+      uri = getUri(interpreter, context, tag);
+    } catch(final IllegalArgumentException ignored) {
+      interpreter.failed();
+      interpreter.notify(context, Notification.ERROR, 11100);
+      throw new TagStrategyException(tag.getText() + " is an invalid URI.");
+    }
   }
 }

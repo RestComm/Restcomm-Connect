@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,13 +28,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
@@ -112,23 +109,23 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
       final URI path = toRecordingPath(sid);
       if(Call.Status.IN_PROGRESS == call.getStatus()) {
         call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
-      }
-      final double duration = WavUtils.getAudioDuration(path);
-      if(duration > 0) {
-        recording = recording(sid, duration);
-        final RecordingsDao dao = daos.getRecordingsDao();
-        dao.addRecording(recording);
-        // Transcribe the path.
-        if(transcribe || (transcribeCallback != null)) {
-          speechRecognizer.recognize(path, transcribeLanguage, this);
+        final double duration = WavUtils.getAudioDuration(path);
+        if(duration > 0) {
+          recording = recording(sid, duration);
+          final RecordingsDao dao = daos.getRecordingsDao();
+          dao.addRecording(recording);
+          // Transcribe the path.
+          if(transcribe || (transcribeCallback != null)) {
+            speechRecognizer.recognize(path, transcribeLanguage, this);
+          }
+          // Redirect to action URI.
+          final List<NameValuePair> variables = context.getRcmlRequestParameters();
+          variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
+          variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
+          variables.add(new BasicNameValuePair("Digits", call.getDigits()));
+          interpreter.load(action, method, variables);
+          interpreter.redirect();
         }
-        // Redirect to action URI.
-        final List<NameValuePair> variables = context.getRcmlRequestParameters();
-        variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
-        variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
-        variables.add(new BasicNameValuePair("Digits", call.getDigits()));
-        interpreter.load(action, method, variables);
-        interpreter.redirect();
       }
     } catch(final Exception exception) {
       interpreter.failed();

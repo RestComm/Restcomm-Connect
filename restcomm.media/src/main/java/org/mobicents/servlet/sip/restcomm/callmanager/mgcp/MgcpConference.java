@@ -32,7 +32,9 @@ import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.media.api.Conference;
+import org.mobicents.servlet.sip.restcomm.media.api.ConferenceException;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 
@@ -86,11 +88,15 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     recordAudio = false;
   }
   
-  @Override public void addParticipant(final Call call) {
+  @Override public void addParticipant(final Call call) throws ConferenceException {
     assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
     if(!calls.containsKey(call.getSid())) {
-      mgcpCall.join(this);
+      try {
+        mgcpCall.join(this);
+      } catch(final CallException exception) {
+        throw new ConferenceException(exception);
+      }
       calls.put(call.getSid(), mgcpCall);
     }
   }
