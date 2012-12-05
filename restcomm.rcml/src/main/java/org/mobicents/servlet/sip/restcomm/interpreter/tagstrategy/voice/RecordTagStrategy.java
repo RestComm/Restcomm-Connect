@@ -46,6 +46,8 @@ import org.mobicents.servlet.sip.restcomm.entities.Transcription.Status;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestDescriptor;
 import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
@@ -62,7 +64,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRecognizerObserver {
+@NotThreadSafe public final class RecordTagStrategy extends VoiceRcmlTagStrategy implements SpeechRecognizerObserver {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private static final Logger logger = Logger.getLogger(RecordTagStrategy.class);
   private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1,12}");
@@ -82,8 +84,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
   
   private Recording recording;
   
-  private RcmlInterpreter interpreter;
-  private RcmlInterpreterContext context;
+  private VoiceRcmlInterpreter interpreter;
+  private VoiceRcmlInterpreterContext context;
   
   public RecordTagStrategy() {
     super();
@@ -97,9 +99,10 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-	this.interpreter = interpreter;
-    this.context = context;
-    final Call call = context.getCall();
+	this.interpreter = (VoiceRcmlInterpreter)interpreter;
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    this.context = voiceContext;
+    final Call call = voiceContext.getCall();
     try {
       if(playBeep) {
         play(call, beepAudioFile, 1);

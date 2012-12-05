@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.sms;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
@@ -44,9 +44,10 @@ import org.mobicents.servlet.sip.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestDescriptor;
 import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestExecutor;
-import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.RcmlTagStrategy;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregatorObserver;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
@@ -57,7 +58,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class SmsTagStrategy extends RcmlTagStrategy implements SmsAggregatorObserver {
+@NotThreadSafe public final class SmsTagStrategy extends VoiceRcmlTagStrategy implements SmsAggregatorObserver {
   private static final Logger logger = Logger.getLogger(SmsTagStrategy.class);
   private final PhoneNumberUtil phoneNumberUtil;
   private final SmsAggregator smsAggregator;
@@ -86,27 +87,30 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
 	this.interpreter = interpreter;
     this.context = context;
 	// Send the text message.
-	try {
-	  final SmsMessagesDao dao = daos.getSmsMessagesDao();
-	  sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
-	  dao.addSmsMessage(sms);
-	  smsAggregator.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
-	      phoneNumberUtil.format(to, PhoneNumberFormat.E164), body, this);
-	  sms = sms.setStatus(SmsMessage.Status.SENDING);
-	  dao.updateSmsMessage(sms);
-	  if(action != null) {
-	    final List<NameValuePair> parameters = context.getRcmlRequestParameters();
-	    parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
-	    parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
-	    interpreter.load(action, method, parameters);
-	    interpreter.redirect();
-      }
-	} catch(final Exception exception) {
-	  interpreter.failed();
-	  interpreter.notify(context, Notification.ERROR, 12400);
-	  logger.error(exception);
-	  throw new TagStrategyException(exception);
-	}
+    final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    if(Call.Status.IN_PROGRESS.equals(voiceContext.getCall().getStatus())) {
+	  try {
+	    final SmsMessagesDao dao = daos.getSmsMessagesDao();
+	    sms = sms(interpreter, context, from, to, body, SmsMessage.Status.QUEUED, SmsMessage.Direction.INCOMING);
+	    dao.addSmsMessage(sms);
+	    smsAggregator.send(phoneNumberUtil.format(from, PhoneNumberFormat.E164),
+	        phoneNumberUtil.format(to, PhoneNumberFormat.E164), body, this);
+	    sms = sms.setStatus(SmsMessage.Status.SENDING);
+	    dao.updateSmsMessage(sms);
+	    if(action != null) {
+	      final List<NameValuePair> parameters = context.getRcmlRequestParameters();
+	      parameters.add(new BasicNameValuePair("SmsSid", sms.getSid().toString()));
+	      parameters.add(new BasicNameValuePair("SmsStatus", sms.getStatus().toString()));
+	      interpreter.load(action, method, parameters);
+	      interpreter.redirect();
+        }
+	  } catch(final Exception exception) {
+	    interpreter.failed();
+	    interpreter.notify(context, Notification.ERROR, 12400);
+	    logger.error(exception);
+	    throw new TagStrategyException(exception);
+	  }
+    }
   }
   
   @Override public void failed() {
@@ -169,6 +173,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.To;
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
 	      final RcmlTag tag) throws TagStrategyException {
+    super.initialize(interpreter, context, tag);
     from = getFrom(interpreter, context, tag);
     to = getTo(interpreter, context, tag);
     initBody(interpreter, context, tag);

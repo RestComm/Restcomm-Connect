@@ -23,12 +23,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class InterpreterExecutor implements LifeCycle {
+@ThreadSafe public final class InterpreterExecutor implements LifeCycle {
   private final ExecutorService executor;
 
   public InterpreterExecutor() {
@@ -52,18 +53,18 @@ public final class InterpreterExecutor implements LifeCycle {
   public void submit(final Sid accountSid, final String apiVersion, final URI voiceUrl,
       final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
       final URI statusCallback, final String statusCallbackMethod, final Call call) {
-    final RcmlInterpreterContext context = new RcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
+    final VoiceRcmlInterpreterContext context = new VoiceRcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
         voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, call);
-    executor.submit(new RcmlInterpreter(context));
+    executor.submit(new VoiceRcmlInterpreter(context));
   }
   
   public void submit(final Sid accountSid, final String apiVersion, final URI voiceUrl,
       final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
       final URI statusCallback, final String statusCallbackMethod, final int timeout,
       final Call call) {
-    final RcmlInterpreterContext context = new RcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
+    final VoiceRcmlInterpreterContext context = new VoiceRcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
 	    voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, timeout,
 	    call);
-	executor.submit(new RcmlInterpreter(context));
+	executor.submit(new VoiceRcmlInterpreter(context));
   }
 }

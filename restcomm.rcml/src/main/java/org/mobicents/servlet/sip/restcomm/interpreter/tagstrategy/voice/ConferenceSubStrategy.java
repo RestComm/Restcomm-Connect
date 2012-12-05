@@ -15,6 +15,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
 import org.mobicents.servlet.sip.restcomm.media.api.Conference;
@@ -34,7 +35,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StartConferenceOnE
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitMethod;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
 
-public final class ConferenceSubStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
+public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements CallObserver, ConferenceObserver {
   private static final Logger logger = Logger.getLogger(ConferenceSubStrategy.class);
 
   private final ConferenceCenter conferenceCenter;
@@ -68,7 +69,8 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
 
   @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    final Call call = voiceContext.getCall();
     final StringBuilder buffer = new StringBuilder();
     buffer.append(context.getAccountSid().toString()).append(":").append(name);
     final String room = buffer.toString();

@@ -14,18 +14,18 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategy;
@@ -170,7 +170,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     if(attribute != null) {
       value = attribute.getValue();
     } else {
-      value = context.getCall().getOriginator();
+      value = context.getFrom();
     }
     try { return PhoneNumberUtil.getInstance().parse(value, "US"); }
     catch(final NumberParseException ignored) { }
@@ -214,40 +214,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 	}
   }
   
-  @Override public synchronized void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
-    Call.Status status = call.getStatus();
-    try {
-      if(Call.Status.RINGING == status && Call.Direction.INBOUND == call.getDirection()) {
-        call.answer();
-      } else if(Call.Status.QUEUED == status) {
-        call.addObserver(this);
-        call.dial();
-        //Issue 95: http://code.google.com/p/restcomm/issues/detail?id=95
-        try {
-          // Wait for state change to ringing before starting the timeout period.
-          wait();
-          // If the call is ringing on the remote side then wait for timeout period.
-          status = call.getStatus();
-          if(Call.Status.RINGING.equals(status)) {
-            interpreter.sendStatusCallback();
-            wait(context.getTimeout() * 1000);
-          }
-        }
-        catch(final InterruptedException ignored) { }
-        call.removeObserver(this);
-        status = call.getStatus();
-        if(Call.Status.IN_PROGRESS != status && Call.Status.FAILED != status) {
-          call.cancel();
-        }
-      }
-    } catch(final CallException exception) {
-	  interpreter.failed();
-	  interpreter.notify(context, Notification.ERROR, 12400);
-	  throw new TagStrategyException(exception);
-	}
-  }
+  @Override public abstract void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException;
   
   protected List<URI> pause(final int seconds) {
     final List<URI> silence = new ArrayList<URI>();

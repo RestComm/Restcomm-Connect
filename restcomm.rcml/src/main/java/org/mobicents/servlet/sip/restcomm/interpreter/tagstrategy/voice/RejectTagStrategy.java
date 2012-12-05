@@ -22,12 +22,14 @@ import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
@@ -36,7 +38,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class RejectTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public final class RejectTagStrategy extends VoiceRcmlTagStrategy {
   private static final Logger logger = Logger.getLogger(RejectTagStrategy.class);
 
   private final List<URI> rejectAudioFile;
@@ -54,7 +56,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    final Call call = voiceContext.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
       try { 
         if("rejected".equalsIgnoreCase(reason)) {

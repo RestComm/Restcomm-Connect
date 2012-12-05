@@ -29,6 +29,7 @@ import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
@@ -42,7 +43,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class GatherTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public final class GatherTagStrategy extends VoiceRcmlTagStrategy {
   private static final Logger logger = Logger.getLogger(GatherTagStrategy.class);
   private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1}");
   
@@ -61,7 +62,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
     try {
 	  // Collect some digits.
 	  final List<URI> announcements = getAnnouncements(interpreter, context, tag);
-	  final Call call = context.getCall();
+	  final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+	  final Call call = voiceContext.getCall();
 	  if(Call.Status.IN_PROGRESS == call.getStatus()) {
         call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
         // Redirect to action URI.;

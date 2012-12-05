@@ -11,6 +11,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
@@ -19,6 +20,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Registration;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
@@ -43,7 +45,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
-public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
+public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallObserver, ConferenceObserver {
   private static final Logger logger = Logger.getLogger(ForkSubStrategy.class);
   
   private final CallManager callManager;
@@ -85,7 +87,8 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
 
   @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    final Call call = voiceContext.getCall();
     final StringBuilder buffer = new StringBuilder();
 	buffer.append(context.getAccountSid().toString()).append(":").append(call.getSid().toString());
 	final String room = buffer.toString();
