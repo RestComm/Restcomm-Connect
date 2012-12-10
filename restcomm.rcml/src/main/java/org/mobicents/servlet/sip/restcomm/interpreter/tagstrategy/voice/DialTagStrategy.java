@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -31,6 +31,9 @@ import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.RcmlTagStrategy;
+import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
@@ -44,7 +47,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class DialTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public final class DialTagStrategy extends VoiceRcmlTagStrategy {
   private URI action;
   private String method;
   private int timeout;
@@ -113,7 +116,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TimeLimit;
     if(attribute != null) {
       value = attribute.getValue();
     } else {
-      value = context.getCall().getOriginator();
+      final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+      final Call call = voiceContext.getCall();
+      value = call.getOriginator();
     }
     try { 
       callerId = PhoneNumberUtil.getInstance().parse(value, "US");

@@ -16,25 +16,13 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class RcmlInterpreterContextException extends Exception {
-  private static final long serialVersionUID = 1L;
-
-  public RcmlInterpreterContextException() {
-    super();
-  }
-
-  public RcmlInterpreterContextException(final String message) {
-    super(message);
-  }
-
-  public RcmlInterpreterContextException(final Throwable cause) {
-    super(cause);
-  }
-
-  public RcmlInterpreterContextException(final String message, final Throwable cause) {
-    super(message, cause);
+@NotThreadSafe public final class BridgeRcmlInterpreter extends VoiceRcmlInterpreter {
+  public BridgeRcmlInterpreter(VoiceRcmlInterpreterContext context) {
+    super(context, new BridgeTagStrategyFactory());
   }
 }

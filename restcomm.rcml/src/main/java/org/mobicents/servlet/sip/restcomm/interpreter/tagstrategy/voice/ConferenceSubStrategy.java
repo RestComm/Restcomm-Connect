@@ -1,4 +1,4 @@
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -6,17 +6,21 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.log4j.Logger;
+
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
-import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
 import org.mobicents.servlet.sip.restcomm.media.api.Conference;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
+import org.mobicents.servlet.sip.restcomm.media.api.ConferenceException;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
@@ -31,14 +35,14 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.StartConferenceOnE
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitMethod;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.WaitUrl;
 
-public final class ConferenceSubStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
+public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements CallObserver, ConferenceObserver {
+  private static final Logger logger = Logger.getLogger(ConferenceSubStrategy.class);
+
   private final ConferenceCenter conferenceCenter;
   
   private final URI action;
   private final String method;
   private final int timeLimit;
-  private final boolean record;
-  private Sid recordingSid;
   private String name;
   private boolean muted;
   private boolean beep;
@@ -58,8 +62,6 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     this.action = action;
     this.method = method;
     this.timeLimit = timeLimit;
-    this.record = record;
-    if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
     waitUrl = URI.create("file://" + configuration.getString("conference-music-file"));
     alertOnEnterAudioFile = URI.create("file://" + configuration.getString("alert-on-enter-file"));
     alertOnExitAudioFile = URI.create("file://" + configuration.getString("alert-on-exit-file"));
@@ -67,7 +69,8 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
 
   @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    final Call call = voiceContext.getCall();
     final StringBuilder buffer = new StringBuilder();
     buffer.append(context.getAccountSid().toString()).append(":").append(name);
     final String room = buffer.toString();
@@ -93,9 +96,15 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
     if(Call.Status.IN_PROGRESS == call.getStatus()) {
       call.addObserver(this);
       conference.addObserver(this);
-      conference.addParticipant(call);
-      try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
-      catch(final InterruptedException ignored) { }
+      try {
+        conference.addParticipant(call);
+        wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
+      } catch(final ConferenceException exception) {
+    	interpreter.failed();
+        interpreter.notify(context, Notification.ERROR, 12400);
+        logger.error(exception);
+        throw new TagStrategyException(exception);
+      } catch(final InterruptedException ignored) { }
       conference.removeObserver(this);
       call.removeObserver(this);
     }
@@ -113,9 +122,6 @@ public final class ConferenceSubStrategy extends RcmlTagStrategy implements Call
       parameters.add(new BasicNameValuePair("DialCallStatus", "completed"));
       parameters.add(new BasicNameValuePair("DialCallDuration",
           Long.toString(finish.minus(start.getMillis()).getMillis() / TimeUtils.SECOND_IN_MILLIS)));
-      if(record) {
-        parameters.add(new BasicNameValuePair("RecordingUrl", toRecordingPath(recordingSid).toString()));
-      }
       interpreter.load(action, method, parameters);
       interpreter.redirect();
     }

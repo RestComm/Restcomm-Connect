@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -22,12 +22,14 @@ import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
@@ -36,7 +38,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class RejectTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public final class RejectTagStrategy extends VoiceRcmlTagStrategy {
   private static final Logger logger = Logger.getLogger(RejectTagStrategy.class);
 
   private final List<URI> rejectAudioFile;
@@ -54,23 +56,24 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Reason;
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    final Call call = voiceContext.getCall();
     if(Call.Status.RINGING == call.getStatus()) {
-      if("rejected".equalsIgnoreCase(reason)) {
-    	try { 
+      try { 
+        if("rejected".equalsIgnoreCase(reason)) {
     	  super.initialize(interpreter, context, tag);
-    	  call.play(rejectAudioFile, 1);
-        } catch(final Exception exception) {
-          interpreter.failed();
-    	  interpreter.notify(context, Notification.ERROR, 12400);
-    	  logger.error(exception);
-    	  throw new TagStrategyException(exception);
-    	}
-        call.hangup();
-      } else if("busy".equalsIgnoreCase(reason)) {
-        call.reject();
-      }
-      interpreter.finish();
+    	  play(call, rejectAudioFile, 1);
+    	  call.hangup();
+        } else if("busy".equalsIgnoreCase(reason)) {
+          call.reject();
+        }
+        interpreter.finish();
+      } catch(final Exception exception) {
+        interpreter.failed();
+  	    interpreter.notify(context, Notification.ERROR, 12400);
+  	    logger.error(exception);
+  	    throw new TagStrategyException(exception);
+  	  }
     }
   }
   

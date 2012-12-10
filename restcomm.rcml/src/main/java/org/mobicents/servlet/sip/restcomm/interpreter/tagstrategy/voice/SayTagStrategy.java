@@ -14,18 +14,20 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
@@ -33,7 +35,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class SayTagStrategy extends RcmlTagStrategy  {
+@NotThreadSafe public final class SayTagStrategy extends VoiceRcmlTagStrategy  {
   private static final Logger logger = Logger.getLogger(SayTagStrategy.class);
 
   private String gender;
@@ -50,7 +52,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
     final List<URI> announcement = new ArrayList<URI>();
     announcement.add(say(gender, language, text));
     try {
-      final Call call = context.getCall();
+      final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+      final Call call = voiceContext.getCall();
       if(loop == 0) {
     	while(Call.Status.IN_PROGRESS == call.getStatus()) {
     	  call.play(announcement, 1);

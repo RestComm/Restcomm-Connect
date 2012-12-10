@@ -1,14 +1,17 @@
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
@@ -17,6 +20,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Registration;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
@@ -26,18 +30,22 @@ import org.mobicents.servlet.sip.restcomm.media.api.Conference;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
+import org.mobicents.servlet.sip.restcomm.xml.Attribute;
 import org.mobicents.servlet.sip.restcomm.xml.Tag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Client;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Number;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Uri;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Method;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.SendDigits;
+import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.Url;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
-public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
+public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallObserver, ConferenceObserver {
   private static final Logger logger = Logger.getLogger(ForkSubStrategy.class);
   
   private final CallManager callManager;
@@ -53,6 +61,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
   private final boolean record;
   private Sid recordingSid;
   
+  private Map<String, Map<String, String>> attributes;
   private List<Call> outboundCalls;
   private volatile boolean forking;
   private Call outboundCall;
@@ -72,12 +81,14 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
     this.ringbackTone = ringbackTone;
     this.record = record;
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
+    this.attributes = new HashMap<String, Map<String, String>>();
     this.forking = false;
   }
 
   @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    final Call call = voiceContext.getCall();
     final StringBuilder buffer = new StringBuilder();
 	buffer.append(context.getAccountSid().toString()).append(":").append(call.getSid().toString());
 	final String room = buffer.toString();
@@ -88,8 +99,8 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
 	bridge.setBackgroundMusic(ringbackAudioFiles);
 	bridge.playBackgroundMusic();
 	call.addObserver(this);
-	bridge.addParticipant(call);
     try {
+      bridge.addParticipant(call);
       final DateTime start = DateTime.now();
 	  outboundCalls = getCalls(tag.getChildren());
 	  fork(outboundCalls);
@@ -137,6 +148,7 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
         interpreter.redirect();
 	  }
 	} catch(final Exception exception) {
+	  interpreter.failed();
 	  interpreter.notify(context, Notification.ERROR, 12400);
       logger.error(exception);
       throw new TagStrategyException(exception);
@@ -176,20 +188,39 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
       } else if(Uri.NAME.equals(tag.getName())) {
         final String uri = tag.getText();
         if(uri != null) {
-          calls.add(callManager.createCall(caller, uri));
+          final Call call = callManager.createCall(caller, uri);
+          calls.add(call);
+          saveAttributes(call.getSid(), tag);
         }
       } else if(Number.NAME.equals(tag.getName())) {
         final String number = tag.getText();
         if(number != null) {
           try { 
 			final PhoneNumber callee = phoneNumberUtil.parse(number, "US");
-			calls.add(callManager.createExternalCall(caller,
-			    phoneNumberUtil.format(callee, PhoneNumberFormat.E164)));
+			final Call call = callManager.createExternalCall(caller,
+		        phoneNumberUtil.format(callee, PhoneNumberFormat.E164));
+			calls.add(call);
+			saveAttributes(call.getSid(), tag);
 		  } catch (NumberParseException ignored) { }
         }
       }
     }
     return calls;
+  }
+  
+  private void saveAttributes(final Sid callSid, Tag tag) {
+    Map<String, String> attributes = this.attributes.get(callSid.toString());
+    if(attributes == null) {
+      attributes = new HashMap<String, String>();
+      this.attributes.put(callSid.toString(), attributes);
+    }
+    Attribute attribute = tag.getAttribute(SendDigits.NAME);
+    if(attribute != null) { attributes.put("sendDigits", attribute.getValue()); }
+    attribute = tag.getAttribute(Url.NAME);
+    if(attribute != null) { attributes.put("url", attribute.getValue()); }
+    attribute = tag.getAttribute(Method.NAME);
+    if(attribute != null) { attributes.put("method", attribute.getValue()); }
+    else { attributes.put("method", "POST"); }
   }
   
   private List<Call> getClients(final String caller, final Tag client) throws CallManagerException {
@@ -199,7 +230,9 @@ public final class ForkSubStrategy extends RcmlTagStrategy implements CallObserv
       final RegistrationsDao dao = daos.getRegistrationsDao();
       final List<Registration> registrations = dao.getRegistrationsByUser(user);
       for(final Registration registration : registrations) {
-        calls.add(callManager.createUserAgentCall(caller, registration.getLocation()));
+    	final Call call = callManager.createUserAgentCall(caller, registration.getLocation()); 
+        calls.add(call);
+        saveAttributes(call.getSid(), client);
       }
     }
     return calls;

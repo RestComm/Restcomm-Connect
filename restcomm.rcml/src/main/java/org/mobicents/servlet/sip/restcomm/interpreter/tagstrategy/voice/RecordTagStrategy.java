@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,13 +28,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
@@ -49,6 +46,8 @@ import org.mobicents.servlet.sip.restcomm.entities.Transcription.Status;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreter;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestDescriptor;
 import org.mobicents.servlet.sip.restcomm.interpreter.http.HttpRequestExecutor;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
@@ -65,7 +64,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class RecordTagStrategy extends RcmlTagStrategy implements SpeechRecognizerObserver {
+@NotThreadSafe public final class RecordTagStrategy extends VoiceRcmlTagStrategy implements SpeechRecognizerObserver {
   private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private static final Logger logger = Logger.getLogger(RecordTagStrategy.class);
   private static final Pattern finishOnKeyPattern = Pattern.compile("[\\*#0-9]{1,12}");
@@ -85,8 +84,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
   
   private Recording recording;
   
-  private RcmlInterpreter interpreter;
-  private RcmlInterpreterContext context;
+  private VoiceRcmlInterpreter interpreter;
+  private VoiceRcmlInterpreterContext context;
   
   public RecordTagStrategy() {
     super();
@@ -100,9 +99,10 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
   
   @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-	this.interpreter = interpreter;
-    this.context = context;
-    final Call call = context.getCall();
+	this.interpreter = (VoiceRcmlInterpreter)interpreter;
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    this.context = voiceContext;
+    final Call call = voiceContext.getCall();
     try {
       if(playBeep) {
         play(call, beepAudioFile, 1);
@@ -112,23 +112,23 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.TranscribeLanguage
       final URI path = toRecordingPath(sid);
       if(Call.Status.IN_PROGRESS == call.getStatus()) {
         call.playAndRecord(emptyAnnouncement, path, timeout, maxLength, finishOnKey);
-      }
-      final double duration = WavUtils.getAudioDuration(path);
-      if(duration > 0) {
-        recording = recording(sid, duration);
-        final RecordingsDao dao = daos.getRecordingsDao();
-        dao.addRecording(recording);
-        // Transcribe the path.
-        if(transcribe || (transcribeCallback != null)) {
-          speechRecognizer.recognize(path, transcribeLanguage, this);
+        final double duration = WavUtils.getAudioDuration(path);
+        if(duration > 0) {
+          recording = recording(sid, duration);
+          final RecordingsDao dao = daos.getRecordingsDao();
+          dao.addRecording(recording);
+          // Transcribe the path.
+          if(transcribe || (transcribeCallback != null)) {
+            speechRecognizer.recognize(path, transcribeLanguage, this);
+          }
+          // Redirect to action URI.
+          final List<NameValuePair> variables = context.getRcmlRequestParameters();
+          variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
+          variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
+          variables.add(new BasicNameValuePair("Digits", call.getDigits()));
+          interpreter.load(action, method, variables);
+          interpreter.redirect();
         }
-        // Redirect to action URI.
-        final List<NameValuePair> variables = context.getRcmlRequestParameters();
-        variables.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
-        variables.add(new BasicNameValuePair("RecordingDuration", recording.getDuration().toString()));
-        variables.add(new BasicNameValuePair("Digits", call.getDigits()));
-        interpreter.load(action, method, variables);
-        interpreter.redirect();
       }
     } catch(final Exception exception) {
       interpreter.failed();

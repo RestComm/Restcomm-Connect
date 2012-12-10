@@ -1,4 +1,4 @@
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -14,12 +14,14 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
+import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
 import org.mobicents.servlet.sip.restcomm.media.api.CallObserver;
@@ -29,7 +31,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
 import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
-public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObserver, ConferenceObserver {
+public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements CallObserver, ConferenceObserver {
   private static final Logger logger = Logger.getLogger(BridgeSubStrategy.class);
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;
@@ -64,7 +66,8 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
 
   @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
+    final Call call = voiceContext.getCall();
 	final PhoneNumber to = getTo(interpreter, context, tag);
 	final String caller = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
 	final String callee = phoneNumberUtil.format(to, PhoneNumberFormat.E164);
@@ -78,8 +81,8 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
 	bridge.setBackgroundMusic(ringbackAudioFiles);
 	bridge.playBackgroundMusic();
 	call.addObserver(this);
-	bridge.addParticipant(call);
 	try {
+	  bridge.addParticipant(call);
 	  final DateTime start = DateTime.now();
 	  outboundCall = callManager.createExternalCall(caller, callee);
 	  outboundCall.addObserver(this);
@@ -129,6 +132,7 @@ public final class BridgeSubStrategy extends RcmlTagStrategy implements CallObse
         interpreter.redirect();
   	  }
 	} catch(final Exception exception) {
+	  interpreter.failed();
       interpreter.notify(context, Notification.ERROR, 12400);
       logger.error(exception);
       throw new TagStrategyException(exception);
