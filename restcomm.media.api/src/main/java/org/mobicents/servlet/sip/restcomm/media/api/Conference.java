@@ -18,7 +18,8 @@ package org.mobicents.servlet.sip.restcomm.media.api;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.List;
+
+import org.mobicents.servlet.sip.restcomm.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,15 +30,13 @@ public interface Conference {
   public String getName();
   public int getNumberOfParticipants();
   public Collection<Call> getParticipants();
+  public Sid getSid();
   public Status getStatus();
   public void play(URI audio);
-  public void playBackgroundMusic();
-  public void recordAudio(URI destination, long length);
+  public void play(URI audio, int iterations);
   public void removeParticipant(Call participant);
   public void removeObserver(ConferenceObserver observer);
-  public void setBackgroundMusic(List<URI> music);
-  public void stopBackgroundMusic();
-  public void stopRecordingAudio();
+  public void stop();
   
   public enum Status {
     INIT("init"),

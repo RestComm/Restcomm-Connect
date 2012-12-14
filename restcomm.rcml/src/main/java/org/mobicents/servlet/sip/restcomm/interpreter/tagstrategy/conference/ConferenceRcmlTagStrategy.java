@@ -14,25 +14,16 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.conference;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.RcmlTagStrategy;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class BridgeRcmlInterpreter extends VoiceRcmlInterpreter {
-  public BridgeRcmlInterpreter(final VoiceRcmlInterpreterContext context,
-      final InterpreterFactory factory) {
-    super(context, new BridgeTagStrategyFactory(), factory);
-  }
-  
-  protected BridgeRcmlInterpreter(final VoiceRcmlInterpreterContext context,
-      final TagStrategyFactory strategies, final InterpreterFactory factory) {
-    super(context, strategies, factory);
-  }
-  
-  @Override protected void cleanup() {
-    factory.remove(context.getCall().getSid());
+@NotThreadSafe public abstract class ConferenceRcmlTagStrategy extends RcmlTagStrategy {
+  public ConferenceRcmlTagStrategy() {
+    super();
   }
 }

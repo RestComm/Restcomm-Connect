@@ -91,7 +91,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	private final RcmlDocumentBuilder resourceBuilder;
 	// XML Resource.
 	private RcmlDocument resource;
-	//XML Resource URI.
+	// XML Resource URI.
 	private URI resourceUri;
 	// XML Resource request attributes.
 	private String requestParameters;
@@ -101,6 +101,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	private String responseBody;
 	// XML Resource response headers.
 	private String responseHeaders;
+	// The thread executing this interpreter.
+	private Thread thread;
 
 	public RcmlInterpreter(final RcmlInterpreterContext context,
 	    final TagStrategyFactory strategies) {
@@ -111,6 +113,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	  addState(EXECUTING);
 	  addState(FINISHED);
 	  addState(FAILED);
+	  
 	  this.context = context;
 	  this.strategies = strategies;
 	  this.resourceBuilder = new RcmlDocumentBuilder(new RcmlTagFactory());
@@ -132,6 +135,11 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 		  setState(FINISHED);
 		}
 	}
+	
+	public void finishAndInterrupt() {
+	  finish();
+	  interruptThread();
+	}
 
 	public URI getCurrentResourceUri() {
 		return resourceUri;
@@ -144,8 +152,27 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 		buffer.append(errorDictionary).append(errorCode).append(".html");
 		return URI.create(buffer.toString());
 	}
+	
+	private void interruptThread() {
+	  if(thread != null) {
+	    final Thread.State state = thread.getState();
+	    if(Thread.State.BLOCKED == state || Thread.State.TIMED_WAITING == state ||
+            Thread.State.WAITING == state) {
+	      thread.interrupt();
+	    }
+	  }
+	}
 
 	protected abstract void initialize();
+	
+	public boolean isRunning() {
+      final State state = getState();
+      return READY.equals(state) || EXECUTING.equals(state) || REDIRECTED.equals(state);
+	}
+	
+	public synchronized void join() throws InterruptedException {
+	  if(isRunning()) { wait(); }
+	}
 
 	public void load(final URI uri, final String method, List<NameValuePair> parameters)
 			throws InterpreterException {
@@ -259,8 +286,17 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 		assertState(EXECUTING);
 		setState(REDIRECTED);
 	}
+	
+	public void redirectAndInterrupt() {
+      redirect();
+      interruptThread();
+	}
 
 	public void run() {
+	  // Make sure we keep a reference to the thread executing
+	  // this interpreter so we can interrupt it if necessary.
+	  thread = Thread.currentThread();
+	  // Initialize the interpreter.
 	  initialize();
 	  while(getState().equals(READY)) {
 	    // Start executing the document.
@@ -290,6 +326,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	    finish();
 	  }
 	  cleanup();
+	  notifyAll();
+	  thread = null;
 	}
 	
 	public void save(final Notification notification) {

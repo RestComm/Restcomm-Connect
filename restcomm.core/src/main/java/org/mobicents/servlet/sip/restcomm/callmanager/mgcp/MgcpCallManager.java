@@ -46,7 +46,7 @@ import org.mobicents.servlet.sip.restcomm.entities.Application;
 import org.mobicents.servlet.sip.restcomm.entities.Client;
 import org.mobicents.servlet.sip.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
@@ -72,7 +72,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 	 private static MgcpServerManager servers;
 
-	 private static InterpreterExecutor executor;
+	 private static InterpreterFactory interpreters;
 
 	 private static DaoManager daos;
 
@@ -215,13 +215,13 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		         application = getVoiceApplication(applicationSid);
 		         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
 		         call.trying(request);
-		         executor.submit(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
+		         interpreters.create(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
 		             application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
 		             application.getStatusCallback(), application.getStatusCallbackMethod(), call);
 		       } else {
 			         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
 		    	   call.trying(request);
-		         executor.submit(client.getAccountSid(), client.getApiVersion(), client.getVoiceUrl(), client.getVoiceMethod(),
+		         interpreters.create(client.getAccountSid(), client.getApiVersion(), client.getVoiceUrl(), client.getVoiceMethod(),
 		             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), null, null, call);
 		       }
 			 } else {
@@ -233,13 +233,13 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 			       application = getVoiceApplication(applicationSid);
 			         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
 			       call.trying(request);
-			       executor.submit(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
+			       interpreters.create(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
 				       application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
 				       application.getStatusCallback(), application.getStatusCallbackMethod(), call);
 			     } else {
 			         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
 			    	 call.trying(request);
-			       executor.submit(incomingPhoneNumber.getAccountSid(), incomingPhoneNumber.getApiVersion(),
+			       interpreters.create(incomingPhoneNumber.getAccountSid(), incomingPhoneNumber.getApiVersion(),
 			           incomingPhoneNumber.getVoiceUrl(), incomingPhoneNumber.getVoiceMethod(), incomingPhoneNumber.getVoiceFallbackUrl(),
 			           incomingPhoneNumber.getVoiceFallbackMethod(), incomingPhoneNumber.getStatusCallback(),
 			           incomingPhoneNumber.getStatusCallbackMethod(), call);
@@ -304,7 +304,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 }
 		 sipFactory = (SipFactory)config.getServletContext().getAttribute(SIP_FACTORY);
 		 final ServiceLocator services = ServiceLocator.getInstance();
-		 executor = services.get(InterpreterExecutor.class);
+		 interpreters = services.get(InterpreterFactory.class);
 		 servers = services.get(MgcpServerManager.class);
 		 daos = services.get(DaoManager.class);
 		 configuration = services.get(Configuration.class);

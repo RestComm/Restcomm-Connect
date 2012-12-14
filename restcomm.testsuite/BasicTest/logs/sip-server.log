@@ -4772,3 +4772,685 @@ INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.stopSipSta
 INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.stop(SipApplicationDispatcherImpl.java:431) - SipApplicationDispatcher Stopped
 INFO main org.mobicents.servlet.sip.catalina.SipStandardService.stop(SipStandardService.java:592) - SIP Standard Service Stopped.
 INFO main org.mobicents.servlet.sip.catalina.SipStandardService.stop(SipStandardService.java:592) - SIP Standard Service Stopped.
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.initialize(SipStandardService.java:239) - Pretty encoding of headers enabled ? true
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.initialize(SipStandardService.java:245) - Sip Stack path name : gov.nist
+WARN main org.mobicents.servlet.sip.catalina.SipStandardService.initSipStack(SipStandardService.java:419) - no sip stack properties file defined 
+WARN main org.mobicents.servlet.sip.catalina.SipStandardService.initSipStack(SipStandardService.java:422) - loading default Mobicents Sip Servlets sip stack properties
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.initSipStack(SipStandardService.java:518) - Mobicents Sip Servlets sip stack properties : {gov.nist.javax.sip.TCP_POST_PARSING_THREAD_POOL_SIZE=30, gov.nist.javax.sip.AUTOMATIC_DIALOG_ERROR_HANDLING=false, gov.nist.javax.sip.MAX_FORK_TIME_SECONDS=0, gov.nist.javax.sip.LOOSE_DIALOG_VALIDATION=true, gov.nist.javax.sip.SERVER_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-messages.xml, javax.sip.AUTOMATIC_DIALOG_SUPPORT=off, gov.nist.javax.sip.LOG_MESSAGE_CONTENT=true, gov.nist.javax.sip.DELIVER_UNSOLICITED_NOTIFY=true, gov.nist.javax.sip.TRACE_LEVEL=32, javax.sip.STACK_NAME=mss-mss-tomcat-embedded-6, org.mobicents.ha.javax.sip.REPLICATION_STRATEGY=ConfirmedDialog, org.mobicents.ha.javax.sip.REPLICATE_APPLICATION_DATA=false, javax.sip.ROUTER_PATH=org.mobicents.ext.javax.sip.dns.DNSAwareRouter, gov.nist.javax.sip.REENTRANT_LISTENER=true, gov.nist.javax.sip.DEBUG_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-debug.txt, gov.nist.javax.sip.THREAD_POOL_SIZE=64, gov.nist.javax.sip.PASS_INVITE_NON_2XX_ACK_TO_LISTENER=true}
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:212) - BUILD TIMESTAMP = null
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:213) - Config Propeties = {}{gov.nist.javax.sip.TCP_POST_PARSING_THREAD_POOL_SIZE=30, gov.nist.javax.sip.AUTOMATIC_DIALOG_ERROR_HANDLING=false, gov.nist.javax.sip.MAX_FORK_TIME_SECONDS=0, gov.nist.javax.sip.LOOSE_DIALOG_VALIDATION=true, gov.nist.javax.sip.SERVER_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-messages.xml, javax.sip.AUTOMATIC_DIALOG_SUPPORT=off, gov.nist.javax.sip.LOG_MESSAGE_CONTENT=true, gov.nist.javax.sip.DELIVER_UNSOLICITED_NOTIFY=true, gov.nist.javax.sip.TRACE_LEVEL=32, javax.sip.STACK_NAME=mss-mss-tomcat-embedded-6, org.mobicents.ha.javax.sip.REPLICATION_STRATEGY=ConfirmedDialog, org.mobicents.ha.javax.sip.REPLICATE_APPLICATION_DATA=false, javax.sip.ROUTER_PATH=org.mobicents.ext.javax.sip.dns.DNSAwareRouter, gov.nist.javax.sip.REENTRANT_LISTENER=true, gov.nist.javax.sip.DEBUG_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-debug.txt, gov.nist.javax.sip.THREAD_POOL_SIZE=64, gov.nist.javax.sip.PASS_INVITE_NON_2XX_ACK_TO_LISTENER=true}
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.ServerLog.checkLogFile(ServerLog.java:236) [Here are the stack configuration properties 
+{}{gov.nist.javax.sip.TCP_POST_PARSING_THREAD_POOL_SIZE=30, gov.nist.javax.sip.AUTOMATIC_DIALOG_ERROR_HANDLING=false, gov.nist.javax.sip.MAX_FORK_TIME_SECONDS=0, gov.nist.javax.sip.LOOSE_DIALOG_VALIDATION=true, gov.nist.javax.sip.SERVER_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-messages.xml, javax.sip.AUTOMATIC_DIALOG_SUPPORT=off, gov.nist.javax.sip.LOG_MESSAGE_CONTENT=true, gov.nist.javax.sip.DELIVER_UNSOLICITED_NOTIFY=true, gov.nist.javax.sip.TRACE_LEVEL=32, javax.sip.STACK_NAME=mss-mss-tomcat-embedded-6, org.mobicents.ha.javax.sip.REPLICATION_STRATEGY=ConfirmedDialog, org.mobicents.ha.javax.sip.REPLICATE_APPLICATION_DATA=false, javax.sip.ROUTER_PATH=org.mobicents.ext.javax.sip.dns.DNSAwareRouter, gov.nist.javax.sip.REENTRANT_LISTENER=true, gov.nist.javax.sip.DEBUG_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-debug.txt, gov.nist.javax.sip.THREAD_POOL_SIZE=64, gov.nist.javax.sip.PASS_INVITE_NON_2XX_ACK_TO_LISTENER=true}
+]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.ServerLog.checkLogFile(ServerLog.java:238) [ ]]>]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.ServerLog.checkLogFile(ServerLog.java:239) [</debug>]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.ServerLog.checkLogFile(ServerLog.java:240) [<description
+ logDescription="mss-mss-tomcat-embedded-6"
+ name="null" />
+]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.ServerLog.checkLogFile(ServerLog.java:242) [<debug>]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.ServerLog.checkLogFile(ServerLog.java:243) [<![CDATA[ ]
+INFO main gov.nist.core.LogWriter.logInfo(LogWriter.java:445) - value -1000 will be used for reliableConnectionKeepAliveTimeout stack property
+INFO main gov.nist.core.LogWriter.logInfo(LogWriter.java:445) - Setting Stack Thread priority to 10
+WARN main gov.nist.core.LogWriter.logWarning(LogWriter.java:435) - using default tls security policy
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.SipStackImpl.<init>(SipStackImpl.java:1198) [created Sip stack. Properties = {}{gov.nist.javax.sip.TCP_POST_PARSING_THREAD_POOL_SIZE=30, gov.nist.javax.sip.AUTOMATIC_DIALOG_ERROR_HANDLING=false, gov.nist.javax.sip.MAX_FORK_TIME_SECONDS=0, gov.nist.javax.sip.LOOSE_DIALOG_VALIDATION=true, gov.nist.javax.sip.SERVER_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-messages.xml, javax.sip.AUTOMATIC_DIALOG_SUPPORT=off, gov.nist.javax.sip.LOG_MESSAGE_CONTENT=true, gov.nist.javax.sip.DELIVER_UNSOLICITED_NOTIFY=true, gov.nist.javax.sip.TRACE_LEVEL=32, javax.sip.STACK_NAME=mss-mss-tomcat-embedded-6, org.mobicents.ha.javax.sip.REPLICATION_STRATEGY=ConfirmedDialog, org.mobicents.ha.javax.sip.REPLICATE_APPLICATION_DATA=false, javax.sip.ROUTER_PATH=org.mobicents.ext.javax.sip.dns.DNSAwareRouter, gov.nist.javax.sip.REENTRANT_LISTENER=true, gov.nist.javax.sip.DEBUG_LOG=/home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/mss-jsip-mss-tomcat-embedded-6-debug.txt, gov.nist.javax.sip.THREAD_POOL_SIZE=64, gov.nist.javax.sip.PASS_INVITE_NON_2XX_ACK_TO_LISTENER=true}]
+INFO main gov.nist.core.LogWriter.logInfo(LogWriter.java:445) - the sip stack timer gov.nist.javax.sip.stack.timers.DefaultSipTimer has been started
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.initSipStack(SipStandardService.java:560) - no AddressResolver will be used since none has been specified.
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.initSipStack(SipStandardService.java:564) - SIP stack initialized
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setBaseTimerInterval(SipApplicationDispatcherImpl.java:2111) - SIP Base Timer Interval set to 500ms
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setT2Interval(SipApplicationDispatcherImpl.java:2131) - SIP Timer T2 Interval set to 4000ms
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setT4Interval(SipApplicationDispatcherImpl.java:2153) - SIP Timer T4 Interval set to 5000ms
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setTimerDInterval(SipApplicationDispatcherImpl.java:2178) - SIP Timer D Interval set to 32000ms
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setMemoryThreshold(SipApplicationDispatcherImpl.java:2043) - Memory threshold set to 95%
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setBackToNormalMemoryThreshold(SipApplicationDispatcherImpl.java:2264) - Back To Normal Memory threshold set to 90%
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setCongestionControlPolicyByName(SipApplicationDispatcherImpl.java:2026) - Congestion Control policy set to ErrorResponse
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setQueueSize(SipApplicationDispatcherImpl.java:1917) - Queue Size set to 1500
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setBackToNormalQueueSize(SipApplicationDispatcherImpl.java:2281) - Back To Normal Queue Size set to 1300
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setGatherStatistics(SipApplicationDispatcherImpl.java:2238) - Gathering Statistics set to true
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setConcurrencyControlMode(SipApplicationDispatcherImpl.java:1906) - Container wide Concurrency Control set to SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setBypassRequestExecutor(SipApplicationDispatcherImpl.java:2074) - Bypass Request Executor enabled ?true
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.setBypassResponseExecutor(SipApplicationDispatcherImpl.java:2091) - Bypass Response Executor enabled ?true
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.init(SipApplicationDispatcherImpl.java:278) - Using the javax.servlet.sip.ar.spi.SipApplicationRouterProvider system property to load the application router provider
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.init(SipApplicationDispatcherImpl.java:309) - org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl@309fe84e Using the following Application Router instance: org.mobicents.servlet.sip.router.DefaultApplicationRouter@524c71d2
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.init(SipApplicationDispatcherImpl.java:319) - Sip Application dispatcher registered under following name mss-tomcat-embedded-6:type=SipApplicationDispatcher
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.init(SipApplicationDispatcherImpl.java:326) - bypassRequestExecutor ? true
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.init(SipApplicationDispatcherImpl.java:327) - bypassResponseExecutor ? true
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.init(SipApplicationDispatcherImpl.java:333) - AsynchronousThreadPoolExecutor size is 15
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.start(SipApplicationDispatcherImpl.java:376) - No Congestion control background task started since the checking interval is equals to -1 milliseconds.
+INFO main org.mobicents.servlet.sip.core.Version.printVersion(Version.java:48) - Release ID: (Mobicents) Sip Servlets 1.7.0.FINAL (build: Git Hash=r7b154129adfb45bfedf688d5f41a8dcf8417db81 date=201204061432)
+INFO main org.mobicents.servlet.sip.core.Version.printVersion(Version.java:49) - Mobicents Sip Servlets 1.7.0.FINAL (build: Git Hash=r7b154129adfb45bfedf688d5f41a8dcf8417db81 date=201204061432) Started.
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.startSipStack(SipApplicationDispatcherImpl.java:2305) - SIP stack started
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.start(SipApplicationDispatcherImpl.java:400) - SipApplicationDispatcher Started
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.start(SipStandardService.java:335) - SIP Standard Service Started.
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.SipStackImpl.createListeningPoint(SipStackImpl.java:1345) [createListeningPoint : address = 127.0.0.1 port = 5070 transport = UDP]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.UDPMessageProcessor.<init>(UDPMessageProcessor.java:128) [Max Message size is 65536]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.SipStackImpl.createListeningPoint(SipStackImpl.java:1381) [Created Message Processor: 127.0.0.1 port = 5070 transport = UDP]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.MessageProcessor.setListeningPoint(MessageProcessor.java:203) [setListeningPointgov.nist.javax.sip.stack.UDPMessageProcessor@206e41b5 listeningPoint = gov.nist.javax.sip.ListeningPointImpl@269be2b5]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.SipStackImpl.createSipProvider(SipStackImpl.java:1413) [createSipProvider: gov.nist.javax.sip.ListeningPointImpl@269be2b5]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.SipProviderImpl.addSipListener(SipProviderImpl.java:237) [add SipListener org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl@309fe84e]
+INFO main org.mobicents.servlet.sip.catalina.SipProtocolHandler.start(SipProtocolHandler.java:322) - Sip Connector started on ip address : 127.0.0.1,port 5070, transport UDP, useStun false, stunAddress null, stunPort : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@9fc5c47
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@170e3e70
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO http-127.0.0.1-8888-1 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-1 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-1 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-2 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-2 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@170e3e70
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@2c96d430
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@9fc5c47
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@9fc5c47
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@1a138218
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@76c20307
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO http-127.0.0.1-8888-3 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-3 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@76c20307
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@2430c6ca
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@1a138218
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@1a138218
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@3afed17b
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@423efa59
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO http-127.0.0.1-8888-4 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-4 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-5 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-5 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-6 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-6 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-6 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-7 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-7 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@423efa59
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@406f8c58
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@3afed17b
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@3afed17b
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@2ed35cfe
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@367e3fb6
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@367e3fb6
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@198323f7
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@2ed35cfe
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@2ed35cfe
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@11fb491
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@48879c2a
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@48879c2a
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@295c9583
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@11fb491
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@11fb491
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@7aab767d
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@ef04776
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@ef04776
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@68cb669d
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@7aab767d
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@7aab767d
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@7c8b3a91
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@18b24578
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@18b24578
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@7e879140
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@7c8b3a91
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@7c8b3a91
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@6685370c
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@33e12969
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@33e12969
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@3fc1058a
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@6685370c
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@6685370c
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@b3fbd77
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@5afd566
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO http-127.0.0.1-8888-7 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-7 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-6 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-6 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-5 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-5 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-5 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-4 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-4 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@5afd566
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@34f9a692
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@b3fbd77
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@b3fbd77
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@52f265fb
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@28056c48
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO http-127.0.0.1-8888-3 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-3 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-3 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO http-127.0.0.1-8888-2 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-2 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@28056c48
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@32f0ace5
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@52f265fb
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@52f265fb
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@330b3697
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@252d0daf
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@252d0daf
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@1213f2b
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@330b3697
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@330b3697
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@72522f83
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@71ad7c17
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@71ad7c17
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@b73e739
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@72522f83
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@72522f83
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@213ebb92
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@1d8c7f4b
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@1d8c7f4b
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@3f564e2a
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@213ebb92
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@213ebb92
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@14d4dd6e
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@23156b71
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO http-127.0.0.1-8888-4 org.mobicents.servlet.sip.catalina.session.ConvergedStandardSession.setMaxInactiveInterval(ConvergedStandardSession.java:138) - maxInactiveInterval = 1800
+INFO http-127.0.0.1-8888-4 org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@23156b71
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@27d8edce
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@14d4dd6e
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@14d4dd6e
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@53ebeb53
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@25a6c130
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@25a6c130
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@12b78625
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@53ebeb53
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@53ebeb53
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@6ec9ffaa
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@fb02ab9
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@fb02ab9
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@73d247e
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@6ec9ffaa
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@6ec9ffaa
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:291) - Starting the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:209) - Initializing the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.init(SipStandardContext.java:227) - sip context Initialized
+INFO main org.mobicents.servlet.sip.restcomm.Bootstrapper.bootstrap(Bootstrapper.java:66) - loading configuration file located at /home/thomas/Projects/RestComm/restcomm/restcomm.testsuite/BasicTest/target/mss-tomcat-embedded-6/webapps/restcomm.core-1.0.0.BETA2-SNAPSHOT/WEB-INF/conf/restcomm.xml
+INFO main org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager.start(MgcpServerManager.java:80) - Initializing 1 servers.
+WARN main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.readProperties(JainMgcpStackImpl.java:192) - Failed to locate properties file, using default values
+INFO main org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl.init(JainMgcpStackImpl.java:159) - Jain Mgcp stack bound to IP /127.0.0.1 and UDP port 2727
+INFO main org.apache.shiro.web.servlet.IniShiroFilter.configure(IniShiroFilter.java:208) - Null or empty configuration specified via 'config' init-param.  Checking path-based configuration.
+INFO main org.apache.shiro.realm.AuthorizingRealm.getAuthorizationCacheLazy(AuthorizingRealm.java:248) - No cache or cacheManager properties have been set.  Authorization cache cannot be obtained.
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.setConcurrencyControlMode(SipStandardContext.java:1371) - Concurrency Control set to SipApplicationSession for application RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:459) - No concurrency control mode for application RestComm , defaulting to the container wide one : SipApplicationSession
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.start(ProxyTimerServiceImpl.java:78) - Started proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@d2dd924
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.start(StandardSipApplicationSessionTimerService.java:88) - Started timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@3d0ad13e
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:488) - the following sip servlet application has been added : RestComm
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:491) - It contains the following Sip Servlets : 
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : PresenceManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipGatewayManager
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.addSipApplication(SipApplicationDispatcherImpl.java:493) - SipApplicationName : RestComm/ServletName : SipCallManager
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:415) - sip application session timeout for this context is 3 minutes
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.start(SipStandardContext.java:418) - sip context started
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService.stop(StandardSipApplicationSessionTimerService.java:81) - Stopped timer service org.mobicents.servlet.sip.core.timers.StandardSipApplicationSessionTimerService@3d0ad13e
+INFO main org.mobicents.servlet.sip.core.timers.TimerServiceImpl.stop(TimerServiceImpl.java:178) - Stopped timer service org.mobicents.servlet.sip.core.timers.TimerServiceImpl@3c7ec4e2
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@d2dd924
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:556) - Stopping the sip context
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:561) - number of active sip sessions : 0
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:562) - number of active sip application sessions : 0
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.removeSipApplication(SipApplicationDispatcherImpl.java:515) - the following sip servlet application has been removed : RestComm
+INFO main org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl.stop(ProxyTimerServiceImpl.java:69) - Stopped proxy timer service org.mobicents.servlet.sip.core.timers.ProxyTimerServiceImpl@d2dd924
+INFO main org.mobicents.servlet.sip.startup.SipStandardContext.stop(SipStandardContext.java:617) - sip context stopped
+DEBUG UDPMessageProcessorThread gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.UDPMessageProcessor.run(UDPMessageProcessor.java:243) [UDPMessageProcessor: Stopping]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.SipProviderImpl.stop(SipProviderImpl.java:141) [Exiting provider]
+DEBUG EventScannerThread gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.EventScanner.run(EventScanner.java:481) [Stopped event scanner!!]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.IOHandler.closeAll(IOHandler.java:700) [Closing 0 sockets from IOHandler]
+DEBUG main gov.nist.core.LogWriter.logStackTrace(LogWriter.java:112) - [CommonLogger.java:113][DefaultSipTimer.java:133][SIPTransactionStack.java:2053][SipStackImpl.java:1471][SipProtocolHandler.java:132][Connector.java:1180][StandardService.java:343][SipStandardService.java:218][MobicentsSipServletsEmbeddedImpl.java:799][MobicentsSipServletsContainer.java:410][MobicentsSipServletsContainer.java:528][ContainerImpl.java:217][ContainerLifecycleController.java:178][ContainerLifecycleController.java:172][ContainerLifecycleController.java:255][ContainerLifecycleController.java:171][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][ContainerDeploymentContextHandler.java:57][null:-1][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:88][ManagerImpl.java:135][ManagerImpl.java:115][EventImpl.java:67][ContainerLifecycleController.java:107][ContainerLifecycleController.java:100][ContainerLifecycleController.java:221][ContainerLifecycleController.java:99][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][ManagerImpl.java:135][ManagerImpl.java:115][EventImpl.java:67][ContainerEventController.java:91][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][TestContextHandler.java:60][null:-1][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:88][ManagerImpl.java:135][ManagerImpl.java:115][EventTestRunnerAdaptor.java:73][Arquillian.java:128][Arquillian.java:114][RunNotifier.java:71][RunNotifier.java:41][RunNotifier.java:68][JUnit4Provider.java:116][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ReflectionUtils.java:189][ProviderFactory.java:165][ProviderFactory.java:85][ForkedBooter.java:104][ForkedBooter.java:75]
+INFO main gov.nist.core.LogWriter.logInfo(LogWriter.java:445) - the sip stack timer gov.nist.javax.sip.stack.timers.DefaultSipTimer has been stopped
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.SipStackImpl.stop(SipStackImpl.java:1554) [stopStack -- stoppping the stack]
+DEBUG main gov.nist.core.LogWriter.logStackTrace(LogWriter.java:112) - [LogWriter.java:92][CommonLogger.java:108][SipStackImpl.java:1555][SipApplicationDispatcherImpl.java:2313][SipApplicationDispatcherImpl.java:421][SipStandardService.java:589][MobicentsSipServletsEmbeddedImpl.java:820][MobicentsSipServletsContainer.java:410][MobicentsSipServletsContainer.java:528][ContainerImpl.java:217][ContainerLifecycleController.java:178][ContainerLifecycleController.java:172][ContainerLifecycleController.java:255][ContainerLifecycleController.java:171][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][ContainerDeploymentContextHandler.java:57][null:-1][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:88][ManagerImpl.java:135][ManagerImpl.java:115][EventImpl.java:67][ContainerLifecycleController.java:107][ContainerLifecycleController.java:100][ContainerLifecycleController.java:221][ContainerLifecycleController.java:99][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][ManagerImpl.java:135][ManagerImpl.java:115][EventImpl.java:67][ContainerEventController.java:91][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][TestContextHandler.java:60][null:-1][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:88][ManagerImpl.java:135][ManagerImpl.java:115][EventTestRunnerAdaptor.java:73][Arquillian.java:128][Arquillian.java:114][RunNotifier.java:71][RunNotifier.java:41][RunNotifier.java:68][JUnit4Provider.java:116][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ReflectionUtils.java:189][ProviderFactory.java:165][ProviderFactory.java:85][ForkedBooter.java:104][ForkedBooter.java:75]
+DEBUG main gov.nist.core.LogWriter.logDebug(LogWriter.java:216) - gov.nist.javax.sip.stack.IOHandler.closeAll(IOHandler.java:700) [Closing 0 sockets from IOHandler]
+DEBUG main gov.nist.core.LogWriter.logStackTrace(LogWriter.java:112) - [CommonLogger.java:113][DefaultSipTimer.java:133][SIPTransactionStack.java:2053][SipStackImpl.java:1557][SipApplicationDispatcherImpl.java:2313][SipApplicationDispatcherImpl.java:421][SipStandardService.java:589][MobicentsSipServletsEmbeddedImpl.java:820][MobicentsSipServletsContainer.java:410][MobicentsSipServletsContainer.java:528][ContainerImpl.java:217][ContainerLifecycleController.java:178][ContainerLifecycleController.java:172][ContainerLifecycleController.java:255][ContainerLifecycleController.java:171][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][ContainerDeploymentContextHandler.java:57][null:-1][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:88][ManagerImpl.java:135][ManagerImpl.java:115][EventImpl.java:67][ContainerLifecycleController.java:107][ContainerLifecycleController.java:100][ContainerLifecycleController.java:221][ContainerLifecycleController.java:99][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][ManagerImpl.java:135][ManagerImpl.java:115][EventImpl.java:67][ContainerEventController.java:91][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:99][EventContextImpl.java:81][TestContextHandler.java:60][null:-1][DelegatingMethodAccessorImpl.java:43][Method.java:616][ObserverImpl.java:94][EventContextImpl.java:88][ManagerImpl.java:135][ManagerImpl.java:115][EventTestRunnerAdaptor.java:73][Arquillian.java:128][Arquillian.java:114][RunNotifier.java:71][RunNotifier.java:41][RunNotifier.java:68][JUnit4Provider.java:116][NativeMethodAccessorImpl.java:-2][NativeMethodAccessorImpl.java:57][DelegatingMethodAccessorImpl.java:43][Method.java:616][ReflectionUtils.java:189][ProviderFactory.java:165][ProviderFactory.java:85][ForkedBooter.java:104][ForkedBooter.java:75]
+INFO main gov.nist.core.LogWriter.logInfo(LogWriter.java:445) - the sip stack timer gov.nist.javax.sip.stack.timers.DefaultSipTimer has been stopped
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.stopSipStack(SipApplicationDispatcherImpl.java:2316) - SIP stack stopped
+INFO main org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl.stop(SipApplicationDispatcherImpl.java:431) - SipApplicationDispatcher Stopped
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.stop(SipStandardService.java:592) - SIP Standard Service Stopped.
+INFO main org.mobicents.servlet.sip.catalina.SipStandardService.stop(SipStandardService.java:592) - SIP Standard Service Stopped.

@@ -18,6 +18,7 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -35,6 +36,7 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
   private static final Logger logger = Logger.getLogger(BridgeSubStrategy.class);
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;
+  private final InterpreterFactory interpreterFactory;
   private final PhoneNumberUtil phoneNumberUtil;
   
   private final URI action;
@@ -43,6 +45,7 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
   private final int timeLimit;
   private final PhoneNumber callerId;
   private final URI ringbackTone;
+  private final String ringbackToneMethod;
   private final boolean record;
   private Sid recordingSid;
   private Call outboundCall;
@@ -53,6 +56,7 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
     final ServiceLocator services = ServiceLocator.getInstance();
     this.callManager = services.get(CallManager.class);
     this.conferenceCenter = services.get(ConferenceCenter.class);
+    this.interpreterFactory = services.get(InterpreterFactory.class);
     this.phoneNumberUtil = PhoneNumberUtil.getInstance();
     this.action = action;
     this.method = method;
@@ -60,6 +64,7 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
     this.timeLimit = timeLimit;
     this.callerId = callerId;
     this.ringbackTone = ringbackTone;
+    this.ringbackToneMethod = "POST";
     this.record = record;
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
   }
@@ -76,10 +81,10 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
 	final String room = buffer.toString();
 	final Conference bridge = conferenceCenter.getConference(room);
 	bridge.addObserver(this);
-	final List<URI> ringbackAudioFiles = new ArrayList<URI>();
-	ringbackAudioFiles.add(ringbackTone);
-	bridge.setBackgroundMusic(ringbackAudioFiles);
-	bridge.playBackgroundMusic();
+	if(ringbackTone != null) {
+	  interpreterFactory.create(context.getAccountSid(), context.getApiVersion(), ringbackTone,
+		  ringbackToneMethod, bridge);
+	}
 	call.addObserver(this);
 	try {
 	  bridge.addParticipant(call);
@@ -94,12 +99,16 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
         }
       } catch(final InterruptedException ignored) { }
       if(Call.Status.IN_PROGRESS == call.getStatus() && Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
-        bridge.stopBackgroundMusic();
+    	// Stop the interpreter
+		final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(bridge.getSid());
+		// Wait for the interpreter to finish before continuing.
+		try { conferenceInterpreter.join(); }
+		catch(final InterruptedException ignored) { }
         bridge.addParticipant(outboundCall);
         if(record) {
           recordingSid = Sid.generate(Sid.Type.RECORDING);
           final URI destination = toRecordingPath(recordingSid);
-          bridge.recordAudio(destination, TimeUtils.SECOND_IN_MILLIS * timeLimit);
+          outboundCall.playAndRecord(new ArrayList<URI>(0), destination, -1, TimeUtils.SECOND_IN_MILLIS * timeLimit, null);
         }
         try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
         catch(final InterruptedException ignored) { }

@@ -1,17 +1,15 @@
 package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
-import org.joda.time.DateTime;
-
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -39,6 +37,7 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
   private static final Logger logger = Logger.getLogger(ConferenceSubStrategy.class);
 
   private final ConferenceCenter conferenceCenter;
+  private final InterpreterFactory interpreterFactory;
   
   private final URI action;
   private final String method;
@@ -59,6 +58,7 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
     super();
     final ServiceLocator services = ServiceLocator.getInstance();
     this.conferenceCenter = services.get(ConferenceCenter.class);
+    this.interpreterFactory = services.get(InterpreterFactory.class);
     this.action = action;
     this.method = method;
     this.timeLimit = timeLimit;
@@ -74,54 +74,54 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
     final StringBuilder buffer = new StringBuilder();
     buffer.append(context.getAccountSid().toString()).append(":").append(name);
     final String room = buffer.toString();
-    final DateTime start = DateTime.now();
     final Conference conference = conferenceCenter.getConference(room);
-    if(!startConferenceOnEnter) {
-      if(Call.Status.IN_PROGRESS == call.getStatus() && !call.isMuted()) {
-        call.mute();
-      }
-      if(conference.getNumberOfParticipants() == 0) {
-        if(waitUrl != null) {
-    	  final List<URI> music = new ArrayList<URI>();
-    	  music.add(waitUrl);
-    	  conference.setBackgroundMusic(music);
-          conference.playBackgroundMusic();
+    if(conference.getNumberOfParticipants() <= maxParticipants) {
+      if(!startConferenceOnEnter) {
+        if(Call.Status.IN_PROGRESS == call.getStatus() && !call.isMuted()) {
+          call.mute();
         }
+        if(conference.getNumberOfParticipants() == 0) {
+          if(waitUrl != null) {
+            interpreterFactory.create(context.getAccountSid(), context.getApiVersion(), waitUrl,
+                waitMethod, conference);
+          }
+        }
+      } else {
+        // Stop the interpreter
+        final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(conference.getSid());
+        // Wait for the interpreter to finish before continuing.
+        try { conferenceInterpreter.join(); }
+        catch(final InterruptedException ignored) { }
+        if(beep) { conference.play(alertOnEnterAudioFile); }
+        if(Call.Status.IN_PROGRESS == call.getStatus() && muted) { call.mute(); }
       }
-    } else {
-      conference.stopBackgroundMusic();
-      if(beep) { conference.play(alertOnEnterAudioFile); }
-      if(Call.Status.IN_PROGRESS == call.getStatus() && muted) { call.mute(); }
-    }
-    if(Call.Status.IN_PROGRESS == call.getStatus()) {
-      call.addObserver(this);
-      conference.addObserver(this);
-      try {
-        conference.addParticipant(call);
-        wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
-      } catch(final ConferenceException exception) {
-    	interpreter.failed();
-        interpreter.notify(context, Notification.ERROR, 12400);
-        logger.error(exception);
-        throw new TagStrategyException(exception);
-      } catch(final InterruptedException ignored) { }
-      conference.removeObserver(this);
-      call.removeObserver(this);
-    }
-    if(endConferenceOnExit || (conference.getNumberOfParticipants() == 0)) {
-      conferenceCenter.removeConference(room);
-    } else {
-      if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
-        conference.removeParticipant(call);
+      if(Call.Status.IN_PROGRESS == call.getStatus()) {
+        call.addObserver(this);
+        conference.addObserver(this);
+        try {
+          conference.addParticipant(call);
+          wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
+        } catch(final ConferenceException exception) {
+    	  interpreter.failed();
+          interpreter.notify(context, Notification.ERROR, 12400);
+          logger.error(exception);
+          throw new TagStrategyException(exception);
+        } catch(final InterruptedException ignored) { }
+        conference.removeObserver(this);
+        call.removeObserver(this);
       }
-      if(beep) { conference.play(alertOnExitAudioFile); }
+      if(endConferenceOnExit || (conference.getNumberOfParticipants() == 0)) {
+        conferenceCenter.removeConference(room);
+      } else {
+        if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
+          conference.removeParticipant(call);
+        }
+        if(beep) { conference.play(alertOnExitAudioFile); }
+      }
     }
-    final DateTime finish = DateTime.now();
     if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
       final List<NameValuePair> parameters = context.getRcmlRequestParameters();
       parameters.add(new BasicNameValuePair("DialCallStatus", "completed"));
-      parameters.add(new BasicNameValuePair("DialCallDuration",
-          Long.toString(finish.minus(start.getMillis()).getMillis() / TimeUtils.SECOND_IN_MILLIS)));
       interpreter.load(action, method, parameters);
       interpreter.redirect();
     }

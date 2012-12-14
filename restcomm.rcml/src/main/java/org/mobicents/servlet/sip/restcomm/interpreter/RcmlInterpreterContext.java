@@ -23,7 +23,6 @@ import org.apache.http.NameValuePair;
 
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.media.api.Call;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -33,12 +32,6 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
   protected final String apiVersion;
   protected final URI statusCallback;
   protected final String statusCallbackMethod;
-  
-  public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI voiceUrl,
-      final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
-      final URI statusCallback, final String statusCallbackMethod, final Call call) {
-	  this(accountSid, apiVersion, statusCallback, statusCallbackMethod);
-  }
   
   public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI statusCallback,
       final String statusCallbackMethod) {

@@ -14,25 +14,25 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice;
+package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.conference;
 
 import java.net.URI;
 
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.sip.restcomm.interpreter.ConferenceRcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.interpreter.VoiceRcmlInterpreterContext;
-import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.media.api.Conference;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class RedirectTagStrategy extends VoiceRcmlTagStrategy {
+public class RedirectTagStrategy extends ConferenceRcmlTagStrategy {
   private static final Logger logger = Logger.getLogger(RedirectTagStrategy.class);
 
   private String method;
@@ -46,8 +46,8 @@ public class RedirectTagStrategy extends VoiceRcmlTagStrategy {
       final RcmlTag tag) throws TagStrategyException {
     // Redirect the interpreter to the new RCML resource.
     if(uri != null) {
-      final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
-      if(Call.Status.IN_PROGRESS.equals(voiceContext.getCall().getStatus())) {
+      final ConferenceRcmlInterpreterContext conferenceContext = (ConferenceRcmlInterpreterContext)context;
+      if(Conference.Status.IN_PROGRESS.equals(conferenceContext.getConference().getStatus())) {
         try {
           interpreter.load(uri, method, context.getRcmlRequestParameters());
           interpreter.redirect();
@@ -64,7 +64,6 @@ public class RedirectTagStrategy extends VoiceRcmlTagStrategy {
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-	super.initialize(interpreter, context, tag);
     initMethod(interpreter, context, tag);
     initUri(interpreter, context, tag);
   }

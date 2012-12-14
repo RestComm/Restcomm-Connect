@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
@@ -36,7 +37,6 @@ import org.mobicents.servlet.sip.restcomm.media.api.CallException;
 import org.mobicents.servlet.sip.restcomm.media.api.Conference;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceException;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceObserver;
-import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -44,7 +44,6 @@ import org.mobicents.servlet.sip.restcomm.util.TimeUtils;
 public final class MgcpConference extends FiniteStateMachine implements Conference, LifeCycle,
     MgcpConnectionObserver, MgcpIvrEndpointObserver {
   private static final Logger logger = Logger.getLogger(MgcpConference.class);
-  private static final List<URI> emptyAnnouncement = new ArrayList<URI>();
   private static final State INIT = new State(Status.INIT.toString());
   private static final State IN_PROGRESS = new State(Status.IN_PROGRESS.toString());
   private static final State COMPLETE = new State(Status.COMPLETED.toString());
@@ -56,6 +55,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     IN_PROGRESS.addTransition(FAILED);
   }
   
+  private final Sid sid;
   private final String name;
   private final Map<Sid, MgcpCall> calls;
   private final List<ConferenceObserver> observers;
@@ -67,25 +67,19 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   private MgcpConnection ivrOutboundConnection;
   private MgcpConnection ivrInboundConnection;
 
-  private List<URI> musicAudioFiles;
-  private boolean backgroundMusic;
-  private boolean recordAudio;
-  private boolean playingAudio;
-
   public MgcpConference(final String name, final MgcpServer server) {
     super(INIT);
     addState(INIT);
     addState(IN_PROGRESS);
     addState(COMPLETE);
     addState(FAILED);
+    
+    this.sid = Sid.generate(Sid.Type.CONFERENCE);
     this.name = name;
     this.calls = new ConcurrentHashMap<Sid, MgcpCall>();
     this.observers = new CopyOnWriteArrayList<ConferenceObserver>();
     this.server = server;
     this.session = server.createMediaSession();
-    musicAudioFiles = null;
-    backgroundMusic = false;
-    recordAudio = false;
   }
   
   @Override public void addParticipant(final Call call) throws ConferenceException {
@@ -113,7 +107,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     calls.clear();
   }
   
-  public void fireStatusChanged() {
+  private void fireStatusChanged() {
     for(final ConferenceObserver observer : observers) {
       observer.onStatusChanged(this);
     }
@@ -138,58 +132,28 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     return result;
   }
   
+  @Override public Sid getSid() {
+	return sid;
+  }
+  
   @Override public synchronized void play(final URI audio) {
-    assertState(IN_PROGRESS);
-    if(audio.getPath().isEmpty()) return;
-    if(!playingAudio) {
-      playingAudio = true;
-      final List<URI> uri = new ArrayList<URI>();
-      uri.add(audio);
-      ivrEndpoint.play(uri, 1);
-      try { wait(); }
-      catch(final InterruptedException ignored) { ivrEndpoint.stop(); }
-    }
-  }
-
-  @Override public synchronized void playBackgroundMusic() {
-    assertState(IN_PROGRESS);
-    if(musicAudioFiles != null && !musicAudioFiles.isEmpty() &&
-        !backgroundMusic) {
-      backgroundMusic = true;
-      ivrEndpoint.play(musicAudioFiles, 1);
-    }
+    play(audio, 1);
   }
   
-  @Override public synchronized void recordAudio(final URI destination, final long length) {
+  @Override public synchronized void play(final URI audio, final int iterations) {
     assertState(IN_PROGRESS);
-    if(!recordAudio) {
-      ivrEndpoint.playRecord(emptyAnnouncement, destination, TimeUtils.MINUTE_IN_MILLIS * 30, length, null);
-      recordAudio = true;
-    }
+    final List<URI> uri = new ArrayList<URI>();
+    uri.add(audio);
+    ivrEndpoint.play(uri, iterations);
+    try { wait(); }
+    catch(final InterruptedException ignored) { ivrEndpoint.stop(); }
   }
   
-  @Override public synchronized void setBackgroundMusic(final List<URI> musicAudioFiles) {
-    this.musicAudioFiles = musicAudioFiles;
-  }
-  
-  @Override public synchronized void stopBackgroundMusic() {
+  @Override public synchronized void stop() {
     assertState(IN_PROGRESS);
-    if(backgroundMusic) {
-      backgroundMusic = false;
-      ivrEndpoint.stop();
-      try { wait(); }
-      catch(final InterruptedException ignored) { }
-    }
-  }
-  
-  @Override public synchronized void stopRecordingAudio() {
-    assertState(IN_PROGRESS);
-    if(recordAudio) {
-      recordAudio = false;
-      ivrEndpoint.stop();
-      try { wait(); }
-      catch(final InterruptedException ignored) { }
-    }
+    ivrEndpoint.stop();
+    try { wait(); }
+    catch(final InterruptedException ignored) { }
   }
   
   @Override public Status getStatus() {
@@ -229,7 +193,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
 
   @Override public synchronized void disconnected(final MgcpConnection connection) {
-
+    // Nothing to do.
   }
 
   @Override public synchronized void failed(final MgcpConnection connection) {
@@ -271,8 +235,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
 
   @Override public synchronized void shutdown() {
     assertState(IN_PROGRESS);
-    stopBackgroundMusic();
-    stopRecordingAudio();
+    stop();
     cleanup();
     server.destroyMediaSession(session);
     setState(COMPLETE);
@@ -280,17 +243,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   }
 
   @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {
-    if(backgroundMusic) {
-      backgroundMusic = false;
-      playBackgroundMusic();
-    } else if(recordAudio) {
-      recordAudio = false;
-    } else if(playingAudio) {
-      playingAudio = false;
-      notify();
-    } else {
-      notify();
-    }
+    notify();
   }
 
   @Override public synchronized void operationFailed(final MgcpIvrEndpoint endpoint) {

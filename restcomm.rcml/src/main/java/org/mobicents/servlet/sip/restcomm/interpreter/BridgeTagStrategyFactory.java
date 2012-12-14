@@ -27,7 +27,6 @@ import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.PauseTag
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.PlayTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.RecordTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.RedirectTagStrategy;
-import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.RejectTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.SayTagStrategy;
 import org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy.voice.SmsTagStrategy;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Fax;
@@ -37,7 +36,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Pause;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Play;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Record;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Redirect;
-import org.mobicents.servlet.sip.restcomm.xml.rcml.Reject;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Say;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.Sms;
 
@@ -55,7 +53,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.Sms;
     strategies.put(Sms.NAME, SmsTagStrategy.class);
     strategies.put(Hangup.NAME, HangupTagStrategy.class);
     strategies.put(Redirect.NAME, RedirectTagStrategy.class);
-    strategies.put(Reject.NAME, RejectTagStrategy.class);
     strategies.put(Pause.NAME, PauseTagStrategy.class);
     strategies.put(Fax.NAME, FaxTagStrategy.class);
   }

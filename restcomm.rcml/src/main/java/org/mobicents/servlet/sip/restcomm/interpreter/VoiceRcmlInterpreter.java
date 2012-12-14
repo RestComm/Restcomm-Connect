@@ -30,17 +30,21 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
 @NotThreadSafe public class VoiceRcmlInterpreter extends RcmlInterpreter {
   public static final Logger logger = Logger.getLogger(VoiceRcmlInterpreter.class);
   
-  private final VoiceRcmlInterpreterContext context;
+  protected final VoiceRcmlInterpreterContext context;
+  protected final InterpreterFactory factory;
 
-  public VoiceRcmlInterpreter(VoiceRcmlInterpreterContext context) {
+  public VoiceRcmlInterpreter(VoiceRcmlInterpreterContext context,
+      final InterpreterFactory factory) {
     super(context, new VoiceTagStrategyFactory());
     this.context = context;
+    this.factory = factory;
   }
   
   protected VoiceRcmlInterpreter(final VoiceRcmlInterpreterContext context,
-      final TagStrategyFactory strategies) {
+      final TagStrategyFactory strategies, final InterpreterFactory factory) {
     super(context, strategies);
     this.context = context;
+    this.factory = factory;
   }
   
   protected void cleanup() {
@@ -49,6 +53,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
 	  call.hangup();
 	}
 	sendStatusCallback();
+	factory.remove(call.getSid());
   }
 
   @Override protected void initialize() {

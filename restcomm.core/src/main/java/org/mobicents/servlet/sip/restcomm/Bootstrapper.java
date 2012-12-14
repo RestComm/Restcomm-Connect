@@ -29,7 +29,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.fax.FaxService;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
@@ -85,7 +85,7 @@ public final class Bootstrapper {
       runtimeConfiguration.setProperty("home-directory", getRestCommPath(config));
       runtimeConfiguration.setProperty("root-uri", getRestCommUri(config));
       services.set(Configuration.class, runtimeConfiguration);
-      services.set(InterpreterExecutor.class, new InterpreterExecutor());
+      services.set(InterpreterFactory.class, new InterpreterFactory());
       final MgcpServerManager serverManager = getMgcpServerManager(configuration);
       services.set(MgcpServerManager.class, serverManager);
       final CallManager callManager = (CallManager)context.getAttribute("org.mobicents.servlet.sip.restcomm.callmanager.CallManager");

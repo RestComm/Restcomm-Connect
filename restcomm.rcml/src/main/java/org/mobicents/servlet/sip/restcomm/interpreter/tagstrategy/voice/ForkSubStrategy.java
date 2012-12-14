@@ -17,6 +17,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.entities.Registration;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
@@ -50,6 +51,7 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
   
   private final CallManager callManager;
   private final ConferenceCenter conferenceCenter;
+  private final InterpreterFactory interpreterFactory;
   private final PhoneNumberUtil phoneNumberUtil;
   
   private final URI action;
@@ -58,6 +60,7 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
   private final int timeLimit;
   private final PhoneNumber callerId;
   private final URI ringbackTone;
+  private final String ringbackToneMethod;
   private final boolean record;
   private Sid recordingSid;
   
@@ -72,6 +75,7 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
     final ServiceLocator services = ServiceLocator.getInstance();
     this.callManager = services.get(CallManager.class);
     this.conferenceCenter = services.get(ConferenceCenter.class);
+    this.interpreterFactory = services.get(InterpreterFactory.class);
     this.phoneNumberUtil = PhoneNumberUtil.getInstance();
     this.action = action;
     this.method = method;
@@ -79,14 +83,15 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
     this.timeLimit = timeLimit;
     this.callerId = callerId;
     this.ringbackTone = ringbackTone;
+    this.ringbackToneMethod = "POST";
     this.record = record;
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
     this.attributes = new HashMap<String, Map<String, String>>();
     this.forking = false;
   }
 
-  @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) throws TagStrategyException {
+  @Override public synchronized void execute(final RcmlInterpreter interpreter,
+      final RcmlInterpreterContext context, final RcmlTag tag) throws TagStrategyException {
 	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
     final Call call = voiceContext.getCall();
     final StringBuilder buffer = new StringBuilder();
@@ -94,10 +99,10 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 	final String room = buffer.toString();
 	final Conference bridge = conferenceCenter.getConference(room);
 	bridge.addObserver(this);
-	final List<URI> ringbackAudioFiles = new ArrayList<URI>();
-	ringbackAudioFiles.add(ringbackTone);
-	bridge.setBackgroundMusic(ringbackAudioFiles);
-	bridge.playBackgroundMusic();
+	if(ringbackTone != null) {
+	  interpreterFactory.create(context.getAccountSid(), context.getApiVersion(), ringbackTone,
+	      ringbackToneMethod, bridge);
+	}
 	call.addObserver(this);
     try {
       bridge.addParticipant(call);
@@ -109,15 +114,33 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 	  cleanup(outboundCalls);
 	  if(Call.Status.IN_PROGRESS == call.getStatus() && (outboundCall != null &&
 	      Call.Status.IN_PROGRESS == outboundCall.getStatus())) {
-        bridge.stopBackgroundMusic();
-        bridge.addParticipant(outboundCall);
-        if(record) {
-          recordingSid = Sid.generate(Sid.Type.RECORDING);
-          final URI destination = toRecordingPath(recordingSid);
-          bridge.recordAudio(destination, TimeUtils.SECOND_IN_MILLIS * timeLimit);
-        }
-        try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
-        catch(final InterruptedException ignored) { }
+		final Map<String, String> callAttributes = attributes.get(outboundCall.getSid().toString());
+		final String digits = callAttributes.get("sendDigits");
+		if(digits != null && !digits.isEmpty()) {
+		  sendDigits(outboundCall, digits);
+		}
+		final String url = callAttributes.get("url");
+		if(url != null && !url.isEmpty()) {
+		  final String method = callAttributes.get("method");
+		  try { 
+			  interpreterFactory.create(context.getAccountSid(),context.getApiVersion(), URI.create(url),
+			      method, outboundCall).join();
+		  } catch(final InterruptedException exception) { }
+		}
+		if(Call.Status.IN_PROGRESS == call.getStatus() &&
+	        Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
+		  // Stop the interpreter
+		  final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(bridge.getSid());
+		  // Wait for the interpreter to finish before continuing.
+		  try { conferenceInterpreter.join(); }
+		  catch(final InterruptedException ignored) { }
+          bridge.addParticipant(outboundCall);
+          if(record) {
+            recordingSid = Sid.generate(Sid.Type.RECORDING);
+            final URI destination = toRecordingPath(recordingSid);
+            outboundCall.playAndRecord(new ArrayList<URI>(0), destination, -1, TimeUtils.SECOND_IN_MILLIS * timeLimit, null);
+          }
+		}
         if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
           outboundCall.removeObserver(this);
           outboundCall.hangup();
@@ -267,6 +290,63 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
     final Conference.Status status = conference.getStatus();
     if(Conference.Status.FAILED == status) {
       notify();
+    }
+  }
+  
+  private void sendDigits(final Call call, final String digits) throws CallException {
+    final char[] characters = digits.toCharArray();
+    for(final char character : characters) {
+      if('*' == character || '#' == character ||
+          Character.isDigit(character)) {
+    	URI tone = null;
+        switch(character) {
+          case '0': {
+        	tone = URI.create("0.tone");
+            break;
+          } case '1': {
+        	tone = URI.create("1.tone");
+            break;
+          } case '2': {
+        	tone = URI.create("2.tone");
+            break;
+          } case '3': {
+        	tone = URI.create("3.tone");
+            break;
+          } case '4': {
+        	tone = URI.create("4.tone");
+            break;
+          } case '5': {
+        	tone = URI.create("5.tone");
+            break;
+          } case '6': {
+        	tone = URI.create("6.tone");
+            break;
+          } case '7': {
+        	tone = URI.create("7.tone");
+            break;
+          } case '8': {
+        	tone = URI.create("8.tone");
+            break;
+          } case '9': {
+        	tone = URI.create("9.tone");
+            break;
+          } case '*': {
+        	tone = URI.create("*.tone");
+            break;
+          } case '#': {
+        	tone = URI.create("#.tone");
+            break;
+          }
+        }
+        final List<URI> tones = new ArrayList<URI>();
+        tones.add(tone);
+        play(call, tones, 1);
+      } else if('w' == character) {
+    	try { wait(500); }
+    	catch(final InterruptedException exception) {
+    	  return;
+    	}
+      }
     }
   }
 }

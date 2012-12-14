@@ -17,6 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
 import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -25,16 +27,19 @@ import org.mobicents.servlet.sip.restcomm.LifeCycle;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.sip.restcomm.media.api.Conference;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class InterpreterExecutor implements LifeCycle {
+@ThreadSafe public final class InterpreterFactory implements LifeCycle {
   private final ExecutorService executor;
+  private final Map<Sid, RcmlInterpreter> interpreters;
 
-  public InterpreterExecutor() {
+  public InterpreterFactory() {
     super();
     executor = Executors.newCachedThreadPool();
+    interpreters = new ConcurrentHashMap<Sid, RcmlInterpreter>();
   }
 
   @Override public void start() throws RuntimeException {
@@ -50,21 +55,57 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
     }
   }
   
-  public void submit(final Sid accountSid, final String apiVersion, final URI voiceUrl,
+  public RcmlInterpreter remove(final Sid sid) {
+    if(interpreters.containsKey(sid)) {
+      final RcmlInterpreter interpreter = interpreters.remove(sid);
+      interpreter.finishAndInterrupt();
+      return interpreter;
+    } else {
+      return null;
+    }
+  }
+  
+  public BridgeRcmlInterpreter create(final Sid accountSid, final String apiVersion, final URI url,
+      final String method, final Call call) {
+	  final VoiceRcmlInterpreterContext context = new VoiceRcmlInterpreterContext(accountSid,
+	      apiVersion, url, method, null, "POST", null, "POST", call);
+	  final BridgeRcmlInterpreter interpreter = new BridgeRcmlInterpreter(context, this);
+	  executor.submit(interpreter);
+	  interpreters.put(call.getSid(), interpreter);
+	  return interpreter;
+  }
+  
+  public ConferenceRcmlInterpreter create(final Sid accountSid, final String apiVersion, final URI waitUrl,
+      final String waitMethod, final Conference conference) {
+	  final ConferenceRcmlInterpreterContext context = new ConferenceRcmlInterpreterContext(accountSid,
+	      apiVersion, waitUrl, waitMethod, conference);
+	  final ConferenceRcmlInterpreter interpreter = new ConferenceRcmlInterpreter(context, this);
+	  executor.submit(interpreter);
+	  interpreters.put(conference.getSid(), interpreter);
+	  return interpreter;
+  }
+  
+  public VoiceRcmlInterpreter create(final Sid accountSid, final String apiVersion, final URI voiceUrl,
       final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
       final URI statusCallback, final String statusCallbackMethod, final Call call) {
     final VoiceRcmlInterpreterContext context = new VoiceRcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
         voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, call);
-    executor.submit(new VoiceRcmlInterpreter(context));
+    final VoiceRcmlInterpreter interpreter = new VoiceRcmlInterpreter(context, this);
+    executor.submit(interpreter);
+    interpreters.put(call.getSid(), interpreter);
+    return interpreter;
   }
   
-  public void submit(final Sid accountSid, final String apiVersion, final URI voiceUrl,
+  public VoiceRcmlInterpreter create(final Sid accountSid, final String apiVersion, final URI voiceUrl,
       final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
       final URI statusCallback, final String statusCallbackMethod, final int timeout,
       final Call call) {
     final VoiceRcmlInterpreterContext context = new VoiceRcmlInterpreterContext(accountSid, apiVersion, voiceUrl,
 	    voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, timeout,
 	    call);
-	executor.submit(new VoiceRcmlInterpreter(context));
+    final VoiceRcmlInterpreter interpreter = new VoiceRcmlInterpreter(context, this);
+	executor.submit(interpreter);
+	interpreters.put(call.getSid(), interpreter);
+	return interpreter;
   }
 }

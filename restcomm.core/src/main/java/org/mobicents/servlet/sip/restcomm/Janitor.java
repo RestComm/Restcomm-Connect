@@ -21,7 +21,7 @@ import org.mobicents.servlet.sip.restcomm.asr.SpeechRecognizer;
 import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.MgcpServerManager;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.fax.FaxService;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.sms.SmsAggregator;
 import org.mobicents.servlet.sip.restcomm.tts.SpeechSynthesizer;
 
@@ -37,7 +37,7 @@ public final class Janitor{
   
   public static void cleanup() {
     final ServiceLocator services = ServiceLocator.getInstance();
-    final InterpreterExecutor interpreterExecutor = services.get(InterpreterExecutor.class);
+    final InterpreterFactory interpreterExecutor = services.get(InterpreterFactory.class);
     interpreterExecutor.shutdown();
     final MgcpServerManager mgcpServerManager = services.get(MgcpServerManager.class);
     mgcpServerManager.shutdown();

@@ -49,7 +49,7 @@ import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordListConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.RestCommResponseConverter;
-import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterExecutor;
+import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManager;
 import org.mobicents.servlet.sip.restcomm.media.api.CallManagerException;
@@ -61,7 +61,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 @NotThreadSafe public abstract class CallsEndpoint extends AbstractEndpoint {
   private final CallManager callManager;
   private final DaoManager daos;
-  private final InterpreterExecutor executor;
+  private final InterpreterFactory interpreters;
   protected final Gson gson;
   protected final XStream xstream;
 
@@ -70,7 +70,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     final ServiceLocator services = ServiceLocator.getInstance();
     callManager = services.get(CallManager.class);
     daos = services.get(DaoManager.class);
-    executor = services.get(InterpreterExecutor.class);
+    interpreters = services.get(InterpreterFactory.class);
     CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(CallDetailRecord.class, converter);
@@ -156,7 +156,7 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     final URI callback = getUrl("StatusCallback", data);
     final String callbackMethod = getMethod("StatusCallbackMethod", data);
     final Integer timeout = getTimeout(data);
-    executor.submit(accountSid, version, url, method, fallbackUrl, fallbackMethod, callback,
+    interpreters.create(accountSid, version, url, method, fallbackUrl, fallbackMethod, callback,
         callbackMethod, timeout, call);
     final CallDetailRecord cdr = toCallDetailRecord(accountSid, call);
     daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
