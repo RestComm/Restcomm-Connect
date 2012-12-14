@@ -186,7 +186,7 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
     if(getState() == RUNNING) {
       synchronized(requestListenersLock) {
 	    for(final JainMgcpListener listener : requestListeners) {
-	    	LOGGER.debug("Received mgcp command: \n"+event);
+	    	LOGGER.debug("Received MGCP command: \n"+event);
 	    	listener.processMgcpCommandEvent(event);
         }
       }
@@ -198,7 +198,6 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
 	  // Find the listener for this response.
       final JainMgcpListener listener = responseListeners.remove(event.getTransactionHandle());
       // Dispatch the response to the listener.
-      LOGGER.debug("Received mgcp response: \n"+event);
       listener.processMgcpResponseEvent(event);
     }
   }
