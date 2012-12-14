@@ -186,7 +186,8 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
     if(getState() == RUNNING) {
       synchronized(requestListenersLock) {
 	    for(final JainMgcpListener listener : requestListeners) {
-          listener.processMgcpCommandEvent(event);
+	    	LOGGER.debug("Received mgcp command: \n"+event);
+	    	listener.processMgcpCommandEvent(event);
         }
       }
     }
@@ -197,6 +198,7 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
 	  // Find the listener for this response.
       final JainMgcpListener listener = responseListeners.remove(event.getTransactionHandle());
       // Dispatch the response to the listener.
+      LOGGER.debug("Received mgcp response: \n"+event);
       listener.processMgcpResponseEvent(event);
     }
   }
@@ -209,6 +211,7 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
 	responseListeners.put(id, listener);
 	// Try to send the command.
 	try {
+		LOGGER.debug("Sending mgcp command: \n"+command);
       mgcpProvider.sendMgcpEvents(new JainMgcpEvent[] { command });
 	} catch(final IllegalArgumentException exception) {
 	  // Make sure we don't start a memory leak.
@@ -222,6 +225,7 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
   public void sendResponse(final JainMgcpResponseEvent response) throws MgcpServerException {
 	assertState(RUNNING);
     try {
+    	LOGGER.debug("Sending mgcp response: \n"+response);
       mgcpProvider.sendMgcpEvents(new JainMgcpEvent[] { response });
     } catch(final IllegalArgumentException exception) {
       LOGGER.error(exception);

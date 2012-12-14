@@ -189,7 +189,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			userAgentConnection = session.createConnection(relayEndpoint, remoteDescriptor);
 			userAgentConnection.addObserver(this);
 			userAgentConnection.connect(ConnectionMode.SendRecv);
-			block(1);
+			block(2);
 			if(MgcpConnection.OPEN.equals(userAgentConnection.getState())) {
 			  alert(request);
 			} else {
@@ -605,7 +605,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		} catch(final IOException exception) {
 			logger.error(exception);
 		}
-		cleanup();
+		server.destroyMediaSession(session);
 	}
 
 	@Override public synchronized void unmute() {
