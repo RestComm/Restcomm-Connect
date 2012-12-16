@@ -111,9 +111,10 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
           recordingSid = Sid.generate(Sid.Type.RECORDING);
           final URI destination = toRecordingPath(recordingSid);
           outboundCall.playAndRecord(new ArrayList<URI>(0), destination, -1, TimeUtils.SECOND_IN_MILLIS * timeLimit, null);
+        } else {
+          try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
+          catch(final InterruptedException ignored) { }
         }
-        try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
-        catch(final InterruptedException ignored) { }
         if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
           outboundCall.removeObserver(this);
           outboundCall.hangup();

@@ -141,6 +141,9 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
             recordingSid = Sid.generate(Sid.Type.RECORDING);
             final URI destination = toRecordingPath(recordingSid);
             outboundCall.playAndRecord(new ArrayList<URI>(0), destination, -1, TimeUtils.SECOND_IN_MILLIS * timeLimit, null);
+          } else {
+            try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
+            catch(final InterruptedException exception) { }
           }
 		}
         if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
