@@ -90,8 +90,10 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         // Stop the interpreter
         final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(conference.getSid());
         // Wait for the interpreter to finish before continuing.
-        try { conferenceInterpreter.join(); }
-        catch(final InterruptedException ignored) { }
+        if(conferenceInterpreter != null) {
+          try { conferenceInterpreter.join(); }
+          catch(final InterruptedException ignored) { }
+        }
         if(beep) { conference.play(alertOnEnterAudioFile); }
         if(Call.Status.IN_PROGRESS == call.getStatus() && muted) { call.mute(); }
       }

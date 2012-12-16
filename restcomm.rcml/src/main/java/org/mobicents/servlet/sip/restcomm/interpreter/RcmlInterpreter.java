@@ -367,7 +367,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 				final TagStrategy strategy = strategies.getTagStrategyInstance(tag.getName());
 				strategy.initialize(this, context, rcmlTag);
 				strategy.execute(this, context, rcmlTag);
-			} catch(final Exception exception) { throw new VisitorException(exception); }
+			} catch(final Exception exception) {
+			    throw new VisitorException(exception);
+			}
 		}
 	}
 }

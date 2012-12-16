@@ -132,8 +132,10 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 		  // Stop the interpreter
 		  final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(bridge.getSid());
 		  // Wait for the interpreter to finish before continuing.
-		  try { conferenceInterpreter.join(); }
-		  catch(final InterruptedException ignored) { }
+		  if(conferenceInterpreter != null) {
+		    try { conferenceInterpreter.join(); }
+		    catch(final InterruptedException ignored) { }
+		  }
           bridge.addParticipant(outboundCall);
           if(record) {
             recordingSid = Sid.generate(Sid.Type.RECORDING);
