@@ -68,7 +68,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.Conference;
   public BridgeRcmlInterpreter create(final Sid accountSid, final String apiVersion, final URI url,
       final String method, final Call call) {
 	  final VoiceRcmlInterpreterContext context = new VoiceRcmlInterpreterContext(accountSid,
-	      apiVersion, url, method, null, "POST", null, "POST", call);
+	      apiVersion, url, method, null, null, null, null, call);
 	  final BridgeRcmlInterpreter interpreter = new BridgeRcmlInterpreter(context, this);
 	  executor.submit(interpreter);
 	  interpreters.put(call.getSid(), interpreter);

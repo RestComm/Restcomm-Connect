@@ -323,11 +323,13 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	@Override public void sessionExpired(final SipApplicationSessionEvent event) {
 	  final SipApplicationSession session = event.getApplicationSession();
       final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
-      call.failed();
-      final StringBuilder buffer = new StringBuilder();
-      buffer.append("A call with ID ").append(call.getSid().toString())
-          .append(" was forcefully clean up after SipApplicationSession timed out.");
-      logger.warn(buffer.toString());
+      if(call != null) {
+        call.failed();
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append("A call with ID ").append(call.getSid().toString())
+            .append(" was forcefully cleaned up after SipApplicationSession timed out.");
+        logger.warn(buffer.toString());
+      }
 	}
 
 	@Override public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) { }

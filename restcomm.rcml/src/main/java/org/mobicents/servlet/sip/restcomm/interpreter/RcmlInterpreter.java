@@ -167,7 +167,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	
 	public boolean isRunning() {
       final State state = getState();
-      return READY.equals(state) || EXECUTING.equals(state) || REDIRECTED.equals(state);
+      return IDLE.equals(state) || READY.equals(state) || EXECUTING.equals(state) || REDIRECTED.equals(state);
 	}
 	
 	public synchronized void join() throws InterruptedException {
@@ -326,7 +326,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	    finish();
 	  }
 	  cleanup();
-	  notifyAll();
+	  synchronized(this) {
+	    notifyAll();
+	  }
 	  thread = null;
 	}
 	

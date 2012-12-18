@@ -313,23 +313,21 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 	}
 
 	public void stop() {
-		final List<State> possibleStates = new ArrayList<State>();
-		possibleStates.add(PLAY);
-		possibleStates.add(PLAY_COLLECT);
-		possibleStates.add(PLAY_RECORD);
-		assertState(possibleStates);
-		// Create the signal.
-		final EventName[] signal = new EventName[1];
-		signal[0] = new EventName(PACKAGE_NAME, MgcpEvent.factory("es"));
-		// Create notification request.
-		requestId = server.generateRequestIdentifier();
-		final NotificationRequest request = new NotificationRequest(this, endpointId, requestId);
-		request.setSignalRequests(signal);
-		request.setNotifiedEntity(server.getCallAgent());
-		request.setRequestedEvents(REQUESTED_EVENTS);
-		// Send the request.
-		server.sendCommand(request, this);
-		setState(STOP);
+	  final State state = getState();
+	  if(PLAY.equals(state) || PLAY_COLLECT.equals(state) || PLAY_RECORD.equals(state)) {
+	    // Create the signal.
+	    final EventName[] signal = new EventName[1];
+	    signal[0] = new EventName(PACKAGE_NAME, MgcpEvent.factory("es"));
+	    // Create notification request.
+	    requestId = server.generateRequestIdentifier();
+	    final NotificationRequest request = new NotificationRequest(this, endpointId, requestId);
+	    request.setSignalRequests(signal);
+	    request.setNotifiedEntity(server.getCallAgent());
+	    request.setRequestedEvents(REQUESTED_EVENTS);
+	    // Send the request.
+	    server.sendCommand(request, this);
+	    setState(STOP);
+	  }
 	}
 
 	@Override public synchronized void updateId(final EndpointIdentifier endpointId) {

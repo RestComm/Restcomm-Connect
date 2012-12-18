@@ -17,6 +17,7 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.entities.Registration;
+import org.mobicents.servlet.sip.restcomm.interpreter.BridgeRcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterFactory;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
@@ -122,9 +123,11 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 		final String url = callAttributes.get("url");
 		if(url != null && !url.isEmpty()) {
 		  final String method = callAttributes.get("method");
-		  try { 
-			  interpreterFactory.create(context.getAccountSid(),context.getApiVersion(), URI.create(url),
-			      method, outboundCall).join();
+		  try {
+			  final URI base = interpreter.getCurrentResourceUri();
+			  final BridgeRcmlInterpreter bridgeInterpreter = interpreterFactory.create(context.getAccountSid(),context.getApiVersion(), resolveIfNotAbsolute(base, url),
+			      method, outboundCall);
+			  bridgeInterpreter.join();
 		  } catch(final InterruptedException exception) { }
 		}
 		if(Call.Status.IN_PROGRESS == call.getStatus() &&
