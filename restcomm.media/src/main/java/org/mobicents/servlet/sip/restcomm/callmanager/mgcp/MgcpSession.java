@@ -16,12 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
-import java.util.ArrayList;
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
+
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-
-import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -37,8 +37,8 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
     super();
     this.id = id;
     this.server = server;
-    this.connections = new ArrayList<MgcpConnection>();
-    this.endpoints = new ArrayList<MgcpEndpoint>();
+    this.connections = new CopyOnWriteArrayList<MgcpConnection>();
+    this.endpoints = new CopyOnWriteArrayList<MgcpEndpoint>();
   }
   
   public MgcpConnection createConnection(final MgcpEndpoint endpoint) {

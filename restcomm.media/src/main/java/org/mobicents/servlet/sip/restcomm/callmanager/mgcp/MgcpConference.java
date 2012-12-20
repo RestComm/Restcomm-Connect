@@ -146,7 +146,9 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     uri.add(audio);
     ivrEndpoint.play(uri, iterations);
     try { wait(); }
-    catch(final InterruptedException ignored) { ivrEndpoint.stop(); }
+    catch(final InterruptedException ignored) { 
+    	ivrEndpoint.stop(); 
+    }
   }
   
   @Override public synchronized void stop() {

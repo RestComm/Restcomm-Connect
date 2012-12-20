@@ -16,9 +16,9 @@
  */
 package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.media.api.Conference;
@@ -34,7 +34,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
   public MgcpConferenceCenter(final MgcpServerManager serverManager) {
     super();
     this.serverManager = serverManager;
-    this.conferences = new HashMap<String, MgcpConference>();
+    this.conferences = new ConcurrentHashMap<String, MgcpConference>();
   }
   
   @Override public synchronized Conference getConference(final String name) {
