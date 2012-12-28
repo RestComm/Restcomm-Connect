@@ -111,8 +111,9 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 	  outboundCalls = getCalls(tag.getChildren());
 	  fork(outboundCalls);
 	  try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
-      catch(final InterruptedException ignored) { }
-	  cleanup(outboundCalls);
+      catch(final InterruptedException ignored) {
+    	  cleanup(outboundCalls);
+      }
 	  if(Call.Status.IN_PROGRESS == call.getStatus() && (outboundCall != null &&
 	      Call.Status.IN_PROGRESS == outboundCall.getStatus())) {
 		final Map<String, String> callAttributes = attributes.get(outboundCall.getSid().toString());

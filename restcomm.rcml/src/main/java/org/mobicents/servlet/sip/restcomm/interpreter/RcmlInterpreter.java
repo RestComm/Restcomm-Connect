@@ -70,6 +70,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	protected static final State FAILED = new State("failed");
 	static {
 		IDLE.addTransition(READY);
+		IDLE.addTransition(FINISHED);
 		READY.addTransition(EXECUTING);
 		READY.addTransition(FINISHED);
 		EXECUTING.addTransition(READY);
@@ -309,7 +310,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 			setState(EXECUTING);
 			// Try to execute the next tag.
 			try { tag.accept(this); }
-			catch(final VisitorException exception) { logger.warn(exception); }
+			catch(final VisitorException exception) { 
+				logger.warn(exception); 
+				}
 			tag.setHasBeenVisited(true);
 			// Handle any state changes caused by executing the tag.
 			final State state = getState();
