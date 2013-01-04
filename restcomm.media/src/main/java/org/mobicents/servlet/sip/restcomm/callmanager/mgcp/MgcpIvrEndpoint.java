@@ -41,6 +41,8 @@ import jain.protocol.ip.mgcp.pkg.PackageName;
 
 import org.apache.log4j.Logger;
 
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.mobicents.servlet.sip.restcomm.FiniteStateMachine;
 import org.mobicents.servlet.sip.restcomm.State;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -51,7 +53,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
  */
 @ThreadSafe public final class MgcpIvrEndpoint extends FiniteStateMachine implements JainMgcpListener, MgcpEndpoint {
 	private static final Logger LOGGER = Logger.getLogger(MgcpIvrEndpoint.class);
-	private static final PackageName PACKAGE_NAME = PackageName.factory("AU");
+	private static final PackageName PACKAGE_NAME = AUPackage.AU;
 	private static final RequestedEvent[] REQUESTED_EVENTS = new RequestedEvent[2];
 	public static final State IDLE = new State("IDLE");
 	public static final State PLAY = new State("PLAY");
@@ -61,8 +63,8 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 	public static final State FAILED = new State("FAILED");
 	static {
 		final RequestedAction[] action = new RequestedAction[] { RequestedAction.NotifyImmediately };
-		REQUESTED_EVENTS[0] = new RequestedEvent(new EventName(PACKAGE_NAME, MgcpEvent.factory("oc")), action);
-		REQUESTED_EVENTS[1] = new RequestedEvent(new EventName(PACKAGE_NAME, MgcpEvent.factory("of")), action);
+		REQUESTED_EVENTS[0] = new RequestedEvent(new EventName(PACKAGE_NAME, AUMgcpEvent.auoc), action);
+		REQUESTED_EVENTS[1] = new RequestedEvent(new EventName(PACKAGE_NAME, AUMgcpEvent.auof), action);
 		IDLE.addTransition(PLAY);
 		IDLE.addTransition(PLAY_COLLECT);
 		IDLE.addTransition(PLAY_RECORD);
@@ -145,7 +147,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 		final String parameters = builder.build();
 		// Create the signal.
 		final EventName[] signal = new EventName[1];
-		signal[0] = new EventName(PACKAGE_NAME, MgcpEvent.factory("pa").withParm(parameters));
+		signal[0] = new EventName(PACKAGE_NAME, AUMgcpEvent.aupa.withParm(parameters));
 		// Create notification request.
 		requestId = server.generateRequestIdentifier();
 		final NotificationRequest request = new NotificationRequest(this, endpointId, requestId);
@@ -176,7 +178,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 		final String parameters = builder.build();
 		// Create the signal.
 		final EventName[] signal = new EventName[1];
-		signal[0] = new EventName(PACKAGE_NAME, MgcpEvent.factory("pc").withParm(parameters));
+		signal[0] = new EventName(PACKAGE_NAME, AUMgcpEvent.aupc.withParm(parameters));
 		// Create notification request.
 		requestId = server.generateRequestIdentifier();
 		final NotificationRequest request = new NotificationRequest(this, endpointId, requestId);
@@ -205,7 +207,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 		final String parameters = builder.build();
 		// Create the signal.
 		final EventName[] signal = new EventName[1];
-		signal[0] = new EventName(PACKAGE_NAME, MgcpEvent.factory("pr").withParm(parameters));
+		signal[0] = new EventName(PACKAGE_NAME, AUMgcpEvent.aupr.withParm(parameters));
 		// Create notification request.
 		requestId = server.generateRequestIdentifier();
 		final NotificationRequest request = new NotificationRequest(this, endpointId, requestId);
@@ -323,7 +325,7 @@ import org.mobicents.servlet.sip.restcomm.callmanager.mgcp.au.AdvancedAudioParam
 
 	    // Create the signal.
 	    final EventName[] signal = new EventName[1];
-	    signal[0] = new EventName(PACKAGE_NAME, MgcpEvent.factory("es"));
+	    signal[0] = new EventName(PACKAGE_NAME, AUMgcpEvent.aues);
 	    // Create notification request.
 	    requestId = server.generateRequestIdentifier();
 	    final NotificationRequest request = new NotificationRequest(this, endpointId, requestId);
