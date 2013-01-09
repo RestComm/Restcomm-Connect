@@ -16,14 +16,7 @@
  */
 package org.mobicents.servlet.sip.restcomm.dao.mybatis;
 
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readDateTime;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readInteger;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readSid;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readString;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.readUri;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeDateTime;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeSid;
-import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.writeUri;
+import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
 
 import java.net.URI;
 import java.util.ArrayList;

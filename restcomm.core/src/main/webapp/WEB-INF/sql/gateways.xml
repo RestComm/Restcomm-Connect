@@ -10,7 +10,7 @@
   </insert>
   
   <select id="getGateway" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_gateways WHERE "sid=#{sid};
+    SELECT * FROM "restcomm_gateways" WHERE "sid=#{sid};
   </select>
   
   <select id="getGateways" resultType="hashmap">

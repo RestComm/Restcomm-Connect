@@ -29,6 +29,7 @@ public interface DaoManager extends Configurable, LifeCycle{
   public AvailablePhoneNumbersDao getAvailablePhoneNumbersDao();
   public CallDetailRecordsDao getCallDetailRecordsDao();
   public ClientsDao getClientsDao();
+  public HttpCookiesDao getHttpCookiesDao();
   public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao();
   public NotificationsDao getNotificationsDao();
   public OutgoingCallerIdsDao getOutgoingCallerIdsDao();
