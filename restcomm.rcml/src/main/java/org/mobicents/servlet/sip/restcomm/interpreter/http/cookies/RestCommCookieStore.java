@@ -21,7 +21,8 @@ import java.util.List;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.cookie.Cookie;
-import org.mobicents.servlet.sip.restcomm.ServiceLocator;
+
+import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
 import org.mobicents.servlet.sip.restcomm.dao.HttpCookiesDao;
 
@@ -29,28 +30,37 @@ import org.mobicents.servlet.sip.restcomm.dao.HttpCookiesDao;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class RestCommCookieStore implements CookieStore {
-  private static final HttpCookiesDao dao;
-  static {
-    dao = ServiceLocator.getInstance().get(DaoManager.class).getHttpCookiesDao();
-  }
+  private final Sid sid;
+  private final HttpCookiesDao dao;
 
-  public RestCommCookieStore() {
+  public RestCommCookieStore(final Sid sid, final DaoManager daos) {
     super();
+    this.sid = sid;
+    this.dao = daos.getHttpCookiesDao();
   }
 
   @Override public void addCookie(final Cookie cookie) {
-    
+    if(!dao.hasCookie(sid, cookie)) {
+      dao.addCookie(sid, cookie);
+    } else {
+      dao.updateCookie(sid,  cookie);
+    }
   }
 
   @Override public void clear() {
-    
+    dao.removeCookies(sid);
   }
 
   @Override public boolean clearExpired(Date date) {
-    return false;
+    if(dao.hasExpiredCookies(sid)) {
+      dao.removeExpiredCookies(sid);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @Override public List<Cookie> getCookies() {
-    return null;
+    return dao.getCookies(sid);
   }
 }

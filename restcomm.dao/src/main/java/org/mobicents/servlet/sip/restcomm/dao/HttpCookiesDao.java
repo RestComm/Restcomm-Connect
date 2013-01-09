@@ -29,6 +29,7 @@ public interface HttpCookiesDao {
   public void addCookie(Sid sid, Cookie cookie);
   public List<Cookie> getCookies(Sid sid);
   public boolean hasCookie(Sid sid, Cookie cookie);
+  public boolean hasExpiredCookies(Sid sid);
   public void removeCookies(Sid sid);
   public void removeExpiredCookies(Sid sid);
   public void updateCookie(Sid sid, Cookie cookie);

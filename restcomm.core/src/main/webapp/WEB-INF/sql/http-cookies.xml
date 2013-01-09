@@ -17,6 +17,10 @@
     SELECT COUNT(*) FROM "restcomm_http_cookies" WHERE "sid"=#{sid} AND "name"=#{name};
   </select>
   
+  <select id="hasExpiredCookies" parameterType="string" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_http_cookies" WHERE "sid"=#{sid} AND "expiration_date" &lt;= NOW();
+  </select>
+  
   <delete id="removeCookies" parameterType="string">
     DELETE FROM "restcomm_http_cookies" WHERE "sid"=#{sid};
   </delete>

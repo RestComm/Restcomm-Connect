@@ -83,6 +83,20 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
       session.close();
     }
   }
+  
+  @Override public boolean hasExpiredCookies(final Sid sid) {
+    final SqlSession session = sessions.openSession();
+    try {
+      final Integer result = session.selectOne(namespace + "hasExpiredCookies", sid.toString());
+      if(result > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      session.close();
+    }
+  }
 
   @Override public void removeCookies(final Sid sid) {
     final SqlSession session = sessions.openSession();

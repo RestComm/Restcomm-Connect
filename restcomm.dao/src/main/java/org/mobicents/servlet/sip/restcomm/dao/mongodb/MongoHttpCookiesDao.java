@@ -74,6 +74,16 @@ import static org.mobicents.servlet.sip.restcomm.dao.DaoUtils.*;
     final long result = collection.count(query);
     return result == 1;
   }
+  
+  @Override public boolean hasExpiredCookies(final Sid sid) {
+    final BasicDBObject query = new BasicDBObject();
+    query.put("sid", sid.toString());
+    final BasicDBObject condition = new BasicDBObject();
+    condition.put("$lte", new Date());
+    query.put("expiration_date", condition);
+    final long result = collection.count(query);
+    return result == 1;
+  }
 
   @Override public void removeCookies(Sid sid) {
     final BasicDBObject query = new BasicDBObject();

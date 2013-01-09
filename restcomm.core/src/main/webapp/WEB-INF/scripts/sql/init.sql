@@ -44,6 +44,17 @@ CREATE TABLE "restcomm_outgoing_caller_ids" (
 "uri" LONGVARCHAR NOT NULL
 );
 
+CREATE TABLE "restcomm_http_cookies" (
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"comment" LONGVARCHAR,
+"domain" LONGVARCHAR,
+"expiration_date" DATETIME,
+"name" LONGVARCHAR NOT NULL,
+"path" LONGVARCHAR,
+"value" LONGVARCHAR,
+"version" INT
+);
+
 CREATE TABLE "restcomm_incoming_phone_numbers" (
 "sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATE NOT NULL,
