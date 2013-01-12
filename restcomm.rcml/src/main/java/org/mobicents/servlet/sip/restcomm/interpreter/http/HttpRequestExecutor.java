@@ -26,7 +26,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.mobicents.servlet.sip.restcomm.interpreter.http.cookies.RestCommCookieStore;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -42,6 +45,8 @@ public final class HttpRequestExecutor {
     HttpResponse response = null;
     HttpRequestDescriptor descriptor = request;
     do {
+      final DefaultHttpClient client = new DefaultHttpClient();
+      client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
       response = new DefaultHttpClient().execute(descriptor.getHttpRequest());
       statusCode = response.getStatusLine().getStatusCode();
       if(isRedirect(statusCode)) {
