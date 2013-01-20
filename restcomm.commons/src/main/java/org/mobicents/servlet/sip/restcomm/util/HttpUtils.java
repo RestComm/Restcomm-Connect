@@ -17,9 +17,6 @@
 package org.mobicents.servlet.sip.restcomm.util;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +25,7 @@ import java.util.Map;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
@@ -40,51 +38,21 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     super();
   }
   
-  public static List<NameValuePair> toList(final String data)
-      throws UnsupportedEncodingException {
-    final List<NameValuePair> list = new ArrayList<NameValuePair>();
-    final String[] tokens = data.split("&");
-    for(final String token : tokens) {
-      final String[] parts = token.split("=");
-      if(parts.length == 1) {
-        list.add(new BasicNameValuePair(parts[0], null));
-      } else if(parts.length == 2) {
-        list.add(new BasicNameValuePair(parts[0], URLDecoder.decode(parts[1], "UTF-8")));
-      }
-    }
-    return list;
-  }
-  
   public static Map<String, String> toMap(final HttpEntity entity)
       throws IllegalStateException, IOException {
-	final int length = (int)entity.getContentLength();
-	final byte[] data = new byte[length];
-	entity.getContent().read(data, 0, length);
-    final String input = new String(data);
-    final String[] tokens = input.split("&");
+    final List<NameValuePair> parameters = URLEncodedUtils.parse(entity);
     final Map<String, String> map = new HashMap<String, String>();
-    for(final String token : tokens) {
-      final String[] parts = token.split("=");
-      if(parts.length == 1) {
-        map.put(parts[0], null);
-      } else if(parts.length == 2) {
-        map.put(parts[0], URLDecoder.decode(parts[1], "UTF-8"));
-      }
+    for(final NameValuePair parameter : parameters) {
+      map.put(parameter.getName(), parameter.getValue());
     }
     return map;
   }
   
   public static String toString(final Header[] headers) {
-	final StringBuilder buffer = new StringBuilder();
-    for(int index = 0; index < headers.length; index++) {
-      final Header header = headers[index];
-      try {
-        buffer.append(header.getName()).append("=").append(URLEncoder.encode(header.getValue(), "UTF-8"));
-      } catch(final UnsupportedEncodingException ignored) { };
-      if(index < (headers.length - 1)) {
-        buffer.append("&");
-      }
+    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+    for(final Header header : headers) {
+      parameters.add(new BasicNameValuePair(header.getName(), header.getValue()));
     }
-    return buffer.toString();
+    return URLEncodedUtils.format(parameters, "UTF-8");
   }
 }

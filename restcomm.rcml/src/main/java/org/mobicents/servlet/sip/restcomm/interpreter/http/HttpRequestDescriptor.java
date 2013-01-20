@@ -29,8 +29,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 
-import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -48,7 +46,7 @@ public final class HttpRequestDescriptor {
     this.method = method;
     final String query = uri.getQuery();
     if(query != null) {
-      parameters.addAll(HttpUtils.toList(query));
+      parameters.addAll(URLEncodedUtils.parse(uri, "UTF-8"));
     }
     this.parameters = parameters;
   }
