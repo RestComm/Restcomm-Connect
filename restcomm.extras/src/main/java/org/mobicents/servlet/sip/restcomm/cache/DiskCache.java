@@ -31,7 +31,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class DiskCache {
+@ThreadSafe public final class DiskCache implements BlockStorageCache {
   private final String location;
   private final Map<String, ReentrantLock> locks;
   

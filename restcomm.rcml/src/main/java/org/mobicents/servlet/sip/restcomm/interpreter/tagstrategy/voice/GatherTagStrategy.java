@@ -68,13 +68,13 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.attributes.NumDigits;
         call.playAndCollect(announcements, numDigits, 1,timeout, timeout, finishOnKey);
         // Redirect to action URI.;
         String digits = call.getDigits();
-        // There is an issue with MMS that when the only key pressed
-        // is the finishOnKey key then it returns it instead of
-        // returning an empty string.
-        if(digits.equals(finishOnKey)) {
-          digits = "";
-        }
-        if(digits != null && digits.length() > 0) {
+        if(digits != null) {
+          if(digits.equals(finishOnKey)) {
+            digits = "";
+          } else if(digits.endsWith(finishOnKey)) {
+            final int finishOnKeyIndex = digits.lastIndexOf(finishOnKey);
+            digits = digits.substring(0, finishOnKeyIndex);
+          }
           final List<NameValuePair> parameters = context.getRcmlRequestParameters();
           parameters.add(new BasicNameValuePair("Digits", digits));
           interpreter.load(action, method, parameters);
