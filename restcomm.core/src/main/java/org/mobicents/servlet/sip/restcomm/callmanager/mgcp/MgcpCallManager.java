@@ -188,14 +188,11 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	  	   call.updateInitialInvite(invite);
 	     } else if(SipServletResponse.SC_BUSY_HERE == status || SipServletResponse.SC_BUSY_EVERYWHERE == status) {
 		   call.busy();
+	     } else if(SipServletResponse.SC_REQUEST_TERMINATED == status) {
+		   response.createAck().send();
 	     } else {
 	       call.failed();
  	     }
-	   } else if("CANCEL".equalsIgnoreCase(method)) {
-	     if(SipServletResponse.SC_REQUEST_TERMINATED == status) {
-		   final SipServletRequest ack = response.createAck();
-		   ack.send();
-	     }
 	   }
 	 }
 
