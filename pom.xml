@@ -5,7 +5,7 @@
 
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>1.0.0.BETA2-SNAPSHOT</version>
+	<version>1.0.0.CR1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A Restful Communications Framework</description>
