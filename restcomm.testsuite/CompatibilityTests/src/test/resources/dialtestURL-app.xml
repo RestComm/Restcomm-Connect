@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Dial callerId="+13055872294">
+        <Number url="http://localhost:8888/restcomm.core-1.0.0.BETA2-SNAPSHOT/demo/hello-world.xml">
+            6000
+        </Number>
+    </Dial>
+</Response>
