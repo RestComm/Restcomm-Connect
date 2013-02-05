@@ -20,7 +20,6 @@ import java.net.URI;
 import java.util.List;
 
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.sip.restcomm.Sid;
 
 /**
@@ -39,6 +38,7 @@ public interface Call {
   public String getForwardedFrom();
   public Sid getSid();
   public String getOriginator();
+  public String getOriginatorURI();
   public String getOriginatorName();
   public String getRecipient();
   public Status getStatus();

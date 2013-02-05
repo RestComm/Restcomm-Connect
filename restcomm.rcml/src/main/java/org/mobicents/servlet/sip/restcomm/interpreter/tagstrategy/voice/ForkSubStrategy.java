@@ -108,7 +108,7 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
     try {
       bridge.addParticipant(call);
       final DateTime start = DateTime.now();
-	  outboundCalls = getCalls(tag.getChildren());
+	  outboundCalls = getCalls(tag.getChildren(),context);
 	  fork(outboundCalls);
 	  try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
       catch(final InterruptedException ignored) {
@@ -211,8 +211,8 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
     forking = false;
   }
   
-  private List<Call> getCalls(final List<Tag> tags) throws CallManagerException {
-    final String caller = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
+  private List<Call> getCalls(final List<Tag> tags, RcmlInterpreterContext context) throws CallManagerException {
+    String caller = phoneNumberUtil.format(callerId, PhoneNumberFormat.E164);
     final List<Call> calls = new ArrayList<Call>();
     for(final Tag tag : tags) {
       if(Client.NAME.equals(tag.getName())) {
@@ -220,6 +220,7 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
       } else if(Uri.NAME.equals(tag.getName())) {
         final String uri = tag.getText();
         if(uri != null) {
+          caller = ((VoiceRcmlInterpreterContext)context).getCall().getOriginatorURI();
           final Call call = callManager.createCall(caller, uri);
           calls.add(call);
           saveAttributes(call.getSid(), tag);

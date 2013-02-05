@@ -435,6 +435,10 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		return from.getUser();
 	}
 
+	@Override public String getOriginatorURI(){
+		return initialInvite.getFrom().getURI().toString();
+	}
+	
 	@Override public String getOriginatorName() {
 		return initialInvite.getFrom().getDisplayName();
 	}
