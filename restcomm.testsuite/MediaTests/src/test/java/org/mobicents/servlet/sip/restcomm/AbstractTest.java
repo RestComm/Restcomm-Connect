@@ -10,7 +10,7 @@ import org.junit.After;
 
 public class AbstractTest {
 	
-	private static final String restcommVersion = "1.0.0.BETA2-SNAPSHOT";
+	private static final String restcommVersion = "1.0.0.CR1-SNAPSHOT";
 	
 	public static WebArchive createWebArchive(){
 		WebArchive archive = ShrinkWrapMaven.resolver()

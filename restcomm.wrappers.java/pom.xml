@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.mobicents.servlet.sip</groupId>
     <artifactId>restcomm</artifactId>
-    <version>1.0.0.BETA2-SNAPSHOT</version>
+    <version>1.0.0.CR1-SNAPSHOT</version>
   </parent>
   <artifactId>twilio-java-sdk</artifactId> 
   <version>3.3.10-SNAPSHOT</version>

@@ -7,12 +7,11 @@
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>1.0.0.BETA2-SNAPSHOT</version>
+		<version>1.0.0.CR1-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm.dao</artifactId>
-	<version>1.0.0.BETA2-SNAPSHOT</version>
 	<name>restcomm.dao</name>
 	<url>http://maven.apache.org</url>
 

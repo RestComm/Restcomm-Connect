@@ -1,5 +1,8 @@
 package org.mobicents.servlet.sip.restcomm;
 
+import java.io.File;
+import java.io.InputStream;
+
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
@@ -11,7 +14,7 @@ import org.junit.After;
 
 public class AbstractTest {
 	
-	private static final String restcommVersion = "1.0.0.BETA2-SNAPSHOT";
+	private static final String restcommVersion = "1.0.0.CR1-SNAPSHOT";
 	
 	@Deployment(testable=false)
 	public static WebArchive createWebArchive(){
