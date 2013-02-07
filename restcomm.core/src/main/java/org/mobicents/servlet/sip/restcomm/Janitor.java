@@ -35,7 +35,7 @@ public final class Janitor{
     super();
   }
   
-  public static void cleanup() {
+  public static void cleanup() throws InterruptedException {
     final ServiceLocator services = ServiceLocator.getInstance();
     final InterpreterFactory interpreterExecutor = services.get(InterpreterFactory.class);
     interpreterExecutor.shutdown();

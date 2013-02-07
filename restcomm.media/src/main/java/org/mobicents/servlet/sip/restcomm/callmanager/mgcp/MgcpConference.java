@@ -151,13 +151,16 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     }
   }
   
-  @Override public synchronized void stop() {
+  @Override public synchronized void stop() throws InterruptedException {
     assertState(IN_PROGRESS);
     ivrEndpoint.stop();
-    try { wait(); }
-    catch(final InterruptedException ignored) { }
+    block(2);
   }
   
+  private void block(int numberOfRequests) throws InterruptedException {
+	  wait(server.getResponseTimeout() * numberOfRequests);
+  }
+
   @Override public Status getStatus() {
     return Status.getValueOf(getState().getName());
   }
@@ -235,7 +238,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     } catch(final InterruptedException ignored) { return; }
   }
 
-  @Override public synchronized void shutdown() {
+  @Override public synchronized void shutdown() throws InterruptedException {
     assertState(IN_PROGRESS);
     stop();
     cleanup();

@@ -94,7 +94,6 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
           try { conferenceInterpreter.join(); }
           catch(final InterruptedException ignored) { }
         }
-        if(beep) { conference.play(alertOnEnterAudioFile); }
         if(Call.Status.IN_PROGRESS == call.getStatus() && muted) { call.mute(); }
       }
       if(Call.Status.IN_PROGRESS == call.getStatus()) {
@@ -102,6 +101,9 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         conference.addObserver(this);
         try {
           conference.addParticipant(call);
+          if(beep && conference.getNumberOfParticipants()>1){
+        	  conference.play(alertOnEnterAudioFile);
+          }
           wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
         } catch(final ConferenceException exception) {
     	  interpreter.failed();
@@ -113,12 +115,22 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         call.removeObserver(this);
       }
       if(endConferenceOnExit || (conference.getNumberOfParticipants() == 0)) {
-        conferenceCenter.removeConference(room);
+    	  try {
+				conferenceCenter.removeConference(room);
+			} catch (InterruptedException exception) {
+				interpreter.failed();
+				interpreter.notify(context, Notification.ERROR, 12400);
+				logger.error(exception);
+				throw new TagStrategyException(exception);
+			}
       } else {
         if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
-          conference.removeParticipant(call);
+        	conference.removeParticipant(call);
+        	if(beep && conference.getNumberOfParticipants()>0){
+        		conference.play(alertOnExitAudioFile);
         }
-        if(beep) { conference.play(alertOnExitAudioFile); }
+
+    	}
       }
     }
     if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {

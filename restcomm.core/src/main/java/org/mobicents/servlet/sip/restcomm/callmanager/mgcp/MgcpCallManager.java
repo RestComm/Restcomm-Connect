@@ -267,7 +267,11 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 }
 
 	 @Override public final void destroy() {
-		 Janitor.cleanup();
+		 try {
+			Janitor.cleanup();
+		} catch (InterruptedException exception) {
+			logger.error(exception);
+		}
 	 }
 	 
 	 private Client getClient(final String name) {

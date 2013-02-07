@@ -52,7 +52,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
     return conferences.keySet();
   }
 
-  @Override public synchronized void removeConference(final String name) {
+  @Override public synchronized void removeConference(final String name) throws InterruptedException {
     if(conferences.containsKey(name)) {
       final MgcpConference conference = conferences.remove(name);
       conference.shutdown();

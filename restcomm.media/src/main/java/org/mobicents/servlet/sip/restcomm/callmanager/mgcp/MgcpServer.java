@@ -185,8 +185,8 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
   @Override public void processMgcpCommandEvent(final JainMgcpCommandEvent event) {
     if(getState() == RUNNING) {
       synchronized(requestListenersLock) {
-	    for(final JainMgcpListener listener : requestListeners) {
 	    	LOGGER.debug("Received MGCP command: \n"+event);
+	    for(final JainMgcpListener listener : requestListeners) {
 	    	listener.processMgcpCommandEvent(event);
         }
       }
