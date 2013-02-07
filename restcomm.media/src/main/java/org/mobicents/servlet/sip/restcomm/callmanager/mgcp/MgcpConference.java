@@ -145,7 +145,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     final List<URI> uri = new ArrayList<URI>();
     uri.add(audio);
     ivrEndpoint.play(uri, iterations);
-    try { wait(); }
+    try { wait(server.getResponseTimeout() * 3); }
     catch(final InterruptedException ignored) { 
     	ivrEndpoint.stop(); 
     }

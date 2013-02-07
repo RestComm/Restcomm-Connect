@@ -196,9 +196,8 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			  throw new Exception(mmsTimedOutException());
 			}
 		} catch(final Exception exception){
+			failed();
 			cleanup();
-			setState(FAILED);
-			fireStatusChanged();
 			logger.error(exception);
 			throw new CallException(exception);
 		}
@@ -374,6 +373,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		possibleStates.add(QUEUED);
 		possibleStates.add(RINGING);
 		possibleStates.add(IN_PROGRESS);
+		possibleStates.add(TRYING);
 		assertState(possibleStates);
 		final State currentState = getState();
 		if(QUEUED.equals(currentState) || RINGING.equals(currentState)) {
@@ -483,6 +483,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			  throw new CallException(mmsTimedOutException());
 			}
 		} catch(final Exception exception) {
+			failed();
 			leave(conference);
 			throw new CallException(exception);
 		}

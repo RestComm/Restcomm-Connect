@@ -101,18 +101,24 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         conference.addObserver(this);
         try {
           conference.addParticipant(call);
-          if(beep && conference.getNumberOfParticipants()>1){
-        	  conference.play(alertOnEnterAudioFile);
+          try{
+        	  if(beep && conference.getNumberOfParticipants()>1){
+        		  conference.play(alertOnEnterAudioFile);
+        	  }
+          } catch(Exception exception){
+        	  logger.error(exception);
+        	  conference.removeParticipant(call);
           }
           wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
         } catch(final ConferenceException exception) {
-    	  interpreter.failed();
-          interpreter.notify(context, Notification.ERROR, 12400);
-          logger.error(exception);
-          throw new TagStrategyException(exception);
-        } catch(final InterruptedException ignored) { }
-        conference.removeObserver(this);
-        call.removeObserver(this);
+        	conference.removeParticipant(call);
+        	interpreter.failed();
+        	interpreter.notify(context, Notification.ERROR, 12400);
+        	conference.removeObserver(this);
+        	call.removeObserver(this);
+        	logger.error(exception);
+        	throw new TagStrategyException(exception);
+        } catch(final InterruptedException ignored) {}
       }
       if(endConferenceOnExit || (conference.getNumberOfParticipants() == 0)) {
     	  try {
@@ -124,13 +130,12 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
 				throw new TagStrategyException(exception);
 			}
       } else {
-        if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
-        	conference.removeParticipant(call);
-        	if(beep && conference.getNumberOfParticipants()>0){
-        		conference.play(alertOnExitAudioFile);
-        }
-
-    	}
+    	  if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
+    		  conference.removeParticipant(call);
+    	  }
+    	  if(beep && conference.getNumberOfParticipants()>0){
+    		  conference.play(alertOnExitAudioFile);
+    	  }
       }
     }
     if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {
