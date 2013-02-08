@@ -38,11 +38,14 @@ import com.twilio.sdk.resource.instance.Account;
 import com.twilio.sdk.resource.instance.IncomingPhoneNumber;
 
 /**
+ * Tests the SAY verb and the Acapela TTS SpeechSynthesizer service. 
+ * In order to run, you need to specify the username/password details at the  src/test/resources/compattests-restcomm_Acapela.xml
+ * 
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 
 @RunWith(Arquillian.class)
-public class SayVerbTest extends AbstractTest {
+public class SayVerbTestAcapela extends AbstractTest {
 	
 	@ArquillianResource
 	URL deploymentUrl;
@@ -111,7 +114,7 @@ public class SayVerbTest extends AbstractTest {
 
 	@Deployment(testable=false)
 	public static WebArchive createWebArchive(){
-		return AbstractTest.createWebArchive("compattests-restcomm.xml", appName);
+		return AbstractTest.createWebArchive("compattests-restcomm_Acapela.xml", appName);
 	}
 
 	private void createPhoneNumber() throws TwilioRestException{
@@ -135,7 +138,7 @@ public class SayVerbTest extends AbstractTest {
 	}
 
 	@Test
-	public void testSayVerb() throws ParseException, TwilioRestException, ClassNotFoundException{	
+	public void testSayVerbAcapela() throws ParseException, TwilioRestException, ClassNotFoundException{	
 		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
 		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
 		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
