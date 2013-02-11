@@ -100,15 +100,10 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         call.addObserver(this);
         conference.addObserver(this);
         try {
+        	if(beep && conference.getNumberOfParticipants()>0){
+      		  conference.play(alertOnEnterAudioFile);
+      	  }
           conference.addParticipant(call);
-          try{
-        	  if(beep && conference.getNumberOfParticipants()>1){
-        		  conference.play(alertOnEnterAudioFile);
-        	  }
-          } catch(Exception exception){
-        	  logger.error(exception);
-        	  conference.removeParticipant(call);
-          }
           wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
         } catch(final ConferenceException exception) {
         	conference.removeParticipant(call);
