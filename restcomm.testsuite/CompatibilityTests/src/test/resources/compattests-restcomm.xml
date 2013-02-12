@@ -93,7 +93,7 @@
 			<local-port>2727</local-port>
 			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
-			<response-timeout>15000</response-timeout>
+			<response-timeout>2000</response-timeout>
 			<!--  <external-address></external-address> -->
 		</mgcp-server>
 	</media-server-manager>

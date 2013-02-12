@@ -5,16 +5,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import javax.sip.message.Response;
 
-import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -29,29 +24,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.arquillian.mediaserver.api.EmbeddedMediaserver;
-import org.mobicents.arquillian.mediaserver.api.MediaserverConfMode;
 import org.mobicents.arquillian.mediaserver.api.MgcpEventListener;
 import org.mobicents.arquillian.mediaserver.api.MgcpUnitRequest;
 import org.mobicents.arquillian.mediaserver.api.annotations.Mediaserver;
-import org.mobicents.arquillian.mss.mediaserver.extension.EmbeddedMediaserverImpl;
-import org.mobicents.commtesting.MgcpEventListenerImpl;
 import org.mobicents.commtesting.MgcpUnit;
-import org.mobicents.media.core.ResourcesPool;
-import org.mobicents.media.core.Server;
-import org.mobicents.media.core.endpoints.impl.IvrEndpoint;
-import org.mobicents.media.server.mgcp.controller.Controller;
-import org.mobicents.media.server.spi.Endpoint;
-import org.mobicents.media.server.spi.ResourceUnavailableException;
-import org.mobicents.servlet.sip.restcomm.entities.NotificationList;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.TwilioRestException;
-import com.twilio.sdk.TwilioRestResponse;
-import com.twilio.sdk.resource.factory.IncomingPhoneNumberFactory;
 import com.twilio.sdk.resource.instance.Account;
-import com.twilio.sdk.resource.instance.Call;
 import com.twilio.sdk.resource.instance.IncomingPhoneNumber;
-import com.twilio.sdk.resource.list.CallList;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -117,10 +98,11 @@ public class DialUrlVerbTest extends AbstractTest {
 					"77f8c12cc7b8f8423e5c38b035249166", endpoint);
 		if(account==null)
 			account = client.getAccount();
-
-		if(incomingPhoneNumber==null)
-			createPhoneNumber();	
 		
+		if(incomingPhoneNumber==null){
+			appURL = endpoint+"/demo/"+appName;
+			incomingPhoneNumber = super.createPhoneNumber(appURL, account);	
+		}
 		mgcpUnit = new MgcpUnit();
 		mgcpEventListener = mgcpUnit.getMgcpEventListener();
 		mediaserver.registerListener(mgcpEventListener);
@@ -128,40 +110,25 @@ public class DialUrlVerbTest extends AbstractTest {
 	}
 
 	@After
-	public void tearDown()
+	public void tearDown() throws TwilioRestException
 	{
 		if(sipCallSender != null)	sipCallSender.disposeNoBye();
 		if(sipPhoneSender != null) sipPhoneSender.dispose();
 		if(sender != null) sender.dispose();
 		
+		if(sipCallReceiver != null)	sipCallReceiver.disposeNoBye();
+		if(sipPhoneReceiver != null) sipPhoneReceiver.dispose();
+		if(receiver != null) receiver.dispose();
+		
+		incomingPhoneNumber.delete();
+		incomingPhoneNumber = null;
 		mgcpEventListener = null;
 		mgcpUnit = null;
-				
 	}
 
 	@Deployment(testable=false)
 	public static WebArchive createWebArchive(){
 		return AbstractTest.createWebArchive("compattests-restcomm.xml", appName);
-	}
-
-	private void createPhoneNumber() throws TwilioRestException{
-		appURL = endpoint+"/demo/"+appName;
-		IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
-		Map<String, String> parameters = new HashMap<String, String>();
-		parameters.put("PhoneNumber", "+14321");
-		parameters.put("VoiceUrl", appURL);
-		parameters.put("VoiceMethod", "POST");
-		parameters.put("VoiceFallbackUrl", appURL);
-		parameters.put("VoiceFallbackMethod", "POST");
-		parameters.put("StatusCallback", appURL);
-		parameters.put("StatusCallbackMethod", "POST");
-		parameters.put("VoiceCallerIdLookup", "false");
-		parameters.put("SmsUrl", appURL);
-		parameters.put("SmsMethod", "POST");
-		parameters.put("SmsFallbackUrl", appURL);
-		parameters.put("SmsFallbackMethod", "POST");
-		incomingPhoneNumber = factory.create(parameters);
-
 	}
 
 	@Test 
@@ -199,8 +166,7 @@ public class DialUrlVerbTest extends AbstractTest {
 		assertTrue(Response.OK == sipCallReceiver.getLastReceivedResponse().getStatusCode());
 		
 		Collection<MgcpUnitRequest> mgcpUnitRequests = mgcpEventListener.getPlayAnnoRequestsReceived();
-		assertTrue(mgcpUnitRequests.size()==3);
-		for (Iterator iterator = mgcpUnitRequests.iterator(); iterator.hasNext();) {
+		for (Iterator<MgcpUnitRequest> iterator = mgcpUnitRequests.iterator(); iterator.hasNext();) {
 			MgcpUnitRequest mgcpUnitRequest = (MgcpUnitRequest) iterator.next();
 			assertTrue(mgcpEventListener.checkForSuccessfulResponse(mgcpUnitRequest.getTxId()));
 			
