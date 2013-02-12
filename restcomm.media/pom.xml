@@ -27,7 +27,7 @@
 			<version>${log4j.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.sdp</groupId>
 			<artifactId>nist-sdp</artifactId>
@@ -58,6 +58,12 @@
 					<artifactId>jaxb-api</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.media</groupId>
+			<artifactId>concurrent</artifactId>
+			<version>${mobicents.mgcp.impl.version}</version>
 		</dependency>
 
 		<dependency>
