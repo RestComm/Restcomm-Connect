@@ -55,7 +55,7 @@
 	</licenses>
 
 	<modules>
-		<module>restcomm.docs</module> 
+		<module>restcomm.docs</module>
 		<module>restcomm.api</module>
 		<module>restcomm.core</module>
 		<module>restcomm.media</module>
@@ -66,7 +66,6 @@
 		<module>restcomm.commons</module>
 		<module>restcomm.media.api</module>
 		<module>restcomm.wrappers.java</module>
-		<!--<module>restcomm.demo</module> -->
 	</modules>
 
 	<distributionManagement>
@@ -88,7 +87,7 @@
 		<commons-configuration.version>1.7</commons-configuration.version>
 		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
-		<mobicents.mgcp.impl.version>3.0.0.FINAL-SNAPSHOT</mobicents.mgcp.impl.version>
+		<mobicents.mgcp.impl.version>3.0.0.CR2</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<sipservletapi.version>1.7.0.FINAL</sipservletapi.version>
