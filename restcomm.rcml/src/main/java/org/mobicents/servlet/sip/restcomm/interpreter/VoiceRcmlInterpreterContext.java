@@ -9,6 +9,11 @@ import org.apache.http.message.BasicNameValuePair;
 import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.media.api.Call;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
 public class VoiceRcmlInterpreterContext extends RcmlInterpreterContext {
   private final Call call;
   private final URI voiceUrl;
@@ -48,8 +53,20 @@ public class VoiceRcmlInterpreterContext extends RcmlInterpreterContext {
     final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
     parameters.add(new BasicNameValuePair("CallSid", call.getSid().toString()));
     parameters.add(new BasicNameValuePair("AccountSid", accountSid.toString()));
-    parameters.add(new BasicNameValuePair("From", call.getOriginator()));
-    parameters.add(new BasicNameValuePair("To", call.getRecipient()));
+    // Make sure from and to are always E.164 formatted.
+    final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+    try {
+      final PhoneNumber from = phoneNumberUtil.parse(call.getOriginator(), "US");
+      parameters.add(new BasicNameValuePair("From", phoneNumberUtil.format(from, PhoneNumberFormat.E164)));
+    } catch(final NumberParseException ignored) {
+      parameters.add(new BasicNameValuePair("From", call.getOriginator()));
+    }
+    try {
+      final PhoneNumber to = phoneNumberUtil.parse(call.getRecipient(), "US");
+      parameters.add(new BasicNameValuePair("To", phoneNumberUtil.format(to, PhoneNumberFormat.E164)));
+    } catch(final NumberParseException ignored) {
+      parameters.add(new BasicNameValuePair("To", call.getRecipient()));
+    }
     parameters.add(new BasicNameValuePair("CallStatus", call.getStatus().toString()));
     parameters.add(new BasicNameValuePair("ApiVersion", apiVersion));
     parameters.add(new BasicNameValuePair("Direction", call.getDirection().toString()));
