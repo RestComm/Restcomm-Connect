@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>org.mobicents.arquillian.container</groupId>
 			<artifactId>mss-arquillian-mediaserver-extension</artifactId>
-			<version>1.0.0-ALPHA2-SNAPSHOT</version>
+			<version>${mss.arquillian.version}</version>
 		</dependency>
 	</dependencies>
 
