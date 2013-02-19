@@ -1,0 +1,77 @@
+@CHARSET "UTF-8";
+
+.incoming-phone-number-grid-cell {
+  float: left;
+}
+
+.incoming-phone-number-grid-row {
+  color: #666666;
+  background-color: #eeeeee;
+  padding: 20px;
+  height: 30px;
+  -moz-border-radius: 15px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+}
+
+a.incoming-phone-number-phone-number-column, .incoming-phone-number-phone-number-column,
+.incoming-phone-number-friendly-name-column {
+  color: #194e91;
+}
+
+.incoming-phone-number-phone-number-column, .incoming-phone-number-friendly-name-column {
+  font-size: 18px;
+  width: 25%;
+}
+
+.incoming-phone-number-urls-column {
+  width: 50%;
+}
+
+.incoming-phone-number-voice-label, .incoming-phone-number-sms-label {
+  color: #eb4821;
+  margin-right: 10px;
+}
+
+.incoming-phone-number-form-label {
+  color: #666666;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 8px;
+  margin-right: 15px;
+}
+
+.incoming-phone-number-voice-url-label, .incoming-phone-number-sms-url-label {
+  color: #194e91;
+}
+
+.incoming-phone-number-form-input, .incoming-phone-number-form-select {
+  color: #666666;
+  font-size: 16px;
+  font-weight: bold;
+  
+  border-width: 1px;
+  border-style: solid;
+  border-color: #cccccc;
+  
+  padding: 5px;
+  
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.incoming-phone-number-form-input {
+  width: 500px;
+}
+
+.incoming-phone-number-voice-url-edit, .incoming-phone-number-sms-url-edit {
+  margin-bottom: 20px;
+}
+
+.incoming-phone-number-voice-url-edit {
+  border-bottom-width: 3px;
+  border-bottom-style: solid;
+  border-bottom-color: #cccccc;
+  
+  padding-bottom: 20px;
+}

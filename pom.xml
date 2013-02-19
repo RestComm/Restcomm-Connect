@@ -61,7 +61,7 @@
 		<module>restcomm.media</module>
 		<module>restcomm.dao</module>
 		<module>restcomm.rcml</module>
-		<!-- <module>restcomm.testsuite</module> -->
+		<module>restcomm.testsuite</module>
 		<module>restcomm.extras</module>
 		<module>restcomm.commons</module>
 		<module>restcomm.media.api</module>

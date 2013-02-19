@@ -194,10 +194,10 @@
 	<modules>
 		<module>BasicTest</module>
 		<!-- The ExtrasTests tests need account setup for SMS and FAX -->
-		<!-- <module>ExtrasTest</module> -->
+		<module>ExtrasTest</module>
 		<module>PresenceTest</module>
-		<!-- <module>MediaTests</module> -->
-		<!-- <module>CompatibilityTests</module> -->
+		<module>MediaTests</module>
+		<module>CompatibilityTests</module>
 	</modules>
 
 	<build>

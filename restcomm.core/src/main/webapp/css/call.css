@@ -1,0 +1,43 @@
+@CHARSET "UTF-8";
+
+.call-grid-cell {
+  float: left;
+}
+
+.call-grid-row-labels, .call-grid-row-even, .call-grid-row-odd {
+  color: #666666;
+}
+
+.call-grid-row-labels {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.call-grid-row-even {
+  background-color: #eeeeee;
+}
+
+.call-grid-row-odd {
+  background-color: #ffffff;
+}
+
+.call-date-column, .call-direction-column, .call-from-column, .call-to-column,
+.call-status-column, .call-duration-column {
+  font-size: 16px;
+}
+
+.call-date-column {
+  width: 25%;
+}
+
+.call-direction-column {
+  width: 15%;
+}
+
+.call-from-column, .call-to-column {
+  width: 20%;
+}
+
+.call-status-column, .call-duration-column {
+  width: 10%;
+}

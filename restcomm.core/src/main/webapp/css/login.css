@@ -1,0 +1,59 @@
+@CHARSET "UTF-8";
+
+.login-top-border {
+  border-bottom-color: #eb4821;
+  border-bottom-style:solid;
+  border-bottom-width: 1px;
+}
+
+.login-dialog {
+  background-color: #194e91;
+  
+  width: 420px;
+  
+  margin-top: 25px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 10px;
+  
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+}
+
+.login-dialog-form {
+  background-color: #eeeeee;
+  
+  padding: 5px;
+  
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.login-dialog-form-row {
+  list-stype: none;
+}
+
+.login-dialog-form-column {
+  display: inline-block;
+  width: 110px;
+}
+
+.login-dialog-form-label {
+  color: #eb4821;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.login-dialog-form-input {
+  color: #eb4821;
+  font-size: 16px;
+  font-weight: bold;
+  
+  border-width: 1px;
+  border-style: solid;
+  border-color: #cccccc;
+}
+
+h1.login-dialog-form-header {
+  color: #ffffff;
+}

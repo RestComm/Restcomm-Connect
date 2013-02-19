@@ -1,0 +1,40 @@
+@CHARSET "UTF-8";
+
+.recording-grid-cell {
+  float: left;
+}
+
+.recording-grid-row-labels, .recording-grid-row-even, .recording-grid-row-odd,
+a.recording-recording-column-even, a.recording-recording-column-odd {
+  color: #666666;
+}
+
+.recording-grid-row-labels {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.recording-grid-row-even {
+  background-color: #eeeeee;
+}
+
+.recording-grid-row-odd {
+  background-color: #ffffff;
+}
+
+.recording-date-column, .recording-source-column, .recording-duration-column,
+.recording-recording-column, .recording-call-details-column {
+  font-size: 16px;
+}
+
+.recording-date-column {
+  width: 25%;
+}
+
+.recording-source-column, .recording-duration-column, .recording-recording-column {
+  width: 20%;
+}
+
+.recording-call-details-column {
+  width: 15%;
+}

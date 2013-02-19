@@ -1,0 +1,39 @@
+@CHARSET "UTF-8";
+
+.sms-message-grid-cell {
+  float: left;
+}
+
+.sms-message-grid-row-labels, .sms-message-grid-row-even, .sms-message-grid-row-odd {
+  color: #666666;
+}
+
+.sms-message-grid-row-labels {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.sms-message-grid-row-even {
+  background-color: #eeeeee;
+}
+
+.sms-message-grid-row-odd {
+  background-color: #ffffff;
+}
+
+.sms-message-date-column, .sms-message-direction-column, .sms-message-from-column,
+.sms-message-to-column, .sms-message-status-column {
+  font-size: 16px;
+}
+
+.sms-message-date-column {
+  width: 25%;
+}
+
+.sms-message-direction-column, .sms-message-from-column, .sms-message-to-column {
+  width: 20%;
+}
+
+.sms-message-status-column {
+  width: 15%;
+}
