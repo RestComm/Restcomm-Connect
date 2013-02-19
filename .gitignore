@@ -4,7 +4,8 @@ acapela/*.wav
 *.nocommit
 bin/
 /.settings
-/.classpath
+.classpath
+.project
 *.class
 logs
 bin
