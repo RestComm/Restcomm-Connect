@@ -186,6 +186,7 @@ public class DialConferenceTest extends AbstractTest {
 
 			//Disconnect and try again
 			try {
+				Thread.sleep(TIMEOUT);
 				assertTrue(sipCallSecond.disconnect());
 				Thread.sleep(smallTIMEOUT);
 				assertEquals(Response.OK, sipCallSecond.getLastReceivedResponse().getStatusCode());
@@ -199,6 +200,7 @@ public class DialConferenceTest extends AbstractTest {
 			
 			//Disconnect and try again
 			try {
+				Thread.sleep(TIMEOUT);
 				assertTrue(sipCallSecond.disconnect());
 				Thread.sleep(smallTIMEOUT);
 				assertEquals(Response.OK, sipCallSecond.getLastReceivedResponse().getStatusCode());
@@ -212,6 +214,7 @@ public class DialConferenceTest extends AbstractTest {
 
 			//Disconnect and try again
 			try {
+				Thread.sleep(TIMEOUT);
 				assertTrue(sipCallSecond.disconnect());
 				Thread.sleep(smallTIMEOUT);
 				assertEquals(Response.OK, sipCallSecond.getLastReceivedResponse().getStatusCode());
