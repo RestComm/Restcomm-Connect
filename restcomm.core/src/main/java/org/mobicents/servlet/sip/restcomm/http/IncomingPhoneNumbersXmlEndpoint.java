@@ -88,8 +88,20 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
     return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_JSON_TYPE);
   }
   
+  @Path("/{sid}.json")
+  @POST public Response updateIncomingPhoneNumberAsJsonPost(@PathParam("accountSid") final String accountSid,
+      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+    return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_JSON_TYPE);
+  }
+  
   @Path("/{sid}")
   @PUT public Response updateIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+    return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_XML_TYPE);
+  }
+  
+  @Path("/{sid}")
+  @POST public Response updateIncomingPhoneNumberAsXmlPost(@PathParam("accountSid") final String accountSid,
       @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
     return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_XML_TYPE);
   }

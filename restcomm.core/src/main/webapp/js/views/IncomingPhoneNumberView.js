@@ -37,12 +37,9 @@ define(['jquery', 'underscore', 'backbone', 'text!templates/IncomingPhoneNumberT
     		var voiceUrl = $('#voice-url').val();
     		var voiceMethod = $('.voice-method').filter(':selected').val();
     		$('#dashboard-busy-indicator').show();
-	        $.post(url.substring(0, url.lastIndexOf(".")), "VoiceUrl=" + voiceUrl +
-	        		"&VoiceMethod=" + voiceMethod)
-	        .done(new function() {
+	        $.post(url, "VoiceUrl=" + voiceUrl + "&VoiceMethod=" + voiceMethod, new function() {
 	        	window.location.hash = '#/user/account/phone-numbers/incoming';
-	        })
-	        .fail(new function() {
+	        }).fail(function() {
 	        	window.location.hash = '#/';
 	        });
 	      });
