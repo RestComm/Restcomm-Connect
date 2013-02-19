@@ -13,7 +13,7 @@ import com.twilio.sdk.resource.instance.Account;
 import com.twilio.sdk.resource.instance.IncomingPhoneNumber;
 
 public class AbstractTest {
-	private static final String restcommVersion = "1.0.0.CR1-SNAPSHOT";
+	private static final String restcommVersion = "1.0.0.CR2-SNAPSHOT";
 
 	public static WebArchive createWebArchive(){
 		WebArchive archive = ShrinkWrapMaven.resolver()

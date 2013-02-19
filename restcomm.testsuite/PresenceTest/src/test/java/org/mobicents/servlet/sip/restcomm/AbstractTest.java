@@ -13,7 +13,7 @@ import com.twilio.sdk.TwilioRestException;
 
 public class AbstractTest {
 	
-	private static final String restcommVersion = "1.0.0.CR1-SNAPSHOT";
+	private static final String restcommVersion = "1.0.0.CR2-SNAPSHOT";
 	
 	@Deployment(testable=false)
 	public static WebArchive createWebArchive(){
