@@ -5,12 +5,10 @@
     <artifactId>restcomm</artifactId>
     <version>1.0.0.CR1-SNAPSHOT</version>
   </parent>
-  <artifactId>twilio-java-sdk</artifactId> 
-  <version>3.3.10-SNAPSHOT</version>
+  <artifactId>restcomm-java-wrapper</artifactId> 
   <packaging>jar</packaging>
-  <name>twilio-java-sdk</name>
-  <description>Java helper library for Twilio services</description>
-  <url>http://www.twilio.com</url>
+  <name>restcomm-java-wrapper</name>
+  <description>Java helper library for Restcomm services</description>
   <licenses>
     <license>
       <name>MIT License</name>
