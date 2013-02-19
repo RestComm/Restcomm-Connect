@@ -167,8 +167,8 @@
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>twilio-java-sdk</artifactId>
-			<version>3.3.10-SNAPSHOT</version>
+			<artifactId>restcomm-java-wrapper</artifactId>
+			<version>1.0.0.CR1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 
