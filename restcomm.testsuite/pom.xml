@@ -195,7 +195,7 @@
 	<modules>
 		<module>BasicTest</module>
 		<!-- The ExtrasTests tests need account setup for SMS and FAX -->
-		<module>ExtrasTest</module>
+		<!--<module>ExtrasTest</module> -->
 		<module>PresenceTest</module>
 		<module>MediaTests</module>
 		<module>CompatibilityTests</module>
@@ -209,6 +209,21 @@
 				<version>2.12.4</version>
 				<configuration>
 					<argLine>-Xms512m -Xmx1024m -XX:MaxPermSize=1024m</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.4.1</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>${basedir}</directory>
+							<includes>
+								<include>logs/</include>
+							</includes>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+					</filesets>
 				</configuration>
 			</plugin>
 		</plugins>
