@@ -150,6 +150,6 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   }
   
   private URI toUri(final String file) {
-    return URI.create("file://" + file);
+    return new File(file).toURI();
   }
 }

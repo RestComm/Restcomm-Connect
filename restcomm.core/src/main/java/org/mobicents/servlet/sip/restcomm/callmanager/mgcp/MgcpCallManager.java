@@ -82,7 +82,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 	 @Override public Call createExternalCall(final String from, final String to) throws CallManagerException {
 		 try{
-			 String uri = proxyUri.toString().replaceFirst("sip:", "");
+			 final String uri = proxyUri.toString().replaceFirst("sip:", "");
 			 final SipURI fromUri = sipFactory.createSipURI(from, uri);
 			 final SipURI toUri = sipFactory.createSipURI(to, uri);
 			 return createCall(fromUri, toUri);
@@ -93,7 +93,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 
 	@Override public Call createUserAgentCall(final String from, final String to) throws CallManagerException {
 	  try {
-		  String uri = proxyUri.toString().replaceFirst("sip:", "");
+		final String uri = proxyUri.toString().replaceFirst("sip:", "");
 	    final SipURI fromUri = sipFactory.createSipURI(from, uri);
         final URI toUri = sipFactory.createURI(to);
         return createCall(fromUri, toUri);
@@ -323,11 +323,15 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	  final SipApplicationSession session = event.getApplicationSession();
       final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
       if(call != null) {
-        call.failed();
-        final StringBuilder buffer = new StringBuilder();
-        buffer.append("A call with ID ").append(call.getSid().toString())
-            .append(" was forcefully cleaned up after SipApplicationSession timed out.");
-        logger.warn(buffer.toString());
+    	final Call.Status status = call.getStatus();
+    	if(Call.Status.CANCELLED != status && Call.Status.FAILED != status &&
+    			Call.Status.BUSY != status && Call.Status.NO_ANSWER != status) { 
+	        call.failed();
+	        final StringBuilder buffer = new StringBuilder();
+	        buffer.append("A call with application ID ").append(event.getApplicationSession().getId())
+	            .append(" was forcefully cleaned up after SipApplicationSession timed out.");
+	        logger.warn(buffer.toString());
+    	}
       }
 	}
 

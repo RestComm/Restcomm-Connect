@@ -43,8 +43,10 @@ import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
+import org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.sip.restcomm.entities.CallDetailRecordList;
+import org.mobicents.servlet.sip.restcomm.entities.Registration;
 import org.mobicents.servlet.sip.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordConverter;
 import org.mobicents.servlet.sip.restcomm.http.converter.CallDetailRecordListConverter;
@@ -125,10 +127,17 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
 	    data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
 	  } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
 	  final String to = data.getFirst("To");
-	  data.remove("To");
-	  try {
-	    data.putSingle("To", phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
-	  } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+	  // Only try to normalize phone numbers.
+	  if(to.startsWith("client")) {
+		  if(to.split(":").length != 2) {
+			  throw new IllegalArgumentException(to + " is an invalid client identifier.");
+		  }
+	  } else if(!to.startsWith("sip")) {
+		  data.remove("To");
+		  try {
+		    data.putSingle("To", phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
+		  } catch(final NumberParseException exception) { throw new IllegalArgumentException(exception); }
+	  }
 	  URI.create(data.getFirst("Url"));
   }
   
@@ -144,8 +153,21 @@ import org.mobicents.servlet.sip.restcomm.util.StringUtils;
     final String from = data.getFirst("From");
     final String to = data.getFirst("To");
     Call call = null;
-    try { call = callManager.createExternalCall(from, to); }
-    catch(final CallManagerException exception) {
+    try {
+    	if(to.startsWith("sip")) {
+    		call = callManager.createCall(from, to);
+    	} else if(to.startsWith("client")) {
+    		final RegistrationsDao dao = daos.getRegistrationsDao();
+    		final List<Registration> registrations = dao.getRegistrationsByUser(to.split(":")[1]);
+    		if(registrations.size() > 0) {
+    			call = callManager.createUserAgentCall(from, registrations.get(0).getLocation());
+    		} else {
+    			return status(NOT_FOUND).build();
+    		}
+    	} else {
+    		call = callManager.createExternalCall(from, to);
+    	}
+    } catch(final CallManagerException exception) {
       return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
     }
     final String version = getApiVersion(data);
