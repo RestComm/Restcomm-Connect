@@ -86,7 +86,7 @@
 		<commons-configuration.version>1.7</commons-configuration.version>
 		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
-		<mobicents.mgcp.impl.version>3.0.0.CR2</mobicents.mgcp.impl.version>
+		<mobicents.mgcp.impl.version>3.0.0.Final</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<sipservletapi.version>1.7.0.FINAL</sipservletapi.version>
