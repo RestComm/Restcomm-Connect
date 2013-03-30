@@ -3,11 +3,17 @@ package org.mobicents.servlet.sip.restcomm;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.sip.SipServletRequest;
+import javax.sip.header.ContentTypeHeader;
+import javax.sip.header.Header;
 import javax.sip.message.Response;
 
 import org.cafesip.sipunit.SipCall;
@@ -35,7 +41,7 @@ import com.twilio.sdk.resource.instance.Call;
  * 
  */
 @RunWith(Arquillian.class)
-@Mediaserver(IVR=1,CONF=1,RELAY=1)
+@Mediaserver(IVR=5,CONF=5,RELAY=5)
 public class OutgoingCallTest extends AbstractTest {
 
 	@ArquillianResource
@@ -78,13 +84,13 @@ public class OutgoingCallTest extends AbstractTest {
 	}
 
 	@Test
-	public void testOutgoing() throws TwilioRestException, ParseException, InterruptedException{
+	public void testOutgoing() throws TwilioRestException, ParseException, InterruptedException, UnsupportedEncodingException, IOException{
+		
 		CallFactory callFactory = account.getCallFactory();
-
+		
 		Map<String, String> parameters = new HashMap<String, String>();
-		parameters.put("From", "+18765");
+		parameters.put("From", "8765");
 		parameters.put("To", "4321");
-		//		parameters.put("Url", "http://restcomm-demo.appspot.com/app/voice/restcomm3.xml");
 		parameters.put("Url", endpoint+"/demo/hello-world.xml");
 		parameters.put("VoiceMethod", "POST");
 
@@ -93,11 +99,20 @@ public class OutgoingCallTest extends AbstractTest {
 		assertNotNull(outgoingCall);
 
 		assertTrue(sipCallA.waitForIncomingCall(5000));
+		
+		byte[] bodyByte = sipCallA.getLastReceivedRequest().getRawContent();
+		String body = new String(bodyByte);
+		ContentTypeHeader contentHeader = sipCallA.getHeaderFactory().createContentTypeHeader("application", "sdp");
+		ArrayList<Header> additionalHeaders = new ArrayList<Header>();
+		additionalHeaders.add(contentHeader);
 
-		assertTrue(sipCallA.sendIncomingCallResponse(Response.RINGING, "Ringing", 0));
-		assertTrue(sipCallA.sendIncomingCallResponse(Response.OK, "OK", 0));
+		assertTrue(sipCallA.sendIncomingCallResponse(Response.TRYING, "TRYING", -1));
+		assertTrue(sipCallA.sendIncomingCallResponse(Response.RINGING, "Ringing", -1));
+		assertTrue(sipCallA.sendIncomingCallResponse(Response.OK, "Ok", -1, additionalHeaders, null, body));
+		assertTrue(sipCallA.waitForAck(5000));
 
-		assertTrue(sipCallA.waitForDisconnect(60000));
+		assertTrue(sipCallA.waitForDisconnect(600000));
+		assertTrue(sipCallA.respondToDisconnect());
 	}
 
 }
