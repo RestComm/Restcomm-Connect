@@ -11,6 +11,7 @@ import java.util.Iterator;
 
 import javax.sip.message.Response;
 
+import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -41,6 +42,8 @@ import com.twilio.sdk.resource.instance.IncomingPhoneNumber;
 @RunWith(Arquillian.class)
 public class DialConferenceTest extends AbstractTest {
 
+	private static Logger logger = Logger.getLogger(DialConferenceTest.class);
+	
 	@ArquillianResource
 	URL deploymentUrl;
 	String endpoint;
@@ -350,6 +353,168 @@ public class DialConferenceTest extends AbstractTest {
 		long[] deadlockedThreads = bean.findDeadlockedThreads();
 		assertTrue(monitorDeadlockedThreads == null);
 		assertTrue(deadlockedThreads == null);
+	}
+	
+	@Test
+	public void testTwoConcurrentCalls() throws InterruptedException{
+		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
+		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
+		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
+
+			Thread firstCall = new Thread(new Runnable() {	
+				@Override
+				public void run() {
+					//SDP for the INVITE
+					byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
+					String body = new String(bodyByte);
+					
+					//First participant calling in the conference
+					sipCallFirst.initiateOutgoingCall(null, uri, null, body, "application", "sdp", null, null);
+					sipCallFirst.waitForAnswer(TIMEOUT);
+					sipCallFirst.sendInviteOkAck();
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					sipCallFirst.disconnect();
+				}
+			});
+			
+			Thread secondCall = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					//SDP for the INVITE
+					byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
+					String body = new String(bodyByte);
+					//Second participant calling in the conference
+					sipCallSecond.initiateOutgoingCall(null, uri, null, body, "application", "sdp", null, null);
+					sipCallSecond.waitForAnswer(TIMEOUT);
+					sipCallSecond.sendInviteOkAck();
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					sipCallSecond.disconnect();
+				}
+			} );
+
+			logger.info("Starting threads");
+			firstCall.start();
+			secondCall.start();
+			
+			logger.info("Sleeping for 5000ms");
+			Thread.sleep(5000);
+
+			//Deadlock detection
+			ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+			long[] monitorDeadlockedThreads = bean.findMonitorDeadlockedThreads();
+			long[] deadlockedThreads = bean.findDeadlockedThreads();
+			
+			if(deadlockedThreads!=null){
+				for (long id : deadlockedThreads) {
+				     logger.info("The deadLock Thread id is : " + id + "  > "+bean.getThreadInfo(id).getThreadName());
+				}
+			}
+
+			assertTrue(monitorDeadlockedThreads == null);
+			assertTrue(deadlockedThreads == null);
+		
+			firstCall.interrupt();
+			secondCall.interrupt();
+	}
+
+	@Test
+	public void testThreeConcurrentCalls() throws InterruptedException{
+		assertTrue(incomingPhoneNumber.getAccountSid().equals("ACae6e420f425248d6a26948c17a9e2acf"));
+		assertTrue(incomingPhoneNumber.getPhoneNumber().equals("+14321"));
+		assertTrue(incomingPhoneNumber.getVoiceUrl().equals(appURL));
+
+			Thread firstCall = new Thread(new Runnable() {	
+				@Override
+				public void run() {
+					//SDP for the INVITE
+					byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
+					String body = new String(bodyByte);
+					
+					//First participant calling in the conference
+					sipCallFirst.initiateOutgoingCall(null, uri, null, body, "application", "sdp", null, null);
+					sipCallFirst.waitForAnswer(TIMEOUT);
+					sipCallFirst.sendInviteOkAck();
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					sipCallFirst.disconnect();
+				}
+			});
+			
+			Thread secondCall = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					//SDP for the INVITE
+					byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
+					String body = new String(bodyByte);
+					//Second participant calling in the conference
+					sipCallSecond.initiateOutgoingCall(null, uri, null, body, "application", "sdp", null, null);
+					sipCallSecond.waitForAnswer(TIMEOUT);
+					sipCallSecond.sendInviteOkAck();
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					sipCallSecond.disconnect();
+				}
+			} );
+			
+			Thread thirdCall = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					//SDP for the INVITE
+					byte[] bodyByte = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
+					String body = new String(bodyByte);
+					//Second participant calling in the conference
+					sipCallThird.initiateOutgoingCall(null, uri, null, body, "application", "sdp", null, null);
+					sipCallThird.waitForAnswer(TIMEOUT);
+					sipCallThird.sendInviteOkAck();
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					sipCallThird.disconnect();
+				}
+			} );
+
+			logger.info("Starting threads");
+			firstCall.start();
+//			Thread.sleep(500);
+			secondCall.start();
+//			Thread.sleep(500);
+			thirdCall.start();
+			
+			logger.info("Sleeping for 5000ms");
+			Thread.sleep(15000);
+
+			//Deadlock detection
+			ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+			long[] monitorDeadlockedThreads = bean.findMonitorDeadlockedThreads();
+			long[] deadlockedThreads = bean.findDeadlockedThreads();
+			
+			if(deadlockedThreads!=null){
+				for (long id : deadlockedThreads) {
+				     logger.info("The deadLock Thread id is : " + id + "  > "+bean.getThreadInfo(id).getThreadName());
+				}
+			}
+
+			assertTrue(monitorDeadlockedThreads == null);
+			assertTrue(deadlockedThreads == null);
+		
+			firstCall.interrupt();
+			secondCall.interrupt();
 	}
 
 }
