@@ -18,8 +18,8 @@
 
 		<tomcat.version>6.0.35</tomcat.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
-		<mss.arquillian.version>1.0.0-CR1</mss.arquillian.version>
-		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
+		<mss.arquillian.version>1.0.0-Final-SNAPSHOT</mss.arquillian.version>
+		<mgcpunit.version>1.0.0-ALPHA3-SNAPSHOT</mgcpunit.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4
 		</shrinkwrap.resolver.version>
 	</properties>

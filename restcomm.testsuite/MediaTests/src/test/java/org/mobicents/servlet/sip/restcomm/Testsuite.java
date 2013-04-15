@@ -10,8 +10,10 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 @SuiteClasses({
 	MediaTest.class,
-	OutgoingCallTest.class
+	OutgoingCallTest.class,
+	ReInviteTest.class
 })
 public class Testsuite {
 
 }
+

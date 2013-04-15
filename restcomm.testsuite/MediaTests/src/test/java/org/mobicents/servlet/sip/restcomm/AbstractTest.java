@@ -4,6 +4,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 
+import com.twilio.sdk.TwilioRestException;
+
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  */
@@ -30,6 +32,14 @@ public class AbstractTest {
 		return archive;		
 	}
 	
+	public static WebArchive createWebArchive(String restcommConfig, String restcommApp){
+		WebArchive archive = createWebArchive(restcommConfig);
+
+		archive.addAsWebResource(restcommApp, "demo/"+restcommApp);
+
+		return archive;
+	}
+	
 	public String getEndpoint(String deploymentUrl) {
 		if (deploymentUrl.endsWith("/")) {
 			deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
@@ -38,7 +48,7 @@ public class AbstractTest {
 	}
 	
 	@After
-	public void tearDown() throws InterruptedException{
+	public void tearDown() throws InterruptedException, TwilioRestException{
 		Thread.sleep(1000);
 	}
 }

@@ -64,7 +64,7 @@ public class MediaTest extends AbstractTest {
 	private static IncomingPhoneNumber incomingPhoneNumber;
 	private String uri = "sip:+14321@127.0.0.1:5070";
 	private static String appURL;
-	
+
 	@BeforeClass
 	public static void beforeClass(){
 		sipStackTool = new SipStackTool("MediaTest");
@@ -87,16 +87,22 @@ public class MediaTest extends AbstractTest {
 			account = client.getAccount();
 
 		if(incomingPhoneNumber==null)
-			createPhoneNumber();
+			incomingPhoneNumber = createPhoneNumber();
 
 	}
 
 	@After
-	public void tearDown()
+	public void tearDown() throws TwilioRestException
 	{
 		if(sipCall != null)	sipCall.disposeNoBye();
 		if(sipPhone != null) sipPhone.dispose();
 		if(receiver != null) receiver.dispose();
+
+		if(incomingPhoneNumber!=null){
+			account.getIncomingPhoneNumber(incomingPhoneNumber.getSid()).delete();
+			incomingPhoneNumber = null;			
+		}
+
 	}
 
 	@Deployment(testable=false)
@@ -104,13 +110,13 @@ public class MediaTest extends AbstractTest {
 		return AbstractTest.createWebArchive("mediatest-restcomm.xml");
 	}
 
-	private void createPhoneNumber() throws TwilioRestException{
+	private IncomingPhoneNumber createPhoneNumber() throws TwilioRestException{
 		appURL = endpoint+"/demo/hello-world.xml";
 		IncomingPhoneNumberFactory factory = account.getIncomingPhoneNumberFactory();
 		Map<String, String> parameters = new HashMap<String, String>();
 		parameters.put("PhoneNumber", "+14321");
-//		parameters.put("VoiceUrl", "http://restcomm-demo.appspot.com/app/voice/restcomm2.xml");
-				parameters.put("VoiceUrl", appURL);
+		//		parameters.put("VoiceUrl", "http://restcomm-demo.appspot.com/app/voice/restcomm2.xml");
+		parameters.put("VoiceUrl", appURL);
 		parameters.put("VoiceMethod", "POST");
 		parameters.put("VoiceFallbackUrl", appURL);
 		parameters.put("VoiceFallbackMethod", "POST");
@@ -123,7 +129,7 @@ public class MediaTest extends AbstractTest {
 		parameters.put("SmsFallbackUrl", appURL);
 		parameters.put("SmsFallbackMethod", "POST");
 		//		URLEncodedUtils. format(parameters, "UTF-8");
-		incomingPhoneNumber = factory.create(parameters);
+		return factory.create(parameters);
 
 	}
 
