@@ -59,5 +59,8 @@ cp restcomm-backup.tar.gz restcomm/
 rm -r $TOMCAT_PATH
 mv restcomm $TOMCAT_PATH
 
+# Cleanup!
+rm -r restcomm*
+
 echo "Thank you for updating to the latest RestComm build."
 
