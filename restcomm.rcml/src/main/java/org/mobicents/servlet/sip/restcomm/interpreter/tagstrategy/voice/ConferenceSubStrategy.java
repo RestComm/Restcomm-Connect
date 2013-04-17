@@ -76,23 +76,25 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
     final String room = buffer.toString();
     final Conference conference = conferenceCenter.getConference(room);
     if(conference.getNumberOfParticipants() <= maxParticipants) {
+	  if(conference.getNumberOfParticipants() == 0) {
+        if(waitUrl != null) {
+          interpreterFactory.create(context.getAccountSid(), context.getApiVersion(), waitUrl,
+              waitMethod, conference);
+        }
+      }
       if(!startConferenceOnEnter) {
         if(Call.Status.IN_PROGRESS == call.getStatus() && !call.isMuted()) {
           call.mute();
         }
-        if(conference.getNumberOfParticipants() == 0) {
-          if(waitUrl != null) {
-            interpreterFactory.create(context.getAccountSid(), context.getApiVersion(), waitUrl,
-                waitMethod, conference);
-          }
-        }
       } else {
-        // Stop the interpreter
-        final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(conference.getSid());
-        // Wait for the interpreter to finish before continuing.
-        if(conferenceInterpreter != null) {
-          try { conferenceInterpreter.join(); }
-          catch(final InterruptedException ignored) { }
+        if(conference.getNumberOfParticipants() > 1) {
+          // Stop the interpreter
+          final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(conference.getSid());
+          // Wait for the interpreter to finish before continuing.
+          if(conferenceInterpreter != null) {
+            try { conferenceInterpreter.join(); }
+            catch(final InterruptedException ignored) { }
+          }
         }
         if(Call.Status.IN_PROGRESS == call.getStatus() && muted) { call.mute(); }
       }

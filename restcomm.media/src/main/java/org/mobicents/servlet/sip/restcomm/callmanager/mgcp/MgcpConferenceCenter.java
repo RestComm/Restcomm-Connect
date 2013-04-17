@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.sip.restcomm.media.api.Conference;
 import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
@@ -28,6 +29,8 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public class MgcpConferenceCenter implements ConferenceCenter {
+  private static final Logger logger = Logger.getLogger(MgcpConferenceCenter.class);
+  
   private final MgcpServerManager serverManager;
   private final Map<String, MgcpConference> conferences;
   
@@ -53,9 +56,10 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
   }
 
   @Override public synchronized void removeConference(final String name) throws InterruptedException {
-    if(conferences.containsKey(name)) {
-      final MgcpConference conference = conferences.remove(name);
-      conference.shutdown();
+    final MgcpConference conference = conferences.remove(name);
+    if(conference != null) {
+  	  logger.info("Shutdown conference: " + conference.getName());
+  	  conference.shutdown();
     }
   }
 }

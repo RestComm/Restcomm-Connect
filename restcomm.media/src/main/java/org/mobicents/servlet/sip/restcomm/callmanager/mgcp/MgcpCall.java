@@ -257,9 +257,6 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
 		try {
 			ok.send();
-			if(remoteConference != null) {
-				remoteConference.removeParticipant(this);
-			}
 		} finally {
 			cleanup();
 			setState(COMPLETED);
