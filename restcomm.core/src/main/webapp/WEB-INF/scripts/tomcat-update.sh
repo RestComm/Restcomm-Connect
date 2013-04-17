@@ -30,12 +30,12 @@ tar -czf restcomm-backup.tar.gz $TOMCAT_PATH
 
 # Download the latest build of RestComm.
 echo "Downloading the latest build. This may take a while."
-wget -q https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-tomcat-1.0.0.CR1-SNAPSHOT.zip
+wget -q https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm-saas-tomcat-1.0.0.CR2-SNAPSHOT.zip
 
 # Unpack RestComm.
 echo "Unpacking RestComm."
-unzip -q restcomm-saas-tomcat-1.0.0.CR1-SNAPSHOT.zip
-mv restcomm-saas-tomcat-1.0.0.CR1-SNAPSHOT restcomm
+unzip -q restcomm-saas-tomcat-1.0.0.CR2-SNAPSHOT.zip
+mv restcomm-saas-tomcat-1.0.0.CR2-SNAPSHOT restcomm
 
 # Copy configuration files from the old installation.
 echo "Configuring RestComm."
@@ -58,9 +58,6 @@ cp -r $TOMCAT_PATH/webapps/restcomm/recordings/ restcomm/webapps/restcomm/record
 cp restcomm-backup.tar.gz restcomm/
 rm -r $TOMCAT_PATH
 mv restcomm $TOMCAT_PATH
-
-# Cleanup!
-rm -r restcomm*
 
 echo "Thank you for updating to the latest RestComm build."
 
