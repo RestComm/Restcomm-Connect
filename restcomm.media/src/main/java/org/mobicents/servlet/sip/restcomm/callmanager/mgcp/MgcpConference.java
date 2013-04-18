@@ -144,13 +144,22 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     assertState(IN_PROGRESS);
     final List<URI> uri = new ArrayList<URI>();
     uri.add(audio);
-    ivrEndpoint.play(uri, iterations);
+    synchronized(this) {
+      try {
+        ivrEndpoint.play(uri, iterations);
+        wait();
+      } catch(final InterruptedException ignored) {
+        stop();
+      }
+    }
   }
   
-  @Override public void stop() throws InterruptedException {
+  @Override public void stop() {
     assertState(IN_PROGRESS);
     ivrEndpoint.stop();
-    block(2);
+    try {
+      block(2);
+    } catch(final InterruptedException ignored) { }
   }
   
   private void block(int numberOfRequests) throws InterruptedException {

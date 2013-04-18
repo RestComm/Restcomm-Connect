@@ -36,7 +36,7 @@ public interface Conference {
   public void play(URI audio, int iterations);
   public void removeParticipant(Call participant);
   public void removeObserver(ConferenceObserver observer);
-  public void stop() throws InterruptedException;
+  public void stop();
   
   public enum Status {
     INIT("init"),

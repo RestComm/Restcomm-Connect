@@ -103,7 +103,7 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         conference.addObserver(this);
         try {
           conference.addParticipant(call);
-          if(beep && conference.getNumberOfParticipants() > 0){
+          if(beep && conference.getNumberOfParticipants() > 1){
       		conference.play(alertOnEnterAudioFile);
       	  }
           synchronized(this) {
@@ -119,6 +119,12 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         	throw new TagStrategyException(exception);
         } catch(final InterruptedException ignored) {}
       }
+      if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
+		  conference.removeParticipant(call);
+	  }
+	  if(beep && conference.getNumberOfParticipants() > 0){
+		  conference.play(alertOnExitAudioFile);
+	  }
       if(endConferenceOnExit || (conference.getNumberOfParticipants() == 0)) {
     	  try {
 				conferenceCenter.removeConference(room);
@@ -128,13 +134,6 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
 				logger.error(exception);
 				throw new TagStrategyException(exception);
 			}
-      } else {
-    	  if(Call.Status.IN_PROGRESS == call.getStatus() && Conference.Status.IN_PROGRESS == conference.getStatus()) {
-    		  conference.removeParticipant(call);
-    	  }
-    	  if(beep && conference.getNumberOfParticipants()>0){
-    		  conference.play(alertOnExitAudioFile);
-    	  }
       }
     }
     if(Call.Status.IN_PROGRESS == call.getStatus() && action != null) {

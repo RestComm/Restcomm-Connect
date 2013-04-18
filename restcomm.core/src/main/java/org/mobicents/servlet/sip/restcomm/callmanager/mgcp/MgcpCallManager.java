@@ -195,60 +195,65 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 }
 
 	 @Override protected final void doInvite(final SipServletRequest request) throws ServletException, IOException {
-		 try {
-			 // Create the call.
-			 final MgcpServer server = servers.getMediaServer();
-			 final MgcpCall call = new MgcpCall(server);
-			 request.getApplicationSession().setAttribute("CALL", call);
-			 // Schedule the RCML script to execute for this call.
-			 Application application = null;
-			 final SipURI from = (SipURI)request.getFrom().getURI();
-			 final Client client = getClient(from.getUser());
-			 if(client != null) {
-		       final Sid applicationSid = client.getVoiceApplicationSid();
-		       if(applicationSid != null) {
-		         application = getVoiceApplication(applicationSid);
-		         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
-		         call.trying(request);
-		         interpreters.create(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
-		             application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
-		             application.getStatusCallback(), application.getStatusCallbackMethod(), call);
-		       } else {
+		 if(request.isInitial()) {
+			 try {
+				 // Create the call.
+				 final MgcpServer server = servers.getMediaServer();
+				 final MgcpCall call = new MgcpCall(server);
+				 request.getApplicationSession().setAttribute("CALL", call);
+				 // Schedule the RCML script to execute for this call.
+				 Application application = null;
+				 final SipURI from = (SipURI)request.getFrom().getURI();
+				 final Client client = getClient(from.getUser());
+				 if(client != null) {
+			       final Sid applicationSid = client.getVoiceApplicationSid();
+			       if(applicationSid != null) {
+			         application = getVoiceApplication(applicationSid);
 			         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
-		    	   call.trying(request);
-		         interpreters.create(client.getAccountSid(), client.getApiVersion(), client.getVoiceUrl(), client.getVoiceMethod(),
-		             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), null, null, call);
-		       }
-			 } else {
-			   final SipURI uri = (SipURI)request.getTo().getURI();
-			   final IncomingPhoneNumber incomingPhoneNumber = getIncomingPhoneNumber(uri.getUser());
-			   if(incomingPhoneNumber != null) {
-			     final Sid applicationSid = incomingPhoneNumber.getVoiceApplicationSid();
-			     if(applicationSid != null) {
-			       application = getVoiceApplication(applicationSid);
-			         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
-			       call.trying(request);
-			       interpreters.create(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
-				       application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
-				       application.getStatusCallback(), application.getStatusCallbackMethod(), call);
-			     } else {
-			         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
-			    	 call.trying(request);
-			       interpreters.create(incomingPhoneNumber.getAccountSid(), incomingPhoneNumber.getApiVersion(),
-			           incomingPhoneNumber.getVoiceUrl(), incomingPhoneNumber.getVoiceMethod(), incomingPhoneNumber.getVoiceFallbackUrl(),
-			           incomingPhoneNumber.getVoiceFallbackMethod(), incomingPhoneNumber.getStatusCallback(),
-			           incomingPhoneNumber.getStatusCallbackMethod(), call);
-			     }
-			   } else {
-				 final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
-				 notFound.send();
-			   }
-			 }
-		 } catch(final InterpreterException exception) {
-			 throw new ServletException(exception);
-		 } catch (CallException e) {
-			throw new ServletException(e);
-		} 
+			         call.trying(request);
+			         interpreters.create(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
+			             application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
+			             application.getStatusCallback(), application.getStatusCallbackMethod(), call);
+			       } else {
+				         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
+			    	   call.trying(request);
+			         interpreters.create(client.getAccountSid(), client.getApiVersion(), client.getVoiceUrl(), client.getVoiceMethod(),
+			             client.getVoiceFallbackUrl(), client.getVoiceFallbackMethod(), null, null, call);
+			       }
+				 } else {
+				   final SipURI uri = (SipURI)request.getTo().getURI();
+				   final IncomingPhoneNumber incomingPhoneNumber = getIncomingPhoneNumber(uri.getUser());
+				   if(incomingPhoneNumber != null) {
+				     final Sid applicationSid = incomingPhoneNumber.getVoiceApplicationSid();
+				     if(applicationSid != null) {
+				       application = getVoiceApplication(applicationSid);
+				         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
+				       call.trying(request);
+				       interpreters.create(application.getAccountSid(), application.getApiVersion(), application.getVoiceUrl(),
+					       application.getVoiceMethod(), application.getVoiceFallbackUrl(), application.getVoiceFallbackMethod(),
+					       application.getStatusCallback(), application.getStatusCallbackMethod(), call);
+				     } else {
+				         //Issue 107: http://code.google.com/p/restcomm/issues/detail?id=107
+				    	 call.trying(request);
+				       interpreters.create(incomingPhoneNumber.getAccountSid(), incomingPhoneNumber.getApiVersion(),
+				           incomingPhoneNumber.getVoiceUrl(), incomingPhoneNumber.getVoiceMethod(), incomingPhoneNumber.getVoiceFallbackUrl(),
+				           incomingPhoneNumber.getVoiceFallbackMethod(), incomingPhoneNumber.getStatusCallback(),
+				           incomingPhoneNumber.getStatusCallbackMethod(), call);
+				     }
+				   } else {
+					 final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
+					 notFound.send();
+				   }
+				 }
+			 } catch(final InterpreterException exception) {
+				 throw new ServletException(exception);
+			 } catch (CallException e) {
+				throw new ServletException(e);
+			} 
+		} else {
+			logger.info("Not initial request received");
+			request.createResponse(SipServletResponse.SC_OK).send();
+		}
 	 }
 	 
     @Override protected void doOptions(final SipServletRequest request)
