@@ -69,9 +69,6 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
   private List<Call> outboundCalls;
   private volatile boolean forking;
   private Call outboundCall;
-  
-  private VoiceRcmlInterpreterContext voiceContext;
-  private volatile boolean executingUrl;
 
   public ForkSubStrategy(final URI action, final String method, final int timeout, final int timeLimit, final PhoneNumber callerId,
       final URI ringbackTone, final boolean record) {
@@ -92,12 +89,11 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
     this.attributes = new HashMap<String, Map<String, String>>();
     this.forking = false;
-    this.executingUrl = false;
   }
 
-  @Override public synchronized void execute(final RcmlInterpreter interpreter,
+  @Override public void execute(final RcmlInterpreter interpreter,
       final RcmlInterpreterContext context, final RcmlTag tag) throws TagStrategyException {
-	voiceContext = (VoiceRcmlInterpreterContext)context;
+	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
     final Call call = voiceContext.getCall();
     final StringBuilder buffer = new StringBuilder();
 	buffer.append(context.getAccountSid().toString()).append(":").append(call.getSid().toString());
@@ -114,10 +110,12 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
       final DateTime start = DateTime.now();
 	  outboundCalls = getCalls(tag.getChildren(),context);
 	  fork(outboundCalls);
-	  try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
-      catch(final InterruptedException ignored) {
+	  synchronized(this) {
+	    try { wait(TimeUtils.SECOND_IN_MILLIS * timeout); }
+        catch(final InterruptedException ignored) {
     	  cleanup(outboundCalls);
-      }
+        }
+	  }
 	  if(Call.Status.IN_PROGRESS == call.getStatus() && (outboundCall != null &&
 	      Call.Status.IN_PROGRESS == outboundCall.getStatus())) {
 		final Map<String, String> callAttributes = attributes.get(outboundCall.getSid().toString());
@@ -127,7 +125,6 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 		}
 		final String url = callAttributes.get("url");
 		if(url != null && !url.isEmpty()) {
-	      executingUrl = true;
 		  final String method = callAttributes.get("method");
 		  try {
 			  final URI base = interpreter.getCurrentResourceUri();
@@ -135,7 +132,6 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 			      method, outboundCall);
 			  bridgeInterpreter.join();
 		  } catch(final InterruptedException exception) { }
-		  executingUrl = false;
 		}
 		if(Call.Status.IN_PROGRESS == call.getStatus() &&
 	        Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
@@ -146,18 +142,17 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
 		    try { conferenceInterpreter.join(); }
 		    catch(final InterruptedException ignored) { }
 		  }
-		  if(Call.Status.IN_PROGRESS == call.getStatus() &&
-		      Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
-            bridge.addParticipant(outboundCall);
-            if(record) {
-              recordingSid = Sid.generate(Sid.Type.RECORDING);
-              final URI destination = toRecordingPath(recordingSid);
-              outboundCall.playAndRecord(new ArrayList<URI>(0), destination, -1, TimeUtils.SECOND_IN_MILLIS * timeLimit, null);
-            } else {
+          bridge.addParticipant(outboundCall);
+          if(record) {
+            recordingSid = Sid.generate(Sid.Type.RECORDING);
+            final URI destination = toRecordingPath(recordingSid);
+            outboundCall.playAndRecord(new ArrayList<URI>(0), destination, -1, TimeUtils.SECOND_IN_MILLIS * timeLimit, null);
+          } else {
+            synchronized(this) {
               try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
               catch(final InterruptedException exception) { }
             }
-		  }
+          }
 		}
         if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
           outboundCall.removeObserver(this);
@@ -299,20 +294,18 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
         notify();
       }
     } else {
-      if(Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
-        if(executingUrl) {
-          interpreterFactory.remove(outboundCall.getSid());
-        } else {
-          notify();
-        }
+      if(Call.Status.IN_PROGRESS != status) {
+        notify();
       }
     }
   }
 
-  @Override public synchronized void onStatusChanged(final Conference conference) {
+  @Override public void onStatusChanged(final Conference conference) {
     final Conference.Status status = conference.getStatus();
     if(Conference.Status.FAILED == status) {
-      notify();
+      synchronized(this) {
+        notify();
+      }
     }
   }
   
@@ -365,8 +358,11 @@ public final class ForkSubStrategy extends VoiceRcmlTagStrategy implements CallO
         tones.add(tone);
         play(call, tones, 1);
       } else if('w' == character) {
-    	try { wait(500); }
-    	catch(final InterruptedException exception) {
+    	try { 
+    	  synchronized(this) {
+    	    wait(500);
+    	  }
+    	} catch(final InterruptedException exception) {
     	  return;
     	}
       }

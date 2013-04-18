@@ -67,7 +67,7 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
     alertOnExitAudioFile = URI.create("file://" + configuration.getString("alert-on-exit-file"));
   }
 
-  @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
 	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
     final Call call = voiceContext.getCall();
@@ -102,11 +102,13 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
         call.addObserver(this);
         conference.addObserver(this);
         try {
-        	if(beep && conference.getNumberOfParticipants()>0){
-      		  conference.play(alertOnEnterAudioFile);
-      	  }
           conference.addParticipant(call);
-          wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
+          if(beep && conference.getNumberOfParticipants() > 0){
+      		conference.play(alertOnEnterAudioFile);
+      	  }
+          synchronized(this) {
+            wait(TimeUtils.SECOND_IN_MILLIS * timeLimit);
+          }
         } catch(final ConferenceException exception) {
         	conference.removeParticipant(call);
         	interpreter.failed();
@@ -268,7 +270,7 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
     }
   }
   
-  @Override public synchronized void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
 	final RcmlTag conference = (RcmlTag)getConferenceTag(tag.getChildren());
     name = conference.getText();
@@ -281,14 +283,16 @@ public final class ConferenceSubStrategy extends VoiceRcmlTagStrategy implements
     maxParticipants = getMaxParticipants(interpreter, context, conference);
   }
 
-  @Override public synchronized void onStatusChanged(final Call call) {
+  @Override public void onStatusChanged(final Call call) {
     final Call.Status status = call.getStatus();
     if(Call.Status.COMPLETED == status || Call.Status.FAILED == status) {
-      notify();
+      synchronized(this) {
+        notify();
+      }
     }
   }
 
-  @Override public synchronized void onStatusChanged(final Conference conference) {
+  @Override public void onStatusChanged(final Conference conference) {
     final Conference.Status status = conference.getStatus();
     if(Conference.Status.COMPLETED == status || Conference.Status.FAILED == status) {
       notify();

@@ -153,8 +153,10 @@ import org.mobicents.servlet.sip.restcomm.util.RangeCounter;
 
   public void destroyMediaSession(final MgcpSession session) {
     assertState(RUNNING);
-    session.release();
-    mediaSessions.remove(session.getId());
+    final MgcpSession mediaSession = mediaSessions.remove(session.getId());
+    if(mediaSession != null) {
+      session.release();
+    }
   }
   
   public NotifiedEntity getCallAgent() {

@@ -122,11 +122,11 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     return name;
   }
   
-  @Override public synchronized int getNumberOfParticipants() {
+  @Override public int getNumberOfParticipants() {
     return calls.size();
   }
 
-  @Override public synchronized Collection<Call> getParticipants() {
+  @Override public Collection<Call> getParticipants() {
 	final List<Call> result = new ArrayList<Call>();
 	result.addAll(calls.values());
     return result;
@@ -136,29 +136,27 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
 	return sid;
   }
   
-  @Override public synchronized void play(final URI audio) {
+  @Override public void play(final URI audio) {
     play(audio, 1);
   }
   
-  @Override public synchronized void play(final URI audio, final int iterations) {
+  @Override public void play(final URI audio, final int iterations) {
     assertState(IN_PROGRESS);
     final List<URI> uri = new ArrayList<URI>();
     uri.add(audio);
     ivrEndpoint.play(uri, iterations);
-    try { wait(server.getResponseTimeout() * 3); }
-    catch(final InterruptedException ignored) { 
-    	ivrEndpoint.stop(); 
-    }
   }
   
-  @Override public synchronized void stop() throws InterruptedException {
+  @Override public void stop() throws InterruptedException {
     assertState(IN_PROGRESS);
     ivrEndpoint.stop();
     block(2);
   }
   
   private void block(int numberOfRequests) throws InterruptedException {
-	  wait(server.getResponseTimeout() * numberOfRequests);
+	  synchronized(this) {
+	    wait(server.getResponseTimeout() * numberOfRequests);
+	  }
   }
 
   @Override public Status getStatus() {
@@ -178,7 +176,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     observers.remove(observer);
   }
 
-  @Override public synchronized void halfOpen(final MgcpConnection connection) {
+  @Override public void halfOpen(final MgcpConnection connection) {
     if(connection == ivrOutboundConnection) {
       conference = session.getConferenceEndpoint();
       ivrInboundConnection = session.createConnection(conference, connection.getLocalDescriptor());
@@ -187,31 +185,35 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     }
   }
 
-  @Override public synchronized void open(final MgcpConnection connection) {
+  @Override public void open(final MgcpConnection connection) {
     if(connection == ivrInboundConnection) {
       ivrOutboundConnection.modify(connection.getLocalDescriptor());
     } else if(connection == ivrOutboundConnection) {
       setState(IN_PROGRESS);
       fireStatusChanged();
+      synchronized(this) {
+        notify();
+      }
+    }
+  }
+
+  @Override public void disconnected(final MgcpConnection connection) {
+    // Nothing to do.
+  }
+
+  @Override public void failed(final MgcpConnection connection) {
+    setState(FAILED);
+    fireStatusChanged();
+    synchronized(this) {
       notify();
     }
   }
 
-  @Override public synchronized void disconnected(final MgcpConnection connection) {
+  @Override public void modified(final MgcpConnection connection) {
     // Nothing to do.
   }
 
-  @Override public synchronized void failed(final MgcpConnection connection) {
-    setState(FAILED);
-    fireStatusChanged();
-    notify();
-  }
-
-  @Override public synchronized void modified(final MgcpConnection connection) {
-    // Nothing to do.
-  }
-
-  @Override public synchronized void start() throws RuntimeException {
+  @Override public void start() throws RuntimeException {
     assertState(INIT);
     ivrEndpoint = session.getIvrEndpoint();
     ivrEndpoint.addObserver(this);
@@ -225,7 +227,9 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
   private void block(final int numberOfRequests, final State errorState) {
     try {
       // ResponseTimeout * NumberOfRequests
-      wait(server.getResponseTimeout() * numberOfRequests);
+      synchronized(this) {
+        wait(server.getResponseTimeout() * numberOfRequests);
+      }
       if(errorState.equals(getState())) {
     	final StringBuilder buffer = new StringBuilder();
     	buffer.append("The server @ ").append(server.getDomainName()).append(" failed to create a conference. ")
@@ -238,7 +242,7 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     } catch(final InterruptedException ignored) { return; }
   }
 
-  @Override public synchronized void shutdown() throws InterruptedException {
+  @Override public void shutdown() throws InterruptedException {
     assertState(IN_PROGRESS);
     stop();
     cleanup();
@@ -247,11 +251,13 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     fireStatusChanged();
   }
 
-  @Override public synchronized void operationCompleted(final MgcpIvrEndpoint endpoint) {
-    notify();
+  @Override public void operationCompleted(final MgcpIvrEndpoint endpoint) {
+    synchronized(this) {
+      notify();
+    }
   }
 
-  @Override public synchronized void operationFailed(final MgcpIvrEndpoint endpoint) {
+  @Override public void operationFailed(final MgcpIvrEndpoint endpoint) {
     setState(FAILED);
     fireStatusChanged();
   }

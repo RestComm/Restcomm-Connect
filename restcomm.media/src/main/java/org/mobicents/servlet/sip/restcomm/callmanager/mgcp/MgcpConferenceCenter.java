@@ -40,7 +40,7 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
     this.conferences = new ConcurrentHashMap<String, MgcpConference>();
   }
   
-  @Override public synchronized Conference getConference(final String name) {
+  @Override public Conference getConference(final String name) {
     MgcpConference conference = conferences.get(name);
     if(conference == null) {
       final MgcpServer server = serverManager.getMediaServer();
@@ -51,12 +51,12 @@ import org.mobicents.servlet.sip.restcomm.media.api.ConferenceCenter;
     return conference;
   }
 
-  @Override public synchronized Set<String> getConferenceNames() {
+  @Override public Set<String> getConferenceNames() {
     return conferences.keySet();
   }
 
-  @Override public synchronized void removeConference(final String name) throws InterruptedException {
-    final MgcpConference conference = conferences.remove(name);
+  @Override public void removeConference(final String name) throws InterruptedException {
+	final MgcpConference conference = conferences.remove(name);
     if(conference != null) {
   	  logger.info("Shutdown conference: " + conference.getName());
   	  conference.shutdown();

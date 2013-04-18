@@ -69,7 +69,7 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
     if(record) { recordingSid = Sid.generate(Sid.Type.RECORDING); }
   }
 
-  @Override public synchronized void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+  @Override public void execute(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
 	final VoiceRcmlInterpreterContext voiceContext = (VoiceRcmlInterpreterContext)context;
     final Call call = voiceContext.getCall();
@@ -92,12 +92,14 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
 	  outboundCall = callManager.createExternalCall(caller, callee);
 	  outboundCall.addObserver(this);
 	  outboundCall.dial();
-      try { 
-        wait();
-        if(Call.Status.RINGING == outboundCall.getStatus()) {
-          wait(TimeUtils.SECOND_IN_MILLIS * timeout);
-        }
-      } catch(final InterruptedException ignored) { }
+	  synchronized(this) {
+        try { 
+          wait();
+          if(Call.Status.RINGING == outboundCall.getStatus()) {
+            wait(TimeUtils.SECOND_IN_MILLIS * timeout);
+          }
+        } catch(final InterruptedException ignored) { }
+	  }
       if(Call.Status.IN_PROGRESS == call.getStatus() && Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
     	// Stop the interpreter
 		final RcmlInterpreter conferenceInterpreter = interpreterFactory.remove(bridge.getSid());
@@ -112,8 +114,10 @@ public final class BridgeSubStrategy extends VoiceRcmlTagStrategy implements Cal
           final URI destination = toRecordingPath(recordingSid);
           outboundCall.playAndRecord(new ArrayList<URI>(0), destination, -1, TimeUtils.SECOND_IN_MILLIS * timeLimit, null);
         } else {
-          try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
-          catch(final InterruptedException ignored) { }
+          synchronized(this) {
+            try { wait(TimeUtils.SECOND_IN_MILLIS * timeLimit); }
+            catch(final InterruptedException ignored) { }
+          }
         }
         if(Call.Status.IN_PROGRESS == outboundCall.getStatus()) {
           outboundCall.removeObserver(this);
