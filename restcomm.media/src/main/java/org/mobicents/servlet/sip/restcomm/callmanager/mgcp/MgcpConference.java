@@ -86,12 +86,13 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     assertState(IN_PROGRESS);
     final MgcpCall mgcpCall = (MgcpCall)call;
     if(!calls.containsKey(call.getSid())) {
+      calls.put(call.getSid(), mgcpCall);
       try {
         mgcpCall.join(this);
       } catch(final CallException exception) {
+        calls.remove(call.getSid());
         throw new ConferenceException(exception);
       }
-      calls.put(call.getSid(), mgcpCall);
     }
   }
   
@@ -144,9 +145,9 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     assertState(IN_PROGRESS);
     final List<URI> uri = new ArrayList<URI>();
     uri.add(audio);
+    ivrEndpoint.play(uri, iterations);
     synchronized(this) {
       try {
-        ivrEndpoint.play(uri, iterations);
         wait();
       } catch(final InterruptedException ignored) {
         stop();
@@ -176,8 +177,8 @@ public final class MgcpConference extends FiniteStateMachine implements Conferen
     assertState(IN_PROGRESS);
     if(calls.containsKey(call.getSid())) {
       final MgcpCall mgcpCall = (MgcpCall)call;
-      mgcpCall.leave(this);
       calls.remove(mgcpCall.getSid());
+      mgcpCall.leave(this);
     }
   }
   

@@ -156,11 +156,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	
 	private void interruptThread() {
 	  if(thread != null) {
-	    final Thread.State state = thread.getState();
-	    if(Thread.State.BLOCKED == state || Thread.State.TIMED_WAITING == state ||
-            Thread.State.WAITING == state) {
-	      thread.interrupt();
-	    }
+	    thread.interrupt();
 	  }
 	}
 
@@ -172,7 +168,7 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	}
 	
 	public synchronized void join() throws InterruptedException {
-	  if(isRunning()) { wait(); }
+	  while(isRunning()) { wait(1000); }
 	}
 
 	public void load(final URI uri, final String method, List<NameValuePair> parameters)
@@ -284,8 +280,9 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 	}
 
 	public void redirect() {
-		assertState(EXECUTING);
-		setState(REDIRECTED);
+		if(EXECUTING.equals(getState())) {
+		  setState(REDIRECTED);
+		}
 	}
 	
 	public void redirectAndInterrupt() {
