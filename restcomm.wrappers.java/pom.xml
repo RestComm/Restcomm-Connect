@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.mobicents.servlet.sip</groupId>
     <artifactId>restcomm</artifactId>
-    <version>1.0.0.CR2-SNAPSHOT</version>
+    <version>1.0.0.FINAL</version>
   </parent>
   <artifactId>restcomm-java-wrapper</artifactId> 
   <packaging>jar</packaging>
