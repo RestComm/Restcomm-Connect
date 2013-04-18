@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>2.0.0.ALPHA1</version>
+		<version>1.0.0.FINAL</version>
 	</parent>
 
 	<groupId>org.mobicents.servlet.sip</groupId>
