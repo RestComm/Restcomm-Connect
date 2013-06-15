@@ -17,40 +17,29 @@
 package org.mobicents.servlet.sip.restcomm.interpreter;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 
-import org.mobicents.servlet.sip.restcomm.Sid;
-import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.sip.restcomm.media.api.Call;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class RcmlInterpreterContext {
-  private final Call call;
+@NotThreadSafe public abstract class RcmlInterpreterContext {
+  protected final Sid accountSid;
+  protected final String apiVersion;
+  protected final URI statusCallback;
+  protected final String statusCallbackMethod;
   
-  private final Sid accountSid;
-  private final String apiVersion;
-  private final URI voiceUrl;
-  private final String voiceMethod;
-  private final URI voiceFallbackUrl;
-  private final String voiceFallbackMethod;
-  
-  public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI voiceUrl,
-      final String voiceMethod, final URI voiceFallbackUrl, final String voiceFallbackMethod, 
-      final Call call) {
+  public RcmlInterpreterContext(final Sid accountSid, final String apiVersion, final URI statusCallback,
+      final String statusCallbackMethod) {
     super();
-    this.call = call;
     this.accountSid = accountSid;
     this.apiVersion = apiVersion;
-    this.voiceUrl = voiceUrl;
-    this.voiceMethod = voiceMethod;
-    this.voiceFallbackUrl = voiceFallbackUrl;
-    this.voiceFallbackMethod = voiceFallbackMethod;
+    this.statusCallback = statusCallback;
+    this.statusCallbackMethod = statusCallbackMethod;
   }
   
   public Sid getAccountSid() {
@@ -61,37 +50,17 @@ import org.mobicents.servlet.sip.restcomm.media.api.Call;
     return apiVersion;
   }
   
-  public Call getCall() {
-	return call;
+  public abstract String getFrom();
+  
+  public abstract List<NameValuePair> getRcmlRequestParameters();
+  
+  public URI getStatusCallback() {
+    return statusCallback;
   }
   
-  public List<NameValuePair> getRcmlRequestParameters() {
-    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-    parameters.add(new BasicNameValuePair("CallSid", call.getSid().toString()));
-    parameters.add(new BasicNameValuePair("AccountSid", accountSid.toString()));
-    parameters.add(new BasicNameValuePair("From", call.getOriginator()));
-    parameters.add(new BasicNameValuePair("To", call.getRecipient()));
-    parameters.add(new BasicNameValuePair("CallStatus", call.getStatus().toString()));
-    parameters.add(new BasicNameValuePair("ApiVersion", apiVersion));
-    parameters.add(new BasicNameValuePair("Direction", call.getDirection().toString()));
-    parameters.add(new BasicNameValuePair("ForwardedFrom", call.getForwardedFrom()));
-    parameters.add(new BasicNameValuePair("CallerName", call.getOriginatorName()));
-    return parameters;
+  public String getStatusCallbackMethod() {
+    return statusCallbackMethod;
   }
   
-  public URI getVoiceUrl() {
-    return voiceUrl;
-  }
-  
-  public String getVoiceMethod() {
-    return voiceMethod;
-  }
-  
-  public URI getVoiceFallbackUrl() {
-    return voiceFallbackUrl;
-  }
-  
-  public String getVoiceFallbackMethod() {
-    return voiceFallbackMethod;
-  }
+  public abstract String getTo();
 }

@@ -6,64 +6,20 @@
 <!-- chapter id nickname: ittsss -->
 <chapter>
 	<title>Configuration</title>
-	<para>In order to make RestComm easy to manage all of the configuration is done in only one file.
-		The file is located at <filename>PATH_TO_DEPLOYMENT_DIRECTORY/restcomm/conf/restcomm.xml</filename>
-		and is composed of the following sections:</para>
-	<table frame='all'>
-		<title>Configuration Sections</title>
-		<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-			<colspec colname='c1' />
-			<colspec colname='c2' />
-			<thead>
-				<row>
-					<entry align="center">Section</entry>
-					<entry align="center">Description</entry>
-				</row>
-			</thead>
-			<tbody>
-				<row>
-					<entry>runtime-settings</entry>
-					<entry>Settings that RestComm will use at runtime to make decisions.</entry>
-				</row>
-				<row>
-					<entry>dao-manager</entry>
-					<entry>
-					  Manages the data store used by RestComm. The default implementation is based on MyBatis and is used
-					  to interact with RDBMS systems. Alternatively, RestComm now ships with a MongoDB implementations as
-					  well.
-					</entry>
-				</row>
-				<row>
-					<entry>media-server-manager</entry>
-					<entry>
-					  Manages media servers managed by RestComm and the connections to them. The media server manager
-					  also implements load-balancing across the media servers. The current implementation is round-robin
-					  but in future releases media server load will dictate how connections are managed.
-					</entry>
-				</row>
-				<row>
-					<entry>sms-aggregator</entry>
-					<entry>
-					  Manages SMS service providers. Please keep in mind that not all SMS providers support all the functionality
-					  offered by RestComm and therefore, certain SMS related feature may be related. Refer to the appropriate
-					  documentation for more information.
-					</entry>
-				</row>
-				<row>
-					<entry>speech-synthesizer</entry>
-					<entry>
-					  A text to speech synthesizer for RestComm. The default implementation uses the Acapela Group TTS service.
-					  In future releases we are planning on supporting all the major service providers.
-					</entry>
-				</row>
-			</tbody>
-		</tgroup>
-	</table>
+	<para>In order for RestComm to function properly it must first be configured. In this chapter we will cover the settings
+	for RestComm and it's respective plug-ins. In order to make RestComm easy to manage all of the configuration is done
+	in only one file. The file is located at <filename>RESTCOMM_HOME/WEB-INF/conf/restcomm.xml</filename> and is composed
+	of the sections that follow.</para>
+	<note>
+		<para>RestComm provides a default set of plug-ins for the storage engine, fax service, SMS aggregator, automatic
+		speech recognition, and speech synthesis. All these services are pluggable and RestComm is not limited to any
+		service provider or software platform whom's services it consumes.</para>
+	</note>	
 	<section>
 		<title>Runtime Settings</title>
 		<para>
-		  The runtime-settings are used by RestComm at runtime to make important decisions. A list of the runtime settings
-		  and a descriptions is provided below.
+		  The runtime-settings are used by RestComm at runtime to customize it's behavior. A list of the runtime settings
+		  and a description is provided below.
 		</para>
 			
 		<table frame='all'>
@@ -79,6 +35,10 @@
 				</thead>
 				<tbody>
 					<row>
+						<entry>api-version</entry>
+						<entry>The version of the RestComm API that we will be executing by default.</entry>
+					</row>
+					<row>
 						<entry>beep-audio-file</entry>
 						<entry>The audio file to play for the 'beep' and 'playBeep' attributes.</entry>
 					</row>
@@ -87,22 +47,32 @@
 						<entry>The audio file to play for the &lt;Reject&gt; verb using the 'rejected' attribute.</entry>
 					</row>
 					<row>
-						<entry>silence-audio-file</entry>
-						<entry>
-						  This file has one second of silence and is used to insert &lt;Pause&gt; verbs in the &lt;Gather&gt;
-						  verb as a prompt that can be played by the media server.
-						</entry>
+						<entry>alert-on-enter-file</entry>
+						<entry>The audio file to play when a participant enters a conference room.</entry>
+					</row>
+					<row>
+						<entry>alert-on-exit-file</entry>
+						<entry>The audio file to play when a participant exits a conference room.</entry>
+					</row>
+					<row>
+						<entry>ringback-audio-file</entry>
+						<entry>The audio file to play when a caller is waiting for a call to be bridged using the
+						&lt;Dial&gt; verb.</entry>
+					</row>
+					<row>
+						<entry>conference-music-file</entry>
+						<entry>The default audio file to play in a conference room. This is equivalent to setting
+						the waitUrl attribute for the &lt;Conference&gt; noun.</entry>
+					</row>
+					<row>
+						<entry>error-dictionary-uri</entry>
+						<entry>The root URI to the error dictionary. This dictionary contains descriptions and possible
+						solutions to the error codes that RestComm will return as part of it's Notifications resource.</entry>
 					</row>
 					<row>
 						<entry>recordings-path</entry>
 						<entry>
 						  The path to the directory used to save recordings made by RestComm.
-						</entry>
-					</row>
-					<row>
-						<entry>recordings-uri</entry>
-						<entry>
-						  The HTTP URI to the recordings directory.
 						</entry>
 					</row>
 					<row>
@@ -121,11 +91,65 @@
 						<entry>outbound-proxy-uri</entry>
 						<entry>
 						  The SIP URI to the outbound proxy. Note: Do not prepend 'sip:' to the proxy uri.
+						  If necessary the port can be included, for example thomas@localhost:5080
 						</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
+		<formalpara>
+			<title>Restcomm Resource Security</title>
+			<para>The security model is based on role based access control. RestComm defines a set of permissions that
+			can be defined for each role. There are two predefined roles Administrator and Developer. The Developer role
+			can be configured or removed all together depending on your needs but the Administrator role can not be changed.
+			The Administrator role can not be modified or removed and it has access to every resource.</para>
+		</formalpara>
+		<para>First we will define the list of permissions and what they mean.</para>
+		<table frame='all'>
+			<title>RestComm Permissions</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Permission</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Create</entry>
+						<entry>The role has access to create a type resource.</entry>
+					</row>
+					<row>
+						<entry>Read</entry>
+						<entry>The role has access to read a type of resource.</entry>
+					</row>
+					<row>
+						<entry>Modify</entry>
+						<entry>The role has access to modify a type of resource.</entry>
+					</row>
+					<row>
+						<entry>Delete</entry>
+						<entry>The role has access to delete a type of resource.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<para>These permissions apply to every resource exposed by the Restful APIs. Once a role is defined it can
+		be specified for new Account resources that are created.</para>
+		<note>
+			<para>If no role is specified when creating a new Account resource then the new Account will inherit
+			the security role of the account that created it. If this role is the Administrator role the system
+			may become compromised.</para>
+		</note>
+		<formalpara>
+			<title>Wildcard Permission</title>
+			<para>The asterisk '*' is a wildcard that means grant all permissions and can be used in place of
+			typing out all the permissions.</para>
+		</formalpara>
+		<para>To see how this all comes together please check out the <filename>restcomm.xml</filename> configuration
+		file.</para>
 	</section>
 	<section>
 		<title>Dao Manager</title>
@@ -147,12 +171,12 @@
 				</thead>
 				<tbody>
 					<row>
-						<entry>datasource</entry>
-						<entry>The JNDI data source to use.</entry>
-					</row>
-					<row>
 						<entry>configuration-file</entry>
 						<entry>The path to the mybatis.xml configuration file.</entry>
+					</row>
+					<row>
+						<entry>data-files</entry>
+						<entry>The path to the data files used to store the database tables.</entry>
 					</row>
 					<row>
 						<entry>sql-files</entry>
@@ -203,14 +227,9 @@
 		
 		<para>
 		  The media server manager is responsible for all the media servers managed by RestComm. The media server manager
-		  is also responsible for load-balancing connections to the media servers that it manages. Currently, load-balancing
-		  uses a naive round-robin implementation but in future implementations the algorithm will be based on media server
-		  load.
-		  
-		  When configuring the media server manager multiple media server can be defined. Below is a description of settings
-		  for each media server.
+		  is also responsible for load-balancing connections to the media servers that it manages. When configuring the
+		  media server manager multiple media servers can be defined. Below is a description of settings for each media server.
 		</para>
-		
 		<table frame='all'>
 			<title>Media Server Manager Settings</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
@@ -242,15 +261,23 @@
 				</tbody>
 			</tgroup>
 		</table>
+		<note>
+			<para>Currently, load-balancing uses a naive round-robin implementation but in future implementations the algorithm
+			will be based on media server load.</para>
+		</note>
 	</section>
 	<section>
 		<title>SMS Aggregator</title>
-		<para>The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.</para>
+		<para>The SMS aggregator is responsible for the handling of SMS messages on behalf of RestComm.</para>
 		
-		<para>
-		  The default SMS aggregator uses Essendex. Please know that in order to use SMS and account with Essendex
-		  is required until support for more service providers is implemented.
-		</para>
+		<formalpara>
+			<title>Requirements</title>
+			<para>The default SMS aggregator is Essendex. Therefore, an account must be created @
+			<ulink url="http://www.esendex.com/">http://www.esendex.com</ulink> before any text
+			messages can be sent.</para>
+		</formalpara>
+		
+		<para>Below is a list of settings that must be configured to send text messages.</para>
 		
 		<table frame='all'>
 			<title>SMS Aggregator Settings</title>
@@ -281,11 +308,88 @@
 		</table>
 	</section>
 	<section>
+		<title>Fax Service</title>
+		<para>The fax service sends faxes out on behalf of RestComm.</para>
+		
+		<formalpara>
+			<title>Requirements</title>
+			<para>The default fax service is provided by Interfax. Therefore, an account must be created @
+			<ulink url="http://www.interfax.net/">http://www.interfax.net</ulink> before any faxes can be
+			sent.</para>
+		</formalpara>
+		
+		<table frame='all'>
+			<title>Fax Service Settings</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Element</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>user</entry>
+						<entry>The user name used to authenticate with Interfax.</entry>
+					</row>
+					<row>
+						<entry>password</entry>
+						<entry>The password used to authenticate with Interfax.</entry>
+					</row>
+					<row>
+						<entry>maximum-file-size</entry>
+						<entry>The maximum files size allowed to be delivered via fax.</entry>
+					</row>
+					<row>
+						<entry>timeout</entry>
+						<entry>The timeout period before an undeliverable fax is considered as failed.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</section>
+	<section>
+		<title>Speech Recognizer</title>
+		<para>This speech recognizer turns speech in to text on behalf of Restcomm.</para>
+		
+		<formalpara>
+			<title>Requirements</title>
+			<para>The default speech recognizer uses the ASR service provided by iSpeech. Therefore, an account must be created @
+			<ulink url="http://www.ispeech.org/">http://www.ispeech.org</ulink> before any speech can be converted to text.</para>
+		</formalpara>
+		
+		<table frame='all'>
+			<title>Speech Recognizer Settings</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Element</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>api-key</entry>
+						<entry>The Web API key provide by iSpeech. This is used as an authentication token for the service.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</section>
+	<section>
 		<title>Speech Synthesizer</title>
 		<para>The speech synthesizer turns text to speech on behalf of RestComm.</para>
 		
-		<para>The default speech synthesizer uses the TTS service provided by the Acapela Group. Please know that in order to use
-		  TTS an account with the Acapela Group is required until support for more service providers is implemented.</para>
+		<formalpara>
+			<title>Requirements</title>
+			<para>The default speech synthesizer uses the TTS service provided by Acapela. Therefore, an account must be created @
+			<ulink url="http://www.acapela-vaas.com/">http://www.acapela-vaas.com</ulink> before any text can be converted to
+			speech.</para>
+		</formalpara>
 		
 		<table frame='all'>
 			<title>Acapela Group Speech Synthesizer Settings</title>

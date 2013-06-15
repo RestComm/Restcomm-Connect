@@ -8,12 +8,14 @@ import java.util.Map;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.resource.InstanceResource;
+import com.twilio.sdk.resource.factory.AnnouncementFactory;
 import com.twilio.sdk.resource.factory.ApplicationFactory;
 import com.twilio.sdk.resource.factory.CallFactory;
 import com.twilio.sdk.resource.factory.ClientFactory;
 import com.twilio.sdk.resource.factory.IncomingPhoneNumberFactory;
 import com.twilio.sdk.resource.factory.OutgoingCallerIdFactory;
 import com.twilio.sdk.resource.factory.SmsFactory;
+import com.twilio.sdk.resource.list.AnnouncementList;
 import com.twilio.sdk.resource.list.ApplicationList;
 import com.twilio.sdk.resource.list.AuthorizedConnectAppList;
 import com.twilio.sdk.resource.list.AvailablePhoneNumberList;
@@ -312,6 +314,26 @@ public class Account extends InstanceResource {
 		return this.getSmsMessages();
 	}
 
+	public AnnouncementList getAnnouncements() {
+		return this.getAnnouncements(new HashMap<String, String>());
+	}
+	
+	public AnnouncementList getAnnouncements(Map<String, String> filters) {
+		AnnouncementList announcements = new AnnouncementList(this.getClient(), filters);
+		announcements.setRequestAccountSid(this.getRequestAccountSid());
+		return announcements;
+	}
+	
+	public Announcement getAnnouncement(String sid) {
+		Announcement announcement = new Announcement(this.getClient(), sid);
+		announcement.setRequestAccountSid(this.getRequestAccountSid());
+		return announcement;
+	}
+	
+	public AnnouncementFactory getAnnouncementFactory() {
+		return this.getAnnouncements();
+	}
+	
 	/**
 	 * Gets the application list
 	 * 

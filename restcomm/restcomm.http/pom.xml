@@ -1,0 +1,121 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.telestax.servlet</groupId>
+    <artifactId>restcomm</artifactId>
+    <version>1.6.0.GA</version>
+  </parent>
+  
+  <artifactId>restcomm.http</artifactId>
+  <name>restcomm.http</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  <dependencies>
+  
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-api</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-log4j12</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>org.apache.shiro</groupId>
+		<artifactId>shiro-core</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>org.apache.shiro</groupId>
+		<artifactId>shiro-web</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>com.google.code.gson</groupId>
+		<artifactId>gson</artifactId>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.googlecode.libphonenumber</groupId>
+		<artifactId>libphonenumber</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>com.sun.jersey</groupId>
+		<artifactId>jersey-server</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>com.sun.jersey</groupId>
+		<artifactId>jersey-client</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>com.sun.jersey</groupId>
+		<artifactId>jersey-servlet</artifactId>
+		<version>${jersey.version}</version>
+	</dependency>
+
+	<dependency>
+		<groupId>com.thoughtworks.xstream</groupId>
+		<artifactId>xstream</artifactId>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.commons</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.dao</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.asr</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.tts</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.sms</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<!-- Testing -->
+	
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<scope>test</scope>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.scalatest</groupId>
+		<artifactId>scalatest_2.9.1</artifactId>
+		<scope>test</scope>
+	</dependency>
+		
+	<dependency>
+		<groupId>com.typesafe.akka</groupId>
+		<artifactId>akka-testkit_2.10</artifactId>
+		<scope>test</scope>
+	</dependency>
+
+  </dependencies>
+</project>

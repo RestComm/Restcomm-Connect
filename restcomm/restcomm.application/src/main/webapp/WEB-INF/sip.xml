@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is free software; you can redistribute it and/or modify it under 
+	the terms of the GNU Lesser General Public License as published by the Free 
+	Software Foundation; either version 2.1 of the License, or (at your option) 
+	any later version. This software is distributed in the hope that it will 
+	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
+	Public License for more details. You should have received a copy of the GNU 
+	Lesser General Public License along with this software; if not, write to 
+	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
+	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
+<sip-app>
+	<app-name>RestComm</app-name>
+	<display-name>RestComm</display-name>
+	<description>Mobicents Restful Communications Framework.</description>
+	<servlet-selection>
+		<servlet-mapping>
+			<servlet-name>CallManager</servlet-name>
+			<pattern>
+				<or>
+					<equal>
+						<var>request.method</var>
+						<value>INVITE</value>
+					</equal>
+					<equal>
+						<var>request.method</var>
+						<value>OPTIONS</value>
+					</equal>
+				</or>
+			</pattern>
+		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>UserAgentManager</servlet-name>
+			<pattern>
+				<or>
+					<equal>
+						<var>request.method</var>
+						<value>REGISTER</value>
+					</equal>
+				</or>
+			</pattern>
+		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>SmsService</servlet-name>
+			<pattern>
+				<or>
+					<equal>
+						<var>request.method</var>
+						<value>MESSAGE</value>
+					</equal>
+				</or>
+			</pattern>
+		</servlet-mapping>
+	</servlet-selection>
+
+	<servlet>
+		<servlet-name>CallManager</servlet-name>
+		<display-name>CallManager</display-name>
+		<description>The RestComm Call Manager.</description>
+		<servlet-class>
+			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+		</servlet-class>
+		<load-on-startup>0</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>UserAgentManager</servlet-name>
+		<display-name>UserAgentManager</display-name>
+		<description>The RestComm User Agent Manager.</description>
+		<servlet-class>
+			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>ProxyManager</servlet-name>
+		<display-name>ProxyManager</display-name>
+		<description>The RestComm Proxy Manager.</description>
+		<servlet-class>
+			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
+		</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>SmsService</servlet-name>
+		<display-name>SmsService</display-name>
+		<description>VoIP Innovations SMS Service.</description>
+		<servlet-class>
+			org.mobicents.servlet.restcomm.sms.VoipInnovationsSmsServiceProxy
+		</servlet-class>
+		<load-on-startup>3</load-on-startup>
+	</servlet>
+	
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+		</listener-class>
+	</listener>
+</sip-app>

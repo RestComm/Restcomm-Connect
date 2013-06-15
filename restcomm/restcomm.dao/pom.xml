@@ -3,14 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.mobicents.servlet.sip</groupId>
+		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>1.0.0.BETA2-SNAPSHOT</version>
+		<version>1.6.0.GA</version>
 	</parent>
 
-	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>restcomm.dao</artifactId>
-	<version>1.0.0.BETA2-SNAPSHOT</version>
 	<name>restcomm.dao</name>
 	<url>http://maven.apache.org</url>
 
@@ -19,52 +17,60 @@
 	</properties>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
-			<version>${jodatime.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
-			<version>${commons-configuration.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>restcomm.api</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>restcomm.commons</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mybatis</groupId>
 			<artifactId>mybatis</artifactId>
-			<version>${mybatis.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
-			<version>${mongodb.version}</version>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- Test -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
-
 </project>

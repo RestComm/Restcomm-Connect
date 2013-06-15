@@ -18,10 +18,16 @@ package org.mobicents.servlet.sip.restcomm.http;
 
 import static org.junit.Assert.assertTrue;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mobicents.servlet.sip.restcomm.AbstractTest;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.TwilioRestException;
@@ -33,31 +39,36 @@ import com.twilio.sdk.resource.list.ClientList;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-// @RunWith(Arquillian.class)
-public class ClientsEndpointTest extends AbstractEndpointTest {
-	
-	public String endpoint = "http://127.0.0.1:8888/restcomm";
-	
-	public ClientsEndpointTest() {
-		super();
+@RunWith(Arquillian.class)
+public class ClientsEndpointTest extends AbstractTest {
+
+	@ArquillianResource
+	URL deploymentUrl;
+	String endpoint;
+
+	private TwilioRestClient client;
+	private Account account;
+
+	@Before
+	public void setUp(){
+		endpoint = super.getEndpoint(deploymentUrl.toString());
+		if(client==null)
+			client = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
+					"77f8c12cc7b8f8423e5c38b035249166", endpoint);
+		if(account==null)
+			account = client.getAccount();
 	}
 
 	@Test
 	public void checkClientTest() {
-		final TwilioRestClient twilioClient = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
-		final Account account = twilioClient.getAccount();
-		final ClientList clients = account.getClients();
+		ClientList clients = account.getClients();
 		assertTrue(clients.getTotal() == 0);
 	}
-	
+
 	@Test
 	public void createClientTest() throws TwilioRestException{
-		final TwilioRestClient twilioClient = new TwilioRestClient("ACae6e420f425248d6a26948c17a9e2acf",
-				"77f8c12cc7b8f8423e5c38b035249166", endpoint);
-		final Account account = twilioClient.getAccount();
-		final ClientFactory clientFactory = account.getClientFactory();
-		final Map<String, String> parameters = new HashMap<String, String>();
+		ClientFactory clientFactory = account.getClientFactory();
+		Map<String, String> parameters = new HashMap<String, String>();
 		parameters.put("Login","rest");
 		parameters.put("Password","comm");
 		parameters.put("FriendlyName", "Restcomm User");
@@ -71,10 +82,10 @@ public class ClientsEndpointTest extends AbstractEndpointTest {
 
 		//Create client
 		Client client = clientFactory.create(parameters);
-		
+
 		assertTrue(client.getFriendlyName().equalsIgnoreCase("Restcomm User"));
 		assertTrue(client.getLogin().equalsIgnoreCase("rest"));
 		assertTrue(client.getPassword().equalsIgnoreCase("comm"));
-		
+
 	}
 }

@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
+
 import org.mobicents.servlet.sip.restcomm.ServiceLocator;
-import org.mobicents.servlet.sip.restcomm.Sid;
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.dao.DaoManager;
-import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategy;
@@ -98,7 +98,9 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     if(attribute == null) {
       return "man";
     }
-    final String gender = attribute.getValue();
+    String gender = attribute.getValue().toLowerCase();
+    if("female".equals(gender)) { gender = "woman"; }
+    if("male".equals(gender)) { gender = "man"; }
     if("man".equals(gender) || "woman".equals(gender)) {
       return gender;
     }
@@ -113,7 +115,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     }
     final ServiceLocator services = ServiceLocator.getInstance();
     final SpeechSynthesizer synthesizer = services.get(SpeechSynthesizer.class);
-    final String language = attribute.getValue();
+    final String language = attribute.getValue().toLowerCase();
     if(synthesizer.isSupported(language)) {
       return language;
     }
@@ -168,7 +170,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
     if(attribute != null) {
       value = attribute.getValue();
     } else {
-      value = context.getCall().getOriginator();
+      value = context.getFrom();
     }
     try { return PhoneNumberUtil.getInstance().parse(value, "US"); }
     catch(final NumberParseException ignored) { }
@@ -212,29 +214,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 	}
   }
   
-  @Override public synchronized void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
-      final RcmlTag tag) throws TagStrategyException {
-    final Call call = context.getCall();
-    final Call.Status status = call.getStatus();
-    try {
-      if(Call.Status.RINGING == status) {
-        call.answer();
-      } else if(Call.Status.QUEUED == status) {
-        call.addObserver(this);
-        call.dial();
-        try { wait(); } catch(final InterruptedException ignored) { }
-        call.removeObserver(this);
-        if(Call.Status.IN_PROGRESS != call.getStatus()) {
-          interpreter.finish();
-          throw new TagStrategyException("The call is " + call.getStatus().toString());
-        }
-      }
-    } catch(final CallException exception) {
-		interpreter.failed();
-		interpreter.notify(context, Notification.ERROR, 12400);
-	    throw new TagStrategyException(exception);
-	}
-  }
+  @Override public abstract void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
+      final RcmlTag tag) throws TagStrategyException;
   
   protected List<URI> pause(final int seconds) {
     final List<URI> silence = new ArrayList<URI>();

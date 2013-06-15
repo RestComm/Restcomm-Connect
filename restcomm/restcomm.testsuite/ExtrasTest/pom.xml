@@ -7,12 +7,11 @@
 	<parent>
 		<groupId>org.mobicents.servlet.sip</groupId>
 		<artifactId>restcomm.testsuite</artifactId>
-		<version>1.0.0.BETA2-SNAPSHOT</version>
+		<version>1.0.0.CR1-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.mobicents.servlet.sip</groupId>
 	<artifactId>ExtrasTest</artifactId>
-	<version>1.0.0.BETA2-SNAPSHOT</version>
 	<name>ExtrasTest</name>
 
 	<properties>
@@ -31,7 +30,7 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>restcomm.extras</artifactId>
-			<version>1.0.0.BETA2-SNAPSHOT</version>
+			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 

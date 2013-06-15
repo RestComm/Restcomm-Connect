@@ -42,6 +42,7 @@ import org.mobicents.servlet.sip.restcomm.annotations.concurrency.ThreadSafe;
   public RcmlDocument build(final Reader input) throws RcmlDocumentBuilderException {
   try {
       final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+      xmlInputFactory.setProperty("javax.xml.stream.isCoalescing", true);
       final XMLStreamReader xmlStreamReader = xmlInputFactory.createXMLStreamReader(input);
       return parse(xmlStreamReader);
     } catch(final XMLStreamException exception) {

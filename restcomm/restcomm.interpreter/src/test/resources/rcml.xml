@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Record
+        action="https://127.0.0.1:8080/restcomm/demos/hello-world.jsp"
+        method="GET"
+        maxLength="60"
+        timeout="5"
+        finishOnKey="#"
+        transcribe="true"
+        transcribeCallback="transcribe.jsp"
+        playBeep="false"
+    />
+    <Gather timeout="30" finishOnKey="#">
+        <Say voice="man" language="en" loop="1">Hello World!</Say>
+		<Play loop="1">https://127.0.0.1:8080/restcomm/audio/hello-world.wav</Play>
+		<Pause length="1"/>
+    </Gather>
+</Response>

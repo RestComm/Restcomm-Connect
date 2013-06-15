@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<configuration>
+  <environments default="production">
+    <environment id="production">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="org.hsqldb.jdbcDriver"/>
+        <property name="url" value="jdbc:hsqldb:file:${data}/restcomm;ifexists=true;hsqldb.write_delay=false;shutdown=true"/>
+        <property name="username" value="sa"/>
+        <property name="password" value=""/>
+      </dataSource>
+    </environment>
+  </environments>
+  
+  
+  <mappers>
+    <mapper url="file://${sql}/accounts.xml"/>
+    <mapper url="file://${sql}/applications.xml"/>
+    <mapper url="file://${sql}/available-phone-numbers.xml"/>
+    <mapper url="file://${sql}/call-detail-records.xml"/>
+    <mapper url="file://${sql}/clients.xml"/>
+    <mapper url="file://${sql}/http-cookies.xml"/>
+    <mapper url="file://${sql}/incoming-phone-numbers.xml"/>
+    <mapper url="file://${sql}/notifications.xml"/>
+    <mapper url="file://${sql}/outgoing-caller-ids.xml"/>
+    <mapper url="file://${sql}/registrations.xml"/>
+    <mapper url="file://${sql}/recordings.xml"/>
+    <mapper url="file://${sql}/sand-boxes.xml"/>
+    <mapper url="file://${sql}/short-codes.xml"/>
+    <mapper url="file://${sql}/sms-messages.xml"/>
+    <mapper url="file://${sql}/transcriptions.xml"/>
+    <mapper url="file://${sql}/gateways.xml"/>
+    <mapper url="file://${sql}/announcements.xml"/>
+  </mappers>
+</configuration>

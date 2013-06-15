@@ -19,19 +19,19 @@ package org.mobicents.servlet.sip.restcomm.interpreter.tagstrategy;
 import java.net.URI;
 
 import org.apache.log4j.Logger;
+
 import org.mobicents.servlet.sip.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.sip.restcomm.entities.Notification;
+import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.sip.restcomm.interpreter.InterpreterException;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreter;
 import org.mobicents.servlet.sip.restcomm.interpreter.RcmlInterpreterContext;
 import org.mobicents.servlet.sip.restcomm.interpreter.TagStrategyException;
-import org.mobicents.servlet.sip.restcomm.media.api.Call;
 import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class RedirectTagStrategy extends RcmlTagStrategy {
+@NotThreadSafe public class RedirectTagStrategy extends RcmlTagStrategy {
   private static final Logger logger = Logger.getLogger(RedirectTagStrategy.class);
 
   private String method;
@@ -46,13 +46,12 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
     // Redirect the interpreter to the new RCML resource.
     if(uri != null) {
       try {
-        if(Call.Status.IN_PROGRESS == context.getCall().getStatus()) {
-          interpreter.load(uri, method);
-          interpreter.redirect();
-        }
+        interpreter.load(uri, method, context.getRcmlRequestParameters());
+        interpreter.redirect();
       } catch(final InterpreterException exception) {
         interpreter.failed();
-        interpreter.notify(context, Notification.ERROR, 12400);
+        final Notification notification = interpreter.notify(context, Notification.ERROR, 12400);
+        interpreter.save(notification);
         logger.error(exception);
         throw new TagStrategyException(exception);
       }
@@ -61,7 +60,6 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
   
   @Override public void initialize(final RcmlInterpreter interpreter, final RcmlInterpreterContext context,
       final RcmlTag tag) throws TagStrategyException {
-    super.initialize(interpreter, context, tag);
     initMethod(interpreter, context, tag);
     initUri(interpreter, context, tag);
   }
@@ -70,7 +68,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
       final RcmlTag tag) throws TagStrategyException {
     method = getMethod(interpreter, context, tag);
 	if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-	  interpreter.notify(context, Notification.WARNING, 13710);
+	  final Notification notification = interpreter.notify(context, Notification.WARNING, 13710);
+	  interpreter.save(notification);
 	  method = "POST";
 	}
   }
@@ -81,7 +80,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTag;
       uri = getUri(interpreter, context, tag);
     } catch(final IllegalArgumentException ignored) {
       interpreter.failed();
-      interpreter.notify(context, Notification.ERROR, 11100);
+      final Notification notification = interpreter.notify(context, Notification.ERROR, 11100);
+      interpreter.save(notification);
       throw new TagStrategyException(tag.getText() + " is an invalid URI.");
     }
   }

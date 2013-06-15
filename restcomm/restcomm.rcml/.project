@@ -1,6 +1,6 @@
 <projectDescription>
   <name>restcomm.rcml</name>
-  <comment>A Restful Communications Framework. NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
+  <comment>A unified communications platform for web developers. NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
   <projects/>
   <buildSpec>
     <buildCommand>

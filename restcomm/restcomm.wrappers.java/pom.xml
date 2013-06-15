@@ -3,14 +3,12 @@
   <parent>
     <groupId>org.mobicents.servlet.sip</groupId>
     <artifactId>restcomm</artifactId>
-    <version>1.0.0.BETA2-SNAPSHOT</version>
+    <version>2.0.0.ALPHA1</version>
   </parent>
-  <artifactId>twilio-java-sdk</artifactId> 
-  <version>3.3.10-SNAPSHOT</version>
+  <artifactId>restcomm-java-wrapper</artifactId> 
   <packaging>jar</packaging>
-  <name>twilio-java-sdk</name>
-  <description>Java helper library for Twilio services</description>
-  <url>http://www.twilio.com</url>
+  <name>restcomm-java-wrapper</name>
+  <description>Java helper library for Restcomm services</description>
   <licenses>
     <license>
       <name>MIT License</name>
