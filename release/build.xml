@@ -10,16 +10,16 @@
 	<property name="telscale.restcomm.release.version" value="6.1.1.GA"/>
 	
 	<!--Telscale binaries versions-->
-	<property name="telscale-sipservlets.version" value="6.1.2.GA" />
+	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
 	<property name="telscale-media.version" value="6.1.1.GA" />
 	<property name="telscale-lb.version" value="6.1.2.GA" />
 	<property name="telscale-diameter.version" value="6.1.2.GA" />
 	
 	
 	<!--GET Telscale-Sip=Servlets & Telscale-Media-Server & Telscale Diameter - properties-->
-	<property name="telscale-sipservlets.distro.version" value="${telscale-sipservlets.version}-jboss-5.1.0.GA-1209171320" />
+	<property name="telscale-sipservlets.distro.version" value="${telscale-sipservlets.version}-jboss-as-5.1.0.GA-1306131642" />
 	<property name="telscale-sipservlets.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.distro.version}.zip" />
-	<property name="telscale-sipservlets.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.2.GA/${telscale-sipservlets.download.distro.file}" />
+	<property name="telscale-sipservlets.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/${telscale-sipservlets.download.distro.file}" />
 	<property name="telscale-sipservlets.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.download.distro.file}" />
 	
 	<!-- TODO: Once productized Media Telscale version available then exchange download link here and version above-->
@@ -47,6 +47,7 @@
 	</taskdef>
 	
 	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	
     <target name="deploy">
     	<ant antfile="${ant.file.telscale.restcomm.release}" target="release">
