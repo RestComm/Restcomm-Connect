@@ -22,7 +22,7 @@ public final class InterpreterTest {
   @Before public void before() {
     system = ActorSystem.create();
     // Create the interpreter.
-    final InterpreterBuilder builder = new InterpreterBuilder(system);
+    final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
     // Create the configuration.
     final Configuration configuration = new PropertiesConfiguration();
     builder.setConfiguration(configuration);

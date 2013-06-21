@@ -152,6 +152,46 @@ public class IncomingPhoneNumbersDaoTest {
     assertTrue(numbers.getIncomingPhoneNumber(sid) == null);
   }
   
+  @Test public void getByPhoneNumber() {
+    final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
+    Sid account = Sid.generate(Sid.Type.ACCOUNT);
+    Sid application = Sid.generate(Sid.Type.APPLICATION);
+    URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
+    String method = "GET";
+    final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
+    builder.setSid(sid);
+    builder.setFriendlyName("Incoming Phone Number Test");
+    builder.setAccountSid(account);
+    builder.setPhoneNumber("+12223334444");
+    builder.setApiVersion("2012-04-24");
+    builder.setHasVoiceCallerIdLookup(false);
+    builder.setVoiceUrl(url);
+    builder.setVoiceMethod(method);
+    builder.setVoiceFallbackUrl(url);
+    builder.setVoiceFallbackMethod(method);
+    builder.setStatusCallback(url);
+    builder.setStatusCallbackMethod(method);
+    builder.setVoiceApplicationSid(application);
+    builder.setSmsUrl(url);
+    builder.setSmsMethod(method);
+    builder.setSmsFallbackUrl(url);
+    builder.setSmsFallbackMethod(method);
+    builder.setSmsApplicationSid(application);
+    builder.setUri(url);
+    IncomingPhoneNumber number = builder.build();
+    final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
+    // Create a new incoming phone number in the data store.
+    numbers.addIncomingPhoneNumber(number);
+    // Read the incoming phone number from the data store.
+    IncomingPhoneNumber result = numbers.getIncomingPhoneNumber("+12223334444");
+    assert(result != null);
+    assertTrue(result.getSid().equals(number.getSid()));
+ // Delete the incoming phone number.
+    numbers.removeIncomingPhoneNumber(sid);
+    // Validate that the incoming phone number was removed.
+    assertTrue(numbers.getIncomingPhoneNumber(sid) == null);
+  }
+  
   @Test public void removeByAccountSid() {
     final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
     Sid account = Sid.generate(Sid.Type.ACCOUNT);

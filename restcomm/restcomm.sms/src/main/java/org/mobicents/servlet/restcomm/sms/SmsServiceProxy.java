@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.sms;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -23,85 +23,75 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipApplicationSessionListener;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener {
+public final class SmsServiceProxy extends SipServlet {
   private static final long serialVersionUID = 1L;
   
   private ActorSystem system;
-  private ActorRef manager;
+  private ActorRef service;
 
-  public CallManagerProxy() {
+  public SmsServiceProxy() {
     super();
-  }
-  
-  @Override public void destroy() {
-    system.shutdown();
-    system.awaitTermination();
   }
   
   @Override protected void doRequest(final SipServletRequest request)
       throws ServletException, IOException {
-    manager.tell(request, null);
+    service.tell(request, null);
   }
 
   @Override protected void doResponse(final SipServletResponse response)
-      throws ServletException, IOException {
-    manager.tell(response, null);
+      throws ServletException, 	IOException {
+    service.tell(response, null);
   }
   
   @Override public void init(final ServletConfig config) throws ServletException {
     final ServletContext context = config.getServletContext();
-    final Configuration xml = (Configuration)context.getAttribute(Configuration.class.getName());
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    final ActorRef gateway = (ActorRef)context.getAttribute(MediaGateway.class.getName());
-    system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
-    // Create the call manager.
     final SipFactory factory = (SipFactory)context.getAttribute(SIP_FACTORY);
-    manager = manager(xml.subset("runtime-settings"), gateway, factory, storage);
-    context.setAttribute(CallManager.class.getName(), manager);
+    Configuration configuration = (Configuration)context.getAttribute(Configuration.class.getName());
+    configuration = configuration.subset("sms-aggregator");
+    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
+    system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
+    service = service(configuration, factory, outboundInterface(config), storage);
   }
   
-  private ActorRef manager(final Configuration configuration, final ActorRef gateway,
-      final SipFactory factory, final DaoManager storage) {
+  @SuppressWarnings("unchecked")
+  private SipURI outboundInterface(final ServletConfig configuration) {
+	final ServletContext context = configuration.getServletContext();
+	SipURI result = null;
+	final List<SipURI> uris = (List<SipURI>)context.getAttribute(OUTBOUND_INTERFACES);
+	for(final SipURI uri : uris) {
+	  final String transport = uri.getTransportParam();
+	  if("udp".equalsIgnoreCase(transport)) {
+	    result = uri;
+	  }
+	}
+	return result;
+  }
+  
+  private ActorRef service(final Configuration configuration, final SipFactory factory,
+      final SipURI transport, final DaoManager storage) {
     return system.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
-          return new CallManager(configuration, system, gateway, factory, storage);
+          return new SmsService(system, configuration, factory, transport, storage);
 		}
     }));
-  }
-
-  @Override public void sessionCreated(final SipApplicationSessionEvent event) {
-    // Nothing to do.
-  }
-
-  @Override public void sessionDestroyed(final SipApplicationSessionEvent event) {
-	// Nothing to do.
-  }
-
-  @Override public void sessionExpired(final SipApplicationSessionEvent event) {
-    manager.tell(event, null);
-  }
-
-  @Override public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
-	// Nothing to do.
   }
 }

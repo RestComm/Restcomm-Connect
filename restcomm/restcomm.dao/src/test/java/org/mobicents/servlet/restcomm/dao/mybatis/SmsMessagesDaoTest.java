@@ -65,7 +65,7 @@ public final class SmsMessagesDaoTest {
     builder.setSender("+17778889999");
     builder.setBody("Hello World!");
     builder.setStatus(SmsMessage.Status.SENDING);
-    builder.setDirection(SmsMessage.Direction.INCOMING);
+    builder.setDirection(SmsMessage.Direction.INBOUND);
     builder.setPrice(new BigDecimal("0.00"));
     builder.setUri(url);
     SmsMessage message = builder.build();
@@ -116,7 +116,7 @@ public final class SmsMessagesDaoTest {
     builder.setSender("+17778889999");
     builder.setBody("Hello World!");
     builder.setStatus(SmsMessage.Status.SENDING);
-    builder.setDirection(SmsMessage.Direction.INCOMING);
+    builder.setDirection(SmsMessage.Direction.INBOUND);
     builder.setPrice(new BigDecimal("0.00"));
     builder.setUri(url);
     SmsMessage message = builder.build();
