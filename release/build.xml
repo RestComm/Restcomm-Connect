@@ -136,22 +136,29 @@
         <exec failonerror="true" executable="${mvn.executable}" dir="${checkout.telscale-restcomm.dir}">
                 <arg line="${release.build.goals} -Dmaven.test.skip=true" />
         </exec>
+        <exec failonerror="true" executable="${mvn.executable}" dir="${checkout.telscale-restcomm.dir}/restcomm.docs">
+                <arg line="${release.build.goals} -Ptelscale -Dmaven.test.skip=true" />
+        </exec>
 	</target>
 
     <target name="copy-restcomm">
         <echo>Copy restcomm </echo>
 		<!--default-->
-        <copy todir="${release.dir}/server/default/deploy/telscale-restcomm.war" failonerror="true">
-                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.core/target/restcomm">
+        <copy tofile="${release.dir}/server/default/deploy/telscale-restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+        <!--copy todir="${release.dir}/server/default/deploy/telscale-restcomm.war" failonerror="true">
+                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
-        </copy>
+        </copy-->
 		<!--all-->
-        <copy todir="${release.dir}/server/all/deploy/telscale-restcomm.war" failonerror="true">
-                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.core/target/restcomm">
+        <copy tofile="${release.dir}/server/all/deploy/telscale-restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+        <!--copy todir="${release.dir}/server/all/deploy/telscale-restcomm.war" failonerror="true">
+                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
-        </copy>
+        </copy-->
     </target>
 	
     <target name="copy-docs">
