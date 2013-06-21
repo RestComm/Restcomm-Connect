@@ -7,7 +7,7 @@
 	<property name="restcomm.docs.dir" location="${release.dir}/docs" />
 	<property name="checkout.dir" value="${base.dir}/checkout" />	
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
-	<property name="telscale.restcomm.release.version" value="6.1.1.GA"/>
+	<property name="telscale.restcomm.release.version" value="6.1.0.GA"/>
 	
 	<!--Telscale binaries versions-->
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
