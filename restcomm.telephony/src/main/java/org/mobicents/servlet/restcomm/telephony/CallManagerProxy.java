@@ -74,8 +74,9 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
     final ActorRef gateway = (ActorRef)context.getAttribute(MediaGateway.class.getName());
     system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
     // Create the call manager.
+    final Configuration configuration = xml.subset("runtime-settings");
     final SipFactory factory = (SipFactory)context.getAttribute(SIP_FACTORY);
-    manager = manager(xml.subset("runtime-settings"), gateway, factory, storage);
+    manager = manager(configuration, gateway, factory, storage);
     context.setAttribute(CallManager.class.getName(), manager);
   }
   

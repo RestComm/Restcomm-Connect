@@ -18,6 +18,7 @@ package org.mobicents.servlet.restcomm.interpreter;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
@@ -30,14 +31,19 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
@@ -46,11 +52,18 @@ import org.joda.time.DateTime;
 
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.asr.GetAsrInfo;
+import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.SmsMessage;
+import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
+import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
+import org.mobicents.servlet.restcomm.fax.FaxResponse;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -59,17 +72,34 @@ import org.mobicents.servlet.restcomm.http.client.Downloader;
 import org.mobicents.servlet.restcomm.http.client.DownloaderResponse;
 import org.mobicents.servlet.restcomm.http.client.HttpRequestDescriptor;
 import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
+import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
+import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
+import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
+import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
+import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
+import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
+import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
+import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
+import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.telephony.Hangup;
+import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
+import org.mobicents.servlet.restcomm.telephony.Play;
+import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.SpeechSynthesizerResponse;
+
+import scala.concurrent.duration.Duration;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -88,19 +118,22 @@ public final class VoiceInterpreter extends UntypedActor {
   private final State downloadingFallbackRcml;
   private final State initializingCall;
   private final State ready;
-  private final State hangingUp;
+  private final State rejecting;
+  private final State playingRejectionPrompt;
+  private final State pausing;
+  private final State playing;
   private final State redirecting;
+  private final State creatingSmsSession;
+  private final State sendingSms;
+  private final State hangingUp;
+  private final State waitingForOutstandingResponses;
   private final State finished;
   /*
   private final State dialing;
-  private final State rejecting;
-  private final State pausing;
   private final State caching;
   private final State synthesizing;
-  private final State playing;
   private final State gathering;
   private final State recording;
-  private final State texting;
   private final State bridging;
   private final State forking;
   private final State conferencing;
@@ -109,14 +142,17 @@ public final class VoiceInterpreter extends UntypedActor {
   private final FiniteStateMachine fsm;
   // The user specific configuration.
   private final Configuration configuration;
+  // The block storage cache.
+  private final ActorRef cache;
   // The downloader will fetch resources for us using HTTP.
   private final ActorRef downloader;
   // The automatic speech recognition service.
-  private final ActorRef asr;
+  private final ActorRef asrService;
   // The fax service.
-  private final ActorRef fax;
+  private final ActorRef faxService;
   // The SMS service.
-  private final ActorRef sms;
+  private final ActorRef smsService;
+  private final Map<Sid, ActorRef> smsSessions;
   // The storage engine.
   private final DaoManager storage;
   // The text to speech synthesizer service.
@@ -133,10 +169,12 @@ public final class VoiceInterpreter extends UntypedActor {
   private CallStateChanged.State callState;
   // A call detail record.
   private CallDetailRecord callRecord;
+  // The media groups for this call.
+  private Map<String, ActorRef> mediaGroups;
   // Information to reach the application that will be executed
   // by this interpreter.
-  private final Sid account;
-  private final Sid phone;
+  private final Sid accountId;
+  private final Sid phoneId;
   private final String version;
   private final URI url;
   private final String method;
@@ -172,35 +210,69 @@ public final class VoiceInterpreter extends UntypedActor {
     initializingCall = new State("initializing call",
             new InitializingCall(source), null);
     ready = new State("ready", new Ready(source), null);
-    redirecting = new State("redirecting", null, null);
-    hangingUp = new State("hanging up", null, null);
-    finished = new State("finished", null, null);
+    rejecting = new State("rejecting", new Rejecting(source), null);
+    playingRejectionPrompt = new State("playing rejection prompt",
+        new PlayingRejectionPrompt(source), null);
+    pausing = new State("pausing", new Pausing(source), null);
+    playing = new State("playing", null, null);
+    redirecting = new State("redirecting", new Redirecting(source), null);
+    creatingSmsSession = new State("creating sms session",
+        new CreatingSmsSession(source), null);
+    sendingSms = new State("sending sms", new SendingSms(source), null);
+    hangingUp = new State("hanging up", new HangingUp(source), null);
+    waitingForOutstandingResponses = new State("waiting for outstaning resonses",
+        new WaitingForOutstandingResponses(source), null);
+    finished = new State("finished", new Finished(source), null);
     /*
     dialing = new State("dialing", null, null);
-    rejecting = new State("rejecting", null, null);
-    pausing = new State("pausing", null, null);
     synthesizing = new State("synthesizing", null, null);
-    playing = new State("playing", null, null);
+    
     gathering = new State("gathering", null, null);
     recording = new State("recording", null, null);
-    texting = new State("texting", null, null);
     bridging = new State("bridging", null, null);
     conferencing = new State("conferencing", null, null);
     */
     // Initialize the transitions for the FSM.
     final Set<Transition> transitions = new HashSet<Transition>();
+    transitions.add(new Transition(uninitialized, acquiringAsrInfo));
+    transitions.add(new Transition(acquiringAsrInfo, acquiringSynthesizerInfo));
+    transitions.add(new Transition(acquiringAsrInfo, finished));
+    transitions.add(new Transition(acquiringSynthesizerInfo, acquiringCallInfo));
+    transitions.add(new Transition(acquiringSynthesizerInfo, finished));
+    transitions.add(new Transition(acquiringCallInfo, initializingCall));
+    transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
+    transitions.add(new Transition(acquiringCallInfo, finished));
+    transitions.add(new Transition(downloadingRcml, ready));
+    transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
+    transitions.add(new Transition(downloadingRcml, hangingUp));
+    transitions.add(new Transition(downloadingRcml, finished));
+    transitions.add(new Transition(downloadingFallbackRcml, ready));
+    transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
+    transitions.add(new Transition(downloadingFallbackRcml, finished));
+    transitions.add(new Transition(ready, redirecting));
+    transitions.add(new Transition(ready, creatingSmsSession));
+    transitions.add(new Transition(ready, hangingUp));
+    transitions.add(new Transition(ready, finished));
+    transitions.add(new Transition(redirecting, ready));
+    transitions.add(new Transition(redirecting, creatingSmsSession));
+    transitions.add(new Transition(redirecting, hangingUp));
+    transitions.add(new Transition(redirecting, finished));
+    transitions.add(new Transition(creatingSmsSession, sendingSms));
+    transitions.add(new Transition(creatingSmsSession, hangingUp));
+    transitions.add(new Transition(creatingSmsSession, finished));
+    transitions.add(new Transition(sendingSms, ready));
+    transitions.add(new Transition(sendingSms, redirecting));
+    transitions.add(new Transition(sendingSms, hangingUp));
+    transitions.add(new Transition(sendingSms, finished));
+    transitions.add(new Transition(hangingUp, waitingForOutstandingResponses));
+    transitions.add(new Transition(hangingUp, finished));
+    transitions.add(new Transition(waitingForOutstandingResponses, waitingForOutstandingResponses));
+    transitions.add(new Transition(waitingForOutstandingResponses, finished));
     // Initialize the FSM.
     this.fsm = new FiniteStateMachine(uninitialized, transitions);
     // Initialize the runtime stuff.
-    this.configuration = configuration;
-    this.asr = asr;
-    this.fax = fax;
-    this.sms = sms;
-    this.storage = storage;
-    this.synthesizer = synthesizer;
-    this.downloader = downloader();
-    this.account = account;
-    this.phone = phone;
+    this.accountId = account;
+    this.phoneId = phone;
     this.version = version;
     this.url = url;
     this.method = method;
@@ -208,6 +280,36 @@ public final class VoiceInterpreter extends UntypedActor {
     this.fallbackMethod = fallbackMethod;
     this.statusCallback = statusCallback;
     this.statusCallbackMethod = statusCallbackMethod;
+    this.configuration = configuration;
+    this.asrService = asr;
+    this.faxService = fax;
+    this.smsService = sms;
+    this.smsSessions = new HashMap<Sid, ActorRef>();
+    this.mediaGroups = new HashMap<String, ActorRef>();
+    this.storage = storage;
+    this.synthesizer = synthesizer;
+    String path = configuration.getString("cache-path");
+    if(!path.endsWith("/")) {
+      path = path + "/";
+    }
+    path = path + accountId.toString();
+    String uri = configuration.getString("cache-uri");
+    if(!uri.endsWith("/")) {
+      uri = uri + "/";
+    }
+    uri = uri + accountId.toString();
+    this.cache = cache(path, uri);
+    this.downloader = downloader();
+  }
+  
+  private ActorRef cache(final String path, final String uri) {
+    final UntypedActorContext context = getContext();
+    return context.actorOf(new Props(new UntypedActorFactory() {
+		private static final long serialVersionUID = 1L;
+		@Override public UntypedActor create() throws Exception {
+          return new DiskCache(path, uri);
+		}
+    }));
   }
   
   private ActorRef downloader() {
@@ -242,7 +344,7 @@ public final class VoiceInterpreter extends UntypedActor {
     final Notification.Builder builder = Notification.builder();
     final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
     builder.setSid(sid);
-    builder.setAccountSid(account);
+    builder.setAccountSid(accountId);
     builder.setCallSid(callInfo.sid());
     builder.setApiVersion(version);
     builder.setLog(log);
@@ -279,7 +381,7 @@ public final class VoiceInterpreter extends UntypedActor {
     }
     buffer = new StringBuilder();
     buffer.append("/").append(version).append("/Accounts/");
-    buffer.append(account.toString()).append("/Notifications/");
+    buffer.append(accountId.toString()).append("/Notifications/");
     buffer.append(sid.toString());
     final URI uri = URI.create(buffer.toString());
     builder.setUri(uri);
@@ -287,7 +389,7 @@ public final class VoiceInterpreter extends UntypedActor {
   }
 
   @SuppressWarnings("unchecked")
-@Override public void onReceive(final Object message) throws Exception {
+  @Override public void onReceive(final Object message) throws Exception {
     final Class<?> klass = message.getClass();
     final State state = fsm.state();
     if(StartInterpreter.class.equals(klass)) {
@@ -297,15 +399,109 @@ public final class VoiceInterpreter extends UntypedActor {
     } else if(SpeechSynthesizerResponse.class.equals(klass)) {
       fsm.transition(message, acquiringCallInfo);
     } else if(CallResponse.class.equals(klass)) {
-      final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
-      final CallInfo info = response.get();
-      if("inbound".equals(info.direction())) {
-        fsm.transition(message, downloadingRcml);
+      if(acquiringCallInfo.equals(state)) {
+        final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
+        callInfo = response.get();
+        final String direction = callInfo.direction();
+        if("inbound".equals(direction)) {
+          fsm.transition(message, downloadingRcml);
+        } else {
+          fsm.transition(message, initializingCall);
+        }
+      } else if(rejecting.equals(state)) {
+        fsm.transition(message, playingRejectionPrompt);
+      }
+    } else if(CallStateChanged.class.equals(klass)) {
+      final CallStateChanged event = (CallStateChanged)message;
+      if(CallStateChanged.State.RINGING == event.state()) {
+        // update db and callback statusCallback url.
+      } else if(CallStateChanged.State.IN_PROGRESS == event.state()) {
+        final String direction = callInfo.direction();
+        if("inbound".equals(direction)) {
+          fsm.transition(message, ready);
+        } else {
+          fsm.transition(message, downloadingRcml);
+        }
+      } else if(CallStateChanged.State.NO_ANSWER == event.state()) {
+        
+      } else if(CallStateChanged.State.COMPLETED == event.state()) {
+        
+      } else if(CallStateChanged.State.FAILED == event.state()) {
+        
+      }
+    } else if(DownloaderResponse.class.equals(klass)) {
+	  final DownloaderResponse response = (DownloaderResponse)message;
+      if(response.succeeded()) {
+        final HttpResponseDescriptor descriptor = response.get();
+        if(HttpStatus.SC_OK == descriptor.getStatusCode()) {
+          fsm.transition(message, ready);
+        } else {
+  	      if(downloadingRcml.equals(state)) {
+            if(fallbackUrl != null) {
+              fsm.transition(message, downloadingFallbackRcml);
+            }
+          } else {
+            fsm.transition(message, finished);
+          }
+        }
       } else {
-        fsm.transition(message, initializingCall);
+        if(downloadingRcml.equals(state)) {
+          if(fallbackUrl != null) {
+            fsm.transition(message, downloadingFallbackRcml);
+          }
+        } else {
+          fsm.transition(message, finished);
+        }
       }
     } else if(Tag.class.equals(klass)) {
-      
+      final Tag verb = (Tag)message;
+      if(CallStateChanged.State.RINGING == callState) {
+        fsm.transition(message, initializingCall);
+      } else if(pause.equals(verb.name())) {
+        fsm.transition(message, pausing);
+      } else if(rejecting.equals(verb.name())) {
+        fsm.transition(message, rejecting);
+      } else if(hangup.equals(verb.name())) {
+        fsm.transition(message, hangingUp);
+      } else if(redirect.equals(verb.name())) {
+        fsm.transition(message, redirecting);
+      } else if(sms.equals(verb.name())) {
+        fsm.transition(message, creatingSmsSession);
+      }
+    } else if(MediaGroupResponse.class.equals(klass)) {
+      final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
+      if(response.succeeded()) {
+        if(playingRejectionPrompt.equals(state)) {
+          fsm.transition(message, finished);
+        }
+      } else {
+        
+      }
+    } else if(SmsServiceResponse.class.equals(klass)) {
+      final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>)message;
+      if(response.succeeded()) {
+        if(creatingSmsSession.equals(state)) {
+          fsm.transition(message, sendingSms);
+        }
+      } else {
+        if(smsSessions.size() > 0) {
+          fsm.transition(message, waitingForOutstandingResponses);
+        } else {
+          fsm.transition(message, finished);
+        }
+      }
+    } else if(SmsSessionResponse.class.equals(klass)) {
+      smsResponse(message);
+    } else if(StopInterpreter.class.equals(klass)) {
+      if(smsSessions.size() > 0) {
+        fsm.transition(message, waitingForOutstandingResponses);
+      } else {
+        fsm.transition(message, finished);
+      }
+    } else if(message instanceof ReceiveTimeout) {
+      if(pausing.equals(state)) {
+        fsm.transition(message, ready);
+      }
     }
   }
   
@@ -313,7 +509,7 @@ public final class VoiceInterpreter extends UntypedActor {
   	final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
     final String callSid = callInfo.sid().toString();
 	  parameters.add(new BasicNameValuePair("CallSid", callSid));
-	  final String accountSid = account.toString();
+	  final String accountSid = accountId.toString();
 	  parameters.add(new BasicNameValuePair("AccountSid", accountSid));
 	  final String from = format(callInfo.from());
     parameters.add(new BasicNameValuePair("From", from));
@@ -353,6 +549,43 @@ public final class VoiceInterpreter extends UntypedActor {
     }
   }
   
+  private void smsResponse(final Object message) {
+    final Class<?> klass = message.getClass();
+    final ActorRef self = self();
+    if(SmsSessionResponse.class.equals(klass)) {
+      final SmsSessionResponse response = (SmsSessionResponse)message;
+      final SmsSessionInfo info = response.info();
+      SmsMessage record = (SmsMessage)info.attributes().get("record");
+      if(response.succeeded()) {
+        final DateTime now = DateTime.now();
+        record = record.setDateSent(now);
+        record = record.setStatus(Status.SENT);
+      } else {
+        record = record.setStatus(Status.FAILED);
+      }
+      final SmsMessagesDao messages = storage.getSmsMessagesDao();
+      messages.updateSmsMessage(record);
+      // Notify the callback listener.
+      final Object attribute = info.attributes().get("callback");
+      if(attribute != null) {
+        final URI callback = (URI)attribute;
+        final List<NameValuePair> parameters = parameters();
+     	request = new HttpRequestDescriptor(callback, "POST", parameters);
+     	downloader.tell(request, null);
+      }
+      // Destroy the sms session.
+      final ActorRef session = smsSessions.remove(record.getSid());
+      final DestroySmsSession destroy = new DestroySmsSession(session);
+      smsService.tell(destroy, self);
+      // Try to stop the interpreter.
+      final State state = fsm.state();
+      if(waitingForOutstandingResponses.equals(state)) {
+        final StopInterpreter stop = StopInterpreter.instance();
+        self.tell(stop, self);
+      }
+    }
+  }
+  
   private abstract class AbstractAction implements Action {
     protected final ActorRef source;
     
@@ -370,7 +603,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  final StartInterpreter request = (StartInterpreter)message;
 	  call = request.resource();
-	  asr.tell(new GetAsrInfo(), source);
+	  asrService.tell(new GetAsrInfo(), source);
 	}
   }
   
@@ -405,11 +638,16 @@ public final class VoiceInterpreter extends UntypedActor {
       super(source);
     }
 
+	@SuppressWarnings("unchecked")
 	@Override public void execute(final Object message) throws Exception {
-      final State state = fsm.state();
-      if(acquiringCallInfo.equals(state)) {
+	  final Class<?> klass = fsm.getClass();
+      if(CallResponse.class.equals(klass)) {
+        final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
+        callInfo = response.get();
+        callState = callInfo.state();
         call.tell(new Dial(), source);
-      } else if(ready.equals(state)) {
+      } else if(Tag.class.equals(klass)) {
+        verb = (Tag)message;
         call.tell(new Answer(), source);
       }
 	}
@@ -423,20 +661,21 @@ public final class VoiceInterpreter extends UntypedActor {
 	@SuppressWarnings("unchecked")
 	@Override public void execute(final Object message) throws Exception {
 	  final Class<?> klass = message.getClass();
-	  if(CallInfo.class.equals(klass)) {
+	  if(CallResponse.class.equals(klass)) {
 	    final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
 	    callInfo = response.get();
+	    callState = callInfo.state();
 	  }
 	  // Create a call detail record for the call.
 	  final CallDetailRecord.Builder builder = CallDetailRecord.builder();
 	  builder.setSid(callInfo.sid());
 	  builder.setDateCreated(callInfo.dateCreated());
-	  builder.setAccountSid(account);
+	  builder.setAccountSid(accountId);
 	  builder.setTo(callInfo.to());
 	  builder.setCallerName(callInfo.fromName());
 	  builder.setFrom(callInfo.from());
 	  builder.setForwardedFrom(callInfo.forwardedFrom());
-	  builder.setPhoneNumberSid(phone);
+	  builder.setPhoneNumberSid(phoneId);
 	  builder.setStatus(callState.toString());
 	  final DateTime now = DateTime.now();
 	  builder.setStartTime(now);
@@ -444,7 +683,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	  builder.setApiVersion(version);
 	  final StringBuilder buffer = new StringBuilder();
 	  buffer.append("/").append(version).append("/Accounts/");
-	  buffer.append(account.toString()).append("/Calls/");
+	  buffer.append(accountId.toString()).append("/Calls/");
 	  buffer.append(callInfo.sid().toString());
 	  final URI uri = URI.create(buffer.toString());
 	  builder.setUri(uri);
@@ -469,13 +708,18 @@ public final class VoiceInterpreter extends UntypedActor {
 	  if(DownloaderResponse.class.equals(klass)) {
 	    final DownloaderResponse result = (DownloaderResponse)message;
 	    final Throwable cause = result.cause();
+	    Notification notification = null;
 	    if(cause instanceof ClientProtocolException) {
-	      notification(ERROR_NOTIFICATION, 11206, cause.getMessage());
+	      notification = notification(ERROR_NOTIFICATION, 11206, cause.getMessage());
 	    } else if(cause instanceof IOException) {
-	      notification(ERROR_NOTIFICATION, 11205, cause.getMessage());
+	      notification = notification(ERROR_NOTIFICATION, 11205, cause.getMessage());
 	    } else if(cause instanceof URISyntaxException) {
-	      notification(ERROR_NOTIFICATION, 11100, cause.getMessage());
+	      notification = notification(ERROR_NOTIFICATION, 11100, cause.getMessage());
 	    }
+	    if(notification != null) {
+  	      final NotificationsDao notifications = storage.getNotificationsDao();
+  	      notifications.addNotification(notification);
+  	    }
 	  }
 	  // Try to use the fall back url and method.
 	  final List<NameValuePair> parameters = parameters();
@@ -493,7 +737,11 @@ public final class VoiceInterpreter extends UntypedActor {
 	  response = (HttpResponseDescriptor)message;
 	  final UntypedActorContext context = getContext();
 	  final State state = fsm.state();
-	  if(downloadingRcml.equals(state) ||
+	  if(initializingCall.equals(state)) {
+	    // Handle the pending verb.
+	    source.tell(verb, source);
+	    return;
+	  } else if(downloadingRcml.equals(state) ||
 	      downloadingFallbackRcml.equals(state) ||
 	      redirecting.equals(state)) {
 		if(parser != null) {
@@ -506,18 +754,74 @@ public final class VoiceInterpreter extends UntypedActor {
 	      parser = parser(response.getContentAsString());
 	    } else if(type.contains("audio/wav") || type.contains("audio/wave") ||
 		    type.contains("audio/x-wav")) {
-	      // Cache the file and then play it using the <Play> verb. FIX ME!
 	      parser = parser("<Play>" + request.getUri() + "</Play>");
 	    } else if(type.contains("text/plain")) {
 	      parser = parser("<Say>" + response.getContentAsString() + "</Say>");
 	    } else {
 	      final StopInterpreter stop = StopInterpreter.instance();
 	      source.tell(stop, source);
+	      return;
 	    }
 	  }
 	  // Ask the parser for the next action to take.
 	  final GetNextVerb next = GetNextVerb.instance();
 	  parser.tell(next, source);
+	}
+  }
+  
+  private final class Rejecting extends AbstractAction {
+    public Rejecting(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+      verb = (Tag)message;
+      String reason = "rejected";
+      Attribute attribute = verb.attribute("reason");
+      final String value = attribute.value();
+      if(attribute != null) {
+        if("rejected".equalsIgnoreCase(value)) {
+          reason = "rejected";
+        } else if("busy".equalsIgnoreCase(value)) {
+          reason = "busy";
+        }
+      }
+      // Reject the call.
+      if("rejected".equals(reason)) {
+        call.tell(new CreateMediaGroup(), source);
+      } else {
+        call.tell(new Reject(), source);
+      }
+	}
+  }
+  
+  private final class PlayingRejectionPrompt extends AbstractAction {
+    public PlayingRejectionPrompt(final ActorRef source) {
+      super(source);
+    }
+
+	@SuppressWarnings("unchecked")
+	@Override public void execute(final Object message) throws Exception {
+	  final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
+	  final ActorRef media = response.get();
+	  mediaGroups.put("rejection media group", media);
+	  String url = configuration.getString("prompts-uri");
+	  if(!url.endsWith("/")) {
+	    url += "/";
+	  }
+	  url += "reject.wav";
+	  URI uri = null;
+	  try {
+	    uri = URI.create(url);
+	  } catch(final Exception exception) {
+	    final Notification notification = notification(ERROR_NOTIFICATION, 12400,
+	        exception.getMessage());
+	    final NotificationsDao notifications = storage.getNotificationsDao();
+	    notifications.addNotification(notification);
+	    return;
+	  }
+	  final Play play = new Play(uri, 1);
+	  media.tell(play, source);
 	}
   }
   
@@ -527,7 +831,299 @@ public final class VoiceInterpreter extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
-	  
+	  final Class<?> klass = message.getClass();
+	  if(Tag.class.equals(klass)) {
+	    verb = (Tag)message;
+	  }
+	  call.tell(new Hangup(), source);
+	}
+  }
+
+  private final class Pausing extends AbstractAction {
+    public Pausing(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+      final UntypedActorContext context = getContext();
+      verb = (Tag)message;
+      int length = 1;
+      Attribute attribute = verb.attribute("length");
+      if(attribute != null) {
+        try {
+          length = Integer.parseInt(attribute.value());
+        } catch(final NumberFormatException exception) {
+          final Notification notification = notification(WARNING_NOTIFICATION, 13910,
+              "Invalid length value.");
+          final NotificationsDao notifications = storage.getNotificationsDao();
+          notifications.addNotification(notification);
+          return;
+        }
+      }
+      context.setReceiveTimeout(Duration.create(length, TimeUnit.SECONDS));
+	}
+  }
+  
+  private final class Redirecting extends AbstractAction {
+    public Redirecting(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+      verb = (Tag)message;
+      final NotificationsDao notifications = storage.getNotificationsDao();
+      String method = null;
+      Attribute attribute = verb.attribute("method");
+      if(attribute != null) {
+        method = attribute.value();
+        if(method != null && !method.isEmpty()) {
+          if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+            final Notification notification = notification(WARNING_NOTIFICATION, 13710,
+                method + " is not a valid HTTP method for <Redirect>");
+            notifications.addNotification(notification);
+            method = "POST";
+          }
+        } else {
+          method = "POST";
+        }
+      } else {
+        method = "POST";
+      }
+      final String text = verb.text();
+      if(text != null && !text.isEmpty()) {
+        // Try to redirect.
+        URI target = null;
+        try {
+          target = URI.create(text);
+        } catch(final Exception exception) {
+          final Notification notification = notification(ERROR_NOTIFICATION, 11100,
+              text + " is an invalid URI.");
+          notifications.addNotification(notification);
+          final StopInterpreter stop = StopInterpreter.instance();
+          source.tell(stop, source);
+          return;
+        }
+        final URI base = request.getUri();
+        final URI uri = resolve(base, target);
+        final List<NameValuePair> parameters = parameters();
+        request = new HttpRequestDescriptor(uri, method, parameters);
+        downloader.tell(request, source);
+      } else {
+    	// Ask the parser for the next action to take.
+    	final GetNextVerb next = GetNextVerb.instance();
+    	parser.tell(next, source);
+      }
+	}
+  }
+
+  private final class CreatingSmsSession extends AbstractAction {
+    public CreatingSmsSession(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(Object message) throws Exception {
+	  // Save <Sms> verb.
+	  verb = (Tag)message;
+	  // Create a new sms session to handle the <Sms> verb.
+	  smsService.tell(new CreateSmsSession(), source);
+	}
+  }
+  
+  private final class SendingSms extends AbstractAction {
+    public SendingSms(final ActorRef source) {
+      super(source);
+    }
+
+	@SuppressWarnings("unchecked")
+	@Override public void execute(final Object message) throws Exception {
+      final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>)message;
+      final ActorRef session = response.get();
+      final NotificationsDao notifications = storage.getNotificationsDao();
+      // Parse "from".
+      String from = null;
+      Attribute attribute = verb.attribute("from");
+      if(attribute == null) {
+        from = callInfo.to();
+      } else {
+	    from = attribute.value();
+        if(from == null || from.isEmpty()) {
+          from = callInfo.to();
+        } else {
+          from = format(from);
+          if(from == null) {
+            from = verb.attribute("from").value();
+	        final Notification notification = notification(ERROR_NOTIFICATION, 14102,
+                from + " is an invalid 'from' phone number.");
+            notifications.addNotification(notification);
+            smsService.tell(new DestroySmsSession(session), source);
+            final StopInterpreter stop = StopInterpreter.instance();
+            source.tell(stop, source);
+            return;
+          }
+        }
+      }
+      // Parse "to".
+      String to = null;
+      attribute = verb.attribute("to");
+      if(attribute == null) {
+        to = callInfo.from();
+      } else {
+        to = attribute.value();
+        if(to == null || to.isEmpty()) {
+          to = callInfo.from();
+        } else {
+          to = format(to);
+          if(to == null) {
+            to = verb.attribute("to").value();
+            final Notification notification = notification(ERROR_NOTIFICATION, 14101,
+                to + " is an invalid 'to' phone number.");
+            notifications.addNotification(notification);
+            smsService.tell(new DestroySmsSession(session), source);
+            final StopInterpreter stop = StopInterpreter.instance();
+            source.tell(stop, source);
+            return;
+          }
+        }
+      }
+      // Parse <Sms> text.
+      String body = verb.text();
+      if(body == null || body.isEmpty() || body.length() > 160) {
+    	final Notification notification = notification(ERROR_NOTIFICATION, 14103,
+            body + " is an invalid SMS body.");
+        notifications.addNotification(notification);
+        smsService.tell(new DestroySmsSession(session), source);
+      } else {
+        // Start observing events from the sms session.
+        session.tell(new Observe(source), source);
+        // Store the status callback in the sms session.
+        attribute = verb.attribute("statusCallback");
+        if(attribute != null) {
+	      String callback = attribute.value();
+	      if(callback != null && !callback.isEmpty()) {
+            URI target = null;
+	        try {
+              target = URI.create(callback);
+            } catch(final Exception exception) {
+              final Notification notification = notification(ERROR_NOTIFICATION, 14105,
+                  callback + " is an invalid URI.");
+              notifications.addNotification(notification);
+              smsService.tell(new DestroySmsSession(session), source);
+              final StopInterpreter stop = StopInterpreter.instance();
+              source.tell(stop, source);
+              return;
+            }
+            final URI base = request.getUri();
+            final URI uri = resolve(base, target);
+            session.tell(new SmsSessionAttribute("callback", uri), source);
+	      }
+        }
+	    // Create an SMS detail record.
+    	final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
+        final SmsMessage.Builder builder = SmsMessage.builder();
+        builder.setSid(sid);
+        builder.setAccountSid(accountId);
+        builder.setApiVersion(version);
+        builder.setRecipient(to);
+        builder.setSender(from);
+        builder.setBody(body);
+        builder.setDirection(Direction.OUTBOUND_REPLY);
+        builder.setStatus(Status.RECEIVED);
+        builder.setPrice(new BigDecimal("0.00"));
+        final StringBuilder buffer = new StringBuilder();
+	    buffer.append("/").append(version).append("/Accounts/");
+	    buffer.append(accountId.toString()).append("/SMS/Messages/");
+	    buffer.append(sid.toString());
+	    final URI uri = URI.create(buffer.toString());
+	    builder.setUri(uri);
+	    final SmsMessage record = builder.build();
+	    final SmsMessagesDao messages = storage.getSmsMessagesDao();
+	    messages.addSmsMessage(record);
+	    // Store the sms record in the sms session.
+	    session.tell(new SmsSessionAttribute("record", record), source);
+        // Send the SMS.
+        final SmsSessionRequest sms = new SmsSessionRequest(from , to, body);
+        session.tell(sms, source);
+        smsSessions.put(sid, session);
+      }
+      // Parses "action".
+      attribute = verb.attribute("action");
+      if(attribute != null) {
+    	  String action = attribute.value();
+          if(action != null && !action.isEmpty()) {
+            URI target = null;
+    	    try {
+              target = URI.create(action);
+            } catch(final Exception exception) {
+              final Notification notification = notification(ERROR_NOTIFICATION, 11100,
+                  action + " is an invalid URI.");
+              notifications.addNotification(notification);
+              final StopInterpreter stop = StopInterpreter.instance();
+              source.tell(stop, source);
+              return;
+            }
+            final URI base = request.getUri();
+            final URI uri = resolve(base, target);
+            // Parse "method".
+            String method = null;
+            attribute = verb.attribute("method");
+            if(attribute != null) {
+              method = attribute.value();
+              if(method != null && !method.isEmpty()) {
+                if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                  final Notification notification = notification(WARNING_NOTIFICATION, 14104,
+                      method + " is not a valid HTTP method for <Sms>");
+                  notifications.addNotification(notification);
+                  method = "POST";
+                }
+              } else {
+                method = "POST";
+              }
+            } else {
+              method = "POST";
+            }
+            // Redirect to the action url.
+            final List<NameValuePair> parameters = parameters();
+            final String status = Status.SENDING.toString();
+            parameters.add(new BasicNameValuePair("SmsStatus", status));
+            request = new HttpRequestDescriptor(uri, method, parameters);
+          } else {
+        	// Ask the parser for the next action to take.
+            final GetNextVerb next = GetNextVerb.instance();
+            parser.tell(next, source);
+          }
+      } else {
+    	// Ask the parser for the next action to take.
+      	final GetNextVerb next = GetNextVerb.instance();
+      	parser.tell(next, source);
+      }
+	}
+  }
+
+  private final class WaitingForOutstandingResponses extends AbstractAction {
+    public WaitingForOutstandingResponses(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+	  final Class<?> klass = message.getClass();
+	  if(AsrResponse.class.equals(klass)) {
+	    
+	  } else if(FaxResponse.class.equals(klass)) {
+	    
+	  } else if(SmsSessionResponse.class.equals(klass)) {
+	    smsResponse(message);
+	  }
+	}
+  }  
+
+  private final class Finished extends AbstractAction {
+    public Finished(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+      final UntypedActorContext context = getContext();
+      context.stop(source);
 	}
   }
 }

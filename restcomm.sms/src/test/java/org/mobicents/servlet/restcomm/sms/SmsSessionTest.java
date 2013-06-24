@@ -1,21 +1,19 @@
 package org.mobicents.servlet.restcomm.sms;
 
 import java.text.ParseException;
+import java.util.List;
 
-import javax.sip.RequestEvent;
-import javax.sip.message.MessageFactory;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-
+import static org.cafesip.sipunit.SipAssert.*;
+import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
 
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 
@@ -23,7 +21,6 @@ import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -46,12 +43,12 @@ public final class SmsSessionTest {
   }
 
   @BeforeClass public static void beforeClass() throws Exception {
-    tool = new SipStackTool("SMSSessionTest");
+    tool = new SipStackTool("SmsSessionTest");
   }
   
   @Before public void before() throws Exception {
     receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-    phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:alice@127.0.0.1:5070");
+    phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:+17778889999@127.0.0.1:5070");
   }
   
   @After public void after() throws Exception {
@@ -61,45 +58,77 @@ public final class SmsSessionTest {
     if(receiver != null) {
       receiver.dispose();
     }
-    deployer.undeploy("SMSSessionTest");
+    deployer.undeploy("SmsSessionTest");
   }
 
-  @Ignore @Test public void testReceiveSms() throws ParseException {
+  @Test public void testSendSmsRedirectReceiveSms() throws ParseException {
     deployer.deploy("SmsSessionTest");
-    final MessageFactory factory = receiver.getMessageFactory();
-    final Request sms = factory.createRequest("MESSAGE");
-    
-  }
-  
-  @Ignore @Test public void testSendSms() throws ParseException {
-    deployer.deploy("SmsSessionTest");
-    // This is necessary for SipUnit to accept unsolicited requests.
+    // Send restcomm an sms.
+    final String proxy =  phone.getStackAddress() + ":5080;lr/udp";
+    final String to = "sip:+12223334444@127.0.0.1:5080";
+    final String body = "Hello World!";
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingMessage(to, proxy, body);
+    assertLastOperationSuccess(call);
+    // Wait for a response sms.
     phone.setLoopback(true);
-    // Wait for an incoming request.
- 	phone.listenRequestMessage();
-    final RequestEvent event = phone.waitRequest(180 * 1000);
-    assertTrue(event != null);
-    final String method = event.getRequest().getMethod();
-    // Validate the request.
-    assertTrue("MESSAGE".equalsIgnoreCase(method));
-    // Send the Accepted response.
-    final MessageFactory factory = receiver.getMessageFactory();
-    final Request request = event.getRequest();
-    Response ok = factory.createResponse(202, request);
-    SipTransaction transaction = phone.sendReply(event, ok);
-    // Validate the transaction.
-    assertNotNull(transaction);
+    phone.listenRequestMessage();
+    assertTrue(call.waitForMessage(60 * 1000));
+    call.sendMessageResponse(202, "Accepted", -1);
+ 	final List<String> messages = call.getAllReceivedMessagesContent();
+ 	assertTrue(messages.size() > 0);
+ 	assertTrue(messages.get(0).equals("Hello World!"));
   }
   
   @Deployment(name="SmsSessionTest", managed=false, testable=false)
   public static WebArchive createWebArchive() {
-    WebArchive archive = ShrinkWrapMaven.resolver()
+    final WebArchive archive = ShrinkWrapMaven.resolver()
         .resolve("com.telestax.servlet:restcomm.application:war:" + version)
         .withoutTransitivity().asSingle(WebArchive.class);
+    JavaArchive dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.dao:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.mgcp:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+            .resolve("com.telestax.servlet:restcomm.http:jar:" + version)
+            .withoutTransitivity().asSingle(JavaArchive.class);
+        archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.interpreter:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.sms.api:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.sms:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("jain:jain-mgcp-ri:jar:1.0")
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("commons-configuration:commons-configuration:jar:1.7")
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    archive.delete("/WEB-INF/sip.xml");
     archive.delete("/WEB-INF/conf/restcomm.xml");
     archive.delete("/WEB-INF/data/hsql/restcomm.script");
+    archive.addAsWebInfResource("sip.xml");
     archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-	archive.addAsWebInfResource("sms-restcomm.script", "data/hsql/restcomm.script");
+	archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+	archive.addAsWebResource("entry.xml");
+	archive.addAsWebResource("sms.xml");
     return archive;
   }
 }

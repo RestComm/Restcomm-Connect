@@ -88,7 +88,7 @@ public final class ProxyManager extends UntypedActor {
   private Address contact(final Gateway gateway, final int expires)
       throws ServletParseException {
 	SipURI outboundInterface = null;
-	if(address != null) {
+	if(address != null && !address.isEmpty()) {
 	  outboundInterface = (SipURI)factory.createSipURI(null, address);
 	} else {
 	  outboundInterface = outboundInterface();

@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.telestax.servlet</groupId>
     <artifactId>restcomm</artifactId>
-    <version>6.1.0.GA-TelScale-SNAPSHOT</version>
+    <version>1.6.0.GA</version>
   </parent>
   
   <artifactId>restcomm.application</artifactId>
@@ -35,5 +35,64 @@
 		<groupId>org.slf4j</groupId>
 		<artifactId>slf4j-log4j12</artifactId>
 	</dependency>
+	
+	<dependency>
+		<groupId>org.scala-lang</groupId>
+		<artifactId>scala-library</artifactId>
+	</dependency>
+	
+	<dependency>
+ 			<groupId>com.typesafe.akka</groupId>
+ 			<artifactId>akka-actor_2.10</artifactId>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.typesafe.akka</groupId>
+		<artifactId>akka-slf4j_2.10</artifactId>
+	</dependency>
+	
+	<dependency>
+		<groupId>commons-configuration</groupId>
+		<artifactId>commons-configuration</artifactId>
+	</dependency>
+	
+	<dependency>
+		<groupId>javax.mail</groupId>
+		<artifactId>mail</artifactId>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.mobicents.servlet.sip</groupId>
+		<artifactId>sip-servlets-spec</artifactId>
+		<scope>provided</scope>
+	</dependency>
+
+	<dependency>
+		<groupId>javax.servlet</groupId>
+		<artifactId>servlet-api</artifactId>
+		<scope>provided</scope>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.commons</artifactId>
+		<version>${project.version}</version>
+		<scope>provided</scope>
+	</dependency>
+
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.dao</artifactId>
+		<version>${project.version}</version>
+		<scope>provided</scope>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.mgcp</artifactId>
+		<version>${project.version}</version>
+		<scope>provided</scope>
+	</dependency>
+	
   </dependencies>
 </project>

@@ -4,7 +4,7 @@
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>6.1.0.GA-TelScale-SNAPSHOT</version>
+	<version>1.6.0.GA</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -54,7 +54,7 @@
 	</licenses>
 
 	<modules>
-		<module>restcomm.asr</module>
+	<!--	<module>restcomm.docs</module> -->
 		<module>restcomm.commons</module>
 		<module>restcomm.dao</module>
 		<module>restcomm.asr</module>
@@ -65,7 +65,6 @@
 		<module>restcomm.sms</module>
 		<module>restcomm.http</module>
 		<module>restcomm.telephony</module>
-		<module>restcomm.docs</module>
 		<module>restcomm.interpreter</module>
 		<module>restcomm.application</module>
 	<!--	<module>restcomm.wrappers.java</module> -->
@@ -83,7 +82,7 @@
 		<mobicents.mgcp.impl.version>3.0.0.CR2</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
-		<sipservletapi.version>6.1.3.GA-TelScale</sipservletapi.version>
+		<sipservletapi.version>1.7.0.FINAL</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<shirocore.version>1.2.0</shirocore.version>
