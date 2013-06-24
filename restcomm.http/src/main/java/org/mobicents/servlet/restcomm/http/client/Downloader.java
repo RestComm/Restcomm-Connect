@@ -99,7 +99,9 @@ public final class Downloader extends UntypedActor {
       } catch(final Exception exception) {
         response = new DownloaderResponse(exception);
       }
-      sender.tell(response, self);
+      if(sender != null) {
+        sender.tell(response, self);
+      }
     }
   }
   

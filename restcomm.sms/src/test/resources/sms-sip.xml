@@ -15,32 +15,6 @@
 	<description>Mobicents Restful Communications Framework.</description>
 	<servlet-selection>
 		<servlet-mapping>
-			<servlet-name>CallManager</servlet-name>
-			<pattern>
-				<or>
-					<equal>
-						<var>request.method</var>
-						<value>INVITE</value>
-					</equal>
-					<equal>
-						<var>request.method</var>
-						<value>OPTIONS</value>
-					</equal>
-				</or>
-			</pattern>
-		</servlet-mapping>
-		<servlet-mapping>
-			<servlet-name>UserAgentManager</servlet-name>
-			<pattern>
-				<or>
-					<equal>
-						<var>request.method</var>
-						<value>REGISTER</value>
-					</equal>
-				</or>
-			</pattern>
-		</servlet-mapping>
-		<servlet-mapping>
 			<servlet-name>SmsService</servlet-name>
 			<pattern>
 				<or>
@@ -72,40 +46,4 @@
 		</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-
-	<servlet>
-		<servlet-name>CallManager</servlet-name>
-		<display-name>CallManager</display-name>
-		<description>The RestComm Call Manager.</description>
-		<servlet-class>
-			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
-		</servlet-class>
-		<load-on-startup>2</load-on-startup>
-	</servlet>
-
-	<servlet>
-		<servlet-name>UserAgentManager</servlet-name>
-		<display-name>UserAgentManager</display-name>
-		<description>The RestComm User Agent Manager.</description>
-		<servlet-class>
-			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
-		</servlet-class>
-		<load-on-startup>3</load-on-startup>
-	</servlet>
-	
-	<servlet>
-		<servlet-name>ProxyManager</servlet-name>
-		<display-name>ProxyManager</display-name>
-		<description>The RestComm Proxy Manager.</description>
-		<servlet-class>
-			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
-		</servlet-class>
-		<load-on-startup>4</load-on-startup>
-	</servlet>
-	
-	<listener>
-		<listener-class>
-			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
-		</listener-class>
-	</listener>
 </sip-app>

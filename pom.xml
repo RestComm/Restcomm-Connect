@@ -57,16 +57,17 @@
 		<module>restcomm.asr</module>
 		<module>restcomm.commons</module>
 		<module>restcomm.dao</module>
-		<module>restcomm.fax</module>
-		<module>restcomm.sms</module>
+		<module>restcomm.asr</module>
 		<module>restcomm.tts</module>
 		<module>restcomm.mgcp</module>
-		<module>restcomm.interpreter</module>
-		<module>restcomm.application</module>
+		<module>restcomm.fax</module>
+		<module>restcomm.sms.api</module>
+		<module>restcomm.sms</module>
 		<module>restcomm.http</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.docs</module>
-	<!-- 	<module>restcomm.rcml</module> -->
+		<module>restcomm.interpreter</module>
+		<module>restcomm.application</module>
 	<!--	<module>restcomm.wrappers.java</module> -->
 	</modules>
 

@@ -197,8 +197,10 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   }
   
   public enum Direction {
-    INCOMING("incoming"),
-    OUTBOUND_API("outbound-api");
+    INBOUND("inbound"),
+    OUTBOUND_API("outbound-api"),
+    OUTBOUND_CALL("outbound-call"),
+    OUTBOUND_REPLY("outbound-reply");
     
     private final String text;
     private Direction(final String text) {

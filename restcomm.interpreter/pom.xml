@@ -81,7 +81,7 @@
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.sms</artifactId>
+		<artifactId>restcomm.sms.api</artifactId>
 		<version>${project.version}</version>
 		<scope>provided</scope>
 	</dependency>

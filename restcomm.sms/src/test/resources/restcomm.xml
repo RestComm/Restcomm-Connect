@@ -106,8 +106,9 @@
 	<!-- The SMS aggregator is responsible for the handling of SMS messages inside of RestComm.
 		Refer to the org.mobicents.servlet.restcomm.SmsAggregator interface for more information.
 	-->
-	<sms-aggregator class="org.mobicents.servlet.restcomm.sms.IPSMService">
-		<endpoint>127.0.0.1:5070</endpoint>
+	<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
+	    <outbound-prefix></outbound-prefix>
+		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
 	</sms-aggregator>
 	
 	<!--

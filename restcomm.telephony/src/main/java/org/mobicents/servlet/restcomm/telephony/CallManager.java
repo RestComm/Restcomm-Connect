@@ -85,7 +85,7 @@ public final class CallManager extends UntypedActor {
     response.send();
   }
   
-  private ActorRef call(final SipFactory factory, final ActorRef gateway) {
+  private ActorRef call() {
     return system.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
@@ -130,8 +130,10 @@ public final class CallManager extends UntypedActor {
         if(sid != null) {
           final Application application = applications.getApplication(sid);
         }
-        final ActorRef call = call(factory, gateway);
+        final ActorRef call = call();
         call.tell(request, self);
+        final SipApplicationSession application = request.getApplicationSession();
+        application.setAttribute(Call.class.getName(), call);
         return;
       }
     }
@@ -156,8 +158,10 @@ public final class CallManager extends UntypedActor {
         if(sid != null) {
           final Application application = applications.getApplication(sid);
         }
-        final ActorRef call = call(factory, gateway);
+        final ActorRef call = call();
         call.tell(request, self);
+        final SipApplicationSession application = request.getApplicationSession();
+        application.setAttribute(Call.class.getName(), call);
         return;
       }
     } catch(final NumberParseException ignored) { }
