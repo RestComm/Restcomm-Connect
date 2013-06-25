@@ -512,30 +512,30 @@ public final class SmsInterpreter extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
-	  response = ((DownloaderResponse)message).get();
 	  final UntypedActorContext context = getContext();
 	  final State state = fsm.state();
 	  // Make sure we create a new parser if necessary.
 	  if(downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) ||
 	      redirecting.equals(state)) {
+	    response = ((DownloaderResponse)message).get();
         if(parser != null) {
           context.stop(parser);
           parser = null;
         }
+	    final String type = response.getContentType();
+	    if(type.contains("text/xml") || type.contains("application/xml") ||
+	      type.contains("text/html")) {
+          parser = parser(response.getContentAsString());
+        } else {
+    	  final NotificationsDao notifications = storage.getNotificationsDao();
+    	  final Notification notification = notification(WARNING_NOTIFICATION, 12300,
+              "Invalide content-type.");
+          notifications.addNotification(notification);
+          final StopInterpreter stop = StopInterpreter.instance();
+          source.tell(stop, source);
+          return;
+        }
 	  }
-	  final String type = response.getContentType();
-	  if(type.contains("text/xml") || type.contains("application/xml") ||
-	    type.contains("text/html")) {
-        parser = parser(response.getContentAsString());
-      } else {
-    	final NotificationsDao notifications = storage.getNotificationsDao();
-    	final Notification notification = notification(WARNING_NOTIFICATION, 12300,
-            "Invalide content-type.");
-        notifications.addNotification(notification);
-        final StopInterpreter stop = StopInterpreter.instance();
-        source.tell(stop, source);
-        return;
-      }
 	  // Ask the parser for the next action to take.
 	  final GetNextVerb next = GetNextVerb.instance();
 	  parser.tell(next, source);

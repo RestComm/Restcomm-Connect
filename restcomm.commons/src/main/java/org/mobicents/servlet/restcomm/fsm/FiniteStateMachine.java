@@ -46,9 +46,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   
   public void transition(final Object event, final State target) throws TransitionFailedException,
       TransitionNotFoundException, TransitionRollbackException {
-    checkNotNull(event);
-    checkNotNull(target);
-    if(!transitions.get(state).containsKey(target)) {
+    checkNotNull(event, "The message passed can not be null.");
+    checkNotNull(target, "The target state can not be null");
+    if(transitions.get(state) == null || !transitions.get(state).containsKey(target)) {
       final StringBuilder buffer = new StringBuilder();
       buffer.append("No transition could be found from a(n) ").append(state.getId()).append(" state to a(n) ")
           .append(target.getId()).append(" state.");

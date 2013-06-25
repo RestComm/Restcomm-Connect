@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.mgcp;
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -102,11 +103,13 @@ public final class Connection extends UntypedActor {
     // Initialize the main transitions for the FSM.
     final Set<Transition> transitions = new HashSet<Transition>();
     transitions.add(new Transition(uninitialized, initializing));
+    transitions.add(new Transition(uninitialized, closed));
     transitions.add(new Transition(closed, openingHalfWay));
     transitions.add(new Transition(closed, opening));
     transitions.add(new Transition(halfOpen, closing));
     transitions.add(new Transition(halfOpen, modifying));
     transitions.add(new Transition(open, closing));
+    transitions.add(new Transition(open, closed));
     transitions.add(new Transition(open, modifying));
     // Initialize the intermediate transitions for the FSM.
     transitions.add(new Transition(initializing, closed));
@@ -247,6 +250,8 @@ public final class Connection extends UntypedActor {
       // If we timed out log it.
       if(message instanceof ReceiveTimeout) {
         logger.error("The media gateway failed to respond in the requested timout period.");
+        final UntypedActorContext context = getContext();
+        context.setReceiveTimeout(Duration.Undefined());
       }
 	}
   }

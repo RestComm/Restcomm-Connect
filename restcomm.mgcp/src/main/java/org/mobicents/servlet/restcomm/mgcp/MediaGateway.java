@@ -247,7 +247,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
     } else if(PowerOffMediaGateway.class.equals(klass)) {
       powerOff(message);
     } else if(GetMediaGatewayInfo.class.equals(klass)) {
-      getInfo(message);
+      sender.tell(new MediaGatewayResponse<MediaGatewayInfo>(getInfo(message)), sender);
     } else if(CreateConnection.class.equals(klass)) {
 	  sender.tell(new MediaGatewayResponse<ActorRef>(getConnection(message)), self);
 	} else if(CreateLink.class.equals(klass)) {

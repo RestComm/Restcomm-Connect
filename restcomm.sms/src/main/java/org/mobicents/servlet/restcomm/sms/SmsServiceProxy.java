@@ -69,6 +69,7 @@ public final class SmsServiceProxy extends SipServlet {
     final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
     system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
     service = service(configuration, factory, outboundInterface(config), storage);
+    context.setAttribute(SmsSession.class.getName(), service);
   }
   
   @SuppressWarnings("unchecked")

@@ -47,6 +47,8 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
+import org.joda.time.DateTime;
+
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -121,6 +123,7 @@ public final class Call extends UntypedActor {
   private final FiniteStateMachine fsm;
   // SIP runtime stuff.
   private final SipFactory factory;
+  private String name;
   private SipURI from;
   private SipURI to;
   private long timeout;
@@ -136,7 +139,10 @@ public final class Call extends UntypedActor {
   private ConnectionMode internalLinkMode;
   // Runtime stuff.
   private final Sid id;
+  private CallStateChanged.State external;
   private String direction;
+  private String forwardedFrom;
+  private DateTime created;
   private final List<ActorRef> observers;
 
   public Call(final SipFactory factory, final ActorRef gateway) {
@@ -247,6 +253,7 @@ public final class Call extends UntypedActor {
     this.gateway = gateway;
     // Initialize the runtime stuff.
     this.id = Sid.generate(Sid.Type.CALL);
+    this.created = DateTime.now();
     this.observers = new ArrayList<ActorRef>();
   }
   
@@ -261,6 +268,14 @@ public final class Call extends UntypedActor {
   
   private void forwarding(final Object message) {
     
+  }
+  
+  private CallResponse<CallInfo> info() {
+    final String from = this.from.getUser();
+    final String to = this.to.getUser();
+    final CallInfo info =  new CallInfo(id, external, direction, created,
+        forwardedFrom, name, from, to);
+    return new CallResponse<CallInfo>(info);
   }
   
   private void invite(final Object message) {
@@ -284,12 +299,15 @@ public final class Call extends UntypedActor {
   @Override public void onReceive(final Object message) throws Exception {
     final UntypedActorContext context = getContext();
     final Class<?> klass = message.getClass();
+    final ActorRef self = self();
     final ActorRef sender = sender();
     final State state = fsm.state();
     if(Observe.class.equals(klass)) {
       observe(message);
     } else if(StopObserving.class.equals(klass)) {
       stopObserving(message);
+    } else if(GetCallInfo.class.equals(klass)) {
+      sender.tell(info(), self);
     } else if(InitializeOutbound.class.equals(klass)) {
       fsm.transition(message, queued);
     } else if(Answer.class.equals(klass) ||
@@ -409,7 +427,7 @@ public final class Call extends UntypedActor {
     } else if(inProgress.equals(state)) {
 	  if(CreateMediaGroup.class.equals(klass)) {
 	    final ActorRef group = getMediaGroup(message);
-	    sender.tell(new CallResponse<ActorRef>(group), sender);
+	    sender.tell(new CallResponse<ActorRef>(group), self);
 	  } else if(DestroyMediaGroup.class.equals(klass)) {
 	    final DestroyMediaGroup request = (DestroyMediaGroup)message;
 	    context.stop(request.group());
@@ -495,6 +513,7 @@ public final class Call extends UntypedActor {
 
 	@Override public void execute(Object message) throws Exception {
 	  final InitializeOutbound request = (InitializeOutbound)message;
+	  name = request.name();
 	  from = request.from();
 	  to = request.to();
 	  timeout = request.timeout();
@@ -504,7 +523,8 @@ public final class Call extends UntypedActor {
 	    direction = OUTBOUND_API;
 	  }
 	  // Notify the observers.
-	  final CallStateChanged event = new CallStateChanged(CallStateChanged.State.QUEUED);
+	  external = CallStateChanged.State.QUEUED;
+	  final CallStateChanged event = new CallStateChanged(external);
 	  for(final ActorRef observer : observers) {
 	    observer.tell(event, source);
 	  }
@@ -522,7 +542,6 @@ public final class Call extends UntypedActor {
 	  gateway.tell(new GetMediaGatewayInfo(), self);
 	}
   }
-  
   
   private final class AcquiringMediaSession extends AbstractAction {
     public AcquiringMediaSession(final ActorRef source) {
@@ -551,7 +570,6 @@ public final class Call extends UntypedActor {
 	}
   }
   
-  
   private final class AcquiringRemoteConnection extends AbstractAction {
     public AcquiringRemoteConnection(final ActorRef source) {
       super(source);
@@ -564,7 +582,6 @@ public final class Call extends UntypedActor {
 	  gateway.tell(new CreateConnection(session), source);
 	}
   }
-  
   
   private final class InitializingRemoteConnection extends AbstractAction {
     public InitializingRemoteConnection(ActorRef source) {
@@ -579,7 +596,6 @@ public final class Call extends UntypedActor {
 	  remoteConn.tell(new InitializeConnection(bridge), source);
 	}
   }
-  
   
   private final class OpeningRemoteConnection extends AbstractAction {
     public OpeningRemoteConnection(final ActorRef source) {
@@ -645,13 +661,18 @@ public final class Call extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  if(message instanceof SipServletRequest) {
 	    invite = (SipServletRequest)message;
+	    name = invite.getFrom().getDisplayName();
 	    from = (SipURI)invite.getFrom().getURI();
 	    to = (SipURI)invite.getTo().getURI();
 	    timeout = -1;
 	    direction = INBOUND;
+	    // Send a ringing response.
+	    final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
+	    ringing.send();
 	  }
       // Notify the observers.
-	  final CallStateChanged event = new CallStateChanged(CallStateChanged.State.RINGING);
+	  external = CallStateChanged.State.RINGING;
+	  final CallStateChanged event = new CallStateChanged(external);
 	  for(final ActorRef observer : observers) {
 	    observer.tell(event, source);
 	  }
@@ -688,7 +709,8 @@ public final class Call extends UntypedActor {
 	  invite.getSession().invalidate();
       invite.getApplicationSession().invalidate();
       // Notify the observers.
-      final CallStateChanged event = new CallStateChanged(CallStateChanged.State.CANCELED);
+      external = CallStateChanged.State.CANCELED;
+      final CallStateChanged event = new CallStateChanged(external);
       for(final ActorRef observer : observers) {
         observer.tell(event, source);
       }
@@ -731,7 +753,8 @@ public final class Call extends UntypedActor {
 	  invite.getSession().invalidate();
 	  invite.getApplicationSession().invalidate();
 	  // Notify the observers.
-      final CallStateChanged event = new CallStateChanged(CallStateChanged.State.BUSY);
+	  external = CallStateChanged.State.BUSY;
+      final CallStateChanged event = new CallStateChanged(external);
       for(final ActorRef observer : observers) {
         observer.tell(event, source);
       }
@@ -746,11 +769,15 @@ public final class Call extends UntypedActor {
     @Override public void execute(final Object message) throws Exception {
       gateway.tell(new DestroyConnection(remoteConn), source);
       remoteConn = null;
+      // Stop the timeout timer.
+  	  final UntypedActorContext context = getContext();
+  	  context.setReceiveTimeout(Duration.Undefined());
    	  // Explicitly invalidate the application session.
   	  invite.getSession().invalidate();
   	  invite.getApplicationSession().invalidate();
   	  // Notify the observers.
-      final CallStateChanged event = new CallStateChanged(CallStateChanged.State.NO_ANSWER);
+  	  external = CallStateChanged.State.NO_ANSWER;
+      final CallStateChanged event = new CallStateChanged(external);
       for(final ActorRef observer : observers) {
         observer.tell(event, source);
       }
@@ -769,7 +796,8 @@ public final class Call extends UntypedActor {
   	  invite.getSession().invalidate();
   	  invite.getApplicationSession().invalidate();
   	  // Notify the observers.
-      final CallStateChanged event = new CallStateChanged(CallStateChanged.State.FAILED);
+  	  external = CallStateChanged.State.FAILED;
+      final CallStateChanged event = new CallStateChanged(external);
       for(final ActorRef observer : observers) {
         observer.tell(event, source);
       }
@@ -802,10 +830,10 @@ public final class Call extends UntypedActor {
 	  if(openingRemoteConnection.equals(state)) {
 	    final ConnectionStateChanged response = (ConnectionStateChanged)message;
 	    final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-	    final String externalIp = gatewayInfo.externalIP().getHostAddress();
 	    final byte[] sdp = response.descriptor().toString().getBytes();
 	    String answer = null;
 	    if(gatewayInfo.useNat()) {
+	      final String externalIp = gatewayInfo.externalIP().getHostAddress();
 	      answer = patch(sdp, externalIp);
 	    } else {
 	      answer = response.descriptor().toString();
@@ -813,8 +841,11 @@ public final class Call extends UntypedActor {
 	    okay.setContent(answer, "application/sdp");
 	    okay.send();
 	  }
+	  // Make sure the SIP session doesn't end pre-maturely.
+	  invite.getApplicationSession().setExpires(0);
 	  // Notify the observers.
-	  final CallStateChanged event = new CallStateChanged(CallStateChanged.State.IN_PROGRESS);
+	  external = CallStateChanged.State.IN_PROGRESS;
+	  final CallStateChanged event = new CallStateChanged(external);
 	  for(final ActorRef observer : observers) {
 	    observer.tell(event, source);
 	  }
@@ -939,7 +970,8 @@ public final class Call extends UntypedActor {
 	  invite.getSession().invalidate();
 	  invite.getApplicationSession().invalidate();
 	  // Notify the observers.
-	  final CallStateChanged event = new CallStateChanged(CallStateChanged.State.COMPLETED);
+	  external = CallStateChanged.State.COMPLETED;
+	  final CallStateChanged event = new CallStateChanged(external);
 	  for(final ActorRef observer : observers) {
 	    observer.tell(event, source);
 	  }

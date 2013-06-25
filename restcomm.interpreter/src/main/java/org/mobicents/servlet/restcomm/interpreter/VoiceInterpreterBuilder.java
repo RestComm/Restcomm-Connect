@@ -35,12 +35,9 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 public final class VoiceInterpreterBuilder {
   private final ActorSystem system;
   private Configuration configuration;
-  private ActorRef downloader;
-  private ActorRef asr;
-  private ActorRef fax;
   private DaoManager storage;
+  private ActorRef calls;
   private ActorRef sms;
-  private ActorRef tts;
   private Sid account;
   private Sid phone;
   private String version;
@@ -64,8 +61,8 @@ public final class VoiceInterpreterBuilder {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
           return new VoiceInterpreter(configuration, account, phone, version, url, method,
-              fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, asr,
-        	  downloader, fax, sms, storage, tts);
+              fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, calls,
+              sms, storage);
 		}
     }));
   }
@@ -74,28 +71,16 @@ public final class VoiceInterpreterBuilder {
     this.configuration = configuration;
   }
   
-  public void setDownloader(final ActorRef downloader) {
-    this.downloader = downloader;
-  }
-  
-  public void setFaxService(final ActorRef fax) {
-    this.fax = fax;
-  }
-  
   public void setStorage(final DaoManager storage) {
     this.storage = storage;
   }
   
+  public void setCallManager(final ActorRef calls) {
+    this.calls = calls;
+  }
+  
   public void setSmsService(final ActorRef sms) {
     this.sms = sms;
-  }
-  
-  public void setSpeechRecognizer(final ActorRef asr) {
-    this.asr = asr;
-  }
-  
-  public void setSpeechSynthesizer(final ActorRef tts) {
-    this.tts = tts;
   }
   
   public void setAccount(final Sid account) {

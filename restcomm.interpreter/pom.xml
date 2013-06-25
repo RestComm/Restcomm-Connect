@@ -95,7 +95,7 @@
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.telephony</artifactId>
+		<artifactId>restcomm.telephony.api</artifactId>
 		<version>${project.version}</version>
 		<scope>provided</scope>
 	</dependency>

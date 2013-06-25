@@ -64,10 +64,11 @@
 		<module>restcomm.sms.api</module>
 		<module>restcomm.sms</module>
 		<module>restcomm.http</module>
+		<module>restcomm.telephony.api</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.interpreter</module>
 		<module>restcomm.application</module>
-	<!--	<module>restcomm.wrappers.java</module> -->
+		<module>restcomm.wrappers.java</module>
 	</modules>
 
 	<properties>

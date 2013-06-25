@@ -16,11 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -31,6 +26,11 @@ import akka.actor.UntypedActorFactory;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipApplicationSessionEvent;
@@ -50,6 +50,8 @@ import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
 import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.*;
 
@@ -58,20 +60,26 @@ import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.*;
  */
 public final class CallManager extends UntypedActor {
   private final ActorSystem system;
+  private final Configuration configuration;
   private final ActorRef gateway;
+  private final ActorRef sms;
   private final SipFactory factory;
   private final DaoManager storage;
   
   private boolean useTo;
   
   public CallManager(final Configuration configuration, final ActorSystem system,
-      final ActorRef gateway, final SipFactory factory, final DaoManager storage) {
+      final ActorRef gateway, final ActorRef sms, final SipFactory factory,
+      final DaoManager storage) {
     super();
     this.system = system;
+    this.configuration = configuration;
     this.gateway = gateway;
+    this.sms = sms;
     this.factory = factory;
     this.storage = storage;
-    this.useTo = configuration.getBoolean("use-to");
+    final Configuration runtime = configuration.subset("runtime-settings");
+    this.useTo = runtime.getBoolean("use-to");
   }
   
   private void authenticate(final Object message) throws IOException {
@@ -126,14 +134,32 @@ public final class CallManager extends UntypedActor {
       if(authorization == null || !permitted(authorization, method)) {
         authenticate(request);
       } else {
+    	final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self);
+        builder.setSmsService(sms);
+        builder.setAccount(client.getAccountSid());
+        builder.setVersion(client.getApiVersion());
         final Sid sid = client.getVoiceApplicationSid();
         if(sid != null) {
           final Application application = applications.getApplication(sid);
+          builder.setUrl(application.getVoiceUrl());
+          builder.setMethod(application.getVoiceMethod());
+          builder.setFallbackUrl(application.getVoiceFallbackUrl());
+          builder.setFallbackMethod(application.getVoiceFallbackMethod());
+        } else {
+          builder.setUrl(client.getVoiceUrl());
+          builder.setMethod(client.getVoiceMethod());
+          builder.setFallbackUrl(client.getVoiceFallbackUrl());
+          builder.setFallbackMethod(client.getVoiceFallbackMethod());
         }
+        final ActorRef interpreter = builder.build();
         final ActorRef call = call();
-        call.tell(request, self);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
+        call.tell(request, self);
+        interpreter.tell(new StartInterpreter(call), self);
         return;
       }
     }
@@ -154,14 +180,36 @@ public final class CallManager extends UntypedActor {
       final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
       final IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
       if(number != null) {
+    	final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self);
+        builder.setSmsService(sms);
+        builder.setAccount(number.getAccountSid());
+        builder.setVersion(number.getApiVersion());
         final Sid sid = number.getVoiceApplicationSid();
         if(sid != null) {
           final Application application = applications.getApplication(sid);
+          builder.setUrl(application.getVoiceUrl());
+          builder.setMethod(application.getVoiceMethod());
+          builder.setFallbackUrl(application.getVoiceFallbackUrl());
+          builder.setFallbackMethod(application.getVoiceFallbackMethod());
+          builder.setStatusCallback(application.getStatusCallback());
+          builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+        } else {
+          builder.setUrl(number.getSmsUrl());
+          builder.setMethod(number.getSmsMethod());
+          builder.setFallbackUrl(number.getSmsFallbackUrl());
+          builder.setFallbackMethod(number.getSmsFallbackMethod());
+          builder.setStatusCallback(number.getStatusCallback());
+          builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
         }
+        final ActorRef interpreter = builder.build();
         final ActorRef call = call();
-        call.tell(request, self);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
+        call.tell(request, self);
+        interpreter.tell(new StartInterpreter(call), self);
         return;
       }
     } catch(final NumberParseException ignored) { }

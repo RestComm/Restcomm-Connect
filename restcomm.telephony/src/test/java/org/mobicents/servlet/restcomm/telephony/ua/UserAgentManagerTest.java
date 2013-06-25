@@ -64,7 +64,7 @@ public final class UserAgentManagerTest {
   }
   
   @BeforeClass public static void beforeClass() throws Exception {
-    tool = new SipStackTool("UserAgentManagerTest");
+    tool = new SipStackTool("UserAgentTest");
   }
   
   @Before public void before() throws Exception {

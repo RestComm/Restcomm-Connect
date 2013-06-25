@@ -197,6 +197,8 @@ public final class MockMediaGateway extends UntypedActor {
     agent = new NotifiedEntity("restcomm", localIp.getHostAddress(), localPort);
     domain = new StringBuilder().append(remoteIp.getHostAddress()).append(":")
         .append(remotePort).toString();
+    connectionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
+    endpointIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
     requestIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
     sessionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
     transactionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
@@ -212,7 +214,7 @@ public final class MockMediaGateway extends UntypedActor {
     } else if(PowerOffMediaGateway.class.equals(klass)) {
       powerOff(message);
     } else if(GetMediaGatewayInfo.class.equals(klass)) {
-      getInfo(message);
+      sender.tell(new MediaGatewayResponse<MediaGatewayInfo>(getInfo(message)), sender);
     } else if(CreateConnection.class.equals(klass)) {
 	  sender.tell(new MediaGatewayResponse<ActorRef>(getConnection(message)), self);
 	} else if(CreateLink.class.equals(klass)) {
@@ -251,6 +253,7 @@ public final class MockMediaGateway extends UntypedActor {
     final ActorRef self = self();
     final jain.protocol.ip.mgcp.message.CreateConnection crcx =
         (jain.protocol.ip.mgcp.message.CreateConnection)message;
+    System.out.println(crcx.toString());
     // Create a response.
     StringBuilder buffer = new StringBuilder();
     buffer.append(connectionIdPool.get());
@@ -271,8 +274,8 @@ public final class MockMediaGateway extends UntypedActor {
     response.setSpecificEndpointIdentifier(endpointId);
     // Create a new secondary end point id if necessary.
     EndpointIdentifier secondaryEndpointId = crcx.getSecondEndpointIdentifier();
-    endpointName = secondaryEndpointId.getLocalEndpointName();
     if(secondaryEndpointId != null) {
+      endpointName = secondaryEndpointId.getLocalEndpointName();
       if(endpointName.endsWith("$")) {
         final String[] tokens = endpointName.split("/");
         final String type = tokens[1];
@@ -293,6 +296,7 @@ public final class MockMediaGateway extends UntypedActor {
   private void modifyConnection(final Object message, final ActorRef sender) {
     final ActorRef self = self();
     final ModifyConnection mdcx = (ModifyConnection)message;
+    System.out.println(mdcx.toString());
     final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
     final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
     final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
@@ -306,6 +310,7 @@ public final class MockMediaGateway extends UntypedActor {
   private void deleteConnection(final Object message, final ActorRef sender) {
     final ActorRef self = self();
     final DeleteConnection dlcx = (DeleteConnection)message;
+    System.out.println(dlcx.toString());
     final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
     final DeleteConnectionResponse response = new DeleteConnectionResponse(self, code);
     final int transaction = dlcx.getTransactionHandle();
@@ -317,6 +322,7 @@ public final class MockMediaGateway extends UntypedActor {
   private void notificationResponse(final Object message, final ActorRef sender) {
     final ActorRef self = self();
     final NotificationRequest rqnt = (NotificationRequest)message;
+    System.out.println(rqnt.toString());
     final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
     final JainMgcpResponseEvent response = new NotificationRequestResponse(self, code);
     final int transaction = rqnt.getTransactionHandle();
@@ -328,6 +334,7 @@ public final class MockMediaGateway extends UntypedActor {
   private void notify(final Object message, final ActorRef sender) {
     final ActorRef self = self();
     final NotificationRequest request = (NotificationRequest)message;
+    System.out.println(request.toString());
     final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
     final EventName[] events = { new EventName(AUPackage.AU, event)} ;
     final Notify notify = new Notify(this, request.getEndpointIdentifier(),

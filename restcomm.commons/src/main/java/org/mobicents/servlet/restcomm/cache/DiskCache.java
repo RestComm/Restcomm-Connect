@@ -43,7 +43,9 @@ public final class DiskCache extends UntypedActor {
       temp += "/";
     }
     final File path = new File(temp);
-    if(!path.exists() || !path.isDirectory()) {
+    if(!path.exists()) {
+      path.mkdirs();
+    } else if(!path.isDirectory()) {
       throw new IllegalArgumentException(location + " is not a valid cache location.");
     }
     this.location = temp;

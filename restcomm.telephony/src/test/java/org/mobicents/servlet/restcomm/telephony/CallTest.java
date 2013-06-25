@@ -16,6 +16,11 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import java.util.List;
+
+import javax.sip.message.Response;
+
+import static org.cafesip.sipunit.SipAssert.*;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -30,11 +35,10 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 
 import org.junit.After;
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
-
-import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,6 +48,14 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public final class CallTest {
   private static final String version = "1.6.0.GA";
+  private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
+      49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32,
+      73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13,
+      10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 116,
+      61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84,
+      80, 47, 65, 86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80,
+      67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
+  private static final String body = new String(bytes);
   
   @ArquillianResource
   private Deployer deployer;
@@ -75,8 +87,35 @@ public final class CallTest {
     deployer.undeploy("CallTest");
   }
 
-  @Ignore @Test public void test() {
+  @Test public void testInboundRedirectAndSms() {
     deployer.deploy("CallTest");
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334444@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertEquals(Response.TRYING, call.getLastReceivedResponse().getStatusCode());
+    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    // Wait for an sms.
+    final SipCall receiver = phone.createSipCall();
+    phone.setLoopback(true);
+    phone.listenRequestMessage();
+    assertTrue(receiver.waitForMessage(10 * 1000));
+    receiver.sendMessageResponse(202, "Accepted", -1);
+ 	final List<String> messages = receiver.getAllReceivedMessagesContent();
+ 	assertTrue(messages.size() > 0);
+ 	assertTrue(messages.get(0).equals("Hello World!"));
+ 	// HangUp the call.
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    assertTrue(call.disconnect());
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
   }
 	
   @Deployment(name="CallTest", managed=false, testable=false)
@@ -90,6 +129,18 @@ public final class CallTest {
     archive.addAsLibrary(dependency);
     dependency = ShrinkWrapMaven.resolver()
         .resolve("com.telestax.servlet:restcomm.dao:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.asr:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.fax:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.tts:jar:" + version)
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
     dependency = ShrinkWrapMaven.resolver()
@@ -113,6 +164,10 @@ public final class CallTest {
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
     dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.telestax.servlet:restcomm.telephony.api:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
         .resolve("com.telestax.servlet:restcomm.telephony:jar:" + version)
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
@@ -124,14 +179,18 @@ public final class CallTest {
         .resolve("jain:jain-mgcp-ri:jar:1.0")
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("joda-time:joda-time:jar:2.0")
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
     archive.delete("/WEB-INF/sip.xml");
     archive.delete("/WEB-INF/conf/restcomm.xml");
     archive.delete("/WEB-INF/data/hsql/restcomm.script");
     archive.addAsWebInfResource("sip.xml");
     archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
 	archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
-	// archive.addAsWebResource("entry.xml");
-	// archive.addAsWebResource("sms.xml");
+	archive.addAsWebResource("entry.xml");
+	archive.addAsWebResource("sms.xml");
     return archive;
   }
 }

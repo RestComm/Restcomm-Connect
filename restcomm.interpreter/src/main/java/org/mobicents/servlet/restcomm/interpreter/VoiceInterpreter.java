@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
@@ -50,8 +51,10 @@ import org.apache.http.message.BasicNameValuePair;
 
 import org.joda.time.DateTime;
 
+import org.mobicents.servlet.restcomm.asr.AsrInfo;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.asr.GetAsrInfo;
+import org.mobicents.servlet.restcomm.asr.ISpeechAsr;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -64,6 +67,7 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
+import org.mobicents.servlet.restcomm.fax.InterfaxService;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -96,7 +100,9 @@ import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.telephony.Play;
 import org.mobicents.servlet.restcomm.telephony.Reject;
+import org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer;
 import org.mobicents.servlet.restcomm.tts.GetSpeechSynthesizerInfo;
+import org.mobicents.servlet.restcomm.tts.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.SpeechSynthesizerResponse;
 
 import scala.concurrent.duration.Duration;
@@ -146,6 +152,8 @@ public final class VoiceInterpreter extends UntypedActor {
   private final ActorRef cache;
   // The downloader will fetch resources for us using HTTP.
   private final ActorRef downloader;
+  // The call manager.
+  private final ActorRef callManager;
   // The automatic speech recognition service.
   private final ActorRef asrService;
   // The fax service.
@@ -158,9 +166,9 @@ public final class VoiceInterpreter extends UntypedActor {
   // The text to speech synthesizer service.
   private final ActorRef synthesizer;
   // The languages supported by the automatic speech recognition service.
-  private Set<String> asrLanguages;
+  private AsrInfo asrInfo;
   // The languages supported by the text to speech synthesizer service. 
-  private Set<String> synthesizerLanguages;
+  private SpeechSynthesizerInfo synthesizerInfo;
   // The call being handled by this interpreter.
   private ActorRef call;
   // The information for this call.
@@ -192,8 +200,7 @@ public final class VoiceInterpreter extends UntypedActor {
   public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone,
 	  final String version, final URI url, final String method, final URI fallbackUrl,
 	  final String fallbackMethod, final URI statusCallback, final String statusCallbackMethod,
-	  final ActorRef asr, final ActorRef downloader, final ActorRef fax, final ActorRef sms,
-      final DaoManager storage, final ActorRef synthesizer) {
+	  final ActorRef callManager, final ActorRef sms, final DaoManager storage) {
     super();
     final ActorRef source = self();
     uninitialized = new State("uninitialized", null, null);
@@ -249,6 +256,8 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(downloadingFallbackRcml, ready));
     transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
     transitions.add(new Transition(downloadingFallbackRcml, finished));
+    transitions.add(new Transition(initializingCall, ready));
+    transitions.add(new Transition(ready, initializingCall));
     transitions.add(new Transition(ready, redirecting));
     transitions.add(new Transition(ready, creatingSmsSession));
     transitions.add(new Transition(ready, hangingUp));
@@ -281,25 +290,47 @@ public final class VoiceInterpreter extends UntypedActor {
     this.statusCallback = statusCallback;
     this.statusCallbackMethod = statusCallbackMethod;
     this.configuration = configuration;
-    this.asrService = asr;
-    this.faxService = fax;
+    this.callManager = callManager;
+    this.asrService = asr(configuration.subset("speech-recognizer"));
+    this.faxService = fax(configuration.subset("fax-service"));
     this.smsService = sms;
     this.smsSessions = new HashMap<Sid, ActorRef>();
     this.mediaGroups = new HashMap<String, ActorRef>();
     this.storage = storage;
-    this.synthesizer = synthesizer;
-    String path = configuration.getString("cache-path");
+    this.synthesizer = tts(configuration.subset("speech-synthesizer"));
+    final Configuration runtime = configuration.subset("runtime-settings");
+    String path = runtime.getString("cache-path");
     if(!path.endsWith("/")) {
       path = path + "/";
     }
     path = path + accountId.toString();
-    String uri = configuration.getString("cache-uri");
+    String uri = runtime.getString("cache-uri");
     if(!uri.endsWith("/")) {
       uri = uri + "/";
     }
     uri = uri + accountId.toString();
     this.cache = cache(path, uri);
     this.downloader = downloader();
+  }
+  
+  private ActorRef asr(final Configuration configuration) {
+    final UntypedActorContext context = getContext();
+    return context.actorOf(new Props(new UntypedActorFactory() {
+	  private static final long serialVersionUID = 1L;
+	  @Override public Actor create() throws Exception {
+		return new ISpeechAsr(configuration);
+	  }
+	}));
+  }
+  
+  private ActorRef fax(final Configuration configuration) {
+    final UntypedActorContext context = getContext();
+    return context.actorOf(new Props(new UntypedActorFactory() {
+	  private static final long serialVersionUID = 1L;
+	  @Override public Actor create() throws Exception {
+		return new InterfaxService(configuration);
+	  }
+	}));
   }
   
   private ActorRef cache(final String path, final String uri) {
@@ -332,7 +363,7 @@ public final class VoiceInterpreter extends UntypedActor {
     }
   }
   
-  protected void invalidVerb(final Tag verb) {
+  private void invalidVerb(final Tag verb) {
     final ActorRef self = self();
     // Get the next verb.
     final GetNextVerb next = GetNextVerb.instance();
@@ -467,6 +498,8 @@ public final class VoiceInterpreter extends UntypedActor {
         fsm.transition(message, redirecting);
       } else if(sms.equals(verb.name())) {
         fsm.transition(message, creatingSmsSession);
+      } else {
+        invalidVerb(verb);
       }
     } else if(MediaGroupResponse.class.equals(klass)) {
       final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
@@ -586,6 +619,16 @@ public final class VoiceInterpreter extends UntypedActor {
     }
   }
   
+  private ActorRef tts(final Configuration configuration) {
+    final UntypedActorContext context = getContext();
+    return context.actorOf(new Props(new UntypedActorFactory() {
+	  private static final long serialVersionUID = 1L;
+	  @Override public Actor create() throws Exception {
+		return new AcapelaSpeechSynthesizer(configuration);
+	  }
+	}));
+  }
+  
   private abstract class AbstractAction implements Action {
     protected final ActorRef source;
     
@@ -612,10 +655,10 @@ public final class VoiceInterpreter extends UntypedActor {
       super(source);
     }
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "unchecked" })
 	@Override public void execute(final Object message) throws Exception {
-	  final AsrResponse<Set> response = (AsrResponse<Set>)message;
-	  asrLanguages = response.get();
+	  final AsrResponse<AsrInfo> response = (AsrResponse<AsrInfo>)message;
+	  asrInfo = response.get();
 	  synthesizer.tell(new GetSpeechSynthesizerInfo(), source);
 	}
   }
@@ -625,10 +668,12 @@ public final class VoiceInterpreter extends UntypedActor {
       super(source);
     }
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	@Override public void execute(final Object message) throws Exception {
-      final SpeechSynthesizerResponse<Set> response = (SpeechSynthesizerResponse<Set>)message;
-      synthesizerLanguages = response.get();
+      final SpeechSynthesizerResponse<SpeechSynthesizerInfo> response =
+          (SpeechSynthesizerResponse<SpeechSynthesizerInfo>)message;
+      synthesizerInfo = response.get();
+      call.tell(new Observe(source), source);
       call.tell(new GetCallInfo(), source);
 	}
   }
@@ -640,8 +685,8 @@ public final class VoiceInterpreter extends UntypedActor {
 
 	@SuppressWarnings("unchecked")
 	@Override public void execute(final Object message) throws Exception {
-	  final Class<?> klass = fsm.getClass();
-      if(CallResponse.class.equals(klass)) {
+	  final Class<?> klass = message.getClass();
+	  if(CallResponse.class.equals(klass)) {
         final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
         callInfo = response.get();
         callState = callInfo.state();
@@ -734,16 +779,18 @@ public final class VoiceInterpreter extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
-	  response = (HttpResponseDescriptor)message;
 	  final UntypedActorContext context = getContext();
 	  final State state = fsm.state();
 	  if(initializingCall.equals(state)) {
+	    final CallStateChanged event = (CallStateChanged)message;
+	    callState = event.state();
 	    // Handle the pending verb.
 	    source.tell(verb, source);
 	    return;
 	  } else if(downloadingRcml.equals(state) ||
 	      downloadingFallbackRcml.equals(state) ||
 	      redirecting.equals(state)) {
+	    response = ((DownloaderResponse)message).get();
 		if(parser != null) {
 		  context.stop(parser);
 		  parser = null;

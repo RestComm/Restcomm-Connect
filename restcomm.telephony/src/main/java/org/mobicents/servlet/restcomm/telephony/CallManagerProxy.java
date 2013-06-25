@@ -38,6 +38,7 @@ import org.apache.commons.configuration.Configuration;
 
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
+import org.mobicents.servlet.restcomm.sms.SmsSession;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -74,18 +75,18 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
     final ActorRef gateway = (ActorRef)context.getAttribute(MediaGateway.class.getName());
     system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
     // Create the call manager.
-    final Configuration configuration = xml.subset("runtime-settings");
     final SipFactory factory = (SipFactory)context.getAttribute(SIP_FACTORY);
-    manager = manager(configuration, gateway, factory, storage);
+    final ActorRef sms = (ActorRef)context.getAttribute(SmsSession.class.getName());
+    manager = manager(xml, gateway, sms, factory, storage);
     context.setAttribute(CallManager.class.getName(), manager);
   }
   
   private ActorRef manager(final Configuration configuration, final ActorRef gateway,
-      final SipFactory factory, final DaoManager storage) {
+      final ActorRef sms, final SipFactory factory, final DaoManager storage) {
     return system.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
-          return new CallManager(configuration, system, gateway, factory, storage);
+          return new CallManager(configuration, system, gateway, sms, factory, storage);
 		}
     }));
   }
