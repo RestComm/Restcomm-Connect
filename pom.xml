@@ -4,7 +4,7 @@
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>1.6.0.GA</version>
+	<version>6.1.0.GA-TelScale-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -54,7 +54,6 @@
 	</licenses>
 
 	<modules>
-	<!--	<module>restcomm.docs</module> -->
 		<module>restcomm.commons</module>
 		<module>restcomm.dao</module>
 		<module>restcomm.asr</module>
