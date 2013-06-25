@@ -68,7 +68,6 @@
 		<module>restcomm.telephony</module>
 		<module>restcomm.interpreter</module>
 		<module>restcomm.application</module>
-		<module>restcomm.wrappers.java</module>
 	</modules>
 
 	<properties>
