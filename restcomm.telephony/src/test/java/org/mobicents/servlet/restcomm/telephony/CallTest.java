@@ -93,9 +93,12 @@ public final class CallTest {
     call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334444@127.0.0.1:5080", null, body, "application", "sdp", null, null);
     assertLastOperationSuccess(call);
     assertTrue(call.waitOutgoingCallResponse(1000));
-    assertEquals(Response.TRYING, call.getLastReceivedResponse().getStatusCode());
-    assertTrue(call.waitOutgoingCallResponse(1000));
-    assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
     assertTrue(call.waitOutgoingCallResponse(1000));
     assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
     call.sendInviteOkAck();
@@ -110,14 +113,30 @@ public final class CallTest {
  	assertTrue(messages.get(0).equals("Hello World!"));
  	// HangUp the call.
     assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
-    assertTrue(call.disconnect());
+    assertTrue(call.waitForDisconnect(5000));
     try {
       Thread.sleep(10 * 1000);
     } catch(final InterruptedException exception) {
       exception.printStackTrace();
     }
   }
-	
+  
+  @Test public void testPauseRejectBusy() {
+    deployer.deploy("CallTest");
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334445@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertEquals(Response.BUSY_HERE, call.getLastReceivedResponse().getStatusCode());
+  }
+
   @Deployment(name="CallTest", managed=false, testable=false)
   public static WebArchive createWebArchive() {
     final WebArchive archive = ShrinkWrapMaven.resolver()
@@ -189,8 +208,9 @@ public final class CallTest {
     archive.addAsWebInfResource("sip.xml");
     archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
 	archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
-	archive.addAsWebResource("entry.xml");
-	archive.addAsWebResource("sms.xml");
+	archive.addAsWebResource("redirect-sms-entry.xml");
+	archive.addAsWebResource("redirect-sms-sms.xml");
+	archive.addAsWebResource("pause-reject-busy-entry.xml");
     return archive;
   }
 }

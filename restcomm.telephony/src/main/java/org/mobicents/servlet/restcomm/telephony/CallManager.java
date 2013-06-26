@@ -197,10 +197,10 @@ public final class CallManager extends UntypedActor {
           builder.setStatusCallback(application.getStatusCallback());
           builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
         } else {
-          builder.setUrl(number.getSmsUrl());
-          builder.setMethod(number.getSmsMethod());
-          builder.setFallbackUrl(number.getSmsFallbackUrl());
-          builder.setFallbackMethod(number.getSmsFallbackMethod());
+          builder.setUrl(number.getVoiceUrl());
+          builder.setMethod(number.getVoiceMethod());
+          builder.setFallbackUrl(number.getVoiceFallbackUrl());
+          builder.setFallbackMethod(number.getVoiceFallbackMethod());
           builder.setStatusCallback(number.getStatusCallback());
           builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
         }

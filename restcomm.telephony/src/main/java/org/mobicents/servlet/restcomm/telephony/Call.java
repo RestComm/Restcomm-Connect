@@ -703,8 +703,8 @@ public final class Call extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  if(remoteConn != null) {
 	    gateway.tell(new DestroyConnection(remoteConn), source);
+	    remoteConn = null;
 	  }
-	  remoteConn = null;
       // Explicitly invalidate the application session.
 	  invite.getSession().invalidate();
       invite.getApplicationSession().invalidate();
@@ -747,8 +747,10 @@ public final class Call extends UntypedActor {
 	    final SipServletResponse busy = invite.createResponse(SipServletResponse.SC_BUSY_HERE);
 	    busy.send();
 	  }
-	  gateway.tell(new DestroyConnection(remoteConn), source);
-	  remoteConn = null;
+	  if(remoteConn != null) {
+	    gateway.tell(new DestroyConnection(remoteConn), source);
+	    remoteConn = null;
+	  }
 	  // Explicitly invalidate the application session.
 	  invite.getSession().invalidate();
 	  invite.getApplicationSession().invalidate();
@@ -767,8 +769,10 @@ public final class Call extends UntypedActor {
     }
     
     @Override public void execute(final Object message) throws Exception {
-      gateway.tell(new DestroyConnection(remoteConn), source);
-      remoteConn = null;
+      if(remoteConn != null) {
+        gateway.tell(new DestroyConnection(remoteConn), source);
+        remoteConn = null;
+      }
       // Stop the timeout timer.
   	  final UntypedActorContext context = getContext();
   	  context.setReceiveTimeout(Duration.Undefined());
@@ -790,8 +794,10 @@ public final class Call extends UntypedActor {
     }
     
     @Override public void execute(final Object message) throws Exception {
-      gateway.tell(new DestroyConnection(remoteConn), source);
-      remoteConn = null;
+      if(remoteConn != null) {
+        gateway.tell(new DestroyConnection(remoteConn), source);
+        remoteConn = null;
+      }
       // Explicitly invalidate the application session.
   	  invite.getSession().invalidate();
   	  invite.getApplicationSession().invalidate();
@@ -944,6 +950,16 @@ public final class Call extends UntypedActor {
     }
 
 	@Override public void execute(Object message) throws Exception {
+	  final Class<?> klass = message.getClass();
+	  if(Hangup.class.equals(klass)) {
+	    final SipSession session = invite.getSession();
+        final SipServletRequest bye = session.createRequest("BYE");
+	    bye.send();
+	  } else if(message instanceof SipServletRequest) {
+	    final SipServletRequest bye = (SipServletRequest)message;
+	    final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
+	    okay.send();
+	  }
 	  remoteConn.tell(new CloseConnection(), source);
 	}
   }

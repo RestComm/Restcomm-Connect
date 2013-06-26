@@ -36,24 +36,33 @@ public final class DiskCache extends UntypedActor {
   private final String location;
   private final String uri;
   
-  public DiskCache(final String location, final String uri) {
+  public DiskCache(final String location, final String uri, final boolean create) {
     super();
+    // Format the cache path.
     String temp = location;
     if(!temp.endsWith("/")) {
       temp += "/";
     }
+    // Create the cache path if specified.
     final File path = new File(temp);
-    if(!path.exists()) {
+    if(create) {
       path.mkdirs();
-    } else if(!path.isDirectory()) {
+    }
+    // Make sure the cache path exists and is a directory.
+    if(!path.exists() || !path.isDirectory()) {
       throw new IllegalArgumentException(location + " is not a valid cache location.");
     }
+    // Format the cache URI.
     this.location = temp;
     temp = uri;
     if(!temp.endsWith("/")) {
       temp += "/";
     }
     this.uri = temp;
+  }
+  
+  public DiskCache(final String location, final String uri) {
+    this(location, uri, false);
   }
   
   private URI cache(final Object message) throws MalformedURLException, IOException {

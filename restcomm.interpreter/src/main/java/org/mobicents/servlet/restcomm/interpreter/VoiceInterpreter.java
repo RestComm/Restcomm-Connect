@@ -77,6 +77,7 @@ import org.mobicents.servlet.restcomm.http.client.DownloaderResponse;
 import org.mobicents.servlet.restcomm.http.client.HttpRequestDescriptor;
 import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
+import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
@@ -94,12 +95,15 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
+import org.mobicents.servlet.restcomm.telephony.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
+import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.telephony.Play;
 import org.mobicents.servlet.restcomm.telephony.Reject;
+import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
 import org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer;
 import org.mobicents.servlet.restcomm.tts.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.SpeechSynthesizerInfo;
@@ -123,6 +127,7 @@ public final class VoiceInterpreter extends UntypedActor {
   private final State downloadingRcml;
   private final State downloadingFallbackRcml;
   private final State initializingCall;
+  private final State initializingCallMediaGroup;
   private final State ready;
   private final State rejecting;
   private final State playingRejectionPrompt;
@@ -171,14 +176,13 @@ public final class VoiceInterpreter extends UntypedActor {
   private SpeechSynthesizerInfo synthesizerInfo;
   // The call being handled by this interpreter.
   private ActorRef call;
+  private ActorRef callMediaGroup;
   // The information for this call.
   private CallInfo callInfo;
   // The call state.
   private CallStateChanged.State callState;
   // A call detail record.
   private CallDetailRecord callRecord;
-  // The media groups for this call.
-  private Map<String, ActorRef> mediaGroups;
   // Information to reach the application that will be executed
   // by this interpreter.
   private final Sid accountId;
@@ -215,7 +219,9 @@ public final class VoiceInterpreter extends UntypedActor {
     downloadingFallbackRcml = new State("downloading fallback rcml",
         new DownloadingFallbackRcml(source), null);
     initializingCall = new State("initializing call",
-            new InitializingCall(source), null);
+        new InitializingCall(source), null);
+    initializingCallMediaGroup = new State("initializing call media group",
+        new InitializingCallMediaGroup(source), null);
     ready = new State("ready", new Ready(source), null);
     rejecting = new State("rejecting", new Rejecting(source), null);
     playingRejectionPrompt = new State("playing rejection prompt",
@@ -258,11 +264,18 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(downloadingFallbackRcml, finished));
     transitions.add(new Transition(initializingCall, ready));
     transitions.add(new Transition(ready, initializingCall));
+    transitions.add(new Transition(ready, pausing));
+    transitions.add(new Transition(ready, rejecting));
     transitions.add(new Transition(ready, redirecting));
     transitions.add(new Transition(ready, creatingSmsSession));
     transitions.add(new Transition(ready, hangingUp));
     transitions.add(new Transition(ready, finished));
+    transitions.add(new Transition(pausing, ready));
+    transitions.add(new Transition(rejecting, playingRejectionPrompt));
+    transitions.add(new Transition(rejecting, finished));
+    transitions.add(new Transition(playingRejectionPrompt, hangingUp));
     transitions.add(new Transition(redirecting, ready));
+    transitions.add(new Transition(redirecting, pausing));
     transitions.add(new Transition(redirecting, creatingSmsSession));
     transitions.add(new Transition(redirecting, hangingUp));
     transitions.add(new Transition(redirecting, finished));
@@ -270,6 +283,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(creatingSmsSession, hangingUp));
     transitions.add(new Transition(creatingSmsSession, finished));
     transitions.add(new Transition(sendingSms, ready));
+    transitions.add(new Transition(sendingSms, pausing));
     transitions.add(new Transition(sendingSms, redirecting));
     transitions.add(new Transition(sendingSms, hangingUp));
     transitions.add(new Transition(sendingSms, finished));
@@ -295,7 +309,6 @@ public final class VoiceInterpreter extends UntypedActor {
     this.faxService = fax(configuration.subset("fax-service"));
     this.smsService = sms;
     this.smsSessions = new HashMap<Sid, ActorRef>();
-    this.mediaGroups = new HashMap<String, ActorRef>();
     this.storage = storage;
     this.synthesizer = tts(configuration.subset("speech-synthesizer"));
     final Configuration runtime = configuration.subset("runtime-settings");
@@ -338,7 +351,7 @@ public final class VoiceInterpreter extends UntypedActor {
     return context.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
-          return new DiskCache(path, uri);
+          return new DiskCache(path, uri, true);
 		}
     }));
   }
@@ -440,7 +453,7 @@ public final class VoiceInterpreter extends UntypedActor {
           fsm.transition(message, initializingCall);
         }
       } else if(rejecting.equals(state)) {
-        fsm.transition(message, playingRejectionPrompt);
+        fsm.transition(message, initializingCallMediaGroup);
       }
     } else if(CallStateChanged.class.equals(klass)) {
       final CallStateChanged event = (CallStateChanged)message;
@@ -453,12 +466,14 @@ public final class VoiceInterpreter extends UntypedActor {
         } else {
           fsm.transition(message, downloadingRcml);
         }
-      } else if(CallStateChanged.State.NO_ANSWER == event.state()) {
-        
-      } else if(CallStateChanged.State.COMPLETED == event.state()) {
-        
-      } else if(CallStateChanged.State.FAILED == event.state()) {
-        
+      } else if(CallStateChanged.State.NO_ANSWER == event.state() ||
+          CallStateChanged.State.COMPLETED == event.state() ||
+          CallStateChanged.State.FAILED == event.state()) {
+    	if(smsSessions.size() > 0) {
+          fsm.transition(message, waitingForOutstandingResponses);
+        } else {
+          fsm.transition(message, finished);
+        }
       }
     } else if(DownloaderResponse.class.equals(klass)) {
 	  final DownloaderResponse response = (DownloaderResponse)message;
@@ -487,11 +502,17 @@ public final class VoiceInterpreter extends UntypedActor {
     } else if(Tag.class.equals(klass)) {
       final Tag verb = (Tag)message;
       if(CallStateChanged.State.RINGING == callState) {
-        fsm.transition(message, initializingCall);
+        if(!pause.equals(verb.name()) && !reject.equals(verb.name())) {
+          fsm.transition(message, initializingCall);
+        } else if(reject.equals(verb.name())) {
+          fsm.transition(message, rejecting);
+        } else if(pause.equals(verb.name())) {
+          fsm.transition(message, pausing);
+        } else {
+          invalidVerb(verb);
+        }
       } else if(pause.equals(verb.name())) {
         fsm.transition(message, pausing);
-      } else if(rejecting.equals(verb.name())) {
-        fsm.transition(message, rejecting);
       } else if(hangup.equals(verb.name())) {
         fsm.transition(message, hangingUp);
       } else if(redirect.equals(verb.name())) {
@@ -501,14 +522,25 @@ public final class VoiceInterpreter extends UntypedActor {
       } else {
         invalidVerb(verb);
       }
+    } else if(End.class.equals(klass)) {
+      fsm.transition(message, hangingUp);
+    } else if(MediaGroupStateChanged.class.equals(klass)) {
+      final MediaGroupStateChanged event = (MediaGroupStateChanged)message;
+      if(MediaGroupStateChanged.State.ACTIVE == event.state()) {
+        if(reject.equals(verb.name())) {
+          fsm.transition(message, playingRejectionPrompt);
+        }
+      } else if(MediaGroupStateChanged.State.INACTIVE == event.state()) {
+        
+      }
     } else if(MediaGroupResponse.class.equals(klass)) {
       final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
       if(response.succeeded()) {
         if(playingRejectionPrompt.equals(state)) {
-          fsm.transition(message, finished);
+          fsm.transition(message, hangingUp);
         }
       } else {
-        
+        fsm.transition(message, hangingUp);
       }
     } else if(SmsServiceResponse.class.equals(klass)) {
       final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>)message;
@@ -541,10 +573,10 @@ public final class VoiceInterpreter extends UntypedActor {
   protected List<NameValuePair> parameters() {
   	final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
     final String callSid = callInfo.sid().toString();
-	  parameters.add(new BasicNameValuePair("CallSid", callSid));
-	  final String accountSid = accountId.toString();
-	  parameters.add(new BasicNameValuePair("AccountSid", accountSid));
-	  final String from = format(callInfo.from());
+	parameters.add(new BasicNameValuePair("CallSid", callSid));
+	final String accountSid = accountId.toString();
+	parameters.add(new BasicNameValuePair("AccountSid", accountSid));
+	final String from = format(callInfo.from());
     parameters.add(new BasicNameValuePair("From", from));
     final String to = format(callInfo.to());
     parameters.add(new BasicNameValuePair("To", to));
@@ -698,6 +730,19 @@ public final class VoiceInterpreter extends UntypedActor {
 	}
   }
   
+  private final class InitializingCallMediaGroup extends AbstractAction {
+    public InitializingCallMediaGroup(final ActorRef source) {
+      super(source);
+    }
+
+    @SuppressWarnings("unchecked")
+	@Override public void execute(final Object message) throws Exception {
+	  final MediaGroupResponse<ActorRef> response = (MediaGroupResponse<ActorRef>)message;
+	  callMediaGroup = response.get();
+	  callMediaGroup.tell(new StartMediaGroup(), source);
+	}
+  }
+  
   private final class DownloadingRcml extends AbstractAction {
     public DownloadingRcml(final ActorRef source) {
       super(source);
@@ -809,6 +854,8 @@ public final class VoiceInterpreter extends UntypedActor {
 	      source.tell(stop, source);
 	      return;
 	    }
+	  } else if(pausing.equals(state)) {
+	    context.setReceiveTimeout(Duration.Undefined());
 	  }
 	  // Ask the parser for the next action to take.
 	  final GetNextVerb next = GetNextVerb.instance();
@@ -847,11 +894,7 @@ public final class VoiceInterpreter extends UntypedActor {
       super(source);
     }
 
-	@SuppressWarnings("unchecked")
 	@Override public void execute(final Object message) throws Exception {
-	  final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
-	  final ActorRef media = response.get();
-	  mediaGroups.put("rejection media group", media);
 	  String url = configuration.getString("prompts-uri");
 	  if(!url.endsWith("/")) {
 	    url += "/";
@@ -868,7 +911,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	    return;
 	  }
 	  final Play play = new Play(uri, 1);
-	  media.tell(play, source);
+	  callMediaGroup.tell(play, source);
 	}
   }
   
@@ -882,6 +925,13 @@ public final class VoiceInterpreter extends UntypedActor {
 	  if(Tag.class.equals(klass)) {
 	    verb = (Tag)message;
 	  }
+	  // Clean up the call media group if necessary.
+	  if(callMediaGroup != null) {
+	    final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
+	    call.tell(destroy, source);
+	    callMediaGroup = null;
+	  }
+	  // Hang up the call.
 	  call.tell(new Hangup(), source);
 	}
   }
@@ -892,7 +942,6 @@ public final class VoiceInterpreter extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
-      final UntypedActorContext context = getContext();
       verb = (Tag)message;
       int length = 1;
       Attribute attribute = verb.attribute("length");
@@ -907,6 +956,7 @@ public final class VoiceInterpreter extends UntypedActor {
           return;
         }
       }
+      final UntypedActorContext context = getContext();
       context.setReceiveTimeout(Duration.create(length, TimeUnit.SECONDS));
 	}
   }
@@ -1169,6 +1219,7 @@ public final class VoiceInterpreter extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
+      // Stop the interpreter.
       final UntypedActorContext context = getContext();
       context.stop(source);
 	}
