@@ -12,7 +12,7 @@ public class Version {
 
 	private Version() {
 		Properties configProp = new Properties();
-		InputStream in = this.getClass().getResourceAsStream("org.mobicents.servlet.restcomm.telephony");
+		InputStream in = this.getClass().getResourceAsStream("/org/mobicents/servlet/restcomm/telephony/version.properties");
         try {
             configProp.load(in);
         } catch (IOException e) {
