@@ -202,6 +202,10 @@ public final class CallTest {
         .resolve("joda-time:joda-time:jar:2.0")
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.iSpeech:iSpeech:jar:1.0.1")
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
     archive.delete("/WEB-INF/sip.xml");
     archive.delete("/WEB-INF/conf/restcomm.xml");
     archive.delete("/WEB-INF/data/hsql/restcomm.script");
