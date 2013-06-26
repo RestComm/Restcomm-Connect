@@ -4,7 +4,7 @@
     <property name="release.dir" location="${ant.file.telscale.restcomm.release}/../target" />
 	<property name="base.dir" location="${ant.file.telscale.restcomm.release}/.." />
 	<property name="docs.dir" location="${release.dir}/docs" />
-	<property name="restcomm.docs.dir" location="${release.dir}/docs" />
+	<property name="restcomm.docs.dir" location="${release.dir}/docs/restcomm" />
 	<property name="checkout.dir" value="${base.dir}/checkout" />	
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
 	<property name="telscale.restcomm.release.version" value="6.1.0.GA"/>
@@ -31,7 +31,8 @@
 	<property name="telscale-diameter.download.url" value="ftp://ftp.box.com/TelScale%20jDiameter/${telscale-diameter.version}/${telscale-diameter.download.distro.file}" />
 	<property name="telscale-diameter.distro.zip.path" value="${checkout.dir}/${telscale-diameter.download.distro.file}" />
 
-	<property name="release.build.goals" value="clean install"/>
+	<property name="release.build.goals" value="clean install -DskipTests=true"/>
+	<property name="release.build.test.goals" value="clean install"/>
 	<property name="release.ts.deploy.goals" value="clean deploy"/>
 	
 	
@@ -61,6 +62,13 @@
     	</ant>
     </target>
 	
+    <target name="release-test">
+    	<ant antfile="${ant.file.telscale.restcomm.release}" target="release">
+    		<property name="release.build.goals" value="${release.build.test.goals}" />
+    	</ant>
+    </target>
+	
+	
 	<!--GET Telscale-Sip=Servlets & Telscale-Media-Server & Telscale Diameter - downloads-->
 	
 	<target name="get-deps" depends="get-telscale-sipservlets,get-telscale-media,get-telscale-diameter" />
@@ -81,7 +89,7 @@
 	<target name="extract-telscale-sipservlets" depends="get-telscale-sipservlets">
 		<delete dir="${checkout.telscale-sipservlets.dir}" failonerror="false" />
 		<unzip src="${telscale-sipservlets.distro.zip.path}" dest="${release.dir}">
-			<mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets.version}-jboss-5.1.0.GA/*" to="*"/>
+			<mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets.version}-jboss-as-5.1.0.GA/*" to="*"/>
 		</unzip>
 	</target>
 	
@@ -99,7 +107,7 @@
 
 	<target name="extract-telscale-media" depends="get-telscale-media">
 		<delete dir="${checkout.telscale-media.dir}" failonerror="false" />
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/media"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/>
 	</target>
 	
 	<!--diameter-->
@@ -116,7 +124,7 @@
 
 	<target name="extract-telscale-diameter" depends="get-telscale-diameter">
 		<delete dir="${checkout.telscale-diameter.dir}" failonerror="false" />
-		<unzip src="${telscale-diameter.distro.zip.path}" dest="${release.dir}/diameter"/>
+		<unzip src="${telscale-diameter.distro.zip.path}" dest="${release.dir}/telscale-diameter"/>
 	</target>
 	
 	
@@ -134,10 +142,10 @@
 	<target name="build-telscale-restcomm">
         <echo>Building Telscale Restcomm</echo>
         <exec failonerror="true" executable="${mvn.executable}" dir="${checkout.telscale-restcomm.dir}">
-                <arg line="${release.build.goals} -Dmaven.test.skip=true" />
+                <arg line="${release.build.goals}" />
         </exec>
         <exec failonerror="true" executable="${mvn.executable}" dir="${checkout.telscale-restcomm.dir}/restcomm.docs">
-                <arg line="${release.build.goals} -Ptelscale -Dmaven.test.skip=true" />
+                <arg line="${release.build.goals} -Ptelscale" />
         </exec>
 	</target>
 
