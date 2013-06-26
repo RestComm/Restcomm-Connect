@@ -47,7 +47,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public final class CallTest {
-  private static final String version = "1.6.0.GA";
+  private static final String version = Version.getInstance().getRestcomm_version();
   private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
       49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32,
       73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13,

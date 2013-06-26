@@ -44,6 +44,7 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.entities.Gateway;
+import org.mobicents.servlet.restcomm.telephony.Version;
 
 import scala.concurrent.duration.Duration;
 
@@ -53,7 +54,8 @@ import scala.concurrent.duration.Duration;
 public final class ProxyManager extends UntypedActor {
   private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
   
-  private static final String ua = "RestComm/1.6.0.GA";
+  private static final String version = Version.getInstance().getRestcomm_version();
+  private static final String ua = "RestComm/" + version;
   private static final int ttl = 1800;
 
   private final ServletConfig configuration;
