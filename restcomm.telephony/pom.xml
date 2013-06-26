@@ -9,6 +9,10 @@
   <artifactId>restcomm.telephony</artifactId>
   <name>restcomm.telephony</name>
   
+  <properties>
+  		<runtime.restcomm.version>${project.version}</runtime.restcomm.version>
+  </properties>
+  
   <dependencies>
   		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -206,4 +210,56 @@
 		</dependency>
 		
 	</dependencies>
+	
+   <build>
+		<plugins>
+	      <plugin>
+	        <artifactId>maven-resources-plugin</artifactId>
+	        <version>2.5</version>
+	        <executions>
+	          <execution>
+	            <id>copy-resources</id>
+	            <!-- here the phase you need -->
+	            <phase>process-resources</phase>
+	            <goals>
+	              <goal>copy-resources</goal>
+	            </goals>
+	            <configuration>
+	              <outputDirectory>${basedir}/target/classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
+	              <resources>          
+				    <resource>
+				        <directory>src/main/java/org/mobicents/servlet/restcomm/telephony</directory>
+						<includes>
+		                	<include>version.properties</include>
+		            	</includes>
+				        <filtering>true</filtering>
+				    </resource>
+	              </resources>              
+	            </configuration>            
+	          </execution>
+	          <execution>
+	            <id>copy-test-resources</id>
+	            <!-- here the phase you need -->
+	            <phase>process-test-resources</phase>
+	            <goals>
+	              <goal>copy-resources</goal>
+	            </goals>
+	            <configuration>
+	              <outputDirectory>${basedir}/target/test-classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
+	              <resources>          
+				    <resource>
+				        <directory>src/main/java/org/mobicents/servlet/restcomm/telephony</directory>
+						<includes>
+		                	<include>version.properties</include>
+		            	</includes>
+				        <filtering>true</filtering>
+				    </resource>
+	              </resources>              
+	            </configuration>            
+	          </execution>
+	        </executions>
+	      </plugin>
+	    </plugins>
+	</build>
+	
 </project>

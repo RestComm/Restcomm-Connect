@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public final class SmsSessionTest {
-  private static final String version = "1.6.0.GA";
+  private static final String version = Version.getInstance().getRestcomm_version();
   
   @ArquillianResource
   private Deployer deployer;
