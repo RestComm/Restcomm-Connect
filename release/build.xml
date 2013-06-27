@@ -68,6 +68,13 @@
     	</ant>
     </target>
 	
+    <target name="release-test-no-clean">
+    	<ant antfile="${ant.file.telscale.restcomm.release}" target="release-no-clean">
+    		<property name="release.build.goals" value="${release.build.test.goals}" />
+    	</ant>
+    </target>
+
+	
 	
 	<!--GET Telscale-Sip=Servlets & Telscale-Media-Server & Telscale Diameter - downloads-->
 	
