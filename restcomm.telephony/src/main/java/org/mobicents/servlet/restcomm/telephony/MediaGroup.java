@@ -192,7 +192,6 @@ public final class MediaGroup extends UntypedActor {
         if(initializingLink.equals(state)) {
           fsm.transition(message, openingLink);
         } else if(openingLink.equals(state) || deactivating.equals(state)) {
-          System.out.println("************************************* 9 ******************************");
           fsm.transition(message, inactive);
         }
       } else if(LinkStateChanged.State.OPEN == response.state()) {
