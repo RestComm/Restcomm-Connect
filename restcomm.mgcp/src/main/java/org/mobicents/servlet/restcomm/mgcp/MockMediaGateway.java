@@ -288,6 +288,7 @@ public final class MockMediaGateway extends UntypedActor {
         buffer.append(endpointIdPool.get());
         secondaryEndpointId = new EndpointIdentifier(buffer.toString(), domain);
       }
+      response.setSecondEndpointIdentifier(secondaryEndpointId);
     }
     final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
     response.setLocalConnectionDescriptor(descriptor);

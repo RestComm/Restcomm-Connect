@@ -192,6 +192,7 @@ public final class MediaGroup extends UntypedActor {
         if(initializingLink.equals(state)) {
           fsm.transition(message, openingLink);
         } else if(openingLink.equals(state) || deactivating.equals(state)) {
+          System.out.println("************************************* 9 ******************************");
           fsm.transition(message, inactive);
         }
       } else if(LinkStateChanged.State.OPEN == response.state()) {
@@ -281,6 +282,7 @@ public final class MediaGroup extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>)message;
 	  ivr = response.get();
+	  ivr.tell(new Observe(source), source);
 	  gateway.tell(new CreateLink(session), source);
 	}
   }
@@ -305,7 +307,7 @@ public final class MediaGroup extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
-	  gateway.tell(new OpenLink(ConnectionMode.SendRecv), source);
+	  link.tell(new OpenLink(ConnectionMode.SendRecv), source);
 	}
   }
   

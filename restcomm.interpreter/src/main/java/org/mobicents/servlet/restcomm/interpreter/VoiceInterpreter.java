@@ -462,8 +462,7 @@ public final class VoiceInterpreter extends UntypedActor {
           fsm.transition(message, initializingCall);
         }
       } else if(acquiringCallMediaGroup.equals(state)) {
-    	System.out.println("************************************* 1 ******************************");
-        fsm.transition(message, initializingCallMediaGroup);
+    	fsm.transition(message, initializingCallMediaGroup);
       }
     } else if(CallStateChanged.class.equals(klass)) {
       final CallStateChanged event = (CallStateChanged)message;
@@ -473,7 +472,6 @@ public final class VoiceInterpreter extends UntypedActor {
         final String direction = callInfo.direction();
         if("inbound".equals(direction)) {
           if(rejecting.equals(state)) {
-            System.out.println("************************************* 0 ******************************");
             fsm.transition(message, acquiringCallMediaGroup);
           } else {
             fsm.transition(message, ready);
@@ -542,9 +540,7 @@ public final class VoiceInterpreter extends UntypedActor {
     } else if(MediaGroupStateChanged.class.equals(klass)) {
       final MediaGroupStateChanged event = (MediaGroupStateChanged)message;
       if(MediaGroupStateChanged.State.ACTIVE == event.state()) {
-    	System.out.println("************************************* 2 ******************************");
-        if(reject.equals(verb.name())) {
-          System.out.println("************************************* 3 ******************************");
+    	if(reject.equals(verb.name())) {
           fsm.transition(message, playingRejectionPrompt);
         }
       } else if(MediaGroupStateChanged.State.INACTIVE == event.state()) {
@@ -773,6 +769,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
 	  callMediaGroup = response.get();
+	  callMediaGroup.tell(new Observe(source), source);
 	  callMediaGroup.tell(new StartMediaGroup(), source);
 	}
   }
@@ -929,7 +926,7 @@ public final class VoiceInterpreter extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
-	  String url = configuration.getString("prompts-uri");
+	  String url = configuration.subset("runtime-settings").getString("prompts-uri");
 	  if(!url.endsWith("/")) {
 	    url += "/";
 	  }
