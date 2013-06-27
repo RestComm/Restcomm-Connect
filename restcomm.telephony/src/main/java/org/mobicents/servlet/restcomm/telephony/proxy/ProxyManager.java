@@ -54,7 +54,7 @@ import scala.concurrent.duration.Duration;
 public final class ProxyManager extends UntypedActor {
   private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
   
-  private static final String version = Version.getInstance().getRestcomm_version();
+  private static final String version = Version.getInstance().getRestCommVersion();
   private static final String ua = "RestComm/" + version;
   private static final int ttl = 1800;
 

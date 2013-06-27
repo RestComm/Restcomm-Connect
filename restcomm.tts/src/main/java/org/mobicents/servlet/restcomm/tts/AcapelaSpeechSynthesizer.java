@@ -207,7 +207,7 @@ public final class AcapelaSpeechSynthesizer extends UntypedActor {
     final HttpPost post = new HttpPost(service);
     final UrlEncodedFormEntity entity = new UrlEncodedFormEntity(query, "UTF-8");
     post.setEntity(entity);
-  	HttpClient client = new DefaultHttpClient();
+  	final HttpClient client = new DefaultHttpClient();
   	final HttpResponse response = client.execute(post);
   	final StatusLine line = response.getStatusLine();
   	final int status = line.getStatusCode();

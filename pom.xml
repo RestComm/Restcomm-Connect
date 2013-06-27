@@ -54,6 +54,8 @@
 	</licenses>
 
 	<modules>
+	<!--	<module>restcomm.docs</module> -->
+		<module>restcomm.application</module>
 		<module>restcomm.commons</module>
 		<module>restcomm.dao</module>
 		<module>restcomm.asr</module>
@@ -61,12 +63,11 @@
 		<module>restcomm.mgcp</module>
 		<module>restcomm.fax</module>
 		<module>restcomm.sms.api</module>
-		<module>restcomm.sms</module>
-		<module>restcomm.http</module>
 		<module>restcomm.telephony.api</module>
-		<module>restcomm.telephony</module>
 		<module>restcomm.interpreter</module>
-		<module>restcomm.application</module>
+		<module>restcomm.http</module>
+		<module>restcomm.sms</module>
+		<module>restcomm.telephony</module>
 	</modules>
 
 	<properties>
@@ -78,7 +79,7 @@
 		<commons-configuration.version>1.7</commons-configuration.version>
 		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
-		<mobicents.mgcp.impl.version>3.0.0.CR2</mobicents.mgcp.impl.version>
+		<mobicents.mgcp.impl.version>3.0.0.Final</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<sipservletapi.version>1.7.0.FINAL</sipservletapi.version>
@@ -87,7 +88,7 @@
 		<shirocore.version>1.2.0</shirocore.version>
 		<shiroweb.version>1.2.0</shiroweb.version>
 		<jersey.version>1.13</jersey.version>
-		<httpclient.version>4.1.2</httpclient.version>
+		<httpclient.version>4.2.5</httpclient.version>
 		<gson.version>2.1</gson.version>
 		<xstream.version>1.4.2</xstream.version>
 		<mongodb.version>2.7.2</mongodb.version>

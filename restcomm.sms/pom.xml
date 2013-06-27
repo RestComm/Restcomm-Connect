@@ -173,35 +173,54 @@
 		
 	</dependencies>
 	
-   <build>
-		<plugins>
-	      <plugin>
-	        <artifactId>maven-resources-plugin</artifactId>
-	        <version>2.5</version>
-	        <executions>
-	          <execution>
-	            <id>copy-resources</id>
-	            <!-- here the phase you need -->
-	            <phase>process-test-resources</phase>
-	            <goals>
-	              <goal>copy-resources</goal>
-	            </goals>
-	            <configuration>
-	              <outputDirectory>${basedir}/target/test-classes/org/mobicents/servlet/restcomm/sms</outputDirectory>
-	              <resources>          
-				    <resource>
-				        <directory>src/test/java/org/mobicents/servlet/restcomm/sms</directory>
-						<includes>
-		                	<include>version.properties</include>
-		            	</includes>
-				        <filtering>true</filtering>
-				    </resource>
-	              </resources>              
-	            </configuration>            
-	          </execution>
-	        </executions>
-	      </plugin>
-	    </plugins>
-	</build>
-
+	<build>
+      <plugins>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.5</version>
+          <executions>
+            <execution>
+              <id>copy-resources</id>
+              <!-- here the phase you need -->
+              <phase>process-resources</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${basedir}/target/classes/org/mobicents/servlet/restcomm/sms</outputDirectory>
+                <resources>          
+                  <resource>
+                    <directory>src/main/resources/org/mobicents/servlet/restcomm/sms</directory>
+                    <includes>
+                      <include>version.properties</include>
+                    </includes>
+                    <filtering>true</filtering>
+                  </resource>
+                </resources>              
+              </configuration>            
+            </execution>
+            <execution>
+              <id>copy-test-resources</id>
+              <!-- here the phase you need -->
+              <phase>process-test-resources</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${basedir}/target/test-classes/org/mobicents/servlet/restcomm/sms</outputDirectory>
+                <resources>          
+                  <resource>
+                    <directory>src/main/resources/org/mobicents/servlet/restcomm/sms</directory>
+                    <includes>
+                      <include>version.properties</include>
+                    </includes>
+                    <filtering>true</filtering>
+                  </resource>
+                </resources>              
+              </configuration>            
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+  </build>
 </project>

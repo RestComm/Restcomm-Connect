@@ -17,7 +17,6 @@
 package org.mobicents.servlet.restcomm.telephony.ua;
 
 import java.text.ParseException;
-import org.mobicents.servlet.restcomm.telephony.Version;
 
 import javax.sip.RequestEvent;
 import javax.sip.address.SipURI;
@@ -45,13 +44,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.telephony.Version;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
 public final class UserAgentManagerTest {
-  private static final String version = Version.getInstance().getRestcomm_version();
+  private static final String version = Version.getInstance().getRestCommVersion();
   
   @ArquillianResource
   private Deployer deployer;

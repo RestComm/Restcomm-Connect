@@ -93,11 +93,12 @@ public final class MockMediaGateway extends UntypedActor {
 
   private ActorRef getConnection(final Object message) {
     final CreateConnection request = (CreateConnection)message;
+    final MediaSession session = request.session();
     final ActorRef gateway = self();
     return getContext().actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
-          return new Connection(gateway, request.session(), agent, timeout);
+          return new Connection(gateway, session, agent, timeout);
 		}
     }));
   }
@@ -116,7 +117,8 @@ public final class MockMediaGateway extends UntypedActor {
   
   private ActorRef getConferenceEndpoint(final Object message) {
     final ActorRef gateway = self();
-    final MediaSession session = (MediaSession)message;
+    final CreateConferenceEndpoint request = (CreateConferenceEndpoint)message;
+    final MediaSession session = request.session();
     return getContext().actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
@@ -131,7 +133,8 @@ public final class MockMediaGateway extends UntypedActor {
   
   private ActorRef getIvrEndpoint(final Object message) {
     final ActorRef gateway = self();
-    final MediaSession session = (MediaSession)message;
+    final CreateIvrEndpoint request = (CreateIvrEndpoint)message;
+    final MediaSession session = request.session();
     return getContext().actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
@@ -154,7 +157,8 @@ public final class MockMediaGateway extends UntypedActor {
   
   private ActorRef getPacketRelayEndpoint(final Object message) {
     final ActorRef gateway = self();
-    final MediaSession session = (MediaSession)message;
+    final CreatePacketRelayEndpoint request = (CreatePacketRelayEndpoint)message;
+    final MediaSession session = request.session();
     return getContext().actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {

@@ -129,6 +129,7 @@ public final class VoiceInterpreter extends UntypedActor {
   private final State initializingCall;
   private final State initializingCallMediaGroup;
   private final State ready;
+  private final State acquiringCallMediaGroup;
   private final State rejecting;
   private final State playingRejectionPrompt;
   private final State pausing;
@@ -214,6 +215,8 @@ public final class VoiceInterpreter extends UntypedActor {
         new AcquiringSpeechSynthesizerInfo(source), null);
     acquiringCallInfo = new State("acquiring call info",
         new AcquiringCallInfo(source), null);
+    acquiringCallMediaGroup = new State("acquiring call media group",
+        new AcquiringCallMediaGroup(source), null);
     downloadingRcml = new State("downloading rcml",
         new DownloadingRcml(source), null);
     downloadingFallbackRcml = new State("downloading fallback rcml",
@@ -255,6 +258,9 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(acquiringCallInfo, initializingCall));
     transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
     transitions.add(new Transition(acquiringCallInfo, finished));
+    transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
+    transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
+    transitions.add(new Transition(acquiringCallMediaGroup, finished));
     transitions.add(new Transition(downloadingRcml, ready));
     transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
     transitions.add(new Transition(downloadingRcml, hangingUp));
@@ -263,6 +269,9 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
     transitions.add(new Transition(downloadingFallbackRcml, finished));
     transitions.add(new Transition(initializingCall, ready));
+    transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
+    transitions.add(new Transition(initializingCallMediaGroup, hangingUp));
+    transitions.add(new Transition(initializingCallMediaGroup, finished));
     transitions.add(new Transition(ready, initializingCall));
     transitions.add(new Transition(ready, pausing));
     transitions.add(new Transition(ready, rejecting));
@@ -271,7 +280,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(ready, hangingUp));
     transitions.add(new Transition(ready, finished));
     transitions.add(new Transition(pausing, ready));
-    transitions.add(new Transition(rejecting, playingRejectionPrompt));
+    transitions.add(new Transition(rejecting, acquiringCallMediaGroup));
     transitions.add(new Transition(rejecting, finished));
     transitions.add(new Transition(playingRejectionPrompt, hangingUp));
     transitions.add(new Transition(redirecting, ready));
@@ -452,7 +461,8 @@ public final class VoiceInterpreter extends UntypedActor {
         } else {
           fsm.transition(message, initializingCall);
         }
-      } else if(rejecting.equals(state)) {
+      } else if(acquiringCallMediaGroup.equals(state)) {
+    	System.out.println("************************************* 1 ******************************");
         fsm.transition(message, initializingCallMediaGroup);
       }
     } else if(CallStateChanged.class.equals(klass)) {
@@ -462,7 +472,12 @@ public final class VoiceInterpreter extends UntypedActor {
       } else if(CallStateChanged.State.IN_PROGRESS == event.state()) {
         final String direction = callInfo.direction();
         if("inbound".equals(direction)) {
-          fsm.transition(message, ready);
+          if(rejecting.equals(state)) {
+            System.out.println("************************************* 0 ******************************");
+            fsm.transition(message, acquiringCallMediaGroup);
+          } else {
+            fsm.transition(message, ready);
+          }
         } else {
           fsm.transition(message, downloadingRcml);
         }
@@ -527,16 +542,21 @@ public final class VoiceInterpreter extends UntypedActor {
     } else if(MediaGroupStateChanged.class.equals(klass)) {
       final MediaGroupStateChanged event = (MediaGroupStateChanged)message;
       if(MediaGroupStateChanged.State.ACTIVE == event.state()) {
+    	System.out.println("************************************* 2 ******************************");
         if(reject.equals(verb.name())) {
+          System.out.println("************************************* 3 ******************************");
           fsm.transition(message, playingRejectionPrompt);
         }
       } else if(MediaGroupStateChanged.State.INACTIVE == event.state()) {
-        
+        fsm.transition(message, hangingUp);
       }
     } else if(MediaGroupResponse.class.equals(klass)) {
       final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
+      System.out.println("************************************* 4 ******************************");
       if(response.succeeded()) {
+    	System.out.println("************************************* 5 ******************************");
         if(playingRejectionPrompt.equals(state)) {
+          System.out.println("************************************* 6 ******************************");
           fsm.transition(message, hangingUp);
         }
       } else {
@@ -552,7 +572,7 @@ public final class VoiceInterpreter extends UntypedActor {
         if(smsSessions.size() > 0) {
           fsm.transition(message, waitingForOutstandingResponses);
         } else {
-          fsm.transition(message, finished);
+          fsm.transition(message, hangingUp);
         }
       }
     } else if(SmsSessionResponse.class.equals(klass)) {
@@ -561,7 +581,11 @@ public final class VoiceInterpreter extends UntypedActor {
       if(smsSessions.size() > 0) {
         fsm.transition(message, waitingForOutstandingResponses);
       } else {
-        fsm.transition(message, finished);
+        if(CallStateChanged.State.IN_PROGRESS == callState) {
+          fsm.transition(message, hangingUp);
+        } else {
+          fsm.transition(message, finished);
+        }
       }
     } else if(message instanceof ReceiveTimeout) {
       if(pausing.equals(state)) {
@@ -730,6 +754,16 @@ public final class VoiceInterpreter extends UntypedActor {
 	}
   }
   
+  private final class AcquiringCallMediaGroup extends AbstractAction {
+    public AcquiringCallMediaGroup(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+	  call.tell(new CreateMediaGroup(), source);
+	}
+  }
+  
   private final class InitializingCallMediaGroup extends AbstractAction {
     public InitializingCallMediaGroup(final ActorRef source) {
       super(source);
@@ -737,7 +771,7 @@ public final class VoiceInterpreter extends UntypedActor {
 
     @SuppressWarnings("unchecked")
 	@Override public void execute(final Object message) throws Exception {
-	  final MediaGroupResponse<ActorRef> response = (MediaGroupResponse<ActorRef>)message;
+	  final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
 	  callMediaGroup = response.get();
 	  callMediaGroup.tell(new StartMediaGroup(), source);
 	}
@@ -882,7 +916,7 @@ public final class VoiceInterpreter extends UntypedActor {
       }
       // Reject the call.
       if("rejected".equals(reason)) {
-        call.tell(new CreateMediaGroup(), source);
+        call.tell(new Answer(), source);
       } else {
         call.tell(new Reject(), source);
       }

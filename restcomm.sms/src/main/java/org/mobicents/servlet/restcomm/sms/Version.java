@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.sms;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +12,7 @@ public final class Version {
   
   private Version() {
     final Properties properties = new Properties();
-    final InputStream input = this.getClass().getResourceAsStream("/org/mobicents/servlet/restcomm/telephony/version.properties");
+    final InputStream input = this.getClass().getResourceAsStream("/org/mobicents/servlet/restcomm/sms/version.properties");
     try {
       if(input != null) {
         properties.load(input);

@@ -1,7 +1,6 @@
 package org.mobicents.servlet.restcomm.telephony.proxy;
 
 import static org.junit.Assert.*;
-import org.mobicents.servlet.restcomm.telephony.Version;
 
 import javax.sip.RequestEvent;
 import javax.sip.message.MessageFactory;
@@ -24,10 +23,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.telephony.Version;
 
 @RunWith(Arquillian.class)
 public final class ProxyManagerTest {
-  private static final String version = Version.getInstance().getRestcomm_version();
+  private static final String version = Version.getInstance().getRestCommVersion();
   
   @ArquillianResource
   private Deployer deployer;

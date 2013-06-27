@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public final class SmsSessionTest {
-  private static final String version = Version.getInstance().getRestcomm_version();
+  private static final String version = Version.getInstance().getRestCommVersion();
   
   @ArquillianResource
   private Deployer deployer;
@@ -86,6 +86,18 @@ public final class SmsSessionTest {
         .resolve("com.telestax.servlet:restcomm.application:war:" + version)
         .withoutTransitivity().asSingle(WebArchive.class);
     JavaArchive dependency = ShrinkWrapMaven.resolver()
+        .resolve("commons-configuration:commons-configuration:jar:1.7")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("jain:jain-mgcp-ri:jar:1.0")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("org.mobicents.media.client:mgcp-driver:jar:3.0.0.Final")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency); 
+    dependency = ShrinkWrapMaven.resolver()
         .resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
@@ -111,14 +123,6 @@ public final class SmsSessionTest {
     archive.addAsLibrary(dependency);
     dependency = ShrinkWrapMaven.resolver()
         .resolve("com.telestax.servlet:restcomm.sms:jar:" + version)
-        .withoutTransitivity().asSingle(JavaArchive.class);
-    archive.addAsLibrary(dependency);
-    dependency = ShrinkWrapMaven.resolver()
-        .resolve("jain:jain-mgcp-ri:jar:1.0")
-        .withoutTransitivity().asSingle(JavaArchive.class);
-    archive.addAsLibrary(dependency);
-    dependency = ShrinkWrapMaven.resolver()
-        .resolve("commons-configuration:commons-configuration:jar:1.7")
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
     archive.delete("/WEB-INF/sip.xml");

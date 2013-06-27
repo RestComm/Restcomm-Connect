@@ -39,6 +39,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -47,7 +48,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public final class CallTest {
-  private static final String version = Version.getInstance().getRestcomm_version();
+  private static final String version = Version.getInstance().getRestCommVersion();
   private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
       49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32,
       73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13,
@@ -87,24 +88,24 @@ public final class CallTest {
     deployer.undeploy("CallTest");
   }
 
-  @Test public void testInboundRedirectAndSms() {
+  @Ignore @Test public void testInboundRedirectAndSms() {
     deployer.deploy("CallTest");
+    phone.setLoopback(true);
     final SipCall call = phone.createSipCall();
     call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334444@127.0.0.1:5080", null, body, "application", "sdp", null, null);
     assertLastOperationSuccess(call);
-    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
     final int response = call.getLastReceivedResponse().getStatusCode();
     assertTrue(response == Response.TRYING || response == Response.RINGING);
     if(response == Response.TRYING) {
-      assertTrue(call.waitOutgoingCallResponse(1000));
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
       assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
     }
-    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
     assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
     call.sendInviteOkAck();
     // Wait for an sms.
     final SipCall receiver = phone.createSipCall();
-    phone.setLoopback(true);
     phone.listenRequestMessage();
     assertTrue(receiver.waitForMessage(10 * 1000));
     receiver.sendMessageResponse(202, "Accepted", -1);
@@ -113,7 +114,7 @@ public final class CallTest {
  	assertTrue(messages.get(0).equals("Hello World!"));
  	// HangUp the call.
     assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
-    assertTrue(call.waitForDisconnect(5000));
+    assertTrue(call.waitForDisconnect(5 * 1000));
     try {
       Thread.sleep(10 * 1000);
     } catch(final InterruptedException exception) {
@@ -121,20 +122,47 @@ public final class CallTest {
     }
   }
   
-  @Test public void testPauseRejectBusy() {
+  @Ignore @Test public void testPauseRejectBusy() {
     deployer.deploy("CallTest");
+    phone.setLoopback(true);
     final SipCall call = phone.createSipCall();
     call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334445@127.0.0.1:5080", null, body, "application", "sdp", null, null);
     assertLastOperationSuccess(call);
-    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
     final int response = call.getLastReceivedResponse().getStatusCode();
     assertTrue(response == Response.TRYING || response == Response.RINGING);
     if(response == Response.TRYING) {
-      assertTrue(call.waitOutgoingCallResponse(1000));
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
       assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
     }
-    assertTrue(call.waitOutgoingCallResponse(1000));
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
     assertEquals(Response.BUSY_HERE, call.getLastReceivedResponse().getStatusCode());
+  }
+  
+  @Ignore @Test public void testPauseRejectRejected() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334446@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // Wait for the media to play and the call to hangup.
+    assertTrue(call.waitForDisconnect(10 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
   }
 
   @Deployment(name="CallTest", managed=false, testable=false)
@@ -143,6 +171,26 @@ public final class CallTest {
         .resolve("com.telestax.servlet:restcomm.application:war:" + version)
         .withoutTransitivity().asSingle(WebArchive.class);
     JavaArchive dependency = ShrinkWrapMaven.resolver()
+        .resolve("commons-configuration:commons-configuration:jar:1.7")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("jain:jain-mgcp-ri:jar:1.0")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("org.mobicents.media.client:mgcp-driver:jar:3.0.0.Final")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("joda-time:joda-time:jar:2.0")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
+        .resolve("com.iSpeech:iSpeech:jar:1.0.1")
+        .offline().withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
+    dependency = ShrinkWrapMaven.resolver()
         .resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
@@ -167,9 +215,9 @@ public final class CallTest {
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
     dependency = ShrinkWrapMaven.resolver()
-            .resolve("com.telestax.servlet:restcomm.http:jar:" + version)
-            .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
+        .resolve("com.telestax.servlet:restcomm.http:jar:" + version)
+        .withoutTransitivity().asSingle(JavaArchive.class);
+    archive.addAsLibrary(dependency);
     dependency = ShrinkWrapMaven.resolver()
         .resolve("com.telestax.servlet:restcomm.interpreter:jar:" + version)
         .withoutTransitivity().asSingle(JavaArchive.class);
@@ -190,22 +238,6 @@ public final class CallTest {
         .resolve("com.telestax.servlet:restcomm.telephony:jar:" + version)
         .withoutTransitivity().asSingle(JavaArchive.class);
     archive.addAsLibrary(dependency);
-    dependency = ShrinkWrapMaven.resolver()
-        .resolve("commons-configuration:commons-configuration:jar:1.7")
-        .withoutTransitivity().asSingle(JavaArchive.class);
-    archive.addAsLibrary(dependency);
-    dependency = ShrinkWrapMaven.resolver()
-        .resolve("jain:jain-mgcp-ri:jar:1.0")
-        .withoutTransitivity().asSingle(JavaArchive.class);
-    archive.addAsLibrary(dependency);
-    dependency = ShrinkWrapMaven.resolver()
-        .resolve("joda-time:joda-time:jar:2.0")
-        .withoutTransitivity().asSingle(JavaArchive.class);
-    archive.addAsLibrary(dependency);
-    dependency = ShrinkWrapMaven.resolver()
-        .resolve("com.iSpeech:iSpeech:jar:1.0.1")
-        .withoutTransitivity().asSingle(JavaArchive.class);
-    archive.addAsLibrary(dependency);
     archive.delete("/WEB-INF/sip.xml");
     archive.delete("/WEB-INF/conf/restcomm.xml");
     archive.delete("/WEB-INF/data/hsql/restcomm.script");
@@ -215,6 +247,7 @@ public final class CallTest {
 	archive.addAsWebResource("redirect-sms-entry.xml");
 	archive.addAsWebResource("redirect-sms-sms.xml");
 	archive.addAsWebResource("pause-reject-busy-entry.xml");
+	archive.addAsWebResource("pause-reject-rejected-entry.xml");
     return archive;
   }
 }
