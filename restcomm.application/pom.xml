@@ -77,22 +77,56 @@
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.commons</artifactId>
 		<version>${project.version}</version>
-		<scope>provided</scope>
 	</dependency>
 
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.dao</artifactId>
 		<version>${project.version}</version>
-		<scope>provided</scope>
 	</dependency>
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.mgcp</artifactId>
 		<version>${project.version}</version>
-		<scope>provided</scope>
 	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.sms</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.sms.api</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.fax</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.http</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.telephony</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.telephony.api</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
 	
   </dependencies>
 </project>
