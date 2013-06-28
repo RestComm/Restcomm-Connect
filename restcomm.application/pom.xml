@@ -93,6 +93,19 @@
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.interpreter</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.tts</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.sms</artifactId>
 		<version>${project.version}</version>
 	</dependency>
@@ -126,6 +139,13 @@
 		<artifactId>restcomm.telephony.api</artifactId>
 		<version>${project.version}</version>
 	</dependency>
+	
+	<dependency>
+		<groupId>jain</groupId>
+		<artifactId>jain-mgcp-ri</artifactId>
+		<version>1.0</version>
+	</dependency>
+	
 	
 	
   </dependencies>
