@@ -234,6 +234,9 @@ public final class Link extends UntypedActor {
     }
     
     @Override public void execute(final Object message) throws Exception {
+      /* Stop the timer. */
+      final UntypedActorContext context = getContext();
+      context.setReceiveTimeout(Duration.Undefined());
       // Notify the observers.
       final LinkStateChanged event = new LinkStateChanged(LinkStateChanged.State.CLOSED);
       for(final ActorRef observer : observers) {
@@ -244,8 +247,6 @@ public final class Link extends UntypedActor {
       // If we timed out log it.
       if(message instanceof ReceiveTimeout) {
         logger.error("The media gateway failed to respond in the requested timout period.");
-        final UntypedActorContext context = getContext();
-        context.setReceiveTimeout(Duration.Undefined());
       }
     }
   }
@@ -256,6 +257,10 @@ public final class Link extends UntypedActor {
     }
     
     @Override public void execute(final Object message) throws Exception {
+   	  /* Stop the timer. */
+      final UntypedActorContext context = getContext();
+      context.setReceiveTimeout(Duration.Undefined());
+      /* Configure the connection and end points. */
       final Class<?> klass = message.getClass();
       if(CreateConnectionResponse.class.equals(klass)) {
         final CreateConnectionResponse response = (CreateConnectionResponse)message;
@@ -345,6 +350,10 @@ public final class Link extends UntypedActor {
     }
     
     @Override public void execute(final Object message) throws Exception {
+      /* Stop the timer here. */
+      final UntypedActorContext context = getContext();
+      context.setReceiveTimeout(Duration.Undefined());
+      
       final String sessionId = Integer.toString(session.id());
       final CallIdentifier callId = new CallIdentifier(sessionId);
       final DeleteConnection dlcx = new DeleteConnection(source, callId,

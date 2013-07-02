@@ -193,6 +193,7 @@ public final class Call extends UntypedActor {
     final Set<Transition> transitions = new HashSet<Transition>();
     transitions.add(new Transition(uninitialized, queued));
     transitions.add(new Transition(uninitialized, ringing));
+    transitions.add(new Transition(uninitialized, failingNoAnswer));
     transitions.add(new Transition(queued, canceled));
     transitions.add(new Transition(queued, acquiringMediaGatewayInfo));
     transitions.add(new Transition(ringing, busy));
@@ -214,7 +215,7 @@ public final class Call extends UntypedActor {
     transitions.add(new Transition(openingRemoteConnection, inProgress));
     transitions.add(new Transition(dialing, busy));
     transitions.add(new Transition(dialing, canceling));
-    transitions.add(new Transition(dialing, noAnswer));
+    transitions.add(new Transition(dialing, failingNoAnswer));
     transitions.add(new Transition(dialing, ringing));
     transitions.add(new Transition(dialing, failed));
     transitions.add(new Transition(dialing, updatingRemoteConnection));
@@ -222,6 +223,7 @@ public final class Call extends UntypedActor {
     transitions.add(new Transition(ringing, canceling));
     transitions.add(new Transition(ringing, noAnswer));
     transitions.add(new Transition(ringing, updatingRemoteConnection));
+    transitions.add(new Transition(failingNoAnswer, noAnswer));
     transitions.add(new Transition(canceling, canceled));
     transitions.add(new Transition(updatingRemoteConnection, inProgress));
     transitions.add(new Transition(updatingRemoteConnection, closingRemoteConnection));
@@ -358,8 +360,6 @@ public final class Call extends UntypedActor {
       if(openingRemoteConnection.equals(state) || dialing.equals(state) ||
           ringing.equals(state)) {
         fsm.transition(message, canceling);
-      } else {
-        fsm.transition(message, canceled);
       }
     } else if(LinkStateChanged.class.equals(klass)) {
       final LinkStateChanged event = (LinkStateChanged)message;
@@ -415,11 +415,14 @@ public final class Call extends UntypedActor {
           break;
         }
         case SipServletResponse.SC_OK: {
-          fsm.transition(message, updatingRemoteConnection);
+          if(dialing.equals(state) || (ringing.equals(state) &&
+              !direction.equals("inbound"))) {
+            fsm.transition(message, updatingRemoteConnection);
+          }
           break;
         }
         default: {
-          if(code >= 400) {
+          if(code >= 400 && code != 487) {
             fsm.transition(message, failing);
           }
         }
@@ -517,10 +520,10 @@ public final class Call extends UntypedActor {
 	  from = request.from();
 	  to = request.to();
 	  timeout = request.timeout();
-	  if(request.internal()) {
-	    direction = OUTBOUND_DIAL;
-	  } else {
+	  if(request.isFromApi()) {
 	    direction = OUTBOUND_API;
+	  } else {
+		direction = OUTBOUND_DIAL;
 	  }
 	  // Notify the observers.
 	  external = CallStateChanged.State.QUEUED;
@@ -661,7 +664,6 @@ public final class Call extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  if(message instanceof SipServletRequest) {
 	    invite = (SipServletRequest)message;
-	    name = invite.getFrom().getDisplayName();
 	    from = (SipURI)invite.getFrom().getURI();
 	    to = (SipURI)invite.getTo().getURI();
 	    timeout = -1;
@@ -732,6 +734,15 @@ public final class Call extends UntypedActor {
   private final class FailingNoAnswer extends Failing {
     public FailingNoAnswer(final ActorRef source) {
       super(source);
+    }
+    
+    @Override public void execute(final Object message) throws Exception {
+      super.execute(message);
+      final State state = fsm.state();
+      if(uninitialized.equals(state)) {
+  	    final UntypedActorContext context = getContext();
+  	    context.setReceiveTimeout(Duration.Undefined());
+  	  }
     }
   }
   
@@ -960,7 +971,9 @@ public final class Call extends UntypedActor {
 	    final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
 	    okay.send();
 	  }
-	  remoteConn.tell(new CloseConnection(), source);
+	  if(remoteConn != null) {
+	    remoteConn.tell(new CloseConnection(), source);
+	  }
 	}
   }
   

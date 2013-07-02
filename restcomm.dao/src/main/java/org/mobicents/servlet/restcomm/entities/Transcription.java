@@ -102,6 +102,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     return uri;
   }
   
+  public Transcription setStatus(final Status status) {
+    final DateTime now = DateTime.now();
+    return new Transcription(sid, dateCreated, now, accountSid, status,
+        recordingSid, duration, transcriptionText, price, uri);
+  }
+  
   @NotThreadSafe public static final class Builder {
 	private Sid sid;
     private Sid accountSid;

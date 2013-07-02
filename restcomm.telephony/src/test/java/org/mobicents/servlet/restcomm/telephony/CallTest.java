@@ -64,6 +64,7 @@ public final class CallTest {
   private static SipStackTool tool;
   private SipStack receiver;
   private SipPhone phone;
+  private SipPhone phone2;
   
   public CallTest() {
     super();
@@ -76,11 +77,15 @@ public final class CallTest {
   @Before public void before() throws Exception {
     receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
     phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:+17778889999@127.0.0.1:5070");
+    phone2 = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:+17778889998@127.0.0.1:5070");
   }
   
   @After public void after() throws Exception {
     if(phone != null) {
       phone.dispose();
+    }
+    if(phone2 != null) {
+      phone2.dispose();
     }
     if(receiver != null) {
       receiver.dispose();
@@ -158,6 +163,162 @@ public final class CallTest {
     assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
     // Wait for the media to play and the call to hangup.
     assertTrue(call.waitForDisconnect(10 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
+  }
+  
+  @Ignore @Test public void testPlaySay() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334447@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // Wait for the media to play and the call to hangup.
+    assertTrue(call.waitForDisconnect(10 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
+  }
+  
+  @Ignore @Test public void testRecord() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334448@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // Wait for the media to play and the call to hangup.
+    assertTrue(call.waitForDisconnect(60 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
+  }
+  
+  @Ignore @Test public void testFax() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334449@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // Wait for the media to play and the call to hangup.
+    assertTrue(call.waitForDisconnect(10 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
+  }
+  
+  @Ignore @Test public void testGather() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334450@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // Wait for the media to play and the call to hangup.
+    assertTrue(call.waitForDisconnect(10 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
+  }
+  
+  @Ignore @Test public void testDialConference() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334451@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // Wait for the media to play and the call to hangup.
+    assertTrue(call.waitForDisconnect(30 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
+  }
+  
+  @Ignore @Test public void testDialFork() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334452@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // hangup.
+    assertTrue(call.waitForDisconnect(60 * 1000));
     try {
       Thread.sleep(10 * 1000);
     } catch(final InterruptedException exception) {
@@ -248,6 +409,13 @@ public final class CallTest {
 	archive.addAsWebResource("redirect-sms-sms.xml");
 	archive.addAsWebResource("pause-reject-busy-entry.xml");
 	archive.addAsWebResource("pause-reject-rejected-entry.xml");
+	archive.addAsWebResource("play-say-entry.xml");
+	archive.addAsWebResource("record-entry.xml");
+	archive.addAsWebResource("fax-entry.xml");
+	archive.addAsWebResource("fax.pdf");
+	archive.addAsWebResource("gather-entry.xml");
+	archive.addAsWebResource("dial-conference-entry.xml");
+	archive.addAsWebResource("dial-fork-entry.xml");
     return archive;
   }
 }

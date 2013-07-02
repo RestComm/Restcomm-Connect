@@ -87,32 +87,7 @@
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.mgcp</artifactId>
-		<version>${project.version}</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.interpreter</artifactId>
-		<version>${project.version}</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.tts</artifactId>
-		<version>${project.version}</version>
-	</dependency>
-	
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.sms</artifactId>
-		<version>${project.version}</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.sms.api</artifactId>
+		<artifactId>restcomm.asr</artifactId>
 		<version>${project.version}</version>
 	</dependency>
 	
@@ -130,6 +105,30 @@
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.interpreter</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.mgcp</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.sms</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.sms.api</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.telephony</artifactId>
 		<version>${project.version}</version>
 	</dependency>
@@ -141,12 +140,16 @@
 	</dependency>
 	
 	<dependency>
-		<groupId>jain</groupId>
-		<artifactId>jain-mgcp-ri</artifactId>
-		<version>1.0</version>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.tts</artifactId>
+		<version>${project.version}</version>
 	</dependency>
 	
-	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.mgcp</artifactId>
+		<version>${project.version}</version>
+	</dependency>
 	
   </dependencies>
 </project>

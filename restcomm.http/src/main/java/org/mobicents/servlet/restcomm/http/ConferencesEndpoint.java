@@ -16,13 +16,20 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import javax.servlet.ServletContext;
+
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class ConferencesEndpoint extends AbstractEndpoint {
+  @javax.ws.rs.core.Context 
+  private ServletContext context;
+  
   public ConferencesEndpoint() {
     super();
+    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
   }
 }

@@ -170,6 +170,7 @@ public final class SmsInterpreter extends UntypedActor {
     transitions.add(new Transition(creatingSmsSession, finished));
     transitions.add(new Transition(sendingSms, ready));
     transitions.add(new Transition(sendingSms, redirecting));
+    transitions.add(new Transition(sendingSms, creatingSmsSession));
     transitions.add(new Transition(sendingSms, waitingForSmsResponses));
     transitions.add(new Transition(sendingSms, finished));
     transitions.add(new Transition(waitingForSmsResponses, waitingForSmsResponses));
@@ -550,7 +551,7 @@ public final class SmsInterpreter extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
       verb = (Tag)message;
       final NotificationsDao notifications = storage.getNotificationsDao();
-      String method = null;
+      String method = "POST";
       Attribute attribute = verb.attribute("method");
       if(attribute != null) {
         method = attribute.value();
@@ -564,8 +565,6 @@ public final class SmsInterpreter extends UntypedActor {
         } else {
           method = "POST";
         }
-      } else {
-        method = "POST";
       }
       final String text = verb.text();
       if(text != null && !text.isEmpty()) {
@@ -618,15 +617,11 @@ public final class SmsInterpreter extends UntypedActor {
       final ActorRef session = response.get();
       final NotificationsDao notifications = storage.getNotificationsDao();
       // Parse "from".
-      String from = null;
+      String from = initialSessionRequest.to();
       Attribute attribute = verb.attribute("from");
-      if(attribute == null) {
-        from = initialSessionRequest.to();
-      } else {
-	    from = attribute.value();
-        if(from == null || from.isEmpty()) {
-          from = initialSessionRequest.to();
-        } else {
+      if(attribute != null) {
+        from = attribute.value();
+        if(from != null && !from.isEmpty()) {
           from = format(from);
           if(from == null) {
             from = verb.attribute("from").value();
@@ -638,18 +633,16 @@ public final class SmsInterpreter extends UntypedActor {
             source.tell(stop, source);
             return;
           }
+        } else {
+          from = initialSessionRequest.to();
         }
       }
       // Parse "to".
-      String to = null;
+      String to = initialSessionRequest.from();
       attribute = verb.attribute("to");
-      if(attribute == null) {
-        to = initialSessionRequest.from();
-      } else {
+      if(attribute != null) {
         to = attribute.value();
-        if(to == null || to.isEmpty()) {
-          to = initialSessionRequest.from();
-        } else {
+        if(to != null && !to.isEmpty()) {
           to = format(to);
           if(to == null) {
             to = verb.attribute("to").value();
@@ -661,6 +654,8 @@ public final class SmsInterpreter extends UntypedActor {
             source.tell(stop, source);
             return;
           }
+        } else {
+          to = initialSessionRequest.from();
         }
       }
       // Parse <Sms> text.
@@ -670,6 +665,9 @@ public final class SmsInterpreter extends UntypedActor {
             body + " is an invalid SMS body.");
         notifications.addNotification(notification);
         service.tell(new DestroySmsSession(session), source);
+        final StopInterpreter stop = StopInterpreter.instance();
+        source.tell(stop, source);
+        return;
       } else {
         // Start observing events from the sms session.
         session.tell(new Observe(source), source);
@@ -742,7 +740,7 @@ public final class SmsInterpreter extends UntypedActor {
             final URI base = request.getUri();
             final URI uri = resolve(base, target);
             // Parse "method".
-            String method = null;
+            String method = "POST";
             attribute = verb.attribute("method");
             if(attribute != null) {
               method = attribute.value();
@@ -756,24 +754,18 @@ public final class SmsInterpreter extends UntypedActor {
               } else {
                 method = "POST";
               }
-            } else {
-              method = "POST";
             }
             // Redirect to the action url.
             final List<NameValuePair> parameters = parameters();
             final String status = Status.SENDING.toString();
             parameters.add(new BasicNameValuePair("SmsStatus", status));
             request = new HttpRequestDescriptor(uri, method, parameters);
-          } else {
-        	// Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
-            parser.tell(next, source);
+            return;
           }
-      } else {
-    	// Ask the parser for the next action to take.
-      	final GetNextVerb next = GetNextVerb.instance();
-      	parser.tell(next, source);
       }
+      // Ask the parser for the next action to take.
+      final GetNextVerb next = GetNextVerb.instance();
+      parser.tell(next, source);
 	}
   }
 

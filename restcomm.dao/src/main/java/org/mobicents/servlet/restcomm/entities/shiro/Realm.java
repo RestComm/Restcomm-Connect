@@ -36,7 +36,6 @@ import org.apache.shiro.authz.permission.DomainPermission;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
-import org.mobicents.servlet.restcomm.ServiceLocator;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -55,7 +54,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
   @Override protected AuthorizationInfo doGetAuthorizationInfo(final PrincipalCollection principals) {
     final Sid sid = new Sid((String)principals.getPrimaryPrincipal());
-    final ServiceLocator services = ServiceLocator.getInstance();
+    final ShiroResources services = ShiroResources.getInstance();
     final DaoManager daos = services.get(DaoManager.class);
     final AccountsDao accounts = daos.getAccountsDao();
     final Account account = accounts.getAccount(sid);
@@ -76,7 +75,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
     Sid sid = null;
     try {
       sid = new Sid(authenticationToken.getUsername());
-      final ServiceLocator services = ServiceLocator.getInstance();
+      final ShiroResources services = ShiroResources.getInstance();
       final DaoManager daos = services.get(DaoManager.class);
       final AccountsDao accounts = daos.getAccountsDao();
       final Account account = accounts.getAccount(sid);
@@ -94,7 +93,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
       synchronized(this) {
         if(roles == null) {
           roles = new HashMap<String, SimpleRole>();
-          final ServiceLocator services = ServiceLocator.getInstance();
+          final ShiroResources services = ShiroResources.getInstance();
           final Configuration configuration = services.get(Configuration.class);
           loadSecurityRoles(configuration.subset("security-roles"));
         }

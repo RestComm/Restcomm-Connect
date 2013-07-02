@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial timeLimit="10" timeout="10">
+	  <Number>+17778889998</Number>
+	  <Uri>sip:alice@127.0.0.1:5070</Uri>
+	  <Client>alice</Client>
+	</Dial>
+</Response>

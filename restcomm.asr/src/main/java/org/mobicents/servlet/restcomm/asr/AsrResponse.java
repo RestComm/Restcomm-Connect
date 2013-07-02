@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.restcomm.asr;
 
+import java.util.Map;
+
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 
@@ -23,15 +25,33 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class AsrResponse<T> extends StandardResponse<T> {
-  public AsrResponse(T object) {
+  private final Map<String, Object> attributes;
+  
+  public AsrResponse(final T object, final Map<String, Object> attributes) {
     super(object);
+    this.attributes = attributes;
+  }
+  
+  public AsrResponse(T object) {
+    this(object, null);
   }
 
-  public AsrResponse(Throwable cause) {
+  public AsrResponse(final Throwable cause, final Map<String, Object> attributes) {
     super(cause);
+    this.attributes = attributes;
+  }
+  
+  public AsrResponse(final Throwable cause) {
+    this(cause, null);
   }
 
-  public AsrResponse(Throwable cause, String message) {
+  public AsrResponse(final Throwable cause, final String message,
+      final Map<String, Object> attributes) {
     super(cause, message);
+    this.attributes = attributes;
+  }
+  
+  public Map<String, Object> attributes() {
+    return attributes;
   }
 }

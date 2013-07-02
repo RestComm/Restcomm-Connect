@@ -22,7 +22,7 @@
 		<cache-uri>http://127.0.0.1:8080/restcomm/cache</cache-uri>
 		
 		<!--  The path where recordings made by the <Record> verb are stored. -->
-		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
+		<recordings-path>${restcomm:home}/recordings</recordings-path>
 		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
 		
 		<!-- The URL to the errors dictionary. -->
@@ -40,12 +40,6 @@
 		 -->
 		<use-to>true</use-to>
 		
-		<!--
-		  Parameters for outbound proxy.
-		-->
-		<outbound-proxy-user></outbound-proxy-user>
-        <outbound-proxy-password></outbound-proxy-password>
-        <outbound-proxy-uri>127.0.0.1:5070</outbound-proxy-uri>
 		<!-- 
 			Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete.
@@ -101,7 +95,7 @@
 		the media server before abandoning the request. This does NOT apply to RQNT/NOTIFY request/response.
 	-->
 	<media-server-manager>
-		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MockMediaGateway"
+		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MediaGateway"
 		    name="Mobicents Media Server">
 			<local-address>127.0.0.1</local-address>
 			<local-port>2727</local-port>
@@ -124,15 +118,15 @@
 		The Fax Service is used to send and receive faxes on behalf of RestComm.
 	-->
 	<fax-service class="org.mobicents.servlet.restcomm.fax.InterfaxService">
-	  <user>thomasquintana</user>
-	  <password>Delta2637</password>
+	  <user></user>
+	  <password></password>
     </fax-service>
 	
 	<!--
 		The Speech Recognizer is responsible for turning speech in to text.
 	-->
 	<speech-recognizer class="org.mobicents.servlet.restcomm.asr.ISpeechAsr">
-		<api-key production="false">1da57e282a615ddd2661c58d50524486</api-key>
+		<api-key production="false"></api-key>
 	</speech-recognizer>
 	
 	<!--
@@ -141,9 +135,9 @@
 	<speech-synthesizer class="org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer">
 		<cache-path>${restcomm:home}/cache/acapela</cache-path>
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
-		<application>EVAL_1434125</application>
-		<login>EVAL_VAAS</login>
-		<password>i9znimmo</password>
+		<application></application>
+		<login></login>
+		<password></password>
 		<speakers>
 		  <belgium-french>
 		    <female>justine8k</female>

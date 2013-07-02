@@ -40,7 +40,6 @@ import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
 import org.mobicents.servlet.restcomm.mgcp.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mgcp.DestroyConnection;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.DestroyLink;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
@@ -132,7 +131,13 @@ public final class Conference extends UntypedActor {
   }
   
   private void info(final Object message, final ActorRef sender) {
-    final ConferenceInfo information = new ConferenceInfo(calls);
+	ConferenceInfo information = null; 
+    final State state = fsm.state();
+    if(running.equals(state)) {
+      information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING);
+    } else if(completed.equals(state)) {
+      information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED);
+    }
     final ActorRef self = self();
     sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
   }
@@ -185,6 +190,8 @@ public final class Conference extends UntypedActor {
         } else if(ConnectionStateChanged.State.CLOSED == response.state()) {
           fsm.transition(message, completed);
         }
+      } else if(closingConnection.equals(state)) {
+        fsm.transition(message, running);
       } else if(stopping.equals(state)) {
         fsm.transition(message, completed);
       }
@@ -354,7 +361,7 @@ public final class Conference extends UntypedActor {
       // Clean up resources
       final ActorRef self = self();
       if(connection != null) {
-        gateway.tell(new DestroyLink(connection), self);
+        gateway.tell(new DestroyConnection(connection), self);
         connection = null;
       }
       if(cnf != null) {

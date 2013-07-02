@@ -45,11 +45,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
       throws MalformedURLException, UnsupportedAudioFileException, IOException {
 	AudioInputStream audio = null;
     try {
-      audio = AudioSystem.getAudioInputStream(wavFile);
-      final AudioFormat format = audio.getFormat();
-      return wavFile.length() / format.getSampleRate() / (format.getSampleSizeInBits() / 8.0) / format.getChannels();
+      if(wavFile != null && wavFile.exists()) {
+        audio = AudioSystem.getAudioInputStream(wavFile);
+        final AudioFormat format = audio.getFormat();
+        return wavFile.length() / format.getSampleRate() / (format.getSampleSizeInBits() / 8.0) / format.getChannels();
+      }
+      return 0;
     } finally {
-      audio.close();
+      if(audio != null) {
+        audio.close();
+      }
     }
   }
 }

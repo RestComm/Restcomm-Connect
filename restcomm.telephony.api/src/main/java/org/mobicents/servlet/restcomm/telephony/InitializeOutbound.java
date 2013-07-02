@@ -28,16 +28,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
   private final SipURI from;
   private final SipURI to;
   private final long timeout;
-  private final boolean internal;
+  private final boolean isFromApi;
   
   public InitializeOutbound(final String name, final SipURI from, final SipURI to,
-      final long timeout, final boolean internal) {
+      final long timeout, final boolean isFromApi) {
     super();
     this.name = name;
     this.from = from;
     this.to = to;
     this.timeout = timeout;
-    this.internal = internal;
+    this.isFromApi = isFromApi;
   }
   
   public String name() {
@@ -56,7 +56,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
     return timeout;
   }
   
-  public boolean internal() {
-    return internal;
+  public boolean isFromApi() {
+    return isFromApi;
   }
 }

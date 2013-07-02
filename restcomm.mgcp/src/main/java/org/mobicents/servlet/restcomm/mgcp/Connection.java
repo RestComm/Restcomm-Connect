@@ -240,6 +240,9 @@ public final class Connection extends UntypedActor {
     }
     
     @Override public void execute(final Object message) throws Exception {
+	  /* Stop the timer. */
+      final UntypedActorContext context = getContext();
+      context.setReceiveTimeout(Duration.Undefined());
       // Notify the observers.
       final ConnectionStateChanged event = new ConnectionStateChanged(ConnectionStateChanged.State.CLOSED);
       for(final ActorRef observer : observers) {
@@ -250,8 +253,6 @@ public final class Connection extends UntypedActor {
       // If we timed out log it.
       if(message instanceof ReceiveTimeout) {
         logger.error("The media gateway failed to respond in the requested timout period.");
-        final UntypedActorContext context = getContext();
-        context.setReceiveTimeout(Duration.Undefined());
       }
 	}
   }
@@ -282,6 +283,9 @@ public final class Connection extends UntypedActor {
     
     @Override public void execute(final Object message) throws Exception {
       super.execute(message);
+      /* Stop the timer. */
+      final UntypedActorContext context = getContext();
+      context.setReceiveTimeout(Duration.Undefined());
       // Notify the observers.
       final ConnectionStateChanged event = new ConnectionStateChanged(localDesc, ConnectionStateChanged.State.HALF_OPEN);
       for(final ActorRef observer : observers) {
@@ -298,6 +302,9 @@ public final class Connection extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
+	  /* Stop the timer. */
+	  final UntypedActorContext context = getContext();
+	  context.setReceiveTimeout(Duration.Undefined());
 	  // Handle results from opening or modifying states.
 	  final Class<?> klass = message.getClass();
 	  if(CreateConnectionResponse.class.equals(klass)) {

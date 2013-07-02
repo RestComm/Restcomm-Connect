@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
@@ -39,7 +40,6 @@ import org.apache.shiro.subject.Subject;
 
 import org.joda.time.DateTime;
 
-import org.mobicents.servlet.restcomm.ServiceLocator;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -55,14 +55,16 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public abstract class AccountsEndpoint extends AbstractEndpoint {
+  @javax.ws.rs.core.Context 
+  private ServletContext context;
   protected final AccountsDao dao;
   protected final Gson gson;
   protected final XStream xstream;
 
   public AccountsEndpoint() {
     super();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    dao = services.get(DaoManager.class).getAccountsDao();
+    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
+    dao = storage.getAccountsDao();
     final AccountConverter converter = new AccountConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Account.class, converter);

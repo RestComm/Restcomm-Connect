@@ -5,6 +5,7 @@ import java.util.List;
 
 import static javax.ws.rs.core.MediaType.*;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -17,7 +18,7 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
 import org.apache.shiro.authz.AuthorizationException;
-import org.mobicents.servlet.restcomm.ServiceLocator;
+
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
@@ -31,14 +32,16 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 @ThreadSafe public class GatewaysEndpoint extends AbstractEndpoint {
+  @javax.ws.rs.core.Context 
+  private ServletContext context;
   protected final GatewaysDao dao;
   protected final Gson gson;
   protected final XStream xstream;
 
   public GatewaysEndpoint() {
     super();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    dao = services.get(DaoManager.class).getGatewaysDao();
+    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
+    dao = storage.getGatewaysDao();
     final GatewayConverter converter = new GatewayConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Gateway.class, converter);

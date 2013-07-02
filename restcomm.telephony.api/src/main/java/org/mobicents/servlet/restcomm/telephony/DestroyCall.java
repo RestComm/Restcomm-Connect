@@ -14,22 +14,24 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.dao;
+package org.mobicents.servlet.restcomm.telephony;
 
-import java.util.List;
+import akka.actor.ActorRef;
 
-import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.entities.Transcription;
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface TranscriptionsDao {
-  public void addTranscription(Transcription transcription);
-  public Transcription getTranscription(Sid sid);
-  public Transcription getTranscriptionByRecording(Sid recordingSid);
-  public List<Transcription> getTranscriptions(Sid accountSid);
-  public void removeTranscription(Sid sid);
-  public void removeTranscriptions(Sid accountSid);
-  public void updateTranscription(Transcription transcription);
+@Immutable public final class DestroyCall {
+  private final ActorRef call;
+  
+  public DestroyCall(final ActorRef call) {
+    super();
+    this.call = call;
+  }
+  
+  public ActorRef call() {
+    return call;
+  }
 }

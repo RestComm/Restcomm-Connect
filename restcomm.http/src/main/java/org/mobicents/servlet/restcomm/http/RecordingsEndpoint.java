@@ -24,6 +24,8 @@ import com.thoughtworks.xstream.XStream;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.*;
+
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
@@ -31,7 +33,6 @@ import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
 
-import org.mobicents.servlet.restcomm.ServiceLocator;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
@@ -47,14 +48,16 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class RecordingsEndpoint extends AbstractEndpoint {
+  @javax.ws.rs.core.Context 
+  private ServletContext context;
   protected final RecordingsDao dao;
   protected final Gson gson;
   protected final XStream xstream;
 
   public RecordingsEndpoint() {
     super();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    dao = services.get(DaoManager.class).getRecordingsDao();
+    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
+    dao = storage.getRecordingsDao();
     final RecordingConverter converter = new RecordingConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Recording.class, converter);

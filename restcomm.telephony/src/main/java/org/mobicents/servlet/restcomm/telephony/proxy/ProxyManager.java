@@ -70,8 +70,9 @@ public final class ProxyManager extends UntypedActor {
     this.factory = factory;
     this.storage = storage;
     this.address = address;
+    final ActorContext context = context();
+    context.setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
     refresh();
-    schedule(60);
   }
   
   private void authenticate(final Object message) {
@@ -108,7 +109,6 @@ public final class ProxyManager extends UntypedActor {
   @Override public void onReceive(Object message) throws Exception {
     if(message instanceof ReceiveTimeout) {
       refresh();
-      schedule(60);
     } else if(message instanceof SipServletResponse) {
       final SipServletResponse response = (SipServletResponse)message;
       final int status = response.getStatus();
@@ -190,11 +190,6 @@ public final class ProxyManager extends UntypedActor {
       final String name = gateway.getFriendlyName();
       logger.error(exception, "Could not send a registration request to the proxy named " + name);
     }
-  }
-  
-  private void schedule(final long seconds) {
-    final ActorContext context = context();
-    context.setReceiveTimeout(Duration.create(seconds, TimeUnit.SECONDS));
   }
   
   private void update(final Object message) {

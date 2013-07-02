@@ -18,13 +18,14 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.net.URI;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
-import org.mobicents.servlet.restcomm.ServiceLocator;
+
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
@@ -37,6 +38,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class AbstractEndpoint {
+  @javax.ws.rs.core.Context 
+  private ServletContext context;
   protected final Configuration configuration;
   protected final String baseRecordingsPath;
   
@@ -44,8 +47,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
   
   public AbstractEndpoint() {
     super();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    configuration = services.get(Configuration.class);
+    configuration = ((Configuration)context.getAttribute(Configuration.class.getName())).subset("runtime-settings");
     baseRecordingsPath = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-path"), "/");
     defaultApiVersion = configuration.getString("api-version");
   }

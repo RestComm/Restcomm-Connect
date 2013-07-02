@@ -63,10 +63,20 @@ public final class ISpeechAsr extends UntypedActor implements SpeechRecognizerEv
     final ActorRef self = self();
     final ActorRef sender = sender();
     if(AsrRequest.class.equals(klass)) {
+      final AsrRequest request = (AsrRequest)message;
+      final Map<String, Object> attributes = request.attributes();
       try {
-        sender.tell(new AsrResponse<String>(recognize(message)), self);
+        if(attributes != null) {
+          sender.tell(new AsrResponse<String>(recognize(message), attributes), self);
+        } else {
+          sender.tell(new AsrResponse<String>(recognize(message)), self);
+        }
       } catch(final Exception exception) {
-        sender.tell(new AsrResponse<String>(exception), self);
+        if(attributes != null) {
+          sender.tell(new AsrResponse<String>(exception, attributes), self);
+        } else {
+          sender.tell(new AsrResponse<String>(exception), self);
+        }
       }
     } else if(GetAsrInfo.class.equals(klass)) {
       sender.tell(new AsrResponse<AsrInfo>(info()), self);

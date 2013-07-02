@@ -17,6 +17,7 @@
 package org.mobicents.servlet.restcomm.asr;
 
 import java.io.File;
+import java.util.Map;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
@@ -26,11 +27,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable public final class AsrRequest {
   private final File file;
   private final String language;
+  private final Map<String, Object> attributes;
   
-  public AsrRequest(final File file, final String language) {
+  public AsrRequest(final File file, final String language,
+    final Map<String, Object> attributes) {
     super();
     this.file = file;
     this.language = language;
+    this.attributes = attributes;
+  }
+  
+  public AsrRequest(final File file, final String language) {
+    this(file, language, null);
+  }
+  
+  public Map<String, Object> attributes() {
+    return attributes;
   }
   
   public File file() {

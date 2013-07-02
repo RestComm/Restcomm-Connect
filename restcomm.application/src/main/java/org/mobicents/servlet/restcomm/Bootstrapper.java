@@ -22,6 +22,7 @@ import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
@@ -123,6 +124,7 @@ public final class Bootstrapper extends SipServlet {
       throw new ServletException(exception);
     }
     context.setAttribute(DaoManager.class.getName(), storage);
+    ShiroResources.getInstance().set(DaoManager.class, storage);
     // Create the media gateway.
     ActorRef gateway = null;
     try {

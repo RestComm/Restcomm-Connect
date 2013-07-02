@@ -102,10 +102,4 @@
 		</servlet-class>
 		<load-on-startup>4</load-on-startup>
 	</servlet>
-	
-	<listener>
-		<listener-class>
-			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
-		</listener-class>
-	</listener>
 </sip-app>

@@ -61,12 +61,12 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
     return forwardedFrom;
   }
   
-  public String from() {
-    return from;
-  }
-  
   public String fromName() {
     return fromName;
+  }
+  
+  public String from() {
+    return from;
   }
   
   public Sid sid() {

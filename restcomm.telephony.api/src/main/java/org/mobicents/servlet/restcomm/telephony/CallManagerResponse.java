@@ -14,22 +14,24 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.dao;
+package org.mobicents.servlet.restcomm.telephony;
 
-import java.util.List;
-
-import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.entities.Transcription;
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface TranscriptionsDao {
-  public void addTranscription(Transcription transcription);
-  public Transcription getTranscription(Sid sid);
-  public Transcription getTranscriptionByRecording(Sid recordingSid);
-  public List<Transcription> getTranscriptions(Sid accountSid);
-  public void removeTranscription(Sid sid);
-  public void removeTranscriptions(Sid accountSid);
-  public void updateTranscription(Transcription transcription);
+@Immutable public final class CallManagerResponse<T> extends StandardResponse<T> {
+  public CallManagerResponse(final T object) {
+   super(object);
+  }
+
+  public CallManagerResponse(final Throwable cause) {
+    super(cause);
+  }
+
+  public CallManagerResponse(final Throwable cause, final String message) {
+    super(cause, message);
+  }
 }

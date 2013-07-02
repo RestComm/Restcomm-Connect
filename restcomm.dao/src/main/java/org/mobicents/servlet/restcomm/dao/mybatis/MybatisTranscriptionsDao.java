@@ -112,6 +112,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     }
   }
   
+  @Override public void updateTranscription(final Transcription transcription) {
+    final SqlSession session = sessions.openSession();
+    try {
+      session.update(namespace + "updateTranscription", toMap(transcription));
+      session.commit();
+    } finally {
+      session.close();
+    }
+  }
+  
   private Map<String, Object> toMap(final Transcription transcription) {
     final Map<String, Object> map = new HashMap<String, Object>();
     map.put("sid", writeSid(transcription.getSid()));

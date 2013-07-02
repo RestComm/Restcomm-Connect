@@ -73,7 +73,8 @@ public final class UserAgentManager extends UntypedActor {
     this.configuration = configuration;
     this.factory = factory;
     this.storage = storage;
-    schedule(60);
+    final ActorContext context = context();
+    context.setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
   }
   
   private void clean() {
@@ -125,7 +126,6 @@ public final class UserAgentManager extends UntypedActor {
     if(message instanceof ReceiveTimeout) {
       clean();
       keepAlive();
-      schedule(60);
     } else if(message instanceof SipServletRequest) {
       final SipServletRequest request = (SipServletRequest)message;
       final String method = request.getMethod();
@@ -270,11 +270,6 @@ public final class UserAgentManager extends UntypedActor {
     // Cleanup
     request.getSession().invalidate();
     request.getApplicationSession().invalidate();
-  }
-  
-  private void schedule(final long seconds) {
-    final ActorContext context = context();
-    context.setReceiveTimeout(Duration.create(seconds, TimeUnit.SECONDS));
   }
   
   private String contact(final SipURI uri, final int expires) {

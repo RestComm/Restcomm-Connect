@@ -28,6 +28,7 @@ import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
@@ -39,7 +40,6 @@ import org.apache.shiro.authz.AuthorizationException;
 
 import org.joda.time.DateTime;
 
-import org.mobicents.servlet.restcomm.ServiceLocator;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
@@ -56,14 +56,16 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
+  @javax.ws.rs.core.Context 
+  private ServletContext context;
   protected final OutgoingCallerIdsDao dao;
   protected final Gson gson;
   protected final XStream xstream;
   
   public OutgoingCallerIdsEndpoint() {
     super();
-    final ServiceLocator services = ServiceLocator.getInstance();
-    dao = services.get(DaoManager.class).getOutgoingCallerIdsDao();
+    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
+    dao = storage.getOutgoingCallerIdsDao();
     final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(OutgoingCallerId.class, converter);

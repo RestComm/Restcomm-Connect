@@ -28,4 +28,8 @@
   <delete id="removeTranscriptions" parameterType="string">
     DELETE FROM "restcomm_transcriptions" WHERE "account_sid"=#{account_sid};
   </delete>
+  
+  <update id="updateTranscription" parameterType="map">
+    UPDATE "restcomm_transcriptions" SET "status"=#{status} WHERE "sid"=#{sid};
+  </update>
 </mapper>

@@ -261,7 +261,7 @@ public final class MockMediaGateway extends UntypedActor {
     // Create a response.
     StringBuilder buffer = new StringBuilder();
     buffer.append(connectionIdPool.get());
-    final ConnectionIdentifier connId = new ConnectionIdentifier(buffer.toString());
+    ConnectionIdentifier connId = new ConnectionIdentifier(buffer.toString());
     final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
     final CreateConnectionResponse response = new CreateConnectionResponse(self, code, connId);
     // Create a new end point id if necessary.
@@ -279,6 +279,10 @@ public final class MockMediaGateway extends UntypedActor {
     // Create a new secondary end point id if necessary.
     EndpointIdentifier secondaryEndpointId = crcx.getSecondEndpointIdentifier();
     if(secondaryEndpointId != null) {
+      buffer = new StringBuilder();
+      buffer.append(connectionIdPool.get());
+      connId = new ConnectionIdentifier(buffer.toString());
+      response.setSecondConnectionIdentifier(connId);
       endpointName = secondaryEndpointId.getLocalEndpointName();
       if(endpointName.endsWith("$")) {
         final String[] tokens = endpointName.split("/");
@@ -339,7 +343,6 @@ public final class MockMediaGateway extends UntypedActor {
   private void notify(final Object message, final ActorRef sender) {
     final ActorRef self = self();
     final NotificationRequest request = (NotificationRequest)message;
-    System.out.println(request.toString());
     final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
     final EventName[] events = { new EventName(AUPackage.AU, event)} ;
     final Notify notify = new Notify(this, request.getEndpointIdentifier(),

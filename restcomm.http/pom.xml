@@ -45,6 +45,11 @@
 		<groupId>com.googlecode.libphonenumber</groupId>
 		<artifactId>libphonenumber</artifactId>
 	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.tomcat</groupId>
+		<artifactId>servlet-api</artifactId>
+	</dependency>
 
 	<dependency>
 		<groupId>com.sun.jersey</groupId>
@@ -71,30 +76,35 @@
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.commons</artifactId>
 		<version>${project.version}</version>
+		<scope>provided</scope>
 	</dependency>
 
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.dao</artifactId>
 		<version>${project.version}</version>
+		<scope>provided</scope>
 	</dependency>
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.asr</artifactId>
 		<version>${project.version}</version>
+		<scope>provided</scope>
 	</dependency>
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.tts</artifactId>
 		<version>${project.version}</version>
+		<scope>provided</scope>
 	</dependency>
 	
 	<dependency>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm.sms.api</artifactId>
 		<version>${project.version}</version>
+		<scope>provided</scope>
 	</dependency>
 	
 	<!-- Testing -->

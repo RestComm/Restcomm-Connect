@@ -21,6 +21,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipApplicationSessionEvent;
 import javax.servlet.sip.SipFactory;
@@ -46,9 +48,11 @@ import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
@@ -61,6 +65,7 @@ import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.*;
 public final class CallManager extends UntypedActor {
   private final ActorSystem system;
   private final Configuration configuration;
+  private final ActorRef conferences;
   private final ActorRef gateway;
   private final ActorRef sms;
   private final SipFactory factory;
@@ -75,6 +80,7 @@ public final class CallManager extends UntypedActor {
     this.system = system;
     this.configuration = configuration;
     this.gateway = gateway;
+    this.conferences = conferences();
     this.sms = sms;
     this.factory = factory;
     this.storage = storage;
@@ -93,6 +99,15 @@ public final class CallManager extends UntypedActor {
     response.send();
   }
   
+  private ActorRef conferences() {
+    return system.actorOf(new Props(new UntypedActorFactory() {
+		private static final long serialVersionUID = 1L;
+		@Override public UntypedActor create() throws Exception {
+          return new ConferenceCenter(gateway);
+		}
+    }));
+  }
+  
   private ActorRef call() {
     return system.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
@@ -108,6 +123,12 @@ public final class CallManager extends UntypedActor {
       final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
       response.send();
     }
+  }
+  
+  private void destroy(final Object message) {
+	final UntypedActorContext context = getContext();
+    final DestroyCall request = (DestroyCall)message;
+    context.stop(request.call());
   }
   
   private String header(final String nonce, final String realm, final String scheme) {
@@ -138,6 +159,7 @@ public final class CallManager extends UntypedActor {
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
+        builder.setConferenceManager(conferences);
         builder.setSmsService(sms);
         builder.setAccount(client.getAccountSid());
         builder.setVersion(client.getApiVersion());
@@ -184,6 +206,7 @@ public final class CallManager extends UntypedActor {
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
+        builder.setConferenceManager(conferences);
         builder.setSmsService(sms);
         builder.setAccount(number.getAccountSid());
         builder.setVersion(number.getApiVersion());
@@ -254,6 +277,9 @@ public final class CallManager extends UntypedActor {
   }
 
   @Override public void onReceive(final Object message) throws Exception {
+    final Class<?> klass = message.getClass();
+    final ActorRef self = self();
+    final ActorRef sender = sender();
     if(message instanceof SipServletRequest) {
       final SipServletRequest request = (SipServletRequest)message;
       check(request);
@@ -263,11 +289,54 @@ public final class CallManager extends UntypedActor {
       } else if("OPTIONS".equals(method)) {
         pong(request);
       }
+    } else if(CreateCall.class.equals(klass)) {
+      try {
+        sender.tell(new CallManagerResponse<ActorRef>(outbound(message)), self);
+      } catch(final Exception exception) {
+        sender.tell(new CallManagerResponse<ActorRef>(exception), self);
+      }
+    } else if(DestroyCall.class.equals(klass)) {
+      destroy(message);
     } else if(message instanceof SipServletResponse) {
       response(message);
     } else if(message instanceof SipApplicationSessionEvent) {
       timeout(message);
     }
+  }
+  
+  private ActorRef outbound(final Object message) throws ServletParseException {
+    final CreateCall request = (CreateCall)message;
+    final Configuration runtime = configuration.subset("runtime-settings");
+    final String uri = runtime.getString("outbound-proxy-uri");
+    final SipURI from = factory.createSipURI(request.from(), uri);
+    SipURI to = null;
+    switch(request.type()) {
+      case CLIENT: {
+        final RegistrationsDao registrations = storage.getRegistrationsDao();
+        final Registration registration = registrations.getRegistration(request.to());
+        if(registration != null) {
+          final String location = registration.getLocation();
+          to = (SipURI)factory.createURI(location);
+        } else {
+          throw new NullPointerException(request.to() + " is not currently registered.");
+        }
+        break;
+      }
+      case PSTN: {
+        to = factory.createSipURI(request.to(), uri);
+        break;
+      }
+      case SIP: {
+        to = (SipURI)factory.createURI(request.to());
+        break;
+      }
+    }
+    final ActorRef call = call();
+    final ActorRef self = self();
+    final InitializeOutbound init = new InitializeOutbound(null, from, to,
+        request.timeout(), request.isFromApi());
+    call.tell(init, self);
+    return call;
   }
   
   public void response(final Object message) {

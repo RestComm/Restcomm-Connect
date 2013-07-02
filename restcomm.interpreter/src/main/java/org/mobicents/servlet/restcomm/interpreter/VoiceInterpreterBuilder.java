@@ -37,6 +37,7 @@ public final class VoiceInterpreterBuilder {
   private Configuration configuration;
   private DaoManager storage;
   private ActorRef calls;
+  private ActorRef conferences;
   private ActorRef sms;
   private Sid account;
   private Sid phone;
@@ -62,7 +63,7 @@ public final class VoiceInterpreterBuilder {
 		@Override public UntypedActor create() throws Exception {
           return new VoiceInterpreter(configuration, account, phone, version, url, method,
               fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, calls,
-              sms, storage);
+              conferences, sms, storage);
 		}
     }));
   }
@@ -77,6 +78,10 @@ public final class VoiceInterpreterBuilder {
   
   public void setCallManager(final ActorRef calls) {
     this.calls = calls;
+  }
+  
+  public void setConferenceManager(final ActorRef conferences) {
+    this.conferences = conferences;
   }
   
   public void setSmsService(final ActorRef sms) {

@@ -16,31 +16,47 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import akka.actor.ActorRef;
-
-import java.util.List;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class ConferenceInfo {
-  private final List<ActorRef> participants;
-  private final ConferenceStateChanged.State state;
+@Immutable public final class CreateCall {
+  public static enum Type { CLIENT, PSTN, SIP };
+
+  private final String from;
+  private final String to;
+  private final boolean isFromApi;
+  private final int timeout;
+  private final Type type;
   
-  public ConferenceInfo(final List<ActorRef> participants,
-      final ConferenceStateChanged.State state) {
+  public CreateCall(final String from, final String to,
+      final boolean isFromApi, final int timeout, final Type type) {
     super();
-    this.participants = participants;
-    this.state = state;
+    this.from = from;
+    this.to = to;
+    this.isFromApi = isFromApi;
+    this.timeout = timeout;
+    this.type = type;
   }
   
-  public List<ActorRef> participants() {
-    return participants;
+  public String from() {
+    return from;
   }
   
-  public ConferenceStateChanged.State state() {
-    return state;
+  public String to() {
+    return to;
+  }
+  
+  public boolean isFromApi() {
+    return isFromApi;
+  }
+  
+  public int timeout() {
+    return timeout;
+  }
+  
+  public Type type() {
+    return type;
   }
 }

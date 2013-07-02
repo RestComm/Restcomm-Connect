@@ -113,7 +113,7 @@ public final class MediaGroup extends UntypedActor {
     this.observers = new ArrayList<ActorRef>();
   }
   
-  private void collect(final Object message, final ActorRef sender) {
+  private void collect(final Object message) {
     final ActorRef self = self();
     final Collect request = (Collect)message;
     final PlayCollect.Builder builder = PlayCollect.builder();
@@ -131,7 +131,7 @@ public final class MediaGroup extends UntypedActor {
     ivrInUse = true;
   }
   
-  private void play(final Object message, final ActorRef sender) {
+  private void play(final Object message) {
     final ActorRef self = self();
     final Play request = (Play)message;
     final List<URI> uris = request.uris();
@@ -172,7 +172,6 @@ public final class MediaGroup extends UntypedActor {
   // FSM logic.
   @Override public void onReceive(final Object message) throws Exception {
     final Class<?> klass = message.getClass();
-    final ActorRef sender = sender();
     final State state = fsm.state();
     if(Observe.class.equals(klass)) {
       observe(message);
@@ -207,11 +206,11 @@ public final class MediaGroup extends UntypedActor {
       }
     } else if(active.equals(state)) {
       if(Play.class.equals(klass)) {
-        play(message, sender);
+        play(message);
       } else if(Collect.class.equals(klass)) {
-        collect(message, sender);
+        collect(message);
       } else if(Record.class.equals(klass)) {
-        record(message, sender);
+        record(message);
       } else if(Stop.class.equals(klass)) {
         stop();
       } else if(IvrEndpointResponse.class.equals(klass)) {
@@ -220,7 +219,7 @@ public final class MediaGroup extends UntypedActor {
     }
   }
   
-  private void record(final Object message, final ActorRef sender) {
+  private void record(final Object message) {
 	final ActorRef self = self();
     final Record request = (Record)message;
     final PlayRecord.Builder builder = PlayRecord.builder();

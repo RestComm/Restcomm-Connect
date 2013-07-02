@@ -17,6 +17,7 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
@@ -25,6 +26,8 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class Record {
+  private static final List<URI> empty = new ArrayList<URI>(0);
+  
   private final URI destination;
   private final List<URI> prompts;
   private final int timeout;
@@ -36,6 +39,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
     super();
     this.destination = recordingId;
     this.prompts = prompts;
+    this.timeout = timeout;
+    this.length = length;
+    this.endInputKey = endInputKey;
+  }
+  
+  public Record(final URI recordingId, final int timeout, final int length,
+      final String endInputKey) {
+    super();
+    this.destination = recordingId;
+    this.prompts = empty;
     this.timeout = timeout;
     this.length = length;
     this.endInputKey = endInputKey;
