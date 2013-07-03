@@ -77,12 +77,12 @@ public final class ConferenceCenter extends UntypedActor {
   }
   
   private void notify(final Object message, final ActorRef sender) {
+	final ConferenceStateChanged update = (ConferenceStateChanged)message;
+	final String name = update.name();
     final ActorRef self = self();
     // Stop observing events from the conference room.
     sender.tell(new StopObserving(self), self);
     // Figure out what happened.
-    final ConferenceStateChanged update = (ConferenceStateChanged)message;
-    final String name = update.name();
     ConferenceCenterResponse response = null;
     if(ConferenceStateChanged.State.RUNNING == update.state()) {
       conferences.put(name, sender);
@@ -103,13 +103,14 @@ public final class ConferenceCenter extends UntypedActor {
   }
   
   private void create(final Object message, final ActorRef sender) {
-    final ActorRef self = self();
     final CreateConference request = (CreateConference)message;
     final String name = request.name();
+    final ActorRef self = self();
     // Check to see if the conference already exists.
     ActorRef conference = conferences.get(name);
     if(conference != null) {
       sender.tell(new ConferenceCenterResponse(conference), self);
+      return;
     }
     // Check to see if it's already created but not initialized.
     // If it is then just add it to the list of observers that will
@@ -118,11 +119,11 @@ public final class ConferenceCenter extends UntypedActor {
     if(observers != null) {
       observers.add(sender);
     } else {
+      observers = new ArrayList<ActorRef>();
+      observers.add(sender);
       conference = getConference(name);
       conference.tell(new Observe(self), self);
       conference.tell(new StartConference(), self);
-      observers = new ArrayList<ActorRef>();
-      observers.add(sender);
       initializing.put(name, observers);
     }
   }

@@ -74,13 +74,13 @@ public final class CallManager extends UntypedActor {
   private boolean useTo;
   
   public CallManager(final Configuration configuration, final ActorSystem system,
-      final ActorRef gateway, final ActorRef sms, final SipFactory factory,
-      final DaoManager storage) {
+      final ActorRef gateway, final ActorRef conferences, final ActorRef sms,
+      final SipFactory factory, final DaoManager storage) {
     super();
     this.system = system;
     this.configuration = configuration;
     this.gateway = gateway;
-    this.conferences = conferences();
+    this.conferences = conferences;
     this.sms = sms;
     this.factory = factory;
     this.storage = storage;
@@ -97,15 +97,6 @@ public final class CallManager extends UntypedActor {
     final String header = header(nonce, realm, "Digest");
     response.addHeader("Proxy-Authenticate", header);
     response.send();
-  }
-  
-  private ActorRef conferences() {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-		private static final long serialVersionUID = 1L;
-		@Override public UntypedActor create() throws Exception {
-          return new ConferenceCenter(gateway);
-		}
-    }));
   }
   
   private ActorRef call() {
@@ -282,12 +273,14 @@ public final class CallManager extends UntypedActor {
     final ActorRef sender = sender();
     if(message instanceof SipServletRequest) {
       final SipServletRequest request = (SipServletRequest)message;
-      check(request);
       final String method = request.getMethod();
       if("INVITE".equals(method)) {
+    	check(request);
         invite(request);
       } else if("OPTIONS".equals(method)) {
         pong(request);
+      } else if("CANCEL".equals(method) || "BYE".equals(method)) {
+        inDialogRequest(request);
       }
     } else if(CreateCall.class.equals(klass)) {
       try {
@@ -360,6 +353,14 @@ public final class CallManager extends UntypedActor {
         request.timeout(), request.isFromApi());
     call.tell(init, self);
     return call;
+  }
+  
+  public void inDialogRequest(final Object message) {
+    final ActorRef self = self();
+    final SipServletRequest request = (SipServletRequest)message;
+    final SipApplicationSession application = request.getApplicationSession();
+    final ActorRef call = (ActorRef)application.getAttribute(Call.class.getName());
+    call.tell(request, self);
   }
   
   public void response(final Object message) {
