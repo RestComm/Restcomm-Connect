@@ -42,6 +42,7 @@ import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.PlayCollect;
 import org.mobicents.servlet.restcomm.mgcp.PlayRecord;
 import org.mobicents.servlet.restcomm.mgcp.StopEndpoint;
+import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -62,6 +63,7 @@ public final class MediaGroup extends UntypedActor {
   private final State acquiringLink;
   private final State initializingLink;
   private final State openingLink;
+  private final State updatingLink;
   private final State deactivating;
   // FSM.
   private final FiniteStateMachine fsm;
@@ -87,6 +89,7 @@ public final class MediaGroup extends UntypedActor {
     acquiringLink = new State("acquiring link", new AcquiringLink(source), null);
     initializingLink = new State("initializing link", new InitializingLink(source), null);
     openingLink = new State("opening link", new OpeningLink(source), null);
+    updatingLink = new State("updating link", new UpdatingLink(source), null);
     deactivating = new State("deactivating", new Deactivating(source), null);
     // Initialize the transitions for the FSM.
     final Set<Transition> transitions = new HashSet<Transition>();
@@ -99,7 +102,10 @@ public final class MediaGroup extends UntypedActor {
     transitions.add(new Transition(initializingLink, openingLink));
     transitions.add(new Transition(openingLink, inactive));
     transitions.add(new Transition(openingLink, deactivating));
-    transitions.add(new Transition(openingLink, active));
+    transitions.add(new Transition(openingLink, updatingLink));
+    transitions.add(new Transition(updatingLink, active));
+    transitions.add(new Transition(updatingLink, inactive));
+    transitions.add(new Transition(updatingLink, deactivating));
     transitions.add(new Transition(active, deactivating));
     transitions.add(new Transition(deactivating, inactive));
     // Initialize the FSM.
@@ -190,11 +196,14 @@ public final class MediaGroup extends UntypedActor {
       if(LinkStateChanged.State.CLOSED == response.state()) {
         if(initializingLink.equals(state)) {
           fsm.transition(message, openingLink);
-        } else if(openingLink.equals(state) || deactivating.equals(state)) {
+        } else if(openingLink.equals(state) || deactivating.equals(state) ||
+            updatingLink.equals(state)) {
           fsm.transition(message, inactive);
         }
       } else if(LinkStateChanged.State.OPEN == response.state()) {
         if(openingLink.equals(state)) {
+          fsm.transition(message, updatingLink);
+        } else if(updatingLink.equals(state)) {
           fsm.transition(message, active);
         }
       }
@@ -298,7 +307,7 @@ public final class MediaGroup extends UntypedActor {
 	  link.tell(new InitializeLink(endpoint, ivr), source);
 	}
   }
-
+  
   private final class OpeningLink extends AbstractAction {
     public OpeningLink(final ActorRef source) {
       super(source);
@@ -306,6 +315,17 @@ public final class MediaGroup extends UntypedActor {
 
 	@Override public void execute(final Object message) throws Exception {
 	  link.tell(new OpenLink(ConnectionMode.SendRecv), source);
+	}
+  }
+  
+  private final class UpdatingLink extends AbstractAction {
+    public UpdatingLink(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+      final UpdateLink update = new UpdateLink(ConnectionMode.SendRecv, UpdateLink.Type.PRIMARY);
+      link.tell(update, source);
 	}
   }
   

@@ -295,6 +295,8 @@ public final class CallManager extends UntypedActor {
       } catch(final Exception exception) {
         sender.tell(new CallManagerResponse<ActorRef>(exception), self);
       }
+    } else if(ExecuteCallScript.class.equals(klass)) {
+      execute(message);
     } else if(DestroyCall.class.equals(klass)) {
       destroy(message);
     } else if(message instanceof SipServletResponse) {
@@ -302,6 +304,27 @@ public final class CallManager extends UntypedActor {
     } else if(message instanceof SipApplicationSessionEvent) {
       timeout(message);
     }
+  }
+  
+  private void execute(final Object message) {
+    final ExecuteCallScript request = (ExecuteCallScript)message;
+    final ActorRef self = self();
+    final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+    builder.setConfiguration(configuration);
+    builder.setStorage(storage);
+    builder.setCallManager(self);
+    builder.setConferenceManager(conferences);
+    builder.setSmsService(sms);
+    builder.setAccount(request.account());
+    builder.setVersion(request.version());
+    builder.setUrl(request.url());
+    builder.setMethod(request.method());
+    builder.setFallbackUrl(request.fallbackUrl());
+    builder.setFallbackMethod(request.fallbackMethod());
+    builder.setStatusCallback(request.callback());
+    builder.setStatusCallbackMethod(request.callbackMethod());
+    final ActorRef interpreter = builder.build();
+    interpreter.tell(new StartInterpreter(request.call()), self);
   }
   
   private ActorRef outbound(final Object message) throws ServletParseException {

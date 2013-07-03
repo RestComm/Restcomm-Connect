@@ -16,9 +16,12 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
 import java.net.URI;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.configuration.Configuration;
@@ -30,26 +33,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class AbstractEndpoint {
-  @javax.ws.rs.core.Context 
-  private ServletContext context;
-  protected final Configuration configuration;
-  protected final String baseRecordingsPath;
-  
-  private final String defaultApiVersion;
+  private String defaultApiVersion;
+  protected Configuration configuration;
+  protected String baseRecordingsPath;
   
   public AbstractEndpoint() {
     super();
-    configuration = ((Configuration)context.getAttribute(Configuration.class.getName())).subset("runtime-settings");
-    baseRecordingsPath = StringUtils.addSuffixIfNotPresent(configuration.getString("recordings-path"), "/");
-    defaultApiVersion = configuration.getString("api-version");
+  }
+  
+  protected void init(final Configuration configuration) {
+    final String path = configuration.getString("recordings-path");
+	baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
+	defaultApiVersion = configuration.getString("api-version");
   }
   
   protected String getApiVersion(final MultivaluedMap<String, String> data) {

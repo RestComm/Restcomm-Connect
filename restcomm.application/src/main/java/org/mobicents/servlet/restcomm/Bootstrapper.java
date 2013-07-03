@@ -125,6 +125,7 @@ public final class Bootstrapper extends SipServlet {
     }
     context.setAttribute(DaoManager.class.getName(), storage);
     ShiroResources.getInstance().set(DaoManager.class, storage);
+    ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
     // Create the media gateway.
     ActorRef gateway = null;
     try {

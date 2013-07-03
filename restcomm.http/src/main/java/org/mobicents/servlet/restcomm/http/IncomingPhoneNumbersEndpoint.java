@@ -32,11 +32,14 @@ import static javax.ws.rs.core.Response.Status.*;
 import java.net.URI;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
@@ -55,15 +58,22 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
-  @javax.ws.rs.core.Context 
-  private ServletContext context;
-  protected final IncomingPhoneNumbersDao dao;
-  protected final Gson gson;
-  protected final XStream xstream;
+  @Context protected ServletContext context;
+  protected Configuration configuration;
+  protected IncomingPhoneNumbersDao dao;
+  protected Gson gson;
+  protected XStream xstream;
   
   public IncomingPhoneNumbersEndpoint() {
     super();
+  }
+  
+  @PostConstruct
+  public void init() {
     final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
+    configuration = (Configuration)context.getAttribute(Configuration.class.getName());
+    configuration = configuration.subset("runtime-settings");
+    super.init(configuration);
     dao = storage.getIncomingPhoneNumbersDao();
     final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();

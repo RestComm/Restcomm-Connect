@@ -16,19 +16,31 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
+import javax.ws.rs.GET;
+import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class ConferencesEndpoint extends AbstractEndpoint {
-  @Context 
-  private ServletContext context;
-  
-  public ConferencesEndpoint() {
+@Path("/Accounts/{accountSid}/SMS/Messages.json")
+@ThreadSafe public final class SmsMessagesJsonEndpoint extends SmsMessagesEndpoint {
+  public SmsMessagesJsonEndpoint() {
     super();
+  }
+  
+  @GET public Response getSmsMessages(@PathParam("accountSid") final String accountSid) {
+    return getSmsMessages(accountSid, APPLICATION_JSON_TYPE);
+  }
+  
+  @POST public Response putSmsMessage(@PathParam("accountSid") final String accountSid,
+      final MultivaluedMap<String, String> data) {
+    return putSmsMessage(accountSid, data, APPLICATION_JSON_TYPE);
   }
 }

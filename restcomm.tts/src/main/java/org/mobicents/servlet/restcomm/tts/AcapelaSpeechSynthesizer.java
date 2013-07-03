@@ -162,9 +162,13 @@ public final class AcapelaSpeechSynthesizer extends UntypedActor {
     if(SpeechSynthesizerRequest.class.equals(klass)) {
       try {
         final URI uri = synthesize(message);
-        sender.tell(new SpeechSynthesizerResponse<URI>(uri), self);
+        if(sender != null) {
+          sender.tell(new SpeechSynthesizerResponse<URI>(uri), self);
+        }
       } catch(final Exception exception) {
-        sender.tell(new SpeechSynthesizerResponse<URI>(exception), self);
+        if(sender != null) {
+          sender.tell(new SpeechSynthesizerResponse<URI>(exception), self);
+        }
       }
     } else if(GetSpeechSynthesizerInfo.class.equals(klass)) {
       sender.tell(new SpeechSynthesizerResponse<SpeechSynthesizerInfo>(info()), self);

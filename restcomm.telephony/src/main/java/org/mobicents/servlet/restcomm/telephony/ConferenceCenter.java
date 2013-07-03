@@ -83,12 +83,10 @@ public final class ConferenceCenter extends UntypedActor {
     // Figure out what happened.
     final ConferenceStateChanged update = (ConferenceStateChanged)message;
     final String name = update.name();
-    final List<ActorRef> observers = initializing.remove(name);
     ConferenceCenterResponse response = null;
     if(ConferenceStateChanged.State.RUNNING == update.state()) {
-      response = new ConferenceCenterResponse(sender);
-      // Add it to the list of on going conferences.
       conferences.put(name, sender);
+      response = new ConferenceCenterResponse(sender);
     } else {
       final StringBuilder buffer = new StringBuilder();
       buffer.append("The conference room ").append(name).append(" failed to initialize.");
@@ -96,6 +94,7 @@ public final class ConferenceCenter extends UntypedActor {
       response = new ConferenceCenterResponse(exception);
     }
     // Notify the observers.
+    final List<ActorRef> observers = initializing.remove(name);
     for(final ActorRef observer : observers) {
       observer.tell(response, self);
     }
@@ -118,15 +117,13 @@ public final class ConferenceCenter extends UntypedActor {
     List<ActorRef> observers = initializing.get(name);
     if(observers != null) {
       observers.add(sender);
+    } else {
+      conference = getConference(name);
+      conference.tell(new Observe(self), self);
+      conference.tell(new StartConference(), self);
+      observers = new ArrayList<ActorRef>();
+      observers.add(sender);
+      initializing.put(name, observers);
     }
-    // If it doesn't exist lets create and initialize a new conference room.
-    conference = getConference(name);
-    conference.tell(new Observe(self), self);
-    conference.tell(new StartConference(), self);
-    // Add the sender to the list of observers waiting for the conference
-    // room to initialize.
-    observers = new ArrayList<ActorRef>();
-    observers.add(sender);
-    initializing.put(name, observers);
   }
 }

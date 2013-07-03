@@ -94,6 +94,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
 import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
 import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
 import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
@@ -714,8 +715,8 @@ public final class VoiceInterpreter extends UntypedActor {
     final Class<?> klass = message.getClass();
     final State state = fsm.state();
     final ActorRef sender = sender();
-    System.out.println(DateTime.now().toString() + " ********************** State: \"" + state.toString() + "\" **********************");
-    System.out.println(DateTime.now().toString() + " ********************** Message: \"" + klass.getName() + "\" **********************");
+    logger.info(" ********** Interpreter's Current State: \"" + state.toString());
+    logger.info(" ********** Interpreter Processing Message: \"" + klass.getName());
     if(StartInterpreter.class.equals(klass)) {
       fsm.transition(message, acquiringAsrInfo);
     } else if(AsrResponse.class.equals(klass)) {
@@ -819,6 +820,8 @@ public final class VoiceInterpreter extends UntypedActor {
         if(downloadingRcml.equals(state)) {
           if(fallbackUrl != null) {
             fsm.transition(message, downloadingFallbackRcml);
+          } else {
+            fsm.transition(message, finished);
           }
         } else {
           fsm.transition(message, finished);
@@ -1217,29 +1220,33 @@ public final class VoiceInterpreter extends UntypedActor {
 	    final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
 	    callInfo = response.get();
 	    callState = callInfo.state();
-	    // Create a call detail record for the call.
-		final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-		builder.setSid(callInfo.sid());
-		builder.setDateCreated(callInfo.dateCreated());
-		builder.setAccountSid(accountId);
-		builder.setTo(callInfo.to());
-		builder.setCallerName(callInfo.fromName());
-		builder.setFrom(callInfo.from());
-		builder.setForwardedFrom(callInfo.forwardedFrom());
-		builder.setPhoneNumberSid(phoneId);
-		builder.setStatus(callState.toString());
-		final DateTime now = DateTime.now();
-		builder.setStartTime(now);
-		builder.setDirection(callInfo.direction());
-		builder.setApiVersion(version);
-		final StringBuilder buffer = new StringBuilder();
-		buffer.append("/").append(version).append("/Accounts/");
-		buffer.append(accountId.toString()).append("/Calls/");
-		buffer.append(callInfo.sid().toString());
-		final URI uri = URI.create(buffer.toString());
-		builder.setUri(uri);
-		callRecord = builder.build();
-		records.addCallDetailRecord(callRecord);
+	    if(callInfo.direction().equals("inbound")) {
+	      // Create a call detail record for the call.
+		  final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+		  builder.setSid(callInfo.sid());
+		  builder.setDateCreated(callInfo.dateCreated());
+		  builder.setAccountSid(accountId);
+		  builder.setTo(callInfo.to());
+		  builder.setCallerName(callInfo.fromName());
+		  builder.setFrom(callInfo.from());
+		  builder.setForwardedFrom(callInfo.forwardedFrom());
+		  builder.setPhoneNumberSid(phoneId);
+		  builder.setStatus(callState.toString());
+		  final DateTime now = DateTime.now();
+		  builder.setStartTime(now);
+		  builder.setDirection(callInfo.direction());
+		  builder.setApiVersion(version);
+		  final StringBuilder buffer = new StringBuilder();
+		  buffer.append("/").append(version).append("/Accounts/");
+		  buffer.append(accountId.toString()).append("/Calls/");
+		  buffer.append(callInfo.sid().toString());
+		  final URI uri = URI.create(buffer.toString());
+		  builder.setUri(uri);
+		  callRecord = builder.build();
+		  records.addCallDetailRecord(callRecord);
+	    } else {
+	      callRecord = records.getCallDetailRecord(callInfo.sid());
+	    }
 	  }
 	  // Ask the downloader to get us the application that will be executed.
 	  final List<NameValuePair> parameters = parameters();
@@ -1253,6 +1260,10 @@ public final class VoiceInterpreter extends UntypedActor {
       super(source);
     }
 
+    
+    
+    
+    
 	@Override public void execute(final Object message) throws Exception {
 	  final Class<?> klass = message.getClass();
       // Notify the account of the issue.
@@ -2568,7 +2579,8 @@ public final class VoiceInterpreter extends UntypedActor {
 
 	@Override public void execute(final Object message) throws Exception {
 	  if(isForking) {
-	    dialBranches.remove(outboundCall);
+	    final boolean result = dialBranches.remove(outboundCall);
+	    System.out.println("*********************************** " + result + " *******************************");
 	    for(final ActorRef branch : dialBranches) {
 	      branch.tell(new Cancel(), source);
 	      callManager.tell(new DestroyCall(branch), source);
@@ -2942,6 +2954,14 @@ public final class VoiceInterpreter extends UntypedActor {
 	    callRecord = callRecord.setDuration(seconds);
 	    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
 	    records.updateCallDetailRecord(callRecord);
+	  }
+	  // Cleanup the outbound call if necessary.
+	  final State state = fsm.state();
+	  if(bridged.equals(state)) {
+	    if(outboundCall != null) {
+	      outboundCall.tell(new StopObserving(source), source);
+	      outboundCall.tell(new Hangup(), source);
+	    }
 	  }
 	  // Destroy the media group(s).
 	  if(callMediaGroup != null) {

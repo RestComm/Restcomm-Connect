@@ -22,6 +22,8 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
@@ -74,6 +76,7 @@ import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
+import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -89,6 +92,8 @@ public final class Call extends UntypedActor {
   private static final String INBOUND = "inbound";
   private static final String OUTBOUND_API = "outbound-api";
   private static final String OUTBOUND_DIAL = "outbound-dial";
+  // Logging
+  private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
   // States for the FSM.
   private final State uninitialized;
   private final State queued;
@@ -117,6 +122,7 @@ public final class Call extends UntypedActor {
   private final State acquiringInternalLink;
   private final State initializingInternalLink;
   private final State openingInternalLink;
+  private final State updatingInternalLink;
   private final State closingInternalLink;
   private final State closingRemoteConnection;
   // FSM.
@@ -183,6 +189,8 @@ public final class Call extends UntypedActor {
         new InitializingInternalLink(source), null);
     openingInternalLink = new State("opening internal link",
         new OpeningInternalLink(source), null);
+    updatingInternalLink = new State("updating internal link",
+    	new UpdatingInternalLink(source), null);
     closingInternalLink = new State("closing internal link",
         new EnteringClosingInternalLink(source), new ExitingClosingInternalLink(source));
     muting = new State("muting", new Muting(source), null);
@@ -193,7 +201,6 @@ public final class Call extends UntypedActor {
     final Set<Transition> transitions = new HashSet<Transition>();
     transitions.add(new Transition(uninitialized, queued));
     transitions.add(new Transition(uninitialized, ringing));
-    transitions.add(new Transition(uninitialized, failingNoAnswer));
     transitions.add(new Transition(queued, canceled));
     transitions.add(new Transition(queued, acquiringMediaGatewayInfo));
     transitions.add(new Transition(ringing, busy));
@@ -238,7 +245,10 @@ public final class Call extends UntypedActor {
     transitions.add(new Transition(initializingInternalLink, openingInternalLink));
     transitions.add(new Transition(openingInternalLink, closingInternalLink));
     transitions.add(new Transition(openingInternalLink, closingRemoteConnection));
-    transitions.add(new Transition(openingInternalLink, inProgress));
+    transitions.add(new Transition(openingInternalLink, updatingInternalLink));
+    transitions.add(new Transition(updatingInternalLink, closingInternalLink));
+    transitions.add(new Transition(updatingInternalLink, closingRemoteConnection));
+    transitions.add(new Transition(updatingInternalLink, inProgress));
     transitions.add(new Transition(closingInternalLink, inProgress));
     transitions.add(new Transition(closingInternalLink, completed));
     transitions.add(new Transition(muting, inProgress));
@@ -304,6 +314,8 @@ public final class Call extends UntypedActor {
     final ActorRef self = self();
     final ActorRef sender = sender();
     final State state = fsm.state();
+    logger.info("********** Call's Current State: \"" + state.toString());
+    logger.info("********** Call Processing Message: \"" + klass.getName());
     if(Observe.class.equals(klass)) {
       observe(message);
     } else if(StopObserving.class.equals(klass)) {
@@ -376,7 +388,11 @@ public final class Call extends UntypedActor {
           }
         }
       } else if(LinkStateChanged.State.OPEN == event.state()) {
-        fsm.transition(message, inProgress);
+        if(openingInternalLink.equals(state)) {
+          fsm.transition(message, updatingInternalLink);
+        } else if(updatingInternalLink.equals(state)) {
+          fsm.transition(message, inProgress);
+        }
       }
     } else if(message instanceof ReceiveTimeout) {
       fsm.transition(message, failingNoAnswer);
@@ -627,6 +643,7 @@ public final class Call extends UntypedActor {
 
 	@Override public void execute(Object message) throws Exception {
 	  final ConnectionStateChanged response = (ConnectionStateChanged)message;
+	  final ActorRef self = self();
 	  // Create a SIP invite to initiate a new session.
 	  final StringBuilder buffer = new StringBuilder();
 	  buffer.append(to.getHost());
@@ -635,6 +652,7 @@ public final class Call extends UntypedActor {
 	  }
 	  final SipURI uri = factory.createSipURI(null, buffer.toString());
 	  final SipApplicationSession application = factory.createApplicationSession();
+	  application.setAttribute(Call.class.getName(), self);
 	  invite = factory.createRequest(application, "INVITE", from, to);
 	  invite.pushRoute(uri);
 	  final SipSession session = invite.getSession();
@@ -652,7 +670,7 @@ public final class Call extends UntypedActor {
 	  invite.send();
 	  // Set the timeout period.
 	  final UntypedActorContext context = getContext();
-	  context.setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
+	  context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
 	}
   }
   
@@ -671,6 +689,9 @@ public final class Call extends UntypedActor {
 	    // Send a ringing response.
 	    final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
 	    ringing.send();
+	  } else if(message instanceof SipServletResponse) {
+	    final UntypedActorContext context = getContext();
+		context.setReceiveTimeout(Duration.Undefined());
 	  }
       // Notify the observers.
 	  external = CallStateChanged.State.RINGING;
@@ -690,6 +711,8 @@ public final class Call extends UntypedActor {
 	  final State state = fsm.state();
 	  if(dialing.equals(state) || (ringing.equals(state) &&
 	      OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction))) {
+		final UntypedActorContext context = getContext();
+		context.setReceiveTimeout(Duration.Undefined());
         final SipServletRequest cancel = invite.createCancel();
         cancel.send();
 	  }
@@ -723,6 +746,14 @@ public final class Call extends UntypedActor {
     public Failing(final ActorRef source) {
       super(source);
     }
+    
+    @Override public void execute(final Object message) throws Exception {
+      if(message instanceof ReceiveTimeout) {
+	    final UntypedActorContext context = getContext();
+	    context.setReceiveTimeout(Duration.Undefined());
+	  }
+      super.execute(message);
+    }
   }
   
   private final class FailingBusy extends Failing {
@@ -734,15 +765,6 @@ public final class Call extends UntypedActor {
   private final class FailingNoAnswer extends Failing {
     public FailingNoAnswer(final ActorRef source) {
       super(source);
-    }
-    
-    @Override public void execute(final Object message) throws Exception {
-      super.execute(message);
-      final State state = fsm.state();
-      if(uninitialized.equals(state)) {
-  	    final UntypedActorContext context = getContext();
-  	    context.setReceiveTimeout(Duration.Undefined());
-  	  }
     }
   }
   
@@ -784,9 +806,6 @@ public final class Call extends UntypedActor {
         gateway.tell(new DestroyConnection(remoteConn), source);
         remoteConn = null;
       }
-      // Stop the timeout timer.
-  	  final UntypedActorContext context = getContext();
-  	  context.setReceiveTimeout(Duration.Undefined());
    	  // Explicitly invalidate the application session.
   	  invite.getSession().invalidate();
   	  invite.getApplicationSession().invalidate();
@@ -827,6 +846,11 @@ public final class Call extends UntypedActor {
     }
 
 	@Override public void execute(final Object message) throws Exception {
+	  final State state = fsm.state();
+	  if(dialing.equals(state)) {
+  	    final UntypedActorContext context = getContext();
+  	    context.setReceiveTimeout(Duration.Undefined());
+  	  }
 	  final SipServletResponse response = (SipServletResponse)message;
 	  final String externalIp = invite.getInitialRemoteAddr();
 	  final byte[] sdp = response.getRawContent();
@@ -858,8 +882,10 @@ public final class Call extends UntypedActor {
 	    okay.setContent(answer, "application/sdp");
 	    okay.send();
 	  }
-	  // Make sure the SIP session doesn't end pre-maturely.
-	  invite.getApplicationSession().setExpires(0);
+	  if(openingRemoteConnection.equals(state) || updatingRemoteConnection.equals(state)) {
+	    // Make sure the SIP session doesn't end pre-maturely.
+	    invite.getApplicationSession().setExpires(0);
+	  }
 	  // Notify the observers.
 	  external = CallStateChanged.State.IN_PROGRESS;
 	  final CallStateChanged event = new CallStateChanged(external);
@@ -906,6 +932,17 @@ public final class Call extends UntypedActor {
 
 	@Override public void execute(Object message) throws Exception {
 	  internalLink.tell(new OpenLink(internalLinkMode), source);
+	}
+  }
+  
+  private final class UpdatingInternalLink extends AbstractAction {
+    public UpdatingInternalLink(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+	  final UpdateLink update = new UpdateLink(ConnectionMode.SendRecv, UpdateLink.Type.PRIMARY);
+	  internalLink.tell(update, source);
 	}
   }
   

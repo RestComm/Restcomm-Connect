@@ -107,6 +107,13 @@
 		<scope>provided</scope>
 	</dependency>
 	
+	<dependency>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm.telephony.api</artifactId>
+		<version>${project.version}</version>
+		<scope>provided</scope>
+	</dependency>
+	
 	<!-- Testing -->
 	
 	<dependency>
@@ -124,6 +131,42 @@
 	<dependency>
 		<groupId>com.typesafe.akka</groupId>
 		<artifactId>akka-testkit_2.10</artifactId>
+		<scope>test</scope>
+	</dependency>
+	
+	<dependency>
+		<groupId>hsqldb</groupId>
+		<artifactId>hsqldb</artifactId>
+		<scope>test</scope>
+	</dependency>
+			
+	<dependency>
+		<groupId>org.mobicents.arquillian.container</groupId>
+		<artifactId>mss-tomcat-embedded-6</artifactId>
+		<scope>test</scope>
+	</dependency>
+
+	<dependency>
+		<groupId>org.jboss.arquillian.junit</groupId>
+		<artifactId>arquillian-junit-container</artifactId>
+		<scope>test</scope>
+	</dependency>
+
+	<dependency>
+		<groupId>org.jboss.shrinkwrap.resolver</groupId>
+		<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+		<scope>test</scope>
+	</dependency>
+
+	<dependency>
+		<groupId>org.jboss.shrinkwrap.resolver</groupId>
+		<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+		<scope>test</scope>
+	</dependency>
+            
+    <dependency>
+		<groupId>org.cafesip.sipunit</groupId>
+		<artifactId>sipunit</artifactId>
 		<scope>test</scope>
 	</dependency>
 
