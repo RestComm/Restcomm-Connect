@@ -23,7 +23,6 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -32,7 +31,6 @@ import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 
@@ -66,32 +64,19 @@ public final class SmsServiceProxy extends SipServlet {
     final SipFactory factory = (SipFactory)context.getAttribute(SIP_FACTORY);
     Configuration configuration = (Configuration)context.getAttribute(Configuration.class.getName());
     configuration = configuration.subset("sms-aggregator");
+    configuration.setProperty(ServletConfig.class.getName(), config);
     final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
     system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
-    service = service(configuration, factory, outboundInterface(config), storage);
+    service = service(configuration, factory, storage);
     context.setAttribute(SmsService.class.getName(), service);
   }
   
-  @SuppressWarnings("unchecked")
-  private SipURI outboundInterface(final ServletConfig configuration) {
-	final ServletContext context = configuration.getServletContext();
-	SipURI result = null;
-	final List<SipURI> uris = (List<SipURI>)context.getAttribute(OUTBOUND_INTERFACES);
-	for(final SipURI uri : uris) {
-	  final String transport = uri.getTransportParam();
-	  if("udp".equalsIgnoreCase(transport)) {
-	    result = uri;
-	  }
-	}
-	return result;
-  }
-  
   private ActorRef service(final Configuration configuration, final SipFactory factory,
-      final SipURI transport, final DaoManager storage) {
+      final DaoManager storage) {
     return system.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
-          return new SmsService(system, configuration, factory, transport, storage);
+          return new SmsService(system, configuration, factory, storage);
 		}
     }));
   }

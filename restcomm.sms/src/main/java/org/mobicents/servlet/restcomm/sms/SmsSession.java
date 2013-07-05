@@ -139,7 +139,8 @@ public final class SmsSession extends UntypedActor {
     final int status = response.getStatus();
     final SmsSessionInfo info = info();
     SmsSessionResponse result = null;
-    if(SipServletResponse.SC_ACCEPTED == status) {
+    if(SipServletResponse.SC_ACCEPTED == status ||
+        SipServletResponse.SC_OK == status) {
       result = new SmsSessionResponse(info, true);
     } else {
       result = new SmsSessionResponse(info, false);
@@ -166,7 +167,7 @@ public final class SmsSession extends UntypedActor {
       return;
     }
     final SipApplicationSession application = factory.createApplicationSession();
-	StringBuilder buffer = new StringBuilder();
+    StringBuilder buffer = new StringBuilder();
 	buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
 	final String sender = buffer.toString();
 	buffer = new StringBuilder();

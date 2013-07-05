@@ -101,7 +101,9 @@ public class SmsMessageConverter extends AbstractConverter
   
   private void writeDateSent(final DateTime dateSent, final HierarchicalStreamWriter writer) {
     writer.startNode("DateSent");
-    writer.setValue(dateSent.toString());
+    if(dateSent != null) {
+      writer.setValue(dateSent.toString());
+    }
     writer.endNode();
   }
   

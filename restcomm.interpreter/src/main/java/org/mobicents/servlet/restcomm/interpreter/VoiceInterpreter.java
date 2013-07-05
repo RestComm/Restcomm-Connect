@@ -2305,7 +2305,7 @@ public final class VoiceInterpreter extends UntypedActor {
         builder.setSender(from);
         builder.setBody(body);
         builder.setDirection(Direction.OUTBOUND_REPLY);
-        builder.setStatus(Status.RECEIVED);
+        builder.setStatus(Status.SENDING);
         builder.setPrice(new BigDecimal("0.00"));
         final StringBuilder buffer = new StringBuilder();
 	    buffer.append("/").append(version).append("/Accounts/");

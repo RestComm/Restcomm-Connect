@@ -28,9 +28,13 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 import java.io.IOException;
+import java.util.List;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
@@ -51,17 +55,17 @@ import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 public final class SmsService extends UntypedActor {
   private final ActorSystem system;
   private final Configuration configuration;
+  private final ServletConfig servletConfig;
   private final SipFactory factory;
-  private final SipURI transport;
   private final DaoManager storage;
   
   public SmsService(final ActorSystem system, final Configuration configuration,
-      final SipFactory factory, final SipURI transport, final DaoManager storage) {
+      final SipFactory factory, final DaoManager storage) {
     super();
     this.system = system;
     this.configuration = configuration;
+    this.servletConfig = (ServletConfig)configuration.getProperty(ServletConfig.class.getName());
     this.factory = factory;
-    this.transport = transport;
     this.storage = storage;
   }
   
@@ -151,11 +155,25 @@ public final class SmsService extends UntypedActor {
     session.tell(response, self);
   }
   
+  @SuppressWarnings("unchecked")
+  private SipURI outboundInterface() {
+	final ServletContext context = servletConfig.getServletContext();
+	SipURI result = null;
+	final List<SipURI> uris = (List<SipURI>)context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
+	for(final SipURI uri : uris) {
+	  final String transport = uri.getTransportParam();
+	  if("udp".equalsIgnoreCase(transport)) {
+	    result = uri;
+	  }
+	}
+	return result;
+  }
+  
   private ActorRef session() {
     return system.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
-          return new SmsSession(configuration, factory, transport);
+          return new SmsSession(configuration, factory, outboundInterface());
 		}
     }));
   }
