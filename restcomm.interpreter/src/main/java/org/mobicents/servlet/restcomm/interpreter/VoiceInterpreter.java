@@ -1236,6 +1236,7 @@ public final class VoiceInterpreter extends UntypedActor {
 		  builder.setStartTime(now);
 		  builder.setDirection(callInfo.direction());
 		  builder.setApiVersion(version);
+		  builder.setPrice(new BigDecimal("0.00"));
 		  final StringBuilder buffer = new StringBuilder();
 		  buffer.append("/").append(version).append("/Accounts/");
 		  buffer.append(accountId.toString()).append("/Calls/");

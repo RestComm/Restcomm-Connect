@@ -72,6 +72,16 @@
 		</security-roles>
 	</runtime-settings>
 	
+	<!-- 
+		Configuration for the VoIP Innovations provisioning API.
+	 -->
+	<voip-innovations>
+		<login>restcomm</login>
+		<password>Delta2637</password>
+		<endpoint>9707</endpoint>
+		<uri>https://www.loginto.us/voip/api2.pl</uri>
+	</voip-innovations>
+	
 	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
 	    <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
 	    <data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>

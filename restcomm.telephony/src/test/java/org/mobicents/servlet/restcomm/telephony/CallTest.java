@@ -318,7 +318,7 @@ public final class CallTest {
     call.sendInviteOkAck();
     assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
     // hangup.
-    assertTrue(call.waitForDisconnect(60 * 1000));
+    assertTrue(call.waitForDisconnect(120 * 1000));
     try {
       Thread.sleep(10 * 1000);
     } catch(final InterruptedException exception) {

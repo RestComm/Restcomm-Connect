@@ -30,6 +30,7 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -40,6 +41,13 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.shiro.authz.AuthorizationException;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
@@ -64,6 +72,8 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
   protected Gson gson;
   protected XStream xstream;
   
+  private String header;
+  
   public IncomingPhoneNumbersEndpoint() {
     super();
   }
@@ -72,10 +82,10 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
   public void init() {
     final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
     configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    configuration = configuration.subset("runtime-settings");
-    super.init(configuration);
+    final Configuration runtime = configuration.subset("runtime-settings");
+    super.init(runtime);
     dao = storage.getIncomingPhoneNumbersDao();
-    final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(configuration);
+    final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(runtime);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(IncomingPhoneNumber.class, converter);
     builder.setPrettyPrinting();
@@ -83,8 +93,84 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new IncomingPhoneNumberListConverter(configuration));
-    xstream.registerConverter(new RestCommResponseConverter(configuration));
+    xstream.registerConverter(new IncomingPhoneNumberListConverter(runtime));
+    xstream.registerConverter(new RestCommResponseConverter(runtime));
+    final Configuration vi = configuration.subset("voip-innovations");
+    header = header(vi.getString("login"), vi.getString("password"));
+  }
+  
+  private String header(final String login, final String password) {
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("<header><sender>");
+    buffer.append("<login>").append(login).append("</login>");
+    buffer.append("<password>").append(password).append("</password>");
+    buffer.append("</sender></header>");
+    return buffer.toString();
+  }
+  
+  protected boolean assignDid(final String did) {
+    if(did != null && !did.isEmpty()) {
+      final Configuration vi = configuration.subset("voip-innovations");
+      final StringBuilder buffer = new StringBuilder();
+      buffer.append("<request id=\"\">");
+      buffer.append(header);
+      buffer.append("<body>");
+      buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
+      buffer.append("<item>");
+      buffer.append("<did>").append(did).append("</did>");
+      buffer.append("<endpointgroup>").append(vi.getString("endpoint")).append("</endpointgroup>");
+      buffer.append("</item>");
+      buffer.append("</body>");
+      buffer.append("</request>");
+      final String body = buffer.toString();
+      final HttpPost post = new HttpPost(vi.getString("uri"));
+      try {
+        List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+        parameters.add(new BasicNameValuePair("apidata", body));
+        post.setEntity(new UrlEncodedFormEntity(parameters));
+        final DefaultHttpClient client = new DefaultHttpClient();
+        final HttpResponse response = client.execute(post);
+        if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+          final String content = StringUtils.toString(response.getEntity().getContent());
+          if(content.contains("<statuscode>100</statuscode>")) {
+            return true;
+          }
+        }
+      } catch(final Exception ignored) { }
+    }
+    return false;
+  }
+  
+  protected boolean isValidDid(final String did) {
+    if(did != null && !did.isEmpty()) {
+      final StringBuilder buffer = new StringBuilder();
+      buffer.append("<request id=\"\">");
+      buffer.append(header);
+      buffer.append("<body>");
+      buffer.append("<requesttype>").append("queryDID").append("</requesttype>");
+      buffer.append("<item>");
+      buffer.append("<did>").append(did).append("</did>");
+      buffer.append("</item>");
+      buffer.append("</body>");
+      buffer.append("</request>");
+      final String body = buffer.toString();
+      final Configuration vi = configuration.subset("voip-innovations");
+      final HttpPost post = new HttpPost(vi.getString("uri"));
+      try {
+        List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+        parameters.add(new BasicNameValuePair("apidata", body));
+        post.setEntity(new UrlEncodedFormEntity(parameters));
+        final DefaultHttpClient client = new DefaultHttpClient();
+        final HttpResponse response = client.execute(post);
+        if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+          final String content = StringUtils.toString(response.getEntity().getContent());
+          if(content.contains("<statusCode>100</statusCode>")) {
+            return true;
+          }
+        }
+      } catch(final Exception ignored) { }
+    }
+    return false;
   }
   
   private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -111,6 +197,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
     builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
     builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
     builder.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+    final Configuration configuration = this.configuration.subset("runtime-settings");
     String rootUri = configuration.getString("root-uri");
     rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
     final StringBuilder buffer = new StringBuilder();
@@ -168,6 +255,10 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
     try { validate(data); } catch(final NullPointerException exception) { 
       return status(BAD_REQUEST).entity(exception.getMessage()).build();
+    }
+    final String number = data.getFirst("PhoneNumber");
+    if(isValidDid(number)) {
+      assignDid(number);
     }
     final IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data);
     dao.addIncomingPhoneNumber(incomingPhoneNumber);
