@@ -760,6 +760,7 @@ public final class SmsInterpreter extends UntypedActor {
             final String status = Status.SENDING.toString();
             parameters.add(new BasicNameValuePair("SmsStatus", status));
             request = new HttpRequestDescriptor(uri, method, parameters);
+            downloader.tell(request, source);
             return;
           }
       }

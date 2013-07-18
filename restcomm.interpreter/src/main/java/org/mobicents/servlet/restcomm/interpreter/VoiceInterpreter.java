@@ -1870,7 +1870,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	  // Parse finish on key.
       String finishOnKey = finishOnKey(verb);
       // Parse the number of digits.
-      int numberOfDigits = Integer.MAX_VALUE;
+      int numberOfDigits = Short.MAX_VALUE;
       Attribute attribute = verb.attribute("numDigits");
       if(attribute != null) {
         final String value = attribute.value();
@@ -2573,7 +2573,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	    source.tell(stop, source);
 	    return;
 	  }
-	  final Play play = new Play(uri, Integer.MAX_VALUE);
+	  final Play play = new Play(uri, Short.MAX_VALUE);
 	  callMediaGroup.tell(play, source);
 	  final UntypedActorContext context = getContext();
 	  context.setReceiveTimeout(Duration.create(timeout(verb), TimeUnit.SECONDS));
