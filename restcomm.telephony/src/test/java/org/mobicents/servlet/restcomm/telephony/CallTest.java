@@ -274,6 +274,32 @@ public final class CallTest {
     }
   }
   
+  @Ignore @Test public void testGatherAndFollowAction() throws InterruptedException {
+    deployer.deploy("CallTest");
+    phone.setLoopback(true);
+    final SipCall call = phone.createSipCall();
+    call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334453@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+    assertLastOperationSuccess(call);
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    final int response = call.getLastReceivedResponse().getStatusCode();
+    assertTrue(response == Response.TRYING || response == Response.RINGING);
+    if(response == Response.TRYING) {
+      assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.RINGING, call.getLastReceivedResponse().getStatusCode());
+    }
+    assertTrue(call.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, call.getLastReceivedResponse().getStatusCode());
+    call.sendInviteOkAck();
+    assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
+    // Wait for the media to play and the call to hangup.
+    assertTrue(call.waitForDisconnect(10 * 1000));
+    try {
+      Thread.sleep(10 * 1000);
+    } catch(final InterruptedException exception) {
+      exception.printStackTrace();
+    }
+  }
+  
   @Ignore @Test public void testDialConference() throws InterruptedException {
     deployer.deploy("CallTest");
     phone.setLoopback(true);
@@ -416,6 +442,8 @@ public final class CallTest {
 	archive.addAsWebResource("gather-entry.xml");
 	archive.addAsWebResource("dial-conference-entry.xml");
 	archive.addAsWebResource("dial-fork-entry.xml");
+	archive.addAsWebResource("gather-action-entry.xml");
+	archive.addAsWebResource("gather-action-finish.xml");
     return archive;
   }
 }

@@ -388,6 +388,8 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(ready, hangingUp));
     transitions.add(new Transition(ready, finished));
     transitions.add(new Transition(pausing, ready));
+    transitions.add(new Transition(pausing, hangingUp));
+    transitions.add(new Transition(pausing, finished));
     transitions.add(new Transition(rejecting, acquiringCallMediaGroup));
     transitions.add(new Transition(rejecting, finished));
     transitions.add(new Transition(playingRejectionPrompt, hangingUp));
@@ -416,6 +418,8 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(caching, hangingUp));
     transitions.add(new Transition(caching, finished));
     transitions.add(new Transition(playing, ready));
+    transitions.add(new Transition(playing, hangingUp));
+    transitions.add(new Transition(playing, finished));
     transitions.add(new Transition(synthesizing, faxing));
     transitions.add(new Transition(synthesizing, pausing));
     transitions.add(new Transition(synthesizing, caching));
@@ -1959,6 +1963,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	      final List<NameValuePair> parameters = parameters();
 	      parameters.add(new BasicNameValuePair("Digits", digits));
 	      request = new HttpRequestDescriptor(uri, method, parameters);
+	      downloader.tell(request, source);
 	      return;
 	    }
 	  }
@@ -2185,6 +2190,7 @@ public final class VoiceInterpreter extends UntypedActor {
           parameters.add(new BasicNameValuePair("Digits", response.get()));
           // add record parameters
           request = new HttpRequestDescriptor(uri, method, parameters);
+          downloader.tell(request, source);
           return;
         }
       }
@@ -2363,6 +2369,7 @@ public final class VoiceInterpreter extends UntypedActor {
             final String status = Status.SENDING.toString();
             parameters.add(new BasicNameValuePair("SmsStatus", status));
             request = new HttpRequestDescriptor(uri, method, parameters);
+            downloader.tell(request, source);
             return;
           }
         }
@@ -2580,8 +2587,7 @@ public final class VoiceInterpreter extends UntypedActor {
 
 	@Override public void execute(final Object message) throws Exception {
 	  if(isForking) {
-	    final boolean result = dialBranches.remove(outboundCall);
-	    System.out.println("*********************************** " + result + " *******************************");
+	    dialBranches.remove(outboundCall);
 	    for(final ActorRef branch : dialBranches) {
 	      branch.tell(new Cancel(), source);
 	      callManager.tell(new DestroyCall(branch), source);
@@ -2677,6 +2683,7 @@ public final class VoiceInterpreter extends UntypedActor {
           // Redirect to the action url.
           final List<NameValuePair> parameters = parameters();
           request = new HttpRequestDescriptor(uri, method, parameters);
+          downloader.tell(request, source);
           return;
         }
       }
@@ -2928,6 +2935,7 @@ public final class VoiceInterpreter extends UntypedActor {
           // Redirect to the action url.
           final List<NameValuePair> parameters = parameters();
           request = new HttpRequestDescriptor(uri, method, parameters);
+          downloader.tell(request, source);
           return;
         }
       }
