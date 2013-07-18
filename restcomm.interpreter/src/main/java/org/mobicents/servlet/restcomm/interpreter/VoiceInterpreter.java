@@ -1309,7 +1309,12 @@ public final class VoiceInterpreter extends UntypedActor {
 	    return;
 	  } else if(downloadingRcml.equals(state) ||
 	      downloadingFallbackRcml.equals(state) ||
-	      redirecting.equals(state)) {
+	      redirecting.equals(state) ||
+	      finishGathering.equals(state) ||
+	      finishRecording.equals(state) ||
+	      sendingSms.equals(state) ||
+	      finishDialing.equals(state) ||
+	      finishConferencing.equals(state)) {
 	    response = ((DownloaderResponse)message).get();
 		if(parser != null) {
 		  context.stop(parser);
@@ -2191,6 +2196,9 @@ public final class VoiceInterpreter extends UntypedActor {
           // add record parameters
           request = new HttpRequestDescriptor(uri, method, parameters);
           downloader.tell(request, source);
+          // A little clean up.
+    	  recordingSid = null;
+    	  recordingUri = null;
           return;
         }
       }
@@ -2684,6 +2692,8 @@ public final class VoiceInterpreter extends UntypedActor {
           final List<NameValuePair> parameters = parameters();
           request = new HttpRequestDescriptor(uri, method, parameters);
           downloader.tell(request, source);
+          dialChildren = null;
+    	  outboundCall = null;
           return;
         }
       }
