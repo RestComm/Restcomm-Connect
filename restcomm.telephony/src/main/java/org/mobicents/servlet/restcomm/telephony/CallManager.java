@@ -133,6 +133,13 @@ public final class CallManager extends UntypedActor {
   private void invite(final Object message) throws IOException, NumberParseException {
     final ActorRef self = self();
     final SipServletRequest request = (SipServletRequest)message;
+    // Make sure we handle re-invites properly.
+    if(!request.isInitial()) {
+      final SipServletResponse okay = request.createResponse(SC_OK);
+      okay.send();
+      return;
+    }
+    // If it's a new invite lets try to handle it.
     final ApplicationsDao applications = storage.getApplicationsDao();
     // Try to find an application defined for the client.
     SipURI uri = (SipURI)request.getFrom().getURI();
