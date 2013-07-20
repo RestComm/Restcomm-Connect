@@ -1646,10 +1646,6 @@ public final class VoiceInterpreter extends UntypedActor {
 	  if(Tag.class.equals(klass)) {
 	    verb = (Tag)message;
 	  }
-	  // Stop the media groups if necessary.
-	  if(callMediaGroup != null) {
-	    callMediaGroup.tell(new StopMediaGroup(), source);
-	  }
 	  // Hang up the call.
 	  call.tell(new Hangup(), source);
 	}
