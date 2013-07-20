@@ -127,7 +127,7 @@ public final class CallTest {
     }
   }
   
-  @Ignore @Test public void testPauseRejectBusy() {
+  @Test public void testPauseRejectBusy() {
     deployer.deploy("CallTest");
     phone.setLoopback(true);
     final SipCall call = phone.createSipCall();
@@ -144,7 +144,7 @@ public final class CallTest {
     assertEquals(Response.BUSY_HERE, call.getLastReceivedResponse().getStatusCode());
   }
   
-  @Test public void testPauseRejectRejected() throws InterruptedException {
+  @Ignore @Test public void testPauseRejectRejected() throws InterruptedException {
     deployer.deploy("CallTest");
     phone.setLoopback(true);
     final SipCall call = phone.createSipCall();
