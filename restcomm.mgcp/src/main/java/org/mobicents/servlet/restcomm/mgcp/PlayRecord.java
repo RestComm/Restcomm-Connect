@@ -112,7 +112,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
     }
     if(endInputKey != null) {
       if(buffer.length() > 0) buffer.append(" ");
-      buffer.append("eik=").append(endInputKey);
+      buffer.append("eik=").append(endInputKey).append(" ");
+      buffer.append("mn=").append(endInputKey.length()).append(" ");
+      buffer.append("mx=").append(endInputKey.length());
     }
     return buffer.toString();
   }
