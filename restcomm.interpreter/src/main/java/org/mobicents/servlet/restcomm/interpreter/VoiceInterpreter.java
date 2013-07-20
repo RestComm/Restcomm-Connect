@@ -2939,7 +2939,8 @@ public final class VoiceInterpreter extends UntypedActor {
 	    final RemoveParticipant remove = new RemoveParticipant(call);
 	    conference.tell(remove, source);
 	  }
-	  // Clean up.
+	  // Clean up.\
+	  callMediaGroup.tell(new StopMediaGroup(), source);
 	  final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
 	  conference.tell(destroy, source);
 	  conferenceMediaGroup = null;
@@ -3036,7 +3037,9 @@ public final class VoiceInterpreter extends UntypedActor {
 	    }
 	  }
 	  // If we still have a conference media group release it.
+	  final StopMediaGroup stop = new StopMediaGroup();
 	  if(conferenceMediaGroup != null) {
+		conferenceMediaGroup.tell(stop, source);  
 	    final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
 	    conference.tell(destroy, source);
 	    conferenceMediaGroup = null;
@@ -3048,6 +3051,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	  }
 	  // Destroy the media group(s).
 	  if(callMediaGroup != null) {
+	    callMediaGroup.tell(stop, source);
 	    final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
 	    call.tell(destroy, source);
 	    callMediaGroup = null;
