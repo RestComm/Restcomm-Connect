@@ -25,7 +25,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class PlayCollect extends AbstractMgcpAUMessage {
+@Immutable public final class PlayCollect {
   private final List<URI> initialPrompts;
   private final boolean clearDigitBuffer;
   private final int maxNumberOfDigits;
@@ -114,11 +114,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
     }
     if(firstDigitTimer > 0) {
       if(buffer.length() > 0) buffer.append(" ");
-      buffer.append("fdt=").append(format(firstDigitTimer));
+      buffer.append("fdt=").append(firstDigitTimer * 10);
     }
     if(interDigitTimer > 0) {
       if(buffer.length() > 0) buffer.append(" ");
-      buffer.append("idt=").append(format(interDigitTimer));
+      buffer.append("idt=").append(interDigitTimer * 10);
     }
     if(endInputKey != null) {
       if(buffer.length() > 0) buffer.append(" ");

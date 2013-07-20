@@ -517,7 +517,8 @@ public final class SmsInterpreter extends UntypedActor {
 	  final State state = fsm.state();
 	  // Make sure we create a new parser if necessary.
 	  if(downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) ||
-	      redirecting.equals(state)) {
+	      redirecting.equals(state) ||
+	      sendingSms.equals(state)) {
 	    response = ((DownloaderResponse)message).get();
         if(parser != null) {
           context.stop(parser);

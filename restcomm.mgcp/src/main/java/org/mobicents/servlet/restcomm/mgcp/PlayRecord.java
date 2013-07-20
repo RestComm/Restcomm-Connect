@@ -25,7 +25,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class PlayRecord extends AbstractMgcpAUMessage {
+@Immutable public final class PlayRecord {
   private final List<URI> initialPrompts;
   private final boolean clearDigitBuffer;
   private final long preSpeechTimer;
@@ -100,15 +100,15 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
     }
     if(preSpeechTimer > 0) {
       if(buffer.length() > 0) buffer.append(" ");
-      buffer.append("prt=").append(format(preSpeechTimer));
+      buffer.append("prt=").append(preSpeechTimer * 10);
     }
     if(postSpeechTimer > 0) {
       if(buffer.length() > 0) buffer.append(" ");
-      buffer.append("pst=").append(format(postSpeechTimer));
+      buffer.append("pst=").append(postSpeechTimer * 10);
     }
     if(recordingLength > 0) {
       if(buffer.length() > 0) buffer.append(" ");
-      buffer.append("rlt=").append(format(recordingLength));
+      buffer.append("rlt=").append(recordingLength * 1000);
     }
     if(endInputKey != null) {
       if(buffer.length() > 0) buffer.append(" ");

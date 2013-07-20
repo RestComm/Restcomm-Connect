@@ -127,7 +127,7 @@ public final class CallTest {
     }
   }
   
-  @Ignore @Test public void testPauseRejectBusy() {
+  @Test public void testPauseRejectBusy() {
     deployer.deploy("CallTest");
     phone.setLoopback(true);
     final SipCall call = phone.createSipCall();

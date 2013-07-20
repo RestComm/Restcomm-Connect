@@ -257,7 +257,7 @@ public final class VoiceInterpreter extends UntypedActor {
   private final URI fallbackUrl;
   private final String fallbackMethod;
   private final URI statusCallback;
-  private final String statusCallbackMethod;
+  private String statusCallbackMethod;
   // application data.
   private HttpRequestDescriptor request;
   private HttpResponseDescriptor response;
@@ -628,6 +628,17 @@ public final class VoiceInterpreter extends UntypedActor {
 	}));
   }
   
+  private void callback() {
+    if(statusCallback != null) {
+      if(statusCallbackMethod == null) {
+        statusCallbackMethod = "POST";
+      }
+	  final List<NameValuePair> parameters = parameters();
+   	  request = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
+   	  downloader.tell(request, null);
+    }
+  }
+  
   private ActorRef cache(final String path, final String uri) {
     final UntypedActorContext context = getContext();
     return context.actorOf(new Props(new UntypedActorFactory() {
@@ -648,7 +659,7 @@ public final class VoiceInterpreter extends UntypedActor {
     }));
   }
   
-  protected String format(final String number) {
+  private String format(final String number) {
     final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
     try {
       final PhoneNumber result = numbersUtil.parse(number, "US");
@@ -665,7 +676,7 @@ public final class VoiceInterpreter extends UntypedActor {
     parser.tell(next, self);
   }
   
-  protected Notification notification(final int log, final int error,
+  private Notification notification(final int log, final int error,
       final String message) {
     final Notification.Builder builder = Notification.builder();
     final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
@@ -778,7 +789,9 @@ public final class VoiceInterpreter extends UntypedActor {
           CallStateChanged.State.FAILED == event.state()) {
         if(bridged.equals(state) && sender == outboundCall) {
           fsm.transition(message, finishDialing);
-        } else if(!forking.equals(state)) {
+        } else if(creatingRecording.equals(state)) {
+          fsm.transition(message, finishRecording);
+        } else if(!forking.equals(state) || call == sender()) {
     	  fsm.transition(message, finished);
         }
       }
@@ -976,7 +989,7 @@ public final class VoiceInterpreter extends UntypedActor {
     }
   }
   
-  protected List<NameValuePair> parameters() {
+  private List<NameValuePair> parameters() {
   	final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
     final String callSid = callInfo.sid().toString();
 	parameters.add(new BasicNameValuePair("CallSid", callSid));
@@ -1010,15 +1023,13 @@ public final class VoiceInterpreter extends UntypedActor {
   
   private void postCleanup() {
     final ActorRef self = self();
-    if(CallStateChanged.State.IN_PROGRESS != callState) {
-      if(smsSessions.isEmpty() && outstandingAsrRequests == 0) {
-        final UntypedActorContext context = getContext();
-        context.stop(self);
-      }
+    if(smsSessions.isEmpty() && outstandingAsrRequests == 0) {
+      final UntypedActorContext context = getContext();
+      context.stop(self);
     }
   }
   
-  protected URI resolve(final URI base, final URI uri) {
+  private URI resolve(final URI base, final URI uri) {
     if(base.equals(uri)) {
       return uri;
     } else {
@@ -1159,15 +1170,22 @@ public final class VoiceInterpreter extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  final Class<?> klass = message.getClass();
 	  if(CallResponse.class.equals(klass)) {
+	    // Update the interpreter state.
         final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
         callInfo = response.get();
         callState = callInfo.state();
+        // Update the storage.
         callRecord = callRecord.setStatus(callState.toString());
         final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
         records.updateCallDetailRecord(callRecord);
+        // Update the application.
+        callback();
+        // Start dialing.
         call.tell(new Dial(), source);
       } else if(Tag.class.equals(klass)) {
+        // Update the interpreter state.
         verb = (Tag)message;
+        // Answer the call.
         call.tell(new Answer(), source);
       }
 	}
@@ -1181,12 +1199,16 @@ public final class VoiceInterpreter extends UntypedActor {
 	@Override public void execute(final Object message) throws Exception {
 	  final Class<?> klass = message.getClass();
 	  if(CallStateChanged.class.equals(klass)) {
+	    // Update the interpreter state.
 	    final CallStateChanged event = (CallStateChanged)message;
 	    callState = event.state();
+	    // Update the storage.
 	    callRecord = callRecord.setStatus(callState.toString());
 	    callRecord = callRecord.setStartTime(DateTime.now());
 	    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
 	    records.updateCallDetailRecord(callRecord);
+	    // Update the application.
+	    callback();
 	  }
 	  call.tell(new CreateMediaGroup(), source);
 	}
@@ -1249,8 +1271,8 @@ public final class VoiceInterpreter extends UntypedActor {
 		  builder.setUri(uri);
 		  callRecord = builder.build();
 		  records.addCallDetailRecord(callRecord);
-	    } else {
-	      callRecord = records.getCallDetailRecord(callInfo.sid());
+		  // Update the application.
+		  callback();
 	    }
 	  }
 	  // Ask the downloader to get us the application that will be executed.
@@ -1264,10 +1286,6 @@ public final class VoiceInterpreter extends UntypedActor {
     public DownloadingFallbackRcml(final ActorRef source) {
       super(source);
     }
-
-    
-    
-    
     
 	@Override public void execute(final Object message) throws Exception {
 	  final Class<?> klass = message.getClass();
@@ -2081,7 +2099,23 @@ public final class VoiceInterpreter extends UntypedActor {
 
 	@SuppressWarnings("unchecked")
 	@Override public void execute(final Object message) throws Exception {
-	  final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
+	  final Class<?> klass = message.getClass();
+	  if(CallStateChanged.class.equals(klass)) {
+	    final CallStateChanged event = (CallStateChanged)message;
+        // Update the interpreter state.
+	    callState = event.state();
+	    // Update the storage.
+	    callRecord = callRecord.setStatus(callState.toString());
+	    final DateTime end = DateTime.now();
+	    callRecord = callRecord.setEndTime(end);
+	    final int seconds = (int)(end.getMillis() -
+	        callRecord.getStartTime().getMillis()) / 1000;
+	    callRecord = callRecord.setDuration(seconds);
+	    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+	    records.updateCallDetailRecord(callRecord);
+	    // Update the application.
+	    callback();
+	  }
 	  final NotificationsDao notifications = storage.getNotificationsDao();
 	  // Create a record of the recording.
 	  final Double duration = WavUtils.getAudioDuration(recordingUri);
@@ -2192,22 +2226,33 @@ public final class VoiceInterpreter extends UntypedActor {
           final List<NameValuePair> parameters = parameters();
           parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
           parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
-          parameters.add(new BasicNameValuePair("Digits", response.get()));
-          // add record parameters
-          request = new HttpRequestDescriptor(uri, method, parameters);
-          downloader.tell(request, source);
+          if(MediaGroupResponse.class.equals(klass)) {
+            final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
+            parameters.add(new BasicNameValuePair("Digits", response.get()));
+            request = new HttpRequestDescriptor(uri, method, parameters);
+            downloader.tell(request, source);
+          } else if(CallStateChanged.class.equals(klass)) {
+            parameters.add(new BasicNameValuePair("Digits", "hangup"));
+            request = new HttpRequestDescriptor(uri, method, parameters);
+            downloader.tell(request, null);
+            source.tell(StopInterpreter.instance(), source);
+          }
           // A little clean up.
     	  recordingSid = null;
     	  recordingUri = null;
           return;
         }
       }
-	  // A little clean up.
-	  recordingSid = null;
-	  recordingUri = null;
-	  // Ask the parser for the next action to take.
-      final GetNextVerb next = GetNextVerb.instance();
-      parser.tell(next, source);
+      if(CallStateChanged.class.equals(klass)) {
+        source.tell(StopInterpreter.instance(), source);
+      } else {
+	    // Ask the parser for the next action to take.
+        final GetNextVerb next = GetNextVerb.instance();
+        parser.tell(next, source);
+      }
+      // A little clean up.
+   	  recordingSid = null;
+   	  recordingUri = null;
 	}
   }
   
@@ -2894,8 +2939,15 @@ public final class VoiceInterpreter extends UntypedActor {
 	    final RemoveParticipant remove = new RemoveParticipant(call);
 	    conference.tell(remove, source);
 	  }
+	  // Clean up.
+	  final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
+	  conference.tell(destroy, source);
+	  conferenceMediaGroup = null;
+	  conference = null;
+	  // Parse remaining conference attributes.
 	  final NotificationsDao notifications = storage.getNotificationsDao();
 	  final Tag child = conference(verb);
+	  // Parse "endConferenceOnExit"
 	  boolean endOnExit = false;
 	  Attribute attribute = child.attribute("endConferenceOnExit");
 	  if(attribute != null) {
@@ -2908,7 +2960,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	    final StopConference stop = new StopConference();
 	    conference.tell(stop, source);
 	  }
-	  // Parses "action".
+	  // Parse "action".
       attribute = verb.attribute("action");
       if(attribute != null) {
     	String action = attribute.value();
@@ -2973,6 +3025,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	    callRecord = callRecord.setDuration(seconds);
 	    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
 	    records.updateCallDetailRecord(callRecord);
+	    callback();
 	  }
 	  // Cleanup the outbound call if necessary.
 	  final State state = fsm.state();
@@ -2981,6 +3034,17 @@ public final class VoiceInterpreter extends UntypedActor {
 	      outboundCall.tell(new StopObserving(source), source);
 	      outboundCall.tell(new Hangup(), source);
 	    }
+	  }
+	  // If we still have a conference media group release it.
+	  if(conferenceMediaGroup != null) {
+	    final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
+	    conference.tell(destroy, source);
+	    conferenceMediaGroup = null;
+	  }
+	  // If the call is in a conference remove it.
+	  if(conference != null) {
+		final RemoveParticipant remove = new RemoveParticipant(call);
+	    conference.tell(remove, source);
 	  }
 	  // Destroy the media group(s).
 	  if(callMediaGroup != null) {

@@ -22,7 +22,7 @@
 		<cache-uri>http://127.0.0.1:8080/restcomm/cache</cache-uri>
 		
 		<!--  The path where recordings made by the <Record> verb are stored. -->
-		<recordings-path>${restcomm:home}/recordings</recordings-path>
+		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
 		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
 		
 		<!-- The URL to the errors dictionary. -->
