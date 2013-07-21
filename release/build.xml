@@ -11,7 +11,7 @@
 	
 	<!--Telscale binaries versions-->
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
-	<property name="telscale-media.version" value="6.1.1.GA" />
+	<property name="telscale-media.version" value="6.1.2.GA" />
 	<property name="telscale-lb.version" value="6.1.2.GA" />
 	<property name="telscale-diameter.version" value="6.1.2.GA" />
 	
@@ -53,6 +53,7 @@
 	
 	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-for-ami" depends="clean,get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-for-ami-no-clean" depends="get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	
     <target name="deploy">
