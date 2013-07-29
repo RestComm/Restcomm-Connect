@@ -6,19 +6,19 @@
 <!-- chapter id nickname: ittsss -->
 <chapter>
 	<title>Configuration</title>
-	<para>In order for RestComm to function properly it must first be configured. In this chapter we will cover the settings
-	for RestComm and it's respective plug-ins. In order to make RestComm easy to manage all of the configuration is done
-	in only one file. The file is located at <filename>RESTCOMM_HOME/WEB-INF/conf/restcomm.xml</filename> and is composed
-	of the sections that follow.</para>
+	<para>In order for TelScale RestComm to function properly it must first be configured. In this chapter we will cover
+	the settings for TelScale RestComm and it's respective plug-ins. In order to make TelScale RestComm easy to manage
+	all of the configuration is done in only one file. The file is located at
+	<filename>RESTCOMM_HOME/WEB-INF/conf/restcomm.xml</filename> and is composed of the sections that follow.</para>
 	<note>
-		<para>RestComm provides a default set of plug-ins for the storage engine, fax service, SMS aggregator, automatic
-		speech recognition, and speech synthesis. All these services are pluggable and RestComm is not limited to any
-		service provider or software platform whom's services it consumes.</para>
+		<para>TelScale RestComm provides a default set of plug-ins for the storage engine, fax service, SMS aggregator,
+		automatic speech recognition, and speech synthesis. All these services are pluggable and TelScale RestComm is not
+		limited to any service provider or software platform whom's services it consumes.</para>
 	</note>	
 	<section>
 		<title>Runtime Settings</title>
 		<para>
-		  The runtime-settings are used by RestComm at runtime to customize it's behavior. A list of the runtime settings
+		  The runtime-settings are used by TelScale RestComm at runtime to customize it's behavior. A list of the runtime settings
 		  and a description is provided below.
 		</para>
 			
@@ -36,43 +36,44 @@
 				<tbody>
 					<row>
 						<entry>api-version</entry>
-						<entry>The version of the RestComm API that we will be executing by default.</entry>
+						<entry>The version of the TelScale RestComm API that we will be executing by default.</entry>
 					</row>
 					<row>
-						<entry>beep-audio-file</entry>
-						<entry>The audio file to play for the 'beep' and 'playBeep' attributes.</entry>
+						<entry>prompts-uri</entry>
+						<entry>The location where the audio prompts are located.</entry>
 					</row>
 					<row>
-						<entry>reject-audio-file</entry>
-						<entry>The audio file to play for the &lt;Reject&gt; verb using the 'rejected' attribute.</entry>
+						<entry>cache-path</entry>
+						<entry>The local path the cache folder.</entry>
 					</row>
 					<row>
-						<entry>alert-on-enter-file</entry>
-						<entry>The audio file to play when a participant enters a conference room.</entry>
-					</row>
-					<row>
-						<entry>alert-on-exit-file</entry>
-						<entry>The audio file to play when a participant exits a conference room.</entry>
-					</row>
-					<row>
-						<entry>ringback-audio-file</entry>
-						<entry>The audio file to play when a caller is waiting for a call to be bridged using the
-						&lt;Dial&gt; verb.</entry>
-					</row>
-					<row>
-						<entry>conference-music-file</entry>
-						<entry>The default audio file to play in a conference room. This is equivalent to setting
-						the waitUrl attribute for the &lt;Conference&gt; noun.</entry>
-					</row>
-					<row>
-						<entry>error-dictionary-uri</entry>
-						<entry>The root URI to the error dictionary. This dictionary contains descriptions and possible
-						solutions to the error codes that RestComm will return as part of it's Notifications resource.</entry>
+						<entry>cache-uri</entry>
+						<entry>The HTTP URI to the cache folder.</entry>
 					</row>
 					<row>
 						<entry>recordings-path</entry>
+						<entry>The local path to the folder containing the recordings.</entry>
+					</row>
+					<row>
+						<entry>recordings-uri</entry>
+						<entry>The HTTP URI to the folder containing the recordings.</entry>
+					</row>
+					<row>
+						<entry>error-dictionary-uri</entry>
+						<entry>The HTTP URI to the TelScale RestComm error dictionary.</entry>
+					</row>
+					<row>
+						<entry>external-ip</entry>
 						<entry>
-						  The path to the directory used to save recordings made by RestComm.
+							The IP to use for out-bound SIP REGISTER requests. This is useful when you
+		  					want to report a different IP than the one TelScale RestComm picked by default.
+		  				</entry>
+					</row>
+					<row>
+						<entry>use-to</entry>
+						<entry>
+							If set to true TelScale RestComm will use the To header to determine the destination.
+		  					If set to false TelScale RestComm will use the Request URI  to determine the destination.
 						</entry>
 					</row>
 					<row>
@@ -91,22 +92,22 @@
 						<entry>outbound-proxy-uri</entry>
 						<entry>
 						  The SIP URI to the outbound proxy. Note: Do not prepend 'sip:' to the proxy uri.
-						  If necessary the port can be included, for example thomas@localhost:5080
+						  If necessary the port can be included, for example alice@localhost:5080
 						</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
 		<formalpara>
-			<title>Restcomm Resource Security</title>
-			<para>The security model is based on role based access control. RestComm defines a set of permissions that
-			can be defined for each role. There are two predefined roles Administrator and Developer. The Developer role
+			<title>TelScale Restcomm Resource Security</title>
+			<para>The security model is based on role based access control. TelScale RestComm defines a set of permissions
+			that can be defined for each role. There are two predefined roles Administrator and Developer. The Developer role
 			can be configured or removed all together depending on your needs but the Administrator role can not be changed.
 			The Administrator role can not be modified or removed and it has access to every resource.</para>
 		</formalpara>
 		<para>First we will define the list of permissions and what they mean.</para>
 		<table frame='all'>
-			<title>RestComm Permissions</title>
+			<title>TelScale RestComm Permissions</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' />
 				<colspec colname='c2' />
@@ -152,11 +153,46 @@
 		file.</para>
 	</section>
 	<section>
+		<title>VoIP Innovations Restful API Access</title>
+		<para>The default auto provisioning API used by TelScale RestComm.</para>
+		
+		<table frame='all'>
+			<title>VoIP Innovations Settings</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Element</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>login</entry>
+						<entry>The user name configured in the VoIP Innovations Portal under API users.</entry>
+					</row>
+					<row>
+						<entry>password</entry>
+						<entry>The password configured in the VoIP Innovations Portal under API users.</entry>
+					</row>
+					<row>
+						<entry>endpoint</entry>
+						<entry>The end point ID of the end point that will be used by TelScale RestComm</entry>
+					</row>
+					<row>
+						<entry>uri</entry>
+						<entry>The path to the VoIP Innovations service end point.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</section>
+	<section>
 		<title>Dao Manager</title>
-		<para>The data access object manager is used to gain access to the data store that RestComm will use.</para>
+		<para>The data access object manager is used to gain access to the data store that TelScale RestComm will use.</para>
 			
-		<para>The default data access object manager is based on MyBatis and provides access to RDBM systems. Alternatively,
-		  a MongoDB implementation is included.</para>
+		<para>The default data access object manager is based on MyBatis and provides access to RDBM systems.</para>
 		
 		<table frame='all'>
 			<title>MyBatis Settings</title>
@@ -185,50 +221,12 @@
 				</tbody>
 			</tgroup>
 		</table>
-		
-		<table frame='all'>
-			<title>MongoDB Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>host</entry>
-						<entry>The IP address or host name of MongoDB server.</entry>
-					</row>
-					<row>
-						<entry>port</entry>
-						<entry>The port on the MongoDB server to use.</entry>
-					</row>
-					<row>
-						<entry>database</entry>
-						<entry>The name of the database to use.</entry>
-					</row>
-					<row>
-						<entry>user</entry>
-						<entry>The user name used to authenticate with MongoDB (Optional).</entry>
-					</row>
-					<row>
-						<entry>password</entry>
-						<entry>The password used to authenticate with MongoDB (Optional).</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
 	</section>
 	<section>
 		<title>Media Server Manager</title>
 		
 		<para>
-		  The media server manager is responsible for all the media servers managed by RestComm. The media server manager
-		  is also responsible for load-balancing connections to the media servers that it manages. When configuring the
-		  media server manager multiple media servers can be defined. Below is a description of settings for each media server.
+		  The media server manager is responsible for all the media servers managed by TelScale RestComm.
 		</para>
 		<table frame='all'>
 			<title>Media Server Manager Settings</title>
@@ -258,22 +256,36 @@
 						<entry>remote-port</entry>
 						<entry>The port for the media server.</entry>
 					</row>
+					<row>
+						<entry>response-timeout</entry>
+						<entry>
+							In milliseconds the maximum amount of time to wait for a response from
+							the media server before abandoning the request. This does NOT apply to
+							RQNT/NOTIFY request/response.
+						</entry>
+					</row>
+					<row>
+						<entry>external-address</entry>
+						<entry>
+							Sometimes there is interest to use a different address in the SDP than
+							the IP address the media server is reporting. This parameter if set tells TelScale RestComm to
+							patch the Connection attribute in the SDP on behalf of the media server to the specified IP address.
+							Note: TelScale RestComm will only do NAT resolution when necessary so if your server already has a
+							routable IP address setting this parameter will have no effect.
+						</entry>
+					</row>
 				</tbody>
 			</tgroup>
 		</table>
-		<note>
-			<para>Currently, load-balancing uses a naive round-robin implementation but in future implementations the algorithm
-			will be based on media server load.</para>
-		</note>
 	</section>
 	<section>
 		<title>SMS Aggregator</title>
-		<para>The SMS aggregator is responsible for the handling of SMS messages on behalf of RestComm.</para>
+		<para>The SMS aggregator is responsible for the handling of SMS messages on behalf of TelScale RestComm.</para>
 		
 		<formalpara>
 			<title>Requirements</title>
-			<para>The default SMS aggregator is Essendex. Therefore, an account must be created @
-			<ulink url="http://www.esendex.com/">http://www.esendex.com</ulink> before any text
+			<para>The default SMS aggregator is SMS over IP as used by VoIP Innovations. Therefore, an account must be
+			created @ <ulink url="http://www.voipinnovations.com/">http://www.voipinnovations.com</ulink> before any text
 			messages can be sent.</para>
 		</formalpara>
 		
@@ -292,16 +304,19 @@
 				</thead>
 				<tbody>
 					<row>
-						<entry>user</entry>
-						<entry>The user name used to authenticate with Essendex.</entry>
+						<entry>outbound-prepend-string</entry>
+						<entry>
+							A string that you would like to prepend to the destination address. For example,
+							to use service from VoIP Innovations a '#' must be prepended to every destination
+							address.
+						</entry>
 					</row>
 					<row>
-						<entry>password</entry>
-						<entry>The password used to authenticate with Essendex.</entry>
-					</row>
-					<row>
-						<entry>account</entry>
-						<entry>The account used to authenticate with Essendex.</entry>
+						<entry>outbound-endpoint</entry>
+						<entry>
+							The SIP endpoint to which outbound SMS messages should be sent.
+							Note: Do not prepend sip: to the endpoint. 
+						</entry>
 					</row>
 				</tbody>
 			</tgroup>
@@ -309,7 +324,7 @@
 	</section>
 	<section>
 		<title>Fax Service</title>
-		<para>The fax service sends faxes out on behalf of RestComm.</para>
+		<para>The fax service sends faxes out on behalf of TelScale RestComm.</para>
 		
 		<formalpara>
 			<title>Requirements</title>
@@ -338,21 +353,13 @@
 						<entry>password</entry>
 						<entry>The password used to authenticate with Interfax.</entry>
 					</row>
-					<row>
-						<entry>maximum-file-size</entry>
-						<entry>The maximum files size allowed to be delivered via fax.</entry>
-					</row>
-					<row>
-						<entry>timeout</entry>
-						<entry>The timeout period before an undeliverable fax is considered as failed.</entry>
-					</row>
 				</tbody>
 			</tgroup>
 		</table>
 	</section>
 	<section>
 		<title>Speech Recognizer</title>
-		<para>This speech recognizer turns speech in to text on behalf of Restcomm.</para>
+		<para>This speech recognizer turns speech in to text on behalf of TelScale Restcomm.</para>
 		
 		<formalpara>
 			<title>Requirements</title>
@@ -382,7 +389,7 @@
 	</section>
 	<section>
 		<title>Speech Synthesizer</title>
-		<para>The speech synthesizer turns text to speech on behalf of RestComm.</para>
+		<para>The speech synthesizer turns text to speech on behalf of TelScale RestComm.</para>
 		
 		<formalpara>
 			<title>Requirements</title>
@@ -403,10 +410,6 @@
 					</row>
 				</thead>
 				<tbody>
-					<row>
-						<entry>cache-path</entry>
-						<entry>The location on the file system to use for caching TTS results.</entry>
-					</row>
 					<row>
 						<entry>service-root</entry>
 						<entry>The acapela group service root URI.</entry>
