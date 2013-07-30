@@ -164,6 +164,352 @@
 		</section>
 	</section>
 	<section>
+		<title>AvailablePhoneNumbers</title>
+		<para>The AvailablePhoneNumbers subresources let you search for incoming local and toll-free phone numbers that are available
+		for you to purchase from a TeleStax partner.</para>
+		<formalpara>
+			<title>AvailablePhoneNumbers List Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/AvailablePhoneNumbers/US/Local</para>
+		</formalpara>
+		<formalpara>
+			<title>Searching For Numbers.</title>
+			<para>When using RestComm the way to search for new phone numbers is by searching
+			the AvailablePhoneNumbers list resource and providing the desired area code.</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A friendly version of the phone number.</entry>
+					</row>
+					<row>
+						<entry>PhoneNumber</entry>
+						<entry>The phone number, in E.164 format.</entry>
+					</row>
+					<row>
+						<entry>Lata</entry>
+						<entry>The LATA for this phone number.</entry>
+					</row>
+					<row>
+						<entry>RateCenter</entry>
+						<entry>The rate center for this phone number.</entry>
+					</row>
+					<row>
+						<entry>Latitude</entry>
+						<entry>The latitude coordinate for this phone number.</entry>
+					</row>
+					<row>
+						<entry>Longitude</entry>
+						<entry>The longitude coordinate for this phone number.</entry>
+					</row>
+					<row>
+						<entry>Region</entry>
+						<entry>The two-letter state or province abbreviation for this phone number.</entry>
+					</row>
+					<row>
+						<entry>PostalCode</entry>
+						<entry>The zip code for this phone number.</entry>
+					</row>
+					<row>
+						<entry>IsoCountry</entry>
+						<entry>The ISO country code for this phone number..</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of an AvailablePhoneNumber resource, including the properties above.</para>
+			</formalpara>
+			<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>AreaCode</entry>
+						<entry>A three digit area code inside the U.S.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+			</table>
+		</section>
+	</section>
+	<section>
+		<title>Clients</title>
+		<para>An Client instance resource represents a user agent registered with RestComm.</para>
+		<formalpara>
+			<title>Client Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/Clients/{ClientSid}</para>
+		</formalpara>
+		<formalpara>
+			<title>Using SIP User Agents</title>
+			<para>When using RestComm to handle SIP user agent you have to create a new Client resource,
+			this resource acts as an account for your user agent and also dictates how calls made by the
+			user agent should be handled.</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Sid</entry>
+						<entry>A string that uniquely identifies this client.</entry>
+					</row>
+					<row>
+						<entry>DateCreated</entry>
+						<entry>The date that this client was created.</entry>
+					</row>
+					<row>
+						<entry>DateUpdated</entry>
+						<entry>The date that this clientr was last updated.</entry>
+					</row>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A friendly name for this client.</entry>
+					</row>
+					<row>
+						<entry>AccountSid</entry>
+						<entry>The unique id of the Account that owns this phone number.</entry>
+					</row>
+					<row>
+						<entry>ApiVersion</entry>
+						<entry>Calls to this phone number will create a new RCML session with this API version.</entry>
+					</row>
+					<row>
+						<entry>Login</entry>
+						<entry>The name that is used inside the &lt;Client&gt; noun. This is also used by
+						the user agent as the user name used for registration and outbound dialing.</entry>
+					</row>
+					<row>
+						<entry>Password</entry>
+						<entry>The password used by the user agent during registration and outbound dialing.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>The client status the possible values are 0 for disabled and 1 for enabled.</entry>
+					</row>
+					<row>
+						<entry>VoiceUrl</entry>
+						<entry>The URL RestComm will request when this client makes an outbound call.</entry>
+					</row>
+					<row>
+						<entry>VoiceMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the above Url. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackUrl</entry>
+						<entry>The URL that RestComm will request if execution of VoiceUrl fails for any reason.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceApplicationSid</entry>
+						<entry>If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs
+							and use the voice URLs specified by the voice application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallback</entry>
+						<entry>The URL that RestComm will request to pass status parameters (such as the call state) to your
+						application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallbackMethod</entry>
+						<entry>The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>Uri</entry>
+						<entry>The URI for this Client, relative to http://localhost:port/restcomm.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of an Client resource, including the properties above.</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP POST/PUT</title>
+				<para>Modifies a Client resource and returns the representation, including the properties above. Below
+				you will find a list of optional parameters.</para>
+			</formalpara>
+			<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Parameter</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A formatted version of this phone number.</entry>
+					</row>
+					<row>
+						<entry>Password</entry>
+						<entry>The password used by the user agent during registration and outbound dialing.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>The client status the possible values are 0 for disabled and 1 for enabled.</entry>
+					</row>
+					<row>
+						<entry>VoiceUrl</entry>
+						<entry>The URL RestComm will request when this phone number receives a call.</entry>
+					</row>
+					<row>
+						<entry>VoiceMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the above Url. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackUrl</entry>
+						<entry>The URL that RestComm will request if execution of VoiceUrl fails for any reason.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceApplicationSid</entry>
+						<entry>If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs
+							and use the voice URLs specified by the voice application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallback</entry>
+						<entry>The URL that RestComm will request to pass status parameters (such as the call state) to your
+						application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallbackMethod</entry>
+						<entry>The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+			<formalpara>
+				<title>HTTP DELETE</title>
+				<para>Deletes a Client from the user's Account.</para>
+			</formalpara>
+		</section>
+		<section>
+			<title>Client List Resource</title>
+			<formalpara>
+				<title>Client List Resource URI</title>
+				<para>/2012-04-24/Accounts/{AccountSid}/Clients</para>
+			</formalpara>
+			<section>
+				<title>Supported Operations</title>
+				<formalpara>
+					<title>HTTP GET</title>
+					<para>Returns the list representation of all the Client resources for this Account, including the
+					properties above.</para>
+				</formalpara>
+				<formalpara>
+					<title>HTTP POST</title>
+					<para>Creates a new Client and returns the representation of the resource, including
+					the properties above. Below you will find a list of required and optional parameters.</para>
+				</formalpara>
+				<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Parameter</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A formatted version of this phone number.</entry>
+					</row>
+					<row>
+						<entry>Login</entry>
+						<entry>The name that is used inside the &lt;Client&gt; noun. This is also used by
+						the user agent as the user name used for registration and outbound dialing.</entry>
+					</row>
+					<row>
+						<entry>Password</entry>
+						<entry>The password used by the user agent during registration and outbound dialing.</entry>
+					</row>
+					<row>
+						<entry>Status</entry>
+						<entry>The client status the possible values are 0 for disabled and 1 for enabled.</entry>
+					</row>
+					<row>
+						<entry>VoiceUrl</entry>
+						<entry>The URL RestComm will request when this phone number receives a call.</entry>
+					</row>
+					<row>
+						<entry>VoiceMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the above Url. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackUrl</entry>
+						<entry>The URL that RestComm will request if execution of VoiceUrl fails for any reason.</entry>
+					</row>
+					<row>
+						<entry>VoiceFallbackMethod</entry>
+						<entry>The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.</entry>
+					</row>
+					<row>
+						<entry>VoiceApplicationSid</entry>
+						<entry>If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs
+							and use the voice URLs specified by the voice application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallback</entry>
+						<entry>The URL that RestComm will request to pass status parameters (such as the call state) to your
+						application.</entry>
+					</row>
+					<row>
+						<entry>StatusCallbackMethod</entry>
+						<entry>The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+			</section>
+		</section>
+	</section>
+	<section>
 		<title>IncomingPhoneNumbers</title>
 		<para>An IncomingPhoneNumber instance resource represents a RestComm phone number.</para>
 		<formalpara>
