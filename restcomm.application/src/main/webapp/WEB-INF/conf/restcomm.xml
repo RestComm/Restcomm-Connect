@@ -80,7 +80,7 @@
 		<login></login>
 		<password></password>
 		<endpoint></endpoint>
-		<uri>https://www.loginto.us/voip/api2.pl</uri>
+		<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
 	</voip-innovations>
 	
 	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">

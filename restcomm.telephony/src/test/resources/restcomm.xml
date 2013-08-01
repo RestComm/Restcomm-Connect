@@ -79,7 +79,7 @@
 		<login>restcomm</login>
 		<password>Delta2637</password>
 		<endpoint>9707</endpoint>
-		<uri>https://www.loginto.us/voip/api2.pl</uri>
+		<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
 	</voip-innovations>
 	
 	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
