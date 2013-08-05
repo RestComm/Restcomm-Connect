@@ -127,7 +127,7 @@ public final class CallTest {
     }
   }
   
-  @Ignore @Test public synchronized void testPauseRejectBusy() {
+  @Test public synchronized void testPauseRejectBusy() {
     deployer.deploy("CallTest");
     phone.setLoopback(true);
     final SipCall call = phone.createSipCall();
@@ -170,7 +170,7 @@ public final class CallTest {
     }
   }
   
-  @Test public synchronized void testPlaySay() throws InterruptedException {
+  @Ignore @Test public synchronized void testPlaySay() throws InterruptedException {
     deployer.deploy("CallTest");
     phone.setLoopback(true);
     final SipCall call = phone.createSipCall();
@@ -188,7 +188,7 @@ public final class CallTest {
     call.sendInviteOkAck();
     assertTrue(!(call.getLastReceivedResponse().getStatusCode() >= 400));
     // Wait for the media to play and the call to hangup.
-    // assertTrue(call.waitForDisconnect(10 * 1000));
+    assertTrue(call.waitForDisconnect(10 * 1000));
     try {
       Thread.sleep(10 * 1000);
     } catch(final InterruptedException exception) {
