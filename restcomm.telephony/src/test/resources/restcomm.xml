@@ -126,7 +126,7 @@
 		Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator interface for more information.
 	-->
 	<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
-	    <outbound-prepend-string></outbound-prepend-string>
+	    <outbound-prefix></outbound-prefix>
 		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
 	</sms-aggregator>
 	

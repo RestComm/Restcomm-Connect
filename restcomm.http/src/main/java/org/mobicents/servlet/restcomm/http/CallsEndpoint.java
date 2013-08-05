@@ -30,7 +30,6 @@ import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -64,6 +63,8 @@ import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 /**
@@ -179,15 +180,15 @@ import scala.concurrent.duration.Duration;
       } else {
         create = new CreateCall(from, to, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN);
       }
-      Future<Object> answer = (Future<Object>)ask(callManager, create, expires);
-      Object object = answer.get();
+      Future<Object> future = (Future<Object>)ask(callManager, create, expires);
+      Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
       Class<?> klass = object.getClass();
       if(CallManagerResponse.class.equals(klass)) {
         final CallManagerResponse<ActorRef> managerResponse = (CallManagerResponse<ActorRef>)object;
         if(managerResponse.succeeded()) {
           final ActorRef call = managerResponse.get();
-          answer = (Future<Object>)ask(call, new GetCallInfo(), expires);
-          object = answer.get();
+          future = (Future<Object>)ask(call, new GetCallInfo(), expires);
+          object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
           klass = object.getClass();
           if(CallResponse.class.equals(klass)) {
             final CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>)object;

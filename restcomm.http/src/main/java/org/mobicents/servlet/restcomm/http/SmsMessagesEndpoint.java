@@ -35,7 +35,6 @@ import com.thoughtworks.xstream.XStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -75,6 +74,8 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 /**
@@ -179,8 +180,8 @@ protected Response putSmsMessage(final String accountSid, final MultivaluedMap<S
     final String body = data.getFirst("Body");
     final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
     try {
-      Future<Object> answer = (Future<Object>)ask(aggregator, new CreateSmsSession(), expires);
-      Object object = answer.get();
+      Future<Object> future = (Future<Object>)ask(aggregator, new CreateSmsSession(), expires);
+      Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
       Class<?> klass = object.getClass();
       if(SmsServiceResponse.class.equals(klass)) {
         final SmsServiceResponse<ActorRef> smsServiceResponse = (SmsServiceResponse<ActorRef>)object;
