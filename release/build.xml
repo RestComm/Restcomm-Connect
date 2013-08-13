@@ -235,6 +235,8 @@
     <target name="copy-restcomm">
         <echo>Copy restcomm </echo>
 		<!--default-->
+	<copy tofile="${basedir}/mobicents-dar.properties" failonerror="true" 
+        	file="${release.dir}/server/default/conf/dars/mobicents-dar.properties"/>
         <copy tofile="${release.dir}/server/default/deploy/restcomm.war" failonerror="true" 
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
         <!--copy todir="${release.dir}/server/default/deploy/telscale-restcomm.war" failonerror="true">
@@ -243,6 +245,8 @@
                 </fileset>
         </copy-->
 		<!--all-->
+	<copy tofile="${basedir}/mobicents-dar.properties" failonerror="true" 
+        	file="${release.dir}/server/all/conf/dars/mobicents-dar.properties"/>
         <copy tofile="${release.dir}/server/all/deploy/restcomm.war" failonerror="true" 
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
         <!--copy todir="${release.dir}/server/all/deploy/telscale-restcomm.war" failonerror="true">
@@ -251,6 +255,8 @@
                 </fileset>
         </copy-->
 		<!--tomcat-->
+	<copy tofile="${basedir}/mobicents-dar.properties" failonerror="true" 
+        	file="${release.tomcat.dir}/conf/dars/mobicents-dar.properties"/>
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true" 
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
 	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true" 
