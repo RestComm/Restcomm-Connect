@@ -254,7 +254,7 @@
 	<copy tofile="${release.tomcat.dir}/webapps/telscale-restcomm.war" failonerror="true" 
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
 	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true" 
-        	file="${checkout.hsqldb.dir}/lib/hsqldb.jar"/>
+        	file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
     </target>
 	
     <target name="copy-docs">
