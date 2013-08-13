@@ -93,7 +93,7 @@
 	
 	<target name="get-deps" depends="get-telscale-sipservlets,get-telscale-sipservlets-tomcat,get-telscale-media,get-telscale-diameter" />
 	<target name="get-ami-deps" depends="get-ami-telscale-sipservlets,get-telscale-media,get-telscale-diameter" />
-	<target name="extract-deps" depends="extract-telscale-sipservlets,extract-telscale-media,extract-telscale-diameter" />
+	<target name="extract-deps" depends="extract-telscale-sipservlets,extract-telscale-sipservlets-tomcat,extract-telscale-media,extract-telscale-diameter" />
 	<target name="extract-ami-deps" depends="extract-ami-telscale-sipservlets,extract-telscale-media,extract-telscale-diameter" />
 	
 	<!--SipServlets JBoss-->
