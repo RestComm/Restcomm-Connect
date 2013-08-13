@@ -2,7 +2,7 @@
 <project name="telscale.restcomm.release" default="release" basedir=".">
 	<property environment="sys"/>
     	<property name="release.dir" location="${ant.file.telscale.restcomm.release}/../target" />
-	<property name="release.tomcat.dir" location="${ant.file.telscale.restcomm.release}/../target/tomcat" />
+	<property name="release.tomcat.dir" location="${ant.file.telscale.restcomm.release}/../target-tomcat" />
 	<property name="base.dir" location="${ant.file.telscale.restcomm.release}/.." />
 	<property name="docs.dir" location="${release.dir}/docs" />
 	<property name="restcomm.docs.dir" location="${release.dir}/docs/restcomm" />
@@ -170,6 +170,7 @@
 	<target name="extract-telscale-media" depends="get-telscale-media">
 		<delete dir="${checkout.telscale-media.dir}" failonerror="false" />
 		<unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.tomcat.dir}/telscale-media"/>
 	</target>
 	
 	<!--diameter-->
@@ -273,6 +274,7 @@
 	
 	<target name="clean">
 	    <delete dir="${release.dir}"/>
+	    <delete dir="${release.tomcat.dir}"/>
 	    <delete dir="${checkout.telscale-restcomm.dir}"/>
 	</target>
 </project>
