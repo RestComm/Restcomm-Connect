@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
 <project name="telscale.restcomm.release" default="release" basedir=".">
 	<property environment="sys"/>
-    <property name="release.dir" location="${ant.file.telscale.restcomm.release}/../target" />
+    	<property name="release.dir" location="${ant.file.telscale.restcomm.release}/../target" />
+	<property name="release.tomcat.dir" location="${ant.file.telscale.restcomm.release}/../target/tomcat" />
 	<property name="base.dir" location="${ant.file.telscale.restcomm.release}/.." />
 	<property name="docs.dir" location="${release.dir}/docs" />
 	<property name="restcomm.docs.dir" location="${release.dir}/docs/restcomm" />
+	<property name="restcomm.docs.tomcat.dir" location="${release.tomcat.dir}/docs/restcomm" />
 	<property name="checkout.dir" value="${base.dir}/checkout" />	
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
 	<property name="telscale.restcomm.release.version" value="6.1.0.GA"/>
@@ -21,6 +23,11 @@
 	<property name="telscale-sipservlets.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.distro.version}.zip" />
 	<property name="telscale-sipservlets.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/${telscale-sipservlets.download.distro.file}" />
 	<property name="telscale-sipservlets.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.download.distro.file}" />
+
+	<property name="telscale-sipservlets.tomcat.distro.version" value="${telscale-sipservlets.version}-apache-tomcat-6.0.35-1306171557" />
+	<property name="telscale-sipservlets.tomcat.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.tomcat.distro.version}.zip" />
+	<property name="telscale-sipservlets.tomcat.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/${telscale-sipservlets.tomcat.download.distro.file}" />
+	<property name="telscale-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.tomcat.download.distro.file}" />
 	
 	<property name="telscale-sipservlets-nolce.distro.version" value="${telscale-sipservlets.version}-jboss-as-5.1.0.GA_no-lce-1306131642" />
 	<property name="telscale-sipservlets-nolce.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets-nolce.distro.version}.zip" />
@@ -84,12 +91,12 @@
 	
 	<!--GET Telscale-Sip=Servlets & Telscale-Media-Server & Telscale Diameter - downloads-->
 	
-	<target name="get-deps" depends="get-telscale-sipservlets,get-telscale-media,get-telscale-diameter" />
+	<target name="get-deps" depends="get-telscale-sipservlets,get-telscale-sipservlets-tomcat,get-telscale-media,get-telscale-diameter" />
 	<target name="get-ami-deps" depends="get-ami-telscale-sipservlets,get-telscale-media,get-telscale-diameter" />
 	<target name="extract-deps" depends="extract-telscale-sipservlets,extract-telscale-media,extract-telscale-diameter" />
 	<target name="extract-ami-deps" depends="extract-ami-telscale-sipservlets,extract-telscale-media,extract-telscale-diameter" />
 	
-	<!--SipServlets-->
+	<!--SipServlets JBoss-->
 	<available file="${telscale-sipservlets.distro.zip.path}" property="got.telscale-sipservlets" />
 	<target name="get-telscale-sipservlets" unless="got.telscale-sipservlets">
 		<echo>Downloading Telscale SipServlets version: ${telscale-sipservlets.version}</echo>
@@ -99,6 +106,18 @@
 		    <arg value="${telscale-sipservlets.download.url}" />
 		</exec>
 		<move file="${base.dir}/${telscale-sipservlets.download.distro.file}" todir="${checkout.dir}"/>
+	</target>
+
+	<!--SipServlets Tomcat-->
+	<available file="${telscale-sipservlets.tomcat.distro.zip.path}" property="got.telscale-sipservlets-tomcat" />
+	<target name="get-telscale-sipservlets-tomcat" unless="got.telscale-sipservlets-tomcat">
+		<echo>Downloading Telscale SipServlets Tomcat version: ${telscale-sipservlets.version}</echo>
+		<exec failonerror="true" executable="wget">
+		    <arg value="--user=telscale-file-server@telestax.com" />
+		    <arg value="--password=t31sca13fi13s" />
+		    <arg value="${telscale-sipservlets.tomcat.download.url}" />
+		</exec>
+		<move file="${base.dir}/${telscale-sipservlets.tomcat.download.distro.file}" todir="${checkout.dir}"/>
 	</target>
 	
 	<!--SipServlets with no LCE-->
@@ -121,6 +140,13 @@
 		</unzip>
 	</target>
 	
+	<target name="extract-telscale-sipservlets-tomcat" depends="get-telscale-sipservlets-tomcat">
+		<delete dir="${checkout.telscale-sipservlets-tomcat.dir}" failonerror="false" />
+		<unzip src="${telscale-sipservlets.tomcat.distro.zip.path}" dest="${release.tomcat.dir}">
+			<mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets.version}-apache-tomcat-6.0.35/*" to="*"/>
+		</unzip>
+	</target>
+
 	<target name="extract-ami-telscale-sipservlets" depends="get-ami-telscale-sipservlets">
 		<delete dir="${checkout.telscale-sipservlets.dir}" failonerror="false" />
 		<unzip src="${telscale-sipservlets-nolce.distro.zip.path}" dest="${release.dir}">
@@ -203,6 +229,9 @@
                         <include name="**/*" />
                 </fileset>
         </copy-->
+		<!--tomcat-->
+	<copy tofile="${release.tomcat.dir}/webapps/telscale-restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
     </target>
 	
     <target name="copy-docs">
@@ -213,12 +242,24 @@
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
+		<!--docs tomcat-->
+		<mkdir dir="${restcomm.docs.tomcat.dir}"/>
+		<copy todir="${restcomm.docs.tomcat.dir}" failonerror="true">
+		        <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+		                <include name="**/*" />
+		        </fileset>
+		</copy>
     </target>
 	
 	
 	<target name="make-final-zip" depends="set-time-stamp">
 		<zip destfile="${base.dir}/TelScale-restcomm-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
 			<zipfileset dir="${release.dir}" prefix="TelScale-restcomm-${telscale.restcomm.release.version}">
+				<include name="**" />
+			</zipfileset>
+		</zip>
+		<zip destfile="${base.dir}/TelScale-restcomm-tomcat-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-restcomm-tomcat-${telscale.restcomm.release.version}">
 				<include name="**" />
 			</zipfileset>
 		</zip>
