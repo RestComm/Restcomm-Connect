@@ -31,7 +31,7 @@
 	<property name="telscale-sipservlets.tomcat.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/${telscale-sipservlets.tomcat.download.distro.file}" />
 	<property name="telscale-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.tomcat.download.distro.file}" />
 	<property name="hsqldb.download.url" value="http://downloads.sourceforge.net/project/hsqldb/hsqldb/hsqldb_1_8_0/hsqldb_1_8_0_10.zip" />
-	<property name="hsqldb.download.distro.file" value="hsqldb.zip" />
+	<property name="hsqldb.download.distro.file" value="hsqldb_1_8_0_10.zip" />
 	<property name="hsqldb.distro.zip.path" value="${checkout.dir}/${hsqldb.download.distro.file}" />
 
 
