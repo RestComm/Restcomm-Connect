@@ -255,6 +255,8 @@
                 </fileset>
         </copy-->
 		<!--tomcat-->
+	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true" 
+        	file="${basedir}/catalina.sh"/>
 	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true" 
@@ -282,20 +284,20 @@
 	
 	
 	<target name="make-final-zip" depends="set-time-stamp">
-		<zip destfile="${base.dir}/TelScale-restcomm-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
-			<zipfileset dir="${release.dir}" prefix="TelScale-restcomm-${telscale.restcomm.release.version}">
+		<zip destfile="${base.dir}/TelScale-Restcomm-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+			<zipfileset dir="${release.dir}" prefix="TelScale-Restcomm-${telscale.restcomm.release.version}">
 				<include name="**" />
 			</zipfileset>
 		</zip>
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
-		<zip destfile="${base.dir}/TelScale-restcomm-tomcat-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
-			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-restcomm-tomcat-${telscale.restcomm.release.version}/bin">
+		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat-${telscale.restcomm.release.version}/bin">
                                 <include name="*.sh" />
                         </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-restcomm-tomcat-${telscale.restcomm.release.version}/bin">
+			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat-${telscale.restcomm.release.version}/bin">
                                 <include name="*.sh" />
                         </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-restcomm-tomcat-${telscale.restcomm.release.version}">
+			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat-${telscale.restcomm.release.version}">
 				<include name="**" />
 			</zipfileset>
 		</zip>
