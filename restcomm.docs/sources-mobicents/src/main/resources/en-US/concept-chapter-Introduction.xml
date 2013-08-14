@@ -1,0 +1,64 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<chapter>
+	<title>Introduction to &SHORT_PLATFORM_NAME;</title>
+	<para>&SHORT_PLATFORM_NAME;
+		is a Communications Platform to rapidly build fax, voice, and text messaging
+		applications, using your existing web development skills.
+	</para>
+	<para>
+		It's a complete turnkey Telco 2.0 SaaS solution ready to deploy in
+		your cloud based on the
+		<ulink url="www.twilio.com">Twilio</ulink>
+		simple and effective APIs and 100% Open Source built on the next
+		generation Cloud Communications platform &PLATFORM_NAME;.
+	</para>
+	<section>
+		<title>How it Works</title>
+		<para>In order to demonstrate how &SHORT_PLATFORM_NAME; works we will go over an application that
+		instructs &SHORT_PLATFORM_NAME; to answer a phone call, say "Hello World" and finally hang up the
+		call.</para>
+		<note>
+			<para>A more thorough explanation of the &SHORT_PLATFORM_NAME; Markup Language is available in Chapter 3. &SHORT_PLATFORM_NAME;
+		    Markup Language</para>
+		</note>
+		<para>In this particular example, the first thing that must happen is that TelScale RestComm receives a call.</para>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/restcomm-inbound-1.png"/>
+			</imageobject>
+		</mediaobject>
+		<para>After TelScale RestComm can confirm that the call is destined for an application that it handles. 
+		TelScale RestComm calls out to your application for instructions on how to handle the new incoming call.
+		Keep in mind that when TelScale RestComm calls out to your application it provides useful information such
+		as from what number the call was dialed, to what number the call is destined, caller ID information, etc.</para>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/restcomm-inbound-2.png"/>
+			</imageobject>
+		</mediaobject>
+		<para>Once your application responds with instructions on how to handle the call, TelScale RestComm gets busy executing the
+		provided instruction set.</para>
+		<programlisting role="XML">
+		&lt;Response&gt;
+		  &lt;Say&gt;Hello World!&lt;/Say&gt;
+		&lt;/Response&gt;
+		</programlisting>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/restcomm-inbound-3.png"/>
+			</imageobject>
+		</mediaobject>
+		<para>In this case TelScale RestComm synthesizes the text to speech, says "Hello World!" to the caller and hangs up.</para>
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="images/restcomm-inbound-4.png"/>
+			</imageobject>
+		</mediaobject>
+	</section>
+	<para>Keep in mind that before you continue you should configure your ASR, Fax, SMS, and TTS plugins in order to have
+	everything function as you would expect it to.</para>
+</chapter>
