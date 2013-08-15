@@ -264,7 +264,7 @@
 	<!--copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true" 
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
 	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
-	<copy todir="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true">
+	<copy todir="${release.tomcat.dir}/webapps/restcomm" failonerror="true">
                 <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
