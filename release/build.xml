@@ -237,30 +237,38 @@
 		<!--default-->
 	<copy tofile="${release.dir}/server/default/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
-        <copy tofile="${release.dir}/server/default/deploy/restcomm.war" failonerror="true" 
-        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
-        <!--copy todir="${release.dir}/server/default/deploy/telscale-restcomm.war" failonerror="true">
+        <!--copy tofile="${release.dir}/server/default/deploy/restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
+	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
+        <copy todir="${release.dir}/server/default/deploy/restcomm.war" failonerror="true">
                 <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
-        </copy-->
+        </copy>
 		<!--all-->
 	<copy tofile="${release.dir}/server/all/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
-        <copy tofile="${release.dir}/server/all/deploy/restcomm.war" failonerror="true" 
-        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
-        <!--copy todir="${release.dir}/server/all/deploy/telscale-restcomm.war" failonerror="true">
+        <!--copy tofile="${release.dir}/server/all/deploy/restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
+	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
+        <copy todir="${release.dir}/server/all/deploy/restcomm.war" failonerror="true">
                 <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
-        </copy-->
+        </copy>
 		<!--tomcat-->
 	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true" 
         	file="${basedir}/catalina.sh"/>
 	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
-	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true" 
-        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+	<!--copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
+	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
+	<copy todir="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true">
+                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                        <include name="**/*" />
+                </fileset>
+        </copy>
 	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true" 
         	file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
     </target>
