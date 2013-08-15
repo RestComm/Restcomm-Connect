@@ -271,6 +271,8 @@
         </copy>
 	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true" 
         	file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
+    <copy file="${basedir}/telestax-license.xml" todir="${release.tomcat.dir}" failonerror="true" />
+    	
     </target>
 	
     <target name="copy-docs">
