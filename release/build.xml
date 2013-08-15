@@ -294,8 +294,8 @@
 	
 	
 	<target name="make-final-zip" depends="set-time-stamp">
-		<zip destfile="${base.dir}/TelScale-Restcomm-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
-			<zipfileset dir="${release.dir}" prefix="TelScale-Restcomm-${telscale.restcomm.release.version}">
+		<zip destfile="${base.dir}/TelScale-Restcomm-JBoss-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+			<zipfileset dir="${release.dir}" prefix="TelScale-Restcomm-JBoss-${telscale.restcomm.release.version}">
 				<include name="**" />
 			</zipfileset>
 		</zip>
