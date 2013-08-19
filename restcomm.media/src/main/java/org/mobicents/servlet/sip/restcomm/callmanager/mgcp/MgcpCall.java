@@ -155,12 +155,12 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	  return buffer.toString();
 	}
 	
-	private void block(final int numberOfRequests) throws InterruptedException {
+	private synchronized void block(final int numberOfRequests) throws InterruptedException {
       // ResponseTimeout * NumberOfRequests
       wait(server.getResponseTimeout() * numberOfRequests);
     }
 	
-	private void block(final int numberOfRequests, final State errorState) throws Exception {
+	private synchronized void block(final int numberOfRequests, final State errorState) throws Exception {
       // ResponseTimeout * NumberOfRequests
       wait(server.getResponseTimeout() * numberOfRequests);
       if(errorState.equals(getState())) {
@@ -168,7 +168,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
       }
     }
 
-	public synchronized void trying(final SipServletRequest request) throws CallException {
+	public void trying(final SipServletRequest request) throws CallException {
 		assertState(IDLE);
 		final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
 		try{
@@ -203,7 +203,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		}
 	}
 	
-	private synchronized void alert(final SipServletRequest request) throws CallException {
+	private void alert(final SipServletRequest request) throws CallException {
 		assertState(TRYING);
 		final SipServletResponse ringing = request.createResponse(SipServletResponse.SC_RINGING);
 		try {
@@ -219,7 +219,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		}
 	}
 	
-	@Override public synchronized void answer() throws CallException {
+	@Override public void answer() throws CallException {
 		assertState(RINGING);
 		try {
 			// Establish the media path way.
@@ -241,19 +241,16 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		}
 	}
 
-	public synchronized void busy() {
+	public void busy() {
 		assertState(QUEUED);
 		cleanup();
 		setState(BUSY);
 		fireStatusChanged();
 	}
 
-	public synchronized void bye(final SipServletRequest request) throws IOException {
-		final List<State> possibleStates = new ArrayList<State>();
-		possibleStates.add(QUEUED);
-		possibleStates.add(RINGING);
-		possibleStates.add(IN_PROGRESS);
-		assertState(possibleStates);
+	public void bye(final SipServletRequest request) throws IOException {
+		final State state = getState();
+		if(QUEUED.equals(state) || RINGING.equals(state) || IN_PROGRESS.equals(state)) {
 		final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
 		try {
 			ok.send();
@@ -263,14 +260,13 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			dateEnded = DateTime.now();
 			fireStatusChanged();
 		}
+		}
 	}
 
-	@Override public synchronized void cancel() throws CallException {
-	    final List<State> possibleStates = new ArrayList<State>();
-	    possibleStates.add(QUEUED);
-	    possibleStates.add(RINGING);
-		assertState(possibleStates);
-		if(Direction.OUTBOUND_DIAL == getDirection()) {
+	@Override public void cancel() throws CallException {
+	    final State state = getState();
+		if(QUEUED.equals(state) || RINGING.equals(state)) {
+		  if(Direction.OUTBOUND_DIAL == getDirection()) {
 			final SipServletRequest cancel = initialInvite.createCancel();
 			try {
 				cancel.send();
@@ -283,34 +279,35 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 				fireStatusChanged();
 				throw new CallException(exception);
 			}
+		  }
 		}
 	}
 
-	public synchronized void cancel(final SipServletRequest request) throws IOException {
-		final List<State> possibleStates = new ArrayList<State>();
-		possibleStates.add(QUEUED);
-		possibleStates.add(RINGING);
-		possibleStates.add(TRYING);
-		assertState(possibleStates);
-		final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
-		try {
+	public void cancel(final SipServletRequest request) throws IOException {
+		final State state = getState();
+		if(QUEUED.equals(state) || RINGING.equals(state) || TRYING.equals(state)) {
+		  final SipServletResponse ok = request.createResponse(SipServletResponse.SC_OK);
+		  try {
 			ok.send();
-		} finally {
+		  } finally {
 			cleanup();
 			setState(CANCELLED);
 			fireStatusChanged();
+		  }
 		}
 	}
 
 	private void cleanup() {
 		server.destroyMediaSession(session);
-		initialInvite.getSession().invalidate();	  
+		initialInvite.getSession().invalidate();
+		initialInvite.getApplicationSession().invalidate();
 	}
 
-	@Override public synchronized void dial() throws CallException {
-		assertState(QUEUED);
-		// Try to negotiate media with a packet relay end point.
-		try {
+	@Override public void dial() throws CallException {
+		final State state = getState();
+		  if(QUEUED.equals(state)) {
+	 	  // Try to negotiate media with a packet relay end point.
+		  try {
 			relayEndpoint = session.getPacketRelayEndpoint();
 			userAgentConnection = session.createConnection(relayEndpoint);
 			userAgentConnection.addObserver(this);
@@ -322,7 +319,7 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			final byte[] offer = patchMedia(server.getExternalAddress(), userAgentConnection.getLocalDescriptor().toString().getBytes());
 			initialInvite.setContent(offer, "application/sdp");
 			initialInvite.send();
-		} catch(final Exception exception) {
+		  } catch(final Exception exception) {
 			cleanup();
 			setState(FAILED);
 			fireStatusChanged();
@@ -331,55 +328,53 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			buffer.append(initialInvite.getFrom().toString()).append(" to ");
 			buffer.append(initialInvite.getTo().toString());
 			throw new CallException(exception);
+		  }
 		}
 	}
 
-	public synchronized void established() {
+	public void established() {
 		logger.debug("ACK received");
 	}
 
-	public synchronized void established(final SipServletResponse successResponse) throws CallException, IOException {
-		final List<State> possibleStates = new ArrayList<State>();
-		possibleStates.add(QUEUED);
-		possibleStates.add(RINGING);
-		assertState(possibleStates);
-		byte[] answer = successResponse.getRawContent();
-		try {
-		  if(answer != null) {
-		    answer = patchMedia(successResponse.getInitialRemoteAddr(), successResponse.getRawContent());
-		    final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
-			userAgentConnection.modify(remoteDescriptor);
-		  } else {
+	public void established(final SipServletResponse successResponse) throws CallException, IOException {
+		final State state = getState();
+		if(QUEUED.equals(state) || RINGING.equals(state)) {
+		  byte[] answer = successResponse.getRawContent();
+		  try {
+		    if(answer != null) {
+		      answer = patchMedia(successResponse.getInitialRemoteAddr(), successResponse.getRawContent());
+		      final ConnectionDescriptor remoteDescriptor = new ConnectionDescriptor(new String(answer));
+			  userAgentConnection.modify(remoteDescriptor);
+		    } else {
+		      terminate();
+			  setState(FAILED);
+			  fireStatusChanged();
+			  throw new CallException("The remote client did not send an SDP answer with their 200 OK response.");
+		    }
+		  } catch(final SdpException exception) {
 		    terminate();
-			setState(FAILED);
-			fireStatusChanged();
-			throw new CallException("The remote client did not send an SDP answer with their 200 OK response.");
+		    setState(FAILED);
+		    fireStatusChanged();
+		    throw new CallException(exception);
 		  }
-		} catch(final SdpException exception) {
-		  terminate();
-		  setState(FAILED);
-		  fireStatusChanged();
-		  throw new CallException(exception);
+		  final SipServletRequest ack = successResponse.createAck();
+		  ack.send();
 		}
-		final SipServletRequest ack = successResponse.createAck();
-		ack.send();
 	}
 
-	public synchronized void failed() {
-		final List<State> possibleStates = new ArrayList<State>();
-		possibleStates.add(QUEUED);
-		possibleStates.add(RINGING);
-		possibleStates.add(IN_PROGRESS);
-		possibleStates.add(TRYING);
-		assertState(possibleStates);
-		final State currentState = getState();
-		if(QUEUED.equals(currentState) || RINGING.equals(currentState)) {
+	public void failed() {
+		final State state = getState();
+		if(QUEUED.equals(state) || RINGING.equals(state) || IN_PROGRESS.equals(state) ||
+		    TRYING.equals(state)) {
+		  final State currentState = getState();
+		  if(QUEUED.equals(currentState) || RINGING.equals(currentState)) {
 			cleanup();
-		} else if(IN_PROGRESS.equals(currentState)) {
+		  } else if(IN_PROGRESS.equals(currentState)) {
 			terminate();
+		  }
+		  setState(FAILED);
+		  fireStatusChanged();
 		}
-		setState(FAILED);
-		fireStatusChanged();
 	}
 
 	private void fail(int code) {
@@ -394,7 +389,8 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 	}
 
 	private void fireStatusChanged() {
-		for(final CallObserver observer : observers) {
+		final List<CallObserver> copy = new ArrayList<CallObserver>(observers);
+		for(final CallObserver observer : copy) {
 			observer.onStatusChanged(this);
 		}
 	}
@@ -449,28 +445,32 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		return Status.getValueOf(getState().getName());
 	}
 
-	@Override public synchronized void hangup() {
-		assertState(IN_PROGRESS);
-		if(remoteConference != null) {
+	@Override public void hangup() {
+		final State state = getState();
+		if(IN_PROGRESS.equals(state)) {
+		  if(remoteConference != null) {
 			remoteConference.removeParticipant(this);
+		  }
+		  terminate();
+		  dateEnded = DateTime.now();
+		  setState(COMPLETED);
+		  fireStatusChanged();
 		}
-		terminate();
-		dateEnded = DateTime.now();
-		setState(COMPLETED);
-		fireStatusChanged();
 	}
 
 	@Override public boolean isMuted() {
 		return muted;
 	}
 
-	public synchronized void join(final MgcpConference conference) throws CallException {
+	public void join(final MgcpConference conference) throws CallException {
 		assertState(IN_PROGRESS);
-		remoteEndpoint = conference.getConferenceEndpoint();
-		remoteOutboundConnection = session.createConnection(remoteEndpoint);
-		remoteOutboundConnection.addObserver(this);
-		remoteOutboundConnection.connect(ConnectionMode.Confrnce);
-		try {
+		final State state = getState();
+		if(IN_PROGRESS.equals(state)) {
+		  remoteEndpoint = conference.getConferenceEndpoint();
+		  remoteOutboundConnection = session.createConnection(remoteEndpoint);
+		  remoteOutboundConnection.addObserver(this);
+		  remoteOutboundConnection.connect(ConnectionMode.Confrnce);
+		  try {
 			block(3);
 			//Issue 138: http://code.google.com/p/restcomm/issues/detail?id=138
 			if(MgcpConnection.OPEN.equals(remoteInboundConnection.getState()) &&
@@ -479,16 +479,18 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 			} else {
 			  throw new CallException(mmsTimedOutException());
 			}
-		} catch(final Exception exception) {
+		  } catch(final Exception exception) {
 			failed();
 			leave(conference);
 			throw new CallException(exception);
+		  }
 		}
 	}
 
-	public synchronized void leave(final MgcpConference conference) {
-		assertState(IN_PROGRESS);
-		if(remoteOutboundConnection != null) {
+	public void leave(final MgcpConference conference) {
+		final State state = getState();
+		if(IN_PROGRESS.equals(state)) {
+		  if(remoteOutboundConnection != null) {
 			session.destroyConnection(remoteOutboundConnection);
 			try {
 			  block(2);
@@ -508,16 +510,20 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 				remoteEndpoint = null;
 			}
 			remoteConference = null;
+		  }
 		}
 	}
 
-	@Override public synchronized void mute() {
-		relayOutboundConnection.modify(ConnectionMode.RecvOnly);
-		try { block(1); }
-		catch(final InterruptedException ignored) {
+	@Override public void mute() {
+		final State state = getState();
+		if(IN_PROGRESS.equals(state)) {
+		  relayOutboundConnection.modify(ConnectionMode.RecvOnly);
+		  try { block(1); }
+		  catch(final InterruptedException ignored) {
 			unmute();
+		  }
+		  muted = true;
 		}
-		muted = true;
 	}
 	
 	private byte[] patchMedia(final String realIp, final byte[] data)
@@ -559,24 +565,22 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		catch(final InterruptedException ignored) { stopMedia(); }
 	}
 
-	@Override public synchronized void reject() {
-		assertState(RINGING);
-		final SipServletResponse busy = initialInvite.createResponse(SipServletResponse.SC_BUSY_HERE);
-		try {
+	@Override public void reject() {
+		final State state = getState();
+		if(RINGING.equals(state)) {
+		  final SipServletResponse busy = initialInvite.createResponse(SipServletResponse.SC_BUSY_HERE);
+		  try {
 			busy.send();
-		} catch(final IOException exception) {
+		  } catch(final IOException exception) {
 			cleanup();
 			setState(FAILED);
 			fireStatusChanged();
 			logger.error(exception);
+		  }
 		}
 	}
 	
-	public synchronized void ringing() {
-	  final List<State> possibleStates = new ArrayList<State>();
-	  possibleStates.add(QUEUED);
-	  possibleStates.add(RINGING);
-	  assertState(possibleStates);
+	public void ringing() {
 	  final State state = getState();
 	  if(QUEUED.equals(state)) {
 	    setState(RINGING);
@@ -588,15 +592,17 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		observers.remove(observer);
 	}
 
-	@Override public synchronized void setExpires(final int minutes) {
+	@Override public void setExpires(final int minutes) {
 		initialInvite.getApplicationSession().setExpires(minutes);
 	}
 
 	@Override public synchronized void stopMedia() {
-		assertState(IN_PROGRESS);
-		ivrEndpoint.stop();
-		try { wait(); }
-		catch(final InterruptedException ignored) { }
+		final State state = getState();
+		if(IN_PROGRESS.equals(state)) {
+		  ivrEndpoint.stop();
+		  try { wait(); }
+		  catch(final InterruptedException ignored) { }
+		}
 	}
 
 	private void terminate() {
@@ -610,14 +616,17 @@ implements Call, MgcpConnectionObserver, MgcpIvrEndpointObserver {
 		server.destroyMediaSession(session);
 	}
 
-	@Override public synchronized void unmute() {
-		relayOutboundConnection.modify(ConnectionMode.SendRecv);
-		try { block(1); }
-		catch(final InterruptedException ignored) { }
-		muted = false;
+	@Override public void unmute() {
+		final State state = getState();
+		if(IN_PROGRESS.equals(state)) {
+		  relayOutboundConnection.modify(ConnectionMode.SendRecv);
+		  try { block(1); }
+		  catch(final InterruptedException ignored) { }
+		  muted = false;
+		}
 	}
 
-	public synchronized void updateInitialInvite(final SipServletRequest initialInvite) {
+	public void updateInitialInvite(final SipServletRequest initialInvite) {
 		this.initialInvite = initialInvite;
 	}
 

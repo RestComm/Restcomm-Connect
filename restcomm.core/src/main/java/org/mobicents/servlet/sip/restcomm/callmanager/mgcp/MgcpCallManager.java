@@ -17,6 +17,8 @@
 package org.mobicents.servlet.sip.restcomm.callmanager.mgcp;
 
  import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -63,26 +65,40 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 private static final Logger logger = Logger.getLogger(MgcpCallManager.class);
 	 private static final long serialVersionUID = 4758133818077979879L;
 
-	 private static SipFactory sipFactory;
+	 private SipFactory sipFactory;
+	 private MgcpServerManager servers;
+	 private InterpreterFactory interpreters;
+	 private DaoManager daos;
 
-	 private static Configuration configuration;
-	 private static String proxyUser;
-	 private static String proxyPassword;
-	 private static SipURI proxyUri;
-
-	 private static MgcpServerManager servers;
-
-	 private static InterpreterFactory interpreters;
-
-	 private static DaoManager daos;
+	 private Configuration configuration;
+	 private String proxyUser;
+	 private String proxyPassword;
+	 private SipURI proxyUri;
+	 private String fallbackProxyUser;
+	 private String fallbackProxyPassword;
+	 private SipURI fallbackProxyUri;
+	 private int maxNumberOfFailedCalls;
+	 private boolean allowFallbackToPrimary;
+	 
+	 private AtomicInteger numberOfFailedCalls;
+	 private AtomicBoolean useFallbackProxy;
 
 	 public MgcpCallManager() {
 		 super();
+		 numberOfFailedCalls = new AtomicInteger();
+		 numberOfFailedCalls.set(0);
+		 useFallbackProxy = new AtomicBoolean();
+		 useFallbackProxy.set(false);
 	 }
 
 	 @Override public Call createExternalCall(final String from, final String to) throws CallManagerException {
 		 try{
-			 final String uri = proxyUri.toString().replaceFirst("sip:", "");
+			 String uri = null;
+			 if(!useFallbackProxy.get()) {
+				 uri = proxyUri.toString().replaceFirst("sip:", "");
+			 } else {
+				 uri = fallbackProxyUri.toString().replaceFirst("sip:", "");
+			 }
 			 final SipURI fromUri = sipFactory.createSipURI(from, uri);
 			 final SipURI toUri = sipFactory.createSipURI(to, uri);
 			 return createCall(fromUri, toUri);
@@ -93,7 +109,12 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 
 	@Override public Call createUserAgentCall(final String from, final String to) throws CallManagerException {
 	  try {
-		final String uri = proxyUri.toString().replaceFirst("sip:", "");
+	    String uri = null;
+		if(!useFallbackProxy.get()) {
+			uri = proxyUri.toString().replaceFirst("sip:", "");
+		} else {
+			uri = fallbackProxyUri.toString().replaceFirst("sip:", "");
+		}
 	    final SipURI fromUri = sipFactory.createSipURI(from, uri);
         final URI toUri = sipFactory.createURI(to);
         return createCall(fromUri, toUri);
@@ -154,6 +175,23 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	 }
 
 	 @Override protected final void doCancel(final SipServletRequest request) throws ServletException, IOException {
+		 int failures = numberOfFailedCalls.incrementAndGet();
+		 logger.info("A total number of " + failures + " failures have now been counted.");
+		 while(failures >= maxNumberOfFailedCalls) {
+		   logger.info("Max number of failed calls has been reached trying to switch over to fallback proxy.");
+    	   if(numberOfFailedCalls.compareAndSet(failures, 0)) {
+    		   final boolean useFallback = useFallbackProxy.get();
+    		   if(allowFallbackToPrimary) {
+    			   useFallbackProxy.set(!useFallback);
+    			   logger.info("Switched to alternate proxy due to maximum failure rate being reached.");
+    		   } else {
+    			   useFallbackProxy.set(true);
+    			   logger.info("Switched to fallback proxy due to maximum failure rate being reached.");
+    		   }
+    	   } else {
+    		   failures = numberOfFailedCalls.get();
+    	   }
+		 }
 		 final SipApplicationSession session = request.getApplicationSession();
 		 final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
 		 call.cancel(request);
@@ -177,8 +215,12 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 if(SipServletResponse.SC_UNAUTHORIZED == status || SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED == status) {
 		   final SipServletRequest invite = invite(request.getFrom().getURI(), request.getTo().getURI());
 	       final AuthInfo authorization = sipFactory.createAuthInfo();
-	 	   final String realm = response.getChallengeRealms().next(); 
-		   authorization.addAuthInfo(status, realm, proxyUser, proxyPassword);
+	 	   final String realm = response.getChallengeRealms().next();
+	 	   if(!useFallbackProxy.get()) {
+	 		  authorization.addAuthInfo(status, realm, proxyUser, proxyPassword);
+	 	   } else {
+	 		  authorization.addAuthInfo(status, realm, fallbackProxyUser, fallbackProxyPassword);
+	 	   }
 		   invite.addAuthHeader(response, authorization);
 		   if(request.getContentLength() > 0) {
 		     invite.setContent(request.getContent(), request.getContentType());
@@ -189,6 +231,23 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 	     } else if(SipServletResponse.SC_BUSY_HERE == status || SipServletResponse.SC_BUSY_EVERYWHERE == status) {
 		   call.busy();
 	     } else {
+	       int failures = numberOfFailedCalls.incrementAndGet();
+	       logger.info("A total number of " + failures + " failures have now been counted.");
+	       while(failures >= maxNumberOfFailedCalls) {
+    	    logger.info("Max number of failed calls has been reached trying to switch over to fallback proxy.");
+	       	if(numberOfFailedCalls.compareAndSet(failures, 0)) {
+	    	   final boolean useFallback = useFallbackProxy.get();
+	    	   if(allowFallbackToPrimary) {
+	    		   useFallbackProxy.set(!useFallback);
+	    		   logger.info("Switched to alternate proxy due to maximum failure rate being reached.");
+	    	   } else {
+	    		   useFallbackProxy.set(true);
+	    		   logger.info("Switched to fallback proxy due to maximum failure rate being reached.");
+	    	   }
+	       	} else {
+	    	   failures = numberOfFailedCalls.get();
+	       	}
+	       }
 	       call.failed();
  	     }
 	   }
@@ -265,6 +324,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 final SipServletRequest request = response.getRequest();
 		 final SipApplicationSession session = response.getApplicationSession();
 		 if(request.getMethod().equals("INVITE") && response.getStatus() == SipServletResponse.SC_OK) {
+			 numberOfFailedCalls.set(0);
 			 final MgcpCall call = (MgcpCall)session.getAttribute("CALL");
 			 try { call.established(response); }
 			 catch(final CallException exception) { throw new ServletException(exception); }
@@ -314,10 +374,32 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 		 configuration = services.get(Configuration.class);
 		 proxyUser = configuration.getString("outbound-proxy-user");
 		 proxyPassword = configuration.getString("outbound-proxy-password");
-		 final String uri = configuration.getString("outbound-proxy-uri");
+		 String uri = configuration.getString("outbound-proxy-uri");
 		 if(uri != null && !uri.isEmpty()) {
 			 proxyUri = sipFactory.createSipURI(null, uri);
 		 }
+		 logger.info("Registered an outbound proxy located @ " + proxyUri.toString());
+		 fallbackProxyUser = configuration.getString("fallback-outbound-proxy-user");
+		 fallbackProxyPassword = configuration.getString("fallback-outbound-proxy-password");
+		 uri = configuration.getString("fallback-outbound-proxy-uri");
+		 if(uri != null && !uri.isEmpty()) {
+			 fallbackProxyUri = sipFactory.createSipURI(null, uri);
+		 }
+		 logger.info("Registered a fallback outbound proxy located @ " + fallbackProxyUri.toString());
+		 final Integer value = configuration.getInt("max-failed-calls");
+		 if(value != null) {
+			 maxNumberOfFailedCalls = value.intValue();
+		 } else {
+			 maxNumberOfFailedCalls = 20;
+		 }
+		 logger.info("Set the maximum number of failed calls to " + maxNumberOfFailedCalls);
+		 final Boolean bool = configuration.getBoolean("allow-fallback-to-primary");
+		 if(bool != null) {
+			 allowFallbackToPrimary = bool;
+		 } else {
+			 allowFallbackToPrimary = false;
+		 }
+		 logger.info("Allow fallback to primay proxy: " + allowFallbackToPrimary);
 	 }
 
 	@Override public void sessionCreated(final SipApplicationSessionEvent event) { }

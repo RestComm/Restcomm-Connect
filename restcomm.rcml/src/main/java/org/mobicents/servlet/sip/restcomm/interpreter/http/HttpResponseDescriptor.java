@@ -16,9 +16,12 @@
  */
 package org.mobicents.servlet.sip.restcomm.interpreter.http;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.HttpClient;
 import org.mobicents.servlet.sip.restcomm.util.HttpUtils;
 
 /**
@@ -28,7 +31,8 @@ public final class HttpResponseDescriptor {
   private final HttpRequestDescriptor requestDescriptor;
   private final int statusCode;
   private final String statusDescription;
-  private final InputStream content;
+  private final HttpClient client;
+  private final HttpEntity entity;
   private final long contentLength;
   private final String contentEncoding;
   private final String contentType;
@@ -36,14 +40,15 @@ public final class HttpResponseDescriptor {
   private final Header[] headers;
   
   private HttpResponseDescriptor(final HttpRequestDescriptor requestDescriptor, final int statusCode,
-      final String statusDescription, final InputStream content, final long contentLength,
-      final String contentEncoding, final String contentType, final boolean isChunked,
-      final Header[] headers) {
+      final String statusDescription, final HttpClient client, final HttpEntity entity,
+      final long contentLength, final String contentEncoding, final String contentType,
+      final boolean isChunked, final Header[] headers) {
     super();
     this.requestDescriptor = requestDescriptor;
     this.statusCode = statusCode;
     this.statusDescription = statusDescription;
-    this.content = content;
+    this.client = client;
+    this.entity = entity;
     this.contentLength = contentLength;
     this.contentEncoding = contentEncoding;
     this.contentType = contentType;
@@ -63,8 +68,8 @@ public final class HttpResponseDescriptor {
 	return statusDescription;
   }
 
-  public InputStream getContent() {
-	return content;
+  public InputStream getContent() throws IllegalStateException, IOException {
+	return entity.getContent();
   }
   
   public long getContentLength() {
@@ -77,6 +82,14 @@ public final class HttpResponseDescriptor {
 
   public String getContentType() {
 	return contentType;
+  }
+  
+  public HttpClient getClient() {
+    return client;
+  }
+  
+  public HttpEntity getEntity() {
+    return entity;
   }
   
   public boolean isChunked() {
@@ -99,7 +112,8 @@ public final class HttpResponseDescriptor {
     private HttpRequestDescriptor requestDescriptor;
     private int statusCode;
     private String statusDescription;
-    private InputStream content;
+    private HttpClient client;
+    private HttpEntity entity;
     private long contentLength;
     private String contentEncoding;
     private String contentType;
@@ -111,8 +125,8 @@ public final class HttpResponseDescriptor {
     }
     
     public HttpResponseDescriptor build() {
-      return new HttpResponseDescriptor(requestDescriptor, statusCode, statusDescription, content, contentLength,
-          contentEncoding, contentType, isChunked, headers);
+      return new HttpResponseDescriptor(requestDescriptor, statusCode, statusDescription, client,
+          entity, contentLength, contentEncoding, contentType, isChunked, headers);
     }
     
     public void setStatusCode(final int statusCode) {
@@ -123,8 +137,12 @@ public final class HttpResponseDescriptor {
       this.statusDescription = statusDescription;
     }
     
-    public void setContent(final InputStream content) {
-      this.content = content;
+    public void setClient(final HttpClient client) {
+      this.client = client;
+    }
+    
+    public void setEntity(final HttpEntity entity) {
+      this.entity = entity;
     }
     
     public void setContentLength(final long contentLength) {

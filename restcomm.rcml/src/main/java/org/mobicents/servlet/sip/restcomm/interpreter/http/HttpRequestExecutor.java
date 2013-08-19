@@ -26,6 +26,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -43,10 +44,11 @@ public final class HttpRequestExecutor {
   public HttpResponseDescriptor execute(final HttpRequestDescriptor request) throws ClientProtocolException,
       IllegalArgumentException, UnsupportedEncodingException, IOException, URISyntaxException {
     int statusCode = -1;
+    DefaultHttpClient client = null;
     HttpResponse response = null;
     HttpRequestDescriptor descriptor = request;
     do {
-      final DefaultHttpClient client = new DefaultHttpClient();
+      client = new DefaultHttpClient();
       client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
       response = new DefaultHttpClient().execute(descriptor.getHttpRequest());
       statusCode = response.getStatusLine().getStatusCode();
@@ -62,7 +64,7 @@ public final class HttpRequestExecutor {
         }
       }
     } while(isRedirect(statusCode));
-    return response(descriptor, response);
+    return response(client, descriptor, response);
   }
   
   private boolean isRedirect(final int code) {
@@ -70,9 +72,11 @@ public final class HttpRequestExecutor {
 	    HttpStatus.SC_SEE_OTHER == code || HttpStatus.SC_TEMPORARY_REDIRECT == code;
   }
   
-  private HttpResponseDescriptor response(final HttpRequestDescriptor descriptor, final HttpResponse response)
+  private HttpResponseDescriptor response(final HttpClient client,
+      final HttpRequestDescriptor descriptor, final HttpResponse response)
       throws IllegalStateException, IOException {
     final HttpResponseDescriptor.Builder builder = HttpResponseDescriptor.builder();
+    builder.setClient(client);
     builder.setRequestDescriptor(descriptor);
     builder.setStatusCode(response.getStatusLine().getStatusCode());
     builder.setStatusDescription(response.getStatusLine().getReasonPhrase());
@@ -87,7 +91,7 @@ public final class HttpRequestExecutor {
       if(contentType != null) {
         builder.setContentType(contentType.getValue());
       }
-      builder.setContent(entity.getContent());
+      builder.setEntity(entity);
       builder.setContentLength(entity.getContentLength());
       builder.setIsChuncked(entity.isChunked());
     }

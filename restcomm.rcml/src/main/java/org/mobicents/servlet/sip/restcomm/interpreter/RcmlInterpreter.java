@@ -29,6 +29,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 import org.joda.time.DateTime;
@@ -200,6 +201,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 		      final String data = StringUtils.toString(response.getContent());
 			  responseBody = data;
 		      resource = resourceBuilder.build(data);
+		      EntityUtils.consume(response.getEntity());
+		      response.getClient().getConnectionManager().shutdown();
 		    } else if(contentType.contains("audio/wav") || contentType.contains("audio/wave") ||
 		        contentType.contains("audio/x-wav")) {
 		      resource = resourceBuilder.build(loadWav(response.getContent()));
@@ -207,6 +210,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 		      final String data = StringUtils.toString(response.getContent());
 			  responseBody = data;
 			  resource = resourceBuilder.build(loadPlainText(data));
+			  EntityUtils.consume(response.getEntity());
+			  response.getClient().getConnectionManager().shutdown();
 		    } else {
 		      save(notify(context, Notification.ERROR, 12300));
 		      throw new InterpreterException("Invalid content type " + contentType);
@@ -230,6 +235,8 @@ import org.mobicents.servlet.sip.restcomm.xml.rcml.RcmlTagFactory;
 		} catch(final URISyntaxException exception) {
 		  save(notify(context, Notification.ERROR, 11100));
 		  throw new InterpreterException(exception);
+		} catch(final Exception exception) {
+		  logger.error(exception);
 		}
 	}
 	

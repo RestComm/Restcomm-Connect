@@ -62,7 +62,7 @@ public class TwilioRestClient {
 	/**
 	 * The default HTTP Connection timeout, also used for socket timeout.
 	 */
-	private static final int CONNECTION_TIMEOUT = 10000;
+	private static final int CONNECTION_TIMEOUT = 25000;
 
 	/**
 	 * Gets the num retries.
