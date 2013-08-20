@@ -1,6 +1,6 @@
 .classpath
 .settings
 .project
-**/data/restcomm.log
-**/data/restcomm.properties
+restcomm.dao/src/test/resources/data/restcomm.log
+restcomm.dao/src/test/resources/data/restcomm.properties
 target
