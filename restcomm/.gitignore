@@ -1,0 +1,6 @@
+.classpath
+.settings
+.project
+**/data/restcomm.log
+**/data/restcomm.properties
+target
