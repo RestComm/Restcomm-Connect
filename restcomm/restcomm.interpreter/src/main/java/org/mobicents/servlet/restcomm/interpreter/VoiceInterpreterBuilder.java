@@ -48,6 +48,7 @@ public final class VoiceInterpreterBuilder {
   private String fallbackMethod;
   private URI statusCallback;
   private String statusCallbackMethod;
+  private String emailAddress;
 
   /**
    * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -62,8 +63,8 @@ public final class VoiceInterpreterBuilder {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
           return new VoiceInterpreter(configuration, account, phone, version, url, method,
-              fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, calls,
-              conferences, sms, storage);
+              fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, emailAddress,
+              calls, conferences, sms, storage);
 		}
     }));
   }
@@ -118,6 +119,10 @@ public final class VoiceInterpreterBuilder {
   
   public void setStatusCallbackMethod(final String statusCallbackMethod) {
     this.statusCallbackMethod = statusCallbackMethod;
+  }
+  
+  public void setEmailAddress(final String emailAddress) {
+    this.emailAddress = emailAddress;
   }
   
   public void setVersion(final String version) {

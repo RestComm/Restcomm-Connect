@@ -39,16 +39,19 @@ import javax.servlet.sip.SipApplicationSessionEvent;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+
 import static javax.servlet.sip.SipServletResponse.*;
+
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
-
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
@@ -57,6 +60,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
+
 import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.*;
 
 /**
@@ -140,6 +144,7 @@ public final class CallManager extends UntypedActor {
       return;
     }
     // If it's a new invite lets try to handle it.
+    final AccountsDao accounts = storage.getAccountsDao();
     final ApplicationsDao applications = storage.getApplicationsDao();
     // Try to find an application defined for the client.
     SipURI uri = (SipURI)request.getFrom().getURI();
@@ -161,6 +166,8 @@ public final class CallManager extends UntypedActor {
         builder.setSmsService(sms);
         builder.setAccount(client.getAccountSid());
         builder.setVersion(client.getApiVersion());
+        final Account account = accounts.getAccount(client.getAccountSid());
+        builder.setEmailAddress(account.getEmailAddress());
         final Sid sid = client.getVoiceApplicationSid();
         if(sid != null) {
           final Application application = applications.getApplication(sid);
@@ -208,6 +215,8 @@ public final class CallManager extends UntypedActor {
         builder.setSmsService(sms);
         builder.setAccount(number.getAccountSid());
         builder.setVersion(number.getApiVersion());
+        final Account account = accounts.getAccount(number.getAccountSid());
+        builder.setEmailAddress(account.getEmailAddress());
         final Sid sid = number.getVoiceApplicationSid();
         if(sid != null) {
           final Application application = applications.getApplication(sid);

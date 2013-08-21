@@ -83,6 +83,12 @@
 		<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
 	</voip-innovations>
 	
+	<smtp>
+		<host></host>
+		<user></user>
+		<password></password>
+	</smtp>
+	
 	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
 	    <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
 	    <data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
