@@ -50,9 +50,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
-
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.asr.AsrInfo;
 import org.mobicents.servlet.restcomm.asr.AsrRequest;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
@@ -67,6 +65,8 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.email.MailMan;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -92,7 +92,9 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
+
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
@@ -149,7 +151,9 @@ import scala.concurrent.duration.Duration;
 public final class VoiceInterpreter extends UntypedActor {
   private static final int ERROR_NOTIFICATION = 0;
   private static final int WARNING_NOTIFICATION = 1;
-  private static final Pattern pattern = Pattern.compile("[\\*#0-9]{1,12}");
+  private static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
+  private static final String EMAIL_SENDER = "restcomm@restcomm.org";
+  private static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
   // Logger.
   private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
   // States for the FSM.
@@ -202,6 +206,8 @@ public final class VoiceInterpreter extends UntypedActor {
   private final String cachePath;
   // The downloader will fetch resources for us using HTTP.
   private final ActorRef downloader;
+  // The mail man that will deliver e-mail.
+  private ActorRef mailer;
   // The call manager.
   private final ActorRef callManager;
   // The conference manager.
@@ -258,6 +264,7 @@ public final class VoiceInterpreter extends UntypedActor {
   private final String fallbackMethod;
   private final URI statusCallback;
   private String statusCallbackMethod;
+  private final String emailAddress;
   // application data.
   private HttpRequestDescriptor request;
   private HttpResponseDescriptor response;
@@ -268,8 +275,8 @@ public final class VoiceInterpreter extends UntypedActor {
   public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone,
 	  final String version, final URI url, final String method, final URI fallbackUrl,
 	  final String fallbackMethod, final URI statusCallback, final String statusCallbackMethod,
-	  final ActorRef callManager, final ActorRef conferenceManager, final ActorRef sms,
-	  final DaoManager storage) {
+	  final String emailAddress, final ActorRef callManager, final ActorRef conferenceManager,
+	  final ActorRef sms, final DaoManager storage) {
     super();
     final ActorRef source = self();
     uninitialized = new State("uninitialized", null, null);
@@ -583,6 +590,7 @@ public final class VoiceInterpreter extends UntypedActor {
     this.fallbackMethod = fallbackMethod;
     this.statusCallback = statusCallback;
     this.statusCallbackMethod = statusCallbackMethod;
+    this.emailAddress = emailAddress;
     this.configuration = configuration;
     this.callManager = callManager;
     this.conferenceManager = conferenceManager;
@@ -592,6 +600,7 @@ public final class VoiceInterpreter extends UntypedActor {
     this.smsSessions = new HashMap<Sid, ActorRef>();
     this.storage = storage;
     this.synthesizer = tts(configuration.subset("speech-synthesizer"));
+    this.mailer = mailer(configuration.subset("smtp"));
     final Configuration runtime = configuration.subset("runtime-settings");
     String path = runtime.getString("cache-path");
     if(!path.endsWith("/")) {
@@ -659,6 +668,43 @@ public final class VoiceInterpreter extends UntypedActor {
     }));
   }
   
+  private void sendMail(final Notification notification) {
+    if(emailAddress == null || emailAddress.isEmpty()) {
+      return;
+    }
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("<strong>").append("Sid: ").append("</strong></br>");
+    buffer.append(notification.getSid().toString()).append("</br>");
+    buffer.append("<strong>").append("Account Sid: ").append("</strong></br>");
+    buffer.append(notification.getAccountSid().toString()).append("</br>");
+    buffer.append("<strong>").append("Call Sid: ").append("</strong></br>");
+    buffer.append(notification.getCallSid().toString()).append("</br>");
+    buffer.append("<strong>").append("API Version: ").append("</strong></br>");
+    buffer.append(notification.getApiVersion()).append("</br>");
+    buffer.append("<strong>").append("Log: ").append("</strong></br>");
+    buffer.append(notification.getLog() == ERROR_NOTIFICATION ? "ERROR" : "WARNING").append("</br>");
+    buffer.append("<strong>").append("Error Code: ").append("</strong></br>");
+    buffer.append(notification.getErrorCode()).append("</br>");
+    buffer.append("<strong>").append("More Information: ").append("</strong></br>");
+    buffer.append(notification.getMoreInfo().toString()).append("</br>");
+    buffer.append("<strong>").append("Message Text: ").append("</strong></br>");
+    buffer.append(notification.getMessageText()).append("</br>");
+    buffer.append("<strong>").append("Message Date: ").append("</strong></br>");
+    buffer.append(notification.getMessageDate().toString()).append("</br>");
+    buffer.append("<strong>").append("Request URL: ").append("</strong></br>");
+    buffer.append(notification.getRequestUrl().toString()).append("</br>");
+    buffer.append("<strong>").append("Request Method: ").append("</strong></br>");
+    buffer.append(notification.getRequestMethod()).append("</br>");
+    buffer.append("<strong>").append("Request Variables: ").append("</strong></br>");
+    buffer.append(notification.getRequestVariables()).append("</br>");
+    buffer.append("<strong>").append("Response Headers: ").append("</strong></br>");
+    buffer.append(notification.getResponseHeaders()).append("</br>");
+    buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
+    buffer.append(notification.getResponseBody()).append("</br>");
+    final Mail email = new Mail(EMAIL_SENDER, emailAddress, EMAIL_SUBJECT, buffer.toString());
+    mailer.tell(email, self());
+  }
+  
   private String format(final String number) {
     final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
     try {
@@ -674,6 +720,16 @@ public final class VoiceInterpreter extends UntypedActor {
     // Get the next verb.
     final GetNextVerb next = GetNextVerb.instance();
     parser.tell(next, self);
+  }
+  
+  private ActorRef mailer(final Configuration configuration) {
+    final UntypedActorContext context = getContext();
+    return context.actorOf(new Props(new UntypedActorFactory() {
+		private static final long serialVersionUID = 1L;
+		@Override public UntypedActor create() throws Exception {
+          return new MailMan(configuration);
+		}
+    }));
   }
   
   private Notification notification(final int log, final int error,
@@ -1304,6 +1360,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	    if(notification != null) {
   	      final NotificationsDao notifications = storage.getNotificationsDao();
   	      notifications.addNotification(notification);
+  	      sendMail(notification);
   	    }
 	  }
 	  // Try to use the fall back url and method.
@@ -1415,6 +1472,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	        exception.getMessage());
 	    final NotificationsDao notifications = storage.getNotificationsDao();
 	    notifications.addNotification(notification);
+	    sendMail(notification);
 	    final StopInterpreter stop = StopInterpreter.instance();
 	    source.tell(stop, source);
 	    return;
@@ -1528,6 +1586,7 @@ public final class VoiceInterpreter extends UntypedActor {
                 text + " is an invalid URI.");
             final NotificationsDao notifications = storage.getNotificationsDao();
             notifications.addNotification(notification);
+            sendMail(notification);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
             return;
@@ -1687,6 +1746,7 @@ public final class VoiceInterpreter extends UntypedActor {
           final Notification notification = notification(ERROR_NOTIFICATION, 11100,
               text + " is an invalid URI.");
           notifications.addNotification(notification);
+          sendMail(notification);
           final StopInterpreter stop = StopInterpreter.instance();
           source.tell(stop, source);
           return;
@@ -1715,7 +1775,7 @@ public final class VoiceInterpreter extends UntypedActor {
       if(attribute != null) {
         finishOnKey = attribute.value();
         if(finishOnKey != null && !finishOnKey.isEmpty()) {
-          if(!pattern.matcher(finishOnKey).matches()) {
+          if(!PATTERN.matcher(finishOnKey).matches()) {
           final NotificationsDao notifications = storage.getNotificationsDao();
   	      final Notification notification = notification(WARNING_NOTIFICATION, 13310,
                 finishOnKey + " is not a valid finishOnKey value");
@@ -1789,6 +1849,7 @@ public final class VoiceInterpreter extends UntypedActor {
                 final Notification notification = notification(ERROR_NOTIFICATION, 13325,
                     text + " is an invalid URI.");
                 notifications.addNotification(notification);
+                sendMail(notification);
                 final StopInterpreter stop = StopInterpreter.instance();
                 source.tell(stop, source);
                 return;
@@ -1947,6 +2008,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	        final Notification notification = notification(ERROR_NOTIFICATION, 11100,
 	            action + " is an invalid URI.");
 	        notifications.addNotification(notification);
+	        sendMail(notification);
 	        final StopInterpreter stop = StopInterpreter.instance();
 	        source.tell(stop, source);
 	        return;
@@ -2008,7 +2070,7 @@ public final class VoiceInterpreter extends UntypedActor {
       if(attribute != null) {
         finishOnKey = attribute.value();
         if(finishOnKey != null && !finishOnKey.isEmpty()) {
-          if(!pattern.matcher(finishOnKey).matches()) {
+          if(!PATTERN.matcher(finishOnKey).matches()) {
     	    final Notification notification = notification(WARNING_NOTIFICATION, 13613,
                 finishOnKey + " is not a valid finishOnKey value");
             notifications.addNotification(notification);
@@ -2076,6 +2138,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	      final Notification notification = notification(ERROR_NOTIFICATION, 12400,
 	          exception.getMessage());
 	      notifications.addNotification(notification);
+	      sendMail(notification);
 	      final StopInterpreter stop = StopInterpreter.instance();
 	      source.tell(stop, source);
 	      return;
@@ -2140,6 +2203,7 @@ public final class VoiceInterpreter extends UntypedActor {
     	    final Notification notification = notification(ERROR_NOTIFICATION, 11100,
                 transcribeCallback + " is an invalid URI.");
             notifications.addNotification(notification);
+            sendMail(notification);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
             return;
@@ -2196,6 +2260,7 @@ public final class VoiceInterpreter extends UntypedActor {
             final Notification notification = notification(ERROR_NOTIFICATION, 11100,
                 action + " is an invalid URI.");
             notifications.addNotification(notification);
+            sendMail(notification);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
             return;
@@ -2290,6 +2355,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	        final Notification notification = notification(ERROR_NOTIFICATION, 14102,
                 from + " is an invalid 'from' phone number.");
             notifications.addNotification(notification);
+            sendMail(notification);
             smsService.tell(new DestroySmsSession(session), source);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
@@ -2309,6 +2375,7 @@ public final class VoiceInterpreter extends UntypedActor {
             final Notification notification = notification(ERROR_NOTIFICATION, 14101,
                 to + " is an invalid 'to' phone number.");
             notifications.addNotification(notification);
+            sendMail(notification);
             smsService.tell(new DestroySmsSession(session), source);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
@@ -2322,6 +2389,7 @@ public final class VoiceInterpreter extends UntypedActor {
     	final Notification notification = notification(ERROR_NOTIFICATION, 14103,
             body + " is an invalid SMS body.");
         notifications.addNotification(notification);
+        sendMail(notification);
         smsService.tell(new DestroySmsSession(session), source);
         final StopInterpreter stop = StopInterpreter.instance();
         source.tell(stop, source);
@@ -2341,6 +2409,7 @@ public final class VoiceInterpreter extends UntypedActor {
               final Notification notification = notification(ERROR_NOTIFICATION, 14105,
                   callback + " is an invalid URI.");
               notifications.addNotification(notification);
+              sendMail(notification);
               smsService.tell(new DestroySmsSession(session), source);
               final StopInterpreter stop = StopInterpreter.instance();
               source.tell(stop, source);
@@ -2391,6 +2460,7 @@ public final class VoiceInterpreter extends UntypedActor {
               final Notification notification = notification(ERROR_NOTIFICATION, 11100,
                   action + " is an invalid URI.");
               notifications.addNotification(notification);
+              sendMail(notification);
               final StopInterpreter stop = StopInterpreter.instance();
               source.tell(stop, source);
               return;
@@ -2447,6 +2517,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	        final Notification notification = notification(ERROR_NOTIFICATION, 13214,
                 callerId + " is an invalid callerId.");
             notifications.addNotification(notification);
+            sendMail(notification);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
             return null;
@@ -2618,6 +2689,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	        exception.getMessage());
 	    final NotificationsDao notifications = storage.getNotificationsDao();
 	    notifications.addNotification(notification);
+	    sendMail(notification);
 	    final StopInterpreter stop = StopInterpreter.instance();
 	    source.tell(stop, source);
 	    return;
@@ -2707,6 +2779,7 @@ public final class VoiceInterpreter extends UntypedActor {
             final Notification notification = notification(ERROR_NOTIFICATION, 11100,
                 action + " is an invalid URI.");
             notifications.addNotification(notification);
+            sendMail(notification);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
             return;
@@ -2837,6 +2910,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	          exception.getMessage());
 	      final NotificationsDao notifications = storage.getNotificationsDao();
 	      notifications.addNotification(notification);
+	      sendMail(notification);
 	      final StopInterpreter stop = StopInterpreter.instance();
 	      source.tell(stop, source);
 	      return;
@@ -2892,6 +2966,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	        final Notification notification = notification(ERROR_NOTIFICATION, 13233,
 	            method + " is not a valid waitUrl value for <Conference>");
 	        notifications.addNotification(notification);
+	        sendMail(notification);
 	        final StopInterpreter stop = StopInterpreter.instance();
 	        source.tell(stop, source);
 	      }
@@ -2969,6 +3044,7 @@ public final class VoiceInterpreter extends UntypedActor {
             final Notification notification = notification(ERROR_NOTIFICATION, 11100,
                 action + " is an invalid URI.");
             notifications.addNotification(notification);
+            sendMail(notification);
             final StopInterpreter stop = StopInterpreter.instance();
             source.tell(stop, source);
             return;
