@@ -11,9 +11,9 @@
 	<property name="restcomm.docs.tomcat.dir" location="${release.tomcat.dir}/docs/restcomm" />
         <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm" />
 	<property name="checkout.dir" value="${base.dir}/checkout" />	
-	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
+	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
-	<property name="telscale.restcomm.release.version" value="6.1.0.GA"/>
+	<property name="telscale.restcomm.release.version" value="6.1.1-TelScale-SNAPSHOT"/>
 	<property name="telscale.restcomm.branch.name" value="ts11"/>
 	
 	<!--Telscale binaries versions-->
