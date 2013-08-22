@@ -197,7 +197,7 @@
 		<unzip src="${hsqldb.distro.zip.path}" dest="${release.hsqldb.dir}"/>
 	</target>
 
-	<target name="extract-ami-telscale-sipservlets" depends="get-ami-telscale-sipservlets">
+	<target name="extract-ami-telscale-sipservlets" depends="get-ami-telscale-sipservlets,extract-hsqldb">
 		<delete dir="${checkout.telscale-sipservlets.dir}" failonerror="false" />
 		<unzip src="${telscale-sipservlets-nolce.distro.zip.path}" dest="${release.dir}">
 			<mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets.version}-jboss-as-5.1.0.GA/*" to="*"/>
