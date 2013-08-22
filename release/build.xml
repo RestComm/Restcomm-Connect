@@ -11,7 +11,8 @@
 	<property name="restcomm.docs.tomcat.dir" location="${release.tomcat.dir}/docs/restcomm" />
         <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm" />
 	<property name="checkout.dir" value="${base.dir}/checkout" />	
-	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
+	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
+	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
 	<property name="telscale.restcomm.release.version" value="6.1.1-TelScale-SNAPSHOT"/>
 	<property name="telscale.restcomm.branch.name" value="ts11"/>
@@ -220,6 +221,7 @@
 		<delete dir="${checkout.telscale-media.dir}" failonerror="false" />
 		<unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/>
 		<unzip src="${telscale-media.distro.zip.path}" dest="${release.tomcat.dir}/telscale-media"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.as7.dir}/telscale-media"/>
 	</target>
 	
 	<!--diameter-->
@@ -253,10 +255,11 @@
 	
 	<target name="build-telscale-restcomm">
         <echo>Building Telscale Restcomm</echo>
-        <exec failonerror="true" executable="${mvn.executable}" dir="${checkout.telscale-restcomm.dir}">
+	<echo>Restcomm workspace dir: "${workspace.telscale-restcomm.dir}"</echo>
+        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm.dir}">
                 <arg line="${release.build.goals}" />
         </exec>
-        <exec failonerror="true" executable="${mvn.executable}" dir="${checkout.telscale-restcomm.dir}/restcomm.docs">
+        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm.dir}/restcomm.docs">
                 <arg line="${release.build.goals} -Ptelscale" />
         </exec>
 	</target>
@@ -270,7 +273,7 @@
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
 	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
         <copy todir="${release.dir}/server/default/deploy/restcomm.war" failonerror="true">
-                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -281,7 +284,7 @@
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
 	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
         <copy todir="${release.dir}/server/all/deploy/restcomm.war" failonerror="true">
-                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -294,7 +297,7 @@
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
 	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
 	<copy todir="${release.tomcat.dir}/webapps/restcomm" failonerror="true">
-                <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -306,33 +309,32 @@
         <copy tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true" 
                 file="${basedir}/mobicents-dar.properties"/>
         <copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
-		file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
+		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>
-        <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" />
-    	
+        <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" />    	
     </target>
 	
     <target name="copy-docs">
 		<!--docs-->
 	    <mkdir dir="${restcomm.docs.dir}"/>
 		<copy todir="${restcomm.docs.dir}" failonerror="true">
-		        <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
 		<!--docs tomcat-->
 		<mkdir dir="${restcomm.docs.tomcat.dir}"/>
 		<copy todir="${restcomm.docs.tomcat.dir}" failonerror="true">
-		        <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
                 <!--docs JBoss AS7-->
                 <mkdir dir="${restcomm.docs.as7.dir}"/>
                 <copy todir="${restcomm.docs.as7.dir}" failonerror="true">
-                        <fileset dir="${checkout.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+                        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
                                 <include name="**/*" />
                         </fileset>
                 </copy>
