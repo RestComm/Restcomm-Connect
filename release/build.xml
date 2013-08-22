@@ -14,7 +14,7 @@
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
 	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
-	<property name="telscale.restcomm.release.version" value="6.1.1-TelScale-SNAPSHOT"/>
+	<property name="telscale.restcomm.release.version" value="6.1.1-SNAPSHOT"/>
 	<property name="telscale.restcomm.branch.name" value="ts11"/>
 	
 	<!--Telscale binaries versions-->
@@ -108,10 +108,10 @@
 	
 	<!--GET Telscale-Sip=Servlets & Telscale-Media-Server & Telscale Diameter - downloads-->
 	
-	<target name="get-deps" depends="get-telscale-sipservlets,get-telscale-sipservlets-tomcat,get-telscale-sipservlets-as7,get-telscale-media,get-telscale-diameter" />
-	<target name="get-ami-deps" depends="get-ami-telscale-sipservlets,get-telscale-media,get-telscale-diameter" />
-	<target name="extract-deps" depends="extract-telscale-sipservlets,extract-telscale-sipservlets-tomcat,extract-telscale-sipservlets-as7,extract-telscale-media,extract-telscale-diameter" />
-	<target name="extract-ami-deps" depends="extract-ami-telscale-sipservlets,extract-telscale-media,extract-telscale-diameter" />
+	<target name="get-deps" depends="get-telscale-sipservlets,get-telscale-sipservlets-tomcat,get-telscale-sipservlets-as7,get-telscale-media"/> <!--,get-telscale-diameter" -->
+	<target name="get-ami-deps" depends="get-ami-telscale-sipservlets,get-telscale-media"/> <!--,get-telscale-diameter" -->
+	<target name="extract-deps" depends="extract-telscale-sipservlets,extract-telscale-sipservlets-tomcat,extract-telscale-sipservlets-as7,extract-telscale-media"/> <!--,extract-telscale-diameter" -->
+	<target name="extract-ami-deps" depends="extract-ami-telscale-sipservlets,extract-telscale-media"/> <!--,extract-telscale-diameter" -->
 	
 	<!--SipServlets JBoss-->
 	<available file="${telscale-sipservlets.distro.zip.path}" property="got.telscale-sipservlets" />
@@ -352,10 +352,10 @@
 			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin">
                                 <include name="*.sh" />
                         </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat-${telscale.restcomm.release.version}/bin">
+			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin">
                                 <include name="*.sh" />
                         </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat-${telscale.restcomm.release.version}">
+			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}">
 				<include name="**" />
 			</zipfileset>
 		</zip>
