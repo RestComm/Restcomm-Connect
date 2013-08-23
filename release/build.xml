@@ -317,7 +317,10 @@
                         <include name="**/*" />
                 </fileset>
         </copy>
-		<!--tomcat-->
+	<chmod dir="${release.dir}/bin" perm="ugo+rx" 
+       		includes="**/*.sh"/>
+
+	<!--tomcat-->
 	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true" 
         	file="${basedir}/catalina.sh"/>
 	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true" 
@@ -333,26 +336,48 @@
 	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true" 
         	file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
         <copy file="${basedir}/telestax-license.xml" todir="${release.tomcat.dir}" failonerror="true" />
+	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx" 
+       		includes="**/*.sh"/>
 
         <!--JBoss AS7-->
         <copy tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true" 
                 file="${basedir}/mobicents-dar.properties"/>
-        <copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
+	<!--Use exploded WAR-->
+	<copy todir="${release.as7.dir}/standalone/deployments/restcomm.war" failonerror="true">
+                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                        <include name="**/*" />
+                </fileset>
+        </copy>
+	<touch file="${release.as7.dir}/standalone/deployments/restcomm.war.dodeploy" />
+	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+	<!--<copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
+		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" /> 
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
-	</zip>
+	</zip>-->
         <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" /> 
+	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx" 
+     		includes="**/*.sh"/>
 
 	<!--JBoss EAP6-->
         <copy tofile="${release.eap6.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true" 
                 file="${basedir}/mobicents-dar.properties"/>
-        <copy todir="${release.eap6.dir}/standalone/deployments" failonerror="true"
+	<!--Use exploded WAR-->
+	<copy todir="${release.eap6.dir}/standalone/deployments/restcomm.war" failonerror="true">
+                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                        <include name="**/*" />
+                </fileset>
+        </copy>
+	<touch file="${release.eap6.dir}/standalone/deployments/restcomm.war.dodeploy" />
+	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+        <!--<copy todir="${release.eap6.dir}/standalone/deployments" failonerror="true"
 		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.eap6.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
-	</zip>
-        <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" />    	
+	</zip>-->
+        <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" /> 
+	<chmod dir="${release.eap6.dir}/bin" perm="ugo+rx" 
+     		includes="**/*.sh"/>
     </target>
 	
     <target name="copy-docs">
@@ -389,13 +414,13 @@
 	
 	
 	<target name="make-final-zip" depends="set-time-stamp">
-		<zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+		<zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false" preserve0permissions="true">
 			<zipfileset dir="${release.dir}" prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}">
 				<include name="**" />
 			</zipfileset>
 		</zip>
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
-		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false" preserve0permissions="true">
 			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin">
                                 <include name="*.sh" />
                         </zipfileset>
@@ -406,12 +431,12 @@
 				<include name="**" />
 			</zipfileset>
 		</zip>
-                <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+                <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false" preserve0permissions="true">
                         <zipfileset dir="${release.as7.dir}" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}">
                                 <include name="**" />
                         </zipfileset>
                 </zip>
-                <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false">
+                <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}-${time.stamp}.zip" filesonly="false" preserve0permissions="true">
                         <zipfileset dir="${release.eap6.dir}" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}">
                                 <include name="**" />
                         </zipfileset>
