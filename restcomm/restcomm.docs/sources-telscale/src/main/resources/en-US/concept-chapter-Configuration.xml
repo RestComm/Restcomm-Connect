@@ -5,7 +5,297 @@
 ]>
 <!-- chapter id nickname: ittsss -->
 <chapter>
-	<title>Configuration</title>
+<title>Getting Started and General Configuration</title>
+
+<section>
+<title>Quick Start Guide</title>
+<para>
+RestComm is a robust, powerful platform that will facilitate building comprehensive real-time communication solutions. The steps below will help you get started with ease.
+</para>
+
+<itemizedlist mark='opencircle'>
+<title>Running RestComm on JBoss</title>
+<listitem>
+<para>
+Download <filename> TelScale-Restcomm-XX.XX.GA.zip </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Using a terminal of your choice, extract the content of <filename> TelScale-Restcomm-XX.XX.GA.zip </filename> to a local directory on your computer. The root directoy into which you extract the content of the .zip file will be referred to as $RESTCOMM_HOME.
+</para>
+</listitem>
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permission of the <filename>run.sh</filename> as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo chmod +x ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+then start the TelScale Media Server as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+If all is correctly started you will see the following at the end of the bash terminal window
+<screen>
+[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL Started ]]]]]]]]]
+</screen>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Open another terminal and proceed as follows:
+</para>
+</listitem>
+
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permissions of all the <filename>.sh</filename> files in the bin directory as follows
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>sudo chmod +x ./*.sh </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Start RestComm by running the following command
+</para>
+</listitem>
+<listitem>
+<para>
+<filename> sudo ./run.sh </filename>
+</para>
+</listitem>
+
+<listitem>
+<para>
+If RestComm is correctly started you will see the following at the end of the terminal
+</para>
+
+<screen>
+INFO  [Version] TelScale Sip Servlets 6.1.3.GA-TelScale (build: Git Hash=r8947f2732ee64c76566ed6c0b236204c048538e1 date=201306131639) Started.
+17:30:05,854 INFO  [Version] 
+==============================================================================
+==                                                                          ==
+==                      Thank you for running TelScale                      ==
+==    Carrier Grade Communications Platform by the creators of Mobicents    ==
+==                    Copyright 2011-2013 Telestax, Inc.                    ==
+==                         http://www.telestax.com/                         ==
+==                                                                          ==
+==============================================================================
+
+</screen>
+</listitem>
+
+</itemizedlist>
+
+
+
+<itemizedlist mark='opencircle'>
+<title>Running RestComm on Tomcat</title>
+
+<listitem>
+<para>
+Download <filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Using a terminal of your choice, extract the content of <filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename> to a local directory on your computer. The root directoy into which you extract the content of the .zip file will be referred to as $RESTCOMM_HOME.
+</para>
+</listitem>
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permission of the <filename>run.sh</filename> as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo chmod +x ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+then start the TelScale Media Server as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+If all is correctly started you will see the following at the end of the bash terminal window
+<screen>
+[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL Started ]]]]]]]]]
+</screen>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Open another terminal and proceed as follows:
+</para>
+</listitem>
+
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permissions of all the <filename>.sh</filename> files in the bin directory as follows
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>sudo chmod +x ./*.sh </filename>
+</para>
+</listitem>
+<listitem>
+<para>The content of the bin directory should be similar to the list below</para>
+<screen>
+bootstrap.jar                 digest.sh             tomcat-juli.jar
+catalina.bat                  setclasspath.bat      tomcat-native.tar.gz
+catalina.sh                   setclasspath.sh       tool-wrapper.bat
+catalina-tasks.xml            shutdown.bat          tool-wrapper.sh
+commons-daemon.jar            shutdown.sh           version.bat
+commons-daemon-native.tar.gz  startup.bat           version.sh
+cpappend.bat                  startup.sh
+digest.bat                    telestax-license.xml
+
+</screen>
+<para>
+Start RestComm by running the following command
+</para>
+</listitem>
+<listitem>
+<para>
+<filename> sudo ./catalina.sh run</filename>
+</para>
+</listitem>
+<listitem>
+<para>If RestComm is correctly start on Tomcat, you will see an output similar to the one below </para>
+<screen>
+Started.
+2013-08-15 19:02:46,903 INFO  [Version] (main) 
+==============================================================================
+==                                                                          ==
+==                      Thank you for running TelScale                      ==
+==    Carrier Grade Communications Platform by the creators of Mobicents    ==
+==                    Copyright 2011-2013 Telestax, Inc.                    ==
+==                         http://www.telestax.com/                         ==
+==                                                                          ==
+==============================================================================
+Aug 15, 2013 7:02:50 PM org.apache.catalina.startup.Catalina start
+INFO: Server startup in 14090 ms
+
+
+</screen>
+</listitem>
+
+</itemizedlist>
+</section>
+<section>
+<title>Testing the Demo Application</title>
+
+<para>
+Once you have the Media Server and RestComm started, you can now try out the demo application. Register the phone number 1234  and bind it to the hello-play.xml application by using the curl command below:
+</para>
+
+<programlisting>
+<![CDATA[
+curl --data "PhoneNumber=1234&VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml&VoiceMethod=POST" http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+]]>
+</programlisting>
+ 
+<para>
+If the command succeeds, the output will be similar to the one below
+</para>
+
+<programlisting>
+<![CDATA[
+curl --data "PhoneNumber=1234&VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml&VoiceMethod=POST" http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+
+{
+  "sid": "PN0834628c131e4b66bc862ae0b21b7cfa",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "friendly_name": "1234",
+  "phone_number": "+11234",
+  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "status_callback_method": "POST",
+  "voice_caller_id_lookup": false,
+  "date_created": "2013-08-15T17:45:21.409-06:00",
+  "date_updated": "2013-08-15T17:45:21.409-06:00",
+  "sms_method": "POST",
+  "sms_fallback_method": "POST",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN0834628c131e4b66bc862ae0b21b7cfa.json"
+]]>
+</programlisting>
+ 
+<warning>
+ 
+You will need to use a SIP phone to call the number 1234 you have just registered. We recommend you use Ekiga as some SIP phones have codec incompatibility issues.
+</warning>
+<para>
+At this stage, you can start Ekiga (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear a welcome message.
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/RestComm-ekiga-sip-phone-demo.png"/>
+	</imageobject>
+</mediaobject>
+<para>
+You are ready to start exploring RestComm and building powerful communication applications.
+</para>
+
+<para>
+Do you want to see more samples of what you can do with TelScale RestComm, visit our site at <ulink url="http:www.telestax.com">TeleStax.com </ulink>
+</para>
+
+</section>
+
+
+
+<section>
+
+<title>Detailed Configuration</title>
+
 	<para>In order for TelScale RestComm to function properly it must first be configured. In this chapter we will cover
 	the settings for TelScale RestComm and it's respective plug-ins. In order to make TelScale RestComm easy to manage
 	all of the configuration is done in only one file. The file is located at
@@ -437,4 +727,5 @@
 			</tgroup>
 		</table>
 	</section>
+</section>
 </chapter>
