@@ -22,7 +22,6 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
 import com.thoughtworks.xstream.XStream;
 
 import static javax.ws.rs.core.MediaType.*;
@@ -49,7 +48,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
@@ -207,6 +205,16 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
     return builder.build();
   }
   
+  private String e164(final String number) {
+    final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
+    try {
+      final PhoneNumber result = numbersUtil.parse(number, "US");
+      return numbersUtil.format(result, PhoneNumberFormat.E164);
+    } catch(final NumberParseException ignored) {
+      return number;
+    }
+  }
+  
   private String getFriendlyName(final PhoneNumber phoneNumber, final MultivaluedMap<String, String> data) {
     final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
     String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.NATIONAL);
@@ -257,11 +265,15 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
       return status(BAD_REQUEST).entity(exception.getMessage()).build();
     }
     final String number = data.getFirst("PhoneNumber");
-    if(isValidDid(number)) {
-      assignDid(number);
+    IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(e164(number));
+    if(incomingPhoneNumber == null) {
+      incomingPhoneNumber = createFrom(new Sid(accountSid), data);
+      dao.addIncomingPhoneNumber(incomingPhoneNumber);
+      // Provision the number from VoIP Innovations if they own it.
+      if(isValidDid(number)) {
+        assignDid(number);
+      }
     }
-    final IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data);
-    dao.addIncomingPhoneNumber(incomingPhoneNumber);
     if(APPLICATION_JSON_TYPE == responseType) {
       return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
     } else if(APPLICATION_XML_TYPE == responseType) {
