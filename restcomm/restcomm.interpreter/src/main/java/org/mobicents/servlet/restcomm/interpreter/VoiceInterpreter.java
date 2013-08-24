@@ -627,6 +627,34 @@ public final class VoiceInterpreter extends UntypedActor {
 	}));
   }
   
+  @SuppressWarnings("unchecked")
+  private void asrResponse(final Object message) {
+    final Class<?> klass = message.getClass();
+    if(AsrResponse.class.equals(klass)) {
+      final AsrResponse<String> response = (AsrResponse<String>)message;
+      Transcription transcription = (Transcription)response.attributes().get("transcription");
+      if(response.succeeded()) {
+        transcription.setStatus(Transcription.Status.COMPLETED);
+      } else {
+        transcription.setStatus(Transcription.Status.FAILED);
+      }
+      final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
+      transcriptions.updateTranscription(transcription);
+      // Notify the callback listener.
+      final Object attribute = response.attributes().get("callback");
+      if(attribute != null) {
+        final URI callback = (URI)attribute;
+        final List<NameValuePair> parameters = parameters();
+     	request = new HttpRequestDescriptor(callback, "POST", parameters);
+     	downloader.tell(request, null);
+      }
+      // Update pending asr responses.
+      outstandingAsrRequests--;
+      // Try to stop the interpreter.
+      postCleanup();
+    }
+  }
+  
   private ActorRef fax(final Configuration configuration) {
     final UntypedActorContext context = getContext();
     return context.actorOf(new Props(new UntypedActorFactory() {
@@ -668,44 +696,7 @@ public final class VoiceInterpreter extends UntypedActor {
     }));
   }
   
-  private void sendMail(final Notification notification) {
-    if(emailAddress == null || emailAddress.isEmpty()) {
-      return;
-    }
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append("<strong>").append("Sid: ").append("</strong></br>");
-    buffer.append(notification.getSid().toString()).append("</br>");
-    buffer.append("<strong>").append("Account Sid: ").append("</strong></br>");
-    buffer.append(notification.getAccountSid().toString()).append("</br>");
-    buffer.append("<strong>").append("Call Sid: ").append("</strong></br>");
-    buffer.append(notification.getCallSid().toString()).append("</br>");
-    buffer.append("<strong>").append("API Version: ").append("</strong></br>");
-    buffer.append(notification.getApiVersion()).append("</br>");
-    buffer.append("<strong>").append("Log: ").append("</strong></br>");
-    buffer.append(notification.getLog() == ERROR_NOTIFICATION ? "ERROR" : "WARNING").append("</br>");
-    buffer.append("<strong>").append("Error Code: ").append("</strong></br>");
-    buffer.append(notification.getErrorCode()).append("</br>");
-    buffer.append("<strong>").append("More Information: ").append("</strong></br>");
-    buffer.append(notification.getMoreInfo().toString()).append("</br>");
-    buffer.append("<strong>").append("Message Text: ").append("</strong></br>");
-    buffer.append(notification.getMessageText()).append("</br>");
-    buffer.append("<strong>").append("Message Date: ").append("</strong></br>");
-    buffer.append(notification.getMessageDate().toString()).append("</br>");
-    buffer.append("<strong>").append("Request URL: ").append("</strong></br>");
-    buffer.append(notification.getRequestUrl().toString()).append("</br>");
-    buffer.append("<strong>").append("Request Method: ").append("</strong></br>");
-    buffer.append(notification.getRequestMethod()).append("</br>");
-    buffer.append("<strong>").append("Request Variables: ").append("</strong></br>");
-    buffer.append(notification.getRequestVariables()).append("</br>");
-    buffer.append("<strong>").append("Response Headers: ").append("</strong></br>");
-    buffer.append(notification.getResponseHeaders()).append("</br>");
-    buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
-    buffer.append(notification.getResponseBody()).append("</br>");
-    final Mail email = new Mail(EMAIL_SENDER, emailAddress, EMAIL_SUBJECT, buffer.toString());
-    mailer.tell(email, self());
-  }
-  
-  private String format(final String number) {
+  private String e164(final String number) {
     final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
     try {
       final PhoneNumber result = numbersUtil.parse(number, "US");
@@ -1051,9 +1042,9 @@ public final class VoiceInterpreter extends UntypedActor {
 	parameters.add(new BasicNameValuePair("CallSid", callSid));
 	final String accountSid = accountId.toString();
 	parameters.add(new BasicNameValuePair("AccountSid", accountSid));
-	final String from = format(callInfo.from());
+	final String from = e164(callInfo.from());
     parameters.add(new BasicNameValuePair("From", from));
-    final String to = format(callInfo.to());
+    final String to = e164(callInfo.to());
     parameters.add(new BasicNameValuePair("To", to));
     final String state = callState.toString();
     parameters.add(new BasicNameValuePair("CallStatus", state));
@@ -1097,32 +1088,41 @@ public final class VoiceInterpreter extends UntypedActor {
     }
   }
   
-  @SuppressWarnings("unchecked")
-  private void asrResponse(final Object message) {
-    final Class<?> klass = message.getClass();
-    if(AsrResponse.class.equals(klass)) {
-      final AsrResponse<String> response = (AsrResponse<String>)message;
-      Transcription transcription = (Transcription)response.attributes().get("transcription");
-      if(response.succeeded()) {
-        transcription.setStatus(Transcription.Status.COMPLETED);
-      } else {
-        transcription.setStatus(Transcription.Status.FAILED);
-      }
-      final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
-      transcriptions.updateTranscription(transcription);
-      // Notify the callback listener.
-      final Object attribute = response.attributes().get("callback");
-      if(attribute != null) {
-        final URI callback = (URI)attribute;
-        final List<NameValuePair> parameters = parameters();
-     	request = new HttpRequestDescriptor(callback, "POST", parameters);
-     	downloader.tell(request, null);
-      }
-      // Update pending asr responses.
-      outstandingAsrRequests--;
-      // Try to stop the interpreter.
-      postCleanup();
+  private void sendMail(final Notification notification) {
+    if(emailAddress == null || emailAddress.isEmpty()) {
+      return;
     }
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("<strong>").append("Sid: ").append("</strong></br>");
+    buffer.append(notification.getSid().toString()).append("</br>");
+    buffer.append("<strong>").append("Account Sid: ").append("</strong></br>");
+    buffer.append(notification.getAccountSid().toString()).append("</br>");
+    buffer.append("<strong>").append("Call Sid: ").append("</strong></br>");
+    buffer.append(notification.getCallSid().toString()).append("</br>");
+    buffer.append("<strong>").append("API Version: ").append("</strong></br>");
+    buffer.append(notification.getApiVersion()).append("</br>");
+    buffer.append("<strong>").append("Log: ").append("</strong></br>");
+    buffer.append(notification.getLog() == ERROR_NOTIFICATION ? "ERROR" : "WARNING").append("</br>");
+    buffer.append("<strong>").append("Error Code: ").append("</strong></br>");
+    buffer.append(notification.getErrorCode()).append("</br>");
+    buffer.append("<strong>").append("More Information: ").append("</strong></br>");
+    buffer.append(notification.getMoreInfo().toString()).append("</br>");
+    buffer.append("<strong>").append("Message Text: ").append("</strong></br>");
+    buffer.append(notification.getMessageText()).append("</br>");
+    buffer.append("<strong>").append("Message Date: ").append("</strong></br>");
+    buffer.append(notification.getMessageDate().toString()).append("</br>");
+    buffer.append("<strong>").append("Request URL: ").append("</strong></br>");
+    buffer.append(notification.getRequestUrl().toString()).append("</br>");
+    buffer.append("<strong>").append("Request Method: ").append("</strong></br>");
+    buffer.append(notification.getRequestMethod()).append("</br>");
+    buffer.append("<strong>").append("Request Variables: ").append("</strong></br>");
+    buffer.append(notification.getRequestVariables()).append("</br>");
+    buffer.append("<strong>").append("Response Headers: ").append("</strong></br>");
+    buffer.append(notification.getResponseHeaders()).append("</br>");
+    buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
+    buffer.append(notification.getResponseBody()).append("</br>");
+    final Mail email = new Mail(EMAIL_SENDER, emailAddress, EMAIL_SUBJECT, buffer.toString());
+    mailer.tell(email, self());
   }
   
   private void smsResponse(final Object message) {
@@ -1495,7 +1495,7 @@ public final class VoiceInterpreter extends UntypedActor {
       if(attribute != null) {
         from = attribute.value();
         if(from != null && from.isEmpty()) {
-          from = format(from);
+          from = e164(from);
           if(from == null) {
             from = verb.attribute("from").value();
             final StopInterpreter stop = StopInterpreter.instance();
@@ -1510,7 +1510,7 @@ public final class VoiceInterpreter extends UntypedActor {
       if(attribute != null) {
         to = attribute.value();
         if(to != null && !to.isEmpty()) {
-          to = format(to);
+          to = e164(to);
           if(to == null) {
             to = verb.attribute("to").value();
             final StopInterpreter stop = StopInterpreter.instance();
@@ -2349,7 +2349,7 @@ public final class VoiceInterpreter extends UntypedActor {
       if(attribute != null) {
         from = attribute.value();
         if(from != null && !from.isEmpty()) {
-          from = format(from);
+          from = e164(from);
           if(from == null) {
             from = verb.attribute("from").value();
 	        final Notification notification = notification(ERROR_NOTIFICATION, 14102,
@@ -2369,7 +2369,7 @@ public final class VoiceInterpreter extends UntypedActor {
       if(attribute != null) {
         to = attribute.value();
         if(to != null && !to.isEmpty()) {
-          to = format(to);
+          to = e164(to);
           if(to == null) {
             to = verb.attribute("to").value();
             final Notification notification = notification(ERROR_NOTIFICATION, 14101,
@@ -2510,7 +2510,7 @@ public final class VoiceInterpreter extends UntypedActor {
       if(attribute != null) {
         callerId = attribute.value();
         if(callerId != null && !callerId.isEmpty()) {
-          callerId = format(callerId);
+          callerId = e164(callerId);
           if(callerId == null) {
             callerId = verb.attribute("callerId").value();
             final NotificationsDao notifications = storage.getNotificationsDao();
@@ -2590,7 +2590,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	  if(text != null && !text.isEmpty()) {
 	    // Handle bridging.
 		isForking = false;
-	    final CreateCall create = new CreateCall(format(callerId(verb)), format(text),
+	    final CreateCall create = new CreateCall(e164(callerId(verb)), e164(text),
 	        false, timeout(verb), CreateCall.Type.PSTN);
 	    callManager.tell(create, source);
 	  } else if(verb.hasChildren()) {
@@ -2636,13 +2636,13 @@ public final class VoiceInterpreter extends UntypedActor {
 	    CreateCall create = null;
 	    final Tag child = dialChildren.get(0);
 	    if(Nouns.client.equals(child.name())) {
-	      create = new CreateCall(format(callerId(verb)), format(child.text()),
+	      create = new CreateCall(e164(callerId(verb)), e164(child.text()),
 	          false, timeout(verb), CreateCall.Type.CLIENT);
 	    } else if(Nouns.number.equals(child.name())) {
-	      create = new CreateCall(format(callerId(verb)), format(child.text()),
+	      create = new CreateCall(e164(callerId(verb)), e164(child.text()),
 	  	      false, timeout(verb), CreateCall.Type.PSTN);
 	    } else if(Nouns.uri.equals(child.name())) {
-	  	  create = new CreateCall(format(callerId(verb)), format(child.text()),
+	  	  create = new CreateCall(e164(callerId(verb)), e164(child.text()),
 	   	      false, timeout(verb), CreateCall.Type.SIP);
 	    }
 	    callManager.tell(create, source);
@@ -3132,6 +3132,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	  callManager.tell(new DestroyCall(call), source);
 	  // Stop the dependencies.
 	  final UntypedActorContext context = getContext();
+	  context.stop(mailer);
 	  context.stop(downloader);
 	  context.stop(asrService);
 	  context.stop(faxService);
