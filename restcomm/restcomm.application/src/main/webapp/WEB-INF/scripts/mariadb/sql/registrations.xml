@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao">
+  <insert id="addRegistration" parameterType="map">
+    INSERT INTO restcomm_registrations (sid, date_created, date_updated, date_expires, address_of_record, display_name,
+    user_name, user_agent, ttl,  location)
+    VALUES (#{sid}, #{date_created}, #{date_updated}, #{date_expires}, #{address_of_record}, #{display_name}, #{user_name}, #{user_agent},
+    #{ttl}, #{location});
+  </insert>
+  
+  <select id="getRegistrations" resultType="hashmap">
+    SELECT * FROM restcomm_registrations;
+  </select>
+  
+  <select id="getRegistration" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_registrations WHERE user_name=#{user_name};
+  </select>
+  
+  <select id="hasRegistration" parameterType="map" resultType="int">
+    SELECT COUNT(*) FROM restcomm_registrations WHERE address_of_record=#{address_of_record} AND 
+    display_name=#{display_name} AND location=#{location} AND user_agent=#{user_agent};
+  </select>
+  
+  <delete id="removeRegistration" parameterType="map">
+    DELETE FROM restcomm_registrations WHERE location=#{location} AND address_of_record=#{address_of_record};
+  </delete>
+  
+  <update id="updateRegistration" parameterType="map">
+    UPDATE restcomm_registrations SET ttl=#{ttl}, date_expires=#{date_expires} WHERE address_of_record=#{address_of_record} AND 
+    display_name=#{display_name} AND location=#{location} AND user_agent=#{user_agent};
+  </update>
+</mapper>
