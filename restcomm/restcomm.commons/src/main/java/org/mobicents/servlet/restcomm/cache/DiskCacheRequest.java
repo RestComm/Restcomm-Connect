@@ -24,14 +24,24 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class DiskCacheRequest {
-  private final URI uri;
+  private URI uri;
+  private String hash = null;
   
-  public DiskCacheRequest(final URI uri) {
+  public DiskCacheRequest(URI uri) {
     super();
     this.uri = uri;
   }
   
+  public DiskCacheRequest(String hash) {
+	  super();
+	  this.hash = hash;
+  }
+  
   public URI uri() {
     return uri;
+  }
+  
+  public String hash(){
+	  return hash;
   }
 }

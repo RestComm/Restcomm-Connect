@@ -37,7 +37,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-
+import org.mobicents.servlet.restcomm.cache.HashGenerator;
 import org.mobicents.servlet.restcomm.util.HttpUtils;
 
 /**
@@ -218,7 +218,8 @@ public final class AcapelaSpeechSynthesizer extends UntypedActor {
   	if(status == HttpStatus.SC_OK) {
   	  final Map<String, String> results = HttpUtils.toMap(response.getEntity());
   	  if("OK".equals(results.get("res"))) {
-  		return URI.create(results.get("snd_url"));
+  		  String ret = results.get("snd_url") + "#hash="+HashGenerator.hashMessage(gender, language, text);
+  		return URI.create(ret);
   	  } else {
   	    final StringBuilder buffer = new StringBuilder();
   		buffer.append(results.get("err_code")).append(" ").append(results.get("err_msg"));
