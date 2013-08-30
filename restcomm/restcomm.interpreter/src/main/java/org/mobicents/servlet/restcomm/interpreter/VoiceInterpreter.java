@@ -16,20 +16,17 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +56,7 @@ import org.mobicents.servlet.restcomm.asr.ISpeechAsr;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
+import org.mobicents.servlet.restcomm.cache.HashGenerator;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
@@ -72,9 +70,9 @@ import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
-import org.mobicents.servlet.restcomm.entities.Transcription;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
+import org.mobicents.servlet.restcomm.entities.Transcription;
 import org.mobicents.servlet.restcomm.fax.FaxRequest;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
 import org.mobicents.servlet.restcomm.fax.InterfaxService;
@@ -92,9 +90,6 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
-
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
-
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
@@ -144,6 +139,20 @@ import org.mobicents.servlet.restcomm.tts.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -171,6 +180,7 @@ public final class VoiceInterpreter extends UntypedActor {
   private final State playingRejectionPrompt;
   private final State pausing;
   private final State caching;
+  private final State checkingCache;
   private final State playing;
   private final State synthesizing;
   private final State redirecting;
@@ -302,6 +312,7 @@ public final class VoiceInterpreter extends UntypedActor {
         new PlayingRejectionPrompt(source), null);
     pausing = new State("pausing", new Pausing(source), null);
     caching = new State("caching", new Caching(source), null);
+    checkingCache = new State("checkingCache", new CheckCache(source), null);
     playing = new State("playing", new Playing(source), null);
     synthesizing = new State("synthesizing", new Synthesizing(source), null);
     redirecting = new State("redirecting", new Redirecting(source), null);
@@ -365,6 +376,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
     transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
     transitions.add(new Transition(initializingCallMediaGroup, pausing));
+    transitions.add(new Transition(initializingCallMediaGroup, checkingCache));
     transitions.add(new Transition(initializingCallMediaGroup, caching));
     transitions.add(new Transition(initializingCallMediaGroup, synthesizing));
     transitions.add(new Transition(initializingCallMediaGroup, redirecting));
@@ -384,6 +396,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(ready, initializingCall));
     transitions.add(new Transition(ready, faxing));
     transitions.add(new Transition(ready, pausing));
+    transitions.add(new Transition(ready, checkingCache));
     transitions.add(new Transition(ready, caching));
     transitions.add(new Transition(ready, synthesizing));
     transitions.add(new Transition(ready, rejecting));
@@ -424,11 +437,15 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(caching, startDialing));
     transitions.add(new Transition(caching, hangingUp));
     transitions.add(new Transition(caching, finished));
+    transitions.add(new Transition(checkingCache, synthesizing));
+    transitions.add(new Transition(checkingCache, playing));
+    transitions.add(new Transition(checkingCache, checkingCache));
     transitions.add(new Transition(playing, ready));
     transitions.add(new Transition(playing, hangingUp));
     transitions.add(new Transition(playing, finished));
     transitions.add(new Transition(synthesizing, faxing));
     transitions.add(new Transition(synthesizing, pausing));
+    transitions.add(new Transition(synthesizing, checkingCache));
     transitions.add(new Transition(synthesizing, caching));
     transitions.add(new Transition(synthesizing, redirecting));
     transitions.add(new Transition(synthesizing, processingGatherChildren));
@@ -441,6 +458,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(redirecting, faxing));
     transitions.add(new Transition(redirecting, ready));
     transitions.add(new Transition(redirecting, pausing));
+    transitions.add(new Transition(redirecting, checkingCache));
     transitions.add(new Transition(redirecting, caching));
     transitions.add(new Transition(redirecting, synthesizing));
     transitions.add(new Transition(redirecting, redirecting));
@@ -456,6 +474,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(finishRecording, faxing));
     transitions.add(new Transition(finishRecording, ready));
     transitions.add(new Transition(finishRecording, pausing));
+    transitions.add(new Transition(finishRecording, checkingCache));
     transitions.add(new Transition(finishRecording, caching));
     transitions.add(new Transition(finishRecording, synthesizing));
     transitions.add(new Transition(finishRecording, redirecting));
@@ -475,6 +494,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(finishGathering, ready));
     transitions.add(new Transition(finishGathering, faxing));
     transitions.add(new Transition(finishGathering, pausing));
+    transitions.add(new Transition(finishGathering, checkingCache));
     transitions.add(new Transition(finishGathering, caching));
     transitions.add(new Transition(finishGathering, synthesizing));
     transitions.add(new Transition(finishGathering, redirecting));
@@ -503,6 +523,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(startDialing, acquiringConferenceInfo));
     transitions.add(new Transition(startDialing, faxing));
     transitions.add(new Transition(startDialing, pausing));
+    transitions.add(new Transition(startDialing, checkingCache));
     transitions.add(new Transition(startDialing, caching));
     transitions.add(new Transition(startDialing, synthesizing));
     transitions.add(new Transition(startDialing, redirecting));
@@ -532,6 +553,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(finishDialing, ready));
     transitions.add(new Transition(finishDialing, faxing));
     transitions.add(new Transition(finishDialing, pausing));
+    transitions.add(new Transition(finishDialing, checkingCache));
     transitions.add(new Transition(finishDialing, caching));
     transitions.add(new Transition(finishDialing, synthesizing));
     transitions.add(new Transition(finishDialing, redirecting));
@@ -547,6 +569,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(acquiringConferenceMediaGroup, initializingConferenceMediaGroup));
     transitions.add(new Transition(acquiringConferenceMediaGroup, faxing));
     transitions.add(new Transition(acquiringConferenceMediaGroup, pausing));
+    transitions.add(new Transition(acquiringConferenceMediaGroup, checkingCache));
     transitions.add(new Transition(acquiringConferenceMediaGroup, caching));
     transitions.add(new Transition(acquiringConferenceMediaGroup, synthesizing));
     transitions.add(new Transition(acquiringConferenceMediaGroup, redirecting));
@@ -568,6 +591,7 @@ public final class VoiceInterpreter extends UntypedActor {
     transitions.add(new Transition(finishConferencing, ready));
     transitions.add(new Transition(finishConferencing, faxing));
     transitions.add(new Transition(finishConferencing, pausing));
+    transitions.add(new Transition(finishConferencing, checkingCache));
     transitions.add(new Transition(finishConferencing, caching));
     transitions.add(new Transition(finishConferencing, synthesizing));
     transitions.add(new Transition(finishConferencing, redirecting));
@@ -894,7 +918,7 @@ public final class VoiceInterpreter extends UntypedActor {
     } else if(DiskCacheResponse.class.equals(klass)) {
       final DiskCacheResponse response = (DiskCacheResponse)message;
       if(response.succeeded()) {
-        if(caching.equals(state)) {
+        if(caching.equals(state) || checkingCache.equals(state)) {
           if(play.equals(verb.name()) || say.equals(verb.name())) {
             fsm.transition(message, playing);
           } else if(fax.equals(verb.name())) {
@@ -904,7 +928,11 @@ public final class VoiceInterpreter extends UntypedActor {
           fsm.transition(message, processingGatherChildren);
         }
       } else {
-        fsm.transition(message, hangingUp);
+    	  if(checkingCache.equals(state)){
+    		  fsm.transition(message, synthesizing);
+    	  } else {
+    	      fsm.transition(message, hangingUp);
+    	  }
       }
     } else if(Tag.class.equals(klass)) {
       final Tag verb = (Tag)message;
@@ -923,7 +951,8 @@ public final class VoiceInterpreter extends UntypedActor {
       } else if(play.equals(verb.name())) {
         fsm.transition(message, caching);
       } else if(say.equals(verb.name())) {
-        fsm.transition(message, synthesizing);
+//        fsm.transition(message, synthesizing);
+    	  fsm.transition(message, checkingCache);
       } else if(gather.equals(verb.name())) {
         fsm.transition(message, processingGatherChildren);
       } else if(pause.equals(verb.name())) {
@@ -958,7 +987,8 @@ public final class VoiceInterpreter extends UntypedActor {
             } else if(play.equals(verb.name())) {
               fsm.transition(message, caching);
             } else if(say.equals(verb.name())) {
-              fsm.transition(message, synthesizing);
+//              fsm.transition(message, synthesizing);
+          	  fsm.transition(message, checkingCache);
             } else if(gather.equals(verb.name())) {
               fsm.transition(message, processingGatherChildren);
             } else if(pause.equals(verb.name())) {
@@ -1558,6 +1588,31 @@ public final class VoiceInterpreter extends UntypedActor {
 	}
   }
   
+  private final class CheckCache extends AbstractAction {
+	  public CheckCache(final ActorRef source) {
+		  super(source);
+	  }
+	  
+	  @SuppressWarnings("unchecked")
+	  @Override
+	  public void execute(final Object message) throws Exception {
+		  final Class<?> klass = message.getClass();
+		  if(Tag.class.equals(klass)) {
+			  verb = (Tag)message;
+		  } 
+//		  else {
+//			  logger.info("Can't check cache, message not verb. Moving to the next verb");
+////			  final GetNextVerb next = GetNextVerb.instance();
+////			  parser.tell(next, source);
+//			  return;
+//		  }
+		  String hash = hash(verb);
+		  DiskCacheRequest request = new DiskCacheRequest(hash);
+		  logger.info("Checking cache for hash: "+hash);
+		  cache.tell(request, source);
+	  }
+  }
+  
   private final class Caching extends AbstractAction {
     public Caching(final ActorRef source) {
       super(source);
@@ -1642,16 +1697,32 @@ public final class VoiceInterpreter extends UntypedActor {
 	}
   }
   
-  private final class Synthesizing extends AbstractAction {
-    public Synthesizing(final ActorRef source) {
-      super(source);
-    }
-
-	@Override public void execute(final Object message) throws Exception {
+  
+  private String hash(Object message){
+	  Map<String,String> details = getSynthesizeDetails(message);
+	  if(details == null){
+		  logger.info("Cannot generate hash, details are null");
+		  return null;
+	  }
+	  String voice = details.get("voice");
+	  String language = details.get("language");
+	  String text = details.get("text");
+	  return HashGenerator.hashMessage(voice, language, text);
+  }
+  
+  private Map<String, String> getSynthesizeDetails(final Object message){
 	  final Class<?> klass = message.getClass();
+	  
+	  Map<String, String> details = new HashMap<String,String>();
+	  
 	  if(Tag.class.equals(klass)) {
         verb = (Tag)message;
+	  } else {
+		  return null;
 	  }
+	  if(!say.equals(verb.name()))
+		  return null;
+	  
 	  // Parse the voice attribute.
 	  String voice = "man";
 	  Attribute attribute = verb.attribute("voice");
@@ -1684,10 +1755,36 @@ public final class VoiceInterpreter extends UntypedActor {
 	  }
 	  // Synthesize.
 	  String text = verb.text();
-	  if(text != null && !text.isEmpty()) {
-	    final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
-	    synthesizer.tell(synthesize, source);
-	  } else {
+
+	  details.put("voice", voice);
+	  details.put("language",language);
+	  details.put("text", text);
+	  
+	  return details;
+	  
+  }
+  
+  private final class Synthesizing extends AbstractAction {
+    public Synthesizing(final ActorRef source) {
+      super(source);
+    }
+
+	@Override public void execute(final Object message) throws Exception {
+		
+		  final Class<?> klass = message.getClass();
+		  
+		  if(Tag.class.equals(klass)) {
+	        verb = (Tag)message;
+		  }
+		
+		Map<String,String> details = getSynthesizeDetails(verb);
+		if(details !=null && !details.isEmpty()){
+			String voice = details.get("voice");
+			String language = details.get("language");
+			String text = details.get("text");
+		    final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
+		    synthesizer.tell(synthesize, source);
+		} else {
 		// Ask the parser for the next action to take.
 	    final GetNextVerb next = GetNextVerb.instance();
 	    parser.tell(next, source);

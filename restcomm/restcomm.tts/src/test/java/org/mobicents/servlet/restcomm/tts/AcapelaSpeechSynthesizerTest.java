@@ -30,11 +30,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.XMLConfiguration;
-
 import org.junit.After;
+
 import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.mobicents.servlet.restcomm.cache.HashGenerator;
 
 import scala.concurrent.duration.FiniteDuration;
 
@@ -116,4 +118,25 @@ public final class AcapelaSpeechSynthesizerTest {
       System.out.println(response.get().toString());
     }};
   }
+  
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testHash() {
+	  final String gender = "man";
+	  final String language = "en";
+	  final String text = "Hello There!";
+	  final String calculatedHash = "hash="+HashGenerator.hashMessage(gender, language, text);
+	  
+	    new JavaTestKit(system) {{
+	        final ActorRef observer = getRef();
+	        final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, text);
+	        tts.tell(synthesize, observer);
+	        final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+	            SpeechSynthesizerResponse.class);
+	        assertTrue(response.succeeded());
+	        assertTrue(response.get().getFragment().equals(calculatedHash));
+	        System.out.println(response.get().toString());
+	      }};
+  }
+  
 }
