@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -51,6 +52,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
         return wavFile.length() / format.getSampleRate() / (format.getSampleSizeInBits() / 8.0) / format.getChannels();
       }
       return 0;
+    }  catch (UnsupportedAudioFileException exception){
+    	//Return calculation based on MMS defaults
+    	int sampleRate = 8000;
+    	int sampleSize = 16;
+    	int channels = 1;
+    	return wavFile.length() / (sampleRate / 8.0) / sampleSize / channels;
     } finally {
       if(audio != null) {
         audio.close();
