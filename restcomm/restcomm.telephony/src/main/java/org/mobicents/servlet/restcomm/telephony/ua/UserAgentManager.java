@@ -230,8 +230,8 @@ public final class UserAgentManager extends UntypedActor {
       ttl = 3600;
     }
     // Get the rest of the information needed for a registration record.
-    final String name = contact.getDisplayName();
-    final String ua = request.getHeader("User-Agent");
+    String name = contact.getDisplayName();
+    String ua = request.getHeader("User-Agent");
     final SipURI to = (SipURI)request.getTo().getURI();
     final String aor = to.toString();
     final String user = to.getUser();
@@ -248,18 +248,31 @@ public final class UserAgentManager extends UntypedActor {
     // Update the data store.
     final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
     final DateTime now = DateTime.now();
+    
+    //Issue 87 (http://www.google.com/url?q=https://bitbucket.org/telestax/telscale-restcomm/issue/87/verb-and-not-working-for-end-to-end-calls%23comment-5855486&usd=2&usg=ALhdy2_mIt4FU4Yb_EL-s0GZCpBG9BB8eQ)
+    //if display name or UA are null, the hasRegistration returns 0 even if there is a registration
+    if(name==null)
+    	name = user;
+    if(ua==null)
+    	ua="GenericUA";
+    
     final Registration registration = new Registration(sid, now, now, aor,
         name, user, ua, ttl, address);
     final RegistrationsDao registrations = storage.getRegistrationsDao();
-    if(ttl == 0) {
+
+	if(ttl == 0) {
+      //Remove Registration if ttl=0
       registrations.removeRegistration(registration);
       response.setHeader("Expires", "0");
       logger.info("The user agent manager unregistered " + user);
     } else {
+
       if(registrations.hasRegistration(registration)) {
+          //Update Registration if exists
         registrations.updateRegistration(registration);
         logger.info("The user agent manager updated " + user);
       } else {
+        //Add registration since it doesn't exists on the DB
         registrations.addRegistration(registration);
         logger.info("The user agent manager registered " + user);
       }
