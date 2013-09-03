@@ -70,7 +70,7 @@
         <property name="defaultSignalGenerators">0</property>
         <property name="defaultLocalConnections">10</property>
         <property name="defaultRemoteConnections">10</property>
-	<property name="dtmfDetectorDbi">-35</property>
+	<property name="dtmfDetectorDbi">0</property>
     </bean>
     
     <!-- MGCP Controller definition -->
