@@ -4,3 +4,4 @@
 restcomm.dao/src/test/resources/data/restcomm.log
 restcomm.dao/src/test/resources/data/restcomm.properties
 target
+bin
