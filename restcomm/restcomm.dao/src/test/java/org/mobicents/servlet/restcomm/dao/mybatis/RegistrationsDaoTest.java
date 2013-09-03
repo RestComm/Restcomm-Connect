@@ -16,18 +16,16 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.junit.Assert.*;
+
 import java.io.InputStream;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-
 import org.joda.time.DateTime;
-
 import org.junit.After;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -49,24 +47,28 @@ public final class RegistrationsDaoTest {
     manager = new MybatisDaoManager();
     manager.start(factory);
   }
-  
-  @After public void after() {
+
+@After public void after() {
     manager.shutdown();
   }
 
   @Test public void createReadUpdateDelete() {
     final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
     final DateTime now = DateTime.now();
+    String username = "tom_"+now;
+    String displayName = "Tom_"+now;
     Registration registration = new Registration(sid, now, now, now,
-    	"sip:tom@company.com", "Tom", "tom", "TestUserAgent/1.0", 3600,
+    	"sip:tom@company.com", displayName, username, "TestUserAgent/1.0", 3600,
     	"sip:tom@company.com");
     final RegistrationsDao registrations = manager.getRegistrationsDao();
     // Create a new registration in the data store.
+    assertFalse(registrations.hasRegistration(registration));
     registrations.addRegistration(registration);
+    assertTrue(registrations.hasRegistration(registration));
     // Read the registration from the data store.
-    Registration result = registrations.getRegistration("tom");
+    Registration result = registrations.getRegistration(username);
     // Validate the results.
-    assertTrue(registrations.getRegistrations().size() == 1);
+    assertTrue(registrations.getRegistrations().size() >= 1);
     assertTrue(result.getSid().equals(registration.getSid()));
     assertTrue(result.getDateCreated().equals(registration.getDateCreated()));
     assertTrue(result.getDateUpdated().equals(registration.getDateUpdated()));
@@ -81,7 +83,7 @@ public final class RegistrationsDaoTest {
     registration = registration.setTimeToLive(3600);
     registrations.updateRegistration(registration);
     // Read the updated registration from the data store.
-    result = registrations.getRegistration("tom");
+    result = registrations.getRegistration(username);
     // Validate the results.
     assertTrue(result.getSid().equals(registration.getSid()));
     assertTrue(result.getDateCreated().equals(registration.getDateCreated()));
@@ -98,4 +100,42 @@ public final class RegistrationsDaoTest {
     // Validate that the registration was removed.
     assertTrue(registrations.getRegistrations().isEmpty());
   }
+  
+  @Test public void checkHasRegistrationWithoutUA() {
+	    final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
+	    final DateTime now = DateTime.now();
+	    String username = "tom_"+now;
+	    String displayName = "Tom_"+now;
+	    Registration registration = new Registration(sid, now, now, now,
+	    	"sip:tom@company.com", displayName, username, null, 3600,
+	    	"sip:tom@company.com");
+	    final RegistrationsDao registrations = manager.getRegistrationsDao();
+	    // Create a new registration in the data store.
+	    assertFalse(registrations.hasRegistration(registration));
+	    registrations.addRegistration(registration);
+	    assertTrue(registrations.getRegistrations().size() > 0);
+	    assertNotNull(registrations.getRegistration(username));
+	    //Expected to fail if UA is null
+	    assertFalse(registrations.hasRegistration(registration));
+
+  }
+  
+  @Test public void checkHasRegistrationWithoutDisplayName() {
+	    final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
+	    final DateTime now = DateTime.now();
+	    String username = "tom_"+now;
+	    String displayName = null;
+	    Registration registration = new Registration(sid, now, now, now,
+	    	"sip:tom@company.com", displayName, username, "TestUserAgent/1.0", 3600,
+	    	"sip:tom@company.com");
+	    final RegistrationsDao registrations = manager.getRegistrationsDao();
+	    // Create a new registration in the data store.
+	    assertFalse(registrations.hasRegistration(registration));
+	    registrations.addRegistration(registration);
+	    assertTrue(registrations.getRegistrations().size() > 0);
+	    assertNotNull(registrations.getRegistration(username));
+	    //Expected to fail if Display Name is null
+	    assertFalse(registrations.hasRegistration(registration));
+}
+  
 }
