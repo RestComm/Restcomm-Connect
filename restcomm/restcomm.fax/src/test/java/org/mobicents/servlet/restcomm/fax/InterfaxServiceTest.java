@@ -24,16 +24,19 @@ import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 //import akka.testkit.JavaTestKit;
 
+
 import java.io.File;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.XMLConfiguration;
-
 import org.junit.After;
+
 import static org.junit.Assert.*;
+
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import scala.concurrent.duration.FiniteDuration;
@@ -69,7 +72,8 @@ public final class InterfaxServiceTest {
 	}));
   }
 
-  @Test	public void testSendFax() {
+  @Test @Ignore
+  public void testSendFax() {
     new JavaTestKit(system) {{
       final ActorRef observer = getRef();
       final File file = new File(getClass().getResource("/fax.pdf").getPath());
