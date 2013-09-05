@@ -46,6 +46,7 @@ import org.junit.runner.RunWith;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@Ignore
 @RunWith(Arquillian.class)
 public final class CallTest {
   private static final String version = Version.getInstance().getRestCommVersion();
