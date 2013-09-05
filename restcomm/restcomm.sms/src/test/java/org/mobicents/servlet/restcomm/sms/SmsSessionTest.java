@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 /**
@@ -61,6 +62,7 @@ public final class SmsSessionTest {
     deployer.undeploy("SmsSessionTest");
   }
 
+  @Ignore
   @Test public void testSendSmsRedirectReceiveSms() throws ParseException {
     deployer.deploy("SmsSessionTest");
     // Send restcomm an sms.
