@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.junit.After;
+import org.junit.Ignore;
 
 import static org.junit.Assert.*;
 
@@ -107,6 +108,7 @@ public final class AcapelaSpeechSynthesizerTest {
   }
 
   @SuppressWarnings("unchecked")
+  @Ignore
   @Test public void testSynthesis() {
     new JavaTestKit(system) {{
       final ActorRef observer = getRef();
@@ -120,6 +122,7 @@ public final class AcapelaSpeechSynthesizerTest {
   }
   
   @SuppressWarnings("unchecked")
+  @Ignore
   @Test
   public void testHash() {
 	  final String gender = "man";
