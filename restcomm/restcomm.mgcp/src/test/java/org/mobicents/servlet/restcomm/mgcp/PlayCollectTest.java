@@ -20,6 +20,7 @@ import java.net.URI;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.mobicents.servlet.restcomm.mgcp.PlayCollect;
 
 /**
@@ -30,6 +31,7 @@ public final class PlayCollectTest {
     super();
   }
   
+  @Ignore
   @Test public void testFormatting() {
     // We will used the builder pattern to create this message.
     final PlayCollect.Builder builder = PlayCollect.builder();
@@ -57,6 +59,7 @@ public final class PlayCollectTest {
     System.out.println("Signal Parameters: " + result + "\n");
   }
   
+  @Ignore
   @Test public void testFormattingWithNoPrompts() {
 	// We will used the builder pattern to create this message.
     final PlayCollect.Builder builder = PlayCollect.builder();
@@ -73,6 +76,7 @@ public final class PlayCollectTest {
     System.out.println("Signal Parameters: " + result + "\n");
   }
   
+  @Ignore
   @Test public void testFormattingWithMultiplePrompts() {
 	// We will used the builder pattern to create this message.
     final PlayCollect.Builder builder = PlayCollect.builder();

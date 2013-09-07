@@ -22,12 +22,14 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
+@Ignore
 public final class SmsSessionTest {
   private static final String version = Version.getInstance().getRestCommVersion();
   
@@ -61,6 +63,7 @@ public final class SmsSessionTest {
     deployer.undeploy("SmsSessionTest");
   }
 
+  @Ignore
   @Test public void testSendSmsRedirectReceiveSms() throws ParseException {
     deployer.deploy("SmsSessionTest");
     // Send restcomm an sms.

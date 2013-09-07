@@ -43,12 +43,14 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.telephony.Version;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@Ignore
 @RunWith(Arquillian.class)
 public final class UserAgentManagerTest {
   private static final String version = Version.getInstance().getRestCommVersion();
