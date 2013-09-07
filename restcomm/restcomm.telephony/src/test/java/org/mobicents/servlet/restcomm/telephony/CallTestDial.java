@@ -7,14 +7,11 @@ import static org.junit.Assert.assertTrue;
 import java.text.ParseException;
 
 import javax.sip.address.SipURI;
-import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -400,7 +397,7 @@ public class CallTestDial {
 		}
 	}
 
-	@Test @Ignore
+	@Test
 	public synchronized void testDialFork() throws InterruptedException, ParseException {
 		deployer.deploy("CallTestDial");
 
@@ -412,13 +409,13 @@ public class CallTestDial {
 		final SipCall aliceCall = alicePhone.createSipCall();
 		aliceCall.listenForIncomingCall();
 
-//		//Prepare George phone to receive call
-//		final SipCall georgeCall = georgePhone.createSipCall();
-//		georgeCall.listenForIncomingCall();
+		//Prepare George phone to receive call
+		final SipCall georgeCall = georgePhone.createSipCall();
+		georgeCall.listenForIncomingCall();
 
 		//Prepare Henrique phone to receive call
-		henriquePhone.setLoopback(true);
-		final SipCall henriqueCall = georgePhone.createSipCall();
+//		henriquePhone.setLoopback(true);
+		final SipCall henriqueCall = henriquePhone.createSipCall();
 		henriqueCall.listenForIncomingCall();
 
 
@@ -442,42 +439,32 @@ public class CallTestDial {
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		
-//		//Start a new thread for George
-//		new Thread( new Runnable() {
-//			@Override
-//			public void run() {
-//				assertTrue(georgeCall.waitForIncomingCall(30*1000));
-//				assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
-//				String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-//				assertTrue(georgeCall.sendIncomingCallResponse(486, "Busy Here-George", 3600));
-//				//				assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null, null));
-//				assertTrue(georgeCall.waitForAck(50 * 1000));
-//
-//				//				georgeCall.listenForDisconnect();
-//				//				assertTrue(georgeCall.waitForDisconnect(30 * 1000));
-//			}
-//		}).start();
-//
-//		//Start a new thread for Alice
-//		new Thread( new Runnable() {
-//			@Override
-//			public void run() {
-//				assertTrue(aliceCall.waitForIncomingCall(30*1000));
-//				assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
-//				String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-//				assertTrue(aliceCall.sendIncomingCallResponse(486, "Busy Here-Alice", 3600));
-//				//				assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
-//				assertTrue(aliceCall.waitForAck(50 * 1000));
-//
-//				//				aliceCall.listenForDisconnect();
-//				//				assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-//			}
-//		}).start();
+		//Start a new thread for George
+		new Thread( new Runnable() {
+			@Override
+			public void run() {
+				assertTrue(georgeCall.waitForIncomingCall(30*1000));
+				assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+				assertTrue(georgeCall.sendIncomingCallResponse(486, "Busy Here-George", 3600));
+				assertTrue(georgeCall.waitForAck(50 * 1000));
+			}
+		}).start();
+
+		//Start a new thread for Alice
+		new Thread( new Runnable() {
+			@Override
+			public void run() {
+				assertTrue(aliceCall.waitForIncomingCall(30*1000));
+				assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+				assertTrue(aliceCall.sendIncomingCallResponse(486, "Busy Here-Alice", 3600));
+				assertTrue(aliceCall.waitForAck(50 * 1000));
+			}
+		}).start();
 
 		assertTrue(henriqueCall.waitForIncomingCall(30*1000));
-		assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique13", 3600));
+		assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique-1", 3600));
 		String receivedBody = new String(henriqueCall.getLastReceivedRequest().getRawContent());
-		assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique13", 3600, receivedBody, "application", "sdp", null, null));
+		assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique", 3600, receivedBody, "application", "sdp", null, null));
 		assertTrue(henriqueCall.waitForAck(50 * 1000));
 
 		henriqueCall.listenForDisconnect();
