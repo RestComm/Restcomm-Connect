@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial timeLimit="100000" timeout="1000000">
+	  <Uri>sip:alice@127.0.0.1:5091</Uri>
+	</Dial>
+	<Hangup/>
+</Response>
