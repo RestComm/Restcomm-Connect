@@ -46,6 +46,7 @@ import org.junit.runner.RunWith;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@Ignore
 @RunWith(Arquillian.class)
 public final class CallTest {
   private static final String version = Version.getInstance().getRestCommVersion();
@@ -127,7 +128,7 @@ public final class CallTest {
     }
   }
   
-  @Test public synchronized void testPauseRejectBusy() {
+  @Ignore @Test public synchronized void testPauseRejectBusy() {
     deployer.deploy("CallTest");
     phone.setLoopback(true);
     final SipCall call = phone.createSipCall();
