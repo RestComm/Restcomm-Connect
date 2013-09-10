@@ -62,7 +62,7 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 	static {
 		parameters = new ArrayList<NameValuePair>();
 		parameters.add(new BasicNameValuePair("c", "WAV"));
-		parameters.add(new BasicNameValuePair("f","8khz_8bit_mono"));
+		parameters.add(new BasicNameValuePair("f","8khz_16bit_mono"));
 	}
 
 	private final URI service;
