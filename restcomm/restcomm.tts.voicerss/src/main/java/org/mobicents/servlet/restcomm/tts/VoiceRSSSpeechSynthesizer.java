@@ -46,15 +46,18 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerException;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
-import org.mobicents.servlet.restcomm.util.HttpUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
+
+	private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
 	private static final String gender = "man";
 
@@ -116,13 +119,13 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 		men.put("es", configuration.getString("languages.spanish-spain"));
 		men.put("sv", configuration.getString("languages.swedish"));	
 	}
-	
-	
+
+
 	@Override public void onReceive(final Object message) throws Exception {
 		final Class<?> klass = message.getClass();
 		final ActorRef self = self();
 		final ActorRef sender = sender();
-		
+
 		if(SpeechSynthesizerRequest.class.equals(klass)) {
 			try {
 				final URI uri = synthesize(message);
@@ -140,8 +143,8 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 	}
 
 	private String getLanguage(final String language) {
-			String languageCode = men.get(language);
-			return languageCode;
+		String languageCode = men.get(language);
+		return languageCode;
 	}
 
 	private URI synthesize(final Object message)
@@ -152,6 +155,7 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 		final String text = request.text();
 
 		if(language == null) {
+			logger.info("There is no suitable speaker to synthesize " + request.language());
 			throw new IllegalArgumentException("There is no suitable language to synthesize " +
 					request.language());
 		}
@@ -168,22 +172,24 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 		final StatusLine line = response.getStatusLine();
 		final int status = line.getStatusCode();
 		final String hash= HashGenerator.hashMessage(gender, language, text);
-		
+
 		if(status == HttpStatus.SC_OK) {
-			
+
 			Header[] contentType = response.getHeaders("Content-Type");
-			
+
 			if (contentType[0].getValue().startsWith("text")){
 				final StringBuilder buffer = new StringBuilder();
 				String error = EntityUtils.toString(response.getEntity());
+				logger.error("VoiceRSSSpeechSynthesizer error: "+error);
 				buffer.append(error);
 				throw new SpeechSynthesizerException(buffer.toString());
 			}
-			
+
+			logger.info("VoiceRSSSpeechSynthesizer success!");
 			InputStream is = response.getEntity().getContent();
 			File file = new File(System.getProperty("java.io.tmpdir")+File.separator+hash+".wav");
 			final OutputStream ostream = new FileOutputStream(file);
-			
+
 			final byte[] buffer = new byte[1024*8];
 			while (true)
 			{
@@ -196,6 +202,7 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 			is.close();
 			return file.toURI();
 		} else {
+			logger.info("VoiceRSSSpeechSynthesizer error, status code: "+line.getStatusCode()+(" reason phrase: ")+line.getReasonPhrase());
 			final StringBuilder buffer = new StringBuilder();
 			buffer.append(line.getStatusCode()).append(" ").append(line.getReasonPhrase());
 			throw new SpeechSynthesizerException(buffer.toString());
