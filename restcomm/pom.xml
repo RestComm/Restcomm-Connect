@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
@@ -54,12 +55,12 @@
 	</licenses>
 
 	<modules>
-	<!--	<module>restcomm.docs</module> -->
+		<!-- <module>restcomm.docs</module> -->
 		<module>restcomm.application</module>
 		<module>restcomm.commons</module>
 		<module>restcomm.dao</module>
 		<module>restcomm.asr</module>
-		<module>restcomm.tts</module>
+		<module>restcomm.tts.acapela</module>
 		<module>restcomm.mgcp</module>
 		<module>restcomm.fax</module>
 		<module>restcomm.sms.api</module>
@@ -68,6 +69,8 @@
 		<module>restcomm.http</module>
 		<module>restcomm.sms</module>
 		<module>restcomm.telephony</module>
+		<module>restcomm.tts.api</module>
+		<module>restcomm.tts.voicerss</module>
 	</modules>
 
 	<properties>
@@ -77,6 +80,7 @@
 		<log4j.version>1.2.16</log4j.version>
 		<slf4j.version>1.5.5</slf4j.version>
 		<commons-configuration.version>1.7</commons-configuration.version>
+		<commons-io.version>2.4</commons-io.version>
 		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
 		<mobicents.mgcp.impl.version>3.0.0.Final</mobicents.mgcp.impl.version>
@@ -115,27 +119,27 @@
 				<artifactId>guava</artifactId>
 				<version>${guava.version}</version>
 			</dependency>
-            
+
 			<!-- Message Passing -->
 			<dependency>
 				<groupId>org.scala-lang</groupId>
 				<artifactId>scala-library</artifactId>
 				<version>${scala-lang.version}</version>
 			</dependency>
-            
+
 			<dependency>
-  				<groupId>com.typesafe.akka</groupId>
-  				<artifactId>akka-actor_2.10</artifactId>
-  				<version>${akka.version}</version>
+				<groupId>com.typesafe.akka</groupId>
+				<artifactId>akka-actor_2.10</artifactId>
+				<version>${akka.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>com.typesafe.akka</groupId>
 				<artifactId>akka-slf4j_2.10</artifactId>
 				<version>${akka.version}</version>
 			</dependency>
-            
-		
+
+
 			<dependency>
 				<groupId>log4j</groupId>
 				<artifactId>log4j</artifactId>
@@ -150,6 +154,12 @@
 			</dependency>
 
 			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
+			</dependency>
+
+			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
 				<version>${slf4j.version}</version>
@@ -160,7 +170,7 @@
 				<artifactId>slf4j-log4j12</artifactId>
 				<version>${slf4j.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>javax.sdp</groupId>
 				<artifactId>nist-sdp</artifactId>
@@ -198,12 +208,12 @@
 				<version>${sipservletapi.version}</version>
 				<scope>provided</scope>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>org.apache.tomcat</groupId>
 				<artifactId>servlet-api</artifactId>
 				<version>${servlet-api.version}</version>
-			</dependency>            
+			</dependency>
 
 			<dependency>
 				<groupId>org.apache.shiro</groupId>
@@ -292,21 +302,21 @@
 				<version>${junit.version}</version>
 				<scope>test</scope>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>org.scalatest</groupId>
 				<artifactId>scalatest_2.9.1</artifactId>
 				<version>${scalatest.version}</version>
 				<scope>test</scope>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>com.typesafe.akka</groupId>
 				<artifactId>akka-testkit_2.10</artifactId>
 				<version>${akka.version}</version>
 				<scope>test</scope>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>org.apache.tomcat</groupId>
 				<artifactId>coyote</artifactId>
@@ -320,14 +330,14 @@
 				<version>${tomcat.version}</version>
 				<scope>provided</scope>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>javax.sip</groupId>
 				<artifactId>jain-sip-ri</artifactId>
 				<version>${sip-ri.version}</version>
 				<scope>test</scope>
 			</dependency>
-		
+
 			<dependency>
 				<groupId>org.mobicents.servlet.sip.containers</groupId>
 				<artifactId>sip-servlets-catalina</artifactId>
@@ -348,14 +358,14 @@
 				<version>${sipservletapi.version}</version>
 				<scope>provided</scope>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>hsqldb</groupId>
 				<artifactId>hsqldb</artifactId>
 				<version>${hsqldb.version}</version>
 				<scope>test</scope>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>org.mobicents.arquillian.container</groupId>
 				<artifactId>mss-tomcat-embedded-6</artifactId>
@@ -383,14 +393,14 @@
 				<version>${shrinkwrap.resolver.version}</version>
 				<scope>test</scope>
 			</dependency>
-            
-            <dependency>
+
+			<dependency>
 				<groupId>org.cafesip.sipunit</groupId>
 				<artifactId>sipunit</artifactId>
 				<version>${sipunit.version}</version>
 				<scope>test</scope>
 			</dependency>
-			
+
 		</dependencies>
 	</dependencyManagement>
 

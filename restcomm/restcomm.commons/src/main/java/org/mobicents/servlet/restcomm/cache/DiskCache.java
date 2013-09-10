@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 
 import akka.actor.ActorRef;
@@ -71,47 +72,57 @@ public final class DiskCache extends UntypedActor {
 	  final DiskCacheRequest request = (DiskCacheRequest)message;
 	  
 	  if(request.hash() == null) {
-		  //This is a request to cache a URI
-		  String hash = null;
-		  URI uri = null;
-		  if(request.uri().toString().contains("hash")){
-			  String fragment = request.uri().getFragment(); 
-			  hash = fragment.replace("hash=", "");
-			  String uriStr = ((request.uri().toString()).replace(fragment, "")).replace("#", "");
-			  uri = URI.create(uriStr);
+		  if(request.uri().getScheme().equalsIgnoreCase("file")){
+			  File origFile = new File(request.uri());
+			  File destFile = new File(location + origFile.getName());
+			  if(!destFile.exists())
+				  FileUtils.moveFile(origFile, destFile);
+			  
+			  return URI.create(this.uri + destFile.getName());
+
 		  } else {
-			  uri = request.uri();
-			  hash = new Sha256Hash(uri.toString()).toHex();
-		  }
-		  
-		  final String extension = extension(uri).toLowerCase();
-		  final File path = new File(location + hash + "." + extension);
-		  if(!path.exists()) {
-			  final File tmp = new File(path + "." + "tmp");
-			  InputStream input = null;
-			  OutputStream output = null;
-			  try {
-				  input = uri.toURL().openStream();
-				  output = new FileOutputStream(tmp);
-				  final byte[] buffer = new byte[4096];
-				  int read = 0;
-				  do {
-					  read = input.read(buffer, 0, 4096);
-					  if(read > 0) {
-						  output.write(buffer, 0, read);
+			  //This is a request to cache a URI
+			  String hash = null;
+			  URI uri = null;
+			  if(request.uri().toString().contains("hash")){
+				  String fragment = request.uri().getFragment(); 
+				  hash = fragment.replace("hash=", "");
+				  String uriStr = ((request.uri().toString()).replace(fragment, "")).replace("#", "");
+				  uri = URI.create(uriStr);
+			  } else {
+				  uri = request.uri();
+				  hash = new Sha256Hash(uri.toString()).toHex();
+			  }
+
+			  final String extension = extension(uri).toLowerCase();
+			  final File path = new File(location + hash + "." + extension);
+			  if(!path.exists()) {
+				  final File tmp = new File(path + "." + "tmp");
+				  InputStream input = null;
+				  OutputStream output = null;
+				  try {
+					  input = uri.toURL().openStream();
+					  output = new FileOutputStream(tmp);
+					  final byte[] buffer = new byte[4096];
+					  int read = 0;
+					  do {
+						  read = input.read(buffer, 0, 4096);
+						  if(read > 0) {
+							  output.write(buffer, 0, read);
+						  }
+					  } while(read != -1);
+					  tmp.renameTo(path);
+				  } finally {
+					  if(input != null) {
+						  input.close();
 					  }
-				  } while(read != -1);
-				  tmp.renameTo(path);
-			  } finally {
-				  if(input != null) {
-					  input.close();
-				  }
-				  if(output != null) {
-					  output.close();
+					  if(output != null) {
+						  output.close();
+					  }
 				  }
 			  }
+			  return URI.create(this.uri + hash + "." + extension);
 		  }
-		  return URI.create(this.uri + hash + "." + extension);
 	  } else {
 		  //This is a check cache request
 		  final String extension = "wav";
@@ -119,13 +130,13 @@ public final class DiskCache extends UntypedActor {
 		  final String filename = hash+"."+extension;
 		  File matchedFile = (new File(location)).listFiles(new FilenameFilter() {
 			  public boolean accept(File dir, String name) {
-//				  return name.startsWith(hash) && name.endsWith("."+extension);
+				  //				  return name.startsWith(hash) && name.endsWith("."+extension);
 				  return name.equalsIgnoreCase(filename);
 			  }
 		  })[0];
 
 		  if(matchedFile.exists()){
-//			  return URI.create(matchedFile.getAbsolutePath());
+			  //			  return URI.create(matchedFile.getAbsolutePath());
 			  return URI.create(this.uri + filename);
 		  } else {
 			  throw new FileNotFoundException(filename);
