@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is free software; you can redistribute it and/or modify it under 
+	the terms of the GNU Lesser General Public License as published by the Free 
+	Software Foundation; either version 2.1 of the License, or (at your option) 
+	any later version. This software is distributed in the hope that it will 
+	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
+	Public License for more details. You should have received a copy of the GNU 
+	Lesser General Public License along with this software; if not, write to 
+	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
+	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
+<!--
+	The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway.
+-->
+<speech-synthesizer class="org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer">
+	<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
+	<application>EVAL_5024122</application>
+	<login>EVAL_VAAS</login>
+	<password>s1zy4vjm</password>
+	<speakers>
+	  <belgium-french>
+	    <female>justine8k</female>
+	    <male></male>
+	  </belgium-french>
+	  <brazilian-portuguese>
+	    <female>marcia8k</female>
+	    <male></male>
+	  </brazilian-portuguese>
+	  <british-english>
+	    <female>rachel8k</female>
+	    <male>graham8k</male>
+	  </british-english>
+	  <canadian-french>
+	    <female>louise8k</female>
+	    <male></male>
+	  </canadian-french>
+	  <czech>
+	    <female>eliska8k</female>
+	    <male></male>
+	  </czech>
+	  <danish>
+	    <female>mette8k</female>
+	    <male>rasmus8k</male>
+	  </danish>
+	  <english>
+	    <female>heather8k</female>
+	    <male>ryan8k</male>
+	  </english>
+	  <finnish>
+	    <female>sanna8k</female>
+	    <male></male>
+	  </finnish>
+	  <french>
+	    <female>claire8k</female>
+	    <male>bruno8k</male>
+	  </french>
+	  <german>
+	    <female>sarah8k</female>
+	    <male>klaus8k</male>
+	  </german>
+	  <greek>
+	    <female></female>
+	    <male>dimitris8k</male>
+	  </greek>
+	  <italian>
+	    <female>chiara8k</female>
+	    <male>vittorio8k</male>
+	  </italian>
+	  <netherlands-dutch>
+	    <female>jasmijn8k</female>
+	    <male>daan8k</male>
+	  </netherlands-dutch>
+	  <norwegian>
+	    <female>kari8k</female>
+	    <male>olav8k</male>
+	  </norwegian>
+	  <polish>
+	    <female>ania8k</female>
+	    <male></male>
+	  </polish>
+	  <portuguese>
+	    <female>celia8k</female>
+	    <male></male>
+	  </portuguese>
+	  <russian>
+	    <female>alyona8k</female>
+	    <male></male>
+	  </russian>
+	  <saudi-arabia-arabic>
+	    <female>salma8k</female>
+	    <male>mehdi8k</male>
+	  </saudi-arabia-arabic>
+	  <spain-catalan>
+	    <female>laia8k</female>
+	    <male></male>
+	  </spain-catalan>
+	  <spanish>
+	    <female>maria8k</female>
+	    <male>antonio8k</male>
+	  </spanish>
+	  <swedish>
+	    <female>elin8k</female>
+	    <male>emil8k</male>
+	  </swedish>
+	  <turkish>
+	    <female>ipek8k</female>
+	    <male></male>
+	  </turkish>
+	</speakers>
+</speech-synthesizer>
