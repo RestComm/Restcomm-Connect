@@ -529,7 +529,11 @@ public class CallTestDial {
 				.withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.tts:jar:" + version)
+				.resolve("com.telestax.servlet:restcomm.tts.acapela:jar:" + version)
+				.withoutTransitivity().asSingle(JavaArchive.class);
+		archive.addAsLibrary(dependency);
+		dependency = ShrinkWrapMaven.resolver()
+				.resolve("com.telestax.servlet:restcomm.tts.api:jar:" + version)
 				.withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
