@@ -157,6 +157,7 @@ public final class CallManager extends UntypedActor {
       final String method = request.getMethod();
       if(authorization == null || !permitted(authorization, method)) {
         authenticate(request);
+        return;
       } else {
     	final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
