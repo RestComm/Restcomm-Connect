@@ -132,8 +132,7 @@
 
 	<!-- The Speech Synthesizer is responsible for turning text in to speech 
 		for play back by the media gateway.
-	<speech-synthesizer
-		class="org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer">
+	<speech-synthesizer class="org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer">
 		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
 		<application></application>
 		<login></login>
@@ -231,8 +230,7 @@
 	</speech-synthesizer>
 	-->
 	
-	<speech-synthesizer
-		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+	<speech-synthesizer class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
 		<apikey></apikey>
 		<languages>
