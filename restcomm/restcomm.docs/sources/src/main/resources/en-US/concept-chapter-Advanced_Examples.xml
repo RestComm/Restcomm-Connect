@@ -1,0 +1,348 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: ittsss -->
+<chapter id="advanced-examples">
+<title>Advanced RestComm Examples</title>
+
+<para>
+In this chapter, you will learn how to use more advanced features of Restcomm verbs to create communications applications
+</para>
+
+<section>
+<title>Activating Text-to-Speech (TTS)</title>
+
+<para>
+You must get an API key from <ulink url="http://www.voicerss.org/">http://www.voicerss.org</ulink> in order to proceed with this section. You can register for a free account and an API key will be emailed to you. Once you have the API key, open the <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml</filename> file and find the speech-synthesizer VoiceRSS section. Add your API key as shown below and restart RestComm
+</para>
+
+<programlisting>
+<![CDATA[
+<speech-synthesizer
+		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+		<service-root>http://api.voicerss.org</service-root>
+		<apikey>2901c0aXXXXXXXXXXXXXX</apikey>
+]]>
+</programlisting>
+
+
+<para>
+Once you have done that, you are ready to use Text-to-Speech feature of RestComm.
+</para>
+
+<section>
+<title>Say Verb</title>
+<para>Create a file called test.xml in the <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/ </filename> directory and copy the content of the application below into the <filename> test.xml</filename>  file and save it</para>
+
+<para>
+<programlisting>
+<![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+        <Say>Welcome to RestComm, you have successfully tested the Say Verb</Say>
+</Response>
+]]>
+</programlisting>
+</para>
+
+<para>From a command terminal run the Curl command below to bind the 1234 phone number to the test.xml file. </para>
+
+<programlisting>
+<![CDATA[
+curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/test.xml"
+
+]]>
+</programlisting>
+
+<para>If the command is successful, you will see an output similar to the following:</para>
+<programlisting>
+<![CDATA[
+{
+  "sid": "PN0834628c131e4b66bc862ae0b21b7cfa",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "friendly_name": "1234",
+  "phone_number": "+11234",
+  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "status_callback_method": "POST",
+  "voice_caller_id_lookup": false,
+  "date_created": "2013-08-15T17:45:21.409-06:00",
+  "date_updated": "2013-08-15T17:45:21.409-06:00",
+  "sms_method": "POST",
+  "sms_fallback_method": "POST",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN0834628c131e4b66bc862ae0b21b7cfa.json"
+]]>
+</programlisting>
+
+<para>Next, you have to configure your SIP phone and make a call to the <filename>test.xml</filename> dialing number 1234</para>
+
+<note>
+<title>Known Issues with some SIP Phones </title>
+<para>
+Some SIP phones have been known to have codec problems and do not correctly render the application as desired. In this example, we shall be using Ekiga.
+</para>
+</note>
+
+<para>
+Start the SIP phone Ekiga (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear the content of the Say Verb in the <filename>test.xml</filename> file.
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/RestComm-ekiga-sip-phone-demo.png"/>
+	</imageobject>
+</mediaobject>
+
+</section>
+
+<section>
+<title>Record Verb</title>
+<para>
+Copy the application below into the <filename>test.xml</filename> file and save it. Dial the number 1234 and when you hear the beep sound, leave a message and hangup when you are finished. 
+</para>
+<para>
+<programlisting>
+<![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+        <Say>Welcome to RestComm, leave a message after the beep</Say>
+	<Record maxLength="30"/>
+</Response>
+]]>
+</programlisting>
+</para>
+ 
+<para>
+A wave file will be recorded and saved in the <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings/ </filename> directory. You can use any media player to listen to the recorded voice message.
+</para>
+</section>
+
+<section>
+<title>Dial Verb and Client</title>
+<para>
+In order to use the Dial verb, you will need to create two users and register them to RestComm. Both users will use the password <filename>1234</filename> for authentication.
+</para>
+
+<formalpara>
+<title>Create User Alice</title>
+<programlisting>
+<![CDATA[
+curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=1234" -d  "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/test.xml"
+]]>
+</programlisting>
+
+</formalpara>
+
+<formalpara>
+<title>Create User Bob</title>
+<programlisting>
+<![CDATA[
+curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=bob" -d "Password=1234" -d  "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/test.xml"
+]]>
+</programlisting>
+
+</formalpara>
+
+<para>
+If the command succeeds, you will see an output from each command similar to the one below:
+</para>
+<programlisting>
+<![CDATA[
+{
+  "sid": "CLa9c3c1b64a3a4350b8462f00ff5df854",
+  "date_created": "2013-09-12T22:02:25.745-06:00",
+  "date_updated": "2013-09-12T22:02:25.745-06:00",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "api_version": "2012-04-24",
+  "friendly_name": "bob",
+  "login": "bob",
+  "password": "1234",
+  "status": "1",
+  "voice_url": "http://127.0.0.1:8080/restcomm/demos/test.xml",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa9c3c1b64a3a4350b8462f00ff5df854.json"
+]]>
+</programlisting>
+
+
+<formalpara>
+<title>Register Alice and Bob using softphone Sflphone</title>
+
+</formalpara>
+
+<para>
+In order to start two instances of Sflphone on the same computer, you need to start the second instance using <filename>sudo Sflphone</filename>.
+</para>
+
+<para>
+When Sflphone is started, go to the the menu Edit->Accounts, then press the Add button
+</para>
+ 
+<para>
+Fill out the configuration for Bob as shown in the screenshot below:
+</para>
+<formalpara>
+<title>Sflphone Basic Configuration</title>
+</formalpara>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/sflphone-config-basic.png"/>
+	</imageobject>
+</mediaobject>
+
+<formalpara>
+<title>Sflphone Advanced Configuration</title>
+<para>Make sure the port number is set to 5061</para>
+</formalpara>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/sflphone-config-advanced.png"/>
+	</imageobject>
+</mediaobject>
+
+<para>
+In the second instance of Sflphone, register user Alice following the same procedure used for Bob. In the Advanced settings, make sure the port number for user Alice is set to 5060
+</para>
+
+<formalpara>
+<title>Copy the content of the application below into the test.xml file and save. </title>
+</formalpara>
+
+<programlisting>
+<![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+        <Say>Welcome to RestComm, you are being forwarded to Alice</Say>
+	<Dial callerid="+123456789">
+	<Client>alice</Client>
+	</Dial>
+</Response>
+]]>
+</programlisting>
+<para>From the Sflphone registered with user Bob, make a call to Alice. Enter the name <filename>alice</filename>  and make the call</para>
+
+</section>
+
+<section>
+<title>Dial Verb and Uri</title>
+<para>
+Copy the Dial Uri application below to the <filename>test.xml</filename>. Remember that the port number for user Alice is 5060 and that is the port that is used in the application. If you want to use a different port, you also have to change the SIP Uri to reflect that. You can then make a call from user Bob to Alice.
+</para>
+<programlisting>
+<![CDATA[
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+        <Say>Welcome to RestCom, you are being forward to Alice</Say>
+	<Dial callerid="+1234567899">
+	<Uri>sip:alice@127.0.0.1:5060</Uri>
+	</Dial>
+ 
+</Response>
+]]>
+</programlisting>
+</section>
+
+<section>
+<title>Dial Verb and Conference</title>
+<para>
+Copy the Dial Conference application below to the <filename>test.xml</filename> and save the file. You can dial any number like 4321 and RestComm will read the Say verb and make a beep sound when you join the conference room. You can use another SIP phone to join the same conference. It works better if you are on a different computer as this reduces the echo generated from the microphones.
+</para>
+<programlisting>
+<![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+        <Say>Welcome to RestCom, you are now joining the conference room</Say>
+	<Dial>
+	<Conference>test-conference</Conference>
+	</Dial>
+</Response>
+]]>
+</programlisting>
+</section>
+
+<section>
+<title>Gather Verb</title>
+<para>
+This verb is used to get user input and instruct RestComm to perform a specific task. This example is a little bit more elaborate and it will require the creation of a php file. You also must host the php file on a web server like Apache. Copy the Gather application below into the <filename>test.xml</filename> and save the file.
+</para>
+<programlisting>
+<![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	 <Gather action="http://127.0.0.1/test-user-input.php" numDigits="1">
+		 <Say>Welcome to Telestax RestCom.</Say>
+		 <Say>For opening hours, press 1.</Say>
+		 <Say>to talk to Alice, press 2.</Say>
+	 </Gather>
+ <!-- If customer doesn't input anything, prompt and try again. -->
+	 <Say>Sorry, I didn't get your response.</Say>
+	 <Redirect>http://127.0.0.1:8080/restcomm/demos/test.xml</Redirect>
+ </Response>
+]]>
+</programlisting>
+
+<formalpara>
+<title>Create a php file in the Apache /var/www/html directory</title>
+</formalpara>
+<para>You can use any web server of your choice, in this example, we shall be using Apache on a Linux computer</para>
+<para>Start the httpd server as follows <filename>sudo service httpd start</filename></para>
+<para>Create a new file called <filename>test-user-input.php</filename> in the /var/www/html directory</para>
+<para>Copy the php application below into the <filename>test-user-input.php</filename> and save </para>
+
+
+<programlisting>
+<![CDATA[
+<?php
+    header('Content-type: text/xml');
+    echo '<?xml version="1.0" encoding="UTF-8"?>';
+ 
+    echo '<Response>';
+ 
+    $user_input = (int) ($_POST['Digits']);
+ 
+    if ($user_input == 1)
+        
+    {
+         echo '<Say>Our Opening hours are 24 hours 7 Days a week </Say>';
+        echo '<Say>Telestax appreciates your business</Say>';
+        echo '<Say>You may Hang up or wait to be redirected to the main menu</Say>';
+        echo '<Redirect>http://127.0.0.1:8080/restcomm/demos/test.xml</Redirect>';
+   
+    }  elseif($user_input == 2) {
+ 
+        echo '<Say>You are being forwarded to Alice</Say>';
+        echo '<Dial callerid="+1234568789">';
+        echo '<Client>alice</Client>';
+	echo '</Dial>';
+
+     } 
+    echo '</Response>';
+?>
+]]>
+</programlisting>
+
+<para>This example welcomes the user and offers two options. If the user presses 1, he hears the openining hours message. If the user presses 2, he will be redirected to user Alice.</para>
+
+<para>To test the application using the Gather verb, dial any number from user Bob and follow the application instruction.</para>
+
+<note>
+<title>Using the Fax, SMS and other features of RestComm</title>
+<para>
+Please note that Telestax also offers TelScale RestComm hosted on Amazon AWS. If you want to learn more about how to use DID provisioning and more, please visit <ulink url="http://www.telestax.com">www.telestax.com </ulink>
+</para>
+</note>
+</section>
+
+</section>
+
+
+ 
+</chapter>
