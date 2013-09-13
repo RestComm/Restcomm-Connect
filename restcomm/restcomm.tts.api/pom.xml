@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>6.1.1.GA-TelScale</version>
+		<version>6.1.1-TelScale-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm.tts.api</artifactId>
