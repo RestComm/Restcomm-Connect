@@ -56,7 +56,7 @@ public final class DownloaderTest {
   @Test public void testGet() throws URISyntaxException, IOException {
     new JavaTestKit(system) {{
       final ActorRef observer = getRef();
-      final URI uri = URI.create("http://www.telestax.com");
+      final URI uri = URI.create("http://www.restcomm.org");
       final String method = "GET";
       final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
       downloader.tell(request, observer);
@@ -64,14 +64,15 @@ public final class DownloaderTest {
       final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
       assertTrue(response.succeeded());
       final HttpResponseDescriptor descriptor = response.get();
-      assertTrue(descriptor.getContentAsString().contains("<title>TeleStax </title>"));
+      System.out.println("Result: "+descriptor.getContentAsString());
+      assertTrue(descriptor.getContentAsString().contains("<title>RestComm - Home</title>"));
     }};
   }
   
   @Test public void testPost() throws URISyntaxException, IOException {
     new JavaTestKit(system) {{
       final ActorRef observer = getRef();
-      final URI uri = URI.create("http://www.telestax.com");
+      final URI uri = URI.create("http://www.restcomm.org");
       final String method = "POST";
       final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
       downloader.tell(request, observer);
@@ -79,7 +80,7 @@ public final class DownloaderTest {
       final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
       assertTrue(response.succeeded());
       final HttpResponseDescriptor descriptor = response.get();
-      assertTrue(descriptor.getContentAsString().contains("<title>TeleStax </title>"));
+      assertTrue(descriptor.getContentAsString().contains("<title>RestComm - Home</title>"));
     }};
   }
   

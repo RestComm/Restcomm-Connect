@@ -59,8 +59,6 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 
 	private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-	private static final String gender = "man";
-
 	private static final List<NameValuePair> parameters;
 	static {
 		parameters = new ArrayList<NameValuePair>();
@@ -151,6 +149,7 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 			throws ClientProtocolException, IOException, SpeechSynthesizerException {
 		final SpeechSynthesizerRequest request = (SpeechSynthesizerRequest)message;
 
+		final String gender = request.gender();
 		final String language = request.language();
 		final String text = request.text();
 
@@ -159,6 +158,10 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 			throw new IllegalArgumentException("There is no suitable language to synthesize " +
 					request.language());
 		}
+		
+		final String hash= HashGenerator.hashMessage(gender, language, text);
+		System.out.println(hash);
+		
 		final List<NameValuePair> query = new ArrayList<NameValuePair>();
 		query.addAll(parameters);
 		query.add(new BasicNameValuePair("hl", getLanguage(language)));
@@ -171,7 +174,6 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 		final HttpResponse response = client.execute(post);
 		final StatusLine line = response.getStatusLine();
 		final int status = line.getStatusCode();
-		final String hash= HashGenerator.hashMessage(gender, language, text);
 
 		if(status == HttpStatus.SC_OK) {
 

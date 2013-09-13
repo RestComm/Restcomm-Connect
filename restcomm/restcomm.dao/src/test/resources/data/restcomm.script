@@ -20,3 +20,7 @@ CREATE USER SA PASSWORD ""
 GRANT DBA TO SA
 SET WRITE_DELAY 10
 SET SCHEMA PUBLIC
+INSERT INTO "restcomm_clients" VALUES('CL673db011517d40528a5e78ce8fbf07e5','2013-09-13 11:36:24.916000000','2013-09-13 11:36:24.916000000','ACa60def3495a345e99973aeca0976be0c','2012-04-24','Alice','alice','1234',1,'http://127.0.0.1:8080/restcomm/demos/hello-world.xml','GET','http://127.0.0.1:8080/restcomm/demos/hello-world.xml','GET','AP2aa6d5236b704afeae960a222a481ea4','http://127.0.0.1:8080/restcomm/demos/hello-world.xml')
+INSERT INTO "restcomm_registrations" VALUES('RG6217b80f71e745cfb6d0c96973917979','2013-09-05 11:09:31.027000000','2013-09-05 11:09:31.027000000','2013-09-05 11:09:31.027000000','sip:tom@company.com','Tom_2013-09-05T11:09:31.027+03:00','tom_2013-09-05T11:09:31.027+03:00','TestUserAgent/1.0',3600,'sip:tom@company.com')
+INSERT INTO "restcomm_registrations" VALUES('RGb88e1f5349b74c82b6eba9ea095a8653','2013-09-13 11:35:07.862000000','2013-09-13 11:35:07.862000000','2013-09-13 11:35:07.862000000','sip:tom@company.com','Tom_2013-09-13T11:35:07.862+03:00','tom_2013-09-13T11:35:07.862+03:00','TestUserAgent/1.0',3600,'sip:tom@company.com')
+INSERT INTO "restcomm_registrations" VALUES('RGb8c6d068423b4b8ba5c705f25d2a5c83','2013-09-13 12:16:47.937000000','2013-09-13 12:16:47.937000000','2013-09-13 12:16:47.937000000','sip:tom@company.com','Tom_2013-09-13T12:16:47.937+03:00','tom_2013-09-13T12:16:47.937+03:00','TestUserAgent/1.0',3600,'sip:tom@company.com')
