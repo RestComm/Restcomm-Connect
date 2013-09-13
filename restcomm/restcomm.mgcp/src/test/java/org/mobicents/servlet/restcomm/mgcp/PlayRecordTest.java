@@ -31,7 +31,7 @@ public final class PlayRecordTest {
     super();
   }
   
-//  @Ignore
+  @Ignore
   @Test public void testFormatting() {
 	// We will used the builder pattern to create this message.
     final PlayRecord.Builder builder = PlayRecord.builder();
@@ -60,7 +60,7 @@ public final class PlayRecordTest {
     System.out.println("Signal Parameters: " + result + "\n");
   }
   
-//  @Ignore
+  @Ignore
   @Test public void testFormattingWithNoPrompts() {
 	// We will used the builder pattern to create this message.
     final PlayRecord.Builder builder = PlayRecord.builder();
@@ -76,7 +76,7 @@ public final class PlayRecordTest {
     System.out.println("Signal Parameters: " + result + "\n");
   }
   
-//  @Ignore
+  @Ignore
   @Test public void testFormattingWithMultiplePrompts() {
 	// We will used the builder pattern to create this message.
     final PlayRecord.Builder builder = PlayRecord.builder();
