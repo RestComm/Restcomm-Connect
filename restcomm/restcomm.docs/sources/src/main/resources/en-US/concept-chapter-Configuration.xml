@@ -17,7 +17,7 @@ RestComm is a robust, powerful platform that will facilitate building comprehens
 <title>Running RestComm on JBoss</title>
 <listitem>
 <para>
-Download <filename> TelScale-Restcomm-XX.XX.GA.zip </filename>
+Download <filename> TelScale-Restcomm-JBoss-AS7-XX.XX.GA.zip </filename>
 </para>
 </listitem>
 <listitem>
@@ -87,7 +87,7 @@ Start RestComm by running the following command
 </listitem>
 <listitem>
 <para>
-<filename> sudo ./run.sh </filename>
+<filename>sudo ./standalone.sh -c standalone-sip.xml</filename>
 </para>
 </listitem>
 
@@ -206,7 +206,7 @@ Start RestComm by running the following command
 </para>
 </listitem>
 <listitem>
-<para>If RestComm is correctly start on Tomcat, you will see an output similar to the one below </para>
+<para>If RestComm is correctly started on Tomcat, you will see an output similar to the one below </para>
 <screen>
 Started.
 2013-08-15 19:02:46,903 INFO  [Version] (main) 
@@ -236,7 +236,8 @@ Once you have the Media Server and RestComm started, you can now try out the dem
 
 <programlisting>
 <![CDATA[
-curl --data "PhoneNumber=1234&VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml&VoiceMethod=POST" http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+
 ]]>
 </programlisting>
  
@@ -246,7 +247,7 @@ If the command succeeds, the output will be similar to the one below
 
 <programlisting>
 <![CDATA[
-curl --data "PhoneNumber=1234&VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml&VoiceMethod=POST" http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
 
 {
   "sid": "PN0834628c131e4b66bc862ae0b21b7cfa",
@@ -288,6 +289,11 @@ You are ready to start exploring RestComm and building powerful communication ap
 Do you want to see more samples of what you can do with TelScale RestComm, visit our site at <ulink url="http:www.telestax.com">TeleStax.com </ulink>
 </para>
 
+
+<note>
+<title>Advanced Examples</title>
+<para>Please go to this chapter for more examples <xref linkend="advanced-examples"/>.</para>
+</note>
 </section>
 
 
@@ -303,7 +309,7 @@ Do you want to see more samples of what you can do with TelScale RestComm, visit
 	<note>
 		<para>TelScale RestComm provides a default set of plug-ins for the storage engine, fax service, SMS aggregator,
 		automatic speech recognition, and speech synthesis. All these services are pluggable and TelScale RestComm is not
-		limited to any service provider or software platform whom's services it consumes.</para>
+		limited to any service provider or software platformz.</para>
 	</note>	
 	<section>
 		<title>Runtime Settings</title>
@@ -649,7 +655,7 @@ Do you want to see more samples of what you can do with TelScale RestComm, visit
 	</section>
 	<section>
 		<title>Speech Recognizer</title>
-		<para>This speech recognizer turns speech in to text on behalf of TelScale Restcomm.</para>
+		<para>This speech recognizer turns speech into text on behalf of TelScale Restcomm.</para>
 		
 		<formalpara>
 			<title>Requirements</title>
@@ -671,12 +677,60 @@ Do you want to see more samples of what you can do with TelScale RestComm, visit
 				<tbody>
 					<row>
 						<entry>api-key</entry>
-						<entry>The Web API key provide by iSpeech. This is used as an authentication token for the service.</entry>
+						<entry>The Web API key provided by iSpeech. This is used as an authentication token for the service.</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
 	</section>
+
+
+	<section>
+		<title>Speech Synthesizer</title>
+		<para>The speech synthesizer turns text to speech on behalf of TelScale RestComm.</para>
+		
+		<formalpara>
+			<title>Requirements</title>
+			<para>The default speech synthesizer uses the TTS service provided by VoiceRSS. Therefore, an account must be created @
+			<ulink url="http://http://www.voicerss.org/">http://www.voicerss.org</ulink> before any text can be converted to
+			speech.</para>
+		</formalpara>
+		
+		<table frame='all'>
+			<title>VoiceRSS Speech Synthesizer Settings</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Element</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>service-root</entry>
+						<entry>The VoiceRSS service root URI.</entry>
+					</row>
+					 
+					<row>
+						<entry>apikey</entry>
+						<entry>The API key used to authenticate with the VoiceRSS.</entry>
+					</row>
+					<row>
+						<entry>languages</entry>
+						<entry>
+						  A list of male and female speakers for different languages. These can be replaced
+						  with other alternatives provided by VoiceRSS.
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</section>
+
+
+<!--
 	<section>
 		<title>Speech Synthesizer</title>
 		<para>The speech synthesizer turns text to speech on behalf of TelScale RestComm.</para>
@@ -727,5 +781,6 @@ Do you want to see more samples of what you can do with TelScale RestComm, visit
 			</tgroup>
 		</table>
 	</section>
+-->
 </section>
 </chapter>
