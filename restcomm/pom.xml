@@ -60,6 +60,19 @@
 		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
 	</scm>
 
+	<distributionManagement>
+		<repository>
+			<id>telscale-releases-repository</id>
+			<name>TelScale Releases Repository</name>
+			<url>http://telestax.artifactoryonline.com/telestax/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>telscale-snapshots-repository</id>
+			<name>TelScale Snapshots Repository</name>
+			<url>http://telestax.artifactoryonline.com/telestax/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
 		<module>restcomm.application</module>
