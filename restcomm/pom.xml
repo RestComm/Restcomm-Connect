@@ -54,6 +54,12 @@
 		</license>
 	</licenses>
 
+	<scm>
+		<connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
+		<developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
+		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
+	</scm>
+
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
 		<module>restcomm.application</module>
