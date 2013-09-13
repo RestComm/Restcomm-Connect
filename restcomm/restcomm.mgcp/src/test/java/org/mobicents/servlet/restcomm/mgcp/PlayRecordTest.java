@@ -44,6 +44,7 @@ public final class PlayRecordTest {
     builder.setEndInputKey("#");
     final PlayRecord playRecord = builder.build();
     final String result = playRecord.toString();
+    System.out.println(result);
     assertTrue("ip=hello.wav ri=recording.wav cb=true prt=10 pst=10 rlt=150 eik=#".equals(result));
     System.out.println("Signal Parameters: " + result + "\n");
   }

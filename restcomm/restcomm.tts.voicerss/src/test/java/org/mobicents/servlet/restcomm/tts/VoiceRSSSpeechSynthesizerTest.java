@@ -135,13 +135,19 @@ public final class VoiceRSSSpeechSynthesizerTest {
 
 	@SuppressWarnings("unchecked")
 	@Test 
-	public void testSynthesis() {
+	public void testSynthesisMan() {
 		new JavaTestKit(system) {{
 			final ActorRef observer = getRef();
 			String gender = "man";
+			String woman = "woman";
 			String language = "en";
 			String message = "Hello TTS World!";
+			
 			String hash = HashGenerator.hashMessage(gender,language,message);
+			String womanHash = HashGenerator.hashMessage(woman,language,message);
+			
+			assertTrue(!hash.equalsIgnoreCase(womanHash));
+			
 			final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender,language,message);
 			tts.tell(synthesize, observer);
 			final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
@@ -159,9 +165,38 @@ public final class VoiceRSSSpeechSynthesizerTest {
 			assertEquals("http://127.0.0.1:8080/restcomm/cache/"+hash+".wav",diskCacheResponse.get().toString());
 
 			FileUtils.deleteQuietly(new File(response.get()));
-
-
 		}};
 	}
 
+	@SuppressWarnings("unchecked")
+	@Test 
+	public void testSynthesisWoman() {
+		new JavaTestKit(system) {{
+			final ActorRef observer = getRef();
+			String gender = "woman";
+			String language = "en";
+			String message = "Hello TTS World!";
+			
+			String hash = HashGenerator.hashMessage(gender,language,message);
+			
+			final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender,language,message);
+			tts.tell(synthesize, observer);
+			final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+					SpeechSynthesizerResponse.class);
+			assertTrue(response.succeeded());
+
+			DiskCacheRequest diskCacheRequest = new DiskCacheRequest(response.get());
+			cache.tell(diskCacheRequest, observer);
+
+			final DiskCacheResponse diskCacheResponse = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+					DiskCacheResponse.class);
+			assertTrue(diskCacheResponse.succeeded());
+
+			assertEquals("file:/tmp/"+hash+".wav",response.get().toString());
+			assertEquals("http://127.0.0.1:8080/restcomm/cache/"+hash+".wav",diskCacheResponse.get().toString());
+
+			FileUtils.deleteQuietly(new File(response.get()));
+		}};
+	}
+	
 }
