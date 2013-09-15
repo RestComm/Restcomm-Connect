@@ -18,6 +18,8 @@ package org.mobicents.servlet.restcomm.http.client;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -46,7 +48,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class Downloader extends UntypedActor {
-  public Downloader() {
+
+	// Logger.
+	private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+	
+	
+	public Downloader() {
     super();
   }
   
@@ -77,6 +84,13 @@ public final class Downloader extends UntypedActor {
         }
       }
     } while(isRedirect(code));
+    if (isHttpError(code)) {
+    	String requestUrl = request.getRequestLine().getUri(); 
+    	String errorReason = response.getStatusLine().getReasonPhrase();
+    	String httpErrorMessage = String.format("Error while fetching http resource: %s \n Http error code: %d \n Http error message: %s", requestUrl, code, errorReason);
+    	logger.warning(httpErrorMessage);
+    	// TODO: Log a record for the Notifications API
+    }
     return response(request, response);
   }
   
@@ -86,6 +100,11 @@ public final class Downloader extends UntypedActor {
         HttpStatus.SC_SEE_OTHER == code ||
         HttpStatus.SC_TEMPORARY_REDIRECT == code;
   }
+  
+  private boolean isHttpError(final int code) {
+	  return (code >= 400);
+  }
+	  
   
   @Override public void onReceive(final Object message) throws Exception {
     final Class<?> klass = message.getClass();
