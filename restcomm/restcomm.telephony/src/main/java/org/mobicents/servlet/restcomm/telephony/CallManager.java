@@ -16,32 +16,27 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.toHex;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.servlet.sip.Address;
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipApplicationSessionEvent;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-
-import static javax.servlet.sip.SipServletResponse.*;
-
+import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
@@ -61,10 +56,23 @@ import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
 
-import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.*;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author ivelin.ivanov@telestax.com
  */
 public final class CallManager extends UntypedActor {
   private final ActorSystem system;
@@ -72,10 +80,17 @@ public final class CallManager extends UntypedActor {
   private final ActorRef conferences;
   private final ActorRef gateway;
   private final ActorRef sms;
-  private final SipFactory factory;
+  private final SipFactory sipFactory;
   private final DaoManager storage;
   
+  // p2pSessions store references to SIP Sessions of proxied peer to peer calls between registered clients
+  HashMap<SipSession, SipSession> b2buaSessions= new HashMap<SipSession, SipSession>();
+  
+  // configurable switch whether to use the To field in a SIP header to determine the callee address
+  // alternatively the Request URI can be used
   private boolean useTo;
+  
+  private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
   
   public CallManager(final Configuration configuration, final ActorSystem system,
       final ActorRef gateway, final ActorRef conferences, final ActorRef sms,
@@ -86,7 +101,7 @@ public final class CallManager extends UntypedActor {
     this.gateway = gateway;
     this.conferences = conferences;
     this.sms = sms;
-    this.factory = factory;
+    this.sipFactory = factory;
     this.storage = storage;
     final Configuration runtime = configuration.subset("runtime-settings");
     this.useTo = runtime.getBoolean("use-to");
@@ -107,7 +122,7 @@ public final class CallManager extends UntypedActor {
     return system.actorOf(new Props(new UntypedActorFactory() {
 		private static final long serialVersionUID = 1L;
 		@Override public UntypedActor create() throws Exception {
-          return new Call(factory, gateway);
+          return new Call(sipFactory, gateway);
 		}
     }));
   }
@@ -159,39 +174,13 @@ public final class CallManager extends UntypedActor {
         authenticate(request);
         return;
       } else {
-    	final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
-        builder.setConfiguration(configuration);
-        builder.setStorage(storage);
-        builder.setCallManager(self);
-        builder.setConferenceManager(conferences);
-        builder.setSmsService(sms);
-        builder.setAccount(client.getAccountSid());
-        builder.setVersion(client.getApiVersion());
-        final Account account = accounts.getAccount(client.getAccountSid());
-        builder.setEmailAddress(account.getEmailAddress());
-        final Sid sid = client.getVoiceApplicationSid();
-        if(sid != null) {
-          final Application application = applications.getApplication(sid);
-          builder.setUrl(application.getVoiceUrl());
-          builder.setMethod(application.getVoiceMethod());
-          builder.setFallbackUrl(application.getVoiceFallbackUrl());
-          builder.setFallbackMethod(application.getVoiceFallbackMethod());
-        } else {
-          builder.setUrl(client.getVoiceUrl());
-          builder.setMethod(client.getVoiceMethod());
-          builder.setFallbackUrl(client.getVoiceFallbackUrl());
-          builder.setFallbackMethod(client.getVoiceFallbackMethod());
-        }
-        final ActorRef interpreter = builder.build();
-        final ActorRef call = call();
-        final SipApplicationSession application = request.getApplicationSession();
-        application.setAttribute(Call.class.getName(), call);
-        call.tell(request, self);
-        interpreter.tell(new StartInterpreter(call), self);
-        return;
+    	// if the client has authenticated, try to redirect to the Client VoiceURL app
+    	// otherwise continue trying to process the Client invite
+    	if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
+    			return;
+    	}
       }
     }
-    // Try to see if the request is destined for an application we are hosting.
     if(useTo) {
       uri = (SipURI)request.getTo().getURI();
       id = uri.getUser();
@@ -199,8 +188,90 @@ public final class CallManager extends UntypedActor {
       uri = (SipURI)request.getRequestURI();
       id = uri.getUser();
     }
-    try {
-      // Format the destination to an E.164 phone number.
+    // Try to see if the request is destined for an application we are hosting.
+    if (redirectToHostedVoiceApp(self, request, accounts, applications, id)) {
+    	return;
+    // Next try to see if the request is destined to another registered client
+    } else {
+    	if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
+    		Client toClient = clients.getClient(id);
+    		if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
+                if (redirectToB2BUA(request, client, toClient)) {
+            		// if all goes well with proxying the invitation on to the next client
+            		// then we can end further processing of this INVITE
+            		return;
+                }
+    		}
+    	}
+    }
+    // We didn't find anyway to handle the call.
+    final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+    response.send();
+  }
+
+/**
+ * @param request
+ * @param client
+ * @param toClient
+ * @throws IOException
+ * @throws UnsupportedEncodingException
+ */
+private boolean redirectToB2BUA(final SipServletRequest request,
+		final Client client, Client toClient) throws IOException,
+		UnsupportedEncodingException {
+	request.getSession().setAttribute("lastRequest", request);
+	if(logger.isInfoEnabled()) {
+	        logger.info("B2BUA (p2p proxy): Got request:\n"
+	                        + request.getMethod());
+	        logger.info(String.format("B2BUA: Proxying a call between %s and %s", client.getUri(), toClient.getUri()));
+	}
+	
+	SipServletRequest outRequest = sipFactory.createRequest(request.getApplicationSession(),
+	                "INVITE", request.getFrom().getURI(), request.getTo().getURI());
+	String user = ((SipURI) request.getTo().getURI()).getUser();
+
+	final RegistrationsDao registrations = storage.getRegistrationsDao();
+	final Registration registration = registrations.getRegistration(user);
+	if(registration != null) {
+	    final String location = registration.getLocation();
+	    SipURI to;
+		try {
+			to = (SipURI)sipFactory.createURI(location);
+
+	        outRequest.setRequestURI(to);
+	        if(request.getContent() != null) {
+	                outRequest.setContent(request.getContent(), request.getContentType());
+	        }
+	        outRequest.send();
+	        b2buaSessions.put(request.getSession(), outRequest.getSession());
+	        b2buaSessions.put(outRequest.getSession(), request.getSession());
+	        return true; // successfully proxied INVITE between two registered clients
+		} catch (ServletParseException badUriEx) {
+	        if(logger.isInfoEnabled()) {
+	            logger.info(String.format("B2BUA: Error parsing Client Contact URI: %s", location), badUriEx);
+	        }
+		};
+	}
+	return false;
+}
+
+/**
+ * 
+ * Try to locate a hosted app corresponding to the callee/To address.
+ * If one is found, begin execution, otherwise return false;
+ * 
+ * @param self
+ * @param request
+ * @param accounts
+ * @param applications
+ * @param id
+ */
+private boolean redirectToHostedVoiceApp(final ActorRef self,
+		final SipServletRequest request, final AccountsDao accounts,
+		final ApplicationsDao applications, String id) {
+	boolean isFoundHostedApp = false;
+  	try {
+  	  // Format the destination to an E.164 phone number.
       final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
       final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(id, "US"),
           PhoneNumberFormat.E164);
@@ -241,13 +312,64 @@ public final class CallManager extends UntypedActor {
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self);
         interpreter.tell(new StartInterpreter(call), self);
-        return;
-      }
-    } catch(final NumberParseException ignored) { }
-    // We didn't find anyway to handle the call.
-    final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
-    response.send();
-  }
+        isFoundHostedApp = true;
+      } 
+  	} catch(final NumberParseException notANumber) {
+        isFoundHostedApp = false;
+    };
+    return isFoundHostedApp;
+}
+
+/**
+ * 
+ *  If there is VoiceUrl provided for a Client configuration,
+ *  try to begin execution of the RCML app, otherwise return false.
+ * 
+ * 
+ * @param self
+ * @param request
+ * @param accounts
+ * @param applications
+ * @param client
+ */
+private boolean redirectToClientVoiceApp(final ActorRef self,
+		final SipServletRequest request, final AccountsDao accounts,
+		final ApplicationsDao applications, final Client client) {
+	URI clientAppVoiceUril = client.getVoiceUrl();
+	boolean isClientManaged = (clientAppVoiceUril != null); 
+	if (isClientManaged) {
+		final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+	    builder.setConfiguration(configuration);
+	    builder.setStorage(storage);
+	    builder.setCallManager(self);
+	    builder.setConferenceManager(conferences);
+	    builder.setSmsService(sms);
+	    builder.setAccount(client.getAccountSid());
+	    builder.setVersion(client.getApiVersion());
+	    final Account account = accounts.getAccount(client.getAccountSid());
+	    builder.setEmailAddress(account.getEmailAddress());
+	    final Sid sid = client.getVoiceApplicationSid();
+	    if(sid != null) {
+	      final Application application = applications.getApplication(sid);
+	      builder.setUrl(application.getVoiceUrl());
+	      builder.setMethod(application.getVoiceMethod());
+	      builder.setFallbackUrl(application.getVoiceFallbackUrl());
+	      builder.setFallbackMethod(application.getVoiceFallbackMethod());
+	    } else {
+		  builder.setUrl(clientAppVoiceUril);
+		  builder.setMethod(client.getVoiceMethod());
+		  builder.setFallbackUrl(client.getVoiceFallbackUrl());
+		  builder.setFallbackMethod(client.getVoiceFallbackMethod());
+	    }
+	    final ActorRef interpreter = builder.build();
+	    final ActorRef call = call();
+	    final SipApplicationSession application = request.getApplicationSession();
+	    application.setAttribute(Call.class.getName(), call);
+	    call.tell(request, self);
+	    interpreter.tell(new StartInterpreter(call), self);
+     }
+	return isClientManaged;
+}
   
   private boolean permitted(final String authorization, final String method) {
   	final Map<String, String> map = toMap(authorization);
@@ -296,6 +418,8 @@ public final class CallManager extends UntypedActor {
         invite(request);
       } else if("OPTIONS".equals(method)) {
         pong(request);
+      } else if("ACK".equals(method)) {
+          ack(request);
       } else if("CANCEL".equals(method) || "BYE".equals(method)) {
         inDialogRequest(request);
       }
@@ -316,7 +440,19 @@ public final class CallManager extends UntypedActor {
     }
   }
   
-  private void execute(final Object message) {
+  private void ack(SipServletRequest request) throws IOException {
+      SipSession b2buaSession = b2buaSessions.get(request.getSession());
+      // if this is not an ACK that belongs to a B2BUA session, then we proxy it to the other client
+      if (b2buaSession != null) { 	  
+	      SipServletResponse response = (SipServletResponse) b2buaSession.getAttribute("lastResponse");
+	      response.createAck().send();
+	      SipApplicationSession sipApplicationSession = request.getApplicationSession();
+	      // Defaulting the sip application session to 1h
+	      sipApplicationSession.setExpires(60);
+      }
+}
+
+private void execute(final Object message) {
     final ExecuteCallScript request = (ExecuteCallScript)message;
     final ActorRef self = self();
     final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
@@ -341,7 +477,7 @@ public final class CallManager extends UntypedActor {
     final CreateCall request = (CreateCall)message;
     final Configuration runtime = configuration.subset("runtime-settings");
     final String uri = runtime.getString("outbound-proxy-uri");
-    final SipURI from = factory.createSipURI(request.from(), uri);
+    final SipURI from = sipFactory.createSipURI(request.from(), uri);
     SipURI to = null;
     switch(request.type()) {
       case CLIENT: {
@@ -349,18 +485,18 @@ public final class CallManager extends UntypedActor {
         final Registration registration = registrations.getRegistration(request.to());
         if(registration != null) {
           final String location = registration.getLocation();
-          to = (SipURI)factory.createURI(location);
+          to = (SipURI)sipFactory.createURI(location);
         } else {
           throw new NullPointerException(request.to() + " is not currently registered.");
         }
         break;
       }
       case PSTN: {
-        to = factory.createSipURI(request.to(), uri);
+        to = sipFactory.createSipURI(request.to(), uri);
         break;
       }
       case SIP: {
-        to = (SipURI)factory.createURI(request.to());
+        to = (SipURI)sipFactory.createURI(request.to());
         break;
       }
     }
@@ -372,20 +508,50 @@ public final class CallManager extends UntypedActor {
     return call;
   }
   
-  public void inDialogRequest(final Object message) {
+  public void inDialogRequest(final Object message) throws IOException {
     final ActorRef self = self();
     final SipServletRequest request = (SipServletRequest)message;
     final SipApplicationSession application = request.getApplicationSession();
-    final ActorRef call = (ActorRef)application.getAttribute(Call.class.getName());
-    call.tell(request, self);
+    
+    SipSession b2buaSession = b2buaSessions.get(request.getSession());
+    // if this response is coming from a client that is in a p2p session with another registered client
+    // we will just proxy the response
+    if (b2buaSession != null) {
+	    final String method = request.getMethod();    
+	    if(logger.isInfoEnabled()) {
+	        logger.info(String.format("B2BUA: Got in dialog request: \n %s", request));
+	    }
+	    b2buaSession.createRequest(method).send();
+    } else {
+	    final ActorRef call = (ActorRef)application.getAttribute(Call.class.getName());
+	    call.tell(request, self);
+    }
   }
   
-  public void response(final Object message) {
+  public void response(final Object message) throws UnsupportedEncodingException, IOException {
 	final ActorRef self = self();
 	final SipServletResponse response = (SipServletResponse)message;
     final SipApplicationSession application = response.getApplicationSession();
-    final ActorRef call = (ActorRef)application.getAttribute(Call.class.getName());
-    call.tell(response, self);
+    
+    SipSession b2buaSession = b2buaSessions.get(response.getSession());
+    // if this response is coming from a client that is in a p2p session with another registered client
+    // we will just proxy the response
+    if (b2buaSession != null) {
+	    if(logger.isInfoEnabled()) {
+	        logger.info(String.format("B2BUA: Got response: \n %s", response));
+	    }
+		response.getSession().setAttribute("lastResponse", response);
+		SipServletRequest request = (SipServletRequest) b2buaSession.getAttribute("lastRequest");
+		SipServletResponse resp = request.createResponse(response.getStatus());
+		if(response.getContent() != null) {
+			resp.setContent(response.getContent(), response.getContentType());
+		}
+		resp.send();    
+    } else {
+    	// otherwise the response is coming back to a Voice app hosted by Restcomm
+	    final ActorRef call = (ActorRef)application.getAttribute(Call.class.getName());
+	    call.tell(response, self);
+    }
   }
   
   public void timeout(final Object message) {
