@@ -16,8 +16,8 @@
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
 	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
-	<property name="telscale.restcomm.release.version" value="6.1.1-SNAPSHOT"/>
-	<property name="telscale.restcomm.branch.name" value="ts11"/>
+	<property name="telscale.restcomm.release.version" value="6.1.2-SNAPSHOT"/>
+	<property name="telscale.restcomm.branch.name" value="ts12"/>
 	
 	<!--Telscale binaries versions-->
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
