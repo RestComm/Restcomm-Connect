@@ -178,7 +178,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
   
   private void writeSmsMessages(final Account account, final HierarchicalStreamWriter writer) {
     writer.startNode("SMSMessages");
-    writer.setValue(prefix(account) + "/SMSMessages");
+    writer.setValue(prefix(account) + "/SMS/Messages");
     writer.endNode();
   }
   
