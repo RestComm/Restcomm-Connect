@@ -227,7 +227,9 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(ringing, noAnswer));
 		transitions.add(new Transition(ringing, updatingRemoteConnection));
 		transitions.add(new Transition(ringing, acquiringMediaGatewayInfo));
+		transitions.add(new Transition(ringing, failingBusy));
 		transitions.add(new Transition(failingNoAnswer, noAnswer));
+		transitions.add(new Transition(failingBusy, busy));
 		transitions.add(new Transition(canceling, canceled));
 		transitions.add(new Transition(updatingRemoteConnection, inProgress));
 		transitions.add(new Transition(updatingRemoteConnection, closingRemoteConnection));
@@ -853,8 +855,12 @@ public final class Call extends UntypedActor {
 			final SipServletResponse response = (SipServletResponse)message;
 			//Issue 99: http://www.google.com/url?q=https://bitbucket.org/telestax/telscale-restcomm/issue/99/dial-uri-fails&usd=2&usg=ALhdy29vtLfDNXNpjTxYYp08YRatKfV9Aw
 			if(response.getStatus()==SipServletResponse.SC_OK && 
-					(OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)))
-				response.createAck().send();
+					(OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction))){
+				SipServletRequest ack = response.createAck();
+				ack.send();
+				logger.info("Just sent out ACK : "+ack.toString());
+			}
+				
 			final String externalIp = invite.getInitialRemoteAddr();
 			final byte[] sdp = response.getRawContent();
 			final String answer = patch(sdp, externalIp);
@@ -1019,6 +1025,17 @@ public final class Call extends UntypedActor {
 					observer.tell(event, source);
 				}
 				
+			} else if(message instanceof SipServletResponse){
+				final SipServletResponse resp = (SipServletResponse)message;
+				if(resp.equals(SipServletResponse.SC_BUSY_HERE) || 
+						resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)){
+					// Notify the observers.
+					external = CallStateChanged.State.BUSY;
+					final CallStateChanged event = new CallStateChanged(external);
+					for(final ActorRef observer : observers) {
+						observer.tell(event, source);
+					}
+				}
 			}
 			if(remoteConn != null) {
 				remoteConn.tell(new CloseConnection(), source);

@@ -601,6 +601,7 @@ public final class VoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(finishConferencing, hangingUp));
 		transitions.add(new Transition(finishConferencing, finished));
 		transitions.add(new Transition(hangingUp, finished));
+		transitions.add(new Transition(hangingUp, finishDialing));
 		// Initialize the FSM.
 		this.fsm = new FiniteStateMachine(uninitialized, transitions);
 		// Initialize the runtime stuff.
@@ -864,6 +865,8 @@ public final class VoiceInterpreter extends UntypedActor {
 				} else if(!forking.equals(state) || call == sender()) {
 					fsm.transition(message, finished);
 				}
+			} else if(CallStateChanged.State.BUSY == event.state()){
+					fsm.transition(message, finishDialing);
 			}
 		} else if(CallManagerResponse.class.equals(klass)) {
 			final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>)message;
