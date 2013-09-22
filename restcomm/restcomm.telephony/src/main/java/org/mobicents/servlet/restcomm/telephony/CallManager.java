@@ -89,7 +89,7 @@ public final class CallManager extends UntypedActor {
   
   private static final String B2BUA_LAST_RESPONSE = "lastResponse";
   private static final String B2BUA_LAST_REQUEST = "lastRequest";
-  private static final String LINKED_SESSION = "linkedSession";  
+  private static final String B2BUA_LINKED_SESSION = "linkedSession";  
   
   private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
   
@@ -248,8 +248,8 @@ private boolean redirectToB2BUA(final SipServletRequest request,
 	        }
 	        final SipSession outgoingSession = outRequest.getSession();
 	        if(request.isInitial()) {
-	        	incomingSession.setAttribute(LINKED_SESSION, outgoingSession);
-	        	outgoingSession.setAttribute(LINKED_SESSION, incomingSession);
+	        	incomingSession.setAttribute(B2BUA_LINKED_SESSION, outgoingSession);
+	        	outgoingSession.setAttribute(B2BUA_LINKED_SESSION, incomingSession);
 	        }
 	        outgoingSession.setAttribute(B2BUA_LAST_REQUEST, outRequest);	        
 	        outRequest.send();
@@ -531,7 +531,7 @@ private void execute(final Object message) {
 	    if(logger.isInfoEnabled()) {
 	        logger.info(String.format("B2BUA: Got CANCEL request: \n %s", request));
 	    }
-	    SipServletRequest originalRequest = (SipServletRequest) linkedB2BUASession.getAttribute(LINKED_SESSION);
+	    SipServletRequest originalRequest = (SipServletRequest) linkedB2BUASession.getAttribute(B2BUA_LINKED_SESSION);
 	    originalRequest.createCancel().send();
     } else {
 	    final ActorRef call = (ActorRef)application.getAttribute(Call.class.getName());
@@ -593,7 +593,7 @@ private void execute(final Object message) {
   }
 
   private SipSession getLinkedSession(SipServletMessage message) {
-	  return (SipSession)message.getSession().getAttribute(LINKED_SESSION);
+	  return (SipSession)message.getSession().getAttribute(B2BUA_LINKED_SESSION);
   }  
   
 
