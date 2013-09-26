@@ -1,175 +1,226 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.telestax.servlet</groupId>
-    <artifactId>restcomm</artifactId>
-    <version>6.1.2-TelScale-SNAPSHOT</version>
-  </parent>
-  
-  <artifactId>restcomm.http</artifactId>
-  <name>restcomm.http</name>
-  <url>http://maven.apache.org</url>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  
-  <dependencies>
-  
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-api</artifactId>
-	</dependency>
-
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-log4j12</artifactId>
-	</dependency>
-
-	<dependency>
-		<groupId>org.apache.shiro</groupId>
-		<artifactId>shiro-core</artifactId>
-	</dependency>
-
-	<dependency>
-		<groupId>org.apache.shiro</groupId>
-		<artifactId>shiro-web</artifactId>
-	</dependency>
-
-	<dependency>
-		<groupId>com.google.code.gson</groupId>
-		<artifactId>gson</artifactId>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.googlecode.libphonenumber</groupId>
-		<artifactId>libphonenumber</artifactId>
-	</dependency>
-	
-	<dependency>
-		<groupId>org.apache.tomcat</groupId>
-		<artifactId>servlet-api</artifactId>
-		<scope>provided</scope>
-	</dependency>
-
-	<dependency>
-		<groupId>com.sun.jersey</groupId>
-		<artifactId>jersey-server</artifactId>
-	</dependency>
-
-	<dependency>
-		<groupId>com.sun.jersey</groupId>
-		<artifactId>jersey-client</artifactId>
-	</dependency>
-
-	<dependency>
-		<groupId>com.sun.jersey</groupId>
-		<artifactId>jersey-servlet</artifactId>
-		<version>${jersey.version}</version>
-	</dependency>
-
-	<dependency>
-		<groupId>com.thoughtworks.xstream</groupId>
-		<artifactId>xstream</artifactId>
-	</dependency>
-	
-	<dependency>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
 		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.commons</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
+		<artifactId>restcomm</artifactId>
+		<version>6.1.2-TelScale-SNAPSHOT</version>
+	</parent>
 
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.dao</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.asr</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.tts.api</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.sms.api</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.telephony.api</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<!-- Testing -->
-	
-	<dependency>
-		<groupId>junit</groupId>
-		<artifactId>junit</artifactId>
-		<scope>test</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>org.scalatest</groupId>
-		<artifactId>scalatest_2.9.1</artifactId>
-		<scope>test</scope>
-	</dependency>
-		
-	<dependency>
-		<groupId>com.typesafe.akka</groupId>
-		<artifactId>akka-testkit_2.10</artifactId>
-		<scope>test</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>hsqldb</groupId>
-		<artifactId>hsqldb</artifactId>
-		<scope>test</scope>
-	</dependency>
-			
-	<dependency>
-		<groupId>org.mobicents.arquillian.container</groupId>
-		<artifactId>mss-tomcat-embedded-6</artifactId>
-		<scope>test</scope>
-	</dependency>
+	<artifactId>restcomm.http</artifactId>
+	<name>restcomm.http</name>
+	<url>http://maven.apache.org</url>
 
-	<dependency>
-		<groupId>org.jboss.arquillian.junit</groupId>
-		<artifactId>arquillian-junit-container</artifactId>
-		<scope>test</scope>
-	</dependency>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
-	<dependency>
-		<groupId>org.jboss.shrinkwrap.resolver</groupId>
-		<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-		<scope>test</scope>
-	</dependency>
+	<dependencies>
 
-	<dependency>
-		<groupId>org.jboss.shrinkwrap.resolver</groupId>
-		<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
-		<scope>test</scope>
-	</dependency>
-            
-    <dependency>
-		<groupId>org.cafesip.sipunit</groupId>
-		<artifactId>sipunit</artifactId>
-		<scope>test</scope>
-	</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
 
-  </dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.googlecode.libphonenumber</groupId>
+			<artifactId>libphonenumber</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-client</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-servlet</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.asr</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.sms.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.telephony.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Testing -->
+
+		<dependency>
+			<groupId>javax.sip</groupId>
+			<artifactId>jain-sip-ri</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-tomcat-jboss4</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>sip-servlets-application-router</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>coyote</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>jasper</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_2.9.1</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-testkit_2.10</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.arquillian.container</groupId>
+			<artifactId>mss-tomcat-embedded-6</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.arquillian.junit</groupId>
+			<artifactId>arquillian-junit-container</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.cafesip.sipunit</groupId>
+			<artifactId>sipunit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>fluent-hc</artifactId>
+			<version>4.3</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
 </project>

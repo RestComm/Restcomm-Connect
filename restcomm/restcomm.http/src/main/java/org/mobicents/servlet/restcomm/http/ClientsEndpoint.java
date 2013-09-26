@@ -163,8 +163,14 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
     try { validate(data); } catch(final NullPointerException exception) { 
       return status(BAD_REQUEST).entity(exception.getMessage()).build();
     }
-    final Client client = createFrom(new Sid(accountSid), data);
-    dao.addClient(client);
+    
+    //Issue 109: https://bitbucket.org/telestax/telscale-restcomm/issue/109
+    Client client = dao.getClient(data.getFirst("Login"));
+    if (client == null){
+    	client = createFrom(new Sid(accountSid), data);
+    	dao.addClient(client);
+    } 
+    
     if(APPLICATION_XML_TYPE == responseType) {
       final RestCommResponse response = new RestCommResponse(client);
   	  return ok(xstream.toXML(response), APPLICATION_XML).build();
