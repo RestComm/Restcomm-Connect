@@ -124,13 +124,16 @@ public class ClientsEndpointTest {
 
 	//Issue 109: https://bitbucket.org/telestax/telscale-restcomm/issue/109
 	@Test
-	public void createClientTest() throws ClientProtocolException, IOException, ParseException {
+	public void createClientTest() throws ClientProtocolException, IOException, ParseException, InterruptedException {
 
 		SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-		String clientSID = createClient("bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml"); 
-		String clientSID2 = createClient("bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml");
 		
+		String clientSID = createClient("bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml");
 		assertNotNull(clientSID);
+		
+		Thread.sleep(1000);
+		
+		String clientSID2 = createClient("bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml");
 		assertNotNull(clientSID2);
 
 		assertTrue(clientSID.equalsIgnoreCase(clientSID2));
@@ -140,6 +143,26 @@ public class ClientsEndpointTest {
 		assertTrue(bobPhone.unregister(bobContact, 0));
 	}
 
+	@Test
+	public void createClientTestNoVoiceUrl() throws ClientProtocolException, IOException, ParseException, InterruptedException {
+
+		SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		
+		String clientSID = createClient("bob","1234",null);
+		assertNotNull(clientSID);
+		
+		Thread.sleep(1000);
+		
+		String clientSID2 = createClient("bob","1234",null);
+		assertNotNull(clientSID2);
+
+		assertTrue(clientSID.equalsIgnoreCase(clientSID2));
+		assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+		bobContact = "sip:mobile@127.0.0.1:5090";
+		assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+		assertTrue(bobPhone.unregister(bobContact, 0));
+	}
+	
 	@Deployment(name="ClientsEndpointTest", managed=true, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
 		final WebArchive archive = ShrinkWrapMaven.resolver()
