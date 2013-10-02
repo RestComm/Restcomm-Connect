@@ -6,21 +6,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.sip.address.SipURI;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -51,7 +40,6 @@ public class ClientsEndpointTest {
 	private Deployer deployer;
 	@ArquillianResource
 	URL deploymentUrl;
-	String endpoint;
 
 	private static SipStackTool tool1;
 	private SipStack bobSipStack;
@@ -67,8 +55,6 @@ public class ClientsEndpointTest {
 	public void before() throws Exception {
 		bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
 		bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
-
-		endpoint = getEndpoint(deploymentUrl.toString());
 	}
 
 	@After public void after() throws Exception {
@@ -80,47 +66,6 @@ public class ClientsEndpointTest {
 		}
 	}
 
-	private String getEndpoint(String deploymentUrl) {
-		if (deploymentUrl.endsWith("/")) {
-			deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-		}
-		return deploymentUrl;
-	}
-
-	private String createClient(String username, String password, String voiceUrl) throws ClientProtocolException, IOException{
-		String url = "http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/"
-				+ "restcomm.application-6.1.2-TelScale-SNAPSHOT/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json";
-		
-		String clientSid = null;
-		
-		CloseableHttpClient httpclient = HttpClients.createDefault();
-
-		HttpPost httpPost = new HttpPost(url);
-		List <NameValuePair> nvps = new ArrayList <NameValuePair>();
-		nvps.add(new BasicNameValuePair("Login", username));
-		nvps.add(new BasicNameValuePair("Password", password));
-		
-		if(voiceUrl != null)
-			nvps.add(new BasicNameValuePair("VoiceUrl", voiceUrl));
-		
-		httpPost.setEntity(new UrlEncodedFormEntity(nvps));
-		CloseableHttpResponse response = httpclient.execute(httpPost);
-
-		if(response.getStatusLine().getStatusCode()==200){
-			HttpEntity entity = response.getEntity();
-			String res = EntityUtils.toString(entity);
-			System.out.println("Entity: "+res);
-			
-			res = res.replaceAll("\\{", "").replaceAll("\\}", "");
-			String[] components = res.split(",");
-			clientSid = (components[0].split(":")[1]).replaceAll("\"", "");
-		}
-		
-		httpPost.releaseConnection();
-		
-		return clientSid;
-	}
-
 
 	//Issue 109: https://bitbucket.org/telestax/telscale-restcomm/issue/109
 	@Test
@@ -128,12 +73,12 @@ public class ClientsEndpointTest {
 
 		SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 		
-		String clientSID = createClient("bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml");
+		String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml");
 		assertNotNull(clientSID);
 		
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		
-		String clientSID2 = createClient("bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml");
+		String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(),"bob","1234","http://127.0.0.1:8080/restcomm/demos/welcome.xml");
 		assertNotNull(clientSID2);
 
 		assertTrue(clientSID.equalsIgnoreCase(clientSID2));
@@ -148,12 +93,12 @@ public class ClientsEndpointTest {
 
 		SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 		
-		String clientSID = createClient("bob","1234",null);
+		String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(),"bob","1234",null);
 		assertNotNull(clientSID);
 		
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		
-		String clientSID2 = createClient("bob","1234",null);
+		String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(),"bob","1234",null);
 		assertNotNull(clientSID2);
 
 		assertTrue(clientSID.equalsIgnoreCase(clientSID2));

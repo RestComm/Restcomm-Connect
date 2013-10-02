@@ -48,8 +48,8 @@ import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
-import org.mobicents.servlet.restcomm.util.B2BUAHelper;
-import org.mobicents.servlet.restcomm.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
+import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
