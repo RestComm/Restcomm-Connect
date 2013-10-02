@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.util;
+package org.mobicents.servlet.restcomm.telephony.util;
 
 import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
 import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.toHex;
@@ -31,6 +31,7 @@ import javax.servlet.sip.SipURI;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Client;
+import org.mobicents.servlet.restcomm.util.DigestAuthentication;
 
 
 /**

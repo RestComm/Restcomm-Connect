@@ -23,11 +23,12 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
+ * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
+ * 
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
@@ -50,19 +51,23 @@ public class CallTestDial {
 	private static SipStackTool tool2;
 	private static SipStackTool tool3;
 	private static SipStackTool tool4;
-
+	
+	//Bob is a simple SIP Client. Will not register with Restcomm
 	private SipStack bobSipStack;
 	private SipPhone bobPhone;
 	private String bobContact = "sip:bob@127.0.0.1:5090";
 
+	//Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML of the VoiceURL will be executed.
 	private SipStack aliceSipStack;
 	private SipPhone alicePhone;
 	private String aliceContact = "sip:alice@127.0.0.1:5091";
 
+	//Henrique is a simple SIP Client. Will not register with Restcomm
 	private SipStack henriqueSipStack;
 	private SipPhone henriquePhone;
 	private String henriqueContact = "sip:henrique@127.0.0.1:5092";
 
+	//George is a simple SIP Client. Will not register with Restcomm
 	private SipStack georgeSipStack;
 	private SipPhone georgePhone;
 	private String georgeContact = "sip:+131313@127.0.0.1:5070";	
@@ -488,7 +493,7 @@ public class CallTestDial {
 
 	@Deployment(name="CallTestDial", managed=false, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
-		String version  = "6.1.1-TelScale-SNAPSHOT";
+		String version = "6.1.2-TelScale-SNAPSHOT";
 		final WebArchive archive = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.application:war:" + version)
 				.withoutTransitivity().asSingle(WebArchive.class);
