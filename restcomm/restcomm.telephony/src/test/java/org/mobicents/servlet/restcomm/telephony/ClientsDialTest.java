@@ -66,25 +66,25 @@ public class ClientsDialTest {
 	private SipPhone dimitriPhone;
 	private String dimitriContact = "sip:dimitri@127.0.0.1:5093";
 	private String dimitriRestcommClientSid;
-	
+
 	//Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML of the VoiceURL will be executed.
 	private SipStack aliceSipStack;
 	private SipPhone alicePhone;
 	private String aliceContact = "sip:alice@127.0.0.1:5091";
-	
+
 	@BeforeClass 
 	public static void beforeClass() throws Exception {
 		tool1 = new SipStackTool("ClientsDialTest1");
 		tool2 = new SipStackTool("ClientsDialTest2");
 		tool3 = new SipStackTool("ClientsDialTest3");
 	}
-	
+
 	@Before 
 	public void before() throws Exception {
 
 		aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1","5091","127.0.0.1:5080");
 		alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
-		
+
 		mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
 		mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
 
@@ -93,7 +93,7 @@ public class ClientsDialTest {
 
 		mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria" , "1234", null);
 		dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "dimitri" , "1234", null);
-		
+
 	}
 
 	@After public void after() throws Exception {
@@ -118,68 +118,70 @@ public class ClientsDialTest {
 			dimitriPhone.dispose();
 		}		
 	}
-	
-	
+
+
 	@Test
 	public void testRegisterClients() throws ParseException, InterruptedException{
 
 		assertNotNull(mariaRestcommClientSid);
 		assertNotNull(dimitriRestcommClientSid);
-		
+
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
-		
+
 		assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 		assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 3600, 3600));
 		assertTrue(dimitriPhone.register(uri, "dimitri", "1234", dimitriContact, 3600, 3600));
-		
+
 		Thread.sleep(1000);
-		
+
 		assertTrue(alicePhone.unregister(aliceContact, 0));
 		assertTrue(mariaPhone.unregister(mariaContact, 0));
 		assertTrue(dimitriPhone.unregister(dimitriContact, 0));
 	}
-	
+
 	@Test
 	public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
 		assertNotNull(mariaRestcommClientSid);
 		assertNotNull(dimitriRestcommClientSid);
-		
+
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
-		
+
 		assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-		Thread.sleep(1000);
+		Thread.sleep(3000);
 		assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 3600, 3600));
-		Thread.sleep(1000);
+		Thread.sleep(3000);
 		assertTrue(dimitriPhone.register(uri, "dimitri", "1234", dimitriContact, 3600, 3600));
+		Thread.sleep(3000);
+
 		Credential c = new Credential("127.0.0.1", "maria", "1234");
 		mariaPhone.addUpdateCredential(c);
-		
+
 		Thread.sleep(1000);
-		
+
 		//Maria initiates a call to Dimitri
 		final SipCall mariaCall = mariaPhone.createSipCall();
 		mariaCall.initiateOutgoingCall(mariaContact, dimitriContact, null, body, "application", "sdp", null, null);
 		assertLastOperationSuccess(mariaCall);
 		assertTrue(mariaCall.waitForAuthorisation(3000));
-		
+
 		//Start a new thread for Dimitri to wait disconnect
 		new Thread( new Runnable() {
 			@Override
 			public void run() {
 				final SipCall dimitriCall = dimitriPhone.createSipCall();
 				dimitriCall.listenForIncomingCall();
-				
+
 				assertTrue(dimitriCall.waitForIncomingCall(3000));
 				assertTrue(dimitriCall.sendIncomingCallResponse(180, "Ringing", 1800));
 				assertTrue(dimitriCall.sendIncomingCallResponse(200, "OK", 1800));
-				
+
 			}
 		}).start();
 
 
-		
-		
+
+
 		assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
 		int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
 		assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
@@ -195,9 +197,9 @@ public class ClientsDialTest {
 		assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
 
 		assertTrue(mariaCall.disconnect());
-		
+
 	}
-	
+
 	@Deployment(name="ClientsDialTest", managed=true, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
 		String version = "6.1.2-TelScale-SNAPSHOT";
@@ -289,5 +291,5 @@ public class ClientsDialTest {
 		archive.addAsWebResource("dial-number-entry.xml");
 		return archive;
 	}
-	
+
 }
