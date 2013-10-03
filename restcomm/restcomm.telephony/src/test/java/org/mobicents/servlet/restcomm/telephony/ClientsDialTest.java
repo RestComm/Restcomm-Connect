@@ -26,6 +26,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,7 +35,7 @@ import org.junit.runner.RunWith;
  * 
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-@RunWith(Arquillian.class)
+//@RunWith(Arquillian.class)
 public class ClientsDialTest {
 
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
@@ -120,7 +121,7 @@ public class ClientsDialTest {
 	}
 
 
-	@Test
+	@Test @Ignore
 	public void testRegisterClients() throws ParseException, InterruptedException{
 
 		assertNotNull(mariaRestcommClientSid);
@@ -139,7 +140,7 @@ public class ClientsDialTest {
 		assertTrue(dimitriPhone.unregister(dimitriContact, 0));
 	}
 
-	@Test
+	@Test @Ignore
 	public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
 		assertNotNull(mariaRestcommClientSid);
