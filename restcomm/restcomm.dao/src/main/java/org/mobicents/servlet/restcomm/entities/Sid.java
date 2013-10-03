@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.entities;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.apache.shiro.crypto.hash.Md5Hash;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
@@ -55,6 +56,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 	  return false;
 	}
 	return true;
+  }
+  
+  //Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
+  public static Sid generate(final Type type, String string){
+	  String token = new Md5Hash(string).toString();
+	  switch(type) {
+	  case ACCOUNT: {
+		  return new Sid("AC" + token);
+	  }
+	  default: {
+		  return generate(type);
+	  }
+	  }
   }
   
   public static Sid generate(final Type type) {

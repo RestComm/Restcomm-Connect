@@ -90,9 +90,13 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
   
   private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
     validate(data);
-    final Sid sid = Sid.generate(Sid.Type.ACCOUNT);
+    
     final DateTime now = DateTime.now();
     final String emailAddress = data.getFirst("EmailAddress");
+    
+    //Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
+    final Sid sid = Sid.generate(Sid.Type.ACCOUNT, emailAddress);
+    
     String friendlyName = emailAddress;
     if(data.containsKey("FriendlyName")) {
       friendlyName = data.getFirst("FriendlyName");
