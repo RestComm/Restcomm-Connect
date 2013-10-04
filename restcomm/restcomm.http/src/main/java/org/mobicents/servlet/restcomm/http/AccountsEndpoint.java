@@ -181,29 +181,34 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
   }
   
   protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-    final Subject subject = SecurityUtils.getSubject();
-    final Sid sid = new Sid((String)subject.getPrincipal());
-    Account account = null;
-    try { account = createFrom(sid, data); } catch(final NullPointerException exception) {
-      return status(BAD_REQUEST).entity(exception.getMessage()).build();
-    }
-    if(subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts"))) {
-      final Account parent = dao.getAccount(sid);
-      if(!subject.hasRole("Administrator") || !data.containsKey("Role")) {
-        account = account.setRole(parent.getRole());
-      }
-      dao.addAccount(account);
-    } else {
-      return status(UNAUTHORIZED).build();
-    }
-    if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(account), APPLICATION_JSON).build();
-    } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(account);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else {
-      return null;
-    }
+	  final Subject subject = SecurityUtils.getSubject();
+	  final Sid sid = new Sid((String)subject.getPrincipal());
+	  Account account = null;
+	  try { account = createFrom(sid, data); } catch(final NullPointerException exception) {
+		  return status(BAD_REQUEST).entity(exception.getMessage()).build();
+	  }
+	  
+	  //If Account already exists don't add it again
+	  if (dao.getAccount(account.getSid()) == null){
+		  if(subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts"))) {
+			  final Account parent = dao.getAccount(sid);
+			  if(!subject.hasRole("Administrator") || !data.containsKey("Role")) {
+				  account = account.setRole(parent.getRole());
+			  }
+			  dao.addAccount(account);
+		  } else {
+			  return status(UNAUTHORIZED).build();
+		  }
+	  }
+	  
+	  if(APPLICATION_JSON_TYPE == responseType) {
+		  return ok(gson.toJson(account), APPLICATION_JSON).build();
+	  } else if(APPLICATION_XML_TYPE == responseType) {
+		  final RestCommResponse response = new RestCommResponse(account);
+		  return ok(xstream.toXML(response), APPLICATION_XML).build();
+	  } else {
+		  return null;
+	  }
   }
   
   private Account update(final Account account, final MultivaluedMap<String, String> data) {
