@@ -20,9 +20,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -39,6 +41,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
   
   @GET public Response getAccounts() {
     return getAccounts(APPLICATION_JSON_TYPE);
+  }
+  
+  @Path("/{sid}.json")
+  @DELETE public Response deleteAccountAsJson(@PathParam("sid") final String sid) {
+	  return deleteAccount(sid);
   }
   
   @Consumes(APPLICATION_FORM_URLENCODED)
