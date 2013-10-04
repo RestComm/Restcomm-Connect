@@ -26,7 +26,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable public final class Sid{
-  private static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
+  public static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
   private final String id;
   public enum Type {ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, INVALID,
       NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION};
