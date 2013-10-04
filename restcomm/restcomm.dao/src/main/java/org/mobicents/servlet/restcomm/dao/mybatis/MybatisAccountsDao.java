@@ -144,7 +144,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     map.put("date_updated", writeDateTime(account.getDateUpdated()));
     map.put("email_address", account.getEmailAddress());
     map.put("friendly_name", account.getFriendlyName());
-    map.put("account_sid", writeSid(account.getSid()));
+    map.put("account_sid", writeSid(account.getAccountSid()));
     map.put("type", writeAccountType(account.getType()));
     map.put("status", writeAccountStatus(account.getStatus()));
     map.put("auth_token", account.getAuthToken());
