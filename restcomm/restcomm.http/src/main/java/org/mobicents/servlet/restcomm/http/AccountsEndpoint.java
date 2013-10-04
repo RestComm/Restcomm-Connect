@@ -18,7 +18,6 @@ package org.mobicents.servlet.restcomm.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
@@ -28,11 +27,13 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
+
 import static javax.ws.rs.core.MediaType.*;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
@@ -41,9 +42,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
-
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -135,6 +134,27 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         return null;
       }
     }
+  }
+
+  protected Response deleteAccount(final String sid) {
+	  final Subject subject = SecurityUtils.getSubject();
+	  final Sid accountSid = new Sid((String)subject.getPrincipal());
+	  final Sid sidToBeRemoved = new Sid(sid);
+	  
+	  try { 
+		  secure(accountSid, "RestComm:Delete:Accounts"); 
+	  } catch(final AuthorizationException exception) { 
+		  return status(UNAUTHORIZED).build(); 
+	  }
+	  //Prevent removal of Administrator account
+	  if(sid.equalsIgnoreCase(accountSid.toString()))
+		  return status(BAD_REQUEST).build();
+	  
+	  if(dao.getAccount(sidToBeRemoved)==null)
+		  return status(NOT_FOUND).build();
+		  
+	  dao.removeAccount(sidToBeRemoved);
+	  return ok().build();
   }
   
   protected Response getAccounts(final MediaType responseType) {

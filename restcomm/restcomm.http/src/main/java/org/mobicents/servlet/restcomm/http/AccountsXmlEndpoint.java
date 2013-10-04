@@ -16,14 +16,17 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import static javax.ws.rs.core.MediaType.*;
-
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -36,6 +39,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 @ThreadSafe public final class AccountsXmlEndpoint extends AccountsEndpoint {
   public AccountsXmlEndpoint() {
     super();
+  }
+  
+  @Path("/{sid}")
+  @DELETE public Response deleteAccountAsXml(@PathParam("sid") final String sid) {
+    return deleteAccount(sid);
   }
   
   @Path("/{accountSid}.json")
