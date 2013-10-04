@@ -21,15 +21,19 @@
 		To authenticate against Restcomm you will need a valid Account and use as a username either the Account's SID or Email Address and for 
 		password the AuthToken of the Account. </para>
 		<para>For example, the following are the same:</para>
-		<screen>
-		~]$ curl --data "PhoneNumber=1234&amp;VoiceUrl=http://127.0.0.1:8080/restcomm/demo/hello-world.xml&amp;VoiceMethod=POST"
-http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
-		</screen>
+<programlisting>
+<![CDATA[
+curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+
+]]>
+</programlisting>
 		<para>and</para>
-		<screen>
-		~]$ curl --data "PhoneNumber=1234&amp;VoiceUrl=http://127.0.0.1:8080/restcomm/demo/hello-world.xml&amp;VoiceMethod=POST"
-http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
-		</screen>
+<programlisting>
+<![CDATA[
+curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+
+]]>
+</programlisting>
 	</formalpara>
 	
 	<section>
