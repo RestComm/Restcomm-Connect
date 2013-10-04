@@ -60,7 +60,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
   }
   
   @Override public Account getAccount(final String name) {
-    return getAccount(namespace + "getAccountByFriendlyName", name);
+	  Account account = null;
+	  
+	  account = getAccount(namespace + "getAccountByFriendlyName", name);
+	  if(account == null)
+		  account = getAccount(namespace + "getAccountByEmail", name);
+	  
+	  return account;
   }
   
   private Account getAccount(final String selector, final Object parameters) {

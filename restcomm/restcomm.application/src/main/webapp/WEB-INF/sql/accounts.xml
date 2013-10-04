@@ -17,6 +17,10 @@
     SELECT * FROM "restcomm_accounts" WHERE "friendly_name"=#{name};
   </select>
   
+    <select id="getAccountByEmail" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_accounts" WHERE "email_address"=#{name};
+  </select>
+  
   <select id="getAccounts" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_accounts" WHERE "account_sid"=#{account_sid};
   </select>
