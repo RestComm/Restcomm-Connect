@@ -179,7 +179,8 @@ public final class UserAgentManager extends UntypedActor {
   
   private void ping(final String to) throws Exception {
     final SipApplicationSession application = factory.createApplicationSession();
-	final SipURI outboundInterface = outboundInterface();
+    String toTransport = ((SipURI)factory.createURI(to)).getTransportParam();
+	final SipURI outboundInterface = outboundInterface(toTransport);
 	StringBuilder buffer = new StringBuilder();
 	buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
 	final String from = buffer.toString();
@@ -198,14 +199,14 @@ public final class UserAgentManager extends UntypedActor {
     response.getApplicationSession().invalidate();
   }
   
-  private SipURI outboundInterface() {
+  private SipURI outboundInterface(String toTransport) {
 	final ServletContext context = configuration.getServletContext();
 	SipURI result = null;
 	@SuppressWarnings("unchecked")
 	final List<SipURI> uris = (List<SipURI>)context.getAttribute(OUTBOUND_INTERFACES);
 	for(final SipURI uri : uris) {
 	  final String transport = uri.getTransportParam();
-	  if("udp".equalsIgnoreCase(transport)) {
+	  if(toTransport != null && toTransport.equalsIgnoreCase(transport)) {
 	    result = uri;
 	  }
 	}
@@ -238,10 +239,15 @@ public final class UserAgentManager extends UntypedActor {
     final SipURI uri = (SipURI)contact.getURI();
     final String ip = request.getInitialRemoteAddr();
     final int port = request.getInitialRemotePort();
+    final String transport = uri.getTransportParam();
     patch(uri, ip, port);
     final StringBuffer buffer = new StringBuffer();
     buffer.append("sip:").append(user).append("@")
         .append(uri.getHost()).append(":").append(uri.getPort());
+    // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
+    if(transport != null) {
+        buffer.append(";transport=").append(transport);
+    }
     final String address = buffer.toString();
     // Prepare the response.
     final SipServletResponse response = request.createResponse(SC_OK);
