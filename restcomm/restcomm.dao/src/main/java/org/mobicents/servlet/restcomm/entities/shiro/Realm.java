@@ -46,88 +46,102 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe public final class Realm extends AuthorizingRealm {
-  private volatile Map<String, SimpleRole> roles;
-  
-  public Realm() {
-    super();
-  }
+	private volatile Map<String, SimpleRole> roles;
 
-  @Override protected AuthorizationInfo doGetAuthorizationInfo(final PrincipalCollection principals) {
-    final Sid sid = new Sid((String)principals.getPrimaryPrincipal());
-    final ShiroResources services = ShiroResources.getInstance();
-    final DaoManager daos = services.get(DaoManager.class);
-    final AccountsDao accounts = daos.getAccountsDao();
-    final Account account = accounts.getAccount(sid);
-    final String roleName = account.getRole();
-    final Set<String> set = new HashSet<String>();
-    set.add(roleName);
-    final SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo(set);
-    final SimpleRole role = getRole(roleName);
-    if(role != null) {
-      authorizationInfo.setObjectPermissions(role.getPermissions());
-    }
-    return authorizationInfo;
-  }
+	public Realm() {
+		super();
+	}
 
-  @Override protected AuthenticationInfo doGetAuthenticationInfo(final AuthenticationToken token)
-      throws AuthenticationException {
-    final UsernamePasswordToken authenticationToken = (UsernamePasswordToken)token;
-    Sid sid = null;
-    try {
-      sid = new Sid(authenticationToken.getUsername());
-      final ShiroResources services = ShiroResources.getInstance();
-      final DaoManager daos = services.get(DaoManager.class);
-      final AccountsDao accounts = daos.getAccountsDao();
-      final Account account = accounts.getAccount(sid);
-      final String authToken = account.getAuthToken();
-      return new SimpleAuthenticationInfo(sid.toString(), authToken.toCharArray(), getName());
-    } catch(final Exception ignored) {
-      return null;
-    }
-  }
-  
-  private SimpleRole getRole(final String role) {
-    if(roles != null) {
-      return roles.get(role);
-    } else {
-      synchronized(this) {
-        if(roles == null) {
-          roles = new HashMap<String, SimpleRole>();
-          final ShiroResources services = ShiroResources.getInstance();
-          final Configuration configuration = services.get(Configuration.class);
-          loadSecurityRoles(configuration.subset("security-roles"));
-        }
-      }
-      return roles.get(role);
-    }
-  }
-  
-  private void loadSecurityRoles(final Configuration configuration) {
-    @SuppressWarnings("unchecked")
-    final List<String> roleNames = (List<String>)configuration.getList("role[@name]");
-    final int numberOfRoles = roleNames.size();
-    if(numberOfRoles > 0) {
-      for(int roleIndex = 0; roleIndex < numberOfRoles; roleIndex++) {
-        StringBuilder buffer = new StringBuilder();
-        buffer.append("role(").append(roleIndex).append(")").toString();
-      	final String prefix = buffer.toString();
-      	final String name = configuration.getString(prefix + "[@name]");
-      	@SuppressWarnings("unchecked")
-      	final List<String> permissions = configuration.getList(prefix + ".permission");
-      	final int numberOfPermissions = permissions.size();
-      	if(name != null) {  
-      	  if(numberOfPermissions > 0) {
-      	    final SimpleRole role = new SimpleRole(name);
-      	    for(int permissionIndex = 0; permissionIndex < numberOfPermissions; permissionIndex++) {
-      	      buffer = new StringBuilder();
-      	      buffer.append(prefix).append(".permission(").append(permissionIndex).append(")");
-      	      final Permission permission = new DomainPermission(buffer.toString());
-      	      role.add(permission);
-      	    }
-      	    roles.put(name, role);
-      	  }
-      	}
-      }
-    }
-  }
+	@Override protected AuthorizationInfo doGetAuthorizationInfo(final PrincipalCollection principals) {
+		final Sid sid = new Sid((String)principals.getPrimaryPrincipal());
+		final ShiroResources services = ShiroResources.getInstance();
+		final DaoManager daos = services.get(DaoManager.class);
+		final AccountsDao accounts = daos.getAccountsDao();
+		final Account account = accounts.getAccount(sid);
+		final String roleName = account.getRole();
+		final Set<String> set = new HashSet<String>();
+		set.add(roleName);
+		final SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo(set);
+		final SimpleRole role = getRole(roleName);
+		if(role != null) {
+			authorizationInfo.setObjectPermissions(role.getPermissions());
+		}
+		return authorizationInfo;
+	}
+
+	@Override protected AuthenticationInfo doGetAuthenticationInfo(final AuthenticationToken token) throws AuthenticationException {
+		final UsernamePasswordToken authenticationToken = (UsernamePasswordToken)token;
+		String username = authenticationToken.getUsername();
+		Sid sid = null;
+		Account account = null;
+		String authToken = null;
+		
+		final ShiroResources services = ShiroResources.getInstance();
+		final DaoManager daos = services.get(DaoManager.class);
+		final AccountsDao accounts = daos.getAccountsDao();
+
+		try{
+			if(Sid.pattern.matcher(username).matches()){
+				sid = new Sid(username);
+				account = accounts.getAccount(sid);
+			} else {
+				account = accounts.getAccount(username);
+				sid = account.getSid();
+			}
+
+			if(account != null){
+				authToken = account.getAuthToken();
+				return new SimpleAuthenticationInfo(sid.toString(), authToken.toCharArray(), getName());
+			} else {
+				return null;
+			}
+		}  catch(Exception ignored) {
+			return null;
+		}
+	}
+
+	private SimpleRole getRole(final String role) {
+		if(roles != null) {
+			return roles.get(role);
+		} else {
+			synchronized(this) {
+				if(roles == null) {
+					roles = new HashMap<String, SimpleRole>();
+					final ShiroResources services = ShiroResources.getInstance();
+					final Configuration configuration = services.get(Configuration.class);
+					loadSecurityRoles(configuration.subset("security-roles"));
+				}
+			}
+			return roles.get(role);
+		}
+	}
+
+	private void loadSecurityRoles(final Configuration configuration) {
+		@SuppressWarnings("unchecked")
+		final List<String> roleNames = (List<String>)configuration.getList("role[@name]");
+		final int numberOfRoles = roleNames.size();
+		if(numberOfRoles > 0) {
+			for(int roleIndex = 0; roleIndex < numberOfRoles; roleIndex++) {
+				StringBuilder buffer = new StringBuilder();
+				buffer.append("role(").append(roleIndex).append(")").toString();
+				final String prefix = buffer.toString();
+				final String name = configuration.getString(prefix + "[@name]");
+				@SuppressWarnings("unchecked")
+				final List<String> permissions = configuration.getList(prefix + ".permission");
+				final int numberOfPermissions = permissions.size();
+				if(name != null) {  
+					if(numberOfPermissions > 0) {
+						final SimpleRole role = new SimpleRole(name);
+						for(int permissionIndex = 0; permissionIndex < numberOfPermissions; permissionIndex++) {
+							buffer = new StringBuilder();
+							buffer.append(prefix).append(".permission(").append(permissionIndex).append(")");
+							final Permission permission = new DomainPermission(buffer.toString());
+							role.add(permission);
+						}
+						roles.put(name, role);
+					}
+				}
+			}
+		}
+	}
 }

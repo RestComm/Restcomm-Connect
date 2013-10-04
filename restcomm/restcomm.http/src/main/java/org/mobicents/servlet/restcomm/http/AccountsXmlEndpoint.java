@@ -54,7 +54,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
   @Path("/{accountSid}")
   @GET public Response getAccountAsXml(@PathParam("accountSid") final String accountSid) {
     return getAccount(accountSid, APPLICATION_XML_TYPE);
-  }
+  } 
   
   @GET public Response getAccounts() {
     return getAccounts(APPLICATION_XML_TYPE);

@@ -118,10 +118,21 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
   }
   
   protected Response getAccount(final String accountSid, final MediaType responseType) {
-    final Sid sid = new Sid(accountSid);
+	
+	  Sid sid = null;
+	  Account account = null;
+	  if(Sid.pattern.matcher(accountSid).matches()){
+			sid = new Sid(accountSid);
+			account = dao.getAccount(sid);
+		} else {
+			account = dao.getAccount(accountSid);
+			sid = account.getSid();
+		}
+
     try { secure(sid, "RestComm:Read:Accounts"); }
 	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final Account account = dao.getAccount(sid);
+
+    
     if(account == null) {
       return status(NOT_FOUND).build();
     } else {
