@@ -195,8 +195,12 @@ public final class UserAgentManager extends UntypedActor {
   
   private void pong(final Object message) {
     final SipServletResponse response = (SipServletResponse)message;
-    response.getSession().invalidate();
-    response.getApplicationSession().invalidate();
+    if(response.getSession().isValid()) {
+        response.getSession().invalidate();
+    }
+    if(response.getApplicationSession().isValid()) {
+        response.getApplicationSession().invalidate();
+    }
   }
   
   private SipURI outboundInterface(String toTransport) {
