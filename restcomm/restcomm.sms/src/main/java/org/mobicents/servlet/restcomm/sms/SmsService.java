@@ -17,6 +17,7 @@
 package org.mobicents.servlet.restcomm.sms;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import javax.servlet.ServletConfig;
@@ -105,6 +106,9 @@ public final class SmsService extends UntypedActor {
 		final String toUser = CallControlHelper.getUserSipId(request, useTo);
 		// Try to see if the request is destined for an application we are hosting.
 		if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
+		    // Tell the sender we received the message okay.
+		    final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
+		    messageAccepted.send();
 		  	return;
 		} else {
 			// try to see if the request is destined to another registered client
@@ -139,10 +143,6 @@ private boolean redirectToHostedSmsApp(final ActorRef self,
 		final SipServletRequest request, final AccountsDao accounts,
 		final ApplicationsDao applications, String id) throws IOException {
 	boolean isFoundHostedApp = false;
-	
-    // Tell the sender we received the message okay.
-    final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
-    messageAccepted.send();
 	
 	// Handle the SMS message.
 	final SipURI uri = (SipURI)request.getRequestURI();
@@ -218,9 +218,14 @@ private boolean redirectToHostedSmsApp(final ActorRef self,
     }
   }
   
-  private void response(final Object message) {
+  private void response(final Object message) throws Exception {
     final ActorRef self = self();
   	final SipServletResponse response = (SipServletResponse)message;
+  	// https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
+  	if (B2BUAHelper.isB2BUASession(response)) {
+  	    B2BUAHelper.forwardResponse(response);
+  	    return;
+  	}
     final SipApplicationSession application = response.getApplicationSession();
     final ActorRef session = (ActorRef)application.getAttribute(SmsSession.class.getName());
     session.tell(response, self);
