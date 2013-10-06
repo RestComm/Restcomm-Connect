@@ -89,7 +89,8 @@ public class B2BUAHelper {
 		        	incomingSession.setAttribute(B2BUA_LINKED_SESSION, outgoingSession);
 		        	outgoingSession.setAttribute(B2BUA_LINKED_SESSION, incomingSession);
 		        }
-		        outgoingSession.setAttribute(B2BUA_LAST_REQUEST, outRequest);	        
+		        outgoingSession.setAttribute(B2BUA_LAST_REQUEST, outRequest);
+		        request.createResponse(100).send();
 		        outRequest.send();
 		        return true; // successfully proxied the SIP request between two registered clients
 			} catch (ServletParseException badUriEx) {
