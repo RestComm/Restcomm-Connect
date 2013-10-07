@@ -68,6 +68,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author ivelin.ivanov@telestax.com
+ * @author jean.deruelle@telestax.com
  */
 public final class CallManager extends UntypedActor {
   private final ActorSystem system;
@@ -432,7 +433,10 @@ private void execute(final Object message) {
 	    if(logger.isInfoEnabled()) {
 	        logger.info(String.format("B2BUA: Got BYE request: \n %s", request));
 	    }
-	    linkedB2BUASession.createRequest("BYE").send();
+	    request.getSession().setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, request);
+	    SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
+	    linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
+	    clonedBye.send();
     } else {
 	    final ActorRef call = (ActorRef)application.getAttribute(Call.class.getName());
 	    call.tell(request, self);
