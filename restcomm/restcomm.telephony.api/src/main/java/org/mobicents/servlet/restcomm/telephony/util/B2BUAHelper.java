@@ -38,11 +38,11 @@ import org.mobicents.servlet.restcomm.entities.Registration;
  * that are connecting in peer to peer mode
  * 
  * @author ivelin.ivanov@telestax.com
- *
+ * @author jean.deruelle@telestax.com
  */
 public class B2BUAHelper {
 
-	private static final String B2BUA_LAST_REQUEST = "lastRequest";
+	public static final String B2BUA_LAST_REQUEST = "lastRequest";
 	private static final String B2BUA_LAST_RESPONSE = "lastResponse";
 	private static final String B2BUA_LINKED_SESSION = "linkedSession";
 

@@ -22,8 +22,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
-@Immutable public final class Registration {
+@Immutable public final class Registration implements Comparable<Registration> {
   private final Sid sid;
   private final DateTime dateCreated;
   private final DateTime dateUpdated;
@@ -102,4 +103,14 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
     return new Registration(sid, dateCreated, now, now.plusSeconds(timeToLive), addressOfRecord,
         displayName, userName, userAgent, timeToLive, location);
   }
+  
+  @Override
+  public int compareTo(Registration registration) {
+      //use reverse order of comparator to have registrations sorted in descending order
+      if(this.getDateUpdated().toDate().getTime() > registration.getDateUpdated().toDate().getTime())
+          return -1;
+      else 
+          return 1;
+  }
+
 }

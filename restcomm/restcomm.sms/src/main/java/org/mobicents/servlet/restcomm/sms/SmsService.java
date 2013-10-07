@@ -17,7 +17,6 @@
 package org.mobicents.servlet.restcomm.sms;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import javax.servlet.ServletConfig;
@@ -57,6 +56,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 public final class SmsService extends UntypedActor {
   private final ActorSystem system;
@@ -221,7 +221,7 @@ private boolean redirectToHostedSmsApp(final ActorRef self,
   private void response(final Object message) throws Exception {
     final ActorRef self = self();
   	final SipServletResponse response = (SipServletResponse)message;
-  	// https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
+  	// https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
   	if (B2BUAHelper.isB2BUASession(response)) {
   	    B2BUAHelper.forwardResponse(response);
   	    return;
