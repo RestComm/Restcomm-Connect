@@ -16,26 +16,35 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readInteger;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@gmail.com (Jean Deruelle)
  */
 @ThreadSafe public final class MybatisRegistrationsDao implements RegistrationsDao {
+  private static final Logger logger = Logger.getLogger(MybatisRegistrationsDao.class);
+    
   private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao.";
   private final SqlSessionFactory sessions;
   
@@ -57,9 +66,20 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
   @Override public Registration getRegistration(String user) {
 	final SqlSession session = sessions.openSession();
     try {
-      final Map<String, Object> result = session.selectOne(namespace + "getRegistration", user);
-      if(result != null) {
-        return toPresenceRecord(result);
+      // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
+      // we get all registrations and sort them by latest updated date so that we target the device where the user last updated the registration
+      final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+      final List<Registration> records = new ArrayList<Registration>();
+      if(results != null && !results.isEmpty()) {
+        for(final Map<String, Object> result : results) {
+          records.add(toPresenceRecord(result));
+        }        
+        if(records.isEmpty()) {
+            return null;
+        } else {
+            Collections.sort(records);
+            return records.get(0);
+        }
       } else {
         return null;
       }

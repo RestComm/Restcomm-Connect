@@ -60,6 +60,7 @@ import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 public final class UserAgentManager extends UntypedActor {
   private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -291,8 +292,12 @@ public final class UserAgentManager extends UntypedActor {
     // Success
     response.send();
     // Cleanup
-    request.getSession().invalidate();
-    request.getApplicationSession().invalidate();
+    if(request.getSession().isValid()) {
+        request.getSession().invalidate();
+    }
+    if(request.getApplicationSession().isValid()) {
+        request.getApplicationSession().invalidate();
+    }
   }
   
   private String contact(final SipURI uri, final int expires) {
