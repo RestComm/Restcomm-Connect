@@ -16,17 +16,17 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import akka.actor.ActorRef;
-import akka.util.Timeout;
-import static akka.pattern.Patterns.*;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-
-import com.thoughtworks.xstream.XStream;
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.util.List;
@@ -34,22 +34,20 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.MediaType;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -66,6 +64,15 @@ import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -133,6 +140,38 @@ import scala.concurrent.duration.Duration;
     } else {
       return null;
     }
+  }
+  
+  //Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+  protected Response getCallsByFilters(String accountSid, UriInfo info, final MediaType responseType) {
+
+	  try { 
+		  secure(new Sid(accountSid), "RestComm:Read:Calls"); 
+	  }catch(final AuthorizationException exception) { 
+		  return status(UNAUTHORIZED).build(); 
+	  }
+
+	  String recipient = info.getQueryParameters().getFirst("To");
+	  String sender = info.getQueryParameters().getFirst("From");
+	  String status = info.getQueryParameters().getFirst("Status");
+	  String startTime = info.getQueryParameters().getFirst("StartTime");
+	  String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
+	  
+	  CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
+	  
+	  CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, 
+			  status, startTime, parentCallSid);
+
+	  final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
+
+	  if(APPLICATION_XML_TYPE == responseType) {
+		  final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
+		  return ok(xstream.toXML(response), APPLICATION_XML).build();
+	  } else if(APPLICATION_JSON_TYPE == responseType) {
+		  return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
+	  } else {
+		  return null;
+	  }
   }
   
   private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
