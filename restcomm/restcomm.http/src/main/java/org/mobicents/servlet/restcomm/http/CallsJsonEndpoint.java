@@ -22,8 +22,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -38,6 +40,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
   
   @GET public Response getCalls(@PathParam("accountSid") final String accountSid) {
     return getCalls(accountSid, APPLICATION_JSON_TYPE);
+  }
+  
+  //Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+  //Example:
+  //curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/filters?status=completed&recipient=15126002188&startTime=2013-09-06
+  @Path("/filters")
+  @GET
+  public Response getCallsByUsingFilters(@PathParam("accountSid") String accountSid, @Context UriInfo info){
+	  
+	  return getCallsByFilters(accountSid, info, APPLICATION_JSON_TYPE);
   }
   
   @POST public Response putCall(@PathParam("accountSid") final String accountSid,

@@ -25,12 +25,13 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-
 import org.joda.time.DateTime;
 
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
+
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -70,6 +71,27 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     }
   }
 
+//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+  @Override
+  public List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter) {
+
+	  final SqlSession session = sessions.openSession();
+
+	  try {
+		  final List<Map<String, Object>> results = session.selectList(namespace + "getCallDetailRecordByUsingFilters", filter);
+		  final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+
+		  if(results != null && !results.isEmpty()) {
+			  for(final Map<String, Object> result : results) {
+				  cdrs.add(toCallDetailRecord(result));
+			  }
+		  }
+		  return cdrs;
+	  } finally {
+		  session.close();
+	  }
+  }
+  
   @Override public List<CallDetailRecord> getCallDetailRecords(final Sid accountSid) {
     return getCallDetailRecords(namespace + "getCallDetailRecords", accountSid.toString());
   }
