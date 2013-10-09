@@ -29,7 +29,7 @@
 			AND "status" like #{status}
 		</if>
 		<if test="parentCallSid != null">
-			AND "parentCallSid" like #{parentCallSid}
+			AND "parent_call_sid" like #{parentCallSid}
 		</if>
 		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
 		<if test="startTime != null">
