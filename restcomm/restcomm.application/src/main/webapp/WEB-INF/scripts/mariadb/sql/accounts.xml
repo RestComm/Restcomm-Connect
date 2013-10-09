@@ -21,7 +21,7 @@
 
 	<select id="getAccountByEmail" parameterType="string"
 		resultType="hashmap">
-		SELECT * FROM "restcomm_accounts" WHERE "email_address"=#{name};
+		SELECT * FROM restcomm_accounts WHERE email_address=#{name};
 	</select>
 
 	<select id="getAccounts" parameterType="string" resultType="hashmap">
