@@ -46,11 +46,6 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     return deleteAccount(sid);
   }
   
-  @Path("/{accountSid}.json")
-  @GET public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {
-    return getAccount(accountSid, APPLICATION_JSON_TYPE);
-  }
-  
   @Path("/{accountSid}")
   @GET public Response getAccountAsXml(@PathParam("accountSid") final String accountSid) {
     return getAccount(accountSid, APPLICATION_XML_TYPE);

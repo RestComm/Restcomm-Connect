@@ -39,6 +39,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     super();
   }
   
+  @Path("/{accountSid}")
+  @GET public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {
+    return getAccount(accountSid, APPLICATION_JSON_TYPE);
+  }
+  
   @GET public Response getAccounts() {
     return getAccounts(APPLICATION_JSON_TYPE);
   }
