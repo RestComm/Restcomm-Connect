@@ -181,6 +181,9 @@ public final class UserAgentManager extends UntypedActor {
   private void ping(final String to) throws Exception {
     final SipApplicationSession application = factory.createApplicationSession();
     String toTransport = ((SipURI)factory.createURI(to)).getTransportParam();
+    if(toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
+        return ;
+    }
 	final SipURI outboundInterface = outboundInterface(toTransport);
 	StringBuilder buffer = new StringBuilder();
 	buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
@@ -196,9 +199,9 @@ public final class UserAgentManager extends UntypedActor {
   
   private void pong(final Object message) {
     final SipServletResponse response = (SipServletResponse)message;
-    if(response.getSession().isValid()) {
-        response.getSession().invalidate();
-    }
+//    if(response.getSession().isValid()) {
+//        response.getSession().invalidate();
+//    }
     if(response.getApplicationSession().isValid()) {
         response.getApplicationSession().invalidate();
     }
@@ -292,9 +295,9 @@ public final class UserAgentManager extends UntypedActor {
     // Success
     response.send();
     // Cleanup
-    if(request.getSession().isValid()) {
-        request.getSession().invalidate();
-    }
+//    if(request.getSession().isValid()) {
+//        request.getSession().invalidate();
+//    }
     if(request.getApplicationSession().isValid()) {
         request.getApplicationSession().invalidate();
     }
