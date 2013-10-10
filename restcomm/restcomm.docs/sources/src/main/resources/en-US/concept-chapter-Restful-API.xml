@@ -95,6 +95,14 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 				<para>Returns the representation of an Account resource, including the properties above.</para>
 			</formalpara>
 			<formalpara>
+				<para>Instead of the AccountSid, Email Address can be used also</para>
+				
+			</formalpara>
+			<formalpara>
+				<title>Account Resource URI</title>
+				<para>/2012-04-24/Accounts/{EmailAddress}</para>
+			</formalpara>
+			<formalpara>
 				<title>HTTP POST/PUT</title>
 				<para>Modifies an Account resource and returns the representation, including the properties above. Below
 				you will find a list of optional parameters.</para>
