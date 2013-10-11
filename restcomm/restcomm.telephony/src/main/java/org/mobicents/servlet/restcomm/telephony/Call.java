@@ -97,6 +97,7 @@ public final class Call extends UntypedActor {
 	private final State queued;
 	private final State ringing;
 	private final State busy;
+	private final State notFound;
 	private final State canceled;
 	private final State noAnswer;
 	private final State inProgress;
@@ -157,6 +158,7 @@ public final class Call extends UntypedActor {
 		queued = new State("queued", new Queued(source), null);
 		ringing = new State("ringing", new Ringing(source), null);
 		busy = new State("busy", new Busy(source), null);
+		notFound = new State("not found", new NotFound(source), null);
 		canceled = new State("canceled", new Canceled(source), null);
 		noAnswer = new State("no answer", new NoAnswer(source), null);
 		inProgress = new State("in progress", new InProgress(source), null);
@@ -223,6 +225,7 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(dialing, updatingRemoteConnection));
 		transitions.add(new Transition(ringing, canceled));
 		transitions.add(new Transition(ringing, busy));
+		transitions.add(new Transition(ringing, notFound));
 		transitions.add(new Transition(ringing, canceling));
 		transitions.add(new Transition(ringing, noAnswer));
 		transitions.add(new Transition(ringing, updatingRemoteConnection));
@@ -465,7 +468,11 @@ public final class Call extends UntypedActor {
 				fsm.transition(message, unmuting);
 			} else if(Hangup.class.equals(klass)) {
 				fsm.transition(message, closingRemoteConnection);
-			}
+			} 
+		} else if(ringing.equals(state)) {
+		    if(org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass)) {
+                fsm.transition(message, notFound);
+            }
 		}
 	}
 
@@ -796,6 +803,30 @@ public final class Call extends UntypedActor {
 			}
 		}
 	}
+	
+	private final class NotFound extends AbstractAction {
+        public NotFound(final ActorRef source) {
+            super(source);
+        }
+
+        @Override public void execute(final Object message) throws Exception {
+            final Class<?> klass = message.getClass();
+            final State state = fsm.state();
+            if(org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass) && INBOUND.equals(direction)) {
+                final SipServletResponse notFound = invite.createResponse(SipServletResponse.SC_NOT_FOUND);
+                notFound.send();
+            }            
+            // Explicitly invalidate the application session.
+            invite.getSession().invalidate();
+            invite.getApplicationSession().invalidate();
+            // Notify the observers.
+            external = CallStateChanged.State.NOT_FOUND;
+            final CallStateChanged event = new CallStateChanged(external);
+            for(final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
+        }
+    }
 
 	private final class NoAnswer extends AbstractAction {
 		public NoAnswer(final ActorRef source) {

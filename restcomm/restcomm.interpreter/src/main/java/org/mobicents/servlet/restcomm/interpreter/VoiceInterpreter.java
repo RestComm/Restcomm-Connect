@@ -176,6 +176,7 @@ public final class VoiceInterpreter extends UntypedActor {
 	private final State initializingCallMediaGroup;
 	private final State acquiringCallMediaGroup;
 	private final State ready;
+	private final State notFound;
 	private final State rejecting;
 	private final State playingRejectionPrompt;
 	private final State pausing;
@@ -307,6 +308,7 @@ public final class VoiceInterpreter extends UntypedActor {
 		initializingCallMediaGroup = new State("initializing call media group",
 				new InitializingCallMediaGroup(source), null);
 		ready = new State("ready", new Ready(source), null);
+		notFound = new State("notFound", new NotFound(source), null);
 		rejecting = new State("rejecting", new Rejecting(source), null);
 		playingRejectionPrompt = new State("playing rejection prompt",
 				new PlayingRejectionPrompt(source), null);
@@ -387,6 +389,7 @@ public final class VoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(initializingCallMediaGroup, hangingUp));
 		transitions.add(new Transition(initializingCallMediaGroup, finished));
 		transitions.add(new Transition(downloadingRcml, ready));
+		transitions.add(new Transition(downloadingRcml, notFound));
 		transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
 		transitions.add(new Transition(downloadingRcml, hangingUp));
 		transitions.add(new Transition(downloadingRcml, finished));
@@ -803,8 +806,8 @@ public final class VoiceInterpreter extends UntypedActor {
 		final State state = fsm.state();
 		final ActorRef sender = sender();
 		if(logger.isInfoEnabled()) {
-    		logger.info(" ********** Interpreter's Current State: \"" + state.toString());
-    		logger.info(" ********** Interpreter Processing Message: \"" + klass.getName());
+    		logger.info(" ********** VoiceInterpreter's Current State: " + state.toString());
+    		logger.info(" ********** VoiceInterpreter's Processing Message: " + klass.getName());
 		}
 		if(StartInterpreter.class.equals(klass)) {
 			fsm.transition(message, acquiringAsrInfo);
@@ -907,9 +910,14 @@ public final class VoiceInterpreter extends UntypedActor {
 			}
 		} else if(DownloaderResponse.class.equals(klass)) {
 			final DownloaderResponse response = (DownloaderResponse)message;
+			if(logger.isDebugEnabled()) {
+			    logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
+			}
 			if(response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
 				fsm.transition(message, ready);
-			} else {
+			} else if(response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
+	                fsm.transition(message, notFound);
+	        } else {
 				if(downloadingRcml.equals(state)) {
 					if(fallbackUrl != null) {
 						fsm.transition(message, downloadingFallbackRcml);
@@ -1454,6 +1462,26 @@ public final class VoiceInterpreter extends UntypedActor {
 			parser.tell(next, source);
 		}
 	}
+	
+	private final class NotFound extends AbstractAction {
+        public NotFound(final ActorRef source) {
+            super(source);
+        }
+
+        @Override public void execute(final Object message) throws Exception {
+            final Class<?> klass = message.getClass();
+            final DownloaderResponse response = (DownloaderResponse)message;
+            if(logger.isDebugEnabled()) {
+                logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
+            }           
+//            final Notification notification = notification(WARNING_NOTIFICATION, 13910,
+//                    "URL Not Found : " +response.get().getURI());
+//            final NotificationsDao notifications = storage.getNotificationsDao();
+//            notifications.addNotification(notification);
+            // Hang up the call.
+            call.tell(new org.mobicents.servlet.restcomm.telephony.NotFound(), source);
+        }
+    }
 
 	private final class Rejecting extends AbstractAction {
 		public Rejecting(final ActorRef source) {
