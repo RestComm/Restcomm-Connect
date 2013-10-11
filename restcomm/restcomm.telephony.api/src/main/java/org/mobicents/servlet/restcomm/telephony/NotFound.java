@@ -21,37 +21,8 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CallStateChanged {
-  public static enum State {
-      QUEUED("queued"),
-      RINGING("ringing"),
-      CANCELED("canceled"),
-      BUSY("busy"),
-      NOT_FOUND("not-found"),
-      FAILED("failed"),
-      NO_ANSWER("no-answer"),
-      IN_PROGRESS("in-progress"),
-      COMPLETED("completed");
-    
-    private final String text;
-  
-    private State(final String text) {
-      this.text = text;
-    }
-    
-    @Override public String toString() {
-      return text;
-    }
-  };
-  
-  private final State state;
-
-  public CallStateChanged(final State state) {
+@Immutable public final class NotFound {
+  public NotFound() {
     super();
-    this.state = state;
-  }
-  
-  public State state() {
-    return state;
   }
 }
