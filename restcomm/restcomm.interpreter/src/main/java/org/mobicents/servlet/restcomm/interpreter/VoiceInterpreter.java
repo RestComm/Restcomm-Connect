@@ -155,6 +155,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 public final class VoiceInterpreter extends UntypedActor {
 	private static final int ERROR_NOTIFICATION = 0;
@@ -801,8 +802,10 @@ public final class VoiceInterpreter extends UntypedActor {
 		final Class<?> klass = message.getClass();
 		final State state = fsm.state();
 		final ActorRef sender = sender();
-		logger.info(" ********** Interpreter's Current State: \"" + state.toString());
-		logger.info(" ********** Interpreter Processing Message: \"" + klass.getName());
+		if(logger.isInfoEnabled()) {
+    		logger.info(" ********** Interpreter's Current State: \"" + state.toString());
+    		logger.info(" ********** Interpreter Processing Message: \"" + klass.getName());
+		}
 		if(StartInterpreter.class.equals(klass)) {
 			fsm.transition(message, acquiringAsrInfo);
 		} else if(AsrResponse.class.equals(klass)) {
@@ -1612,7 +1615,9 @@ public final class VoiceInterpreter extends UntypedActor {
 			//		  }
 			String hash = hash(verb);
 			DiskCacheRequest request = new DiskCacheRequest(hash);
-			logger.info("Checking cache for hash: "+hash);
+			if(logger.isErrorEnabled()) {
+			    logger.info("Checking cache for hash: "+hash);
+			}
 			cache.tell(request, source);
 		}
 	}
@@ -1705,7 +1710,9 @@ public final class VoiceInterpreter extends UntypedActor {
 	private String hash(Object message){
 		Map<String,String> details = getSynthesizeDetails(message);
 		if(details == null){
-			logger.info("Cannot generate hash, details are null");
+		    if(logger.isInfoEnabled()) {
+		        logger.info("Cannot generate hash, details are null");
+		    }
 			return null;
 		}
 		String voice = details.get("voice");
@@ -2097,9 +2104,22 @@ public final class VoiceInterpreter extends UntypedActor {
 		@SuppressWarnings("unchecked")
 		@Override public void execute(final Object message) throws Exception {
 			final NotificationsDao notifications = storage.getNotificationsDao();
+			final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
 			// Parses "action".
 			Attribute attribute = verb.attribute("action");
-			if(attribute != null) {
+			String digits = response.get();
+			final String finishOnKey = finishOnKey(verb);
+			if(digits.equals(finishOnKey)) {
+                digits = "";
+			}
+			if(logger.isDebugEnabled()) {
+			    logger.debug("Digits collected : " + digits);
+			}
+			// https://bitbucket.org/telestax/telscale-restcomm/issue/150/verb-is-looping-by-default-and-never
+			// If the 'timeout' is reached before the caller enters any digits, or if the caller enters the 'finishOnKey' value 
+			// before entering any other digits, Twilio will not make a request to the 'action' URL but instead continue processing 
+			// the current TwiML document with the verb immediately following the <Gather>
+			if(attribute != null && (digits != null && !digits.trim().isEmpty())) {
 				String action = attribute.value();
 				if(action != null && !action.isEmpty()) {
 					URI target = null;
@@ -2133,12 +2153,7 @@ public final class VoiceInterpreter extends UntypedActor {
 						}
 					}
 					// Redirect to the action url.
-					final String finishOnKey = finishOnKey(verb);
-					final MediaGroupResponse<String> response = (MediaGroupResponse<String>)message;
-					String digits = response.get();
-					if(digits.equals(finishOnKey)) {
-						digits = "";
-					} else if(digits.endsWith(finishOnKey)) {
+					if(digits.endsWith(finishOnKey)) {
 						final int finishOnKeyIndex = digits.lastIndexOf(finishOnKey);
 						digits = digits.substring(0, finishOnKeyIndex);
 					}
@@ -2345,8 +2360,8 @@ public final class VoiceInterpreter extends UntypedActor {
 					attributes.put("transcription", transcription);
 					asrService.tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
 					outstandingAsrRequests++;
-				} catch(final Exception exception) {
-					logger.debug(exception.getMessage(), exception);
+				} catch(final Exception exception) {				    
+					logger.error(exception.getMessage(), exception);
 				}
 			}
 			// If action is present redirect to the action URI.
