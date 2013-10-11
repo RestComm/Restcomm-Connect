@@ -77,6 +77,7 @@ public class CallTestDial {
 	private String dialURI = "sip:+12223334454@127.0.0.1:5080";
 	private String dialClient = "sip:+12223334455@127.0.0.1:5080";
 	private String dialNumber = "sip:+12223334456@127.0.0.1:5080";
+	private String notFoundDialNumber = "sip:+12223334458@127.0.0.1:5080";
 
 	@BeforeClass 
 	public static void beforeClass() throws Exception {
@@ -201,6 +202,30 @@ public class CallTestDial {
 		}
 	}
 
+	@Test
+	// Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/113/when-restcomm-cannot-find-an-app-url-it
+    public synchronized void testDialApplicationInvalidURL() throws InterruptedException, ParseException {
+        deployer.deploy("CallTestDial");
+
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, notFoundDialNumber, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.NOT_FOUND);
+        
+        Thread.sleep(3000);
+    }
+	
 	@Test 
 	public synchronized void testDialUriAliceHangup() throws InterruptedException, ParseException {
 		deployer.deploy("CallTestDial");
