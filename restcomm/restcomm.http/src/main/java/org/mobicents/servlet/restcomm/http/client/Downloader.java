@@ -89,7 +89,6 @@ public final class Downloader extends UntypedActor {
     	String errorReason = response.getStatusLine().getReasonPhrase();
     	String httpErrorMessage = String.format("Error while fetching http resource: %s \n Http error code: %d \n Http error message: %s", requestUrl, code, errorReason);
     	logger.warning(httpErrorMessage);
-    	// TODO: Log a record for the Notifications API
     }
     return response(request, response);
   }
