@@ -555,6 +555,32 @@
 
 	<repositories>
 		<repository>
+		  <id>telscale-releases-repository</id>
+		  <name>TelScale Releases Repository</name>
+		  <url>http://telestax.artifactoryonline.com/telestax/releases</url>
+		  <releases>
+		    <enabled>true</enabled>
+		    <updatePolicy>never</updatePolicy>
+		  </releases>
+		  <snapshots>
+		    <enabled>false</enabled>
+		    <updatePolicy>never</updatePolicy>
+		  </snapshots>		  		  
+		</repository>
+		<repository>
+		  <id>telscale-snapshots-repository</id>
+		  <name>TelScale Snapshots Repository</name>
+		  <url>http://telestax.artifactoryonline.com/telestax/snapshots</url>
+		  <releases>
+		    <enabled>false</enabled>
+		    <updatePolicy>never</updatePolicy>
+		  </releases>
+		  <snapshots>
+		    <enabled>true</enabled>
+		    <updatePolicy>never</updatePolicy>
+		  </snapshots>		  		  
+		</repository>
+		<repository>
 			<id>mobicents-public-repository-group</id>
 			<name>Mobicens Public Maven Repository Group</name>
 			<url>https://oss.sonatype.org/content/groups/public</url>
