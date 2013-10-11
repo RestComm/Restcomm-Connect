@@ -761,7 +761,7 @@ public final class VoiceInterpreter extends UntypedActor {
 		builder.setApiVersion(version);
 		builder.setLog(log);
 		builder.setErrorCode(error);
-		final String base = configuration.getString("error-dictionary-uri");
+		final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
 		StringBuilder buffer = new StringBuilder();
 		buffer.append(base);
 		if(!base.endsWith("/")) {
@@ -1474,10 +1474,10 @@ public final class VoiceInterpreter extends UntypedActor {
             if(logger.isDebugEnabled()) {
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
             }           
-//            final Notification notification = notification(WARNING_NOTIFICATION, 13910,
-//                    "URL Not Found : " +response.get().getURI());
-//            final NotificationsDao notifications = storage.getNotificationsDao();
-//            notifications.addNotification(notification);
+            final Notification notification = notification(WARNING_NOTIFICATION, 21402,
+                    "URL Not Found : " +response.get().getURI());
+            final NotificationsDao notifications = storage.getNotificationsDao();
+            notifications.addNotification(notification);
             // Hang up the call.
             call.tell(new org.mobicents.servlet.restcomm.telephony.NotFound(), source);
         }
