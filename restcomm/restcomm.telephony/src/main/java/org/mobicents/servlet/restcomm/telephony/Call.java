@@ -811,14 +811,10 @@ public final class Call extends UntypedActor {
 
         @Override public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            final State state = fsm.state();
             if(org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass) && INBOUND.equals(direction)) {
                 final SipServletResponse notFound = invite.createResponse(SipServletResponse.SC_NOT_FOUND);
                 notFound.send();
             }            
-            // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NOT_FOUND;
             final CallStateChanged event = new CallStateChanged(external);
