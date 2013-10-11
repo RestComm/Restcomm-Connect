@@ -4,13 +4,18 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import gov.nist.javax.sip.message.SIPResponse;
+
 import java.text.ParseException;
+import java.util.ArrayList;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 
+import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipResponse;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -26,6 +31,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
  * 
@@ -33,7 +41,8 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class CallTestDial {
-
+    private final Logger logger = Logger.getLogger(CallTestDial.class.getName());
+    
 	private static final String version = Version.getInstance().getRestCommVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
 		49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32,
@@ -218,12 +227,22 @@ public class CallTestDial {
         //Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, notFoundDialNumber, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.NOT_FOUND);
-        
+//        assertLastOperationSuccess(bobCall);
+        // wait for 100 Trying
+        assertTrue(bobCall.waitOutgoingCallResponse(10000));
         Thread.sleep(3000);
+        // wait for 180 Ringing
+        assertTrue(bobCall.waitOutgoingCallResponse(10000));
+        // wait for 404 Not Found
+        assertTrue(bobCall.waitOutgoingCallResponse(10000));
+        ArrayList<SipResponse> responses = bobCall.getAllReceivedResponses();
+        for (SipResponse sipResponse : responses) {
+               logger.info("response received : " + sipResponse.getStatusCode());
+            if(sipResponse.getStatusCode() == Response.NOT_FOUND) {
+                return;
+            }
+        }
+        assertTrue("we didn't get a 404 as we should have", false);
     }
 	
 	@Test 
