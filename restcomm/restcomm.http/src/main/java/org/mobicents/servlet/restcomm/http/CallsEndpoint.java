@@ -40,6 +40,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
@@ -69,6 +70,8 @@ import akka.util.Timeout;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.TypeAdapter;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
@@ -83,7 +86,9 @@ import com.thoughtworks.xstream.XStream;
   private ActorRef callManager;
   private DaoManager daos;
   private Gson gson;
+  private GsonBuilder builder;
   private XStream xstream;
+  private CallDetailRecordListConverter listConverter;
 
   public CallsEndpoint() {
     super();
@@ -97,15 +102,17 @@ import com.thoughtworks.xstream.XStream;
     daos = (DaoManager)context.getAttribute(DaoManager.class.getName());
     super.init(configuration);
     CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
-    final GsonBuilder builder = new GsonBuilder();
+    listConverter = new CallDetailRecordListConverter(configuration);
+    builder = new GsonBuilder();
     builder.registerTypeAdapter(CallDetailRecord.class, converter);
+	builder.registerTypeAdapter(CallDetailRecordList.class, listConverter);
     builder.setPrettyPrinting();
     gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new CallDetailRecordListConverter(configuration));
     xstream.registerConverter(new RestCommResponseConverter(configuration));
+	xstream.registerConverter(new CallDetailRecordListConverter(configuration));
   }
   
   protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
@@ -127,6 +134,74 @@ import com.thoughtworks.xstream.XStream;
     }
   }
   
+  protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType){
+//	  final CallDetailRecordList cdrs;
+
+	  try { 
+		  secure(new Sid(accountSid), "RestComm:Read:Calls"); 
+	  } catch(final AuthorizationException exception) { 
+		  return status(UNAUTHORIZED).build(); 
+	  }
+	  
+	  //Issue 110
+	  String pageSize = info.getQueryParameters().getFirst("PageSize");
+
+	  String page = info.getQueryParameters().getFirst("Page");
+	  
+	  String afterSid = info.getQueryParameters().getFirst("AfterSid");
+	  
+	  String recipient = info.getQueryParameters().getFirst("To");
+	  String sender = info.getQueryParameters().getFirst("From");
+	  String status = info.getQueryParameters().getFirst("Status");
+	  String startTime = info.getQueryParameters().getFirst("StartTime");
+	  String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
+
+	  Integer pageSizeInt, pageInt;
+	  
+	  if (pageSize == null) {
+		  pageSizeInt = 50;
+	  } else {
+		  pageSizeInt = Integer.parseInt(pageSize);
+	  }
+		  
+	  if (page == null) {
+		  pageInt = 0;
+	  } else {
+		  pageInt = Integer.parseInt(page);  
+	  }
+		  
+	  
+	  int limit = pageSizeInt;
+	  int offset = (pageInt == 0) ? 0 : (((pageInt-1)*pageSizeInt)+pageSizeInt);
+	  
+	  CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
+	  
+	  CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, 
+			  status, startTime, parentCallSid, limit, offset);
+
+	  final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
+	  final int total = dao.getTotalCallDetailRecords(filter);
+
+	  listConverter.setCount(total);
+	  listConverter.setPage(pageInt);
+	  listConverter.setPageSize(pageSizeInt);
+	  listConverter.setPathUri(info.getRequestUri().getPath());
+	  
+	  
+
+
+	  
+	  
+	  if(APPLICATION_XML_TYPE == responseType) {
+		  final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
+		  return ok(xstream.toXML(response), APPLICATION_XML).build();
+	  } else if(APPLICATION_JSON_TYPE == responseType) {
+		  return ok(gson.toJson(new CallDetailRecordList(cdrs)), APPLICATION_JSON).build();
+	  } else {
+		  return null;
+	  }
+  }
+  
   protected Response getCalls(final String accountSid, final MediaType responseType) {
     try { secure(new Sid(accountSid), "RestComm:Read:Calls"); }
     catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
@@ -143,13 +218,7 @@ import com.thoughtworks.xstream.XStream;
   }
   
   //Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
-  protected Response getCallsByFilters(String accountSid, UriInfo info, final MediaType responseType) {
-
-	  try { 
-		  secure(new Sid(accountSid), "RestComm:Read:Calls"); 
-	  }catch(final AuthorizationException exception) { 
-		  return status(UNAUTHORIZED).build(); 
-	  }
+  protected List<CallDetailRecord> getCallsByFilters(String accountSid, UriInfo info, int limit, int offset) {
 
 	  String recipient = info.getQueryParameters().getFirst("To");
 	  String sender = info.getQueryParameters().getFirst("From");
@@ -160,18 +229,11 @@ import com.thoughtworks.xstream.XStream;
 	  CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 	  
 	  CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, 
-			  status, startTime, parentCallSid);
+			  status, startTime, parentCallSid, limit, offset);
 
 	  final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
 
-	  if(APPLICATION_XML_TYPE == responseType) {
-		  final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
-		  return ok(xstream.toXML(response), APPLICATION_XML).build();
-	  } else if(APPLICATION_JSON_TYPE == responseType) {
-		  return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
-	  } else {
-		  return null;
-	  }
+	  return cdrs;
   }
   
   private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
