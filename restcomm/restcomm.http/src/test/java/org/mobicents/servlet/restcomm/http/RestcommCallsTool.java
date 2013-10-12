@@ -6,6 +6,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -43,7 +44,11 @@ public class RestcommCallsTool {
 		return accountsUrl;
 	}
 	
-	public JsonArray getCalls(String deploymentUrl, String username, String authToken){	
+	public JsonObject getCalls(String deploymentUrl, String username, String authToken){	
+		return getCalls(deploymentUrl, username, authToken, null, null);
+	}
+	
+	public JsonObject getCalls(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize){	
 		
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -52,14 +57,30 @@ public class RestcommCallsTool {
 		
 		WebResource webResource = jerseyClient.resource(url);
 	    
-	    String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);  
+		String response = null;
+		
+		if(page != null || pageSize != null){
+			MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+			
+			if (page != null)
+				params.add("Page", String.valueOf(page));
+			if (pageSize != null)
+				params.add("PageSize", String.valueOf(pageSize));
+			
+			response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON).get(String.class);
+		} else {
+			response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+		}
+	
 	    JsonParser parser = new JsonParser();
-	    JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+	    JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 	    
-		return jsonArray;
+//	    JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+	    
+		return jsonObject;
 	}
 
-	public JsonArray getCallsUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters){	
+	public JsonObject getCallsUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters){	
 		
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -74,11 +95,11 @@ public class RestcommCallsTool {
 			String filterData = filters.get(filterName);
 			params.add(filterName, filterData);
 		}
-	    
-	    String response = webResource.path("filters").queryParams(params).accept(MediaType.APPLICATION_JSON).get(String.class);  
+	    webResource = webResource.queryParams(params);
+	    String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);  
 	    JsonParser parser = new JsonParser();
-	    JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+	    JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 	    
-		return jsonArray;
+		return jsonObject;
 	}
 }
