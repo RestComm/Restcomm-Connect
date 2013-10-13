@@ -112,7 +112,7 @@ import com.thoughtworks.xstream.XStream;
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
     xstream.registerConverter(new RestCommResponseConverter(configuration));
-	xstream.registerConverter(new CallDetailRecordListConverter(configuration));
+	xstream.registerConverter(listConverter);
   }
   
   protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
@@ -186,11 +186,6 @@ import com.thoughtworks.xstream.XStream;
 	  listConverter.setPage(pageInt);
 	  listConverter.setPageSize(pageSizeInt);
 	  listConverter.setPathUri(info.getRequestUri().getPath());
-	  
-	  
-
-
-	  
 	  
 	  if(APPLICATION_XML_TYPE == responseType) {
 		  final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
