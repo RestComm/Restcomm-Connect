@@ -70,8 +70,23 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
       session.close();
     }
   }
+  
+  //Issue 110
+  @Override
+  public Integer getTotalCallDetailRecords(CallDetailRecordFilter filter) {
+	
+	  final SqlSession session = sessions.openSession();
+	  try {
+		  final Integer total = session.selectOne(namespace + "getTotalCallDetailRecordByUsingFilters", filter);
+		  return total;
+	  } finally {
+		  session.close();
+	  }
+	  
+  }
 
 //Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
   @Override
   public List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter) {
 

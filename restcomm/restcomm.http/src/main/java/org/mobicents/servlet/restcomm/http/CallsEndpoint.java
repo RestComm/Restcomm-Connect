@@ -83,7 +83,9 @@ import com.thoughtworks.xstream.XStream;
   private ActorRef callManager;
   private DaoManager daos;
   private Gson gson;
+  private GsonBuilder builder;
   private XStream xstream;
+  private CallDetailRecordListConverter listConverter;
 
   public CallsEndpoint() {
     super();
@@ -97,15 +99,17 @@ import com.thoughtworks.xstream.XStream;
     daos = (DaoManager)context.getAttribute(DaoManager.class.getName());
     super.init(configuration);
     CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
-    final GsonBuilder builder = new GsonBuilder();
+    listConverter = new CallDetailRecordListConverter(configuration);
+    builder = new GsonBuilder();
     builder.registerTypeAdapter(CallDetailRecord.class, converter);
+	builder.registerTypeAdapter(CallDetailRecordList.class, listConverter);
     builder.setPrettyPrinting();
     gson = builder.create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
-    xstream.registerConverter(new CallDetailRecordListConverter(configuration));
     xstream.registerConverter(new RestCommResponseConverter(configuration));
+	xstream.registerConverter(listConverter);
   }
   
   protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
@@ -127,48 +131,54 @@ import com.thoughtworks.xstream.XStream;
     }
   }
   
-  protected Response getCalls(final String accountSid, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Calls"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
-    final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(new Sid(accountSid));
-    if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
-    } else {
-      return null;
-    }
-  }
-  
-  //Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
-  protected Response getCallsByFilters(String accountSid, UriInfo info, final MediaType responseType) {
+//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110  
+  protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType){
 
 	  try { 
 		  secure(new Sid(accountSid), "RestComm:Read:Calls"); 
-	  }catch(final AuthorizationException exception) { 
+	  } catch(final AuthorizationException exception) { 
 		  return status(UNAUTHORIZED).build(); 
 	  }
-
+	  
+	  String pageSize = info.getQueryParameters().getFirst("PageSize");
+	  String page = info.getQueryParameters().getFirst("Page");
+//	  String afterSid = info.getQueryParameters().getFirst("AfterSid");
 	  String recipient = info.getQueryParameters().getFirst("To");
 	  String sender = info.getQueryParameters().getFirst("From");
 	  String status = info.getQueryParameters().getFirst("Status");
 	  String startTime = info.getQueryParameters().getFirst("StartTime");
 	  String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
 	  
+	  if (pageSize == null) {
+		  pageSize = "50";
+	  }
+		  
+	  if (page == null) {
+		  page = "0";
+	  } 
+	  
+	  int limit = Integer.parseInt(pageSize);
+	  int offset = (page == "0") ? 0 : (((Integer.parseInt(page)-1)*Integer.parseInt(pageSize))+Integer.parseInt(pageSize));
+	  
 	  CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 	  
 	  CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, 
-			  status, startTime, parentCallSid);
+			  status, startTime, parentCallSid, limit, offset);
 
 	  final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
+	  final int total = dao.getTotalCallDetailRecords(filter);
 
+	  listConverter.setCount(total);
+	  listConverter.setPage(Integer.parseInt(page));
+	  listConverter.setPageSize(Integer.parseInt(pageSize));
+	  listConverter.setPathUri(info.getRequestUri().getPath());
+	  
 	  if(APPLICATION_XML_TYPE == responseType) {
 		  final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
 		  return ok(xstream.toXML(response), APPLICATION_XML).build();
 	  } else if(APPLICATION_JSON_TYPE == responseType) {
-		  return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
+		  return ok(gson.toJson(new CallDetailRecordList(cdrs)), APPLICATION_JSON).build();
 	  } else {
 		  return null;
 	  }

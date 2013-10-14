@@ -41,4 +41,5 @@ public interface CallDetailRecordsDao {
 	
 	//Support for filtering of calls list result, Issue 153
 	public List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
+	Integer getTotalCallDetailRecords(CallDetailRecordFilter filter);
 }
