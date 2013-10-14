@@ -51,23 +51,15 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     return getCall(accountSid, sid, APPLICATION_XML_TYPE);
   }
   
-  @GET public Response getCalls(@PathParam("accountSid") final String accountSid) {
-    return getCalls(accountSid, APPLICATION_XML_TYPE);
+//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
+  @GET public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+    return getCalls(accountSid, info, APPLICATION_XML_TYPE);
   }
   
   @POST public Response putCall(@PathParam("accountSid") final String accountSid,
       final MultivaluedMap<String, String> data) {
     return putCall(accountSid, data, APPLICATION_XML_TYPE);
-  }
-    
-  //Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
-  //Example:
-  //curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/filters?status=completed&recipient=15126002188&startTime=2013-09-06
-  @Path("/filters")
-  @GET
-  public Response getCallsByUsingFilters(@PathParam("accountSid") String accountSid, @Context UriInfo info){
-	  
-	  return getCallsByFilters(accountSid, info, APPLICATION_XML_TYPE);
   }
   
 }
