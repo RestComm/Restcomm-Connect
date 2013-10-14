@@ -16,6 +16,7 @@
   </select>
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
+	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
 	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE "account_sid"=#{accountSid}
 
@@ -38,6 +39,7 @@
 	</select>
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
+	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
 	<select id="getCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" AS "restcomm_call_detail_records" WHERE "account_sid"=#{accountSid}
 
@@ -55,15 +57,10 @@
 		</if>
 		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
 		<if test="startTime != null">
-		    AND "start_time" &gt;= #{startTime}
+		    AND "start_time" &gt;= #{startTime} order by "start_time"
 		</if>
 		
-		<!-- Issue 110 -->
 		LIMIT #{limit} OFFSET #{offset}
-		
-		<if test="startTime != null">
- 			order by "start_time"
-		</if>
 	</select>  
   
   <select id="getCallDetailRecords" parameterType="string" resultType="hashmap">

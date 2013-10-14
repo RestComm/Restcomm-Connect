@@ -1,16 +1,12 @@
 package org.mobicents.servlet.restcomm.http;
 
-import java.io.Writer;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
-import org.mobicents.servlet.restcomm.entities.RestCommResponse;
-import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordConverter;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -18,10 +14,6 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
-import com.thoughtworks.xstream.io.json.JsonWriter;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -91,23 +83,10 @@ public class RestcommCallsTool {
 	
 			return jsonObject;
 		} else {
-//			XStream xstream = new XStream();
-			
-			XStream xstream = new XStream(new JsonHierarchicalStreamDriver() {
-			    public HierarchicalStreamWriter createWriter(Writer writer) {
-			        return new JsonWriter(writer, JsonWriter.DROP_ROOT_MODE);
-			    }
-			});
-			
-//			 XStream xstream = new XStream(new JettisonMappedXmlDriver());
-		        xstream.setMode(XStream.NO_REFERENCES);
-
+			XStream xstream = new XStream();
 			xstream.alias("cdrlist", CallDetailRecordList.class);
-			System.out.println(xstream.toXML(response));
 			JsonObject jsonObject = parser.parse(xstream.toXML(response)).getAsJsonObject();
-			
-		    System.out.println(xstream.toXML(response));
-			return null;
+			return jsonObject;
 		}
 
 	}
