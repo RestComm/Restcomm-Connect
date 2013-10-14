@@ -48,6 +48,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 		return CallDetailRecordList.class.equals(klass);
 	}
 
+	//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+	//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
 	@Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
 			final MarshallingContext context) {
 		final CallDetailRecordList list = (CallDetailRecordList)object;
@@ -71,6 +73,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 		writer.endNode();
 	}
 
+	//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+	//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
 	@Override
 	public JsonObject serialize(CallDetailRecordList cdrList, Type type, JsonSerializationContext context) { 
 

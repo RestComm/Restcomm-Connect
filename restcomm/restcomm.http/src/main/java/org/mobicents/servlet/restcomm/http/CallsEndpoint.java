@@ -40,7 +40,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
@@ -70,8 +69,6 @@ import akka.util.Timeout;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.TypeAdapter;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
@@ -134,8 +131,9 @@ import com.thoughtworks.xstream.XStream;
     }
   }
   
+//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110  
   protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType){
-//	  final CallDetailRecordList cdrs;
 
 	  try { 
 		  secure(new Sid(accountSid), "RestComm:Read:Calls"); 
@@ -143,36 +141,25 @@ import com.thoughtworks.xstream.XStream;
 		  return status(UNAUTHORIZED).build(); 
 	  }
 	  
-	  //Issue 110
 	  String pageSize = info.getQueryParameters().getFirst("PageSize");
-
 	  String page = info.getQueryParameters().getFirst("Page");
-	  
-	  String afterSid = info.getQueryParameters().getFirst("AfterSid");
-	  
+//	  String afterSid = info.getQueryParameters().getFirst("AfterSid");
 	  String recipient = info.getQueryParameters().getFirst("To");
 	  String sender = info.getQueryParameters().getFirst("From");
 	  String status = info.getQueryParameters().getFirst("Status");
 	  String startTime = info.getQueryParameters().getFirst("StartTime");
 	  String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
-
-	  Integer pageSizeInt, pageInt;
 	  
 	  if (pageSize == null) {
-		  pageSizeInt = 50;
-	  } else {
-		  pageSizeInt = Integer.parseInt(pageSize);
+		  pageSize = "50";
 	  }
 		  
 	  if (page == null) {
-		  pageInt = 0;
-	  } else {
-		  pageInt = Integer.parseInt(page);  
-	  }
-		  
+		  page = "0";
+	  } 
 	  
-	  int limit = pageSizeInt;
-	  int offset = (pageInt == 0) ? 0 : (((pageInt-1)*pageSizeInt)+pageSizeInt);
+	  int limit = Integer.parseInt(pageSize);
+	  int offset = (page == "0") ? 0 : (((Integer.parseInt(page)-1)*Integer.parseInt(pageSize))+Integer.parseInt(pageSize));
 	  
 	  CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 	  
@@ -183,8 +170,8 @@ import com.thoughtworks.xstream.XStream;
 	  final int total = dao.getTotalCallDetailRecords(filter);
 
 	  listConverter.setCount(total);
-	  listConverter.setPage(pageInt);
-	  listConverter.setPageSize(pageSizeInt);
+	  listConverter.setPage(Integer.parseInt(page));
+	  listConverter.setPageSize(Integer.parseInt(pageSize));
 	  listConverter.setPathUri(info.getRequestUri().getPath());
 	  
 	  if(APPLICATION_XML_TYPE == responseType) {
@@ -195,40 +182,6 @@ import com.thoughtworks.xstream.XStream;
 	  } else {
 		  return null;
 	  }
-  }
-  
-  protected Response getCalls(final String accountSid, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Calls"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
-    final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(new Sid(accountSid));
-    if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
-    } else {
-      return null;
-    }
-  }
-  
-  //Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
-  protected List<CallDetailRecord> getCallsByFilters(String accountSid, UriInfo info, int limit, int offset) {
-
-	  String recipient = info.getQueryParameters().getFirst("To");
-	  String sender = info.getQueryParameters().getFirst("From");
-	  String status = info.getQueryParameters().getFirst("Status");
-	  String startTime = info.getQueryParameters().getFirst("StartTime");
-	  String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
-	  
-	  CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
-	  
-	  CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, 
-			  status, startTime, parentCallSid, limit, offset);
-
-	  final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
-
-	  return cdrs;
   }
   
   private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {

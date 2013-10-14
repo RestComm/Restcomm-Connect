@@ -15,7 +15,6 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -92,36 +91,6 @@ public class CallsEndpointTest {
 	}
 	
 	@Test
-	public void getCallsListUsingPageSizeXML(){
-		JsonObject firstPage = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken,null, 100, false);
-		
-//		System.out.println(firstPageResp.getObject().toString());
-		
-//		int totalSize = firstPage.get("total").getAsInt();
-//		JsonArray firstPageCallsArray = firstPage.get("calls").getAsJsonArray();
-//		int firstPageCallsArraySize = firstPageCallsArray.size();
-//		assertTrue(firstPageCallsArraySize == 100 );
-//		assertTrue(firstPage.get("start").getAsInt() == 0);
-//		assertTrue(firstPage.get("end").getAsInt() == 99);
-//
-//		
-//		JsonObject secondPage = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken, 2, 100, false);
-//		JsonArray secondPageCallsArray = secondPage.get("calls").getAsJsonArray();
-//		assertTrue(secondPageCallsArray.size() == 100);
-//		assertTrue(secondPage.get("start").getAsInt() == 200);
-//		assertTrue(secondPage.get("end").getAsInt() == 299);
-//		
-//		JsonObject lastPage = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken,firstPage.get("num_pages").getAsInt(), 100, true); 
-//		JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
-//		assertTrue(lastPageCallsArray.get(lastPageCallsArray.size()-1).getAsJsonObject().get("sid").getAsString().equals("CAfe9ce46f104f4beeb10c83a5dad2be66"));
-//		assertTrue(lastPageCallsArray.size() == 42);
-//		assertTrue(lastPage.get("start").getAsInt() == 400);
-//		assertTrue(lastPage.get("end").getAsInt() == 442);
-//		
-//		assertTrue(totalSize == 442);		
-	}
-	
-	@Test
 	public void getCallsListFilteredByStatus(){
 		Map<String, String> filters = new HashMap<String, String>();
 		filters.put("Status", "in-progress");
@@ -131,76 +100,84 @@ public class CallsEndpointTest {
 		JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
 				adminAccountSid, adminAuthToken, filters);
 		
-		assertTrue(filteredCallsByStatusObject.get("calls").getAsJsonArray().size() > 0);
+		assertTrue(filteredCallsByStatusObject.get("calls").getAsJsonArray().size() == 50);
+		assertTrue(allCallsObject.get("start").getAsInt() == 0);
+		assertTrue(allCallsObject.get("end").getAsInt() == 49);
+		assertTrue(filteredCallsByStatusObject.get("start").getAsInt() == 0);
+		assertTrue(filteredCallsByStatusObject.get("end").getAsInt() == 49);
 		assertTrue(allCallsObject.get("calls").getAsJsonArray().size() == filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
 	}
 
-//	@Test
-//	public void getCallsListFilteredBySender(){
-//		Map<String, String> filters = new HashMap<String, String>();
-//		filters.put("From", "3021097%");
-//		JsonArray allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-//		
-//		JsonArray filteredCallsBySender = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
-//				adminAccountSid, adminAuthToken, filters);
-//		
-//		assertTrue(filteredCallsBySender.size() > 0);
-//		assertTrue(allCalls.size() > filteredCallsBySender.size());
-//	}
-//
-//	@Test
-//	public void getCallsListFilteredByRecipient(){
-//		Map<String, String> filters = new HashMap<String, String>();
-//		filters.put("To", "1512600%");
-//		JsonArray allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-//		
-//		JsonArray filteredCallsByRecipient = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
-//				adminAccountSid, adminAuthToken, filters);
-//		
-//		assertTrue(filteredCallsByRecipient.size() > 0);
-//		assertTrue(allCalls.size() > filteredCallsByRecipient.size());
-//	}
-//	
-//	@Test
-//	public void getCallsListFilteredByStartTime(){
-//		Map<String, String> filters = new HashMap<String, String>();
-//		filters.put("StartTime", "2013-09-10");
-//		JsonArray allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-//		
-//		JsonArray filteredCallsByStartTime = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
-//				adminAccountSid, adminAuthToken, filters);
-//		
-//		assertTrue(filteredCallsByStartTime.size() > 0);
-//		assertTrue(allCalls.size() > filteredCallsByStartTime.size());
-//	}
-//	
-//	@Test
-//	public void getCallsListFilteredByParentCallSid(){
-//		Map<String, String> filters = new HashMap<String, String>();
-//		filters.put("ParentCallSid", "CA01a09068a1f348269b6670ef599a6e57");
-//		
-//		JsonArray filteredCallsByParentCallSid = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
-//				adminAccountSid, adminAuthToken, filters);
-//		
-//		assertTrue(filteredCallsByParentCallSid.size() == 0);
-//	}
-//	
-//	@Test
-//	public void getCallsListFilteredUsingMultipleFilters(){
-//		Map<String, String> filters = new HashMap<String, String>();
-//		filters.put("StartTime", "2013-09-10");
-//		filters.put("To", "1512600%");
-//		filters.put("From", "3021097%");
-//		filters.put("Status", "in-progress");
-//		
-//		JsonArray allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-//		
-//		JsonArray filteredCallsUsingMultipleFilters = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
-//				adminAccountSid, adminAuthToken, filters);
-//		
-//		assertTrue(filteredCallsUsingMultipleFilters.size() > 0);
-//		assertTrue(allCalls.size() > filteredCallsUsingMultipleFilters.size());
-//	}	
+	@Test
+	public void getCallsListFilteredBySender(){
+		Map<String, String> filters = new HashMap<String, String>();
+		filters.put("From", "3021097%");
+		JsonObject allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+		
+		JsonObject filteredCallsBySender = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
+				adminAccountSid, adminAuthToken, filters);
+		
+		assertTrue(filteredCallsBySender.get("calls").getAsJsonArray().size() == 50);
+		assertTrue(allCalls.get("start").getAsInt() == 0);
+		assertTrue(allCalls.get("end").getAsInt() == 49);
+		assertTrue(filteredCallsBySender.get("start").getAsInt() == 0);
+		assertTrue(filteredCallsBySender.get("end").getAsInt() == 49);
+		assertTrue(allCalls.get("calls").getAsJsonArray().size() == filteredCallsBySender.get("calls").getAsJsonArray().size());
+	}
+
+	@Test
+	public void getCallsListFilteredByRecipient(){
+		Map<String, String> filters = new HashMap<String, String>();
+		filters.put("To", "1512600%");
+		JsonObject allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+		
+		JsonObject filteredCallsByRecipient = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
+				adminAccountSid, adminAuthToken, filters);
+		
+		assertTrue(filteredCallsByRecipient.get("calls").getAsJsonArray().size() == 50);
+		assertTrue(allCalls.get("calls").getAsJsonArray().size() == filteredCallsByRecipient.get("calls").getAsJsonArray().size());
+	}
+	
+	@Test
+	public void getCallsListFilteredByStartTime(){
+		Map<String, String> filters = new HashMap<String, String>();
+		filters.put("StartTime", "2013-09-10");
+		JsonObject allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+		
+		JsonObject filteredCallsByStartTime = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
+				adminAccountSid, adminAuthToken, filters);
+		
+		assertTrue(filteredCallsByStartTime.get("calls").getAsJsonArray().size() > 0);
+		assertTrue(allCalls.get("calls").getAsJsonArray().size() == filteredCallsByStartTime.get("calls").getAsJsonArray().size());
+	}
+	
+	@Test
+	public void getCallsListFilteredByParentCallSid(){
+		Map<String, String> filters = new HashMap<String, String>();
+		filters.put("ParentCallSid", "CA01a09068a1f348269b6670ef599a6e57");
+		
+		JsonObject filteredCallsByParentCallSid = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
+				adminAccountSid, adminAuthToken, filters);
+		
+		assertTrue(filteredCallsByParentCallSid.get("calls").getAsJsonArray().size() == 0);
+	}
+	
+	@Test
+	public void getCallsListFilteredUsingMultipleFilters(){
+		Map<String, String> filters = new HashMap<String, String>();
+		filters.put("StartTime", "2013-09-10");
+		filters.put("To", "1512600%");
+		filters.put("From", "3021097%");
+		filters.put("Status", "in-progress");
+		
+		JsonObject allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+		
+		JsonObject filteredCallsUsingMultipleFilters = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(), 
+				adminAccountSid, adminAuthToken, filters);
+		
+		assertTrue(filteredCallsUsingMultipleFilters.get("calls").getAsJsonArray().size() > 0);
+		assertTrue(allCalls.get("calls").getAsJsonArray().size() > filteredCallsUsingMultipleFilters.get("calls").getAsJsonArray().size());
+	}	
 	
 	@Deployment(name="ClientsEndpointTest", managed=true, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
