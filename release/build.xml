@@ -68,7 +68,7 @@
 	<property name="telscale-diameter.download.url" value="ftp://ftp.box.com/TelScale%20jDiameter/${telscale-diameter.version}/${telscale-diameter.download.distro.file}" />
 	<property name="telscale-diameter.distro.zip.path" value="${checkout.dir}/${telscale-diameter.download.distro.file}" />
 
-	<property name="release.build.goals" value="clean install -DskipTests=true"/>
+	<property name="release.build.goals" value="clean install -Dmaven.test.skip=true"/>
 	<property name="release.build.test.goals" value="clean install"/>
 	<property name="release.ts.deploy.goals" value="clean deploy"/>
 	
