@@ -1,8 +1,4 @@
-package org.mobicents.servlet.restcomm.telephony;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+package telephony;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -14,6 +10,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

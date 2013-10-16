@@ -1,15 +1,4 @@
-package org.mobicents.servlet.restcomm.telephony;
-
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.net.URL;
-import java.text.ParseException;
-
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
+package telephony;
 
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -18,17 +7,19 @@ import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.*;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+import java.net.URL;
+import java.text.ParseException;
+
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.*;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.

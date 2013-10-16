@@ -1,16 +1,4 @@
-package org.mobicents.servlet.restcomm.telephony;
-
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import gov.nist.javax.sip.message.SIPResponse;
-
-import java.text.ParseException;
-import java.util.ArrayList;
-
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
+package telephony;
 
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
@@ -30,9 +18,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.telephony.Version;
 
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+import java.text.ParseException;
+import java.util.ArrayList;
+
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
