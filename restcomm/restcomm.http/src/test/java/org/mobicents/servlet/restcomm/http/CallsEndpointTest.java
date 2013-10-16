@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -21,10 +22,12 @@ import com.google.gson.JsonObject;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
 
 @RunWith(Arquillian.class)
 public class CallsEndpointTest {
+    private final static Logger logger = Logger.getLogger(CallsEndpointTest.class.getName());
 
 	private static final String version = "6.1.2-TelScale-SNAPSHOT";
 
@@ -181,6 +184,7 @@ public class CallsEndpointTest {
 	
 	@Deployment(name="ClientsEndpointTest", managed=true, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
+        logger.info("Packaging Test App");
 		final WebArchive archive = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.application:war:" + version)
 				.withoutTransitivity().asSingle(WebArchive.class);
@@ -206,55 +210,55 @@ public class CallsEndpointTest {
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.dao:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.asr:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.fax:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.tts.acapela:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.tts.api:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.mgcp:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.http:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.interpreter:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.sms.api:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.sms:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.telephony.api:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		dependency = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.telephony:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
+                .offline().withoutTransitivity().asSingle(JavaArchive.class);
 		archive.addAsLibrary(dependency);
 		archive.delete("/WEB-INF/sip.xml");
 		archive.delete("/WEB-INF/conf/restcomm.xml");
@@ -262,6 +266,7 @@ public class CallsEndpointTest {
 		archive.addAsWebInfResource("sip.xml");
 		archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
 		archive.addAsWebInfResource("restcomm_with_Data.script", "data/hsql/restcomm.script");
+        logger.info("Packaged Test App");
 		return archive;
 	}
 	
