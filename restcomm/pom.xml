@@ -91,7 +91,8 @@
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
-	</modules>
+        <module>restcomm.testsuite</module>
+    </modules>
 
 	<properties>
 		<scala-lang.version>2.10.1</scala-lang.version>
