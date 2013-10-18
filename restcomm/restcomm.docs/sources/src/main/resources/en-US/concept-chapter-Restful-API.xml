@@ -17,28 +17,35 @@
 	
 		<formalpara>
 		<title>User Authentication</title>
-		<para>Before accepting any Restful API call, Restcomm will need to authenticate the requestor. 
-		To authenticate against Restcomm you will need a valid Account and use as a username either the Account's SID or Email Address and for 
-		password the AuthToken of the Account. </para>
-		<para>For example, the following are the same:</para>
+		<para>Before accepting any Restful API call, Restcomm will authenticate the request source using either a valid Account SID or an Email Account combined with an Authentication Token. </para>
+		<para>See below for the default Administrator account.</para>
+
+
 <programlisting>
 <![CDATA[
-curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
 
+{AccountSID}:{AuthToken}
+ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166 
 ]]>
 </programlisting>
-		<para>and</para>
+
+
+or
+
 <programlisting>
 <![CDATA[
-curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
 
+{AccountEmail}:{AuthToken}
+administrator@company.com:77f8c12cc7b8f8423e5c38b035249166
 ]]>
 </programlisting>
+
+
 	</formalpara>
 	
 	<section>
 		<title>Accounts</title>
-		<para>Accounts and subaccounts are useful for things like segmenting phone numbers and usage data for your users and
+		<para>Accounts and sub-accounts are useful for things like segmenting phone numbers and usage data for your users and
 		controlling access to data.</para>
 		<formalpara>
 			<title>Account Resource URI</title>
@@ -95,7 +102,7 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 				<para>Returns the representation of an Account resource, including the properties above.</para>
 			</formalpara>
 			<formalpara>
-				<para>Instead of the AccountSid, Email Address can be used also</para>
+				
 				
 			</formalpara>
 			<formalpara>
@@ -134,6 +141,70 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 				</tbody>
 			</tgroup>
 		</table>
+
+<formalpara>
+<title>Get information about the default account</title>
+</formalpara>
+
+<programlisting>
+<![CDATA[
+curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
+
+]]>
+</programlisting>
+
+<formalpara>
+<title>Change default account password(AuthToken)</title>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=NewPassword"
+
+]]>
+</programlisting>
+
+<note>
+<title>Command line versus Browser</title>
+<para>The above command uses the Account SID and the one below uses the Email Account. Note the <filename>administrator%40company.com</filename> is used instead of <filename>administrator@company.com</filename>. This is because using curl on the bash terminal doesn't parse the @ correctlyl. If you were to running on a browser, you can safely use the @ as the web browser will correctly handle it. </para>
+</note>
+<programlisting>
+<![CDATA[
+curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
+]]>
+</programlisting>
+
+<para>The above commands will print an output similar to the one below:</para>
+<programlisting>
+<![CDATA[
+
+<RestcommResponse>
+  <Account>
+    <Sid>ACae6e420f425248d6a26948c17a9e2acf</Sid>
+    <FriendlyName>Default Administrator Account</FriendlyName>
+    <Status>active</Status>
+    <Type>Full</Type>
+    <DateCreated>2012-04-24T00:00:00.000-06:00</DateCreated>
+    <DateUpdated>2012-04-24T00:00:00.000-06:00</DateUpdated>
+    <AuthToken>77f8c12cc7b8f8423e5c38b035249166</AuthToken>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf</Uri>
+    <SubresourceUris>
+      <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers</AvailablePhoneNumbers>
+      <Calls>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls</Calls>
+      <Conferences>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences</Conferences>
+      <IncomingPhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers</IncomingPhoneNumbers>
+      <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications</Notifications>
+      <OutgoingCallerIds>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/OutgoingCallerIds</OutgoingCallerIds>
+      <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings</Recordings>
+      <Sandbox>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Sandbox</Sandbox>
+      <SMSMessages>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages</SMSMessages>
+      <Transcriptions>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions</Transcriptions>
+    </SubresourceUris>
+  </Account>
+
+]]>
+</programlisting>
+
+
 		</section>
 		<section>
 			<title>Account List Resource</title>
@@ -148,11 +219,20 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 					<para>Returns the list representation of all the Sub-Account resources for this Account, including the
 					properties above.</para>
 				</formalpara>
+
+
+
+
+
+
 				<formalpara>
 					<title>HTTP POST</title>
 					<para>Creates a new Sub-Account and returns the representation of the Sub-Account resource, including
 					the properties above. Below you will find a list of required and optional parameters.</para>
 				</formalpara>
+
+
+	
 				<table frame='all'>
 				<title>Request Parameters</title>
 				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
@@ -190,6 +270,52 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 					</tbody>
 				</tgroup>
 			</table>
+
+<para>Here is an example of how to createa a sub-account. The sub-account will inherit the same permissions has the Administrator's account.</para>
+
+<programlisting>
+<![CDATA[
+
+curl -X POST http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm"
+ 
+
+]]>
+</programlisting>
+<note>
+<title>About Sub-accounts </title>
+<para>Note that the SID, Email and the AuthToken (see output below) of the sub-account can now be used instead of the Administrator's account</para>
+</note>
+<programlisting>
+<![CDATA[
+<RestcommResponse>
+  <Account>
+    <Sid>AC3b8f0dd2e5026abde018446cbb3b185d</Sid>
+    <FriendlyName>MySubAccount</FriendlyName>
+    <Status>active</Status>
+    <Type>Full</Type>
+    <DateCreated>2013-10-16T09:22:28.708-06:00</DateCreated>
+    <DateUpdated>2013-10-16T09:22:28.712-06:00</DateUpdated>
+    <AuthToken>53134d7a9914e2b47c8435ebdb50ded3</AuthToken>
+    <Uri>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d</Uri>
+    <SubresourceUris>
+      <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/AvailablePhoneNumbers</AvailablePhoneNumbers>
+      <Calls>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Calls</Calls>
+      <Conferences>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Conferences</Conferences>
+      <IncomingPhoneNumbers>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/IncomingPhoneNumbers</IncomingPhoneNumbers>
+      <Notifications>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Notifications</Notifications>
+      <OutgoingCallerIds>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/OutgoingCallerIds</OutgoingCallerIds>
+      <Recordings>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Recordings</Recordings>
+      <Sandbox>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Sandbox</Sandbox>
+      <SMSMessages>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/SMS/Messages</SMSMessages>
+      <Transcriptions>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Transcriptions</Transcriptions>
+    </SubresourceUris>
+  </Account>
+
+]]>
+</programlisting>
+
+
+
 			</section>
 		</section>
 	</section>
@@ -204,7 +330,7 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 		<formalpara>
 			<title>Searching For Numbers.</title>
 			<para>When using RestComm the way to search for new phone numbers is by searching
-			the AvailablePhoneNumbers list resource and providing the desired area code.</para>
+			the AvailablePhoneNumbers list resource and providing the desired area code as a filter.</para>
 		</formalpara>
 		<table frame='all'>
 			<title>Resource Properties</title>
@@ -257,6 +383,10 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 				</tbody>
 			</tgroup>
 		</table>
+
+
+
+
 		<section>
 			<title>Supported Operations</title>
 			<formalpara>
@@ -282,6 +412,24 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 				</tbody>
 			</tgroup>
 			</table>
+
+<note>
+<title>Querying Available Phone Numbers</title>
+<para>You need to be using RestComm for VoIP Innovations in order to be able to use this feature. See here for more details <ulink url="www.telestax.com/online-documentation"> RestComm AMI for VoIP Innovation</ulink> 
+
+</para>
+</note>
+
+<para>Here is an example, the AreaCode is any valid United States Code</para>
+<programlisting>
+<![CDATA[
+
+curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<Elastic_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers/US/Local -d "AreaCode=305"
+
+]]>
+</programlisting>
+
+
 		</section>
 	</section>
 	<section>
@@ -536,6 +684,70 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 				</tbody>
 			</tgroup>
 		</table>
+
+
+<formalpara>
+<title>Create a Client</title>
+<para>The client name will be Alice as shown below</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+
+ curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=test" 
+]]>
+</programlisting>
+<para>The output of the command will be similar to the one below</para>
+<programlisting>
+<![CDATA[
+
+{
+  "sid": "CL4e10e3b56a614414bcc1eeca5d96effe",
+  "date_created": "2013-10-16T08:51:32.460-06:00",
+  "date_updated": "2013-10-16T08:51:32.460-06:00",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "api_version": "2012-04-24",
+  "friendly_name": "alice",
+  "login": "alice",
+  "password": "test",
+  "status": "1",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe.json"
+
+]]>
+</programlisting>
+<formalpara>
+<title>Delete a Client</title>
+<para>You must use the Client SID</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe
+]]>
+</programlisting>
+
+
+<formalpara>
+<title>Change Client's Password</title>
+<para>You must use the Client SID as shown below:</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe -d "Password=NewPassword"
+]]>
+</programlisting>
+
+
+<formalpara>
+<title>Get List of available Clients</title>
+<para>The command below shows all Clients created using the default Admin Account</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/
+]]>
+</programlisting>
+
 			</section>
 		</section>
 	</section>
@@ -823,6 +1035,60 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 				</tbody>
 			</tgroup>
 		</table>
+
+<formalpara>
+<title>Attach a phone number to an application</title>
+<para>This one uses the default application</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+]]>
+</programlisting>
+<programlisting>
+<![CDATA[
+Result of the above command
+
+{
+  "sid": "PNdd7a0a0248244615978bd5781598e5eb",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "friendly_name": "234",
+  "phone_number": "+1234",
+  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "status_callback_method": "POST",
+  "voice_caller_id_lookup": false,
+  "date_created": "2013-10-04T17:42:02.500-06:00",
+  "date_updated": "2013-10-04T17:42:02.500-06:00",
+  "sms_method": "POST",
+  "sms_fallback_method": "POST",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb.json"
+
+]]>
+</programlisting>
+
+<formalpara>
+<title>Delete a phone number</title>
+<para>You have to get the SID of the phone and use curl to delete as follows</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X DELETE http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb
+]]>
+</programlisting>
+
+<formalpara>
+<title>List of phone numbers</title>
+<para>Gets all numbers created using IncomingPhoneNumbers.json</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+]]>
+</programlisting>
+
 			</section>
 		</section>
 	</section>
@@ -896,11 +1162,35 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 						<entry>Duration</entry>
 						<entry>The length of the call in seconds.</entry>
 					</row>
+
+					<row>
+						<entry>Price</entry>
+						<entry>The charge for this call, in the currency associated with the account. Populated after the call is completed.</entry>
+					</row>
+
+
 					<row>
 						<entry>Direction</entry>
 						<entry>A string describing the direction of the call. Possible values are inbound, outbound-api,
 						and outbound-dial</entry>
 					</row>
+
+<row>
+						<entry>AnsweredBy</entry>
+						<entry>If this call was initiated with answering machine detection, either human or machine. Empty otherwise.</entry>
+					</row>
+
+<row>
+						<entry>ApiVersion</entry>
+						<entry>Displays the current API version</entry>
+					</row>
+
+<row>
+						<entry>ForwardFrom</entry>
+						<entry>If this call was an incoming call forwarded from another number, the forwarding phone number (depends on carrier supporting forwarding). Empty otherwise.</entry>
+					</row>
+
+
 					<row>
 						<entry>CallerName</entry>
 						<entry>If this call was an incoming call, the caller's name. Empty otherwise.</entry>
@@ -990,7 +1280,290 @@ curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 					</tbody>
 				</tgroup>
 			</table>
-			</section>
+
+<formalpara>
+<title>Get a list of all available calls</title>
+<para>This will return all the available calls linked to the account SID</para>
+</formalpara>
+
+<note>
+<title>Working on a production server</title>
+<para>Using filter is a good practice on a server with thousands or millions of calls</para>
+</note>
+<programlisting>
+<![CDATA[
+curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls
+
+]]>
+</programlisting>
+
+<para>If the system hasn't received any calls, you will see the the output below</para>
+
+<programlisting>
+<![CDATA[
+<RestcommResponse>
+  <Calls page="0" numpages="0" pagesize="50" total="0" start="0" end="0" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50"/>
+
+]]>
+</programlisting>
+
+		</section>
+
+
+
+
+<section>
+
+<title>List Filter</title>
+
+<formalpara>
+<title>HTTP GET</title>
+<para>The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:</para>
+</formalpara>
+
+<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>To </entry>
+							<entry>Only show calls to this phone number or Client identifier.</entry>
+						</row>
+						<row>
+							<entry>From </entry>
+							<entry>Only show calls from this phone number or Client identifier.</entry>
+						</row>
+<row>
+							<entry>Status</entry>
+							<entry>Only show calls currently in this status. May be queued, ringing, in-progress, canceled, completed, failed, busy, or no-answer.</entry>
+						</row>
+<row>
+							<entry>StartTime</entry>
+							<entry>Only show calls that started on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for calls that started at or before midnight on a date, and StartTime=YYYY-MM-DD for calls that started at or after midnight on a date.</entry>
+						</row>
+<row>
+							<entry>ParentCallSid</entry>
+							<entry>Only show calls spawned by the call with this Sid.</entry>
+						</row>
+						
+					</tbody>
+				</tgroup>
+			</table>
+
+
+<formalpara>
+<title>Filter using the From parameter</title>
+<para>The example below will only return Calls made from client Alice</para>
+</formalpara>
+
+<programlisting>
+<![CDATA[
+ curl -X GET  http://administrator%40company.com:77f8c12cc7166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?From=alice
+]]>
+</programlisting>
+
+<para>The result will be similar to the one below</para>
+
+<programlisting>
+<![CDATA[
+<RestcommResponse>
+  <Calls page="0" numpages="0" pagesize="50" total="0" start="0" end="1" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50">
+    <Call>
+      <Sid>CAc0fb839632cf444f9066876d5de741e0</Sid>
+      <DateCreated>2013-10-18T04:51:47.643-06:00</DateCreated>
+      <DateUpdated>2013-10-18T04:51:49.174-06:00</DateUpdated>
+      <ParentCallSid/>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <To>1234</To>
+      <From>alice</From>
+      <PhoneNumberSid/>
+      <Status>completed</Status>
+      <StartTime>2013-10-18T04:51:47.671-06:00</StartTime>
+      <EndTime>2013-10-18T04:51:49.174-06:00</EndTime>
+      <Duration>1</Duration>
+      <Price>0.00</Price>
+      <Direction>inbound</Direction>
+      <AnsweredBy/>
+      <ApiVersion>2012-04-24</ApiVersion>
+      <ForwardedFrom/>
+      <CallerName/>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0</Uri>
+      <SubresourceUris>
+        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Notifications</Notifications>
+        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Recordings</Recordings>
+      </SubresourceUris>
+    </Call>
+  </Calls>
+
+]]>
+</programlisting>
+
+</section>
+
+<section>
+
+<title>Paging Information</title>
+
+<formalpara>
+<title>HTTP GET</title>
+<para>The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:</para>
+</formalpara>
+
+
+<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>Page </entry>
+							<entry>The current page number. Zero-indexed, so the first page is 0.</entry>
+						</row>
+						<row>
+							<entry>NumPages</entry>
+							<entry>The total number of pages.</entry>
+						</row>
+<row>
+							<entry>PageSize</entry>
+							<entry>How many items are in each page</entry>
+						</row>
+<row>
+							<entry>Total</entry>
+							<entry>The total number of items in the list.</entry>
+						</row>
+						<row>
+							<entry>Start</entry>
+							<entry>The position in the overall list of the first item in this page.</entry>
+						</row>
+						<row>
+							<entry>End</entry>
+							<entry>The position in the overall list of the last item in this page.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+
+
+
+
+
+<formalpara>
+<title>Example</title>
+<para>The command below will return a single item from the list of calls using the PageSize parameter</para>
+</formalpara>
+<programlisting>
+<![CDATA[
+curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?PageSize=1
+
+]]>
+</programlisting>
+
+<para>The result of the PageSize parameter</para>
+
+
+<programlisting>
+<![CDATA[
+<RestcommResponse>
+  <Calls page="0" numpages="7" pagesize="1" total="7" start="0" end="0" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=1" previouspageuri="null" nextpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=1&amp;PageSize=1&amp;AfterSid=CA4049cf008d6b4277b92ab863fd4ec7c8" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=7&amp;PageSize=1">
+    <Call>
+      <Sid>CA4049cf008d6b4277b92ab863fd4ec7c8</Sid>
+      <DateCreated>2013-10-18T04:49:45.942-06:00</DateCreated>
+      <DateUpdated>2013-10-18T04:49:46.272-06:00</DateUpdated>
+      <ParentCallSid/>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <To>1235</To>
+      <From>bob</From>
+      <PhoneNumberSid/>
+      <Status>completed</Status>
+      <StartTime>2013-10-18T04:49:45.994-06:00</StartTime>
+      <EndTime>2013-10-18T04:49:46.272-06:00</EndTime>
+      <Duration>0</Duration>
+      <Price>0.00</Price>
+      <Direction>inbound</Direction>
+      <AnsweredBy/>
+      <ApiVersion>2012-04-24</ApiVersion>
+      <ForwardedFrom/>
+      <CallerName/>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8</Uri>
+      <SubresourceUris>
+        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Notifications</Notifications>
+        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Recordings</Recordings>
+      </SubresourceUris>
+    </Call>
+  </Calls>
+
+
+]]>
+</programlisting>
+
+
+
+
+<formalpara>
+<title>Additional Paging Information</title>
+<para>The API returns URIs to the next, previous, first and last pages of the returned list as shown in the table below:</para>
+</formalpara>
+
+<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>Uri</entry>
+							<entry>The URI of the current page.</entry>
+						</row>
+						<row>
+							<entry>Firstpageuri</entry>
+							<entry>The URI for the first page of this list.</entry>
+						</row>
+						<row>
+							<entry>Nextpageuri</entry>
+							<entry>The URI for the next page of this list.</entry>
+						</row>
+						<row>
+							<entry>Previouspageuri</entry>
+							<entry>The URI for the previous page of this list.</entry>
+						</row>
+						<row>
+							<entry>Lastpageuri</entry>
+							<entry>The URI for the last page of this list.</entry>
+						</row>
+	
+					</tbody>
+				</tgroup>
+			</table>
+
+
+
+
+</section>
+
+
+
+
 		</section>
 	</section>
 	<section>
