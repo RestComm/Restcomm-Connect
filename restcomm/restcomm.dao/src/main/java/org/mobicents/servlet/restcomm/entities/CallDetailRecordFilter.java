@@ -15,11 +15,11 @@ public class CallDetailRecordFilter {
 	private final String status;
 	private final String startTime;
 	private final String parentCallSid;
-	private final int limit;
-	private final int offset;
+	private final Integer limit;
+	private final Integer offset;
 	
 	public CallDetailRecordFilter(String accountSid, String recipient, String sender, 
-			String status, String startTime, String parentCallSid, int limit, int offset) {
+			String status, String startTime, String parentCallSid, Integer limit, Integer offset) {
 		this.accountSid = accountSid;
 		
 		//The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character

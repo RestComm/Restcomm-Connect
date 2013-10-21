@@ -163,12 +163,19 @@ import com.thoughtworks.xstream.XStream;
 	  
 	  CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 	  
+	  CallDetailRecordFilter filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, 
+			  status, startTime, parentCallSid, null, null);
+	  final int total = dao.getTotalCallDetailRecords(filterForTotal);
+	  
+	  if(Integer.parseInt(page) > (total / limit)){
+		  return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
+	  }
+	  
 	  CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, 
 			  status, startTime, parentCallSid, limit, offset);
 
 	  final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
-	  final int total = dao.getTotalCallDetailRecords(filter);
-
+	  
 	  listConverter.setCount(total);
 	  listConverter.setPage(Integer.parseInt(page));
 	  listConverter.setPageSize(Integer.parseInt(pageSize));
