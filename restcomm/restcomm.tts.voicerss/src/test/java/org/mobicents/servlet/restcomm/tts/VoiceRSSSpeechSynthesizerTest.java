@@ -70,7 +70,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
 		final XMLConfiguration configuration = new XMLConfiguration(input);
 		tts = tts(configuration);
 		cache = cache("/tmp/cache","http://127.0.0.1:8080/restcomm/cache");
-		tempSystemDirectory = System.getProperty("java.io.tmpdir");
+		tempSystemDirectory = "file:"+System.getProperty("java.io.tmpdir")+"/";
 	}
 
 	@After public void after() throws Exception {
