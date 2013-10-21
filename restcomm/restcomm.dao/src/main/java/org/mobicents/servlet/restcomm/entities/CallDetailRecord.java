@@ -17,10 +17,10 @@
 package org.mobicents.servlet.restcomm.entities;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 
@@ -127,7 +127,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   }
 
   public BigDecimal getPrice() {
-    return price;
+    return (price == null) ? new BigDecimal("0.0") : price;
   }
   
   public String getDirection() {
