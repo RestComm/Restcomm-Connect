@@ -58,6 +58,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
 	private ActorSystem system;
 	private ActorRef tts;
 	private ActorRef cache;
+	private String tempSystemDirectory ;
 
 	public VoiceRSSSpeechSynthesizerTest() throws ConfigurationException {
 		super();
@@ -69,6 +70,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
 		final XMLConfiguration configuration = new XMLConfiguration(input);
 		tts = tts(configuration);
 		cache = cache("/tmp/cache","http://127.0.0.1:8080/restcomm/cache");
+		tempSystemDirectory = System.getProperty("java.io.tmpdir");
 	}
 
 	@After public void after() throws Exception {
@@ -161,7 +163,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
 					DiskCacheResponse.class);
 			assertTrue(diskCacheResponse.succeeded());
 
-			assertEquals("file:/tmp/"+hash+".wav",response.get().toString());
+			assertEquals(tempSystemDirectory+hash+".wav",response.get().toString());
 			assertEquals("http://127.0.0.1:8080/restcomm/cache/"+hash+".wav",diskCacheResponse.get().toString());
 
 			FileUtils.deleteQuietly(new File(response.get()));
@@ -192,7 +194,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
 					DiskCacheResponse.class);
 			assertTrue(diskCacheResponse.succeeded());
 
-			assertEquals("file:/tmp/"+hash+".wav",response.get().toString());
+			assertEquals(tempSystemDirectory+hash+".wav",response.get().toString());
 			assertEquals("http://127.0.0.1:8080/restcomm/cache/"+hash+".wav",diskCacheResponse.get().toString());
 
 			FileUtils.deleteQuietly(new File(response.get()));
