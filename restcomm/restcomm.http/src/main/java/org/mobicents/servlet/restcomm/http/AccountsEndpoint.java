@@ -122,11 +122,20 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 	  Sid sid = null;
 	  Account account = null;
 	  if(Sid.pattern.matcher(accountSid).matches()){
-			sid = new Sid(accountSid);
-			account = dao.getAccount(sid);
+		  	try {
+		  		sid = new Sid(accountSid);
+				account = dao.getAccount(sid);
+		  	} catch (Exception e){
+		        return status(NOT_FOUND).build();
+		  	}
+			
 		} else {
-			account = dao.getAccount(accountSid);
-			sid = account.getSid();
+			try {
+				account = dao.getAccount(accountSid);
+				sid = account.getSid();
+			} catch (Exception e){
+			      return status(NOT_FOUND).build();
+			}
 		}
 
     try { secure(sid, "RestComm:Read:Accounts"); }
