@@ -241,6 +241,7 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(inProgress, acquiringInternalLink));
 		transitions.add(new Transition(inProgress, closingInternalLink));
 		transitions.add(new Transition(inProgress, closingRemoteConnection));
+		transitions.add(new Transition(inProgress, acquiringMediaGatewayInfo));
 		transitions.add(new Transition(acquiringInternalLink, closingRemoteConnection));
 		transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
 		transitions.add(new Transition(initializingInternalLink, closingRemoteConnection));
