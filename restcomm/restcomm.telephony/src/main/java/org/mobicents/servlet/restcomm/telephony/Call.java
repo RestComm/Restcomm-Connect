@@ -149,6 +149,8 @@ public final class Call extends UntypedActor {
 	private String forwardedFrom;
 	private DateTime created;
 	private final List<ActorRef> observers;
+	
+	private ActorRef group;
 
 	public Call(final SipFactory factory, final ActorRef gateway) {
 		super();
@@ -450,7 +452,8 @@ public final class Call extends UntypedActor {
 			}
     } else if(inProgress.equals(state)) {
 			if(CreateMediaGroup.class.equals(klass)) {
-				final ActorRef group = getMediaGroup(message);
+				if(group == null)
+					group = getMediaGroup(message);
 				sender.tell(new CallResponse<ActorRef>(group), self);
 			} else if(DestroyMediaGroup.class.equals(klass)) {
 				final DestroyMediaGroup request = (DestroyMediaGroup)message;
