@@ -17,7 +17,6 @@
 package org.mobicents.servlet.restcomm.interpreter;
 
 import static akka.pattern.Patterns.ask;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
@@ -33,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +44,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.asr.AsrInfo;
@@ -88,12 +85,10 @@ import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
-import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Verbs;
 import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
 import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
 import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
@@ -101,37 +96,24 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
 import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
-import org.mobicents.servlet.restcomm.telephony.AddParticipant;
 import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
-import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.Cancel;
 import org.mobicents.servlet.restcomm.telephony.Collect;
-import org.mobicents.servlet.restcomm.telephony.ConferenceCenterResponse;
-import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
-import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
-import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
-import org.mobicents.servlet.restcomm.telephony.CreateCall;
-import org.mobicents.servlet.restcomm.telephony.CreateConference;
 import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.DestroyCall;
 import org.mobicents.servlet.restcomm.telephony.DestroyMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
-import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
-import org.mobicents.servlet.restcomm.telephony.Mute;
+import org.mobicents.servlet.restcomm.telephony.MediaGroupStatus;
 import org.mobicents.servlet.restcomm.telephony.Play;
 import org.mobicents.servlet.restcomm.telephony.Record;
 import org.mobicents.servlet.restcomm.telephony.Reject;
-import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.Stop;
-import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
@@ -157,11 +139,8 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 
 /**
- * @author thomas.quintana@telestax.com (Thomas Quintana)
- * @author jean.deruelle@telestax.com
  * @author gvagenas@telestax.com
  */
 public final class SubVoiceInterpreter extends UntypedActor {
@@ -200,6 +179,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 	private final State sendingSms;	
 	private final State hangingUp;
 	private final State finished;
+	private final State checkingMediaGroupState;
 	// FSM.
 	private final FiniteStateMachine fsm;
 	// The user specific configuration.
@@ -317,6 +297,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 
 		hangingUp = new State("hanging up", new HangingUp(source), null);
 		finished = new State("finished", new Finished(source), null);
+		checkingMediaGroupState = new State("checkingMediaGroupState", new CheckMediaGroupState(source), null);
 
 		// Initialize the transitions for the FSM.
 		final Set<Transition> transitions = new HashSet<Transition>();
@@ -327,9 +308,28 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(acquiringSynthesizerInfo, finished));
 		transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
 		transitions.add(new Transition(acquiringCallInfo, finished));
+		
+		transitions.add(new Transition(acquiringCallMediaGroup, checkingMediaGroupState));
 		transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
 		transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
 		transitions.add(new Transition(acquiringCallMediaGroup, finished));
+		
+		transitions.add(new Transition(checkingMediaGroupState, initializingCallMediaGroup));
+		transitions.add(new Transition(checkingMediaGroupState, faxing));
+		transitions.add(new Transition(checkingMediaGroupState, downloadingRcml));
+		transitions.add(new Transition(checkingMediaGroupState, playingRejectionPrompt));
+		transitions.add(new Transition(checkingMediaGroupState, pausing));
+		transitions.add(new Transition(checkingMediaGroupState, checkingCache));
+		transitions.add(new Transition(checkingMediaGroupState, caching));
+		transitions.add(new Transition(checkingMediaGroupState, synthesizing));
+		transitions.add(new Transition(checkingMediaGroupState, redirecting));
+		transitions.add(new Transition(checkingMediaGroupState, processingGatherChildren));
+		transitions.add(new Transition(checkingMediaGroupState, creatingRecording));
+		transitions.add(new Transition(checkingMediaGroupState, creatingSmsSession));
+		transitions.add(new Transition(checkingMediaGroupState, hangingUp));
+		transitions.add(new Transition(checkingMediaGroupState, finished));
+		transitions.add(new Transition(checkingMediaGroupState, ready));
+		
 		transitions.add(new Transition(initializingCallMediaGroup, faxing));
 		transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
 		transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
@@ -704,7 +704,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 				callInfo = response.get();
 				fsm.transition(message, downloadingRcml);
 			} else if(acquiringCallMediaGroup.equals(state)) {
-				fsm.transition(message, initializingCallMediaGroup);
+				fsm.transition(message, checkingMediaGroupState);
 			} 
 		} 	
 		else if(DownloaderResponse.class.equals(klass)) {
@@ -721,7 +721,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		else if(MediaGroupStateChanged.class.equals(klass)) {
 			final MediaGroupStateChanged event = (MediaGroupStateChanged)message;
 			if(MediaGroupStateChanged.State.ACTIVE == event.state()) {
-				if(initializingCallMediaGroup.equals(state)) {
+				if(initializingCallMediaGroup.equals(state) || checkingMediaGroupState.equals(state)) {
 					fsm.transition(message, ready);
 				} if (ready.equals(state)){
 					if(reject.equals(verb.name())) {
@@ -749,7 +749,9 @@ public final class SubVoiceInterpreter extends UntypedActor {
 					}
 				}
 			}else if(MediaGroupStateChanged.State.INACTIVE == event.state()) {
-				if(!hangingUp.equals(state)) {
+				if(checkingMediaGroupState.equals(state)){
+					fsm.transition(message, initializingCallMediaGroup);
+				} else if(!hangingUp.equals(state)) {
 					fsm.transition(message, hangingUp);
 				}
 			}
@@ -1060,6 +1062,25 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		}
 	}
 
+	private final class CheckMediaGroupState extends AbstractAction {
+		public CheckMediaGroupState(final ActorRef source) {
+			super(source);
+		}
+		
+		@SuppressWarnings("unchecked")
+		@Override
+		public void execute(Object message) throws Exception {
+			final Class<?> klass = message.getClass();
+			if(CallResponse.class.equals(klass)) {
+				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
+				callMediaGroup = response.get();
+				MediaGroupStatus status = new MediaGroupStatus();
+				callMediaGroup.tell(status, source);
+			}
+		}
+		
+	}
+	
 	private final class InitializingCallMediaGroup extends AbstractAction {
 		public InitializingCallMediaGroup(final ActorRef source) {
 			super(source);
@@ -1068,9 +1089,9 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		@SuppressWarnings("unchecked")
 		@Override public void execute(final Object message) throws Exception {
 			final Class<?> klass = message.getClass();
-			if(CallResponse.class.equals(klass)) {
-				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
-				callMediaGroup = response.get();
+			if(MediaGroupStateChanged.class.equals(klass)) {
+//				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
+//				callMediaGroup = response.get();
 				callMediaGroup.tell(new Observe(source), source);
 				callMediaGroup.tell(new StartMediaGroup(), source);
 			} else if(Tag.class.equals(klass)) {
