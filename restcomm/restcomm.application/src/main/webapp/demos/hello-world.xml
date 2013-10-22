@@ -2,5 +2,5 @@
 <Response>
 	<Say>Welcome to RestComm, a TeleStax sponsored project.</Say>
 	<Say language="de">Willkommen bei RestComm einem TeleStax geförderten Projektes.</Say>
-	<Say language="fr">Bienvenue à RestComm projet un TeleStax parrainé.</Say>
+	<Say language="fr">Bienvenue à RestComm un projet parrainé par TeleStax .</Say>
 </Response>
