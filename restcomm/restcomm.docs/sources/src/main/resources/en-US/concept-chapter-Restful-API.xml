@@ -1281,6 +1281,25 @@ curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166
 				</tgroup>
 			</table>
 
+
+<formalpara>
+<title>Making a call using Calls API</title>
+<para>You need to create a RestComm client called Alice and register the client on your SIP phone. Make sure the SIP phone is listening on port 5060. The phone should ring and when you answer the hello-play.xml file will be played.</para>
+</formalpara>
+
+<programlisting>
+<![CDATA[
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5060" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+
+]]>
+</programlisting>
+
+
+<note>
+<title>Calling a DID number</title>
+<para>The above example shows how toa make a call to a SIP number. If you want to make a call to a DID number, you must use <ulink url="http://www.telestax.com/voip-innovations-offers-restcomm/">RestComm AMI for Voice Innovation</ulink></para>
+</note>
+
 <formalpara>
 <title>Get a list of all available calls</title>
 <para>This will return all the available calls linked to the account SID</para>
