@@ -376,7 +376,7 @@ private void execute(final Object message) {
     switch(request.type()) {
       case CLIENT: {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        final Registration registration = registrations.getRegistration(request.to());
+        final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
         if(registration != null) {
           final String location = registration.getLocation();
           to = (SipURI)sipFactory.createURI(location);
