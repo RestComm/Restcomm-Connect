@@ -228,52 +228,18 @@ INFO: Server startup in 14090 ms
 </itemizedlist>
 </section>
 <section>
-<title>Testing the Demo Application</title>
+<title>Testing the Demo Applications</title>
+
 
 <para>
-Once you have the Media Server and RestComm started, you can now try out the demo application. Register the phone number 1234  and bind it to the hello-play.xml application by using the curl command below:
+Restcomm comes prepackaged with multiple example applications designed to help you quickly get started.
 </para>
 
-<programlisting>
-<![CDATA[
-curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+<section>
+<title>Demo 1 </title>
 
-]]>
-</programlisting>
- 
 <para>
-If the command succeeds, the output will be similar to the one below
-</para>
-
-<programlisting>
-<![CDATA[
-curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
-
-{
-  "sid": "PN0834628c131e4b66bc862ae0b21b7cfa",
-  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-  "friendly_name": "1234",
-  "phone_number": "+11234",
-  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
-  "voice_method": "POST",
-  "voice_fallback_method": "POST",
-  "status_callback_method": "POST",
-  "voice_caller_id_lookup": false,
-  "date_created": "2013-08-15T17:45:21.409-06:00",
-  "date_updated": "2013-08-15T17:45:21.409-06:00",
-  "sms_method": "POST",
-  "sms_fallback_method": "POST",
-  "api_version": "2012-04-24",
-  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN0834628c131e4b66bc862ae0b21b7cfa.json"
-]]>
-</programlisting>
- 
-<warning>
- 
-You will need to use a SIP phone to call the number 1234 you have just registered. We recommend you use Ekiga as some SIP phones have codec incompatibility issues.
-</warning>
-<para>
-At this stage, you can start Ekiga (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear a welcome message.
+Start a SIP phone like (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear a welcome message.
 </para>
 
 <mediaobject>
@@ -281,20 +247,84 @@ At this stage, you can start Ekiga (see below) and dial <filename>1234@127.0.0.1
 	<imagedata align="center" fileref="images/RestComm-ekiga-sip-phone-demo.png"/>
 	</imageobject>
 </mediaobject>
-<para>
-You are ready to start exploring RestComm and building powerful communication applications.
-</para>
+<warning>
+Some SIP phones have codec incompatibility issues, in the above example, we used Ekiga. 
+</warning>
+
+<programlisting>
+<![CDATA[
+The application bound to the number 1235 can be found at <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-play.xml</filename>.
+]]>
+</programlisting>
+
+
+
+</section>
+<section>
+<title>Demo 2</title>
 
 <para>
-Do you want to see more samples of what you can do with TelScale RestComm, visit our site at <ulink url="http:www.telestax.com">TeleStax.com </ulink>
+You must first activate Text-to-Speech before you can proceed.
 </para>
+<para>
+You must get an API key from <ulink url="http://www.voicerss.org/">http://www.voicerss.org</ulink> in order to proceed with this section. You can register for a free account and an API key will be emailed to you. Once you have the API key, open the <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml</filename> file and find the speech-synthesizer VoiceRSS section. Add your API key as shown below and restart RestComm
+</para>
+
+<programlisting>
+<![CDATA[
+<speech-synthesizer
+		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+		<service-root>http://api.voicerss.org</service-root>
+		<apikey>2901c0aXXXXXXXXXXXXXX</apikey>
+]]>
+</programlisting>
+
+<para>
+Start a SIP phone dial <filename>1235@127.0.0.1:5080</filename>. You will hear a welcome message in multiple languages.
+</para>
+
+
+<programlisting>
+<![CDATA[
+The application bound to the number 1235 can be found at <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-world.xml</filename>.
+]]>
+</programlisting>
+
+ 
+
+</section>
+
+<section>
+<title>Demo 3 </title>
+<para>This demo creates a simple IVR system</para>
+
+
+<note>
+<title>Activate DTMF using Ekiga </title>
+<para>Make sure your DTMF setting in Ekiga is set to RFC2833. In order to set it correctly, go to the menu Edit->Preference->Protocols->SIP Settings->DTMF Mode </para>
+</note>
+
+
+<para>
+Start a SIP phone dial <filename>1236@127.0.0.1:5080</filename>. You will hear a message asking you to enter a digit and press star. If the digit is correctly received, Restcomm will replay the number you entered.
+</para>
+
+
+<programlisting>
+<![CDATA[
+The application bound to the number 1236 can be found at <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/hello-gather.xml</filename>.
+]]>
+</programlisting>
 
 
 <note>
 <title>Advanced Examples</title>
 <para>Please go to this chapter for more examples <xref linkend="advanced-examples"/>.</para>
 </note>
+
 </section>
+</section>
+
 
 
 
