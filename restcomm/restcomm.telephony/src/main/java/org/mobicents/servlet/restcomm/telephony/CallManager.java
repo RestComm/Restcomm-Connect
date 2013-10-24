@@ -51,7 +51,9 @@ import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 
+import akka.actor.ActorContext;
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
@@ -332,6 +334,8 @@ private boolean redirectToClientVoiceApp(final ActorRef self,
       response(message);
     } else if(message instanceof SipApplicationSessionEvent) {
       timeout(message);
+    } else if(GetCall.class.equals(klass)) {
+      sender.tell(lookup(message), self);
     }
   }
   
@@ -459,6 +463,14 @@ private void execute(final Object message) {
     }
   }
   
+  public ActorRef lookup(final Object message) {
+	  final GetCall getCall = (GetCall)message;
+	  final String callPath = getCall.callPath();
+	  
+	  final ActorContext context = getContext();
+
+	  return context.actorFor(callPath);
+  }
  
 public void timeout(final Object message) {
 	final ActorRef self = self();

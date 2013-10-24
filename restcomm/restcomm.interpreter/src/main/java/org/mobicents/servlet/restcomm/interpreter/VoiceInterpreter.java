@@ -1381,6 +1381,9 @@ public final class VoiceInterpreter extends UntypedActor {
 					buffer.append(callInfo.sid().toString());
 					final URI uri = URI.create(buffer.toString());
 					builder.setUri(uri);
+					
+					builder.setCallPath(call.path().toString());
+					
 					callRecord = builder.build();
 					records.addCallDetailRecord(callRecord);
 					// Update the application.
