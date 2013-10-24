@@ -205,6 +205,7 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(uninitialized, ringing));
 		transitions.add(new Transition(queued, canceled));
 		transitions.add(new Transition(queued, acquiringMediaGatewayInfo));
+		transitions.add(new Transition(queued, closingRemoteConnection));
 		transitions.add(new Transition(acquiringMediaGatewayInfo, canceled));
 		transitions.add(new Transition(acquiringMediaGatewayInfo, acquiringMediaSession));
 		transitions.add(new Transition(acquiringMediaSession, canceled));
@@ -233,6 +234,7 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(ringing, updatingRemoteConnection));
 		transitions.add(new Transition(ringing, acquiringMediaGatewayInfo));
 		transitions.add(new Transition(ringing, failingBusy));
+		transitions.add(new Transition(ringing, closingRemoteConnection));
 		transitions.add(new Transition(failingNoAnswer, noAnswer));
 		transitions.add(new Transition(failingBusy, busy));
 		transitions.add(new Transition(canceling, canceled));
@@ -473,6 +475,10 @@ public final class Call extends UntypedActor {
 			} else if(Hangup.class.equals(klass)) {
 				fsm.transition(message, closingRemoteConnection);
 			} 
+		} else if (Hangup.class.equals(klass)) {
+			if (queued.equals(state) || ringing.equals(state)){
+				fsm.transition(message, closingRemoteConnection);
+			}
 		} else if(ringing.equals(state)) {
 		    if(org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass)) {
                 fsm.transition(message, notFound);
