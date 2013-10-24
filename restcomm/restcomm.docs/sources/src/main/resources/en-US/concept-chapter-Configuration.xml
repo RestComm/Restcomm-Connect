@@ -253,7 +253,8 @@ Some SIP phones have codec incompatibility issues, in the above example, we used
 
 <programlisting>
 <![CDATA[
-The application bound to the number 1235 can be found at <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-play.xml</filename>.
+The application bound to the number 1235 can be found at
+ <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-play.xml</filename>.
 ]]>
 </programlisting>
 
@@ -286,7 +287,8 @@ Start a SIP phone dial <filename>1235@127.0.0.1:5080</filename>. You will hear a
 
 <programlisting>
 <![CDATA[
-The application bound to the number 1235 can be found at <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-world.xml</filename>.
+The application bound to the number 1235 can be found at
+ <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-world.xml</filename>.
 ]]>
 </programlisting>
 
@@ -312,7 +314,10 @@ Start a SIP phone dial <filename>1236@127.0.0.1:5080</filename>. You will hear a
 
 <programlisting>
 <![CDATA[
-The application bound to the number 1236 can be found at <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/hello-gather.xml</filename>.
+The application bound to the number 1236 can be found at 
+<filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/hello-gather.xml</filename>.
+and 
+<filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/gather.jsp</filename>.
 ]]>
 </programlisting>
 
