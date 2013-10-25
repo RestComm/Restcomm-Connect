@@ -2807,8 +2807,12 @@ public final class VoiceInterpreter extends UntypedActor {
 				} else if(Nouns.uri.equals(child.name())) {
 					create = new CreateCall(e164(callerId(verb)), e164(child.text()),
 							false, timeout(verb), CreateCall.Type.SIP);
-				}
-				callManager.tell(create, source);	
+                } else if(Nouns.SIP.equals(child.name())) {
+                    // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                    create = new CreateCall(e164(callerId(verb)), e164(child.text()),
+                            false, timeout(verb), CreateCall.Type.SIP);
+                }
+				callManager.tell(create, source);
 			} else {
 				// Fork.
 				final Fork fork = Fork.instance();
