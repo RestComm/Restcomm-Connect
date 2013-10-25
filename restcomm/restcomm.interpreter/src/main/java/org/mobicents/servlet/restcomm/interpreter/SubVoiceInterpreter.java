@@ -16,7 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static akka.pattern.Patterns.ask;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
@@ -121,8 +120,6 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
@@ -133,7 +130,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.util.Timeout;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -248,6 +244,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 	private ActorRef source;
 	private Tag verb;
 
+	private Boolean hangupOnEnd;
+
 	private ActorRef originalInterpreter;
 
 	public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone,
@@ -255,6 +253,17 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			final String fallbackMethod, final URI statusCallback, final String statusCallbackMethod,
 			final String emailAddress, final ActorRef callManager, final ActorRef conferenceManager,
 			final ActorRef sms, final DaoManager storage) {
+
+		this(configuration, account, phone, version, url, method,
+				fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, emailAddress,
+				callManager, conferenceManager, sms, storage, false);
+	}
+
+	public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone,
+			final String version, final URI url, final String method, final URI fallbackUrl,
+			final String fallbackMethod, final URI statusCallback, final String statusCallbackMethod,
+			final String emailAddress, final ActorRef callManager, final ActorRef conferenceManager,
+			final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
 		super();
 		source = self();
 		uninitialized = new State("uninitialized", null, null);
@@ -308,12 +317,12 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(acquiringSynthesizerInfo, finished));
 		transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
 		transitions.add(new Transition(acquiringCallInfo, finished));
-		
+
 		transitions.add(new Transition(acquiringCallMediaGroup, checkingMediaGroupState));
 		transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
 		transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
 		transitions.add(new Transition(acquiringCallMediaGroup, finished));
-		
+
 		transitions.add(new Transition(checkingMediaGroupState, initializingCallMediaGroup));
 		transitions.add(new Transition(checkingMediaGroupState, faxing));
 		transitions.add(new Transition(checkingMediaGroupState, downloadingRcml));
@@ -329,7 +338,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(checkingMediaGroupState, hangingUp));
 		transitions.add(new Transition(checkingMediaGroupState, finished));
 		transitions.add(new Transition(checkingMediaGroupState, ready));
-		
+
 		transitions.add(new Transition(initializingCallMediaGroup, faxing));
 		transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
 		transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
@@ -504,6 +513,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		uri = uri + accountId.toString();
 		this.cache = cache(path, uri);
 		this.downloader = downloader();
+		this.hangupOnEnd = hangupOnEnd;
 	}
 
 	private ActorRef asr(final Configuration configuration) {
@@ -668,8 +678,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		final ActorRef sender = sender();
 
 		if(logger.isInfoEnabled()) {
-			logger.info(" ********** VoiceInterpreter's Current State: " + state.toString());
-			logger.info(" ********** VoiceInterpreter's Processing Message: " + klass.getName());
+			logger.info(" ********** SubVoiceInterpreter's Current State: " + state.toString());
+			logger.info(" ********** SubVoiceInterpreter's Processing Message: " + klass.getName());
 		}
 
 		if(StartInterpreter.class.equals(klass)) {
@@ -810,7 +820,11 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			}
 		} 
 		else if(End.class.equals(klass)) {
-			originalInterpreter.tell(message, source);
+			if(!hangupOnEnd) {
+				originalInterpreter.tell(message, source);
+			} else {
+				fsm.transition(message, hangingUp);
+			}
 		} 
 		else if(StartGathering.class.equals(klass)) {
 			fsm.transition(message, gathering);
@@ -1066,7 +1080,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		public CheckMediaGroupState(final ActorRef source) {
 			super(source);
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public void execute(Object message) throws Exception {
@@ -1074,13 +1088,16 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			if(CallResponse.class.equals(klass)) {
 				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
 				callMediaGroup = response.get();
+				//Ask CallMediaGroup to add us as Observer, if the callMediaGroup is active we will not reach InitializingCallMediaGroup where
+				//we were adding SubVoiceInterpreter as an observer. Better do it here.
+				callMediaGroup.tell(new Observe(source), source);
 				MediaGroupStatus status = new MediaGroupStatus();
 				callMediaGroup.tell(status, source);
 			}
 		}
-		
+
 	}
-	
+
 	private final class InitializingCallMediaGroup extends AbstractAction {
 		public InitializingCallMediaGroup(final ActorRef source) {
 			super(source);
@@ -1090,9 +1107,9 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		@Override public void execute(final Object message) throws Exception {
 			final Class<?> klass = message.getClass();
 			if(MediaGroupStateChanged.class.equals(klass)) {
-//				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
-//				callMediaGroup = response.get();
-				callMediaGroup.tell(new Observe(source), source);
+				//				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
+				//				callMediaGroup = response.get();
+				//				callMediaGroup.tell(new Observe(source), source);
 				callMediaGroup.tell(new StartMediaGroup(), source);
 			} else if(Tag.class.equals(klass)) {
 				verb = (Tag)message;
