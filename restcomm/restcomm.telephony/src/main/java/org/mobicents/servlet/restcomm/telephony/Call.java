@@ -328,6 +328,8 @@ public final class Call extends UntypedActor {
 			observe(message);
     } else if(StopObserving.class.equals(klass)) {
 			stopObserving(message);
+    } else if(GetCallObservers.class.equals(klass)) {
+    	sender.tell(new CallResponse<List<ActorRef>>(observers), self);
     } else if(GetCallInfo.class.equals(klass)) {
 			sender.tell(info(), self);
     } else if(InitializeOutbound.class.equals(klass)) {

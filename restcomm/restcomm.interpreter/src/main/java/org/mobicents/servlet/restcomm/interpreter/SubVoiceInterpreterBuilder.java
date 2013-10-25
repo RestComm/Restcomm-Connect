@@ -49,6 +49,8 @@ public final class SubVoiceInterpreterBuilder {
   private URI statusCallback;
   private String statusCallbackMethod;
   private String emailAddress;
+  
+  private Boolean hangupOnEnd = false;
 
   /**
    * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -64,7 +66,7 @@ public final class SubVoiceInterpreterBuilder {
 		@Override public UntypedActor create() throws Exception {
           return new SubVoiceInterpreter(configuration, account, phone, version, url, method,
               fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, emailAddress,
-              calls, conferences, sms, storage);
+              calls, conferences, sms, storage, hangupOnEnd);
 		}
     }));
   }
@@ -127,5 +129,9 @@ public final class SubVoiceInterpreterBuilder {
   
   public void setVersion(final String version) {
     this.version = version;
+  }
+  
+  public void setHangupOnEnd(final Boolean hangupOnEnd) {
+	  this.hangupOnEnd = hangupOnEnd;
   }
 }
