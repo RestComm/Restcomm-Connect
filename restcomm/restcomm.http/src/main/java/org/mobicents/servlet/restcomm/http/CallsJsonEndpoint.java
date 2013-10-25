@@ -49,4 +49,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
       final MultivaluedMap<String, String> data) {
     return putCall(accountSid, data, APPLICATION_JSON_TYPE);
   }
+  
+  //Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
+  @Path("/{sid}")
+  @POST
+  public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data){
+	  return updateCall(accountSid, sid, data, APPLICATION_JSON_TYPE);
+  }
+  
 }

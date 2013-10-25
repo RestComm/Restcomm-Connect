@@ -66,7 +66,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
   @Path("/{sid}")
   @POST
   public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data){
-	  return modifyCall(accountSid, sid, data, APPLICATION_XML_TYPE);
+	  return updateCall(accountSid, sid, data, APPLICATION_XML_TYPE);
   }
   
 }

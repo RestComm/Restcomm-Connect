@@ -29,6 +29,7 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -58,11 +59,11 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
-import org.mobicents.servlet.restcomm.telephony.DestroyCall;
 import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.GetCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
+import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -308,7 +309,8 @@ import com.thoughtworks.xstream.XStream;
 	}
 
 	//Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
-	protected Response modifyCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
+	@SuppressWarnings("unchecked")
+	protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
 		final Sid accountSid = new Sid(sid);
 		try { secure(accountSid, "RestComm:Modify:Calls"); }
 		catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
@@ -330,17 +332,17 @@ import com.thoughtworks.xstream.XStream;
 			future = (Future<Object>)ask(call, new GetCallInfo(), expires);
 			CallResponse<CallInfo> response = (CallResponse<CallInfo>)Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 			callInfo = response.get();
-		} catch (Exception e){
-			return  javax.ws.rs.core.Response.status(404).build();
+		} catch (Exception exception){
+			return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
 		}
 
 		final String url = data.getFirst("Url");
 		String method = data.getFirst("Method");
 		final String status = data.getFirst("Status");
 		final String fallBackUrl = data.getFirst("FallbackUrl");
-		final String fallBackMethod = data.getFirst("FallbackMethod");
+		String fallBackMethod = data.getFirst("FallbackMethod");
 		final String statusCallBack = data.getFirst("StatusCallback");
-		final String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
+		String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
 
 
 		if(method == null)
@@ -348,6 +350,8 @@ import com.thoughtworks.xstream.XStream;
 
 		if(url != null && status != null){
 			//Throw exception. We can either redirect a running call using Url or change the state of a Call with Status
+			final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\""; 
+			return status(javax.ws.rs.core.Response.Status.CONFLICT).entity(errorMessage).build();
 		}
 
 		//Modify state of a call
@@ -367,6 +371,24 @@ import com.thoughtworks.xstream.XStream;
 				if (call != null){
 					call.tell(new Hangup(), null);
 				}
+			}
+		}
+
+		if(url != null && call != null){
+			try{
+				final String version = getApiVersion(data);
+				final URI uri = (new URL(url)).toURI();
+
+				URI fallbackUri = (fallBackUrl != null) ? (new URL(fallBackUrl)).toURI() : null;
+				fallBackMethod = (fallBackMethod == null) ? "POST" : fallBackMethod;
+				URI callbackUri = (statusCallBack != null) ? (new URL(statusCallBack)).toURI() : null;
+				statusCallbackMethod = (statusCallbackMethod == null) ? "POST" : statusCallbackMethod;
+
+				final UpdateCallScript update = new UpdateCallScript(call, accountSid, version, uri, method,
+						fallbackUri, fallBackMethod, callbackUri, statusCallbackMethod);
+				callManager.tell(update, null);
+			} catch (Exception exception) {
+				return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
 			}
 		}
 
