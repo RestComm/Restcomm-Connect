@@ -1283,9 +1283,9 @@ curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166
 
 
 <formalpara>
-<title>Making a call using Calls API</title>
-<para>You need to create a RestComm client called Alice and register the client on your SIP phone. Make sure the SIP phone is listening on port 5060. The phone should ring and when you answer the hello-play.xml file will be played.</para>
+<title>Making a call to a SIP account</title>
 </formalpara>
+<para>Restcomm will make a call to any SIP account that is reachable. It the example below, the SIP account is listening on port 5060. When you make the call, the SIP phone on which Alice is registered will ring and the hello-play.xml file will be played.</para>
 
 <programlisting>
 <![CDATA[
@@ -1293,6 +1293,22 @@ curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 ]]>
 </programlisting>
+
+<formalpara>
+<title>Making a call to a Restcomm client</title>
+</formalpara>
+<para>You must first create a RestComm client. In the example below, the Restcomm client created is called Alice. When you make the call, the SIP phone on which Alice is registered will ring and the hello-play.xml file will be played.</para>
+
+
+
+<programlisting>
+<![CDATA[
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+
+]]>
+</programlisting>
+
+
 
 
 <note>
