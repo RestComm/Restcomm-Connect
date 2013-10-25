@@ -1074,6 +1074,9 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			if(CallResponse.class.equals(klass)) {
 				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
 				callMediaGroup = response.get();
+				//Ask CallMediaGroup to add us as Observer, if the callMediaGroup is active we will not reach InitializingCallMediaGroup where
+				//we were adding SubVoiceInterpreter as an observer. Better do it here.
+				callMediaGroup.tell(new Observe(source), source);
 				MediaGroupStatus status = new MediaGroupStatus();
 				callMediaGroup.tell(status, source);
 			}
@@ -1092,7 +1095,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			if(MediaGroupStateChanged.class.equals(klass)) {
 //				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
 //				callMediaGroup = response.get();
-				callMediaGroup.tell(new Observe(source), source);
+//				callMediaGroup.tell(new Observe(source), source);
 				callMediaGroup.tell(new StartMediaGroup(), source);
 			} else if(Tag.class.equals(klass)) {
 				verb = (Tag)message;
