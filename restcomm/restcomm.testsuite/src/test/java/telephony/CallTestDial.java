@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(Arquillian.class)
 public class CallTestDial {
-    private final Logger logger = Logger.getLogger(CallTestDial.class.getName());
+    private final static Logger logger = Logger.getLogger(CallTestDial.class.getName());
     
 	private static final String version = Version.getInstance().getRestCommVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
@@ -82,6 +82,7 @@ public class CallTestDial {
 	private String dialClient = "sip:+12223334455@127.0.0.1:5080";
 	private String dialNumber = "sip:+12223334456@127.0.0.1:5080";
 	private String notFoundDialNumber = "sip:+12223334457@127.0.0.1:5080";
+    private String dialSip = "sip:+12223334458@127.0.0.1:5080";
 
 	@BeforeClass 
 	public static void beforeClass() throws Exception {
@@ -529,9 +530,62 @@ public class CallTestDial {
 		}
 	}
 
+    @Test
+    // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    public synchronized void testDialSip() throws InterruptedException, ParseException {
+        deployer.deploy("CallTestDial");
+
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialSip, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if(response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+       /* assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));*/
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+        // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch(final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
 
 	@Deployment(name="CallTestDial", managed=false, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
+        logger.info("Packaging Test App");
 		String version = "6.1.2-TelScale-SNAPSHOT";
 		final WebArchive archive = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.application:war:" + version)
@@ -618,7 +672,9 @@ public class CallTestDial {
 		archive.addAsWebResource("dial-fork-entry.xml");
 		archive.addAsWebResource("dial-uri-entry.xml");
 		archive.addAsWebResource("dial-client-entry.xml");
+        archive.addAsWebResource("dial-sip.xml");
 		archive.addAsWebResource("dial-number-entry.xml");
+        logger.info("Packaged Test App");
 		return archive;
 	}
 
