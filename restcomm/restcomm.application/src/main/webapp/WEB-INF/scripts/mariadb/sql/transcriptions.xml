@@ -30,6 +30,10 @@
   </delete>
   
   <update id="updateTranscription" parameterType="map">
-    UPDATE restcomm_transcriptions SET status=#{status} WHERE sid=#{sid};
+    UPDATE restcomm_transcriptions SET status=#{status} 
+        <if test="transcription_text != null">
+			, transcription_text=#{transcription_text} 
+		</if>
+    WHERE sid=#{sid};
   </update>
 </mapper>
