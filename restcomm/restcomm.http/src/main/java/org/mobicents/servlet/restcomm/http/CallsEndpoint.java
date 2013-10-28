@@ -219,10 +219,10 @@ import com.thoughtworks.xstream.XStream;
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Response putCall(final String sid, final MultivaluedMap<String, String> data,
+	protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data,
 			final MediaType responseType) {
-		final Sid accountSid = new Sid(sid);
-		try { secure(accountSid, "RestComm:Create:Calls"); }
+		final Sid accountId = new Sid(accountSid);
+		try { secure(accountId, "RestComm:Create:Calls"); }
 		catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
 		try { validate(data); normalize(data); }
 		catch(final RuntimeException exception) {
@@ -235,11 +235,11 @@ import com.thoughtworks.xstream.XStream;
 		CreateCall create = null;
 		try {
 			if(to.contains("@")) {
-				create = new CreateCall(from, to, true, timeout != null ? timeout : 30, CreateCall.Type.SIP);
+				create = new CreateCall(from, to, true, timeout != null ? timeout : 30, CreateCall.Type.SIP, accountId);
 			} else if(to.startsWith("client")) {
-				create = new CreateCall(from, to, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT);
+				create = new CreateCall(from, to, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT, accountId);
 			} else {
-				create = new CreateCall(from, to, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN);
+				create = new CreateCall(from, to, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN, accountId);
 			}
 			Future<Object> future = (Future<Object>)ask(callManager, create, expires);
 			Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
@@ -263,14 +263,14 @@ import com.thoughtworks.xstream.XStream;
 							final String fallbackMethod = getMethod("FallbackMethod", data);
 							final URI callback = getUrl("StatusCallback", data);
 							final String callbackMethod = getMethod("StatusCallbackMethod", data);
-							final ExecuteCallScript execute = new ExecuteCallScript(call, accountSid, version, url, method,
+							final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
 									fallbackUrl, fallbackMethod, callback, callbackMethod);
 							callManager.tell(execute, null);
 							// Create a call detail record for the call.
 							final CallDetailRecord.Builder builder = CallDetailRecord.builder();
 							builder.setSid(callInfo.sid());
 							builder.setDateCreated(callInfo.dateCreated());
-							builder.setAccountSid(accountSid);
+							builder.setAccountSid(accountId);
 							builder.setTo(callInfo.to());
 							builder.setCallerName(callInfo.fromName());
 							builder.setFrom(callInfo.from());
@@ -282,7 +282,7 @@ import com.thoughtworks.xstream.XStream;
 							builder.setApiVersion(version);
 							final StringBuilder buffer = new StringBuilder();
 							buffer.append("/").append(version).append("/Accounts/");
-							buffer.append(accountSid.toString()).append("/Calls/");
+							buffer.append(accountId.toString()).append("/Calls/");
 							buffer.append(callInfo.sid().toString());
 							final URI uri = URI.create(buffer.toString());
 							builder.setUri(uri);

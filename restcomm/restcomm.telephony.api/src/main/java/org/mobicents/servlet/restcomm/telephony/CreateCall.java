@@ -17,6 +17,7 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,15 +30,17 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
   private final boolean isFromApi;
   private final int timeout;
   private final Type type;
+  private final Sid accountId;
   
   public CreateCall(final String from, final String to,
-      final boolean isFromApi, final int timeout, final Type type) {
+      final boolean isFromApi, final int timeout, final Type type, final Sid accountId) {
     super();
     this.from = from;
     this.to = to;
     this.isFromApi = isFromApi;
     this.timeout = timeout;
     this.type = type;
+    this.accountId = accountId;
   }
   
   public String from() {
@@ -58,5 +61,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
   
   public Type type() {
     return type;
+  }
+
+  public Sid accountId() {
+      return accountId;
   }
 }

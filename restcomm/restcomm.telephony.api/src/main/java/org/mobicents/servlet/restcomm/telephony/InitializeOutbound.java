@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.telephony;
 import javax.servlet.sip.SipURI;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,15 +30,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
   private final SipURI to;
   private final long timeout;
   private final boolean isFromApi;
+  private final String apiVersion;
+  private final Sid accountId;
   
   public InitializeOutbound(final String name, final SipURI from, final SipURI to,
-      final long timeout, final boolean isFromApi) {
+      final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId) {
     super();
     this.name = name;
     this.from = from;
     this.to = to;
     this.timeout = timeout;
     this.isFromApi = isFromApi;
+    this.apiVersion = apiVersion;
+    this.accountId = accountId;
   }
   
   public String name() {
@@ -58,5 +63,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
   
   public boolean isFromApi() {
     return isFromApi;
+  }
+
+  public String apiVersion() {
+      return apiVersion;
+  }
+
+  public Sid accountId() {
+    return accountId;
   }
 }
