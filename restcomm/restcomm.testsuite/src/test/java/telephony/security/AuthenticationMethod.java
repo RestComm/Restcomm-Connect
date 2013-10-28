@@ -48,10 +48,8 @@ public interface AuthenticationMethod {
      *            is the username and password.
      * @param authorizationHeader
      *            is the authorization header from the SIP request.
-     * @param requestLine
-     *            is the RequestLine from the SIP Request.
      */
-    public boolean doAuthenticate(String username,
+    public boolean doAuthenticate(String username, String password,
                                   AuthorizationHeader authorizationHeader, Request request);
 
 }

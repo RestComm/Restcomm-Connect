@@ -46,10 +46,6 @@ public class DigestServerAuthenticationMethod implements AuthenticationMethod {
 
     public final static String DEFAULT_REALM = "sip-servlets-realm";
 
-    public final static String USER_AUTH = "user";
-
-    public final static String PASS_AUTH = "pass";
-
     private MessageDigest messageDigest;
 
     /** to hex converter */
@@ -152,7 +148,7 @@ public class DigestServerAuthenticationMethod implements AuthenticationMethod {
      * @param authHeader
      *            is the Authroization header from the SIP request.
      */
-    public boolean doAuthenticate(String user, AuthorizationHeader authHeader,
+    public boolean doAuthenticate(String user, String password, AuthorizationHeader authHeader,
                                   Request request) {
         String realm = authHeader.getRealm();
         String username = authHeader.getUsername();
@@ -194,7 +190,7 @@ public class DigestServerAuthenticationMethod implements AuthenticationMethod {
                         + realm);
         System.out
                 .println("DEBUG, DigestAuthenticationMethod, doAuthenticate(), password:"
-                        + PASS_AUTH);
+                        + password);
         System.out
                 .println("DEBUG, DigestAuthenticationMethod, doAuthenticate(), uri:"
                         + uri);
@@ -205,7 +201,7 @@ public class DigestServerAuthenticationMethod implements AuthenticationMethod {
                 .println("DEBUG, DigestAuthenticationMethod, doAuthenticate(), method:"
                         + request.getMethod());
 
-        String A1 = username + ":" + realm + ":" + PASS_AUTH;
+        String A1 = username + ":" + realm + ":" + password;
         String A2 = request.getMethod().toUpperCase() + ":" + uri.toString();
         byte mdbytes[] = messageDigest.digest(A1.getBytes());
         String HA1 = toHexString(mdbytes);

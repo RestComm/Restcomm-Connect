@@ -2757,7 +2757,7 @@ public final class VoiceInterpreter extends UntypedActor {
 				// Handle bridging.
 				isForking = false;
 				final CreateCall create = new CreateCall(e164(callerId(verb)), e164(text),
-						false, timeout(verb), CreateCall.Type.PSTN, accountId);
+                        null, null, false, timeout(verb), CreateCall.Type.PSTN, accountId);
 				callManager.tell(create, source);
 			} else if(verb.hasChildren()) {
 				// Handle conferencing.
@@ -2808,17 +2808,17 @@ public final class VoiceInterpreter extends UntypedActor {
 				final Tag child = dialChildren.get(0);
 				if(Nouns.client.equals(child.name())) {
 					create = new CreateCall(e164(callerId(verb)), e164(child.text()),
-							false, timeout(verb), CreateCall.Type.CLIENT, accountId);
+                            null, null, false, timeout(verb), CreateCall.Type.CLIENT, accountId);
 				} else if(Nouns.number.equals(child.name())) {
 					create = new CreateCall(e164(callerId(verb)), e164(child.text()),
-							false, timeout(verb), CreateCall.Type.PSTN, accountId);
+                            null, null, false, timeout(verb), CreateCall.Type.PSTN, accountId);
 				} else if(Nouns.uri.equals(child.name())) {
 					create = new CreateCall(e164(callerId(verb)), e164(child.text()),
-							false, timeout(verb), CreateCall.Type.SIP, accountId);
+                            null, null, false, timeout(verb), CreateCall.Type.SIP, accountId);
                 } else if(Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                     create = new CreateCall(e164(callerId(verb)), e164(child.text()),
-                            false, timeout(verb), CreateCall.Type.SIP, accountId);
+                            child.attribute("username").value(), child.attribute("password").value(), false, timeout(verb), CreateCall.Type.SIP, accountId);
                 }
 				callManager.tell(create, source);
 			} else {
