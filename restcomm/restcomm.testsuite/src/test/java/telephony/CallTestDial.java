@@ -11,15 +11,15 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.telephony.Version;
+import telephony.security.DigestServerAuthenticationMethod;
 
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
+import javax.sip.header.ProxyAuthenticateHeader;
+import javax.sip.header.ProxyAuthorizationHeader;
 import javax.sip.message.Message;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
@@ -83,6 +83,7 @@ public class CallTestDial {
 	private String dialNumber = "sip:+12223334456@127.0.0.1:5080";
 	private String notFoundDialNumber = "sip:+12223334457@127.0.0.1:5080";
     private String dialSip = "sip:+12223334458@127.0.0.1:5080";
+    private String dialSipSecurity = "sip:+12223334459@127.0.0.1:5080";
 
 	@BeforeClass 
 	public static void beforeClass() throws Exception {
@@ -570,6 +571,7 @@ public class CallTestDial {
         Header myotherheader = invite.getHeader("X-myotherheader");
         assertNotNull(mycustomheader);
         assertNotNull(myotherheader);
+
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
@@ -589,8 +591,95 @@ public class CallTestDial {
         }
     }
 
+    @Test
+    @Ignore
+    // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    // in auth manner
+    public synchronized void testDialSipAuth() throws InterruptedException, ParseException {
+        deployer.deploy("CallTestDial");
 
-	@Deployment(name="CallTestDial", managed=false, testable=false)
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialSipSecurity, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if(response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        MessageExt invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite);
+        assertEquals(Request.INVITE, invite.getCSeqHeader().getMethod());
+        Header mycustomheader = invite.getHeader("X-mycustomheader");
+        Header myotherheader = invite.getHeader("X-myotherheader");
+        assertNotNull(mycustomheader);
+        assertNotNull(myotherheader);
+
+        DigestServerAuthenticationMethod dsam = new DigestServerAuthenticationMethod();
+        dsam.initialize(); // it should read values from file, now all static
+
+        ProxyAuthenticateHeader proxyAuthenticate =
+                aliceSipStack.getHeaderFactory().createProxyAuthenticateHeader(dsam.getScheme());
+        proxyAuthenticate.setParameter("realm",dsam.getRealm(null));
+        proxyAuthenticate.setParameter("nonce",dsam.generateNonce());
+        //proxyAuthenticateImpl.setParameter("domain",authenticationMethod.getDomain());
+        proxyAuthenticate.setParameter("opaque","");
+
+        proxyAuthenticate.setParameter("algorithm",dsam.getAlgorithm());
+        ArrayList<Header> headers = new ArrayList<Header>();
+        headers.add(proxyAuthenticate);
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.PROXY_AUTHENTICATION_REQUIRED, "Non authorized", 3600, headers, null, null));
+
+        invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite.getHeader(ProxyAuthorizationHeader.NAME));
+
+        ProxyAuthorizationHeader proxyAuthorization=
+                (ProxyAuthorizationHeader)invite.getHeader(ProxyAuthorizationHeader.NAME);
+        String username=proxyAuthorization.getParameter("username");
+        //String password=proxyAuthorization.getParameter("password");
+
+        boolean res=dsam.doAuthenticate(username,proxyAuthorization,(Request)invite);
+        assertTrue(res);
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+        // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch(final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Deployment(name="CallTestDial", managed=false, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
 		String version = "6.1.2-TelScale-SNAPSHOT";
@@ -680,6 +769,7 @@ public class CallTestDial {
 		archive.addAsWebResource("dial-uri-entry.xml");
 		archive.addAsWebResource("dial-client-entry.xml");
         archive.addAsWebResource("dial-sip.xml");
+        archive.addAsWebResource("dial-sip-auth.xml");
 		archive.addAsWebResource("dial-number-entry.xml");
         logger.info("Packaged Test App");
 		return archive;
