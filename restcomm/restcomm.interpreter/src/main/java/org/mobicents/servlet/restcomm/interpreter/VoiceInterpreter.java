@@ -669,9 +669,10 @@ public final class VoiceInterpreter extends UntypedActor {
 			final AsrResponse<String> response = (AsrResponse<String>)message;
 			Transcription transcription = (Transcription)response.attributes().get("transcription");
 			if(response.succeeded()) {
-				transcription.setStatus(Transcription.Status.COMPLETED);
+				transcription = transcription.setStatus(Transcription.Status.COMPLETED);
+				transcription = transcription.setTranscriptionText(response.get());
 			} else {
-				transcription.setStatus(Transcription.Status.FAILED);
+				transcription = transcription.setStatus(Transcription.Status.FAILED);
 			}
 			final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
 			transcriptions.updateTranscription(transcription);
@@ -819,7 +820,11 @@ public final class VoiceInterpreter extends UntypedActor {
 		if(StartInterpreter.class.equals(klass)) {
 			fsm.transition(message, acquiringAsrInfo);
 		} else if(AsrResponse.class.equals(klass)) {
+			if(outstandingAsrRequests > 0){
+				asrResponse(message);
+			} else {
 			fsm.transition(message, acquiringSynthesizerInfo);
+			}
 		} else if(SpeechSynthesizerResponse.class.equals(klass)) {
 			if(acquiringSynthesizerInfo.equals(state)) {
 				fsm.transition(message, acquiringCallInfo);
@@ -1061,9 +1066,11 @@ public final class VoiceInterpreter extends UntypedActor {
 			} else {
 				fsm.transition(message, hangingUp);
 			}
-		} else if(AsrResponse.class.equals(klass)) {
-			asrResponse(message);
-		} else if(SmsSessionResponse.class.equals(klass)) {
+		} 
+//		else if(AsrResponse.class.equals(klass)) {
+//			asrResponse(message);
+//		} 
+		else if(SmsSessionResponse.class.equals(klass)) {
 			smsResponse(message);
 		} else if(FaxResponse.class.equals(klass)) {
 			fsm.transition(message, ready);
@@ -2384,6 +2391,7 @@ public final class VoiceInterpreter extends UntypedActor {
 				final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
 				final Transcription.Builder otherBuilder = Transcription.builder();
 				otherBuilder.setSid(sid);
+				otherBuilder.setAccountSid(accountId);
 				otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
 				otherBuilder.setRecordingSid(recordingSid);
 				otherBuilder.setDuration(duration);
