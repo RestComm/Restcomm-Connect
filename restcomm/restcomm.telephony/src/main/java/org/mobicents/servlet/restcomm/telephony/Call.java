@@ -29,11 +29,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.sdp.Connection;
@@ -128,9 +124,13 @@ public final class Call extends UntypedActor {
 	private final FiniteStateMachine fsm;
 	// SIP runtime stuff.
 	private final SipFactory factory;
+    private String apiVersion;
+    private Sid accountId;
 	private String name;
 	private SipURI from;
 	private SipURI to;
+    // custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    private Map<String,String> headers;
 	private long timeout;
 	private SipServletRequest invite;
 	// MGCP runtime stuff.
@@ -152,7 +152,7 @@ public final class Call extends UntypedActor {
 	
 	private ActorRef group;
 
-	public Call(final SipFactory factory, final ActorRef gateway) {
+    public Call(final SipFactory factory, final ActorRef gateway) {
 		super();
 		final ActorRef source = self();
 		// Initialize the states for the FSM.
@@ -554,7 +554,24 @@ public final class Call extends UntypedActor {
 			final InitializeOutbound request = (InitializeOutbound)message;
 			name = request.name();
 			from = request.from();
-			to = request.to();
+            to = request.to();
+            apiVersion = request.apiVersion();
+            accountId = request.accountId();
+            String toHeaderString = to.toString();
+            if(toHeaderString.indexOf('?') != -1) {
+                // custom headers parsing for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                headers = new HashMap<String, String>();
+                // we keep only the to URI without the headers
+                to = (SipURI) factory.createURI(toHeaderString.substring(0,toHeaderString.lastIndexOf('?')));
+                String headersString = toHeaderString.substring(toHeaderString.lastIndexOf('?')+1);
+                StringTokenizer tokenizer = new StringTokenizer(headersString, "&");
+                while(tokenizer.hasMoreTokens()) {
+                    String headerNameValue = tokenizer.nextToken();
+                    String headerName= headerNameValue.substring(0, headerNameValue.lastIndexOf('='));
+                    String headerValue = headerNameValue.substring(headerNameValue.lastIndexOf('=')+1);
+                    headers.put(headerName, headerValue);
+                }
+            }
 			timeout = request.timeout();
 			if(request.isFromApi()) {
 				direction = OUTBOUND_API;
@@ -675,6 +692,17 @@ public final class Call extends UntypedActor {
 			application.setAttribute(Call.class.getName(), self);
 			invite = factory.createRequest(application, "INVITE", from, to);
 			invite.pushRoute(uri);
+
+            if(headers != null) {
+                // adding custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                Set<Map.Entry<String, String>> entrySet = headers.entrySet();
+                for(Map.Entry<String, String> entry : entrySet) {
+                    invite.addHeader("X-" + entry.getKey(), entry.getValue());
+                }
+            }
+            invite.addHeader("X-RestComm-ApiVersion" , apiVersion);
+            invite.addHeader("X-RestComm-AccountSid" , accountId.toString());
+            invite.addHeader("X-RestComm-CallSid", id.toString());
 			final SipSession session = invite.getSession();
 			session.setHandler("CallManager");
 			String offer = null;

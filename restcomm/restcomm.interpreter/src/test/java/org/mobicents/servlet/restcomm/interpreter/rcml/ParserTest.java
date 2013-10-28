@@ -66,6 +66,17 @@ public final class ParserTest {
         }));
     }
 
+    private ActorRef parser(final String input) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new Parser(input);
+            }
+        }));
+    }
+
     @Test
     public void testParser() {
         final InputStream input = getClass().getResourceAsStream("/rcml.xml");
@@ -139,6 +150,59 @@ public final class ParserTest {
             assertTrue(child.attribute("method").value().equals("POST"));
             assertTrue(child.attribute("url").value().equals("/handle_screening_on_answer"));
             assertTrue(child.text().equals("sip:kate@example.com?customheader=foo"));
+            parser.tell(next, observer);
+            expectMsgClass(End.class);
+        }};
+    }
+
+    @Test
+    // Test for SIP Noun Parsing for Issue
+    // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    public void testParserDialSIPText() {
+        final String rcmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+        "<Response>\n"+
+            "<Dial\n"+
+                " record=\"true\"\n"+
+                " timeout=\"10\"\n"+
+                " hangupOnStar=\"true\"\n"+
+                " callerId=\"bob\"\n"+
+                " method=\"POST\"\n"+
+                " action=\"/handle_post_dial\">\n"+
+
+                "<Sip \n"+
+                " username=\"admin\"\n"+
+                " password=\"1234\"\n"+
+                " method=\"POST\"\n"+
+                " url=\"/handle_screening_on_answer\">\n"+
+                "sip:kate@example.com?customheader=foo&myotherheader=bar\n"+
+                "</Sip>\n"+
+            "</Dial>\n"+
+        "</Response>";
+        //final InputStream input = getClass().getResourceAsStream("/rcml-sip.xml");
+        new JavaTestKit(system) {{
+            final ActorRef observer = getRef();
+            // Create a new parser.
+            final GetNextVerb next = GetNextVerb.instance();
+            System.out.println(rcmlContent);
+            final ActorRef parser = parser(rcmlContent);
+            // Start consuming verbs until the end of the document.
+            parser.tell(next, observer);
+            Tag verb = expectMsgClass(Tag.class);
+            assertTrue(dial.equals(verb.name()));
+            assertTrue(verb.attribute("record").value().equals("true"));
+            assertTrue(verb.attribute("timeout").value().equals("10"));
+            assertTrue(verb.attribute("hangupOnStar").value().equals("true"));
+            assertTrue(verb.attribute("callerId").value().equals("bob"));
+            assertTrue(verb.attribute("method").value().equals("POST"));
+            assertTrue(verb.attribute("action").value().equals("/handle_post_dial"));
+            final List<Tag> children = verb.children();
+            Tag child = children.get(0);
+            assertTrue(Nouns.SIP.equals(child.name()));
+            assertTrue(child.attribute("username").value().equals("admin"));
+            assertTrue(child.attribute("password").value().equals("1234"));
+            assertTrue(child.attribute("method").value().equals("POST"));
+            assertTrue(child.attribute("url").value().equals("/handle_screening_on_answer"));
+            assertTrue(child.text().equals("sip:kate@example.com?customheader=foo&myotherheader=bar"));
             parser.tell(next, observer);
             expectMsgClass(End.class);
         }};

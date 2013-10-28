@@ -1,10 +1,8 @@
 package telephony;
 
+import gov.nist.javax.sip.message.MessageExt;
 import org.apache.log4j.Logger;
-import org.cafesip.sipunit.SipCall;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipResponse;
-import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.*;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -21,13 +19,15 @@ import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.telephony.Version;
 
 import javax.sip.address.SipURI;
+import javax.sip.header.Header;
+import javax.sip.message.Message;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 import java.text.ParseException;
 import java.util.ArrayList;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -562,11 +562,18 @@ public class CallTestDial {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-       /* assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        MessageExt invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite);
+        assertEquals(Request.INVITE, invite.getCSeqHeader().getMethod());
+        Header mycustomheader = invite.getHeader("X-mycustomheader");
+        Header myotherheader = invite.getHeader("X-myotherheader");
+        assertNotNull(mycustomheader);
+        assertNotNull(myotherheader);
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
-        assertTrue(aliceCall.waitForAck(50 * 1000));*/
+        assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
 
