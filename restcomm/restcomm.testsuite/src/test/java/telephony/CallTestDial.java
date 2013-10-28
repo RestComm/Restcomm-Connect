@@ -33,6 +33,7 @@ import static org.junit.Assert.*;
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
  * 
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
 public class CallTestDial {
@@ -592,7 +593,6 @@ public class CallTestDial {
     }
 
     @Test
-    @Ignore
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // in auth manner
     public synchronized void testDialSipAuth() throws InterruptedException, ParseException {
@@ -649,15 +649,14 @@ public class CallTestDial {
         headers.add(proxyAuthenticate);
         assertTrue(aliceCall.sendIncomingCallResponse(Response.PROXY_AUTHENTICATION_REQUIRED, "Non authorized", 3600, headers, null, null));
 
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
         invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
         assertNotNull(invite.getHeader(ProxyAuthorizationHeader.NAME));
 
         ProxyAuthorizationHeader proxyAuthorization=
                 (ProxyAuthorizationHeader)invite.getHeader(ProxyAuthorizationHeader.NAME);
-        String username=proxyAuthorization.getParameter("username");
-        //String password=proxyAuthorization.getParameter("password");
 
-        boolean res=dsam.doAuthenticate(username,proxyAuthorization,(Request)invite);
+        boolean res=dsam.doAuthenticate("alice", "1234", proxyAuthorization,(Request)invite);
         assertTrue(res);
 
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));

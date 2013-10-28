@@ -37,12 +37,7 @@ import javax.sdp.MediaDescription;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
+import javax.servlet.sip.*;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -80,6 +75,7 @@ import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 public final class Call extends UntypedActor {
 	// Define possible directions.
@@ -131,6 +127,8 @@ public final class Call extends UntypedActor {
 	private SipURI to;
     // custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     private Map<String,String> headers;
+    private String username;
+    private String password;
 	private long timeout;
 	private SipServletRequest invite;
 	// MGCP runtime stuff.
@@ -441,6 +439,23 @@ public final class Call extends UntypedActor {
 				fsm.transition(message, failingBusy);
 				break;
 			}
+            case SipServletResponse.SC_UNAUTHORIZED:
+            case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
+                // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                if(username == null || password == null) {
+                    fsm.transition(message, failing);
+                } else {
+                    AuthInfo authInfo = factory.createAuthInfo();
+                    // FIXME need to retrieve the realm from the response or app server, not hard coded
+                    authInfo.addAuthInfo(response.getStatus(), "sip-servlets-realm", username, password);
+                    SipServletRequest challengeRequest = response.getSession().createRequest(
+                            response.getRequest().getMethod());
+                    challengeRequest.addAuthHeader(response, authInfo);
+                    invite = challengeRequest;
+                    challengeRequest.send();
+                }
+                break;
+            }
 			case SipServletResponse.SC_OK: {
           if(dialing.equals(state) || (ringing.equals(state) &&
               !direction.equals("inbound"))) {
@@ -557,6 +572,8 @@ public final class Call extends UntypedActor {
             to = request.to();
             apiVersion = request.apiVersion();
             accountId = request.accountId();
+            username = request.username();
+            password = request.password();
             String toHeaderString = to.toString();
             if(toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
