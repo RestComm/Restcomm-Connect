@@ -16,12 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +24,15 @@ import java.util.Map;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class ConferenceCenter extends UntypedActor {
   private final ActorRef gateway;
@@ -84,7 +85,7 @@ public final class ConferenceCenter extends UntypedActor {
     sender.tell(new StopObserving(self), self);
     // Figure out what happened.
     ConferenceCenterResponse response = null;
-    if(ConferenceStateChanged.State.RUNNING == update.state()) {
+    if(ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT == update.state() || ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT == update.state()) {
       conferences.put(name, sender);
       response = new ConferenceCenterResponse(sender);
     } else {

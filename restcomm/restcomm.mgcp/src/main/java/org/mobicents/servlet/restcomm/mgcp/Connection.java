@@ -150,6 +150,12 @@ public final class Connection extends UntypedActor {
   @Override public void onReceive(final Object message) throws Exception {
     final Class<?> klass = message.getClass();
     final State state = fsm.state();
+    
+	if(logger.isInfoEnabled()) {
+		logger.info(" ********** Connection Current State: " + state.toString());
+		logger.info(" ********** Connection Processing Message: " + klass.getName());
+	} 
+	
     if(Observe.class.equals(klass)) {
       observe(message);
     } else if(StopObserving.class.equals(klass)) {

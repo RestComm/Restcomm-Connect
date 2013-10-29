@@ -76,6 +76,7 @@ import scala.concurrent.duration.Duration;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class Call extends UntypedActor {
 	// Define possible directions.
@@ -1050,7 +1051,7 @@ public final class Call extends UntypedActor {
 		}
 
 		@Override public void execute(final Object message) throws Exception {
-			final UpdateConnection update = new UpdateConnection(ConnectionMode.RecvOnly);
+			final UpdateConnection update = new UpdateConnection(ConnectionMode.SendOnly);
 			remoteConn.tell(update, source);
 
 		}
