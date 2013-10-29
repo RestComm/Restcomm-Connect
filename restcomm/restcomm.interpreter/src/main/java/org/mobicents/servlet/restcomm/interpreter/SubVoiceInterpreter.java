@@ -801,8 +801,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			if(reject.equals(verb.name())) {
 				fsm.transition(message, rejecting);
 			} else if(pause.equals(verb.name())) {
-				fsm.transition(message, pausing);				} 
-			else if(fax.equals(verb.name())) {
+				fsm.transition(message, pausing);
+            } else if(fax.equals(verb.name())) {
 				fsm.transition(message, caching);
 			} else if(play.equals(verb.name())) {
 				fsm.transition(message, caching);
