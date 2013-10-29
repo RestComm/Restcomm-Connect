@@ -2817,8 +2817,16 @@ public final class VoiceInterpreter extends UntypedActor {
                             null, null, false, timeout(verb), CreateCall.Type.SIP, accountId);
                 } else if(Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                    String username = null;
+                    String password = null;
+                    if(child.attribute("username") != null) {
+                        username = child.attribute("username").value();
+                    }
+                    if(child.attribute("password") != null) {
+                        password = child.attribute("password").value();
+                    }
                     create = new CreateCall(e164(callerId(verb)), e164(child.text()),
-                            child.attribute("username").value(), child.attribute("password").value(), false, timeout(verb), CreateCall.Type.SIP, accountId);
+                            username, password, false, timeout(verb), CreateCall.Type.SIP, accountId);
                 }
 				callManager.tell(create, source);
 			} else {
@@ -2915,7 +2923,7 @@ public final class VoiceInterpreter extends UntypedActor {
 				} else {
 					method = "POST";
 				}
-				
+
 			    final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(getContext().system());
 			    builder.setConfiguration(configuration);
 			    builder.setStorage(storage);
