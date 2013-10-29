@@ -111,11 +111,13 @@ import org.mobicents.servlet.restcomm.telephony.Cancel;
 import org.mobicents.servlet.restcomm.telephony.Collect;
 import org.mobicents.servlet.restcomm.telephony.ConferenceCenterResponse;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
+import org.mobicents.servlet.restcomm.telephony.ConferenceModeratorPresent;
 import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
 import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.CreateConference;
 import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
+import org.mobicents.servlet.restcomm.telephony.CreateWaitUrlConfMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.DestroyCall;
 import org.mobicents.servlet.restcomm.telephony.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.Dial;
@@ -133,6 +135,7 @@ import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.Stop;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
+import org.mobicents.servlet.restcomm.telephony.Unmute;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
@@ -162,6 +165,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
  * @author gvagenas@telestax.com
+ * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class VoiceInterpreter extends UntypedActor {
 	private static final int ERROR_NOTIFICATION = 0;
@@ -270,6 +274,12 @@ public final class VoiceInterpreter extends UntypedActor {
 	// The conferencing stuff.
 	private ActorRef conference;
 	private ConferenceInfo conferenceInfo;
+	
+	private ConferenceStateChanged.State conferenceState;
+	private boolean callMuted;
+	private boolean startConferenceOnEnter = true;
+	private ActorRef confSubVoiceInterpreter;
+	
 	private ActorRef conferenceMediaGroup;
 	// Information to reach the application that will be executed
 	// by this interpreter.
@@ -918,7 +928,10 @@ public final class VoiceInterpreter extends UntypedActor {
 			if(ConferenceStateChanged.State.COMPLETED == event.state()) {
 				if(conferencing.equals(state)) {
 					fsm.transition(message, finishConferencing);
-				}
+				} 
+			} else if (ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT == event.state()) {
+				conferenceState = event.state();
+				conferenceStateModeratorPresent(message);
 			}
 		} else if(DownloaderResponse.class.equals(klass)) {
 			final DownloaderResponse response = (DownloaderResponse)message;
@@ -1092,6 +1105,21 @@ public final class VoiceInterpreter extends UntypedActor {
 			}
 		}
 	}
+	
+	private void conferenceStateModeratorPresent(final Object message) {
+		if (!startConferenceOnEnter && !callMuted) {
+			logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call");
+			call.tell(new Unmute(), self());
+		}
+
+		if (confSubVoiceInterpreter != null) {
+			logger.info("VoiceInterpreter stopping confSubVoiceInterpreter");
+
+			// Stop the conference back ground music
+			final StopInterpreter stop = StopInterpreter.instance();
+			confSubVoiceInterpreter.tell(stop, self());
+ 		}
+ 	}	
 
 	private List<NameValuePair> parameters() {
 		final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
@@ -3061,6 +3089,7 @@ public final class VoiceInterpreter extends UntypedActor {
 			final ConferenceResponse<ConferenceInfo> response =
 					(ConferenceResponse<ConferenceInfo>)message;
 			conferenceInfo = response.get();
+			conferenceState = conferenceInfo.state();
 			final Tag child = conference(verb);
 			// If there is room join the conference.
 			int max = 40;
@@ -3151,64 +3180,101 @@ public final class VoiceInterpreter extends UntypedActor {
 			final NotificationsDao notifications = storage.getNotificationsDao();
 			final Tag child = conference(verb);
 			// Mute
-			boolean muted = false;
+
 			Attribute attribute = child.attribute("muted");
 			if(attribute != null) {
 				final String value = attribute.value();
 				if(value != null && !value.isEmpty()) {
-					muted = Boolean.parseBoolean(value);
+					callMuted = Boolean.parseBoolean(value);
 				}
 			}
-			if(muted) {
+			
+			if(callMuted) {
 				final Mute mute = new Mute();
 				call.tell(mute, source);
 			}
 			// Parse start conference.
-			boolean startOnEnter = true;
+
 			attribute = child.attribute("startConferenceOnEnter");
 			if(attribute != null) {
 				final String value = attribute.value();
 				if(value != null && !value.isEmpty()) {
-					startOnEnter = Boolean.parseBoolean(value);
+					startConferenceOnEnter = Boolean.parseBoolean(value);
 				}
 			}
-			// Parse wait url.
-			URI waitUrl = null;
-			attribute = child.attribute("waitUrl");
-			if(attribute != null) {
-				String value = attribute.value();
-				if(value != null && !value.isEmpty()) {
-					try {
-						waitUrl = URI.create(value);
-					} catch(final Exception exception) {
-						final Notification notification = notification(ERROR_NOTIFICATION, 13233,
-								method + " is not a valid waitUrl value for <Conference>");
-						notifications.addNotification(notification);
-						sendMail(notification);
-						final StopInterpreter stop = StopInterpreter.instance();
-						source.tell(stop, source);
-					}
-				}
-				final URI base = request.getUri();
-				waitUrl = resolve(base, waitUrl);
-				// Parse method.
-				String method = "POST";
-				attribute = child.attribute("waitMethod");
+			
+			if (!startConferenceOnEnter) {
+				
+				if (!callMuted) {
+					final Mute mute = new Mute();
+					logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter
+					+ " callMuted = " + callMuted);
+					call.tell(mute, source);
+ 				}
+				
+				// Parse wait url.
+				URI waitUrl = null;
+				attribute = child.attribute("waitUrl");
 				if(attribute != null) {
-					method = attribute.value();
-					if(method != null && !method.isEmpty()) {
-						if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-							final Notification notification = notification(WARNING_NOTIFICATION, 13234,
-									method + " is not a valid waitMethod value for <Conference>");
+					String value = attribute.value();
+					if(value != null && !value.isEmpty()) {
+						try {
+							waitUrl = URI.create(value);
+						} catch(final Exception exception) {
+							final Notification notification = notification(ERROR_NOTIFICATION, 13233,
+									method + " is not a valid waitUrl value for <Conference>");
 							notifications.addNotification(notification);
+							sendMail(notification);
+							final StopInterpreter stop = StopInterpreter.instance();
+							source.tell(stop, source);
+							
+							//TODO shouldn't we return here?
+						}
+					}
+					
+					final URI base = request.getUri();
+					waitUrl = resolve(base, waitUrl);
+					// Parse method.
+					String method = "POST";
+					attribute = child.attribute("waitMethod");
+					if(attribute != null) {
+						method = attribute.value();
+						if(method != null && !method.isEmpty()) {
+							if(!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+								final Notification notification = notification(WARNING_NOTIFICATION, 13234,
+										method + " is not a valid waitMethod value for <Conference>");
+								notifications.addNotification(notification);
+								method = "POST";
+							}
+						} else {
 							method = "POST";
 						}
-					} else {
-						method = "POST";
+					}
+					// Start the waitUrl media player.
+					
+					if(waitUrl !=null){
+						final ConfVoiceInterpreterBuilder confVoiceInterpreterBuilder = new ConfVoiceInterpreterBuilder(
+								getContext().system());
+						confVoiceInterpreterBuilder.setAccount(accountId);
+						confVoiceInterpreterBuilder.setCallInfo(callInfo);
+						confVoiceInterpreterBuilder.setConference(conference);
+						confVoiceInterpreterBuilder.setConfiguration(configuration);
+						confVoiceInterpreterBuilder.setEmailAddress(emailAddress);
+						confVoiceInterpreterBuilder.setMethod(method);
+						confVoiceInterpreterBuilder.setStorage(storage);
+						confVoiceInterpreterBuilder.setUrl(waitUrl);
+						confVoiceInterpreterBuilder.setVersion(version);
+	
+						final ActorRef confInterpreter = confVoiceInterpreterBuilder.build();
+	
+						CreateWaitUrlConfMediaGroup createWaitUrlConfMediaGroup = new CreateWaitUrlConfMediaGroup(
+								confInterpreter);
+						conference.tell(createWaitUrlConfMediaGroup, source);
 					}
 				}
-				// Start the waitUrl media player.
-			}
+			}  else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
+				conference.tell(new ConferenceModeratorPresent(), source);
+ 			}
 			// Set timer.
 			final int timeLimit = timeLimit(verb);
 			final UntypedActorContext context = getContext();

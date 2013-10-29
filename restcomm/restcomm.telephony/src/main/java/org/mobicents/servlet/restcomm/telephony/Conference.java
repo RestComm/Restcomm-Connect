@@ -16,12 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.util.ArrayList;
@@ -33,6 +27,8 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.mgcp.CloseConnection;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
@@ -48,13 +44,27 @@ import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class Conference extends UntypedActor {
+	
+	private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+	
   // Finite state machine stuff.
   private final State uninitialized;
-  private final State running;
+ // private final State running;
+  private final State runningModeratorAbsent;
+  private final State runningModeratorPresent;
   private final State completed;
   // Special intermediate states.
   private final State acquiringMediaSession;
@@ -72,6 +82,8 @@ public final class Conference extends UntypedActor {
   private MediaSession session;
   private ActorRef cnf;
   private ActorRef connection;
+  
+  private ActorRef confVoiceInterpreter;
   // Runtime stuff.
   private final List<ActorRef> calls;
   private final List<ActorRef> observers;
@@ -81,7 +93,11 @@ public final class Conference extends UntypedActor {
     final ActorRef source = self();
     // Initialize the states for the FSM.
     uninitialized = new State("uninitialized", null, null);
-    running = new State("running", new Running(source), null);
+   // running = new State("running", new Running(source), null);
+    
+    runningModeratorAbsent = new State("running moderator absent", new RunningModeratorAbsent(source), null);
+    runningModeratorPresent = new State("running moderator present", new RunningModeratorPresent(source), null);
+    
     completed = new State("completed", new Completed(source), null);
     acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
     acquiringCnf = new State("acquiring cnf", new AcquiringCnf(source), null);
@@ -105,8 +121,13 @@ public final class Conference extends UntypedActor {
     transitions.add(new Transition(openingConnection, completed));
     transitions.add(new Transition(openingConnection, stopping));
     transitions.add(new Transition(closingConnection, stopping));
-    transitions.add(new Transition(closingConnection, running));
-    transitions.add(new Transition(running, completed));
+    
+    transitions.add(new Transition(closingConnection, runningModeratorAbsent));
+    transitions.add(new Transition(runningModeratorAbsent, runningModeratorPresent));
+    
+    transitions.add(new Transition(runningModeratorPresent, completed));
+    transitions.add(new Transition(runningModeratorAbsent, completed));
+
     transitions.add(new Transition(stopping, completed));
     // Initialize the FSM.
     this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -133,8 +154,10 @@ public final class Conference extends UntypedActor {
   private void info(final Object message, final ActorRef sender) {
 	ConferenceInfo information = null; 
     final State state = fsm.state();
-    if(running.equals(state)) {
-      information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING);
+    if(runningModeratorAbsent.equals(state)) {
+      information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+    } else  if(runningModeratorPresent.equals(state)) {
+        information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
     } else if(completed.equals(state)) {
       information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED);
     }
@@ -166,6 +189,12 @@ public final class Conference extends UntypedActor {
     final Class<?> klass = message.getClass();
     final ActorRef sender = sender();
     final State state = fsm.state();
+    
+	if(logger.isInfoEnabled()) {
+		logger.info(" ********** Conference Current State: " + state.toString());
+		logger.info(" ********** Conference Processing Message: " + klass.getName());
+	}    
+    
     if(Observe.class.equals(klass)) {
       observe(message);
     } else if(StopObserving.class.equals(klass)) {
@@ -191,7 +220,9 @@ public final class Conference extends UntypedActor {
           fsm.transition(message, completed);
         }
       } else if(closingConnection.equals(state)) {
-        fsm.transition(message, running);
+        
+    	  fsm.transition(message, runningModeratorAbsent);
+        
       } else if(stopping.equals(state)) {
         fsm.transition(message, completed);
       }
@@ -201,13 +232,21 @@ public final class Conference extends UntypedActor {
       } else {
         fsm.transition(message, completed);
       }
-	} else if(running.equals(state)) {
-	  if(CreateMediaGroup.class.equals(klass)) {
+	} else if(runningModeratorAbsent.equals(state) || runningModeratorPresent.equals(state)) {
+	  if(CreateWaitUrlConfMediaGroup.class.equals(klass)){
+			handleCreateWaitUrlConfMediaGroup(message);
+	  } else if(CreateMediaGroup.class.equals(klass)) {
 	    final ActorRef group = getMediaGroup(message);
 	    sender.tell(new ConferenceResponse<ActorRef>(group), sender);
 	  } else if(DestroyMediaGroup.class.equals(klass)) {
-	    final DestroyMediaGroup request = (DestroyMediaGroup)message;
-	    context.stop(request.group());
+		    final DestroyMediaGroup request = (DestroyMediaGroup)message;
+		    context.stop(request.group());
+	  } else if(DestroyWaitUrlConfMediaGroup.class.equals(klass)) {
+	    final DestroyWaitUrlConfMediaGroup request = (DestroyWaitUrlConfMediaGroup)message;
+	    context.stop(request.getWaitUrlConfMediaGroup());
+	    
+	    //ConferenceVoiceInterpreter is dead now. Set it to null
+	    this.confVoiceInterpreter = null;
 	  } else if(AddParticipant.class.equals(klass)) {
         invite(message);
 	  } else if(JoinComplete.class.equals(klass)) {
@@ -216,8 +255,28 @@ public final class Conference extends UntypedActor {
 	    remove(message);
 	  } else if(GetConferenceInfo.class.equals(klass)) {
 	    info(message, sender);
-	  }
+	  } else if(ConferenceModeratorPresent.class.equals(klass)){
+		  if(runningModeratorAbsent.equals(state)){
+			  fsm.transition(message, runningModeratorPresent);
+		  }
+	  } 
     }
+  }
+  
+  private void handleCreateWaitUrlConfMediaGroup(final Object message){
+	  CreateWaitUrlConfMediaGroup createWaitUrlConfMediaGroup = (CreateWaitUrlConfMediaGroup)message;
+	  ActorRef confVoiceInterpreterTmp = createWaitUrlConfMediaGroup.getConfVoiceInterpreter();
+	  if(confVoiceInterpreter == null){
+		  this.confVoiceInterpreter = confVoiceInterpreterTmp;
+		  
+		  StartInterpreter startInterpreter = new StartInterpreter(getSelf());
+		  this.confVoiceInterpreter.tell(startInterpreter, getSelf());
+		  
+	  } else {
+		  final ActorRef self = self();
+		  StopInterpreter stopInterpreter = StopInterpreter.instance();
+		  confVoiceInterpreterTmp.tell(stopInterpreter, self);
+	  }
   }
   
   private void remove(final Object message) {
@@ -227,6 +286,12 @@ public final class Conference extends UntypedActor {
     if(calls.remove(call)) {
       final Leave leave = new Leave();
       call.tell(leave, self);
+    }
+    
+    if(calls.size() == 0){
+    	//If no more participants and back ground music was on, we should stop it now.
+    	logger.info("calls size is zero in conference "+ name);
+		this.stopAndCleanConfVoiceInter(self);
     }
   }
   
@@ -317,21 +382,40 @@ public final class Conference extends UntypedActor {
 	}
   }
 
-  private final class Running extends AbstractAction {
-    public Running(final ActorRef source) {
-      super(source);
-    }
+  private final class RunningModeratorAbsent extends AbstractAction {
+	    public RunningModeratorAbsent(final ActorRef source) {
+	      super(source);
+	    }
 
-	@Override public void execute(final Object message) throws Exception {
-	  gateway.tell(new DestroyConnection(connection), source);
-	  connection = null;
-	  // Notify the observers.
-	  final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING);
-	  for(final ActorRef observer : observers) {
-	    observer.tell(event, source);
+		@Override public void execute(final Object message) throws Exception {
+		  gateway.tell(new DestroyConnection(connection), source);
+		  connection = null;
+		  // Notify the observers.
+		  final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+		  for(final ActorRef observer : observers) {
+		    observer.tell(event, source);
+		  }
+		}
 	  }
-	}
-  }
+  
+  private final class RunningModeratorPresent extends AbstractAction {
+	    public RunningModeratorPresent(final ActorRef source) {
+	      super(source);
+	    }
+
+		@Override public void execute(final Object message) throws Exception {
+			//Stop the background music if present
+			stopAndCleanConfVoiceInter(source);
+			
+		  // Notify the observers.
+		  final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
+		  for(final ActorRef observer : observers) {
+		    observer.tell(event, source);
+		  }
+		}
+	  }
+  
+  
 
   private final class Stopping extends AbstractAction {
     public Stopping(final ActorRef source) {
@@ -368,6 +452,8 @@ public final class Conference extends UntypedActor {
         gateway.tell(new DestroyEndpoint(cnf), self);
         cnf = null;
       }
+      
+      stopAndCleanConfVoiceInter(source);
       // Notify the observers.
       final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.COMPLETED);
       for(final ActorRef observer : observers) {
@@ -375,5 +461,13 @@ public final class Conference extends UntypedActor {
       }
       observers.clear();
 	}
+  }
+  
+  private void stopAndCleanConfVoiceInter(final ActorRef source){
+	  if(this.confVoiceInterpreter != null){
+			StopInterpreter stopInterpreter = StopInterpreter.instance();
+			this.confVoiceInterpreter.tell(stopInterpreter, source);
+			this.confVoiceInterpreter = null;
+	  }
   }
 }

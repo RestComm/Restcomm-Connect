@@ -21,27 +21,26 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
- * @author amit.bhayani@telestax.com (Amit Bhayani)
+ * <p>
+ * Tell's {@link Conference} that moderator has not yet joined and it should
+ * Transition from {@link ConferenceStateChanged#State.RUNNING} to
+ * {@link ConferenceStateChanged#State.RUNNING_MODERATOR_ABSENT}
+ * </p>
+ * 
+ * @author Amit Bhayani
+ * 
  */
-public final class ConferenceStateChanged {
-  public static enum State { RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED };
-  
-  private final String name;
-  private final State state;
-  
-  public ConferenceStateChanged(final String name, final State state) {
-    super();
-    this.name = name;
-    this.state = state;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public State state() {
-    return state;
-  }
+@Immutable
+public class ConferenceModeratorAbsent {
+
+	/**
+	 * 
+	 */
+	public ConferenceModeratorAbsent() {
+		super();
+	}
+
 }
