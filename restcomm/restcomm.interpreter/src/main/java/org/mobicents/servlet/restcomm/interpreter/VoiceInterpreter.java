@@ -851,7 +851,12 @@ public final class VoiceInterpreter extends UntypedActor {
 				}
 			}
 		} else if(CallResponse.class.equals(klass)) {
-			if(acquiringCallInfo.equals(state)) {
+            if(forking.equals(state)) {
+                // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+                // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response received
+                final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
+                callInfo = response.get();
+            } else if(acquiringCallInfo.equals(state)) {
 				final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
 				callInfo = response.get();
 				final String direction = callInfo.direction();
@@ -867,6 +872,7 @@ public final class VoiceInterpreter extends UntypedActor {
 			}
 		} else if(CallStateChanged.class.equals(klass)) {
 			final CallStateChanged event = (CallStateChanged)message;
+            callState = event.state();
 			if(CallStateChanged.State.RINGING == event.state()) {
 				// update db and callback statusCallback url.
 			} else if(CallStateChanged.State.IN_PROGRESS == event.state()) {
@@ -883,7 +889,8 @@ public final class VoiceInterpreter extends UntypedActor {
 			} else if(CallStateChanged.State.NO_ANSWER == event.state() ||
 					CallStateChanged.State.COMPLETED == event.state() ||
 					CallStateChanged.State.FAILED == event.state()) {
-				if(bridged.equals(state) && sender == outboundCall) {
+                // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
+				if((bridged.equals(state) || forking.equals(state)) && (sender == outboundCall || outboundCall == null)) {
 					fsm.transition(message, finishDialing);
 				} else if(creatingRecording.equals(state)) {
 					fsm.transition(message, finishRecording);
@@ -1137,9 +1144,11 @@ public final class VoiceInterpreter extends UntypedActor {
 		parameters.add(new BasicNameValuePair("CallerName", callerName));
 		final String forwardedFrom = callInfo.forwardedFrom();
 		parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+        //logger.info("Type " + callInfo.type());
         if(CreateCall.Type.SIP == callInfo.type()) {
             // Adding SIP OUT Headers and SipCallId for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
             SipServletResponse lastResponse = callInfo.lastResponse();
+            //logger.info("lastResponse " + lastResponse);
             if(lastResponse != null) {
                 final int statusCode = lastResponse.getStatus();
                 final String method = lastResponse.getMethod();

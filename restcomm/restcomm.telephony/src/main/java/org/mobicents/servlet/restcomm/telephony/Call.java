@@ -440,6 +440,7 @@ public final class Call extends UntypedActor {
 			}
 			case SipServletResponse.SC_BUSY_HERE:
 			case SipServletResponse.SC_BUSY_EVERYWHERE: {
+                sendCallInfoToObservers();
 				fsm.transition(message, failingBusy);
 				break;
 			}
@@ -447,7 +448,8 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
                 // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                 if(username == null || password == null) {
-                    fsm.transition(message, failing);
+                    sendCallInfoToObservers();
+                    fsm.transition(message, failed);
                 } else {
                     AuthInfo authInfo = factory.createAuthInfo();
                     String authHeader = response.getHeader("Proxy-Authenticate");
@@ -469,12 +471,13 @@ public final class Call extends UntypedActor {
           if(dialing.equals(state) || (ringing.equals(state) &&
               !direction.equals("inbound"))) {
 					fsm.transition(message, updatingRemoteConnection);
-				} 
+				}
 				break;
 			}
 			default: {
 				if(code >= 400 && code != 487) {
-					fsm.transition(message, failing);
+                    sendCallInfoToObservers();
+					fsm.transition(message, failed);
 				}
 			}
 			}
@@ -557,6 +560,15 @@ public final class Call extends UntypedActor {
 			observers.remove(observer);
 		}
 	}
+    // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+    // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response received
+    private void sendCallInfoToObservers() {
+        // logger.info("Send Call Info type " + type + " lastResponse " + lastResponse);
+        for(final ActorRef observer : observers) {
+            // logger.info("Send Call Info to " + observer + " from " + from + " type " + type + " lastResponse " + lastResponse);
+            observer.tell(info(), self());
+        }
+    }
 
 
 	private abstract class AbstractAction implements Action {
