@@ -90,25 +90,7 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
 import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
-import org.mobicents.servlet.restcomm.telephony.Answer;
-import org.mobicents.servlet.restcomm.telephony.CallInfo;
-import org.mobicents.servlet.restcomm.telephony.CallResponse;
-import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
-import org.mobicents.servlet.restcomm.telephony.Cancel;
-import org.mobicents.servlet.restcomm.telephony.Collect;
-import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.DestroyCall;
-import org.mobicents.servlet.restcomm.telephony.DestroyMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
-import org.mobicents.servlet.restcomm.telephony.Hangup;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupStatus;
-import org.mobicents.servlet.restcomm.telephony.Play;
-import org.mobicents.servlet.restcomm.telephony.Record;
-import org.mobicents.servlet.restcomm.telephony.Reject;
-import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
+import org.mobicents.servlet.restcomm.telephony.*;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
@@ -907,14 +889,25 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		parameters.add(new BasicNameValuePair("CallerName", callerName));
 		final String forwardedFrom = callInfo.forwardedFrom();
 		parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
-        SipServletResponse lastResponse = callInfo.lastResponse();
-        final String sipCallId = lastResponse.getCallId();
-        parameters.add(new BasicNameValuePair("SipCallId", sipCallId));
-        Iterator<String> headerIt = lastResponse.getHeaderNames();
-        while(headerIt.hasNext()) {
-            String headerName = headerIt.next();
-            if(headerName.startsWith("X-")) {
-                parameters.add(new BasicNameValuePair(headerName, lastResponse.getHeader(headerName)));
+        // Adding SIP OUT Headers and SipCallId for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+        if(CreateCall.Type.SIP == callInfo.type()) {
+            SipServletResponse lastResponse = callInfo.lastResponse();
+            if(lastResponse != null) {
+                final int statusCode = lastResponse.getStatus();
+                final String method = lastResponse.getMethod();
+                // See https://www.twilio.com/docs/sip/receiving-sip-headers
+                // On a successful call setup (when a 200 OK SIP response is returned) any X-headers on the 200 OK message are posted to the call screening URL
+                if(statusCode >= 200 && statusCode < 300 && "INVITE".equalsIgnoreCase(method)) {
+                    final String sipCallId = lastResponse.getCallId();
+                    parameters.add(new BasicNameValuePair("SipCallId", sipCallId));
+                    Iterator<String> headerIt = lastResponse.getHeaderNames();
+                    while(headerIt.hasNext()) {
+                        String headerName = headerIt.next();
+                        if(headerName.startsWith("X-")) {
+                            parameters.add(new BasicNameValuePair("SipHeader_" + headerName, lastResponse.getHeader(headerName)));
+                        }
+                    }
+                }
             }
         }
 		return parameters;

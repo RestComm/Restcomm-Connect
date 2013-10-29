@@ -35,9 +35,10 @@ import org.mobicents.servlet.restcomm.entities.Sid;
   private final boolean isFromApi;
   private final String apiVersion;
   private final Sid accountId;
+  private final CreateCall.Type type;
   
   public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username, final String password,
-      final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId) {
+      final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId, final CreateCall.Type type) {
     super();
     this.name = name;
     this.from = from;
@@ -48,6 +49,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
     this.isFromApi = isFromApi;
     this.apiVersion = apiVersion;
     this.accountId = accountId;
+    this.type = type;
   }
   
   public String name() {
@@ -84,5 +86,9 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
   public String password() {
       return password;
+  }
+
+  public CreateCall.Type type() {
+      return type;
   }
 }

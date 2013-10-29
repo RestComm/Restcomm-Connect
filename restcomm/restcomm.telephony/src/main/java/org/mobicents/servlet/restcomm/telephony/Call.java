@@ -130,6 +130,7 @@ public final class Call extends UntypedActor {
     private Map<String,String> headers;
     private String username;
     private String password;
+    private CreateCall.Type type;
 	private long timeout;
 	private SipServletRequest invite;
     private SipServletResponse lastResponse;
@@ -292,7 +293,7 @@ public final class Call extends UntypedActor {
 	private CallResponse<CallInfo> info() {
 		final String from = this.from.getUser();
 		final String to = this.to.getUser();
-		final CallInfo info =  new CallInfo(id, external, direction, created,
+		final CallInfo info =  new CallInfo(id, external, type, direction, created,
 				forwardedFrom, name, from, to, lastResponse);
 		return new CallResponse<CallInfo>(info);
 	}
@@ -582,6 +583,7 @@ public final class Call extends UntypedActor {
             accountId = request.accountId();
             username = request.username();
             password = request.password();
+            type = request.type();
             String toHeaderString = to.toString();
             if(toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
