@@ -74,7 +74,7 @@ public final class Parser extends UntypedActor {
   }
   
   public Parser(final String text) throws IOException {
-    this(new StringReader(text.replaceAll( "&([^;]+(?!(?:\\w|;)))", "&amp;$1" )));
+    this(new StringReader(text.trim().replaceAll( "&([^;]+(?!(?:\\w|;)))", "&amp;$1" )));
   }
   
   private void end(final Stack<Tag.Builder> builders, final XMLStreamReader stream) {
