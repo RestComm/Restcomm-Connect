@@ -723,7 +723,14 @@ public class CallTestDial {
 
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
+        ArrayList<String> headers = new ArrayList<String>();
+        Header customHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-mycustomheader", "customValue");
+        Header otherHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-myothereader", "customOtherValue");
+        headers.add(customHeader.toString());
+        headers.add(otherHeader.toString());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", headers, null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);

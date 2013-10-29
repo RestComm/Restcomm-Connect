@@ -132,6 +132,7 @@ public final class Call extends UntypedActor {
     private String password;
 	private long timeout;
 	private SipServletRequest invite;
+    private SipServletResponse lastResponse;
 	// MGCP runtime stuff.
 	private final ActorRef gateway;
 	private MediaGatewayInfo gatewayInfo;
@@ -292,7 +293,7 @@ public final class Call extends UntypedActor {
 		final String from = this.from.getUser();
 		final String to = this.to.getUser();
 		final CallInfo info =  new CallInfo(id, external, direction, created,
-				forwardedFrom, name, from, to);
+				forwardedFrom, name, from, to, lastResponse);
 		return new CallResponse<CallInfo>(info);
 	}
 
@@ -424,6 +425,7 @@ public final class Call extends UntypedActor {
 			}
     } else if(message instanceof SipServletResponse) {
 			final SipServletResponse response = (SipServletResponse)message;
+            lastResponse = response;
 			final int code = response.getStatus();
 			switch(code) {
 			case SipServletResponse.SC_CALL_BEING_FORWARDED: {

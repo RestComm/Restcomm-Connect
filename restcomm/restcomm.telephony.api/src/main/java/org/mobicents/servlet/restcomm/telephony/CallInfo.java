@@ -20,10 +20,14 @@ import org.joda.time.DateTime;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
+
+import javax.servlet.sip.SipServletResponse;
+
 import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 @Immutable public final class CallInfo {
   private final Sid sid;
@@ -34,10 +38,11 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
   private final String fromName;
   private final String from;
   private final String to;
+  private final SipServletResponse lastResponse;
   
   public CallInfo(final Sid sid, final State state, final String direction,
 	  final DateTime dateCreated, final String forwardedFrom, final String fromName,
-	  final String from, final String to) {
+	  final String from, final String to, final SipServletResponse lastResponse) {
     super();
     this.sid = sid;
     this.state = state;
@@ -47,6 +52,7 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
     this.fromName = fromName;
     this.from = from;
     this.to = to;
+    this.lastResponse = lastResponse;
   }
   
   public DateTime dateCreated() {
@@ -79,5 +85,9 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
   
   public String to() {
     return to;
+  }
+
+  public SipServletResponse lastResponse() {
+    return lastResponse;
   }
 }

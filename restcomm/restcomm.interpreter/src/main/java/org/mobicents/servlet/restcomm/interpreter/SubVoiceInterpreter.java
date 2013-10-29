@@ -31,12 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -136,8 +131,11 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
+import javax.servlet.sip.SipServletResponse;
+
 /**
  * @author gvagenas@telestax.com
+ * @author jean.deruelle@telestax.com
  */
 public final class SubVoiceInterpreter extends UntypedActor {
 	private static final int ERROR_NOTIFICATION = 0;
@@ -909,6 +907,16 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		parameters.add(new BasicNameValuePair("CallerName", callerName));
 		final String forwardedFrom = callInfo.forwardedFrom();
 		parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+        SipServletResponse lastResponse = callInfo.lastResponse();
+        final String sipCallId = lastResponse.getCallId();
+        parameters.add(new BasicNameValuePair("SipCallId", sipCallId));
+        Iterator<String> headerIt = lastResponse.getHeaderNames();
+        while(headerIt.hasNext()) {
+            String headerName = headerIt.next();
+            if(headerName.startsWith("X-")) {
+                parameters.add(new BasicNameValuePair(headerName, lastResponse.getHeader(headerName)));
+            }
+        }
 		return parameters;
 	}
 
