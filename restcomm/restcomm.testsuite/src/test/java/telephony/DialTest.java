@@ -35,8 +35,8 @@ import static org.junit.Assert.*;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
-public class CallTestDial {
-    private final static Logger logger = Logger.getLogger(CallTestDial.class.getName());
+public class DialTest {
+    private final static Logger logger = Logger.getLogger(DialTest.class.getName());
     
 	private static final String version = Version.getInstance().getRestCommVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
@@ -138,12 +138,12 @@ public class CallTestDial {
 		if(georgeSipStack != null) {
 			georgeSipStack.dispose();
 		}
-		deployer.undeploy("CallTestDial");
+		deployer.undeploy("DialTest");
 	}
 
 	@Test 
 	public synchronized void testDialConference() throws InterruptedException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		final SipCall bobCall = bobPhone.createSipCall();
 		bobCall.initiateOutgoingCall(bobContact, dialConf, null, body, "application", "sdp", null, null);
@@ -213,7 +213,7 @@ public class CallTestDial {
 	@Test
 	// Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/113/when-restcomm-cannot-find-an-app-url-it
     public synchronized void testDialApplicationInvalidURL() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+        deployer.deploy("DialTest");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -246,7 +246,7 @@ public class CallTestDial {
 	
 	@Test 
 	public synchronized void testDialUriAliceHangup() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -297,7 +297,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialUriBobHangup() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -348,7 +348,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialClientAlice() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -399,7 +399,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Prepare George phone to receive call
 		georgePhone.setLoopback(true);
@@ -447,7 +447,7 @@ public class CallTestDial {
 
 	@Test
 	public synchronized void testDialFork() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Register Alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -536,7 +536,7 @@ public class CallTestDial {
     @Test
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     public synchronized void testDialSip() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+        deployer.deploy("DialTest");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -597,7 +597,7 @@ public class CallTestDial {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // in auth manner
     public synchronized void testDialSipAuth() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+        deployer.deploy("DialTest");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -683,7 +683,7 @@ public class CallTestDial {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // with URL screening
     public synchronized void testDialSipTagScreening() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+        deployer.deploy("DialTest");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -751,7 +751,7 @@ public class CallTestDial {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // with URL screening
     public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+        deployer.deploy("DialTest");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -814,7 +814,7 @@ public class CallTestDial {
         }
     }
 
-    @Deployment(name="CallTestDial", managed=false, testable=false)
+    @Deployment(name="DialTest", managed=false, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
 		String version = "6.1.2-TelScale-SNAPSHOT";
