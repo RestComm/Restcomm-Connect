@@ -2906,7 +2906,7 @@ public final class VoiceInterpreter extends UntypedActor {
 			
 			logger.info("Checking for tag with attributes for this outboundcall");
 			Tag child = dialChildrenWithAttributes.get(outboundCall);
-			if(child != null){
+			if(child != null && child.attribute("url") != null){
 			
 				URI url = new URL(child.attribute("url").value()).toURI();
 				String method = null;
