@@ -64,6 +64,7 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
+            <version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 

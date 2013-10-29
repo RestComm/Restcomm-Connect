@@ -92,30 +92,35 @@
         <dependency>
             <groupId>org.mobicents.servlet.sip.containers</groupId>
             <artifactId>sip-servlets-catalina</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mobicents.servlet.sip.containers</groupId>
             <artifactId>sip-servlets-tomcat-jboss4</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mobicents.servlet.sip</groupId>
             <artifactId>sip-servlets-application-router</artifactId>
+            <version>${sipservletapi.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>coyote</artifactId>
+            <version>${tomcat.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>jasper</artifactId>
+            <version>${tomcat.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -146,6 +151,7 @@
         <dependency>
             <groupId>org.mobicents.arquillian.container</groupId>
             <artifactId>mss-tomcat-embedded-6</artifactId>
+            <version>${mss.arquillian.version}</version>
             <scope>test</scope>
         </dependency>
 
