@@ -446,8 +446,13 @@ public final class Call extends UntypedActor {
                     fsm.transition(message, failing);
                 } else {
                     AuthInfo authInfo = factory.createAuthInfo();
-                    // FIXME need to retrieve the realm from the response or app server, not hard coded
-                    authInfo.addAuthInfo(response.getStatus(), "sip-servlets-realm", username, password);
+                    String authHeader = response.getHeader("Proxy-Authenticate");
+                    if(authHeader == null) {
+                        authHeader = response.getHeader("WWW-Authenticate");
+                    }
+                    String tempRealm = authHeader.substring(authHeader.indexOf("realm=\"") + "realm=\"".length());
+                    String realm = tempRealm.substring(0, tempRealm.indexOf("\""));
+                    authInfo.addAuthInfo(response.getStatus(), realm, username, password);
                     SipServletRequest challengeRequest = response.getSession().createRequest(
                             response.getRequest().getMethod());
                     challengeRequest.addAuthHeader(response, authInfo);
