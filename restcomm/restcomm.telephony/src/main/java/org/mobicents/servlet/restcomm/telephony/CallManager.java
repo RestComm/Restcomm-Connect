@@ -454,7 +454,7 @@ private void update(final Object message) throws Exception {
     final ActorRef call = call();
     final ActorRef self = self();
     final InitializeOutbound init = new InitializeOutbound(null, from, to, request.username(), request.password(),
-        request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId());
+        request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type());
     call.tell(init, self);
     return call;
   }

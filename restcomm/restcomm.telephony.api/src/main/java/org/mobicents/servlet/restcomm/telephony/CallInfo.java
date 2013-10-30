@@ -32,6 +32,7 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
 @Immutable public final class CallInfo {
   private final Sid sid;
   private final State state;
+  private final CreateCall.Type type;
   private final String direction;
   private final DateTime dateCreated;
   private final String forwardedFrom;
@@ -40,7 +41,7 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
   private final String to;
   private final SipServletResponse lastResponse;
   
-  public CallInfo(final Sid sid, final State state, final String direction,
+  public CallInfo(final Sid sid, final State state, final CreateCall.Type type, final String direction,
 	  final DateTime dateCreated, final String forwardedFrom, final String fromName,
 	  final String from, final String to, final SipServletResponse lastResponse) {
     super();
@@ -53,6 +54,7 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
     this.from = from;
     this.to = to;
     this.lastResponse = lastResponse;
+    this.type = type;
   }
   
   public DateTime dateCreated() {
@@ -61,6 +63,10 @@ import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
   
   public String direction() {
     return direction;
+  }
+
+  public CreateCall.Type type() {
+      return type;
   }
   
   public String forwardedFrom() {

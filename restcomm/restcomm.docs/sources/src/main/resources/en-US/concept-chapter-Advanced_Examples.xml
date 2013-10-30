@@ -47,11 +47,11 @@ Once you have done that, you are ready to use Text-to-Speech feature of RestComm
 </programlisting>
 </para>
 
-<para>From a command terminal run the Curl command below to bind the 1234 phone number to the test.xml file. </para>
+<para>From a command terminal run the Curl command below to bind the 5555 phone number to the test.xml file. </para>
 
 <programlisting>
 <![CDATA[
-curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/test.xml"
+curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=5555" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/test.xml"
 
 ]]>
 </programlisting>
@@ -62,8 +62,8 @@ curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 {
   "sid": "PN0834628c131e4b66bc862ae0b21b7cfa",
   "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-  "friendly_name": "1234",
-  "phone_number": "+11234",
+  "friendly_name": "5555",
+  "phone_number": "+15555",
   "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
   "voice_method": "POST",
   "voice_fallback_method": "POST",
@@ -78,7 +78,7 @@ curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 ]]>
 </programlisting>
 
-<para>Next, you have to configure your SIP phone and make a call to the <filename>test.xml</filename> dialing number 1234</para>
+<para>Next, you have to configure your SIP phone and make a call to the <filename>test.xml</filename> dialing number 5555</para>
 
 <note>
 <title>Known Issues with some SIP Phones </title>
@@ -88,21 +88,20 @@ Some SIP phones have been known to have codec problems and do not correctly rend
 </note>
 
 <para>
-Start the SIP phone Ekiga (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear the content of the Say Verb in the <filename>test.xml</filename> file.
+Start the SIP phone Ekiga (see below) and dial <filename>5555@127.0.0.1:5080</filename>. You will hear the content of the Say Verb in the <filename>test.xml</filename> file.
 </para>
 
 <mediaobject>
 	<imageobject>
-	<imagedata align="center" fileref="images/RestComm-ekiga-sip-phone-demo.png"/>
+	<imagedata align="center" fileref="images/RestComm-ekiga-sip-phone-demo_5555.png"/>
 	</imageobject>
 </mediaobject>
 
 </section>
 
-<section>
+<section id="record-verb">
 <title>Record Verb</title>
-<para>
-Copy the application below into the <filename>test.xml</filename> file and save it. Dial the number 1234 and when you hear the beep sound, leave a message and hangup when you are finished. 
+<para>Create a file called test.xml in the <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/ </filename> directory and copy the content of the application below into the <filename> test.xml</filename>  file and save it. Dial the number 5555 and when you hear the beep sound, leave a message and hangup when you are finished. 
 </para>
 <para>
 <programlisting>

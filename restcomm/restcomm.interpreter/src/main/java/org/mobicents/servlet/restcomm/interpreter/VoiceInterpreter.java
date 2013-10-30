@@ -35,12 +35,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -160,6 +155,8 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
+import javax.servlet.sip.SipServletResponse;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -854,7 +851,12 @@ public final class VoiceInterpreter extends UntypedActor {
 				}
 			}
 		} else if(CallResponse.class.equals(klass)) {
-			if(acquiringCallInfo.equals(state)) {
+            if(forking.equals(state)) {
+                // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+                // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response received
+                final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
+                callInfo = response.get();
+            } else if(acquiringCallInfo.equals(state)) {
 				final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
 				callInfo = response.get();
 				final String direction = callInfo.direction();
@@ -870,6 +872,7 @@ public final class VoiceInterpreter extends UntypedActor {
 			}
 		} else if(CallStateChanged.class.equals(klass)) {
 			final CallStateChanged event = (CallStateChanged)message;
+            callState = event.state();
 			if(CallStateChanged.State.RINGING == event.state()) {
 				// update db and callback statusCallback url.
 			} else if(CallStateChanged.State.IN_PROGRESS == event.state()) {
@@ -886,7 +889,8 @@ public final class VoiceInterpreter extends UntypedActor {
 			} else if(CallStateChanged.State.NO_ANSWER == event.state() ||
 					CallStateChanged.State.COMPLETED == event.state() ||
 					CallStateChanged.State.FAILED == event.state()) {
-				if(bridged.equals(state) && sender == outboundCall) {
+                // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
+				if((bridged.equals(state) || forking.equals(state)) && (sender == outboundCall || outboundCall == null)) {
 					fsm.transition(message, finishDialing);
 				} else if(creatingRecording.equals(state)) {
 					fsm.transition(message, finishRecording);
@@ -1140,6 +1144,30 @@ public final class VoiceInterpreter extends UntypedActor {
 		parameters.add(new BasicNameValuePair("CallerName", callerName));
 		final String forwardedFrom = callInfo.forwardedFrom();
 		parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+        //logger.info("Type " + callInfo.type());
+        if(CreateCall.Type.SIP == callInfo.type()) {
+            // Adding SIP OUT Headers and SipCallId for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+            SipServletResponse lastResponse = callInfo.lastResponse();
+            //logger.info("lastResponse " + lastResponse);
+            if(lastResponse != null) {
+                final int statusCode = lastResponse.getStatus();
+                final String method = lastResponse.getMethod();
+                // See https://www.twilio.com/docs/sip/receiving-sip-headers
+                // Headers on the final SIP response message (any 4xx or 5xx message or the final BYE/200) are posted to the Dial action URL.
+                if((statusCode >= 400 && "INVITE".equalsIgnoreCase(method)) || (statusCode >= 200 && statusCode < 300 && "BYE".equalsIgnoreCase(method))) {
+                    final String sipCallId = lastResponse.getCallId();
+                    parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
+                    parameters.add(new BasicNameValuePair("DialSipResponseCode", ""+statusCode));
+                    Iterator<String> headerIt = lastResponse.getHeaderNames();
+                    while(headerIt.hasNext()) {
+                        String headerName = headerIt.next();
+                        if(headerName.startsWith("X-")) {
+                            parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse.getHeader(headerName)));
+                        }
+                    }
+                }
+            }
+        }
 		return parameters;
 	}
 
