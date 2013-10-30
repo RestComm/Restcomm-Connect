@@ -20,6 +20,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com (Jean Deruelle)
  */
 @Immutable public final class Nouns {
   public static final String client = "Client";
@@ -27,6 +28,8 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
   public static final String number = "Number";
   public static final String queue = "Queue";
   public static final String uri = "Uri";
+  // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+  public static final String SIP = "Sip";
 
   public Nouns() {
     super();
@@ -38,6 +41,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
     if(number.equals(name)) return true;
     if(queue.equals(name)) return true;
     if(uri.equals(name)) return true;
+    if(SIP.equals(name)) return true;
     return false;
   }
 }

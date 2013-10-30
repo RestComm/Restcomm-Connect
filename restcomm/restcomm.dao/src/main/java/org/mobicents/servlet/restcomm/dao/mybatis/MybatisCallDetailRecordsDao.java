@@ -195,8 +195,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     final String forwardedFrom = readString(map.get("forwarded_from"));
     final String callerName = readString(map.get("caller_name"));
     final URI uri = readUri(map.get("uri"));
+    final String callPath = readString(map.get("call_path"));
     return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
-        startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+        startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   private Map<String, Object> toMap(final CallDetailRecord cdr) {
@@ -220,6 +221,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     map.put("forwarded_from", cdr.getForwardedFrom());
     map.put("caller_name", cdr.getCallerName());
     map.put("uri", writeUri(cdr.getUri()));
+    map.put("call_path", cdr.getCallPath());
     return map;
   }
 }

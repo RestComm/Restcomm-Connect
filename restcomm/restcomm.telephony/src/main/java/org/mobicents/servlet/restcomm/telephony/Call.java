@@ -29,11 +29,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.sdp.Connection;
@@ -41,12 +37,7 @@ import javax.sdp.MediaDescription;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
+import javax.servlet.sip.*;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -84,6 +75,8 @@ import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
+ * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class Call extends UntypedActor {
 	// Define possible directions.
@@ -128,11 +121,19 @@ public final class Call extends UntypedActor {
 	private final FiniteStateMachine fsm;
 	// SIP runtime stuff.
 	private final SipFactory factory;
+    private String apiVersion;
+    private Sid accountId;
 	private String name;
 	private SipURI from;
 	private SipURI to;
+    // custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    private Map<String,String> headers;
+    private String username;
+    private String password;
+    private CreateCall.Type type;
 	private long timeout;
 	private SipServletRequest invite;
+    private SipServletResponse lastResponse;
 	// MGCP runtime stuff.
 	private final ActorRef gateway;
 	private MediaGatewayInfo gatewayInfo;
@@ -152,7 +153,7 @@ public final class Call extends UntypedActor {
 	
 	private ActorRef group;
 
-	public Call(final SipFactory factory, final ActorRef gateway) {
+    public Call(final SipFactory factory, final ActorRef gateway) {
 		super();
 		final ActorRef source = self();
 		// Initialize the states for the FSM.
@@ -205,6 +206,7 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(uninitialized, ringing));
 		transitions.add(new Transition(queued, canceled));
 		transitions.add(new Transition(queued, acquiringMediaGatewayInfo));
+		transitions.add(new Transition(queued, closingRemoteConnection));
 		transitions.add(new Transition(acquiringMediaGatewayInfo, canceled));
 		transitions.add(new Transition(acquiringMediaGatewayInfo, acquiringMediaSession));
 		transitions.add(new Transition(acquiringMediaSession, canceled));
@@ -233,6 +235,7 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(ringing, updatingRemoteConnection));
 		transitions.add(new Transition(ringing, acquiringMediaGatewayInfo));
 		transitions.add(new Transition(ringing, failingBusy));
+		transitions.add(new Transition(ringing, closingRemoteConnection));
 		transitions.add(new Transition(failingNoAnswer, noAnswer));
 		transitions.add(new Transition(failingBusy, busy));
 		transitions.add(new Transition(canceling, canceled));
@@ -290,8 +293,8 @@ public final class Call extends UntypedActor {
 	private CallResponse<CallInfo> info() {
 		final String from = this.from.getUser();
 		final String to = this.to.getUser();
-		final CallInfo info =  new CallInfo(id, external, direction, created,
-				forwardedFrom, name, from, to);
+		final CallInfo info =  new CallInfo(id, external, type, direction, created,
+				forwardedFrom, name, from, to, lastResponse);
 		return new CallResponse<CallInfo>(info);
 	}
 
@@ -326,6 +329,8 @@ public final class Call extends UntypedActor {
 			observe(message);
     } else if(StopObserving.class.equals(klass)) {
 			stopObserving(message);
+    } else if(GetCallObservers.class.equals(klass)) {
+    	sender.tell(new CallResponse<List<ActorRef>>(observers), self);
     } else if(GetCallInfo.class.equals(klass)) {
 			sender.tell(info(), self);
     } else if(InitializeOutbound.class.equals(klass)) {
@@ -421,6 +426,7 @@ public final class Call extends UntypedActor {
 			}
     } else if(message instanceof SipServletResponse) {
 			final SipServletResponse response = (SipServletResponse)message;
+            lastResponse = response;
 			final int code = response.getStatus();
 			switch(code) {
 			case SipServletResponse.SC_CALL_BEING_FORWARDED: {
@@ -434,19 +440,44 @@ public final class Call extends UntypedActor {
 			}
 			case SipServletResponse.SC_BUSY_HERE:
 			case SipServletResponse.SC_BUSY_EVERYWHERE: {
+                sendCallInfoToObservers();
 				fsm.transition(message, failingBusy);
 				break;
 			}
+            case SipServletResponse.SC_UNAUTHORIZED:
+            case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
+                // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                if(username == null || password == null) {
+                    sendCallInfoToObservers();
+                    fsm.transition(message, failed);
+                } else {
+                    AuthInfo authInfo = factory.createAuthInfo();
+                    String authHeader = response.getHeader("Proxy-Authenticate");
+                    if(authHeader == null) {
+                        authHeader = response.getHeader("WWW-Authenticate");
+                    }
+                    String tempRealm = authHeader.substring(authHeader.indexOf("realm=\"") + "realm=\"".length());
+                    String realm = tempRealm.substring(0, tempRealm.indexOf("\""));
+                    authInfo.addAuthInfo(response.getStatus(), realm, username, password);
+                    SipServletRequest challengeRequest = response.getSession().createRequest(
+                            response.getRequest().getMethod());
+                    challengeRequest.addAuthHeader(response, authInfo);
+                    invite = challengeRequest;
+                    challengeRequest.send();
+                }
+                break;
+            }
 			case SipServletResponse.SC_OK: {
           if(dialing.equals(state) || (ringing.equals(state) &&
               !direction.equals("inbound"))) {
 					fsm.transition(message, updatingRemoteConnection);
-				} 
+				}
 				break;
 			}
 			default: {
 				if(code >= 400 && code != 487) {
-					fsm.transition(message, failing);
+                    sendCallInfoToObservers();
+					fsm.transition(message, failed);
 				}
 			}
 			}
@@ -473,6 +504,10 @@ public final class Call extends UntypedActor {
 			} else if(Hangup.class.equals(klass)) {
 				fsm.transition(message, closingRemoteConnection);
 			} 
+		} else if (Hangup.class.equals(klass)) {
+			if (queued.equals(state) || ringing.equals(state)){
+				fsm.transition(message, closingRemoteConnection);
+			}
 		} else if(ringing.equals(state)) {
 		    if(org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass)) {
                 fsm.transition(message, notFound);
@@ -525,6 +560,15 @@ public final class Call extends UntypedActor {
 			observers.remove(observer);
 		}
 	}
+    // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+    // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response received
+    private void sendCallInfoToObservers() {
+        // logger.info("Send Call Info type " + type + " lastResponse " + lastResponse);
+        for(final ActorRef observer : observers) {
+            // logger.info("Send Call Info to " + observer + " from " + from + " type " + type + " lastResponse " + lastResponse);
+            observer.tell(info(), self());
+        }
+    }
 
 
 	private abstract class AbstractAction implements Action {
@@ -546,7 +590,27 @@ public final class Call extends UntypedActor {
 			final InitializeOutbound request = (InitializeOutbound)message;
 			name = request.name();
 			from = request.from();
-			to = request.to();
+            to = request.to();
+            apiVersion = request.apiVersion();
+            accountId = request.accountId();
+            username = request.username();
+            password = request.password();
+            type = request.type();
+            String toHeaderString = to.toString();
+            if(toHeaderString.indexOf('?') != -1) {
+                // custom headers parsing for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                headers = new HashMap<String, String>();
+                // we keep only the to URI without the headers
+                to = (SipURI) factory.createURI(toHeaderString.substring(0,toHeaderString.lastIndexOf('?')));
+                String headersString = toHeaderString.substring(toHeaderString.lastIndexOf('?')+1);
+                StringTokenizer tokenizer = new StringTokenizer(headersString, "&");
+                while(tokenizer.hasMoreTokens()) {
+                    String headerNameValue = tokenizer.nextToken();
+                    String headerName= headerNameValue.substring(0, headerNameValue.lastIndexOf('='));
+                    String headerValue = headerNameValue.substring(headerNameValue.lastIndexOf('=')+1);
+                    headers.put(headerName, headerValue);
+                }
+            }
 			timeout = request.timeout();
 			if(request.isFromApi()) {
 				direction = OUTBOUND_API;
@@ -667,6 +731,17 @@ public final class Call extends UntypedActor {
 			application.setAttribute(Call.class.getName(), self);
 			invite = factory.createRequest(application, "INVITE", from, to);
 			invite.pushRoute(uri);
+
+            if(headers != null) {
+                // adding custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                Set<Map.Entry<String, String>> entrySet = headers.entrySet();
+                for(Map.Entry<String, String> entry : entrySet) {
+                    invite.addHeader("X-" + entry.getKey(), entry.getValue());
+                }
+            }
+            invite.addHeader("X-RestComm-ApiVersion" , apiVersion);
+            invite.addHeader("X-RestComm-AccountSid" , accountId.toString());
+            invite.addHeader("X-RestComm-CallSid", id.toString());
 			final SipSession session = invite.getSession();
 			session.setHandler("CallManager");
 			String offer = null;
@@ -992,7 +1067,7 @@ public final class Call extends UntypedActor {
 		}
 
 		@Override public void execute(final Object message) throws Exception {
-			final UpdateConnection update = new UpdateConnection(ConnectionMode.RecvOnly);
+			final UpdateConnection update = new UpdateConnection(ConnectionMode.SendOnly);
 			remoteConn.tell(update, source);
 
 		}

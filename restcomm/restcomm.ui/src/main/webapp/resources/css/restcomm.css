@@ -1,0 +1,222 @@
+/* Bootstrap customization classes ------------------------------------------ */
+.modal-large {
+    width: 680px;
+    margin-left: -340px;
+}
+
+.input-med-small {
+    width: 135px;
+}
+
+.input-med-large {
+    width: 180px;
+}
+
+.text-bottom {
+    vertical-align: text-bottom;
+}
+
+/* Common classes ----------------------------------------------------------- */
+
+body {
+    background-image: url('../img/background.png')
+}
+
+.hidden {
+    display: none !important;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.navbar-logo {
+    vertical-align: bottom;
+}
+
+.navbar-telestax {
+    margin-top: -9px;
+}
+
+.navbar-restcomm {
+    margin-left: 10px;
+    margin-top: -6px;
+    height:24px;
+}
+
+.page-header {
+    color: dimgrey;
+    display: inline;
+}
+
+.page-subheader {
+    color: darkgrey;
+    display: inline;
+}
+
+.record-filter-div {
+    margin-bottom: 10px;
+}
+
+.no-records-alert {
+    margin-top: 50px;
+}
+
+hr.small {
+    margin: 10px 0;
+}
+
+a.clean-link {
+    text-decoration: none;
+}
+
+input.ng-dirty.ng-invalid { border: solid 2px red; }
+
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.no-margins {
+    margin: 0;
+}
+
+.margin-left-10 {
+    margin-left: 10px;
+}
+
+.width-5pc {
+    width: 5%;
+}
+
+.width-10pc {
+    width: 10%;
+}
+
+.width-15pc {
+    width: 15%;
+}
+
+.width-20pc {
+    width: 20%;
+}
+
+.width-30pc {
+    width: 30%;
+}
+
+.opacity30 {
+    opacity: 0.3;
+}
+.opacity40 {
+    opacity: 0.4;
+}
+.opacity50 {
+    opacity: 0.5;
+}
+.opacity60 {
+    opacity: 0.6;
+}
+.opacity70 {
+    opacity: 0.7;
+}
+
+.form-dl > dt, .form-dl > dd {
+    height: 36px;
+}
+
+/* Index.html classes ------------------------------------------------------- */
+
+ul#rightMenu > li i {
+    margin-right: 5px;
+    opacity: 0.5;
+}
+
+/* Dashboard Page classes --------------------------------------------------- */
+
+.dashboard-container {
+    height: 260px;
+}
+
+.dashboard-container > h1 {
+    margin: 45px;
+}
+
+/* Accounts Page classes ---------------------------------------------------- */
+
+.grey-tab > a {
+    background-color: rgba(230, 230, 230, 0.3) !important;
+    font-weight: bold;
+}
+
+.btn-configure {
+    margin: 0 0 2px 10px;
+}
+
+/* Calls Logs classes ------------------------------------------------------- */
+
+.table-condensed tr > td > dl {
+    margin: 0;
+}
+
+.details-header {
+    margin-top: -10px;
+}
+
+/* Messages Logs classes ---------------------------------------------------- */
+
+.filter-field {
+    margin-right: 15px;
+}
+
+/* Numbers classes ---------------------------------------------------------- */
+
+.available-feature {
+    color: #2e8b57;
+}
+
+.unavailable-feature {
+    color: #8b0000;
+}
+
+.btn-delete-div {
+    opacity: 0.8;
+    margin-top: 6px;
+}
+
+.no-top-margin {
+    margin-top: 0;
+}
+
+.account-details {
+    margin-top: 5px;
+}
+
+.account-details-field {
+    margin-right: 10px;
+}
+
+.account-details-field > h4 {
+    margin-top: 5px;
+}
+
+.account-detail-field-name {
+    margin-top: 5px;
+}
+
+/* Providers classes -------------------------------------------------------- */
+
+.dl-small {
+    margin: 3px 3px 3px -60px;
+}
+
+.dl-small > dt, .dl-small > dd {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.font-as-icon {
+    font-size: 1.2em;
+}
