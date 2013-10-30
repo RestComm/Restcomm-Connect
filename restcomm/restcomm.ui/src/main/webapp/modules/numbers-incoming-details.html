@@ -1,0 +1,124 @@
+<ul class="nav nav-pills">
+    <li class="active"><a ng-href="#/numbers">RESTCOMM NUMBERS</a></li>
+    <li><a href="#/numbers/clients">SIP CLIENTS</a></li>
+    <li><a href="#/numbers/outgoing">VERIFIED CALLER IDS</a></li>
+    <!--
+        <li><a href="#/numbers/shortcodes">SHORT CODES</a></li>
+        <li><a href="#/numbers/porting">PORTING REQUESTS</a></li>
+    -->
+</ul>
+
+<div class="row-fluid">
+    <div class="span12 well well-small"><h1 class="page-header"><i class="icon-phone"></i> {{ numberDetails.phone_number }}</h1>  <h2 class="page-subheader"> _ {{ numberDetails.friendly_name }}</h2></div>
+</div>
+
+<div class="well well-small">
+    <h3 class="muted details-header">Voice</h3>
+    <fieldset>
+        <label class="pull-left" for="voice-url">
+            <h4 class="account-detail-field-name">Voice Request URL</h4>
+        </label>
+        <span class="pull-right">
+            <select class="input-small" ng-model="numberDetails.voice_method">
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input id="voice-url" type="text" class="span6" placeholder="Voice Request URL" ng-model="numberDetails.voice_url" />
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="voice-fallback-url">
+            <h4 class="account-detail-field-name">Voice Fallback URL</h4>
+        </label>
+        <span class="pull-right">
+            <select class="input-small" ng-model="numberDetails.voice_fallback_method">
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input id="voice-fallback-url" type="text" class="span6" placeholder="Voice Fallback URL" ng-model="numberDetails.voice_fallback_url" />
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="status-callback-url">
+            <h4 class="account-detail-field-name">Status Callback URL</h4>
+        </label>
+        <span class="pull-right">
+            <select class="input-small" ng-model="numberDetails.status_callback_method">
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input id="status-callback-url" type="text" class="span6" placeholder="Status Callback URL" ng-model="numberDetails.status_callback" />
+        </span>
+    </fieldset>
+</div>
+<div class="well well-small">
+    <h3 class="muted details-header">SMS</h3>
+    <fieldset>
+        <label class="pull-left" for="sms-url">
+            <h4 class="account-detail-field-name">SMS Request URL</h4>
+        </label>
+        <span class="pull-right">
+            <select class="input-small" ng-model="numberDetails.sms_method">
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input id="sms-url" type="text" class="span6" placeholder="SMS Request URL" ng-model="numberDetails.sms_url" />
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="sms-fallback-url">
+            <h4 class="account-detail-field-name">SMS Fallback URL</h4>
+        </label>
+        <span class="pull-right">
+            <select class="input-small" ng-model="numberDetails.sms_fallback_method">
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input id="sms-fallback-url" type="text" class="span6" placeholder="SMS Fallback URL" ng-model="numberDetails.sms_fallback_url" />
+        </span>
+    </fieldset>
+</div>
+<div class="well well-small">
+    <h3 class="muted details-header">USSD</h3>
+    <fieldset>
+        <label class="pull-left" for="ussd-url">
+            <h4 class="account-detail-field-name">USSD Request URL</h4>
+        </label>
+        <span class="pull-right">
+            <select class="input-small" ng-model="numberDetails.ussd_method">
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input id="ussd-url" type="text" class="span6" placeholder="USSD Request URL" ng-model="numberDetails.ussd_url" />
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="ussd-fallback-url">
+            <h4 class="account-detail-field-name">USSD Fallback URL</h4>
+        </label>
+        <span class="pull-right">
+            <select class="input-small" ng-model="numberDetails.ussd_fallback_method">
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input id="ussd-fallback-url" type="text" class="span6" placeholder="USSD Fallback URL" ng-model="numberDetails.ussd_fallback_url" />
+        </span>
+    </fieldset>
+</div>
+<div class="well well-small">
+    <h3 class="muted details-header">MISC</h3>
+    <fieldset>
+        <label class="checkbox pull-left">
+            <input type=checkbox ng-model="numberDetails.voice_caller_id_lookup"><h4 class="no-top-margin inline">Caller ID Lookup <small><i class="icon-info-sign inline" tooltip="Uses CNAM database lookup to find Caller ID"></i></small></h4>
+        </label>
+    </fieldset>
+</div>
+<div class="">
+    <button class="btn btn-primary" ng-click="registerIncomingNumber(numberDetails)">Save Changes</button>
+    <a href="#/numbers" class="btn">Close</a>
+    <button class="btn btn-danger pull-right">Release Number</button>
+</div>

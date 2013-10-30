@@ -130,6 +130,7 @@ public final class Call extends UntypedActor {
     private Map<String,String> headers;
     private String username;
     private String password;
+    private CreateCall.Type type;
 	private long timeout;
 	private SipServletRequest invite;
     private SipServletResponse lastResponse;
@@ -292,7 +293,7 @@ public final class Call extends UntypedActor {
 	private CallResponse<CallInfo> info() {
 		final String from = this.from.getUser();
 		final String to = this.to.getUser();
-		final CallInfo info =  new CallInfo(id, external, direction, created,
+		final CallInfo info =  new CallInfo(id, external, type, direction, created,
 				forwardedFrom, name, from, to, lastResponse);
 		return new CallResponse<CallInfo>(info);
 	}
@@ -439,6 +440,7 @@ public final class Call extends UntypedActor {
 			}
 			case SipServletResponse.SC_BUSY_HERE:
 			case SipServletResponse.SC_BUSY_EVERYWHERE: {
+                sendCallInfoToObservers();
 				fsm.transition(message, failingBusy);
 				break;
 			}
@@ -446,7 +448,8 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
                 // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                 if(username == null || password == null) {
-                    fsm.transition(message, failing);
+                    sendCallInfoToObservers();
+                    fsm.transition(message, failed);
                 } else {
                     AuthInfo authInfo = factory.createAuthInfo();
                     String authHeader = response.getHeader("Proxy-Authenticate");
@@ -468,12 +471,13 @@ public final class Call extends UntypedActor {
           if(dialing.equals(state) || (ringing.equals(state) &&
               !direction.equals("inbound"))) {
 					fsm.transition(message, updatingRemoteConnection);
-				} 
+				}
 				break;
 			}
 			default: {
 				if(code >= 400 && code != 487) {
-					fsm.transition(message, failing);
+                    sendCallInfoToObservers();
+					fsm.transition(message, failed);
 				}
 			}
 			}
@@ -556,6 +560,15 @@ public final class Call extends UntypedActor {
 			observers.remove(observer);
 		}
 	}
+    // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+    // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response received
+    private void sendCallInfoToObservers() {
+        // logger.info("Send Call Info type " + type + " lastResponse " + lastResponse);
+        for(final ActorRef observer : observers) {
+            // logger.info("Send Call Info to " + observer + " from " + from + " type " + type + " lastResponse " + lastResponse);
+            observer.tell(info(), self());
+        }
+    }
 
 
 	private abstract class AbstractAction implements Action {
@@ -582,6 +595,7 @@ public final class Call extends UntypedActor {
             accountId = request.accountId();
             username = request.username();
             password = request.password();
+            type = request.type();
             String toHeaderString = to.toString();
             if(toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out

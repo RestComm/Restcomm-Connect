@@ -1,0 +1,59 @@
+<div class="row">
+    <div class="span6 offset2 text-center"><img src="resources/img/restcomm-logo.png" />&nbsp;&nbsp;&nbsp;<img src="resources/img/restcomm-letters.png" /><hr></div>
+</div>
+<div class="row">
+    <div class="span6 offset2 well well-large">
+        <legend>Login</legend>
+        <form class="form-horizontal" ng-submit="login()">
+            <div class="control-group">
+                <label class="control-label" for="inputHost">Host</label>
+                <div class="controls">
+                    <div class="input-prepend">
+                        <span class="add-on"><i class="icon-cogs"></i> </span><input id="inputHost" type="text" class="span3" placeholder="Host" value="{{credentials.host}}" ng-model="credentials.host" disabled required />
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputAccSID">Email <span class="muted">/</span> Account SID</label>
+                <div class="controls">
+                    <div class="input-prepend">
+                        <span class="add-on"><i class="icon-user"></i> </span><input id="inputAccSID" type="text" class="span3" placeholder="Email or Account SID" ng-model="credentials.sid" required autofocus />
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputAuthToken">Password</label>
+                <div class="controls">
+                    <div class="input-prepend">
+                        <span class="add-on"><i class="icon-lock"></i> </span><input id="inputAuthToken" type="password" class="span3" placeholder="Password" ng-model="credentials.token" required />
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls pull-right">
+                    <label class="checkbox">
+                        <input type="checkbox" name="remember" checked><small> Remember Me</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <!--<button class="btn btn-inverse btn-mini" type="button" onclick="autofill();"><i class="icon-key"></i> Admin</button>-->
+                <div class="controls pull-right">
+                    <button class="btn" type="reset">Clear</button>
+                    <button class="btn btn-primary">Login</button>
+                </div>
+            </div>
+            <div>
+                <alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
+            </div>
+        </form>
+    </div>
+</div>
+
+        <script type="text/javascript">
+            function login() {
+                alert("loggin");
+                return false;
+            }
+        </script>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html ng-app="restcomm">
+    <head>
+        <title>RestComm</title>
+
+        <link rel="icon" type="image/png" href="resources/img/favicon.png">
+        <link rel="stylesheet" href="resources/css/font-awesome.min.css" />
+        <link rel="stylesheet" href="resources/css/bootstrap-combined.no-icons.min.css" />
+        <link rel="stylesheet" href="resources/css/restcomm.css" />
+        <style type="text/css">
+
+            .sidebar-nav {
+                padding: 9px 0;
+            }
+
+                /* Sticky footer styles
+                -------------------------------------------------- */
+
+            html,
+            body {
+                height: 100%;
+                /* The html and body elements cannot have any padding or margin. */
+            }
+
+                /* Wrapper for page content to push down footer */
+            #wrap {
+                min-height: 100%;
+                height: auto !important;
+                height: 100%;
+                /* Negative indent footer by it's height */
+                margin: 0 auto -75px;
+            }
+
+                /* Set the fixed height of the footer here */
+            #push,
+            #footer {
+                height: 75px;
+            }
+            #footer {
+            }
+
+                /* Custom page CSS
+                -------------------------------------------------- */
+                /* Not required for template or sticky footer method. */
+
+            .container {
+                width: auto;
+                max-width: 960px;
+            }
+
+            #wrap > .container-fluid {
+                padding-top: 60px;
+            }
+            #wrap > .container {
+                padding-top: 60px;
+            }
+            .container .credit {
+                margin: 20px 0;
+            }
+
+                /* Lastly, apply responsive CSS fixes as necessary */
+            @media (max-width: 767px) {
+                #footer {
+                    margin-left: -20px;
+                    margin-right: -20px;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                }
+                #wrap > .container-fluid {
+                    padding-top: 0px;
+                }
+            }
+
+            @media (max-width: 980px) {
+                /* Enable use of floated navbar text */
+                .navbar-text.pull-right {
+                    float: none;
+                    padding-left: 5px;
+                    padding-right: 5px;
+                }
+                #wrap > .container-fluid {
+                    padding-top: 0px;
+                }
+            }
+
+
+        </style>
+
+        <!-- Angular does some things with CSS so it's good to load this in the head -->
+        <script type="text/javascript" src="resources/js/jquery-1.10.2.min.js"></script>
+        <script type="text/javascript" src="resources/js/angular.min.js"></script>
+        <script type="text/javascript" src="resources/js/angular-route.min.js"></script>
+        <script type="text/javascript" src="resources/js/angular-resource.min.js"></script>
+        <script type="text/javascript" src="resources/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="resources/js/ui-bootstrap-0.4.0.min.js"></script>
+        <script type="text/javascript" src="resources/js/restcomm.js"></script>
+        <script type="text/javascript" src="resources/js/controllers.js"></script>
+    </head>
+    <body>
+        <div id="wrap">
+            <div class="navbar navbar-inverse navbar-fixed-top" ng-controller="MenuCtrl">
+                <div class="navbar-inner">
+                    <div class="container-fluid">
+                        <span class="brand navbar-logo"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
+                        <div class="nav-collapse collapse" ng-show="auth.isLoggedIn()">
+                            <ul class="nav">
+                                <li><a> </a></li>
+                                <li><a ng-href="#/dashboard"><i class="icon-dashboard"></i> Dashboard</a></li>
+                                <li class="divider-vertical"></li>
+                                <li><a ng-href="#/numbers"><i class="icon-phone"></i> Numbers</a></li>
+                                <li class="divider-vertical"></li>
+                                <li><a ng-href="#/logs"><i class="icon-file-text-alt"></i> Logs</a></li>
+                                <li class="divider-vertical"></li>
+                                <!--<li><a ng-href="#/providers"><i class="icon-cogs"></i> Providers</a></li>-->
+                                <!--<li class="divider-vertical"></li>-->
+                                <!--<li><a ng-href="#/usage"><i class="icon-bar-chart"></i> Usage</a></li>-->
+                                <!--<li class="divider-vertical"></li>-->
+                            </ul>
+                            <ul class="nav pull-right">
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> {{ auth.getLoggedUser() }} <b class="caret"></b></a>
+                                    <ul id="rightMenu" class="dropdown-menu">
+                                        <li><a href="#/profile/{{ auth.getAccountSid() }}"><i class="icon-cog"></i> Account Settings</a></li>
+                                        <li class="divider"></li>
+                                        <li class="nav-header">Sub Accounts</li>
+                                        <li ng-repeat="account in accountsList" ng-hide="account.sid == auth.getAccountSid()"><a href="#"><i ng-class="account.type == 'Full' ? 'icon-suitcase' : 'icon-code'"> </i> {{account.friendly_name}}</a></li>
+                                        <li class="disabled"><a href="#"></a> </li>
+                                        <li class="disabled"><a href="#"></a> </li>
+                                        <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccount();"><i class="icon-plus-sign"></i> Create New Account...</a> </li>
+                                        <li class="divider"></li>
+                                        <li><a href="#/login" ng-click="logout()"><i class="icon-signout"></i> Sign Out</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div><!--/.nav-collapse -->
+                    </div>
+                </div>
+
+                <!-- Register New Account Modal -->
+                <div modal="registeringNewAccount" close="closeRegisterAccount()" options="modalOpts">
+                    <div class="modal-header">
+                        <h3><i class="icon-user"></i> Create New Account</h3>
+                    </div>
+                    <div class="modal-body">
+                        <form name="myForm">
+                        <dl class="dl-horizontal form-dl">
+                            <!--<dt>Account SID</dt>-->
+                            <!--<dd><input type="text" class="input-xlarge" id="new-number-account-sid" ng-model="sid" placeholder="Account SID" disabled /></dd>-->
+                            <!--<hr class="small" />-->
+                            <dt>Friendly Name</dt>
+                            <dd>
+                                <input id="new-account-friendly-name" ng-model="newAccount.friendlyName" type="text" maxlength="64" placeholder="Wife Account" />
+                            </dd>
+                            <dt>Email Address</dt>
+                            <dd>
+                                <input id="new-account-email" ng-model="newAccount.email" type="email" placeholder="labs@restcomm.org" autofocus required />
+                            </dd>
+                            <dt>Password</dt>
+                            <dd>
+                                <input id="new-account-password" name="new-account-password" ng-model="newAccount.password" equals="{{newAccount.passwordConfirmation}}" type="password" placeholder="mySafeP@ssw0rD!" required />
+                            </dd>
+                            <dt>Confirm Password</dt>
+                            <dd>
+                                <input id="new-account-password-confirmation" name="new-account-password-confirmation" ng-model="newAccount.passwordConfirmation" equals="{{newAccount.password}}" type="password" placeholder="mySafeP@ssw0rD!" />
+                                <span></span>
+                            </dd>
+                            <dt>Role</dt>
+                            <dd>
+                                <select>
+                                    <option value="Administrator">Administrator</option>
+                                    <option value="Developer">Developer</option>
+                                </select>
+                            </dd>
+                            <dt>Status</dt>
+                            <dd>
+                                <select>
+                                    <option>Active</option>
+                                    <option>Suspended</option>
+                                    <option>Closed</option>
+                                </select>
+                            </dd>
+                        </dl>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn cancel" ng-click="closeRegisterAccount()">Cancel</button>
+                        <button class="btn btn-primary" ng-click="createAccount(newAccount)">Register</button>
+                    </div>
+                </div>
+
+            </div>
+            <div class="container" ng-view>
+            </div>
+            <div id="push"></div>
+            <div id="footer" class="opacity50">
+                <div class="container">
+                    <h4 class="pull-right">POWERED BY RESTCOMM <small>(c) 2013 TeleStax </small></h4>
+                </div>
+            </div>
+        </div>
+
+
+    </body>
+</html>

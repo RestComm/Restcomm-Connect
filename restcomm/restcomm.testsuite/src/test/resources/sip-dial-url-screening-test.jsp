@@ -2,7 +2,7 @@
 <%
     Set<Map.Entry<String, String[]>> parametersSet = request.getParameterMap().entrySet();
     for(Map.Entry<String, String[]> entry : parametersSet) {
-        System.out.println("***********   sip-url-test.jsp  : " + entry.getKey() + " = " + entry.getValue()[0]);
+        System.out.println("***********   sip-dial-url-screening-test.jsp  : " + entry.getKey() + " = " + entry.getValue()[0]);
     }
 %>
 <?xml version="1.0" encoding="UTF-8"?>

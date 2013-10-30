@@ -1313,7 +1313,7 @@ curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 <note>
 <title>Calling a DID number</title>
-<para>The above example shows how toa make a call to a SIP number. If you want to make a call to a DID number, you must use <ulink url="http://www.telestax.com/voip-innovations-offers-restcomm/">RestComm AMI for Voice Innovation</ulink></para>
+<para>The above example shows how to make a call to a SIP number. If you want to make a call to a DID number, you must can connect Restcomm to a DID provisioning service provider. The quickest way is to use <ulink url="http://www.telestax.com/voip-innovations-offers-restcomm/">RestComm AMI for Voice Innovation</ulink></para>
 </note>
 
 <formalpara>
@@ -1723,6 +1723,39 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 					</tbody>
 				</tgroup>
 			</table>
+
+
+
+<note>
+<title>Using SMS and making DID calls</title>
+<para>You need to configure Restcomm to send SMS messages and DID phone calls to a Service Provider for provisioning. In the <filename>restcomm.xml</filename> file, the outbound-proxy-uri and the SMS outbound-endpoint must point to the Service Provider IP address. You may also decide to use <ulink url="http://www.telestax.com/restcomm-amazon-ami/">Restcomm AMI.</ulink> </para>
+</note>
+
+
+<formalpara>
+<title>Send SMS Messages</title>
+</formalpara>
+<para>Note the encoding used <filename>%2B13216549878</filename> instead of the <filename>+13216549878</filename> The + sign is encoded to to send SMS from the command line. </para>
+<para>From the bash terminal, you can run the command below:</para>
+<programlisting>
+<![CDATA[
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
+
+]]>
+</programlisting>
+
+<formalpara>
+<title>Get list of SMS Messages</title>
+</formalpara>
+<para>This will display list of message sent</para>
+<para>From the bash terminal, you can run the command below:</para>
+<programlisting>
+<![CDATA[
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages  
+
+]]>
+</programlisting>
+
 			</section>
 		</section>
 	</section>
@@ -1806,7 +1839,30 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 					<para>Returns the list representation of all the Recording resources for this Account, including the
 					properties above.</para>
 				</formalpara>
-			</section>
+	
+
+<note>
+<title>How to Record a Message</title>
+<para>
+Go to the Advanced Chapter under <xref linkend="record-verb"/> section to learn how to record a message. 
+</para>
+</note>
+
+
+<formalpara>
+<title>Get List of Recordings</title>
+</formalpara>
+<para>The list of recorded wav files can be found in the directory $RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings/ </para>
+<para>From the bash terminal, you can run the command below:</para>
+<programlisting>
+<![CDATA[
+curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings
+
+]]>
+</programlisting>
+
+
+		</section>
 		</section>
 	</section>
 	<section>

@@ -235,10 +235,19 @@
 			</tbody>
 		</tgroup>
 	    </table>
+<note>
+<title>Media Server Audio File Format</title>
+<para>
+The recommended audio file format is linear( 8000,16 bit , Mono ).
+</para>
+</note>
+
 	    <formalpara>
 	    	<title>Nesting</title>
 	    	<para>The &lt;Play&gt; verb can not have any other verbs or nouns nested. Only a URL.</para>
 	    </formalpara>
+
+
 	    <formalpara>
 	    	<title>Examples</title>
 	    	<para>For an example of how to use the &lt;Play&gt; verb see below.</para>
