@@ -1,33 +1,41 @@
-package telephony;
+package org.mobicents.servlet.restcomm.telephony;
 
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import gov.nist.javax.sip.message.MessageExt;
-import org.apache.log4j.Logger;
-import org.cafesip.sipunit.*;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.*;
-import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.telephony.Version;
-import telephony.security.DigestServerAuthenticationMethod;
+
+import java.text.ParseException;
+import java.util.ArrayList;
 
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
 import javax.sip.header.ProxyAuthenticateHeader;
 import javax.sip.header.ProxyAuthorizationHeader;
-import javax.sip.message.Message;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
-import java.text.ParseException;
-import java.util.ArrayList;
 
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.*;
+import org.apache.log4j.Logger;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipResponse;
+import org.cafesip.sipunit.SipStack;
+import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.test.api.Deployer;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+//import org.mobicents.servlet.restcomm.telephony.Version;
+import org.mobicents.servlet.restcomm.telephony.security.DigestServerAuthenticationMethod;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -39,7 +47,7 @@ import static org.junit.Assert.*;
 public class CallTestDial {
     private final static Logger logger = Logger.getLogger(CallTestDial.class.getName());
     
-	private static final String version = Version.getInstance().getRestCommVersion();
+//	private static final String version = Version.getInstance().getRestCommVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
 		49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32,
 		73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13,
@@ -752,80 +760,87 @@ public class CallTestDial {
         logger.info("Packaging Test App");
 		String version = "6.1.2-TelScale-SNAPSHOT";
 		final WebArchive archive = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.application:war:" + version)
+				.resolve("com.telestax.servlet:restcomm.application:war:" + version).offline()
 				.withoutTransitivity().asSingle(WebArchive.class);
-		JavaArchive dependency = ShrinkWrapMaven.resolver()
-				.resolve("commons-configuration:commons-configuration:jar:1.7")
-				.offline().withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("jain:jain-mgcp-ri:jar:1.0")
-				.offline().withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("org.mobicents.media.client:mgcp-driver:jar:3.0.0.Final")
-				.offline().withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("joda-time:joda-time:jar:2.0")
-				.offline().withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.iSpeech:iSpeech:jar:1.0.1")
-				.offline().withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.dao:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.asr:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.fax:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.tts.acapela:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.tts.api:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.mgcp:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.http:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.interpreter:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.sms.api:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.sms:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.telephony.api:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
-		dependency = ShrinkWrapMaven.resolver()
-				.resolve("com.telestax.servlet:restcomm.telephony:jar:" + version)
-				.withoutTransitivity().asSingle(JavaArchive.class);
-		archive.addAsLibrary(dependency);
+		
+//		JavaArchive dependency = ShrinkWrapMaven.resolver()
+//				.resolve("commons-configuration:commons-configuration:jar:1.7")
+//				.offline().withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("jain:jain-mgcp-ri:jar:1.0")
+//				.offline().withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("org.mobicents.media.client:mgcp-driver:jar:3.0.0.Final")
+//				.offline().withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("joda-time:joda-time:jar:2.0")
+//				.offline().withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.iSpeech:iSpeech:jar:1.0.1")
+//				.offline().withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.dao:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.asr:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.fax:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.tts.voicerss:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.tts.acapela:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.tts.api:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.mgcp:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.http:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.interpreter:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.sms.api:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.sms:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.telephony.api:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+//		dependency = ShrinkWrapMaven.resolver()
+//				.resolve("com.telestax.servlet:restcomm.telephony:jar:" + version)
+//				.withoutTransitivity().asSingle(JavaArchive.class);
+//		archive.addAsLibrary(dependency);
+		
 		archive.delete("/WEB-INF/sip.xml");
 		archive.delete("/WEB-INF/conf/restcomm.xml");
 		archive.delete("/WEB-INF/data/hsql/restcomm.script");

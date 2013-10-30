@@ -107,7 +107,8 @@
 		<mobicents.mgcp.impl.version>3.0.0.Final</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
-		<sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version>
+		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
+		<sipservletapi.version>2.0.0.FINAL</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.27</servlet-api.version>

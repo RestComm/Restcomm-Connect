@@ -1,4 +1,4 @@
-package telephony;
+package org.mobicents.servlet.restcomm.telephony;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
