@@ -1,10 +1,8 @@
 package telephony;
 
+import gov.nist.javax.sip.message.MessageExt;
 import org.apache.log4j.Logger;
-import org.cafesip.sipunit.SipCall;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipResponse;
-import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.*;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -13,30 +11,32 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.telephony.Version;
+import telephony.security.DigestServerAuthenticationMethod;
 
 import javax.sip.address.SipURI;
+import javax.sip.header.Header;
+import javax.sip.header.ProxyAuthenticateHeader;
+import javax.sip.header.ProxyAuthorizationHeader;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 import java.text.ParseException;
 import java.util.ArrayList;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
  * 
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
-public class CallTestDial {
-    private final Logger logger = Logger.getLogger(CallTestDial.class.getName());
+public class DialTest {
+    private final static Logger logger = Logger.getLogger(DialTest.class.getName());
     
 	private static final String version = Version.getInstance().getRestCommVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
@@ -82,6 +82,10 @@ public class CallTestDial {
 	private String dialClient = "sip:+12223334455@127.0.0.1:5080";
 	private String dialNumber = "sip:+12223334456@127.0.0.1:5080";
 	private String notFoundDialNumber = "sip:+12223334457@127.0.0.1:5080";
+    private String dialSip = "sip:+12223334458@127.0.0.1:5080";
+    private String dialSipSecurity = "sip:+12223334459@127.0.0.1:5080";
+    private String dialSipTagScreening = "sip:+12223334460@127.0.0.1:5080";
+    private String dialSipDialTagScreening = "sip:+12223334461@127.0.0.1:5080";
 
 	@BeforeClass 
 	public static void beforeClass() throws Exception {
@@ -134,12 +138,12 @@ public class CallTestDial {
 		if(georgeSipStack != null) {
 			georgeSipStack.dispose();
 		}
-		deployer.undeploy("CallTestDial");
+		deployer.undeploy("DialTest");
 	}
 
 	@Test 
 	public synchronized void testDialConference() throws InterruptedException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		final SipCall bobCall = bobPhone.createSipCall();
 		bobCall.initiateOutgoingCall(bobContact, dialConf, null, body, "application", "sdp", null, null);
@@ -209,7 +213,7 @@ public class CallTestDial {
 	@Test
 	// Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/113/when-restcomm-cannot-find-an-app-url-it
     public synchronized void testDialApplicationInvalidURL() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+        deployer.deploy("DialTest");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -242,7 +246,7 @@ public class CallTestDial {
 	
 	@Test 
 	public synchronized void testDialUriAliceHangup() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -293,7 +297,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialUriBobHangup() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -344,7 +348,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialClientAlice() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -395,7 +399,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Prepare George phone to receive call
 		georgePhone.setLoopback(true);
@@ -443,7 +447,7 @@ public class CallTestDial {
 
 	@Test
 	public synchronized void testDialFork() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+		deployer.deploy("DialTest");
 
 		//Register Alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -529,9 +533,290 @@ public class CallTestDial {
 		}
 	}
 
+    @Test
+    // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    public synchronized void testDialSip() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
 
-	@Deployment(name="CallTestDial", managed=false, testable=false)
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialSip, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if(response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        MessageExt invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite);
+        assertEquals(Request.INVITE, invite.getCSeqHeader().getMethod());
+        Header mycustomheader = invite.getHeader("X-mycustomheader");
+        Header myotherheader = invite.getHeader("X-myotherheader");
+        assertNotNull(mycustomheader);
+        assertNotNull(myotherheader);
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+        // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch(final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Test
+    // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    // in auth manner
+    public synchronized void testDialSipAuth() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialSipSecurity, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if(response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        MessageExt invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite);
+        assertEquals(Request.INVITE, invite.getCSeqHeader().getMethod());
+        Header mycustomheader = invite.getHeader("X-mycustomheader");
+        Header myotherheader = invite.getHeader("X-myotherheader");
+        assertNotNull(mycustomheader);
+        assertNotNull(myotherheader);
+
+        DigestServerAuthenticationMethod dsam = new DigestServerAuthenticationMethod();
+        dsam.initialize(); // it should read values from file, now all static
+
+        ProxyAuthenticateHeader proxyAuthenticate =
+                aliceSipStack.getHeaderFactory().createProxyAuthenticateHeader(dsam.getScheme());
+        proxyAuthenticate.setParameter("realm",dsam.getRealm(null));
+        proxyAuthenticate.setParameter("nonce",dsam.generateNonce());
+        //proxyAuthenticateImpl.setParameter("domain",authenticationMethod.getDomain());
+        proxyAuthenticate.setParameter("opaque","");
+
+        proxyAuthenticate.setParameter("algorithm",dsam.getAlgorithm());
+        ArrayList<Header> headers = new ArrayList<Header>();
+        headers.add(proxyAuthenticate);
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.PROXY_AUTHENTICATION_REQUIRED, "Non authorized", 3600, headers, null, null));
+
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite.getHeader(ProxyAuthorizationHeader.NAME));
+
+        ProxyAuthorizationHeader proxyAuthorization=
+                (ProxyAuthorizationHeader)invite.getHeader(ProxyAuthorizationHeader.NAME);
+
+        boolean res=dsam.doAuthenticate("alice", "1234", proxyAuthorization,(Request)invite);
+        assertTrue(res);
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+        // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch(final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Test
+    // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    // with URL screening
+    public synchronized void testDialSipTagScreening() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialSipTagScreening, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if(response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        MessageExt invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite);
+        assertEquals(Request.INVITE, invite.getCSeqHeader().getMethod());
+        Header mycustomheader = invite.getHeader("X-mycustomheader");
+        Header myotherheader = invite.getHeader("X-myotherheader");
+        assertNotNull(mycustomheader);
+        assertNotNull(myotherheader);
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        ArrayList<String> headers = new ArrayList<String>();
+        Header customHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-mycustomheader", "customValue");
+        Header otherHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-myothereader", "customOtherValue");
+        headers.add(customHeader.toString());
+        headers.add(otherHeader.toString());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", headers, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+        // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch(final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Test
+    // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    // with URL screening
+    public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialSipDialTagScreening, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if(response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        MessageExt invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite);
+        assertEquals(Request.INVITE, invite.getCSeqHeader().getMethod());
+        Header mycustomheader = invite.getHeader("X-mycustomheader");
+        Header myotherheader = invite.getHeader("X-myotherheader");
+        assertNotNull(mycustomheader);
+        assertNotNull(myotherheader);
+
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        ArrayList<String> headers = new ArrayList<String>();
+        Header customHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-mycustomheader", "customValue");
+        Header otherHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-myothereader", "customOtherValue");
+        headers.add(customHeader.toString());
+        headers.add(otherHeader.toString());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.NOT_FOUND, "Not-Found", 3600, receivedBody, "application", "sdp", headers, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+        // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch(final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Deployment(name="DialTest", managed=false, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
+        logger.info("Packaging Test App");
 		String version = "6.1.2-TelScale-SNAPSHOT";
 		final WebArchive archive = ShrinkWrapMaven.resolver()
 				.resolve("com.telestax.servlet:restcomm.application:war:" + version)
@@ -618,7 +903,14 @@ public class CallTestDial {
 		archive.addAsWebResource("dial-fork-entry.xml");
 		archive.addAsWebResource("dial-uri-entry.xml");
 		archive.addAsWebResource("dial-client-entry.xml");
+        archive.addAsWebResource("dial-sip.xml");
+        archive.addAsWebResource("dial-sip-auth.xml");
+        archive.addAsWebResource("dial-sip-screening.xml");
+        archive.addAsWebResource("dial-sip-dial-screening.xml");
 		archive.addAsWebResource("dial-number-entry.xml");
+        archive.addAsWebResource("sip-url-screening-test.jsp");
+        archive.addAsWebResource("sip-dial-url-screening-test.jsp");
+        logger.info("Packaged Test App");
 		return archive;
 	}
 

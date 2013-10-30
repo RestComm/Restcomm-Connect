@@ -16,6 +16,7 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
@@ -23,6 +24,9 @@ import static javax.servlet.sip.SipServletResponse.SC_OK;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
@@ -47,10 +51,16 @@ import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.SubVoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -60,6 +70,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -326,12 +337,21 @@ private boolean redirectToClientVoiceApp(final ActorRef self,
       }
     } else if(ExecuteCallScript.class.equals(klass)) {
       execute(message);
+    } else if(UpdateCallScript.class.equals(klass)) {
+    	try {
+    		update(message);
+    	} catch (final Exception exception) {
+    		sender.tell(new CallManagerResponse<ActorRef>(exception), self);
+    	}
+      	
     } else if(DestroyCall.class.equals(klass)) {
       destroy(message);
     } else if(message instanceof SipServletResponse) {
       response(message);
     } else if(message instanceof SipApplicationSessionEvent) {
       timeout(message);
+    } else if(GetCall.class.equals(klass)) {
+      sender.tell(lookup(message), self);
     }
   }
   
@@ -366,7 +386,44 @@ private void execute(final Object message) {
     final ActorRef interpreter = builder.build();
     interpreter.tell(new StartInterpreter(request.call()), self);
   }
-  
+
+@SuppressWarnings({ "rawtypes", "unchecked" })
+private void update(final Object message) throws Exception {
+	final UpdateCallScript request = (UpdateCallScript)message;
+    final ActorRef self = self();
+    final ActorRef call = request.call();
+    
+	final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+    Future<Object> future = (Future<Object>)ask(call, new GetCallObservers(), expires);
+	CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>)Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+    List<ActorRef> callObservers = response.get();
+    
+    for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
+		ActorRef interpreter = (ActorRef) iterator.next();
+		call.tell(new StopObserving(interpreter), null);
+		getContext().stop(interpreter);
+	}
+    
+    final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(system);
+    builder.setConfiguration(configuration);
+    builder.setStorage(storage);
+    builder.setCallManager(self);
+    builder.setConferenceManager(conferences);
+    builder.setSmsService(sms);
+    builder.setAccount(request.account());
+    builder.setVersion(request.version());
+    builder.setUrl(request.url());
+    builder.setMethod(request.method());
+    builder.setFallbackUrl(request.fallbackUrl());
+    builder.setFallbackMethod(request.fallbackMethod());
+    builder.setStatusCallback(request.callback());
+    builder.setStatusCallbackMethod(request.callbackMethod());
+    builder.setHangupOnEnd(true);
+    final ActorRef interpreter = builder.build();
+    interpreter.tell(new StartInterpreter(request.call()), self);
+
+}
+
   private ActorRef outbound(final Object message) throws ServletParseException {
     final CreateCall request = (CreateCall)message;
     final Configuration runtime = configuration.subset("runtime-settings");
@@ -396,8 +453,8 @@ private void execute(final Object message) {
     }
     final ActorRef call = call();
     final ActorRef self = self();
-    final InitializeOutbound init = new InitializeOutbound(null, from, to,
-        request.timeout(), request.isFromApi());
+    final InitializeOutbound init = new InitializeOutbound(null, from, to, request.username(), request.password(),
+        request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type());
     call.tell(init, self);
     return call;
   }
@@ -459,6 +516,15 @@ private void execute(final Object message) {
     }
   }
   
+  public ActorRef lookup(final Object message) {
+	  final GetCall getCall = (GetCall)message;
+	  final String callPath = getCall.callPath();
+	  
+	  final ActorContext context = getContext();
+
+	  //The context.actorFor has been depreciated for actorSelection at the latest Akka release.
+	  return context.actorFor(callPath);
+  }
  
 public void timeout(final Object message) {
 	final ActorRef self = self();

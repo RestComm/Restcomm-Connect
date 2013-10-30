@@ -46,6 +46,7 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
+            <version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -109,13 +110,15 @@
 
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
-			<artifactId>coyote</artifactId>
+			<artifactId>tomcat-coyote</artifactId>
+            <version>${tomcat7.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
-			<artifactId>jasper</artifactId>
+			<artifactId>tomcat-jasper</artifactId>
+            <version>${tomcat7.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -127,19 +130,22 @@
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip.containers</groupId>
-			<artifactId>sip-servlets-catalina</artifactId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+            <version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip.containers</groupId>
-			<artifactId>sip-servlets-tomcat-jboss4</artifactId>
+			<artifactId>sip-servlets-tomcat-7</artifactId>
+            <version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-application-router</artifactId>
+            <version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -151,7 +157,7 @@
 
 		<dependency>
 			<groupId>org.mobicents.arquillian.container</groupId>
-			<artifactId>mss-tomcat-embedded-6</artifactId>
+			<artifactId>mss-tomcat-embedded-7</artifactId>
 			<scope>test</scope>
 		</dependency>
 

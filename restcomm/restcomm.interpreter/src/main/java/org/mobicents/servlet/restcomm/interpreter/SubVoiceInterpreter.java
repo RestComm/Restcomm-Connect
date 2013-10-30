@@ -16,7 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static akka.pattern.Patterns.ask;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
@@ -32,12 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -96,33 +90,13 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
 import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
-import org.mobicents.servlet.restcomm.telephony.Answer;
-import org.mobicents.servlet.restcomm.telephony.CallInfo;
-import org.mobicents.servlet.restcomm.telephony.CallResponse;
-import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
-import org.mobicents.servlet.restcomm.telephony.Cancel;
-import org.mobicents.servlet.restcomm.telephony.Collect;
-import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.DestroyCall;
-import org.mobicents.servlet.restcomm.telephony.DestroyMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
-import org.mobicents.servlet.restcomm.telephony.Hangup;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupStatus;
-import org.mobicents.servlet.restcomm.telephony.Play;
-import org.mobicents.servlet.restcomm.telephony.Record;
-import org.mobicents.servlet.restcomm.telephony.Reject;
-import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
+import org.mobicents.servlet.restcomm.telephony.*;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
@@ -133,15 +107,17 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.util.Timeout;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
+import javax.servlet.sip.SipServletResponse;
+
 /**
  * @author gvagenas@telestax.com
+ * @author jean.deruelle@telestax.com
  */
 public final class SubVoiceInterpreter extends UntypedActor {
 	private static final int ERROR_NOTIFICATION = 0;
@@ -248,6 +224,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 	private ActorRef source;
 	private Tag verb;
 
+	private Boolean hangupOnEnd;
+
 	private ActorRef originalInterpreter;
 
 	public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone,
@@ -255,6 +233,17 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			final String fallbackMethod, final URI statusCallback, final String statusCallbackMethod,
 			final String emailAddress, final ActorRef callManager, final ActorRef conferenceManager,
 			final ActorRef sms, final DaoManager storage) {
+
+		this(configuration, account, phone, version, url, method,
+				fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, emailAddress,
+				callManager, conferenceManager, sms, storage, false);
+	}
+
+	public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone,
+			final String version, final URI url, final String method, final URI fallbackUrl,
+			final String fallbackMethod, final URI statusCallback, final String statusCallbackMethod,
+			final String emailAddress, final ActorRef callManager, final ActorRef conferenceManager,
+			final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
 		super();
 		source = self();
 		uninitialized = new State("uninitialized", null, null);
@@ -308,12 +297,12 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(acquiringSynthesizerInfo, finished));
 		transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
 		transitions.add(new Transition(acquiringCallInfo, finished));
-		
+
 		transitions.add(new Transition(acquiringCallMediaGroup, checkingMediaGroupState));
 		transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
 		transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
 		transitions.add(new Transition(acquiringCallMediaGroup, finished));
-		
+
 		transitions.add(new Transition(checkingMediaGroupState, initializingCallMediaGroup));
 		transitions.add(new Transition(checkingMediaGroupState, faxing));
 		transitions.add(new Transition(checkingMediaGroupState, downloadingRcml));
@@ -329,7 +318,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(checkingMediaGroupState, hangingUp));
 		transitions.add(new Transition(checkingMediaGroupState, finished));
 		transitions.add(new Transition(checkingMediaGroupState, ready));
-		
+
 		transitions.add(new Transition(initializingCallMediaGroup, faxing));
 		transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
 		transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
@@ -504,6 +493,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		uri = uri + accountId.toString();
 		this.cache = cache(path, uri);
 		this.downloader = downloader();
+		this.hangupOnEnd = hangupOnEnd;
 	}
 
 	private ActorRef asr(final Configuration configuration) {
@@ -523,9 +513,10 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			final AsrResponse<String> response = (AsrResponse<String>)message;
 			Transcription transcription = (Transcription)response.attributes().get("transcription");
 			if(response.succeeded()) {
-				transcription.setStatus(Transcription.Status.COMPLETED);
+				transcription = transcription.setStatus(Transcription.Status.COMPLETED);
+				transcription = transcription.setTranscriptionText(response.get());
 			} else {
-				transcription.setStatus(Transcription.Status.FAILED);
+				transcription = transcription.setStatus(Transcription.Status.FAILED);
 			}
 			final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
 			transcriptions.updateTranscription(transcription);
@@ -668,8 +659,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		final ActorRef sender = sender();
 
 		if(logger.isInfoEnabled()) {
-			logger.info(" ********** VoiceInterpreter's Current State: " + state.toString());
-			logger.info(" ********** VoiceInterpreter's Processing Message: " + klass.getName());
+			logger.info(" ********** SubVoiceInterpreter's Current State: " + state.toString());
+			logger.info(" ********** SubVoiceInterpreter's Processing Message: " + klass.getName());
 		}
 
 		if(StartInterpreter.class.equals(klass)) {
@@ -677,7 +668,11 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			fsm.transition(message, acquiringAsrInfo);
 		} 
 		else if(AsrResponse.class.equals(klass)) {
+			if(outstandingAsrRequests > 0){
+				asrResponse(message);
+			} else {
 			fsm.transition(message, acquiringSynthesizerInfo);
+			}
 		} 
 		else if(SpeechSynthesizerResponse.class.equals(klass)) {
 			if(acquiringSynthesizerInfo.equals(state)) {
@@ -786,8 +781,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			if(reject.equals(verb.name())) {
 				fsm.transition(message, rejecting);
 			} else if(pause.equals(verb.name())) {
-				fsm.transition(message, pausing);				} 
-			else if(fax.equals(verb.name())) {
+				fsm.transition(message, pausing);
+            } else if(fax.equals(verb.name())) {
 				fsm.transition(message, caching);
 			} else if(play.equals(verb.name())) {
 				fsm.transition(message, caching);
@@ -810,7 +805,11 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			}
 		} 
 		else if(End.class.equals(klass)) {
-			originalInterpreter.tell(message, source);
+			if(!hangupOnEnd) {
+				originalInterpreter.tell(message, source);
+			} else {
+				fsm.transition(message, hangingUp);
+			}
 		} 
 		else if(StartGathering.class.equals(klass)) {
 			fsm.transition(message, gathering);
@@ -849,9 +848,11 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			} else {
 				fsm.transition(message, hangingUp);
 			}
-		} else if(AsrResponse.class.equals(klass)) {
-			asrResponse(message);
-		} else if(SmsSessionResponse.class.equals(klass)) {
+		} 
+//		else if(AsrResponse.class.equals(klass)) {
+//			asrResponse(message);
+//		} 
+		else if(SmsSessionResponse.class.equals(klass)) {
 			smsResponse(message);
 		} else if(FaxResponse.class.equals(klass)) {
 			fsm.transition(message, ready);
@@ -888,6 +889,27 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		parameters.add(new BasicNameValuePair("CallerName", callerName));
 		final String forwardedFrom = callInfo.forwardedFrom();
 		parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+        // Adding SIP OUT Headers and SipCallId for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+        if(CreateCall.Type.SIP == callInfo.type()) {
+            SipServletResponse lastResponse = callInfo.lastResponse();
+            if(lastResponse != null) {
+                final int statusCode = lastResponse.getStatus();
+                final String method = lastResponse.getMethod();
+                // See https://www.twilio.com/docs/sip/receiving-sip-headers
+                // On a successful call setup (when a 200 OK SIP response is returned) any X-headers on the 200 OK message are posted to the call screening URL
+                if(statusCode >= 200 && statusCode < 300 && "INVITE".equalsIgnoreCase(method)) {
+                    final String sipCallId = lastResponse.getCallId();
+                    parameters.add(new BasicNameValuePair("SipCallId", sipCallId));
+                    Iterator<String> headerIt = lastResponse.getHeaderNames();
+                    while(headerIt.hasNext()) {
+                        String headerName = headerIt.next();
+                        if(headerName.startsWith("X-")) {
+                            parameters.add(new BasicNameValuePair("SipHeader_" + headerName, lastResponse.getHeader(headerName)));
+                        }
+                    }
+                }
+            }
+        }
 		return parameters;
 	}
 
@@ -1066,7 +1088,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		public CheckMediaGroupState(final ActorRef source) {
 			super(source);
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public void execute(Object message) throws Exception {
@@ -1074,13 +1096,16 @@ public final class SubVoiceInterpreter extends UntypedActor {
 			if(CallResponse.class.equals(klass)) {
 				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
 				callMediaGroup = response.get();
+				//Ask CallMediaGroup to add us as Observer, if the callMediaGroup is active we will not reach InitializingCallMediaGroup where
+				//we were adding SubVoiceInterpreter as an observer. Better do it here.
+				callMediaGroup.tell(new Observe(source), source);
 				MediaGroupStatus status = new MediaGroupStatus();
 				callMediaGroup.tell(status, source);
 			}
 		}
-		
+
 	}
-	
+
 	private final class InitializingCallMediaGroup extends AbstractAction {
 		public InitializingCallMediaGroup(final ActorRef source) {
 			super(source);
@@ -1090,9 +1115,9 @@ public final class SubVoiceInterpreter extends UntypedActor {
 		@Override public void execute(final Object message) throws Exception {
 			final Class<?> klass = message.getClass();
 			if(MediaGroupStateChanged.class.equals(klass)) {
-//				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
-//				callMediaGroup = response.get();
-				callMediaGroup.tell(new Observe(source), source);
+				//				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
+				//				callMediaGroup = response.get();
+				//				callMediaGroup.tell(new Observe(source), source);
 				callMediaGroup.tell(new StartMediaGroup(), source);
 			} else if(Tag.class.equals(klass)) {
 				verb = (Tag)message;
@@ -2060,6 +2085,7 @@ public final class SubVoiceInterpreter extends UntypedActor {
 				final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
 				final Transcription.Builder otherBuilder = Transcription.builder();
 				otherBuilder.setSid(sid);
+				otherBuilder.setAccountSid(accountId);
 				otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
 				otherBuilder.setRecordingSid(recordingSid);
 				otherBuilder.setDuration(duration);

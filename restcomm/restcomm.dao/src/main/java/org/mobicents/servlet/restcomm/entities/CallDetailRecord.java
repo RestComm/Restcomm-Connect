@@ -48,10 +48,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   private final String callerName;
   private final URI uri;
 
+  private final String callPath;
+  
   public CallDetailRecord(final Sid sid, final Sid parentCallSid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
       final String to, final String from , final Sid phoneNumberSid, final String status, final DateTime startTime, final DateTime endTime,
       final Integer duration, final BigDecimal price, final String direction, final String answeredBy, final String apiVersion,
-      final String forwardedFrom, final String callerName, final URI uri) {
+      final String forwardedFrom, final String callerName, final URI uri, final String callPath) {
     super();
     this.sid = sid;
     this.parentCallSid = parentCallSid;
@@ -72,6 +74,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     this.forwardedFrom = forwardedFrom;
     this.callerName = callerName;
     this.uri = uri;
+    this.callPath = callPath;
   }
   
   public static Builder builder() {
@@ -154,34 +157,38 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     return uri;
   }
   
+  public String getCallPath() {
+	  return callPath;
+  }
+  
   public CallDetailRecord setStatus(final String status) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   public CallDetailRecord setStartTime(final DateTime startTime) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   public CallDetailRecord setEndTime(final DateTime endTime) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   public CallDetailRecord setDuration(final Integer duration) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   public CallDetailRecord setPrice(final BigDecimal price) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   public CallDetailRecord setAnsweredBy(final String answeredBy) {
     return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from , phoneNumberSid, status, startTime, endTime,
-        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri);
+        duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   @NotThreadSafe public static final class Builder {
@@ -204,6 +211,8 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     private String forwardedFrom;
     private String callerName;
     private URI uri;
+    
+    private String callPath;
 
     private Builder() {
       super();
@@ -226,12 +235,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
       forwardedFrom = null;
       callerName = null;
       uri = null;
+      callPath = null;
     }
     
     public CallDetailRecord build() {
       return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid,
           to, from, phoneNumberSid, status, startTime, endTime, duration, price, direction,
-          answeredBy, apiVersion, forwardedFrom, callerName, uri);
+          answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
     }
 
 	public void setSid(final Sid sid) {
@@ -304,6 +314,10 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 
 	public void setUri(final URI uri) {
 		this.uri = uri;
+	}
+	
+	public void setCallPath(final String callPath) {
+		this.callPath = callPath;
 	}
   }
 }

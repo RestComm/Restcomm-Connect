@@ -1,4 +1,9 @@
 /*
+ * TeleStax, Open Source Cloud Communications  
+ * Copyright 2012, Telestax Inc and individual contributors
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation; either version 2.1 of
@@ -18,9 +23,10 @@ package org.mobicents.servlet.restcomm.telephony;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class ConferenceStateChanged {
-  public static enum State { RUNNING, COMPLETED };
+  public static enum State { RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED };
   
   private final String name;
   private final State state;
