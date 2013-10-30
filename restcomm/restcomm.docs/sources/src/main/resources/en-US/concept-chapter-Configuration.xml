@@ -340,7 +340,7 @@ and
 	<para>In order for TelScale RestComm to function properly it must first be configured. In this chapter we will cover
 	the settings for TelScale RestComm and it's respective plug-ins. In order to make TelScale RestComm easy to manage
 	all of the configuration is done in only one file. The file is located at
-	<filename>RESTCOMM_HOME/WEB-INF/conf/restcomm.xml</filename> and is composed of the sections that follow.</para>
+	<filename>RESTCOMM_HOME/WEB-INF/webapps/restcomm/conf/restcomm.xml</filename> and is composed of the sections that follow.</para>
 	<note>
 		<para>TelScale RestComm provides a default set of plug-ins for the storage engine, fax service, SMS aggregator,
 		automatic speech recognition, and speech synthesis. All these services are pluggable and TelScale RestComm is not
