@@ -1,4 +1,4 @@
-package telephony.security;
+package org.mobicents.servlet.restcomm.telephony.security;
 
 import javax.sip.*;
 import javax.sip.message.*;

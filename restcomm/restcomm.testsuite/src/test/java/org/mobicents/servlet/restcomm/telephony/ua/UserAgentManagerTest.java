@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package telephony.ua;
+package org.mobicents.servlet.restcomm.telephony.ua;
 
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -29,13 +29,14 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.telephony.Version;
+//import org.mobicents.servlet.restcomm.telephony.Version;
 
 import javax.sip.RequestEvent;
 import javax.sip.address.SipURI;
 import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
+
 import java.text.ParseException;
 
 import static org.junit.Assert.assertNotNull;
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertTrue;
 @Ignore
 @RunWith(Arquillian.class)
 public final class UserAgentManagerTest {
-  private static final String version = Version.getInstance().getRestCommVersion();
+	private static final String version = "6.1.2-TelScale-SNAPSHOT";// Version.getInstance().getRestCommVersion();
   
   @ArquillianResource
   private Deployer deployer;
