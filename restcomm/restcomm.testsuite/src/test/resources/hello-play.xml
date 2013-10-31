@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Play>http://127.0.0.1:8080/restcomm/audio/demo-prompt.wav</Play>
+</Response>
