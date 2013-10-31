@@ -15,6 +15,7 @@
 	<property name="checkout.dir" value="${base.dir}/checkout" />	
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
 	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
+	<property name="workspace.telscale-restcomm-ui.dir" value="${checkout.dir}/telscale-restcomm/restcomm.ui" />
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
 	<property name="telscale.restcomm.release.version" value="6.1.2-SNAPSHOT"/>
 	<property name="telscale.restcomm.branch.name" value="ts12"/>
@@ -84,10 +85,10 @@
 		</classpath>
 	</taskdef>
 	
-	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
-	<target name="release-for-ami" depends="clean,get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
-	<target name="release-for-ami-no-clean" depends="get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
-	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-for-ami" depends="clean,get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-for-ami-no-clean" depends="get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
 	
     <target name="deploy">
     	<ant antfile="${ant.file.telscale.restcomm.release}" target="release">
@@ -298,9 +299,17 @@
         </exec>
 	</target>
 
+	<target name="build-telscale-restcomm-ui">
+        <echo>Building Telscale Restcomm Admin UI</echo>
+	<echo>Restcomm workspace dir: "${workspace.telscale-restcomm-ui.dir}"</echo>
+        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm-ui.dir}">
+                <arg line="clean install" />
+        </exec>
+	</target>
+
     <target name="copy-restcomm">
         <echo>Copy restcomm </echo>
-		<!--default-->
+		<!--JBOSS AS5 default profile-->
 	<copy tofile="${release.dir}/server/default/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
         <!--copy tofile="${release.dir}/server/default/deploy/restcomm.war" failonerror="true" 
@@ -311,7 +320,11 @@
                         <include name="**/*" />
                 </fileset>
         </copy>
-		<!--all-->
+	<!-- Copy Admin UI -->
+        <copy tofile="${release.dir}/server/default/deploy/restcomm-management.war" failonerror="true" 
+        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+
+	<!--JBoss AS6 all profile-->
 	<copy tofile="${release.dir}/server/all/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
         <!--copy tofile="${release.dir}/server/all/deploy/restcomm.war" failonerror="true" 
@@ -322,6 +335,10 @@
                         <include name="**/*" />
                 </fileset>
         </copy>
+	<!-- Copy Admin UI -->
+        <copy tofile="${release.dir}/server/all/deploy/restcomm-management.war" failonerror="true" 
+        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+
 	<chmod dir="${release.dir}/bin" perm="ugo+rx" 
        		includes="**/*.sh"/>
 
@@ -338,6 +355,10 @@
                         <include name="**/*" />
                 </fileset>
         </copy>
+	<!-- Copy Admin UI -->
+        <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true" 
+        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+
 	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true" 
         	file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
         <copy file="${basedir}/telestax-license.xml" todir="${release.tomcat.dir}" failonerror="true" />
@@ -354,6 +375,12 @@
                 </fileset>
         </copy>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm.war.dodeploy" />
+
+	<!-- Copy Admin UI -->
+        <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
+        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
+
 	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
 	<!--<copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
 		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" /> 
@@ -375,6 +402,12 @@
                 </fileset>
         </copy>
 	<touch file="${release.eap6.dir}/standalone/deployments/restcomm.war.dodeploy" />
+
+	<!-- Copy Admin UI -->
+        <copy tofile="${release.eap6.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
+        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
+
 	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
         <!--<copy todir="${release.eap6.dir}/standalone/deployments" failonerror="true"
 		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
