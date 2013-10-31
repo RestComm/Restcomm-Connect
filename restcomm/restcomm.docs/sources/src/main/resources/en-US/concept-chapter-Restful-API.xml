@@ -444,6 +444,15 @@ curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0352491
 			<para>When using RestComm to handle SIP user agent you have to create a new Client resource,
 			this resource acts as an account for your user agent and also dictates how calls made by the
 			user agent should be handled.</para>
+
+
+<note>
+<title>Client without VoiceUrl</title>
+<para>Restcomm has a new implied behavior when VoiceUrl is not provided for a Client account. Restcomm will proxy calls from such Clients to the destination Client (only if registered) or to the destination Application DID.
+</para>
+<para>
+Only registered Clients are allowed to use the B2BUA/P2P/Proxy functionalities of Restcomm. Proxying and P2P calls are only allowed between registered(authenticated) Clients.</para>
+</note>
 		</formalpara>
 		<table frame='all'>
 			<title>Resource Properties</title>
