@@ -232,6 +232,7 @@ public final class Call extends UntypedActor {
 		transitions.add(new Transition(ringing, notFound));
 		transitions.add(new Transition(ringing, canceling));
 		transitions.add(new Transition(ringing, noAnswer));
+        transitions.add(new Transition(ringing, failed));
 		transitions.add(new Transition(ringing, updatingRemoteConnection));
 		transitions.add(new Transition(ringing, acquiringMediaGatewayInfo));
 		transitions.add(new Transition(ringing, failingBusy));
