@@ -172,8 +172,8 @@ public class CreateCallsTest {
 		
 		assertTrue(aliceCall.waitForIncomingCall(5000));
 		String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
-		assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+		assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
 		
 		//Restcomm now should execute RCML that will create a call to +131313 (george's phone)
 		
@@ -224,8 +224,8 @@ public class CreateCallsTest {
 		//Restcomm now should execute RCML that will create a call to Alice Restcomm client
 		assertTrue(aliceCall.waitForIncomingCall(5000));
 		receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
-		assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+		assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
 		
 		Thread.sleep(3000);
 		
@@ -239,7 +239,7 @@ public class CreateCallsTest {
 	}
 	
 	
-    @Deployment(name="DialTest", managed=true, testable=false)
+    @Deployment(name="CreateCallsTest", managed=true, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
 		String version = "6.1.2-TelScale-SNAPSHOT";
