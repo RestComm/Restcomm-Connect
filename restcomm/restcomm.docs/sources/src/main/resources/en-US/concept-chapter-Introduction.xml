@@ -5,16 +5,11 @@
 ]>
 <chapter>
 	<title>Introduction to &SHORT_PLATFORM_NAME;</title>
-	<para>&SHORT_PLATFORM_NAME;
-		is a Communications Platform to rapidly build fax, voice, and text messaging
-		applications, using your existing web development skills.
+	<para>&SHORT_PLATFORM_NAME; is a turnkey Cloud Communications platform based on Open Source building blocks from the team behind Mobicents. Restcomm offers a clean room implementation of the Twilio.com APIs and much more.
+
 	</para>
 	<para>
-		It's a complete turnkey Telco 2.0 SaaS solution ready to deploy in
-		your cloud based on the
-		<ulink url="www.twilio.com">Twilio</ulink>
-		simple and effective APIs and 100% Open Source built on the next
-		generation Cloud Communications platform &PLATFORM_NAME;.
+Restcomm can be integrated with VoIP and legacy SS7 network providers either in the cloud or via on-premise Resource Adaptors.
 	</para>
 	<section>
 		<title>How it Works</title>
