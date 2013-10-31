@@ -141,7 +141,7 @@ public class DialTest {
 //		deployer.undeploy("DialTest");
 	}
 
-	@Test 
+	@Test
 	public synchronized void testDialConference() throws InterruptedException {
 //		deployer.deploy("DialTest");
 
@@ -753,7 +753,7 @@ public class DialTest {
 
     @Test
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-    // with URL screening
+    // with Dial Action screening
     public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
 //        deployer.deploy("DialTest");
 
@@ -802,6 +802,76 @@ public class DialTest {
         headers.add(customHeader.toString());
         headers.add(otherHeader.toString());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.NOT_FOUND, "Not-Found", 3600, receivedBody, "application", "sdp", headers, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+        // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch(final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Test
+    // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    // with Dial Action screening
+    public synchronized void testDialSipDialTagScreening180Decline() throws InterruptedException, ParseException {
+//        deployer.deploy("DialTest");
+
+        //Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        //Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        //Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialSipDialTagScreening, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if(response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30*1000));
+        MessageExt invite = (MessageExt)aliceCall.getLastReceivedRequest().getMessage();
+        assertNotNull(invite);
+        assertEquals(Request.INVITE, invite.getCSeqHeader().getMethod());
+        Header mycustomheader = invite.getHeader("X-mycustomheader");
+        Header myotherheader = invite.getHeader("X-myotherheader");
+        assertNotNull(mycustomheader);
+        assertNotNull(myotherheader);
+
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600, receivedBody, "application", "sdp", null, null));
+
+        ArrayList<String> headers = new ArrayList<String>();
+        Header customHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-mycustomheader", "customValue");
+        Header otherHeader =
+                aliceSipStack.getHeaderFactory().createHeader("X-myothereader", "customOtherValue");
+        headers.add(customHeader.toString());
+        headers.add(otherHeader.toString());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.DECLINE, "Declined", 3600, receivedBody, "application", "sdp", headers, null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
