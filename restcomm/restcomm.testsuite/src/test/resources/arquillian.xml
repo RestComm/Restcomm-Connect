@@ -3,9 +3,9 @@
 	xmlns="http://jboss.org/schema/arquillian"
 	xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
 
-	<container qualifier="mss-tomcat-embedded-6" default="true">
+	<container qualifier="mss-tomcat-embedded-7" default="true">
 		<configuration>
-			<property name="tomcatHome">target/mss-tomcat-embedded-6</property>
+			<property name="tomcatHome">target/mss-tomcat-embedded-7</property>
 			<property name="workDir">work</property>
 			<property name="bindHttpPort">8080</property>
 			<property name="unpackArchive">true</property>

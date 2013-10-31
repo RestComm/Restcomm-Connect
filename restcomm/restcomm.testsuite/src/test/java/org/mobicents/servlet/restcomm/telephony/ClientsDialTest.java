@@ -1,4 +1,4 @@
-package telephony;
+package org.mobicents.servlet.restcomm.telephony;
 
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;

@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package telephony;
+package org.mobicents.servlet.restcomm.telephony;
 
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -29,9 +29,10 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.telephony.Version;
+//import org.mobicents.servlet.restcomm.telephony.Version;
 
 import javax.sip.message.Response;
+
 import java.util.List;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
@@ -44,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 @Ignore
 @RunWith(Arquillian.class)
 public final class CallTest {
-  private static final String version = Version.getInstance().getRestCommVersion();
+	private static final String version = "6.1.2-TelScale-SNAPSHOT";// Version.getInstance().getRestCommVersion();
   private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114,
       49, 32, 53, 51, 54, 53, 53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32,
       73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49, 13, 10, 115, 61, 45, 13,
