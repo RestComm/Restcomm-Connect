@@ -146,12 +146,12 @@ public class CallTestDial {
 		if(georgeSipStack != null) {
 			georgeSipStack.dispose();
 		}
-		deployer.undeploy("CallTestDial");
+//		deployer.undeploy("CallTestDial");
 	}
 
 	@Test 
 	public synchronized void testDialConference() throws InterruptedException {
-		deployer.deploy("CallTestDial");
+//		deployer.deploy("CallTestDial");
 
 		final SipCall bobCall = bobPhone.createSipCall();
 		bobCall.initiateOutgoingCall(bobContact, dialConf, null, body, "application", "sdp", null, null);
@@ -221,7 +221,7 @@ public class CallTestDial {
 	@Test
 	// Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/113/when-restcomm-cannot-find-an-app-url-it
     public synchronized void testDialApplicationInvalidURL() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+//        deployer.deploy("CallTestDial");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -234,10 +234,12 @@ public class CallTestDial {
         //Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, notFoundDialNumber, null, body, "application", "sdp", null, null);
-//        assertLastOperationSuccess(bobCall);
+        assertLastOperationSuccess(bobCall);
+
         // wait for 100 Trying
-        assertTrue(bobCall.waitOutgoingCallResponse(10000));
-        Thread.sleep(3000);
+        //        assertTrue(bobCall.waitOutgoingCallResponse(10000));
+        //        Thread.sleep(3000);
+        
         // wait for 180 Ringing
         assertTrue(bobCall.waitOutgoingCallResponse(10000));
         // wait for 404 Not Found
@@ -254,7 +256,7 @@ public class CallTestDial {
 	
 	@Test 
 	public synchronized void testDialUriAliceHangup() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+//		deployer.deploy("CallTestDial");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -296,6 +298,7 @@ public class CallTestDial {
 
 		bobCall.listenForDisconnect();
 		assertTrue(bobCall.waitForDisconnect(30 * 1000));
+		assertTrue(bobCall.respondToDisconnect());
 		try {
 			Thread.sleep(10 * 1000);
 		} catch(final InterruptedException exception) {
@@ -305,7 +308,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialUriBobHangup() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+//		deployer.deploy("CallTestDial");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -347,6 +350,7 @@ public class CallTestDial {
 
 		aliceCall.listenForDisconnect();
 		assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+		assertTrue(aliceCall.respondToDisconnect());
 		try {
 			Thread.sleep(10 * 1000);
 		} catch(final InterruptedException exception) {
@@ -356,7 +360,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialClientAlice() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+//		deployer.deploy("CallTestDial");
 
 		//Phone2 register as alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -407,7 +411,7 @@ public class CallTestDial {
 
 	@Test 
 	public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+//		deployer.deploy("CallTestDial");
 
 		//Prepare George phone to receive call
 		georgePhone.setLoopback(true);
@@ -440,11 +444,11 @@ public class CallTestDial {
 		assertTrue(georgeCall.waitForAck(50 * 1000));
 
 		Thread.sleep(3000);
-
+		georgeCall.listenForDisconnect();
 		// hangup.
 		bobCall.disconnect();
 
-		georgeCall.listenForDisconnect();
+		
 		assertTrue(georgeCall.waitForDisconnect(30 * 1000));
 		try {
 			Thread.sleep(10 * 1000);
@@ -455,7 +459,7 @@ public class CallTestDial {
 
 	@Test
 	public synchronized void testDialFork() throws InterruptedException, ParseException {
-		deployer.deploy("CallTestDial");
+//		deployer.deploy("CallTestDial");
 
 		//Register Alice
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -544,7 +548,7 @@ public class CallTestDial {
     @Test
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     public synchronized void testDialSip() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+//        deployer.deploy("CallTestDial");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -605,7 +609,7 @@ public class CallTestDial {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // in auth manner
     public synchronized void testDialSipAuth() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+//        deployer.deploy("CallTestDial");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -691,7 +695,7 @@ public class CallTestDial {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // with URL screening
     public synchronized void testDialSipScreening() throws InterruptedException, ParseException {
-        deployer.deploy("CallTestDial");
+//        deployer.deploy("CallTestDial");
 
         //Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null,"127.0.0.1:5080");
@@ -755,7 +759,7 @@ public class CallTestDial {
         }
     }
 
-    @Deployment(name="CallTestDial", managed=false, testable=false)
+    @Deployment(name="CallTestDial", managed=true, testable=false)
 	public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
 		String version = "6.1.2-TelScale-SNAPSHOT";
@@ -853,9 +857,11 @@ public class CallTestDial {
 		archive.addAsWebResource("dial-client-entry.xml");
         archive.addAsWebResource("dial-sip.xml");
         archive.addAsWebResource("dial-sip-auth.xml");
-        archive.addAsWebResource("dial-sip-url.xml");
+        archive.addAsWebResource("sip-dial-url-screening-test.jsp");
 		archive.addAsWebResource("dial-number-entry.xml");
-        archive.addAsWebResource("sip-url-test.jsp");
+		archive.addAsWebResource("hello-play.xml");
+        archive.addAsWebResource("sip-url-screening-test.jsp");
+        archive.addAsWebResource("dial-sip-screening.xml");
         logger.info("Packaged Test App");
 		return archive;
 	}
