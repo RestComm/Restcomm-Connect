@@ -1469,6 +1469,13 @@ You may POST the following parameters:
 <section>
 <title>Modifying Live Calls - Example</title>
 
+
+<warning>
+<para>
+In the current release of Restcomm, you cannot redirect a live call to an RCML application that contains the Dial Verb. This is schedule to be resolved in the next release.
+</para>
+</warning>
+
 <programlisting>
 <![CDATA[
  Modifying a Live Call 
