@@ -113,4 +113,52 @@ public class RestcommCallsTool {
 	    
 		return jsonObject;
 	}
+	
+	public JsonObject createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
+
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+		
+		String url = getAccountsUrl(deploymentUrl, username, true);
+		
+		WebResource webResource = jerseyClient.resource(url);
+		
+		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		params.add("From", from);
+		params.add("To", to);
+		params.add("Url", rcmlUrl);
+		
+//	    webResource = webResource.queryParams(params);
+	    String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);  
+	    JsonParser parser = new JsonParser();
+	    JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+		
+	    return jsonObject;
+	}
+	
+	public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status, String rcmlUrl) throws Exception {
+
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+		
+		String url = getAccountsUrl(deploymentUrl, username, true);
+		
+		WebResource webResource = jerseyClient.resource(url);
+		
+		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		if(status != null && rcmlUrl != null){
+			throw new Exception("You can either redirect a call using the \"url\" attribute or terminate it using the \"status\" attribute!");
+		}
+		if (status != null)
+			params.add("Status", status);
+		if (rcmlUrl != null)
+			params.add("Url", rcmlUrl);
+		
+	    String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);  
+	    JsonParser parser = new JsonParser();
+	    JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+		
+	    return jsonObject;
+	}	
+	
 }
