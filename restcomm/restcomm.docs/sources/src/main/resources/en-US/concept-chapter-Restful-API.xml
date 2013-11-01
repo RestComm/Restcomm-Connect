@@ -4,7 +4,7 @@
 %BOOK_ENTITIES;
 ]>
 <!-- chapter id nickname: ittsss -->
-<chapter>
+<chapter id="restful-api">
 	<title>Restful APIs</title>
 	<para>The RestComm Restufl APIs are very similar to Twilio's and allow you to query meta-data about your account, phone numbers,
 	calls, text messages, and recordings. Through the Restful API you can also start outbound calls and send text messages.</para>
@@ -1101,9 +1101,12 @@ curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166
 			</section>
 		</section>
 	</section>
-	<section>
-		<title>Calls</title>
-		<para>A Call represents a connection between a phone or user agent and RestComm. This may be inbound
+
+
+
+<section>
+	<title>Calls</title>
+	<para>A Call represents a connection between a phone or user agent and RestComm. This may be inbound
 		or outbound. The Calls list resource represents the set of phone calls originated and terminated from
 		an account.</para>
 		<formalpara>
@@ -1211,24 +1214,30 @@ curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166
 				</tbody>
 			</tgroup>
 		</table>
-		<section>
-			<title>Supported Operations</title>
-			<formalpara>
+
+
+<section>
+	<title>Supported Operations</title>
+	<formalpara>
 				<title>HTTP GET</title>
 				<para>Returns the representation of a Call resource, including the properties above.</para>
 			</formalpara>
-		</section>
-		<section>
-			<title>Call List Resource</title>
-			<formalpara>
+</section>
+
+
+<section>
+	<title>Call List Resource</title>
+	<formalpara>
 				<title>Call List Resource URI</title>
 				<para>/2012-04-24/Accounts/{AccountSid}/Calls</para>
 			</formalpara>
-			<section>
-				<title>Supported Operations</title>
-				<formalpara>
-					<title>HTTP GET</title>
-					<para>Returns the list representation of all the Call resources for this Account, including the
+</section>
+
+<section>
+	<title>Supported Operations</title>
+	<formalpara>
+	<title>HTTP GET</title>
+	<para>Returns the list representation of all the Call resources for this Account, including the
 					properties above.</para>
 				</formalpara>
 				<formalpara>
@@ -1350,8 +1359,219 @@ curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166
 
 ]]>
 </programlisting>
+</section>
 
+
+<section>
+<title>REST API: Modifying Live Calls</title>
+
+<para>
+Realtime call modification allows you to interrupt an in-progress call and terminate it or have it begin processing RCML from a new URL. This is useful for any application where you want to asynchronously change the behavior of a running call. For example: hold music, call queues, transferring calls, forcing hangup, etc.
+</para>
+
+		<section>
+			<title>HTTP POST to a Call</title>
+			<formalpara>
+				<title>Client List Resource URI</title>
+</formalpara>
+			<para>
+			To redirect or terminate a live call, you make an HTTP POST request to an in-progress Call instance resource URI:
+			</para>
+			<para>/2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}</para>
+			
 		</section>
+
+<formalpara>
+	<title>POST Parameters</title>
+</formalpara>
+	<para>
+The following parameters are available for you to POST when modifying a phone call:
+	</para>
+
+<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>Url</entry>
+							<entry>A valid URL that returns TwiML. Twilio will immediately redirect the call to the new TwiML.</entry>
+						</row>
+						<row>
+							<entry>Method</entry>
+							<entry>The HTTP method Twilio should use when requesting the above URL. Defaults to POST.</entry>
+						</row>
+						<row>
+							<entry>Status</entry>
+							<entry>Either canceled or completed. Specifying canceled will attempt to hangup calls that are queued or ringing but not affect calls already in progress. Specifying completed will attempt to hang up a call even if it's already in progress.</entry>
+						</row>
+											
+					</tbody>
+				</tgroup>
+			</table>
+<note>
+<title>Call in-Progress</title>
+<para>
+Note that any call which is currently ringing within a Dial verb is in-progress from the point of view of Restcomm, and thus you must use 'Status=completed' to cancel it.
+</para>
+</note>
+
+
+<formalpara>
+	<title>Optional Parameters</title>
+	<para>
+You may POST the following parameters:
+	</para>
+</formalpara>
+
+
+<table frame='all'>
+				<title>Request Parameters</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Parameter</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>FallbackUrl</entry>
+							<entry>A URL that Twilio will request if an error occurs requesting or executing the TwiML at Url.</entry>
+						</row>
+						<row>
+							<entry>FallbackMethod</entry>
+							<entry>The HTTP method that Twilio should use to request the FallbackUrl. Must be either GET or POST. Defaults to POST.</entry>
+						</row>
+						<row>
+							<entry>StatusCallback</entry>
+							<entry>A URL that Twilio will request when the call ends to notify your app.</entry>
+						</row>
+<row>
+							<entry>StatusCallbackMethod</entry>
+							<entry>The HTTP method Twilio should use when requesting the above URL. Defaults to POST.</entry>
+						</row>
+											
+					</tbody>
+				</tgroup>
+			</table>
+
+
+<section>
+<title>Modifying Live Calls - Example</title>
+
+<programlisting>
+<![CDATA[
+ Modifying a Live Call 
+
+In order to accomplish this, you need to create a client called alice
+Start a SIP phone and register alice
+From the terminal run the following curl command
+Make sure alice is using the port 5061
+The "From=" could be any number of your choice
+The Url is the default sample example provided with Restcomm
+
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:7f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5061" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+
+You will see an output similar to the one below:
+
+{
+  "sid": "CAfa51b104354440b09213d04752f50271",
+  "date_created": "2013-11-01T03:41:14.488-06:00",
+  "date_updated": "2013-11-01T03:41:14.488-06:00",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "to": "alice",
+  "from": "+16175551212",
+  "status": "queued",
+  "start_time": "2013-11-01T03:41:14.488-06:00",
+  "price": "0.0",
+  "direction": "outbound-api",
+  "api_version": "2012-04-24",
+  "uri": "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271.json",
+  "subresource_uris": {
+    "notifications": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271/Notifications",
+    "recordings": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271/Recordings"
+  }
+
+
+Notice the "sid": "CAfa51b104354440b09213d04752f50271",
+This Call ID is what you must use to interact with the current call.
+You can now redirect the current call to another application as shown below
+Notice that the Call ID is referenced
+The call will now be redirected to the Url specified(hello-world.xml)
+
+
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:7f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-world.xml"
+
+The output showing the same Call ID
+
+<RestcommResponse>
+  <Call>
+    <Sid>CAfa51b104354440b09213d04752f50271</Sid>
+    <DateCreated>2013-11-01T03:41:14.488-06:00</DateCreated>
+    <DateUpdated>2013-11-01T03:41:14.488-06:00</DateUpdated>
+    <ParentCallSid/>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <To>alice</To>
+    <From>+16175551212</From>
+    <PhoneNumberSid/>
+       ..... TRUNCATED
+
+
+You can still redirect the current call back to the previous application
+
+
+curl -X POST http://ACae6e420f425248d6f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+
+The output showing the same Call ID
+
+<RestcommResponse>
+  <Call>
+    <Sid>CAfa51b104354440b09213d04752f50271</Sid>
+    <DateCreated>2013-11-01T03:41:14.488-06:00</DateCreated>
+    <DateUpdated>2013-11-01T03:41:14.488-06:00</DateUpdated>
+    <ParentCallSid/>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <To>alice</To>
+    <From>+16175551212</From>
+    <PhoneNumberSid/>
+   ..... TRUNCATED
+
+
+You can end the call using the Status=completed command as shown below
+
+curl -X POST http://ACae6e420f425248d6f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Status=completed"
+
+The output showing the same Call ID
+
+<RestcommResponse>
+  <Call>
+    <Sid>CAfa51b104354440b09213d04752f50271</Sid>
+    <DateCreated>2013-11-01T03:41:14.488-06:00</DateCreated>
+    <DateUpdated>2013-11-01T03:41:14.488-06:00</DateUpdated>
+    <ParentCallSid/>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <To>alice</To>
+    <From>+16175551212</From>
+    <PhoneNumberSid/>
+   ..... TRUNCATED
+
+]]>
+</programlisting>
+
+</section>
+
+
+</section>
 
 
 
@@ -1605,11 +1825,13 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 </section>
 
+</section>
 
 
 
-		</section>
-	</section>
+
+
+
 	<section>
 		<title>SMS Messages</title>
 		<para>An SMS Message resource represents an inbound or outbound SMS message.</para>

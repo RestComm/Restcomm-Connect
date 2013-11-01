@@ -15,6 +15,7 @@
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Configuration.xml" />
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-RestComm_Markup_Language.xml"/>
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Restful-API.xml" />
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Admin-UI.xml" />
 <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Advanced_Examples.xml" />
 <!--
 	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concept-chapter-Fundamentals.xml" /> 
