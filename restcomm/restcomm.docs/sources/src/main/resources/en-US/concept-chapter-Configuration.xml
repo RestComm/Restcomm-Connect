@@ -225,6 +225,28 @@ INFO: Server startup in 14090 ms
 </screen>
 </listitem>
 
+<warning>
+<para>
+On a production system, please take into consideration the following:
+</para>
+<para>
+MMS can get in a bad state and report "Too many open files" error because of the OS limitation on the total number of file descriptors.
+</para>
+<para>
+You can go to the following sites to see how to update your server:
+</para>
+<para>
+<ulink url="http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/"/>
+</para>
+<para>
+<ulink url="http://amitbhayani.blogspot.fr/2010/01/javanetsocketexception-too-many-open.html"/>
+</para>
+<para>
+
+</para>
+</warning>
+
+
 </itemizedlist>
 </section>
 <section>
