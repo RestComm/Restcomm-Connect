@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.dao.mybatis;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -189,6 +190,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     final DateTime endTime = readDateTime(map.get("end_time"));
     final Integer duration = readInteger(map.get("duration"));
     final BigDecimal price = readBigDecimal(map.get("price"));
+    final Currency priceUnit = readCurrency(map.get("price_unit"));
     final String direction = readString(map.get("direction"));
     final String answeredBy = readString(map.get("answered_by"));
     final String apiVersion = readString(map.get("api_version"));
@@ -197,7 +199,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     final URI uri = readUri(map.get("uri"));
     final String callPath = readString(map.get("call_path"));
     return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
-        startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
+        startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri, callPath);
   }
   
   private Map<String, Object> toMap(final CallDetailRecord cdr) {

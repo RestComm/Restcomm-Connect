@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.dao.mybatis;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +128,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     map.put("status", smsMessage.getStatus().toString());
     map.put("direction", smsMessage.getDirection().toString());
     map.put("price", writeBigDecimal(smsMessage.getPrice()));
+    map.put("price_unit", writeCurrency(smsMessage.getPriceUnit()));
     map.put("api_version", smsMessage.getApiVersion());
     map.put("uri", writeUri(smsMessage.getUri()));
     return map;
@@ -144,9 +146,10 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     final SmsMessage.Status status = SmsMessage.Status.getStatusValue(readString(map.get("status")));
     final SmsMessage.Direction direction = SmsMessage.Direction.getDirectionValue(readString(map.get("direction")));
     final BigDecimal price = readBigDecimal(map.get("price"));
+    final Currency priceUnit = readCurrency(map.get("price_unit"));
     final String apiVersion = readString(map.get("api_version"));
     final URI uri = readUri(map.get("uri"));
     return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status,
-        direction, price, apiVersion, uri);
+        direction, price, priceUnit, apiVersion, uri);
   }
 }

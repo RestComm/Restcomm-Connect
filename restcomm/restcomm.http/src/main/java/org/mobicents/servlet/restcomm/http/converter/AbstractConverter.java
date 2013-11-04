@@ -18,6 +18,7 @@ package org.mobicents.servlet.restcomm.http.converter;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -153,6 +154,17 @@ public abstract class AbstractConverter implements Converter {
     object.addProperty("price", price.toString());
   }
   
+  protected void writePriceUnit(final Currency priceUnit, final HierarchicalStreamWriter writer) {
+    writer.startNode("PriceUnit");
+    writer.setValue(priceUnit.getCurrencyCode());
+    writer.endNode();
+  }
+  
+  protected void writePriceUnit(final Currency priceUnit, final JsonObject object) {
+    object.addProperty("price_unit", priceUnit.getCurrencyCode());
+  }
+  
+ 
   protected void writeSid(final Sid sid, final HierarchicalStreamWriter writer) {
     writer.startNode("Sid");
     writer.setValue(sid.toString());

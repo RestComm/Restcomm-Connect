@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.dao.mybatis;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -67,6 +68,7 @@ public final class SmsMessagesDaoTest {
     builder.setStatus(SmsMessage.Status.SENDING);
     builder.setDirection(SmsMessage.Direction.INBOUND);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("USD"));
     builder.setUri(url);
     SmsMessage message = builder.build();
     final SmsMessagesDao messages = manager.getSmsMessagesDao();
@@ -85,6 +87,7 @@ public final class SmsMessagesDaoTest {
     assertTrue(result.getStatus() == message.getStatus());
     assertTrue(result.getDirection() == message.getDirection());
     assertTrue(result.getPrice().equals(message.getPrice()));
+    assertTrue(result.getPriceUnit().equals(message.getPriceUnit()));
     assertTrue(result.getUri().equals(message.getUri()));
     // Update the message.
     final DateTime now = DateTime.now();
@@ -118,6 +121,7 @@ public final class SmsMessagesDaoTest {
     builder.setStatus(SmsMessage.Status.SENDING);
     builder.setDirection(SmsMessage.Direction.INBOUND);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("GBP"));
     builder.setUri(url);
     SmsMessage message = builder.build();
     final SmsMessagesDao messages = manager.getSmsMessagesDao();

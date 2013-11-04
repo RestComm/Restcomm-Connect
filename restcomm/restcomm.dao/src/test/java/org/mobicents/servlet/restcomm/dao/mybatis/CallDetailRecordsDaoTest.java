@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -73,6 +74,7 @@ public class CallDetailRecordsDaoTest {
     builder.setEndTime(DateTime.now());
     builder.setDuration(1);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("USD"));
     builder.setDirection("outbound-api");
     builder.setApiVersion("2012-04-24");
     builder.setCallerName("Alice");
@@ -96,6 +98,7 @@ public class CallDetailRecordsDaoTest {
     assertTrue(result.getEndTime().equals(cdr.getEndTime()));
     assertTrue(result.getDuration().equals(cdr.getDuration()));
     assertTrue(result.getPrice().equals(cdr.getPrice()));
+    assertTrue(result.getPriceUnit().equals(cdr.getPriceUnit()));
     assertTrue(result.getDirection().equals(cdr.getDirection()));
     assertTrue(result.getApiVersion().equals(cdr.getApiVersion()));
     assertTrue(result.getCallerName().equals(cdr.getCallerName()));
@@ -111,6 +114,7 @@ public class CallDetailRecordsDaoTest {
     assertTrue(result.getStatus().equals(cdr.getStatus()));
     assertTrue(result.getDuration().equals(cdr.getDuration()));
     assertTrue(result.getPrice().equals(cdr.getPrice()));
+    assertTrue(result.getPriceUnit().equals(cdr.getPriceUnit()));
     // Delete the CDR.
     cdrs.removeCallDetailRecord(sid);
     // Validate that the CDR was removed.
@@ -136,6 +140,7 @@ public class CallDetailRecordsDaoTest {
     builder.setEndTime(DateTime.now());
     builder.setDuration(1);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("JPY"));
     builder.setDirection("outbound-api");
     builder.setApiVersion("2012-04-24");
     builder.setCallerName("Alice");
@@ -171,6 +176,7 @@ public class CallDetailRecordsDaoTest {
     builder.setEndTime(DateTime.now());
     builder.setDuration(1);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("EUR"));
     builder.setDirection("outbound-api");
     builder.setApiVersion("2012-04-24");
     builder.setCallerName("Alice");
@@ -206,6 +212,7 @@ public class CallDetailRecordsDaoTest {
     builder.setEndTime(DateTime.now());
     builder.setDuration(1);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("USD"));
     builder.setDirection("outbound-api");
     builder.setApiVersion("2012-04-24");
     builder.setCallerName("Alice");
@@ -241,6 +248,7 @@ public class CallDetailRecordsDaoTest {
     builder.setEndTime(DateTime.now());
     builder.setDuration(1);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("CZK"));
     builder.setDirection("outbound-api");
     builder.setApiVersion("2012-04-24");
     builder.setCallerName("Alice");
@@ -277,6 +285,7 @@ public class CallDetailRecordsDaoTest {
     builder.setEndTime(now);
     builder.setDuration(1);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("AUD"));
     builder.setDirection("outbound-api");
     builder.setApiVersion("2012-04-24");
     builder.setCallerName("Alice");
@@ -312,6 +321,7 @@ public class CallDetailRecordsDaoTest {
     builder.setEndTime(DateTime.now());
     builder.setDuration(1);
     builder.setPrice(new BigDecimal("0.00"));
+    builder.setPriceUnit(Currency.getInstance("GBP"));
     builder.setDirection("outbound-api");
     builder.setApiVersion("2012-04-24");
     builder.setCallerName("Alice");
