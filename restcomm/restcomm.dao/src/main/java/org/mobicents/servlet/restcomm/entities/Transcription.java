@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.entities;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 
 import org.joda.time.DateTime;
 
@@ -40,11 +41,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   private final Double duration;
   private final String transcriptionText;
   private final BigDecimal price;
+  private Currency priceUnit;
   private final URI uri;
 
   public Transcription(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
       final Status status, final Sid recordingSid, final Double duration, final String transcriptionText, final BigDecimal price,
-      final URI uri) {
+      final Currency priceUnit, final URI uri) {
     super();
     this.sid = sid;
     this.dateCreated = dateCreated;
@@ -55,6 +57,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     this.duration = duration;
     this.transcriptionText = transcriptionText;
     this.price = price;
+    this.priceUnit = priceUnit;
     this.uri = uri;
   }
   
@@ -97,6 +100,10 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   public BigDecimal getPrice() {
     return price;
   }
+  
+  public Currency getPriceUnit() {
+		return priceUnit;
+	}
 
   public URI getUri() {
     return uri;
@@ -105,13 +112,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   public Transcription setStatus(final Status status) {
     final DateTime now = DateTime.now();
     return new Transcription(sid, dateCreated, now, accountSid, status,
-        recordingSid, duration, transcriptionText, price, uri);
+        recordingSid, duration, transcriptionText, price, priceUnit, uri);
   }
   
   public Transcription setTranscriptionText(final String text) {
 	    final DateTime now = DateTime.now();
 	    return new Transcription(sid, dateCreated, now, accountSid, status,
-	        recordingSid, duration, text, price, uri);
+	        recordingSid, duration, text, price, priceUnit, uri);
   }
   
   @NotThreadSafe public static final class Builder {
@@ -122,7 +129,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     private Double duration;
     private String transcriptionText;
     private BigDecimal price;
-    private URI uri;
+    private Currency priceUnit;
+
+	private URI uri;
 
     private Builder() {
       super();
@@ -131,7 +140,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     public Transcription build() {
       final DateTime now = DateTime.now();
       return new Transcription(sid, now, now, accountSid, status, recordingSid, duration,
-          transcriptionText, price, uri);
+          transcriptionText, price, priceUnit, uri);
     }
     
     public void setSid(final Sid sid) {
@@ -162,6 +171,10 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
       this.price = price;
     }
     
+    public void setPriceUnit(Currency priceUnit) {
+    	this.priceUnit = priceUnit;
+    }
+
     public void setUri(final URI uri) {
       this.uri = uri;
     }

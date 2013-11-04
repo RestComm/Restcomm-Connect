@@ -18,6 +18,7 @@ package org.mobicents.servlet.restcomm.entities;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 
 import org.joda.time.DateTime;
 
@@ -40,12 +41,14 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   private final Status status;
   private final Direction direction;
   private final BigDecimal price;
-  private final String apiVersion;
+  private final Currency priceUnit;
+
+private final String apiVersion;
   private final URI uri;
   
   public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
       final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
-      final Direction direction, final BigDecimal price, final String apiVersion, final URI uri) {
+      final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri) {
     super();
     this.sid = sid;
     this.dateCreated = dateCreated;
@@ -58,6 +61,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     this.status = status;
     this.direction = direction;
     this.price = price;
+    this.priceUnit = priceUnit;
     this.apiVersion = apiVersion;
     this.uri = uri;
   }
@@ -110,6 +114,10 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     return price;
   }
 
+  public Currency getPriceUnit() {
+	return priceUnit;
+  }
+
   public String getApiVersion() {
     return apiVersion;
   }
@@ -120,12 +128,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   
   public SmsMessage setDateSent(final DateTime dateSent) {
     return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient,
-        body, status, direction, price, apiVersion, uri);
+        body, status, direction, price, priceUnit, apiVersion, uri);
   }
   
   public SmsMessage setStatus(final Status status) {
     return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient,
-        body, status, direction, price, apiVersion, uri);
+        body, status, direction, price, priceUnit, apiVersion, uri);
   }
   
   @NotThreadSafe public static final class Builder {
@@ -138,6 +146,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     private Status status;
     private Direction direction;
     private BigDecimal price;
+    private Currency priceUnit;
     private String apiVersion;
     private URI uri;
 	  
@@ -148,7 +157,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
     public SmsMessage build() {
       final DateTime now = DateTime.now();
       return new SmsMessage(sid, now, now, dateSent, accountSid, sender, recipient, body, status,
-          direction, price, apiVersion, uri);
+          direction, price, priceUnit, apiVersion, uri);
     }
     
     public void setSid(final Sid sid) {
@@ -187,7 +196,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
       this.price = price;
     }
     
-    public void setApiVersion(final String apiVersion) {
+    public void setPriceUnit(Currency priceUnit) {
+		this.priceUnit = priceUnit;
+	}
+
+	public void setApiVersion(final String apiVersion) {
       this.apiVersion = apiVersion;
     }
     

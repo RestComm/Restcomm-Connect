@@ -2090,6 +2090,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 				otherBuilder.setRecordingSid(recordingSid);
 				otherBuilder.setDuration(duration);
 				otherBuilder.setPrice(new BigDecimal("0.00"));
+  		        //TODO implement currency property to be read from Configuration
+			    otherBuilder.setPriceUnit(Currency.getInstance("USD"));
 				buffer = new StringBuilder();
 				buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
 				buffer.append("/Transcriptions/").append(sid.toString());
@@ -2292,6 +2294,8 @@ public final class SubVoiceInterpreter extends UntypedActor {
 				builder.setDirection(Direction.OUTBOUND_REPLY);
 				builder.setStatus(Status.SENDING);
 				builder.setPrice(new BigDecimal("0.00"));
+			    //TODO implement currency property to be read from Configuration
+			    builder.setPriceUnit(Currency.getInstance("USD"));
 				final StringBuilder buffer = new StringBuilder();
 				buffer.append("/").append(version).append("/Accounts/");
 				buffer.append(accountId.toString()).append("/SMS/Messages/");

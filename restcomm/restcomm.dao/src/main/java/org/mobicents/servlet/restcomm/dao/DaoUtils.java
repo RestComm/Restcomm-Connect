@@ -18,6 +18,7 @@ package org.mobicents.servlet.restcomm.dao;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 import java.util.Date;
 
 import org.joda.time.DateTime;
@@ -122,6 +123,15 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
     }
   }
   
+  public static Currency readCurrency(final Object object) {
+	    if(object != null) {
+	      return Currency.getInstance((String)object);
+	    } else {
+	      return null;
+	    }
+	  }
+  
+  
   public static String writeAccountStatus(final Account.Status status) {
     return status.toString();
   }
@@ -161,4 +171,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
       return null;
     }
   }
+  
+  public static String writeCurrency(final Currency currency) {
+	    if(currency != null) {
+	      return currency.getCurrencyCode();
+	    } else {
+	      return null;
+	    }
+	  }
+  
 }

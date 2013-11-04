@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import scala.concurrent.duration.FiniteDuration;
@@ -69,7 +70,7 @@ public final class DownloaderTest {
     }};
   }
   
-  @Test public void testPost() throws URISyntaxException, IOException {
+  @Test @Ignore public void testPost() throws URISyntaxException, IOException {
     new JavaTestKit(system) {{
       final ActorRef observer = getRef();
       final URI uri = URI.create("http://www.restcomm.org");
