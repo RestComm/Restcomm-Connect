@@ -275,7 +275,7 @@ Some SIP phones have codec incompatibility issues, in the above example, we used
 
 <programlisting>
 <![CDATA[
-The application bound to the number 1235 can be found at
+The application bound to the number 1234 can be found at
  <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-play.xml</filename>.
 ]]>
 </programlisting>
@@ -310,7 +310,7 @@ Start a SIP phone dial <filename>1235@127.0.0.1:5080</filename>. You will hear a
 <programlisting>
 <![CDATA[
 The application bound to the number 1235 can be found at
- <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-world.xml</filename>.
+ $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-world.xml.
 ]]>
 </programlisting>
 
@@ -326,6 +326,7 @@ The application bound to the number 1235 can be found at
 <note>
 <title>Activate DTMF using Ekiga </title>
 <para>Make sure your DTMF setting in Ekiga is set to RFC2833. In order to set it correctly, go to the menu Edit->Preference->Protocols->SIP Settings->DTMF Mode </para>
+<para>You may also use SFLPHONE instead of Ekiga</para>
 </note>
 
 
@@ -343,6 +344,73 @@ and
 ]]>
 </programlisting>
 
+</section>
+
+<section>
+<title>Demo 4 </title>
+<para>This demo makes a call from one SIP phone to another. The Demo uses the SIP noun. You can calll any SIP account. All you have to do is  change the content of the <filename>dial-sip.xml</filename> </para>
+<para>
+In order to use this demo, you may use the default accounts, Alice and Bob, and register them on two separate SIP phones. Start both SIP phones and make sure Alice and Bob are registerd with the password (1234). These users come pre-configured with Restcomm for test purposes. 
+</para>
+
+<note>
+<title>Start Two SIP Phone Sessions </title>
+<para>If you are using the SIP sflphone here is what to do:  </para>
+<para>Start first instance ex. - sflphone </para>
+<para>Start second instance ex. - sudo sflphone </para>
+</note>
+
+<para>In the application <filename>dial-sip.xml</filename> you can change the default to <filename>sip:alice@127.0.0.1:5061?</filename></para>
+<para>
+This will allow you to make a call to Alice. Note that Alice must be registered on port 5061
+</para>
+
+<para>
+From the the phone on which Bob is registerd,  dial the number <filename>1237</filename>. The phone on which Alice is registered will ring and the connection will be made when you answer the call.
+</para>
+
+
+<programlisting>
+<![CDATA[
+The application bound to the number 1237 can be found at 
+$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/dial/sip/dial-sip.xml.
+
+]]>
+</programlisting>
+
+
+
+</section>
+
+<section>
+<title>Demo 5 </title>
+<para>This demo makes a call from one SIP Client to Another. The demo uses the Client noun</para>
+
+<para>
+In order to use this demo, you must have user Alice and Bob registered on two separate SIP phones. Start both SIP phones and make sure Alice and Bob are registerd with the password (1234). These users come pre-configured with Restcomm for test purposes. 
+</para>
+
+<note>
+<title>Start Two SIP Phone Sessions </title>
+<para>You can start the second instance of your SIP phones by prepending the executable with <filename>sudo</filename>. If you are using the SIP sflphone here is what to do:  </para>
+<para>Start first instance ex. - sflphone </para>
+<para>Start second instance ex. - sudo sflphone </para>
+</note>
+
+
+<para>
+From the phone on which Bob is registerd,  dial the number <filename>1238</filename>. The phone on which Alice is registered will ring and the connection will be made when you answer the call.
+</para>
+
+
+<programlisting>
+<![CDATA[
+The application bound to the number 1238 can be found at 
+<filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/dial/client/dial-client.xml</filename>.
+
+]]>
+</programlisting>
+
 
 <note>
 <title>Advanced Examples</title>
@@ -350,6 +418,50 @@ and
 </note>
 
 </section>
+
+
+<section>
+<title>Demo 6 </title>
+<para>This demo Lets a user join a conference as a moderator and the other user as a participant. The participant will dial <filename>1310</filename> and will hear a hold music. The moderator will dial <filename>1311</filename> and the hold music will stop and the conference will be started.</para>
+
+<para>
+Most SIP phones will require you to register before you can make a call. You can use the default accounts, Alice and Bob with password (1234)to register.
+</para>
+
+<note>
+<title>Start Two SIP Phone Sessions </title>
+<para>You can start the second instance of your SIP phones by prepending the executable with <filename>sudo</filename>. If you are using the SIP sflphone here is what to do:  </para>
+<para>Start first instance ex. - sflphone </para>
+<para>Start second instance ex. - sudo sflphone </para>
+</note>
+
+
+<para>
+From the phone on which Bob is registerd,  dial the number <filename>1310</filename>. From the phone on which Alice is registered, dial <filename>1311</filename>
+</para>
+
+
+<programlisting>
+<![CDATA[
+The application bound to the number 1310 and 1311 can be found at 
+
+http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference.xml
+
+and at
+
+http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference-moderator.xml
+
+]]>
+</programlisting>
+
+
+<note>
+<title>Advanced Examples</title>
+<para>Please go to this chapter for more examples <xref linkend="advanced-examples"/>.</para>
+</note>
+
+</section>
+
 </section>
 
 
