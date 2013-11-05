@@ -3231,7 +3231,7 @@ public final class VoiceInterpreter extends UntypedActor {
 				}
 			}
 			
-			if (!startConferenceOnEnter) {
+			if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
 				
 				if (!callMuted) {
 					final Mute mute = new Mute();
