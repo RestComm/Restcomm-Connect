@@ -152,6 +152,7 @@ public final class Call extends UntypedActor {
 	private final List<ActorRef> observers;
 	
 	private ActorRef group;
+	private ActorRef conference;
 
     public Call(final SipFactory factory, final ActorRef gateway) {
 		super();
@@ -496,6 +497,7 @@ public final class Call extends UntypedActor {
 			} else if(RemoveParticipant.class.equals(klass)) {
 				remove(message);
 			} else if(Join.class.equals(klass)) {
+				conference = sender;
 				fsm.transition(message, acquiringInternalLink);
 			} else if(Leave.class.equals(klass)) {
 				fsm.transition(message, closingInternalLink);
@@ -985,6 +987,9 @@ public final class Call extends UntypedActor {
 
 		@Override public void execute(final Object message) throws Exception {
 			final State state = fsm.state();
+			if(updatingInternalLink.equals(state) && conference != null){
+				conference.tell(new JoinComplete(), source);
+			}
 			if(openingRemoteConnection.equals(state)) {
 				final ConnectionStateChanged response = (ConnectionStateChanged)message;
 				final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);

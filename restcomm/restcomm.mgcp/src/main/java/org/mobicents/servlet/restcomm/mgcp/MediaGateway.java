@@ -272,7 +272,8 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
 	  sender.tell(new MediaGatewayResponse<ActorRef>(endpoint), self);
 	} else if(DestroyConnection.class.equals(klass)) {
 	  final DestroyConnection request = (DestroyConnection)message;
-	  context.stop(request.connection());
+	  if(request.connection() != null)
+		  context.stop(request.connection());
 	} else if(DestroyLink.class.equals(klass)) {
 	  final DestroyLink request = (DestroyLink)message;
 	  context.stop(request.link());
