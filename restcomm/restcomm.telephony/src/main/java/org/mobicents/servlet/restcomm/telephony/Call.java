@@ -369,7 +369,8 @@ public final class Call extends UntypedActor {
 					fsm.transition(message, noAnswer);
 				} else if(muting.equals(state) || unmuting.equals(state)) {
 					fsm.transition(message, closingRemoteConnection);
-				} else if(closingRemoteConnection.equals(state)) {		
+				} else if(closingRemoteConnection.equals(state)) {
+					remoteConn = null;
 					if(internalLink != null) {
 						fsm.transition(message, closingInternalLink);
 					} else {
@@ -1123,14 +1124,6 @@ public final class Call extends UntypedActor {
 				final SipServletRequest bye = (SipServletRequest)message;
 				final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
 				okay.send();
-
-				//Issue 99: http://www.google.com/url?q=https://bitbucket.org/telestax/telscale-restcomm/issue/99/dial-uri-fails&usd=2&usg=ALhdy29vtLfDNXNpjTxYYp08YRatKfV9Aw
-				// Notify the observers.
-				external = CallStateChanged.State.COMPLETED;
-				final CallStateChanged event = new CallStateChanged(external);
-				for(final ActorRef observer : observers) {
-					observer.tell(event, source);
-				}
 				
 			} else if(message instanceof SipServletResponse){
 				final SipServletResponse resp = (SipServletResponse)message;
