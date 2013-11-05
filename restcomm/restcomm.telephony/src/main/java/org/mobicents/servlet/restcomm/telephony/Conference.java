@@ -27,6 +27,9 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.fsm.TransitionFailedException;
+import org.mobicents.servlet.restcomm.fsm.TransitionNotFoundException;
+import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.mgcp.CloseConnection;
@@ -126,6 +129,7 @@ public final class Conference extends UntypedActor {
     transitions.add(new Transition(runningModeratorAbsent, runningModeratorPresent));
     
     transitions.add(new Transition(runningModeratorPresent, completed));
+    transitions.add(new Transition(runningModeratorPresent, runningModeratorAbsent));
     transitions.add(new Transition(runningModeratorAbsent, completed));
 
     transitions.add(new Transition(stopping, completed));
@@ -279,7 +283,7 @@ public final class Conference extends UntypedActor {
 	  }
   }
   
-  private void remove(final Object message) {
+  private void remove(final Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
 	final RemoveParticipant request = (RemoveParticipant)message;
 	final ActorRef call = request.call();
 	final ActorRef self = self();
@@ -292,6 +296,9 @@ public final class Conference extends UntypedActor {
     	//If no more participants and back ground music was on, we should stop it now.
     	logger.info("calls size is zero in conference "+ name);
 		this.stopAndCleanConfVoiceInter(self);
+		if (runningModeratorPresent.equals(fsm.state())){
+			fsm.transition(message, runningModeratorAbsent);
+		}
     }
   }
   
