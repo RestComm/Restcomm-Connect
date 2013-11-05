@@ -790,8 +790,9 @@ public class ConfVoiceInterpreter extends UntypedActor {
 		public void execute(final Object message) throws Exception {
 			final Class<?> klass = message.getClass();
 			if (DiskCacheResponse.class.equals(klass)) {
+				//Issue 202: https://bitbucket.org/telestax/telscale-restcomm/issue/202
 				// Parse the loop attribute.
-				int loop = 1;
+				int loop = Integer.MAX_VALUE;
 				final Attribute attribute = verb.attribute("loop");
 				if (attribute != null) {
 					final String number = attribute.value();

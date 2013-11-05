@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Say>Welcome to the conference bridge</Say>
+	<Say>When moderator joins you will be connected</Say>
+	<Dial>
+		<Conference startConferenceOnEnter="false" waitUrl="http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav">1111</Conference>
+	</Dial>
+</Response>
+

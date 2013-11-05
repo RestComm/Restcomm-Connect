@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+        <Say>Welcome moderator</Say>
+        <Say>You will be connected to the conference bridge</Say>
+        <Dial>
+                <Conference startConferenceOnEnter="true">1111</Conference>
+        </Dial>
+</Response>
+

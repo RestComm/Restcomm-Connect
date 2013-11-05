@@ -1156,18 +1156,27 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 	<para>The Uri noun has been deprecated and will no longer be available in future releases. Please use the SIP noun instead.</para>
 	</warning>
 			<title>Uri</title>
-			<para>The &lt;Uri&gt; noun specifies a SIP URI to dial. You can use multiple &lt;Uri&gt; nouns within
+		<warning>
+			<title>Uri noun depreciated</title>
+			<para>
+				The Uri noun is depreciated and will be removed in future releases. Instead use Sip noun.
+			</para>
+		</warning>
+		</section>
+		<section>
+			<title>Sip</title>
+			<para>The &lt;Sip&gt; noun specifies a SIP URI to dial. You can use multiple &lt;Sip&gt; nouns within
 			a &lt;Dial&gt; verb to simultaneously attempt a connection with many user agents at once. The first
 			user agent to accept the incoming connection is connected to the call and the other connection attempts
 			are canceled.</para>
 			<formalpara>
 	    		<title>Examples</title>
-	    		<para>For an example of how to use the &lt;Uri&gt; none see below.</para>
+	    		<para>For an example of how to use the &lt;Sip&gt; noun see below.</para>
 	    	</formalpara>
 	    	<programlisting role="XML">
 			&lt;Response&gt;
 				&lt;Dial&gt;
-					&lt;Uri&gt;sip:thomas@127.0.0.1:5080&lt;/Uri&gt;
+					&lt;Sip&gt;sip:thomas@127.0.0.1:5080&lt;/Sip&gt;
 				&lt;/Dial&gt;
 			&lt;/Response&gt;
 			</programlisting>

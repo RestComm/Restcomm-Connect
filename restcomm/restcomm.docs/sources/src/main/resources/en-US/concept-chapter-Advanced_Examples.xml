@@ -123,50 +123,20 @@ A wave file will be recorded and saved in the <filename>$RESTCOMM_HOME/standalon
 <section>
 <title>Dial Verb and Client</title>
 <para>
-In order to use the Dial verb, you will need to create two users and register them to RestComm. Both users will use the password <filename>1234</filename> for authentication.
+In order to use the Dial verb, you will need two users and register them to RestComm.
 </para>
+<para>Restcomm has already two users created for you for testing purposes, alice and bob</para>
 
 <formalpara>
-<title>Create User Alice</title>
-<programlisting>
-<![CDATA[
-curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=1234" -d  "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/test.xml"
-]]>
-</programlisting>
-
+<title>Alice Restcomm client</title>
+Username = alice / Password = 1234
 </formalpara>
 
 <formalpara>
-<title>Create User Bob</title>
-<programlisting>
-<![CDATA[
-curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=bob" -d "Password=1234" -d  "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/test.xml"
-]]>
-</programlisting>
-
+<title>Bob Restcomm client</title>
+Username = bob / Password = 1234
 </formalpara>
 
-<para>
-If the command succeeds, you will see an output from each command similar to the one below:
-</para>
-<programlisting>
-<![CDATA[
-{
-  "sid": "CLa9c3c1b64a3a4350b8462f00ff5df854",
-  "date_created": "2013-09-12T22:02:25.745-06:00",
-  "date_updated": "2013-09-12T22:02:25.745-06:00",
-  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-  "api_version": "2012-04-24",
-  "friendly_name": "bob",
-  "login": "bob",
-  "password": "1234",
-  "status": "1",
-  "voice_url": "http://127.0.0.1:8080/restcomm/demos/test.xml",
-  "voice_method": "POST",
-  "voice_fallback_method": "POST",
-  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa9c3c1b64a3a4350b8462f00ff5df854.json"
-]]>
-</programlisting>
 
 
 <formalpara>
