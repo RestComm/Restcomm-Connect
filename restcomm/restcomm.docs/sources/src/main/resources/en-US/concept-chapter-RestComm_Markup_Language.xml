@@ -1151,6 +1151,10 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 			</programlisting>
 		</section>
 		<section>
+
+	<warning>
+	<para>The Uri noun has been deprecated and will no longer be available in future releases. Please use the SIP noun instead.</para>
+	</warning>
 			<title>Uri</title>
 			<para>The &lt;Uri&gt; noun specifies a SIP URI to dial. You can use multiple &lt;Uri&gt; nouns within
 			a &lt;Dial&gt; verb to simultaneously attempt a connection with many user agents at once. The first
@@ -1168,6 +1172,294 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 			&lt;/Response&gt;
 			</programlisting>
 		</section>
+
+<section>
+
+			<title>SIP</title>
+			<para>The <filename>Dial</filename> verb's <filename>Sip</filename>  noun lets you set up VoIP sessions by using SIP -- Session Initiation Protocol. With this feature, you can send a call to any SIP endpoint. Set up your RCML to use the <filename>Sip</filename> noun within the <filename>Dial</filename> verb.</para>
+
+<para>
+Currently, only one <filename>Sip</filename> noun may be specified per <filename>Dial</filename>, and the INVITE message may be sent to only one SIP endpoint. Also, you cannot add any other nouns (eg Number, Client) in the same <filename>Dial</filename> as the SIP. If you want to use another noun, set up a callback on the <filename>Dial</filename> to use alternate methods.
+</para>
+			<formalpara>
+	    		<title>Examples</title>
+	    		<para>For an example of how to use the &lt;Sip&gt; noun see below.</para>
+	    	</formalpara>
+	    	<programlisting role="XML">
+			&lt;Response&gt;
+				&lt;Dial&gt;
+					&lt;Sip&gt;sip:alice@127.0.0.1:5080&lt;/Sip&gt;
+				&lt;/Dial&gt;
+			&lt;/Response&gt;
+			</programlisting>
+
+<formalpara>
+<title>Authentication </title>
+</formalpara>
+
+<para>
+Send username and password attributes for authentication to your SIP infrastructure as attributes on the Sip noun.
+</para>
+
+<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Attribute Name</entry>
+						<entry align="center">Values</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>username</entry>
+						<entry>Username for SIP authentication.</entry>
+					</row>
+<row>
+						<entry>password</entry>
+						<entry>Password for SIP authentication</entry>
+					</row>
+			
+				</tbody>
+			</tgroup>
+		</table>
+
+<formalpara>
+<title>Authentication Example </title>
+</formalpara>
+
+<programlisting>
+<![CDATA[
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial>
+		<Sip username="alice" password="secret">sip:alice@example.com</Sip>
+	</Dial>
+</Response>
+
+]]>
+</programlisting>
+
+
+<formalpara>
+<title>Custom headers</title>
+</formalpara>
+
+<para>
+Send custom headers by appending them to the SIP URI -- just as you'd pass headers in a URI over HTTP. For example:
+</para>
+
+<programlisting>
+<![CDATA[
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial>
+		<Sip>
+		sip:alice@example.com?mycustomheader=tata&myotherheader=toto
+		</Sip>
+	</Dial>
+</Response>
+
+]]>
+</programlisting>
+
+<note>
+<title>Character Limit</title>
+While the SIP URI itself must be under 255 chars, the headers must be under 1024 characters.
+</note>
+
+
+<formalpara>
+<title>Transport</title>
+</formalpara>
+
+<para>
+Set a parameter on your SIP URI to specify what transport protocol you want to use. Currently, this is limited to TCP and UDP. By default, Restcomm sends your SIP INVITE over UDP. Change this by using the transport parameter:
+</para>
+
+
+
+<programlisting>
+<![CDATA[
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial>
+		<Sip>
+		sip:alice@example.com;transport=tcp
+		</Sip>
+	</Dial>
+</Response>
+
+]]>
+</programlisting>
+
+
+<formalpara>
+<title>Attributes</title>
+</formalpara>
+ 
+
+<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='3' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<colspec colname='c3' />
+				<thead>
+					<row>
+						<entry align="center">Attribute Name</entry>
+						<entry align="center">Allowed Values</entry>
+						<entry align="center">Default Value</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>url</entry>
+						<entry>call screening url.</entry>
+						<entry>none.</entry>
+					</row>
+<row>
+						<entry>method</entry>
+						<entry>GET, POST </entry>
+						<entry>POST </entry>
+					</row>
+			
+				</tbody>
+			</tgroup>
+		</table>
+
+
+
+<para>
+The url attribute allows you to specify a url for a TwiML document that runs on the called party's end, after they answer, but before the two parties are connected. You can use this RCML to privately Play or Say information to the called party, or provide a chance to decline the phone call using Gather and Hangup. The current caller continues to hear ringing while the RCML document executes on the other end. RCML documents executed in this manner cannot contain the Dial verb.
+</para>
+
+<formalpara>
+<title>method</title>
+</formalpara>
+
+<para>
+The method attribute allows you to specify which HTTP method Restcomm should use when requesting the URL specified in the url attribute. The default is POST.
+
+</para>
+
+<formalpara>
+<title>Call Screening HTTP parameters</title>
+</formalpara>
+
+
+<para>
+When a call is answered, Twilio passes the following parameters with its request to your screening URL (in addition to the standard RCML Voice request parameters):
+</para>
+
+
+
+<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Attribute Name</entry>
+						<entry align="center">Values</entry>
+
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>SipCallId</entry>
+						<entry>The SIP call ID header of the request made to the remote SIP infrastructure.</entry>
+					</row>
+<row>
+						<entry>SipHeader</entry>
+						<entry>The name/value of any X-headers returned in the 200 response to the SIP INVITE request.</entry>
+					</row>
+			
+				</tbody>
+			</tgroup>
+		</table>
+
+
+<formalpara>
+<title>Dial Action HTTP parameters</title>
+</formalpara>
+
+<para>
+Use the action callback parameters to modify your application based on the results of the SIP dial attempt:
+</para>
+
+
+<table frame='all'>
+			<title>Request Parameters</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Attribute Name</entry>
+						<entry align="center">Values</entry>
+
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>DialSipCallId</entry>
+						<entry>The SIP call ID header of the request made to the remote SIP infrastructure.</entry>
+					</row>
+<row>
+						<entry>DialSipResponseCode</entry>
+						<entry>The SIP response code as a result of the INVITE attempt.</entry>
+					</row>
+			
+<row>
+						<entry>DialSipHeader_ </entry>
+						<entry>The name/value of any X-headers returned in the final response to the SIP INVITE request.</entry>
+					</row>
+
+				</tbody>
+			</tgroup>
+		</table>
+
+<formalpara>
+<title>Dial with Multiple Examples</title>
+</formalpara>
+
+<para>
+A more complex Dial, specifying custom settings as attributes on Dial, including call screening and setting the protocol to TCP.
+</para>
+
+<programlisting>
+<![CDATA[
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial
+		record="true"
+		timeout="10"
+		hangupOnStar="true"
+		callerId="bob"
+		method="POST"
+		action="/handle_post_dial">
+	<Sip
+		method="POST"
+		url="/handle_screening_on_answer">
+		sip:alice@example.com?customheader=foo
+	</Sip>
+	</Dial>
+</Response>
+
+]]>
+</programlisting>
+
+
+		</section>
+
 	</section>
 	<section>
 		<title>Hangup</title>
