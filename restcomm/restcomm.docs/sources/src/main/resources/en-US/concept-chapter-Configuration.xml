@@ -13,6 +13,27 @@
 RestComm is a robust, powerful platform that will facilitate building comprehensive real-time communication solutions. The steps below will help you get started with ease.
 </para>
 
+<warning>
+<para>
+On a production system, please take into consideration the following:
+</para>
+<para>
+MMS can get into a bad state and report "Too many open files" error because of Linux default value on the total number of file descriptors.
+</para>
+<para>
+You can go to the following sites to see how to increase the maximum number of open files in your server:
+</para>
+<para>
+<ulink url="http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/"/>
+</para>
+<para>
+<ulink url="http://amitbhayani.blogspot.fr/2010/01/javanetsocketexception-too-many-open.html"/>
+</para>
+<para>
+
+</para>
+</warning>
+
 <itemizedlist mark='opencircle'>
 <title>Running RestComm on JBoss</title>
 <listitem>
@@ -225,29 +246,15 @@ INFO: Server startup in 14090 ms
 </screen>
 </listitem>
 
-<warning>
-<para>
-On a production system, please take into consideration the following:
-</para>
-<para>
-MMS can get in a bad state and report "Too many open files" error because of the OS limitation on the total number of file descriptors.
-</para>
-<para>
-You can go to the following sites to see how to update your server:
-</para>
-<para>
-<ulink url="http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/"/>
-</para>
-<para>
-<ulink url="http://amitbhayani.blogspot.fr/2010/01/javanetsocketexception-too-many-open.html"/>
-</para>
-<para>
 
-</para>
-</warning>
 
 
 </itemizedlist>
+
+
+
+
+
 </section>
 <section>
 <title>Testing the Demo Applications</title>
@@ -258,10 +265,10 @@ Restcomm comes prepackaged with multiple example applications designed to help y
 </para>
 
 <section>
-<title>Demo 1 </title>
+<title>Demo 1 - Testing the Play Verb</title>
 
 <para>
-Start a SIP phone like (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear a welcome message.
+Start a SIP phone (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear a welcome message.
 </para>
 
 <mediaobject>
@@ -270,7 +277,7 @@ Start a SIP phone like (see below) and dial <filename>1234@127.0.0.1:5080</filen
 	</imageobject>
 </mediaobject>
 <warning>
-Some SIP phones have codec incompatibility issues, in the above example, we used Ekiga. 
+Some SIP phones have codec incompatibility issues, in the above example, we used Ekiga. You may also try Jitsi or Sflphone. 
 </warning>
 
 <programlisting>
@@ -284,7 +291,7 @@ The application bound to the number 1234 can be found at
 
 </section>
 <section>
-<title>Demo 2</title>
+<title>Demo 2 - Testing Say Verb</title>
 
 <para>
 You must first activate Text-to-Speech before you can proceed.
@@ -319,7 +326,7 @@ The application bound to the number 1235 can be found at
 </section>
 
 <section>
-<title>Demo 3 </title>
+<title>Demo 3 - Testing Gather Verb</title>
 <para>This demo creates a simple IVR system</para>
 
 
@@ -347,8 +354,8 @@ and
 </section>
 
 <section>
-<title>Demo 4 </title>
-<para>This demo makes a call from one SIP phone to another. The Demo uses the SIP noun. You can calll any SIP account. All you have to do is  change the content of the <filename>dial-sip.xml</filename> </para>
+<title>Demo 4 - Testing the Dial Sip Noun</title>
+<para>This demo makes a call from one SIP phone to another. The Demo uses the SIP noun. You can calll any SIP account. All you have to do is change the content of the <filename>dial-sip.xml</filename> </para>
 <para>
 In order to use this demo, you may use the default accounts, Alice and Bob, and register them on two separate SIP phones. Start both SIP phones and make sure Alice and Bob are registerd with the password (1234). These users come pre-configured with Restcomm for test purposes. 
 </para>
@@ -362,7 +369,7 @@ In order to use this demo, you may use the default accounts, Alice and Bob, and 
 
 <para>In the application <filename>dial-sip.xml</filename> you can change the default to <filename>sip:alice@127.0.0.1:5061?</filename></para>
 <para>
-This will allow you to make a call to Alice. Note that Alice must be registered on port 5061
+This will allow you to make a call to Alice. Note that Alice must be registered on port 5061 for the call to succeed.
 </para>
 
 <para>
@@ -383,7 +390,7 @@ $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/dial/sip/dial-sip.xml.
 </section>
 
 <section>
-<title>Demo 5 </title>
+<title>Demo 5 - Testing the Client Noun</title>
 <para>This demo makes a call from one SIP Client to Another. The demo uses the Client noun</para>
 
 <para>
@@ -421,7 +428,7 @@ The application bound to the number 1238 can be found at
 
 
 <section>
-<title>Demo 6 </title>
+<title>Demo 6 - Testing Conference Noun </title>
 <para>This demo Lets a user join a conference as a moderator and the other user as a participant. The participant will dial <filename>1310</filename> and will hear a hold music. The moderator will dial <filename>1311</filename> and the hold music will stop and the conference will be started.</para>
 
 <para>

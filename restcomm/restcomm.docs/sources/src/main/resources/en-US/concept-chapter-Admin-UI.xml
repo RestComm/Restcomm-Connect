@@ -257,11 +257,11 @@ When you click on the Register Number button, you will see a screenshot similar 
 					</row>
 			<row>
 						<entry>4</entry>
-						<entry>See the Rest API chapter for more information</entry>
+						<entry>See the Rest API <xref linkend="restful-api" />  for more information</entry>
 					</row>
 	<row>
 						<entry>5</entry>
-						<entry>See the Rest API chapter for more information</entry>
+						<entry>See the Rest API <xref linkend="restful-api" />  for more information</entry>
 					</row>
 
 					
