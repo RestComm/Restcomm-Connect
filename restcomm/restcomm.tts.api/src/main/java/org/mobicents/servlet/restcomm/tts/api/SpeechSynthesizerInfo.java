@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class SpeechSynthesizerInfo {
-  private final Set<String> languages;
-  
-  public SpeechSynthesizerInfo(final Set<String> languages) {
-    super();
-    this.languages = languages;
-  }
-  
-  public Set<String> languages() {
-    return languages;
-  }
+@Immutable
+public final class SpeechSynthesizerInfo {
+    private final Set<String> languages;
+
+    public SpeechSynthesizerInfo(final Set<String> languages) {
+        super();
+        this.languages = languages;
+    }
+
+    public Set<String> languages() {
+        return languages;
+    }
 }

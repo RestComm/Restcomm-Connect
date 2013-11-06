@@ -21,16 +21,17 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class StopInterpreter {
-  private static final class Singleton {
-    private static final StopInterpreter instance = new StopInterpreter();
-  }
+@Immutable
+public final class StopInterpreter {
+    private static final class Singleton {
+        private static final StopInterpreter instance = new StopInterpreter();
+    }
 
-  private StopInterpreter() {
-    super();
-  }
-  
-  public static StopInterpreter instance() {
-    return Singleton.instance;
-  }
+    private StopInterpreter() {
+        super();
+    }
+
+    public static StopInterpreter instance() {
+        return Singleton.instance;
+    }
 }

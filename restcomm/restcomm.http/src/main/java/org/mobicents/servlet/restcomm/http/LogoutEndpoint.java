@@ -14,10 +14,10 @@ import org.apache.shiro.SecurityUtils;
 @Path("/Logout")
 public class LogoutEndpoint extends AbstractEndpoint {
 
-	@GET
-	public Response logout(@Context HttpServletRequest request) {
-		SecurityUtils.getSubject().logout();
-		return Response.ok().build();
-	}
-	
+    @GET
+    public Response logout(@Context HttpServletRequest request) {
+        SecurityUtils.getSubject().logout();
+        return Response.ok().build();
+    }
+
 }

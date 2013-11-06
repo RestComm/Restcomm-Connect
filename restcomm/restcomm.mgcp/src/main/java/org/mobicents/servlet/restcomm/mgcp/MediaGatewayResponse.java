@@ -22,16 +22,17 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class MediaGatewayResponse<T> extends StandardResponse<T> {
-  public MediaGatewayResponse(final T object) {
-    super(object);
-  }
-  
-  public MediaGatewayResponse(final Throwable cause) {
-    super(cause);
-  }
+@Immutable
+public final class MediaGatewayResponse<T> extends StandardResponse<T> {
+    public MediaGatewayResponse(final T object) {
+        super(object);
+    }
 
-  public MediaGatewayResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+    public MediaGatewayResponse(final Throwable cause) {
+        super(cause);
+    }
+
+    public MediaGatewayResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

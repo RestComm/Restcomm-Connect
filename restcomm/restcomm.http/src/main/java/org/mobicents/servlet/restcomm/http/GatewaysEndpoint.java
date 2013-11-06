@@ -34,168 +34,181 @@ import org.mobicents.servlet.restcomm.http.converter.GatewayListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
-@ThreadSafe public class GatewaysEndpoint extends AbstractEndpoint {
-  @Context protected ServletContext context;
-  protected Configuration configuration;
-  protected GatewaysDao dao;
-  protected Gson gson;
-  protected XStream xstream;
+@ThreadSafe
+public class GatewaysEndpoint extends AbstractEndpoint {
+    @Context
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected GatewaysDao dao;
+    protected Gson gson;
+    protected XStream xstream;
 
-  public GatewaysEndpoint() {
-    super();
-  }
-  
-  @PostConstruct
-  public void init() {
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    configuration = configuration.subset("runtime-settings");
-    super.init(configuration);
-    dao = storage.getGatewaysDao();
-    final GatewayConverter converter = new GatewayConverter(configuration);
-    final GsonBuilder builder = new GsonBuilder();
-    builder.registerTypeAdapter(Gateway.class, converter);
-    builder.setPrettyPrinting();
-    gson = builder.create();
-    xstream = new XStream();
-    xstream.alias("RestcommResponse", RestCommResponse.class);
-    xstream.registerConverter(converter);
-    xstream.registerConverter(new GatewayListConverter(configuration));
-    xstream.registerConverter(new RestCommResponseConverter(configuration));
-  }
-  
-  private Gateway createFrom(final MultivaluedMap<String, String> data) {
-    final Gateway.Builder builder = Gateway.builder();
-    final Sid sid = Sid.generate(Sid.Type.GATEWAY);
-    builder.setSid(sid);
-    String friendlyName = data.getFirst("FriendlyName");
-    if(friendlyName == null || friendlyName.isEmpty()) {
-      friendlyName = data.getFirst("UserName");
+    public GatewaysEndpoint() {
+        super();
     }
-    builder.setFriendlyName(friendlyName);
-    builder.setPassword(data.getFirst("Password"));
-    builder.setProxy(data.getFirst("Proxy"));
-    final boolean register = Boolean.parseBoolean(data.getFirst("Register"));
-    builder.setRegister(register);
-    builder.setUserName(data.getFirst("UserName"));
-    final int ttl = Integer.parseInt(data.getFirst("TTL"));
-    builder.setTimeToLive(ttl);
-    String rootUri = configuration.getString("root-uri");
-    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append(rootUri).append(getApiVersion(data)).append("/Management/")
-        .append("Gateways/").append(sid.toString());
-    builder.setUri(URI.create(buffer.toString()));
-    return builder.build();
-  }
-  
-  protected Response getGateway(final String sid, final MediaType responseType) {
-    final Sid accountSid = Sid.generate(Sid.Type.INVALID);
-    try { secure(accountSid, "RestComm:Read:Gateways"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final Gateway gateway = dao.getGateway(new Sid(sid));
-    if(gateway == null) {
-      return status(NOT_FOUND).build();
-    } else {
-      if(APPLICATION_XML_TYPE == responseType) {
-        final RestCommResponse response = new RestCommResponse(gateway);
-        return ok(xstream.toXML(response), APPLICATION_XML).build();
-      } else if(APPLICATION_JSON_TYPE == responseType) {
-        return ok(gson.toJson(gateway), APPLICATION_JSON).build();
-      } else {
-        return null;
-      }
+
+    @PostConstruct
+    public void init() {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = configuration.subset("runtime-settings");
+        super.init(configuration);
+        dao = storage.getGatewaysDao();
+        final GatewayConverter converter = new GatewayConverter(configuration);
+        final GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(Gateway.class, converter);
+        builder.setPrettyPrinting();
+        gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new GatewayListConverter(configuration));
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
-  }
-  
-  protected Response getGateways(final MediaType responseType) {
-    final Sid accountSid = Sid.generate(Sid.Type.INVALID);
-    try { secure(accountSid, "RestComm:Read:Gateways"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final List<Gateway> gateways = dao.getGateways();
-    if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(new GatewayList(gateways));
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(gateways), APPLICATION_JSON).build();
-    } else {
-      return null;
+
+    private Gateway createFrom(final MultivaluedMap<String, String> data) {
+        final Gateway.Builder builder = Gateway.builder();
+        final Sid sid = Sid.generate(Sid.Type.GATEWAY);
+        builder.setSid(sid);
+        String friendlyName = data.getFirst("FriendlyName");
+        if (friendlyName == null || friendlyName.isEmpty()) {
+            friendlyName = data.getFirst("UserName");
+        }
+        builder.setFriendlyName(friendlyName);
+        builder.setPassword(data.getFirst("Password"));
+        builder.setProxy(data.getFirst("Proxy"));
+        final boolean register = Boolean.parseBoolean(data.getFirst("Register"));
+        builder.setRegister(register);
+        builder.setUserName(data.getFirst("UserName"));
+        final int ttl = Integer.parseInt(data.getFirst("TTL"));
+        builder.setTimeToLive(ttl);
+        String rootUri = configuration.getString("root-uri");
+        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(rootUri).append(getApiVersion(data)).append("/Management/").append("Gateways/").append(sid.toString());
+        builder.setUri(URI.create(buffer.toString()));
+        return builder.build();
     }
-  }
-  
-  protected Response putGateway(final MultivaluedMap<String, String> data,
-      final MediaType responseType) {
-    final Sid accountSid = Sid.generate(Sid.Type.INVALID);
-	try { secure(accountSid, "RestComm:Create:Gateways"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-	try { validate(data); } catch(final RuntimeException exception) { 
-	  return status(BAD_REQUEST).entity(exception.getMessage()).build();
-	}
-	final Gateway gateway = createFrom(data);
-	dao.addGateway(gateway);
-	if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(gateway);
-  	  return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(gateway), APPLICATION_JSON).build();
-    } else {
-      return null;
+
+    protected Response getGateway(final String sid, final MediaType responseType) {
+        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+        try {
+            secure(accountSid, "RestComm:Read:Gateways");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Gateway gateway = dao.getGateway(new Sid(sid));
+        if (gateway == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(gateway);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(gateway), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
+        }
     }
-  }
-  
-  protected Response updateGateway(final String sid, final MultivaluedMap<String, String> data,
-      final MediaType responseType) {
-    final Sid accountSid = Sid.generate(Sid.Type.INVALID);
-	try { secure(accountSid, "RestComm:Modify:Gateways"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-	final Gateway gateway = dao.getGateway(new Sid(sid));
-	if(gateway == null) {
-	  return status(NOT_FOUND).build();
-	} else {
-	  dao.updateGateway(update(gateway, data));
-	  if(APPLICATION_XML_TYPE == responseType) {
-        final RestCommResponse response = new RestCommResponse(gateway);
-        return ok(xstream.toXML(response), APPLICATION_XML).build();
-      } else if(APPLICATION_JSON_TYPE == responseType) {
-        return ok(gson.toJson(gateway), APPLICATION_JSON).build();
-      } else {
-        return null;
-      }
-	}
-  }
-  
-  private void validate(final MultivaluedMap<String, String> data) {
-    if(!data.containsKey("UserName")) {
-      throw new NullPointerException("UserName can not be null.");
-    } else if(!data.containsKey("Password")) {
-      throw new NullPointerException("Password can not be null.");
-    } else if(!data.containsKey("Proxy")) {
-      throw new NullPointerException("The Proxy can not be null");
-    } else if(!data.containsKey("Register")) {
-      throw new NullPointerException("Register must be true or false");
+
+    protected Response getGateways(final MediaType responseType) {
+        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+        try {
+            secure(accountSid, "RestComm:Read:Gateways");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final List<Gateway> gateways = dao.getGateways();
+        if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new GatewayList(gateways));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(gateways), APPLICATION_JSON).build();
+        } else {
+            return null;
+        }
     }
-  }
-  
-  private Gateway update(final Gateway gateway, final MultivaluedMap<String, String> data) {
-    Gateway result = gateway;
-    if(data.containsKey("FriendlyName")) {
-      result = result.setFriendlyName(data.getFirst("FriendlyName"));
+
+    protected Response putGateway(final MultivaluedMap<String, String> data, final MediaType responseType) {
+        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+        try {
+            secure(accountSid, "RestComm:Create:Gateways");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        try {
+            validate(data);
+        } catch (final RuntimeException exception) {
+            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        }
+        final Gateway gateway = createFrom(data);
+        dao.addGateway(gateway);
+        if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(gateway);
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(gateway), APPLICATION_JSON).build();
+        } else {
+            return null;
+        }
     }
-    if(data.containsKey("UserName")) {
-      result = result.setUserName(data.getFirst("UserName"));
+
+    protected Response updateGateway(final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
+        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+        try {
+            secure(accountSid, "RestComm:Modify:Gateways");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Gateway gateway = dao.getGateway(new Sid(sid));
+        if (gateway == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            dao.updateGateway(update(gateway, data));
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(gateway);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(gateway), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
+        }
     }
-    if(data.containsKey("Password")) {
-      result = result.setPassword(data.getFirst("Password"));
+
+    private void validate(final MultivaluedMap<String, String> data) {
+        if (!data.containsKey("UserName")) {
+            throw new NullPointerException("UserName can not be null.");
+        } else if (!data.containsKey("Password")) {
+            throw new NullPointerException("Password can not be null.");
+        } else if (!data.containsKey("Proxy")) {
+            throw new NullPointerException("The Proxy can not be null");
+        } else if (!data.containsKey("Register")) {
+            throw new NullPointerException("Register must be true or false");
+        }
     }
-    if(data.containsKey("Proxy")) {
-      result = result.setProxy(data.getFirst("Proxy"));
+
+    private Gateway update(final Gateway gateway, final MultivaluedMap<String, String> data) {
+        Gateway result = gateway;
+        if (data.containsKey("FriendlyName")) {
+            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+        }
+        if (data.containsKey("UserName")) {
+            result = result.setUserName(data.getFirst("UserName"));
+        }
+        if (data.containsKey("Password")) {
+            result = result.setPassword(data.getFirst("Password"));
+        }
+        if (data.containsKey("Proxy")) {
+            result = result.setProxy(data.getFirst("Proxy"));
+        }
+        if (data.containsKey("Register")) {
+            result = result.setRegister(Boolean.parseBoolean("Register"));
+        }
+        if (data.containsKey("TTL")) {
+            result = result.setTimeToLive(Integer.parseInt(data.getFirst("TTL")));
+        }
+        return result;
     }
-    if(data.containsKey("Register")) {
-      result = result.setRegister(Boolean.parseBoolean("Register"));
-    }
-    if(data.containsKey("TTL")) {
-      result = result.setTimeToLive(Integer.parseInt(data.getFirst("TTL")));
-    }
-    return result;
-  }
 }

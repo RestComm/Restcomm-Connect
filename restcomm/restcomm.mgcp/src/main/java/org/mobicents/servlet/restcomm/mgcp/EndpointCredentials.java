@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class EndpointCredentials {
-  private final EndpointIdentifier endpointId;
+@Immutable
+public final class EndpointCredentials {
+    private final EndpointIdentifier endpointId;
 
-  public EndpointCredentials(final EndpointIdentifier endpointId) {
-    super();
-    this.endpointId = endpointId;
-  }
-  
-  public EndpointIdentifier endpointId() {
-    return endpointId;
-  }
+    public EndpointCredentials(final EndpointIdentifier endpointId) {
+        super();
+        this.endpointId = endpointId;
+    }
+
+    public EndpointIdentifier endpointId() {
+        return endpointId;
+    }
 }

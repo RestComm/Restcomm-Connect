@@ -32,41 +32,43 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class OutgoingCallerIdConverter extends AbstractConverter
-    implements JsonSerializer<OutgoingCallerId> {
-  public OutgoingCallerIdConverter(final Configuration configuration) {
-    super(configuration);
-  }
+@ThreadSafe
+public final class OutgoingCallerIdConverter extends AbstractConverter implements JsonSerializer<OutgoingCallerId> {
+    public OutgoingCallerIdConverter(final Configuration configuration) {
+        super(configuration);
+    }
 
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return OutgoingCallerId.class.equals(klass);
-  }
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return OutgoingCallerId.class.equals(klass);
+    }
 
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final OutgoingCallerId outgoingCallerId = (OutgoingCallerId)object;
-    writer.startNode("OutgoingCallerId");
-    writeSid(outgoingCallerId.getSid(), writer);
-    writeAccountSid(outgoingCallerId.getAccountSid(), writer);
-    writeFriendlyName(outgoingCallerId.getFriendlyName(), writer);
-    writePhoneNumber(outgoingCallerId.getPhoneNumber(), writer);
-    writeDateCreated(outgoingCallerId.getDateCreated(), writer);
-    writeDateUpdated(outgoingCallerId.getDateUpdated(), writer);
-    writeUri(outgoingCallerId.getUri(), writer);
-    writer.endNode();
-  }
-  
-  @Override public JsonElement serialize(final OutgoingCallerId outgoingCallerId, final Type type,
-      final JsonSerializationContext context) {
-  	final JsonObject object = new JsonObject();
-  	writeSid(outgoingCallerId.getSid(), object);
-    writeAccountSid(outgoingCallerId.getAccountSid(), object);
-    writeFriendlyName(outgoingCallerId.getFriendlyName(), object);
-    writePhoneNumber(outgoingCallerId.getPhoneNumber(), object);
-    writeDateCreated(outgoingCallerId.getDateCreated(), object);
-    writeDateUpdated(outgoingCallerId.getDateUpdated(), object);
-    writeUri(outgoingCallerId.getUri(), object);
-  	return object;
-  }
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final OutgoingCallerId outgoingCallerId = (OutgoingCallerId) object;
+        writer.startNode("OutgoingCallerId");
+        writeSid(outgoingCallerId.getSid(), writer);
+        writeAccountSid(outgoingCallerId.getAccountSid(), writer);
+        writeFriendlyName(outgoingCallerId.getFriendlyName(), writer);
+        writePhoneNumber(outgoingCallerId.getPhoneNumber(), writer);
+        writeDateCreated(outgoingCallerId.getDateCreated(), writer);
+        writeDateUpdated(outgoingCallerId.getDateUpdated(), writer);
+        writeUri(outgoingCallerId.getUri(), writer);
+        writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(final OutgoingCallerId outgoingCallerId, final Type type,
+            final JsonSerializationContext context) {
+        final JsonObject object = new JsonObject();
+        writeSid(outgoingCallerId.getSid(), object);
+        writeAccountSid(outgoingCallerId.getAccountSid(), object);
+        writeFriendlyName(outgoingCallerId.getFriendlyName(), object);
+        writePhoneNumber(outgoingCallerId.getPhoneNumber(), object);
+        writeDateCreated(outgoingCallerId.getDateCreated(), object);
+        writeDateUpdated(outgoingCallerId.getDateUpdated(), object);
+        writeUri(outgoingCallerId.getUri(), object);
+        return object;
+    }
 }

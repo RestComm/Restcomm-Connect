@@ -13,9 +13,8 @@ public interface AuthenticationMethod {
     public String getScheme();
 
     /**
-     * Initialize the authentication method. This has to be done outside the
-     * constructor as the constructor is generic (created from the class name
-     * specified in the authentication method).
+     * Initialize the authentication method. This has to be done outside the constructor as the constructor is generic (created
+     * from the class name specified in the authentication method).
      */
     public void initialize();
 
@@ -40,16 +39,12 @@ public interface AuthenticationMethod {
     public String generateNonce();
 
     /**
-     * Check the response and answer true if authentication succeeds. Not all of
-     * these fields are relevant for every method - a basic scheme may simply do
-     * a username password check.
-     *
-     * @param username
-     *            is the username and password.
-     * @param authorizationHeader
-     *            is the authorization header from the SIP request.
+     * Check the response and answer true if authentication succeeds. Not all of these fields are relevant for every method - a
+     * basic scheme may simply do a username password check.
+     * 
+     * @param username is the username and password.
+     * @param authorizationHeader is the authorization header from the SIP request.
      */
-    public boolean doAuthenticate(String username, String password,
-                                  AuthorizationHeader authorizationHeader, Request request);
+    public boolean doAuthenticate(String username, String password, AuthorizationHeader authorizationHeader, Request request);
 
 }

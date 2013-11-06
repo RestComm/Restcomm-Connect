@@ -27,23 +27,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class IncomingPhoneNumberListConverter extends AbstractConverter {
-  public IncomingPhoneNumberListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return IncomingPhoneNumberList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final IncomingPhoneNumberList list = (IncomingPhoneNumberList)object;
-    writer.startNode("IncomingPhoneNumbers");
-    for(final IncomingPhoneNumber incomingPhoneNumber : list.getIncomingPhoneNumbers()) {
-      context.convertAnother(incomingPhoneNumber);
+@ThreadSafe
+public final class IncomingPhoneNumberListConverter extends AbstractConverter {
+    public IncomingPhoneNumberListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return IncomingPhoneNumberList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final IncomingPhoneNumberList list = (IncomingPhoneNumberList) object;
+        writer.startNode("IncomingPhoneNumbers");
+        for (final IncomingPhoneNumber incomingPhoneNumber : list.getIncomingPhoneNumbers()) {
+            context.convertAnother(incomingPhoneNumber);
+        }
+        writer.endNode();
+    }
 }

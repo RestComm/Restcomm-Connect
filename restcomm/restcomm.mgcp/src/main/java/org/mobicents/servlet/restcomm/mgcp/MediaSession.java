@@ -21,15 +21,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class MediaSession {
-  private final int id;
+@Immutable
+public final class MediaSession {
+    private final int id;
 
-  public MediaSession(final int id) {
-    super();
-    this.id = id;
-  }
-  
-  public int id() {
-    return id;
-  }
+    public MediaSession(final int id) {
+        super();
+        this.id = id;
+    }
+
+    public int id() {
+        return id;
+    }
 }

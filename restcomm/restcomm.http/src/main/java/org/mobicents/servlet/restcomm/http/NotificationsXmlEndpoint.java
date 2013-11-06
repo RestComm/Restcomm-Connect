@@ -28,24 +28,26 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/Notifications")
-@ThreadSafe public final class NotificationsXmlEndpoint extends NotificationsEndpoint {
-  public NotificationsXmlEndpoint() {
-    super();
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getNotificationAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getNotification(accountSid, sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getNotificationAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getNotification(accountSid, sid, APPLICATION_XML_TYPE);
-  }
-  
-  @GET public Response getNotifications(@PathParam("accountSid") final String accountSid) {
-    return getNotifications(accountSid, APPLICATION_XML_TYPE);
-  }
+@ThreadSafe
+public final class NotificationsXmlEndpoint extends NotificationsEndpoint {
+    public NotificationsXmlEndpoint() {
+        super();
+    }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getNotificationAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getNotification(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getNotificationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getNotification(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getNotifications(@PathParam("accountSid") final String accountSid) {
+        return getNotifications(accountSid, APPLICATION_XML_TYPE);
+    }
 }

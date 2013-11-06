@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class DestroyMediaGroup {
-  private final ActorRef group;
-  
-  public DestroyMediaGroup(final ActorRef group) {
-    super();
-    this.group = group;
-  }
-  
-  public ActorRef group() {
-    return group;
-  }
+@Immutable
+public final class DestroyMediaGroup {
+    private final ActorRef group;
+
+    public DestroyMediaGroup(final ActorRef group) {
+        super();
+        this.group = group;
+    }
+
+    public ActorRef group() {
+        return group;
+    }
 }

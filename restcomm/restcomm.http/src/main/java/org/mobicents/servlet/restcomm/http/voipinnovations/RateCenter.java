@@ -23,21 +23,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class RateCenter {
-  private final String name;
-  private final List<NPA> npas;
-  
-  public RateCenter(final String name, final List<NPA> npas) {
-    super();
-    this.name = name;
-    this.npas = npas;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public List<NPA> npas() {
-    return npas;
-  }
+@Immutable
+public final class RateCenter {
+    private final String name;
+    private final List<NPA> npas;
+
+    public RateCenter(final String name, final List<NPA> npas) {
+        super();
+        this.name = name;
+        this.npas = npas;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public List<NPA> npas() {
+        return npas;
+    }
 }

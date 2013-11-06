@@ -22,15 +22,15 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class IvrEndpointResponse<T> extends StandardResponse<T> {
-  public IvrEndpointResponse(final T object) {
-    super(object);
-  }
+    public IvrEndpointResponse(final T object) {
+        super(object);
+    }
 
-  public IvrEndpointResponse(final Throwable cause) {
-	super(cause);
-  }
-  
-  public IvrEndpointResponse(final Throwable cause, final String message) {
-	super(cause, message);
-  }
+    public IvrEndpointResponse(final Throwable cause) {
+        super(cause);
+    }
+
+    public IvrEndpointResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

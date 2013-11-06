@@ -34,39 +34,42 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/Calls")
-@ThreadSafe public final class CallsXmlEndpoint extends CallsEndpoint {
-  public CallsXmlEndpoint() {
-    super();
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getCallAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getCall(accountSid, sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getCallAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getCall(accountSid, sid, APPLICATION_XML_TYPE);
-  }
-  
-//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
-//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
-  @GET public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-    return getCalls(accountSid, info, APPLICATION_XML_TYPE);
-  }
-  
-  @POST public Response putCall(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putCall(accountSid, data, APPLICATION_XML_TYPE);
-  }
-  
-  //Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
-  @Path("/{sid}")
-  @POST
-  public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data){
-	  return updateCall(accountSid, sid, data, APPLICATION_XML_TYPE);
-  }
-  
+@ThreadSafe
+public final class CallsXmlEndpoint extends CallsEndpoint {
+    public CallsXmlEndpoint() {
+        super();
+    }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getCallAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getCall(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getCallAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getCall(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+    // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
+    @GET
+    public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+        return getCalls(accountSid, info, APPLICATION_XML_TYPE);
+    }
+
+    @POST
+    public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putCall(accountSid, data, APPLICATION_XML_TYPE);
+    }
+
+    // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
+    @Path("/{sid}")
+    @POST
+    public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data) {
+        return updateCall(accountSid, sid, data, APPLICATION_XML_TYPE);
+    }
+
 }

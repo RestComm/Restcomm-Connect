@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class DestroyConnection {
-  private final ActorRef connection;
+@Immutable
+public final class DestroyConnection {
+    private final ActorRef connection;
 
-  public DestroyConnection(final ActorRef connection) {
-    super();
-    this.connection = connection;
-  }
-  
-  public ActorRef connection() {
-    return connection;
-  }
+    public DestroyConnection(final ActorRef connection) {
+        super();
+        this.connection = connection;
+    }
+
+    public ActorRef connection() {
+        return connection;
+    }
 }

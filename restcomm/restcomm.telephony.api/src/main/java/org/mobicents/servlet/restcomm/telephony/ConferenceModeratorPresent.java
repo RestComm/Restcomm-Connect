@@ -1,5 +1,5 @@
 /*
- * TeleStax, Open Source Cloud Communications  
+ * TeleStax, Open Source Cloud Communications
  * Copyright 2012, Telestax Inc and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -25,23 +25,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * <p>
- * Tell's {@link Conference} that moderator has not yet joined and it should
- * Transition from {@link ConferenceStateChanged#State.RUNNING} to
- * {@link ConferenceStateChanged#State.RUNNING_MODERATOR_PRESENT} or from
- * {@link ConferenceStateChanged#State.RUNNING_MODERATOR_ABSENT} to {@link ConferenceStateChanged#State.RUNNING_MODERATOR_PRESENT}
+ * Tell's {@link Conference} that moderator has not yet joined and it should Transition from
+ * {@link ConferenceStateChanged#State.RUNNING} to {@link ConferenceStateChanged#State.RUNNING_MODERATOR_PRESENT} or from {@link ConferenceStateChanged#State.RUNNING_MODERATOR_ABSENT} to
+ * {@link ConferenceStateChanged#State.RUNNING_MODERATOR_PRESENT}
  * </p>
- * 
+ *
  * @author Amit Bhayani
- * 
+ *
  */
 @Immutable
 public class ConferenceModeratorPresent {
 
-	/**
-	 * 
-	 */
-	public ConferenceModeratorPresent() {
-		super();
-	}
+    public ConferenceModeratorPresent() {
+        super();
+    }
 
 }

@@ -130,7 +130,7 @@
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
-        <module>restcomm.testsuite</module>
+        	<module>restcomm.testsuite</module>
     </modules>
 
 

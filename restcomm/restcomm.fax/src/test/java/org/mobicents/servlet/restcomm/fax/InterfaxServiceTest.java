@@ -24,7 +24,6 @@ import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 //import akka.testkit.JavaTestKit;
 
-
 import java.io.File;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -45,46 +44,52 @@ import scala.concurrent.duration.FiniteDuration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class InterfaxServiceTest {
-  private ActorSystem system;
-  private ActorRef interfax;
+    private ActorSystem system;
+    private ActorRef interfax;
 
-  public InterfaxServiceTest() {
-    super();
-  }
+    public InterfaxServiceTest() {
+        super();
+    }
 
-  @Before public void before() throws Exception {
-    system = ActorSystem.create();
-    final URL input = getClass().getResource("/interfax.xml");
-	final XMLConfiguration configuration = new XMLConfiguration(input);
-	interfax = interfax(configuration);
-  }
+    @Before
+    public void before() throws Exception {
+        system = ActorSystem.create();
+        final URL input = getClass().getResource("/interfax.xml");
+        final XMLConfiguration configuration = new XMLConfiguration(input);
+        interfax = interfax(configuration);
+    }
 
-  @After public void after() throws Exception {
-    system.shutdown();
-  }
-  
-  private ActorRef interfax(final Configuration configuration) {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-	  private static final long serialVersionUID = 1L;
-	  @Override public Actor create() throws Exception {
-		return new InterfaxService(configuration);
-	  }
-	}));
-  }
+    @After
+    public void after() throws Exception {
+        system.shutdown();
+    }
 
-  @Test @Ignore
-  public void testSendFax() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      final File file = new File(getClass().getResource("/fax.pdf").getPath());
-      // This is the fax number for http://faxtoy.net/
-      final FaxRequest request = new FaxRequest("+18888771655", file);
-      // This will fax "Welcome to RestComm!" to http://faxtoy.net/
-      interfax.tell(request, observer);
-      final FaxResponse response = expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
-          FaxResponse.class);
-      assertTrue(response.succeeded());
-      System.out.println(response.get().toString());
-    }};
-  }
+    private ActorRef interfax(final Configuration configuration) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Actor create() throws Exception {
+                return new InterfaxService(configuration);
+            }
+        }));
+    }
+
+    @Test
+    @Ignore
+    public void testSendFax() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final File file = new File(getClass().getResource("/fax.pdf").getPath());
+                // This is the fax number for http://faxtoy.net/
+                final FaxRequest request = new FaxRequest("+18888771655", file);
+                // This will fax "Welcome to RestComm!" to http://faxtoy.net/
+                interfax.tell(request, observer);
+                final FaxResponse response = expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS), FaxResponse.class);
+                assertTrue(response.succeeded());
+                System.out.println(response.get().toString());
+            }
+        };
+    }
 }

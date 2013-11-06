@@ -22,15 +22,15 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class ConferenceResponse<T> extends StandardResponse<T> {
-  public ConferenceResponse(final T object) {
-    super(object);
-  }
+    public ConferenceResponse(final T object) {
+        super(object);
+    }
 
-  public ConferenceResponse(final Throwable cause) {
-    super(cause);
-  }
+    public ConferenceResponse(final Throwable cause) {
+        super(cause);
+    }
 
-  public ConferenceResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+    public ConferenceResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

@@ -38,72 +38,81 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/Clients")
-@ThreadSafe public final class ClientsXmlEndpoint extends ClientsEndpoint {
-  public ClientsXmlEndpoint() {
-    super();
-  }
-  
-  private Response deleteClient(final String accountSid, final String sid) {
-    try { secure(new Sid(accountSid), "RestComm:Delete:Clients"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    dao.removeClient(new Sid(sid));
-    return ok().build();
-  }
-  
-  @Path("/{sid}.json")
-  @DELETE public Response deleteClientAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return deleteClient(accountSid, sid);
-  }
-  
-  @Path("/{sid}")
-  @DELETE public Response deleteClientAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return deleteClient(accountSid, sid);
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getClientAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getClient(accountSid, sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getClientAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getClient(accountSid, sid, APPLICATION_XML_TYPE);
-  }
-  
-  @GET public Response getClients(@PathParam("accountSid") final String accountSid) {
-    return getClients(accountSid, APPLICATION_XML_TYPE);
-  }
-  
-  @POST public Response putClient(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putClient(accountSid, data, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{sid}.json")
-  @POST public Response updateClientAsJsonPost(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-    return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}.json")
-  @PUT public Response updateClientAsJsonPut(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-    return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @POST public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-    return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @PUT public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-    return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
-  }
+@ThreadSafe
+public final class ClientsXmlEndpoint extends ClientsEndpoint {
+    public ClientsXmlEndpoint() {
+        super();
+    }
+
+    private Response deleteClient(final String accountSid, final String sid) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Delete:Clients");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        dao.removeClient(new Sid(sid));
+        return ok().build();
+    }
+
+    @Path("/{sid}.json")
+    @DELETE
+    public Response deleteClientAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return deleteClient(accountSid, sid);
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return deleteClient(accountSid, sid);
+    }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getClientAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getClient(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getClient(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getClients(@PathParam("accountSid") final String accountSid) {
+        return getClients(accountSid, APPLICATION_XML_TYPE);
+    }
+
+    @POST
+    public Response putClient(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putClient(accountSid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{sid}.json")
+    @POST
+    public Response updateClientAsJsonPost(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}.json")
+    @PUT
+    public Response updateClientAsJsonPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data) {
+        return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @POST
+    public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data) {
+        return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{sid}")
+    @PUT
+    public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data) {
+        return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
+    }
 }

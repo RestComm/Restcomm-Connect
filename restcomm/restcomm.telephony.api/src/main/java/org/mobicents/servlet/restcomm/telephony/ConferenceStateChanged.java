@@ -1,5 +1,5 @@
 /*
- * TeleStax, Open Source Cloud Communications  
+ * TeleStax, Open Source Cloud Communications
  * Copyright 2012, Telestax Inc and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -26,22 +26,24 @@ package org.mobicents.servlet.restcomm.telephony;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class ConferenceStateChanged {
-  public static enum State { RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED };
-  
-  private final String name;
-  private final State state;
-  
-  public ConferenceStateChanged(final String name, final State state) {
-    super();
-    this.name = name;
-    this.state = state;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public State state() {
-    return state;
-  }
+    public static enum State {
+        RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED
+    };
+
+    private final String name;
+    private final State state;
+
+    public ConferenceStateChanged(final String name, final State state) {
+        super();
+        this.name = name;
+        this.state = state;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public State state() {
+        return state;
+    }
 }

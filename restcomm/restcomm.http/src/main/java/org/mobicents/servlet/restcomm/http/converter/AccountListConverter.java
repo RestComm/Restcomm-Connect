@@ -27,23 +27,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class AccountListConverter extends AbstractConverter {
-  public AccountListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return AccountList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final AccountList list = (AccountList)object;
-    writer.startNode("Accounts");
-    for(final Account account : list.getAccounts()) {
-      context.convertAnother(account);
+@ThreadSafe
+public final class AccountListConverter extends AbstractConverter {
+    public AccountListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return AccountList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final AccountList list = (AccountList) object;
+        writer.startNode("Accounts");
+        for (final Account account : list.getAccounts()) {
+            context.convertAnother(account);
+        }
+        writer.endNode();
+    }
 }

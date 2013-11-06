@@ -23,22 +23,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class InitializeLink {
-  private final ActorRef primaryEndpoint;
-  private final ActorRef secondaryEndpoint;
-  
-  public InitializeLink(final ActorRef primaryEndpoint,
-      final ActorRef secondaryEndpoint) {
-    super();
-    this.primaryEndpoint = primaryEndpoint;
-    this.secondaryEndpoint = secondaryEndpoint;
-  }
-  
-  public ActorRef primaryEndpoint() {
-    return primaryEndpoint;
-  }
-  
-  public ActorRef secondaryEndpoint() {
-    return secondaryEndpoint;
-  }
+@Immutable
+public final class InitializeLink {
+    private final ActorRef primaryEndpoint;
+    private final ActorRef secondaryEndpoint;
+
+    public InitializeLink(final ActorRef primaryEndpoint, final ActorRef secondaryEndpoint) {
+        super();
+        this.primaryEndpoint = primaryEndpoint;
+        this.secondaryEndpoint = secondaryEndpoint;
+    }
+
+    public ActorRef primaryEndpoint() {
+        return primaryEndpoint;
+    }
+
+    public ActorRef secondaryEndpoint() {
+        return secondaryEndpoint;
+    }
 }

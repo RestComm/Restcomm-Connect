@@ -21,15 +21,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CreateConference {
-  private final String name;
-  
-  public CreateConference(final String name) {
-    super();
-    this.name = name;
-  }
-  
-  public String name() {
-    return name;
-  }
+@Immutable
+public final class CreateConference {
+    private final String name;
+
+    public CreateConference(final String name) {
+        super();
+        this.name = name;
+    }
+
+    public String name() {
+        return name;
+    }
 }

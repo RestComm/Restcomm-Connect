@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Reject {
-  public Reject() {
-    super();
-  }
+@Immutable
+public final class Reject {
+    public Reject() {
+        super();
+    }
 }

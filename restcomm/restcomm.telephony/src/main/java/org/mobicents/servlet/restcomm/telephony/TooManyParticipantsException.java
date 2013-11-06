@@ -20,21 +20,21 @@ package org.mobicents.servlet.restcomm.telephony;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class TooManyParticipantsException extends Exception {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public TooManyParticipantsException() {
-    super();
-  }
+    public TooManyParticipantsException() {
+        super();
+    }
 
-  public TooManyParticipantsException(final String message) {
-    super(message);
-  }
+    public TooManyParticipantsException(final String message) {
+        super(message);
+    }
 
-  public TooManyParticipantsException(final Throwable cause) {
-    super(cause);
-  }
+    public TooManyParticipantsException(final Throwable cause) {
+        super(cause);
+    }
 
-  public TooManyParticipantsException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    public TooManyParticipantsException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -37,60 +37,68 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/OutgoingCallerIds")
-@ThreadSafe public final class OutgoingCallerIdsXmlEndpoint extends OutgoingCallerIdsEndpoint {
-  public OutgoingCallerIdsXmlEndpoint() {
-    super();
-  }
-  
-  private Response deleteOutgoingCallerId(String accountSid, String sid) {
-	try { secure(new Sid(accountSid), "RestComm:Delete:OutgoingCallerIds"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    dao.removeOutgoingCallerId(new Sid(sid));
-    return ok().build();
-  }
-  
-  @Path("/{sid}.json")
-  @DELETE public Response deleteOutgoingCallerIdAsJson(@PathParam("accountSid") String accountSid,
-      @PathParam("sid") String sid) {
-    return deleteOutgoingCallerId(accountSid, sid);
-  }
-  
-  @Path("/{sid}")
-  @DELETE public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid,
-      @PathParam("sid") String sid) {
-    return deleteOutgoingCallerId(accountSid, sid);
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getCallerIdAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getCallerId(accountSid, sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getCallerIdAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getCallerId(accountSid, sid, APPLICATION_XML_TYPE);
-  }
-  
-  @GET public Response getCallerIds(@PathParam("accountSid") final String accountSid) {
-    return getCallerIds(accountSid, APPLICATION_XML_TYPE);
-  }
-  
-  @POST public Response putOutgoingCallerId(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putOutgoingCallerId(accountSid, data, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{sid}.json")
-  @PUT public Response updateOutgoingCallerIdAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-    return updateOutgoingCallerId(accountSid, sid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @PUT public Response updateOutgoingCallerIdAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-    return updateOutgoingCallerId(accountSid, sid, data, APPLICATION_XML_TYPE);
-  }
+@ThreadSafe
+public final class OutgoingCallerIdsXmlEndpoint extends OutgoingCallerIdsEndpoint {
+    public OutgoingCallerIdsXmlEndpoint() {
+        super();
+    }
+
+    private Response deleteOutgoingCallerId(String accountSid, String sid) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Delete:OutgoingCallerIds");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        dao.removeOutgoingCallerId(new Sid(sid));
+        return ok().build();
+    }
+
+    @Path("/{sid}.json")
+    @DELETE
+    public Response deleteOutgoingCallerIdAsJson(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+        return deleteOutgoingCallerId(accountSid, sid);
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+        return deleteOutgoingCallerId(accountSid, sid);
+    }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getCallerIdAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getCallerId(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getCallerIdAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getCallerId(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getCallerIds(@PathParam("accountSid") final String accountSid) {
+        return getCallerIds(accountSid, APPLICATION_XML_TYPE);
+    }
+
+    @POST
+    public Response putOutgoingCallerId(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putOutgoingCallerId(accountSid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{sid}.json")
+    @PUT
+    public Response updateOutgoingCallerIdAsJson(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateOutgoingCallerId(accountSid, sid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @PUT
+    public Response updateOutgoingCallerIdAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateOutgoingCallerId(accountSid, sid, data, APPLICATION_XML_TYPE);
+    }
 }

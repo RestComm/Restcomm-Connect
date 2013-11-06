@@ -27,22 +27,23 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class AvailablePhoneNumberListConverter extends AbstractConverter {
-  public AvailablePhoneNumberListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return AvailablePhoneNumberList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final AvailablePhoneNumberList list = (AvailablePhoneNumberList)object;
-    writer.startNode("AvailablePhoneNumbers");
-    for(final AvailablePhoneNumber number : list.getAvailablePhoneNumbers()) {
-      context.convertAnother(number);
+    public AvailablePhoneNumberListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return AvailablePhoneNumberList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final AvailablePhoneNumberList list = (AvailablePhoneNumberList) object;
+        writer.startNode("AvailablePhoneNumbers");
+        for (final AvailablePhoneNumber number : list.getAvailablePhoneNumbers()) {
+            context.convertAnother(number);
+        }
+        writer.endNode();
+    }
 }

@@ -27,23 +27,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class NotificationListConverter extends AbstractConverter {
-  public NotificationListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return NotificationList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final NotificationList list = (NotificationList)object;
-    writer.startNode("Notifications");
-    for(final Notification notification : list.getNotifications()) {
-      context.convertAnother(notification);
+@ThreadSafe
+public final class NotificationListConverter extends AbstractConverter {
+    public NotificationListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return NotificationList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final NotificationList list = (NotificationList) object;
+        writer.startNode("Notifications");
+        for (final Notification notification : list.getNotifications()) {
+            context.convertAnother(notification);
+        }
+        writer.endNode();
+    }
 }

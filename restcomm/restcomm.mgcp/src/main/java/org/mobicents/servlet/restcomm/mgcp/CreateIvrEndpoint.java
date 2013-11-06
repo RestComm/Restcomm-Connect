@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CreateIvrEndpoint extends AbstractCreateMessage {
-  public CreateIvrEndpoint(final MediaSession session) {
-    super(session);
-  }
+@Immutable
+public final class CreateIvrEndpoint extends AbstractCreateMessage {
+    public CreateIvrEndpoint(final MediaSession session) {
+        super(session);
+    }
 }

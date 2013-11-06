@@ -22,16 +22,17 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CallResponse<T> extends StandardResponse<T> {
-  public CallResponse(T object) {
-    super(object);
-  }
+@Immutable
+public final class CallResponse<T> extends StandardResponse<T> {
+    public CallResponse(T object) {
+        super(object);
+    }
 
-  public CallResponse(final Throwable cause) {
-    super(cause);
-  }
+    public CallResponse(final Throwable cause) {
+        super(cause);
+    }
 
-  public CallResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+    public CallResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

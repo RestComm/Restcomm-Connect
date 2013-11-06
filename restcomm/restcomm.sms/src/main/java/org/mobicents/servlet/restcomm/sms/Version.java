@@ -24,31 +24,32 @@ import java.util.Properties;
  * @author (Pavel Slegr)
  */
 public final class Version {
-  private static final class Singleton {
-    private static final Version instance = new Version();
-  }
-  private final String version;
-  
-  private Version() {
-    final Properties properties = new Properties();
-    final InputStream input = this.getClass().getResourceAsStream("/org/mobicents/servlet/restcomm/sms/version.properties");
-    try {
-      if(input != null) {
-        properties.load(input);
-      } else {
-        throw new NullPointerException("Could not load the version.properties file.");
-      }
-    } catch(final IOException exception) {
-      exception.printStackTrace();
+    private static final class Singleton {
+        private static final Version instance = new Version();
     }
-    version = properties.getProperty("restcomm.version");
-  }
 
-  public static Version getInstance(){
-    return Singleton.instance;
-  }
+    private final String version;
 
-  public String getRestCommVersion() {
-    return version;
-  }
+    private Version() {
+        final Properties properties = new Properties();
+        final InputStream input = this.getClass().getResourceAsStream("/org/mobicents/servlet/restcomm/sms/version.properties");
+        try {
+            if (input != null) {
+                properties.load(input);
+            } else {
+                throw new NullPointerException("Could not load the version.properties file.");
+            }
+        } catch (final IOException exception) {
+            exception.printStackTrace();
+        }
+        version = properties.getProperty("restcomm.version");
+    }
+
+    public static Version getInstance() {
+        return Singleton.instance;
+    }
+
+    public String getRestCommVersion() {
+        return version;
+    }
 }

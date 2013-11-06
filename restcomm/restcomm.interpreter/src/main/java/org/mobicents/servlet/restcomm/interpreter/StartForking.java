@@ -21,16 +21,17 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class StartForking {
-  private static final class Singleton {
-    private static final StartForking instance = new StartForking();
-  }
-  
-  private StartForking() {
-    super();
-  }
-  
-  public static StartForking instance() {
-    return Singleton.instance;
-  }
+@Immutable
+public final class StartForking {
+    private static final class Singleton {
+        private static final StartForking instance = new StartForking();
+    }
+
+    private StartForking() {
+        super();
+    }
+
+    public static StartForking instance() {
+        return Singleton.instance;
+    }
 }

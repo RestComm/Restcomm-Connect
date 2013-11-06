@@ -40,44 +40,46 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SmsServiceProxy extends SipServlet {
-  private static final long serialVersionUID = 1L;
-  
-  private ActorSystem system;
-  private ActorRef service;
+    private static final long serialVersionUID = 1L;
 
-  public SmsServiceProxy() {
-    super();
-  }
-  
-  @Override protected void doRequest(final SipServletRequest request)
-      throws ServletException, IOException {
-    service.tell(request, null);
-  }
+    private ActorSystem system;
+    private ActorRef service;
 
-  @Override protected void doResponse(final SipServletResponse response)
-      throws ServletException, 	IOException {
-    service.tell(response, null);
-  }
-  
-  @Override public void init(final ServletConfig config) throws ServletException {
-    final ServletContext context = config.getServletContext();
-    final SipFactory factory = (SipFactory)context.getAttribute(SIP_FACTORY);
-    Configuration configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    configuration = configuration.subset("sms-aggregator");
-    configuration.setProperty(ServletConfig.class.getName(), config);
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
-    service = service(configuration, factory, storage);
-    context.setAttribute(SmsService.class.getName(), service);
-  }
-  
-  private ActorRef service(final Configuration configuration, final SipFactory factory,
-      final DaoManager storage) {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-		private static final long serialVersionUID = 1L;
-		@Override public UntypedActor create() throws Exception {
-          return new SmsService(system, configuration, factory, storage);
-		}
-    }));
-  }
+    public SmsServiceProxy() {
+        super();
+    }
+
+    @Override
+    protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
+        service.tell(request, null);
+    }
+
+    @Override
+    protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
+        service.tell(response, null);
+    }
+
+    @Override
+    public void init(final ServletConfig config) throws ServletException {
+        final ServletContext context = config.getServletContext();
+        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = configuration.subset("sms-aggregator");
+        configuration.setProperty(ServletConfig.class.getName(), config);
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+        service = service(configuration, factory, storage);
+        context.setAttribute(SmsService.class.getName(), service);
+    }
+
+    private ActorRef service(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new SmsService(system, configuration, factory, storage);
+            }
+        }));
+    }
 }

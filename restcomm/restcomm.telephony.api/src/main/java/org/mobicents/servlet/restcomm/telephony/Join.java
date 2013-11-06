@@ -25,21 +25,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Join {
-  private final ActorRef endpoint;
-  private final ConnectionMode mode;
-  
-  public Join(final ActorRef endpoint, final ConnectionMode mode) {
-    super();
-    this.endpoint = endpoint;
-    this.mode = mode;
-  }
-  
-  public ActorRef endpoint() {
-    return endpoint;
-  }
-  
-  public ConnectionMode mode() {
-    return mode;
-  }
+@Immutable
+public final class Join {
+    private final ActorRef endpoint;
+    private final ConnectionMode mode;
+
+    public Join(final ActorRef endpoint, final ConnectionMode mode) {
+        super();
+        this.endpoint = endpoint;
+        this.mode = mode;
+    }
+
+    public ActorRef endpoint() {
+        return endpoint;
+    }
+
+    public ConnectionMode mode() {
+        return mode;
+    }
 }

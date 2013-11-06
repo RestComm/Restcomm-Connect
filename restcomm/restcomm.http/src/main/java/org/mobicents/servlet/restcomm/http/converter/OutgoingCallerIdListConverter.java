@@ -27,23 +27,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class OutgoingCallerIdListConverter extends AbstractConverter {
-  public OutgoingCallerIdListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return OutgoingCallerIdList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final OutgoingCallerIdList list = (OutgoingCallerIdList)object;
-    writer.startNode("OutgoingCallerIds");
-    for(final OutgoingCallerId outgoingCallerId : list.getOutgoingCallerIds()) {
-      context.convertAnother(outgoingCallerId);
+@ThreadSafe
+public final class OutgoingCallerIdListConverter extends AbstractConverter {
+    public OutgoingCallerIdListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return OutgoingCallerIdList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final OutgoingCallerIdList list = (OutgoingCallerIdList) object;
+        writer.startNode("OutgoingCallerIds");
+        for (final OutgoingCallerId outgoingCallerId : list.getOutgoingCallerIds()) {
+            context.convertAnother(outgoingCallerId);
+        }
+        writer.endNode();
+    }
 }

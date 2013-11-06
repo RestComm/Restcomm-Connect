@@ -7,7 +7,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class MediaGroupStatus {
-	public MediaGroupStatus(){
-		super();
-	}
+    public MediaGroupStatus() {
+        super();
+    }
 }

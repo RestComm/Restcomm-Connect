@@ -18,12 +18,12 @@ package org.mobicents.servlet.restcomm.mgcp;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CreateConferenceEndpoint extends AbstractCreateMessage {
-  public CreateConferenceEndpoint(final MediaSession session) {
-    super(session);
-  }
+@Immutable
+public final class CreateConferenceEndpoint extends AbstractCreateMessage {
+    public CreateConferenceEndpoint(final MediaSession session) {
+        super(session);
+    }
 }

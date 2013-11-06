@@ -26,36 +26,37 @@ import org.mobicents.servlet.restcomm.http.voipinnovations.State;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class GetDIDListResponseConverter extends AbstractConverter {
-  public GetDIDListResponseConverter() {
-    super();
-  }
-  
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(Class klass) {
-    return GetDIDListResponse.class.equals(klass);
-  }
-
-  @Override public Object unmarshal(final HierarchicalStreamReader reader,
-		final UnmarshallingContext context) {
-    String name = null;
-    String status = null;
-    int code = -1;
-    State state = null;
-    while(reader.hasMoreChildren()) {
-      reader.moveDown();
-      final String child = reader.getNodeName();
-      if("name".equals(child)) {
-        name = reader.getValue();
-      } else if("status".equals(child)) {
-        status = reader.getValue();
-      } else if("statuscode".equals(child)) {
-        final String value = reader.getValue();
-        code = getInteger(value);
-      } else if("state".equals(child)) {
-        state = (State)context.convertAnother(null, State.class);
-      }
-      reader.moveUp();
+    public GetDIDListResponseConverter() {
+        super();
     }
-    return new GetDIDListResponse(name, status, code, state);
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(Class klass) {
+        return GetDIDListResponse.class.equals(klass);
+    }
+
+    @Override
+    public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
+        String name = null;
+        String status = null;
+        int code = -1;
+        State state = null;
+        while (reader.hasMoreChildren()) {
+            reader.moveDown();
+            final String child = reader.getNodeName();
+            if ("name".equals(child)) {
+                name = reader.getValue();
+            } else if ("status".equals(child)) {
+                status = reader.getValue();
+            } else if ("statuscode".equals(child)) {
+                final String value = reader.getValue();
+                code = getInteger(value);
+            } else if ("state".equals(child)) {
+                state = (State) context.convertAnother(null, State.class);
+            }
+            reader.moveUp();
+        }
+        return new GetDIDListResponse(name, status, code, state);
+    }
 }

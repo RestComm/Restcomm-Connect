@@ -30,16 +30,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Management/Gateways.json")
-@ThreadSafe public class GatewaysJsonEndpoint extends GatewaysEndpoint {
-  public GatewaysJsonEndpoint() {
-    super();
-  }
-  
-  @GET public Response getClients() {
-    return getGateways(APPLICATION_JSON_TYPE);
-  }
-  
-  @POST public Response putClient(final MultivaluedMap<String, String> data) {
-    return putGateway(data, APPLICATION_JSON_TYPE);
-  }
+@ThreadSafe
+public class GatewaysJsonEndpoint extends GatewaysEndpoint {
+    public GatewaysJsonEndpoint() {
+        super();
+    }
+
+    @GET
+    public Response getClients() {
+        return getGateways(APPLICATION_JSON_TYPE);
+    }
+
+    @POST
+    public Response putClient(final MultivaluedMap<String, String> data) {
+        return putGateway(data, APPLICATION_JSON_TYPE);
+    }
 }

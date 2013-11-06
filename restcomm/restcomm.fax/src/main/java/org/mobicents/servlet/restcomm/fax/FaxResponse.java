@@ -24,16 +24,17 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class FaxResponse extends StandardResponse<URI> {
-  public FaxResponse(final URI object) {
-    super(object);
-  }
+@Immutable
+public final class FaxResponse extends StandardResponse<URI> {
+    public FaxResponse(final URI object) {
+        super(object);
+    }
 
-  public FaxResponse(final Throwable cause) {
-    super(cause);
-  }
+    public FaxResponse(final Throwable cause) {
+        super(cause);
+    }
 
-  public FaxResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+    public FaxResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

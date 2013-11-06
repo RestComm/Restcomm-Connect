@@ -23,42 +23,43 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class MediaGatewayInfo {
-  private final String name;
-  // Server Info.
-  final InetAddress ip;
-  final int port;
-  // Used for NAT traversal.
-  private final boolean useNat;
-  private final InetAddress externalIp;
+@Immutable
+public final class MediaGatewayInfo {
+    private final String name;
+    // Server Info.
+    final InetAddress ip;
+    final int port;
+    // Used for NAT traversal.
+    private final boolean useNat;
+    private final InetAddress externalIp;
 
-  public MediaGatewayInfo(final String name, final InetAddress ip,
-      final int port, final boolean useNat, final InetAddress externalIp) {
-    super();
-    this.name = name;
-    this.ip = ip;
-    this.port = port;
-    this.useNat = useNat;
-    this.externalIp = externalIp;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public InetAddress ip() {
-    return ip;
-  }
-  
-  public int port() {
-    return port;
-  }
-  
-  public boolean useNat() {
-    return useNat;
-  }
-  
-  public InetAddress externalIP() {
-    return externalIp;
-  }
+    public MediaGatewayInfo(final String name, final InetAddress ip, final int port, final boolean useNat,
+            final InetAddress externalIp) {
+        super();
+        this.name = name;
+        this.ip = ip;
+        this.port = port;
+        this.useNat = useNat;
+        this.externalIp = externalIp;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public InetAddress ip() {
+        return ip;
+    }
+
+    public int port() {
+        return port;
+    }
+
+    public boolean useNat() {
+        return useNat;
+    }
+
+    public InetAddress externalIP() {
+        return externalIp;
+    }
 }

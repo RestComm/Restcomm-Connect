@@ -36,79 +36,81 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class AbstractEndpoint {
-  private String defaultApiVersion;
-  protected Configuration configuration;
-  protected String baseRecordingsPath;
-  
-  public AbstractEndpoint() {
-    super();
-  }
-  
-  protected void init(final Configuration configuration) {
-    final String path = configuration.getString("recordings-path");
-	baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
-	defaultApiVersion = configuration.getString("api-version");
-  }
-  
-  protected String getApiVersion(final MultivaluedMap<String, String> data) {
-    String apiVersion = defaultApiVersion;
-    if(data != null && data.containsKey("ApiVersion")) {
-     apiVersion = data.getFirst("ApiVersion");
+@NotThreadSafe
+public abstract class AbstractEndpoint {
+    private String defaultApiVersion;
+    protected Configuration configuration;
+    protected String baseRecordingsPath;
+
+    public AbstractEndpoint() {
+        super();
     }
-    return apiVersion;
-  }
-  
-  protected PhoneNumber getPhoneNumber(final MultivaluedMap<String, String> data) {
-    final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-    PhoneNumber phoneNumber = null;
-    try { phoneNumber = phoneNumberUtil.parse(data.getFirst("PhoneNumber"), "US"); }
-    catch(final NumberParseException ignored) { }
-    return phoneNumber;
-  }
-  
-  protected String getMethod(final String name, final MultivaluedMap<String, String> data) {
-    String method = "POST";
-    if(data.containsKey(name)) {
-      method = data.getFirst(name);
+
+    protected void init(final Configuration configuration) {
+        final String path = configuration.getString("recordings-path");
+        baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
+        defaultApiVersion = configuration.getString("api-version");
     }
-    return method;
-  }
-  
-  protected Sid getSid(final String name, final MultivaluedMap<String, String> data) {
-    Sid sid = null;
-    if(data.containsKey(name)) {
-      sid = new Sid(data.getFirst(name));
+
+    protected String getApiVersion(final MultivaluedMap<String, String> data) {
+        String apiVersion = defaultApiVersion;
+        if (data != null && data.containsKey("ApiVersion")) {
+            apiVersion = data.getFirst("ApiVersion");
+        }
+        return apiVersion;
     }
-    return sid;
-  }
-  
-  protected URI getUrl(final String name, final MultivaluedMap<String, String> data) {
-    URI uri = null;
-    if(data.containsKey(name)) {
-      uri = URI.create(data.getFirst(name));
+
+    protected PhoneNumber getPhoneNumber(final MultivaluedMap<String, String> data) {
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        PhoneNumber phoneNumber = null;
+        try {
+            phoneNumber = phoneNumberUtil.parse(data.getFirst("PhoneNumber"), "US");
+        } catch (final NumberParseException ignored) {
+        }
+        return phoneNumber;
     }
-    return uri;
-  }
-  
-  protected boolean getHasVoiceCallerIdLookup(final MultivaluedMap<String, String> data) {
-    boolean hasVoiceCallerIdLookup = false;
-    if(data.containsKey("VoiceCallerIdLookup")) {
-      final String value = data.getFirst("VoiceCallerIdLookup");
-      if("true".equalsIgnoreCase(value)) {
-        return true;
-      }
+
+    protected String getMethod(final String name, final MultivaluedMap<String, String> data) {
+        String method = "POST";
+        if (data.containsKey(name)) {
+            method = data.getFirst(name);
+        }
+        return method;
     }
-    return hasVoiceCallerIdLookup;
-  }
-  
-  protected void secure(final Sid accountSid, final String permission) throws AuthorizationException {
-    final Subject subject = SecurityUtils.getSubject();
-    if(subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) &&
-	    subject.isPermitted(permission))) {
-	  return;
-    } else {
-      throw new AuthorizationException();
+
+    protected Sid getSid(final String name, final MultivaluedMap<String, String> data) {
+        Sid sid = null;
+        if (data.containsKey(name)) {
+            sid = new Sid(data.getFirst(name));
+        }
+        return sid;
     }
-  }
+
+    protected URI getUrl(final String name, final MultivaluedMap<String, String> data) {
+        URI uri = null;
+        if (data.containsKey(name)) {
+            uri = URI.create(data.getFirst(name));
+        }
+        return uri;
+    }
+
+    protected boolean getHasVoiceCallerIdLookup(final MultivaluedMap<String, String> data) {
+        boolean hasVoiceCallerIdLookup = false;
+        if (data.containsKey("VoiceCallerIdLookup")) {
+            final String value = data.getFirst("VoiceCallerIdLookup");
+            if ("true".equalsIgnoreCase(value)) {
+                return true;
+            }
+        }
+        return hasVoiceCallerIdLookup;
+    }
+
+    protected void secure(final Sid accountSid, final String permission) throws AuthorizationException {
+        final Subject subject = SecurityUtils.getSubject();
+        if (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission))) {
+            return;
+        } else {
+            throw new AuthorizationException();
+        }
+    }
 }

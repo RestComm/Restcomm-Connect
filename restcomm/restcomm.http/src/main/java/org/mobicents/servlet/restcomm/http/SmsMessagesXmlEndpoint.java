@@ -30,29 +30,31 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/SMS/Messages")
-@ThreadSafe public final class SmsMessagesXmlEndpoint extends SmsMessagesEndpoint {
-  public SmsMessagesXmlEndpoint() {
-    super();
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getSmsMessageAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getSmsMessage(accountSid, sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getSmsMessageAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getSmsMessage(accountSid, sid, APPLICATION_XML_TYPE);
-  }
-  
-  @GET public Response getSmsMessages(@PathParam("accountSid") final String accountSid) {
-    return getSmsMessages(accountSid, APPLICATION_XML_TYPE);
-  }
-  
-  @POST public Response putSmsMessage(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putSmsMessage(accountSid, data, APPLICATION_XML_TYPE);
-  }
+@ThreadSafe
+public final class SmsMessagesXmlEndpoint extends SmsMessagesEndpoint {
+    public SmsMessagesXmlEndpoint() {
+        super();
+    }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getSmsMessageAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getSmsMessage(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getSmsMessageAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getSmsMessage(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getSmsMessages(@PathParam("accountSid") final String accountSid) {
+        return getSmsMessages(accountSid, APPLICATION_XML_TYPE);
+    }
+
+    @POST
+    public Response putSmsMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putSmsMessage(accountSid, data, APPLICATION_XML_TYPE);
+    }
 }
