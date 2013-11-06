@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class ClientList {
-  private final List<Client> clients;
+@NotThreadSafe
+public final class ClientList {
+    private final List<Client> clients;
 
-  public ClientList(final List<Client> clients) {
-    super();
-    this.clients = clients;
-  }
-  
-  public List<Client> getClients() {
-    return clients;
-  }
+    public ClientList(final List<Client> clients) {
+        super();
+        this.clients = clients;
+    }
+
+    public List<Client> getClients() {
+        return clients;
+    }
 }

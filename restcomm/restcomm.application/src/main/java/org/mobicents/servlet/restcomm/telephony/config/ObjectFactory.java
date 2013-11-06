@@ -20,28 +20,28 @@ package org.mobicents.servlet.restcomm.telephony.config;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class ObjectFactory {
-  private final ClassLoader loader;
-  
-  public ObjectFactory() {
-    super();
-    loader = getClass().getClassLoader();
-  }
-  
-  public ObjectFactory(final ClassLoader loader) {
-    super();
-    this.loader = loader;
-  }
-  
-  public Object getObjectInstance(final String name) throws ObjectInstantiationException {
-	try {
-	  final Class<?> klass = loader.loadClass(name);
-	  return klass.newInstance();
-	} catch(final ClassNotFoundException exception) {
-	  throw new ObjectInstantiationException(exception);
-	} catch(final InstantiationException exception) {
-	  throw new ObjectInstantiationException(exception);
-	} catch(final IllegalAccessException exception) {
-	  throw new ObjectInstantiationException(exception);
-	}
-  }
+    private final ClassLoader loader;
+
+    public ObjectFactory() {
+        super();
+        loader = getClass().getClassLoader();
+    }
+
+    public ObjectFactory(final ClassLoader loader) {
+        super();
+        this.loader = loader;
+    }
+
+    public Object getObjectInstance(final String name) throws ObjectInstantiationException {
+        try {
+            final Class<?> klass = loader.loadClass(name);
+            return klass.newInstance();
+        } catch (final ClassNotFoundException exception) {
+            throw new ObjectInstantiationException(exception);
+        } catch (final InstantiationException exception) {
+            throw new ObjectInstantiationException(exception);
+        } catch (final IllegalAccessException exception) {
+            throw new ObjectInstantiationException(exception);
+        }
+    }
 }

@@ -22,5 +22,5 @@ import org.apache.commons.configuration.Configuration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Configurable {
-  public void configure(Configuration configuration);
+    void configure(Configuration configuration);
 }

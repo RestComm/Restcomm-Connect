@@ -10,25 +10,28 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class AccountsDaoTest {
-  private static MybatisDaoManager manager;
-  
-  public AccountsDaoTest() {
-    super();
-  }
+    private static MybatisDaoManager manager;
 
-  @Before public void before() throws Exception {
-    final InputStream data = getClass().getResourceAsStream("/mybatis.xml");
-    final SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
-    final SqlSessionFactory factory = builder.build(data);
-    manager = new MybatisDaoManager();
-    manager.start(factory);
-  }
+    public AccountsDaoTest() {
+        super();
+    }
 
-  @After public void after() throws Exception {
-    manager.shutdown();
-  }
+    @Before
+    public void before() throws Exception {
+        final InputStream data = getClass().getResourceAsStream("/mybatis.xml");
+        final SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+        final SqlSessionFactory factory = builder.build(data);
+        manager = new MybatisDaoManager();
+        manager.start(factory);
+    }
 
-  @Test public void createReadUpdateDelete() {
-    
-  }
+    @After
+    public void after() throws Exception {
+        manager.shutdown();
+    }
+
+    @Test
+    public void createReadUpdateDelete() {
+
+    }
 }

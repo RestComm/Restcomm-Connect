@@ -21,30 +21,29 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class TransitionFailedException extends Exception {
-  private static final long serialVersionUID = 7560694777499972921L;
-  private final Object event;
-  private final Transition transition;
-  
-  public TransitionFailedException(final String message, final Object event,
-      final Transition transition) {
-    super(message);
-    this.event = event;
-    this.transition = transition;
-  }
-  
-  public TransitionFailedException(final Throwable cause, final Object event,
-      final Transition transition) {
-    super(cause);
-    this.event = event;
-    this.transition = transition;
-  }
-  
-  public Object getEvent() {
-    return event;
-  }
-  
-  public Transition getTransition() {
-    return transition;
-  }
+@NotThreadSafe
+public final class TransitionFailedException extends Exception {
+    private static final long serialVersionUID = 7560694777499972921L;
+    private final Object event;
+    private final Transition transition;
+
+    public TransitionFailedException(final String message, final Object event, final Transition transition) {
+        super(message);
+        this.event = event;
+        this.transition = transition;
+    }
+
+    public TransitionFailedException(final Throwable cause, final Object event, final Transition transition) {
+        super(cause);
+        this.event = event;
+        this.transition = transition;
+    }
+
+    public Object getEvent() {
+        return event;
+    }
+
+    public Transition getTransition() {
+        return transition;
+    }
 }

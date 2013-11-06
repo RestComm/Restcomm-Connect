@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class GatewayList {
-  private final List<Gateway> gateways;
+@NotThreadSafe
+public final class GatewayList {
+    private final List<Gateway> gateways;
 
-  public GatewayList(final List<Gateway> gateways) {
-    super();
-    this.gateways = gateways;
-  }
-  
-  public List<Gateway> getGateways() {
-    return gateways;
-  }
+    public GatewayList(final List<Gateway> gateways) {
+        super();
+        this.gateways = gateways;
+    }
+
+    public List<Gateway> getGateways() {
+        return gateways;
+    }
 }

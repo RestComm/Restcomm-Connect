@@ -27,13 +27,21 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface NotificationsDao {
-  public void addNotification(Notification notification);
-  public Notification getNotification(Sid sid);
-  public List<Notification> getNotifications(Sid accountSid);
-  public List<Notification> getNotificationsByCall(Sid callSid);
-  public List<Notification> getNotificationsByLogLevel(int logLevel);
-  public List<Notification> getNotificationsByMessageDate(DateTime messageDate);
-  public void removeNotification(Sid sid);
-  public void removeNotifications(Sid accountSid);
-  public void removeNotificationsByCall(Sid callSid);
+    void addNotification(Notification notification);
+
+    Notification getNotification(Sid sid);
+
+    List<Notification> getNotifications(Sid accountSid);
+
+    List<Notification> getNotificationsByCall(Sid callSid);
+
+    List<Notification> getNotificationsByLogLevel(int logLevel);
+
+    List<Notification> getNotificationsByMessageDate(DateTime messageDate);
+
+    void removeNotification(Sid sid);
+
+    void removeNotifications(Sid accountSid);
+
+    void removeNotificationsByCall(Sid callSid);
 }

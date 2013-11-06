@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class NotificationList {
-  private final List<Notification> notifications;
+@NotThreadSafe
+public final class NotificationList {
+    private final List<Notification> notifications;
 
-  public NotificationList(final List<Notification> notifications) {
-    super();
-    this.notifications = notifications;
-  }
-  
-  public List<Notification> getNotifications() {
-    return notifications;
-  }
+    public NotificationList(final List<Notification> notifications) {
+        super();
+        this.notifications = notifications;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
 }

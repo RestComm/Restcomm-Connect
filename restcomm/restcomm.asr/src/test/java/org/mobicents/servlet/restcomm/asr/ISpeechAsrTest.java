@@ -43,63 +43,73 @@ import scala.concurrent.duration.FiniteDuration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class ISpeechAsrTest {
-  private ActorSystem system;
-  private ActorRef asr;
-	  
-  public ISpeechAsrTest() {
-    super();
-  }
+    private ActorSystem system;
+    private ActorRef asr;
 
-  @Before public void before() throws Exception {
-    system = ActorSystem.create();
-    final URL input = getClass().getResource("/ispeech.xml");
-	final XMLConfiguration configuration = new XMLConfiguration(input);
-	asr = asr(configuration);
-  }
+    public ISpeechAsrTest() {
+        super();
+    }
 
-  @After public void after() throws Exception {
-    system.shutdown();
-  }
-  
-  private ActorRef asr(final Configuration configuration) {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-	  private static final long serialVersionUID = 1L;
-	  @Override public Actor create() throws Exception {
-		return new ISpeechAsr(configuration);
-	  }
-	}));
-  }
-  
-  @SuppressWarnings("unchecked")
-  @Test public void testInfo() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      asr.tell(new GetAsrInfo(), observer);
-      final AsrResponse<AsrInfo> response = expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
-          AsrResponse.class);
-      assertTrue(response.succeeded());
-      final Set<String> languages = response.get().languages();
-      assertTrue(languages.contains("en"));
-      assertTrue(languages.contains("en-gb"));
-      assertTrue(languages.contains("es"));
-      assertTrue(languages.contains("it"));
-      assertTrue(languages.contains("fr"));
-      assertTrue(languages.contains("pl"));
-      assertTrue(languages.contains("pt"));
-    }};
-  }
+    @Before
+    public void before() throws Exception {
+        system = ActorSystem.create();
+        final URL input = getClass().getResource("/ispeech.xml");
+        final XMLConfiguration configuration = new XMLConfiguration(input);
+        asr = asr(configuration);
+    }
 
-  @SuppressWarnings("unchecked")
-  @Test public void testRecognition() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      final File file = new File(getClass().getResource("/hello-world.wav").getPath());
-      final AsrRequest request = new AsrRequest(file, "en");
-      asr.tell(request, observer);
-      final AsrResponse<String> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
-          AsrResponse.class);
-      assertTrue(response.succeeded());
-      assertTrue(response.get().equals("hello world"));
-    }};
-  }
+    @After
+    public void after() throws Exception {
+        system.shutdown();
+    }
+
+    private ActorRef asr(final Configuration configuration) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Actor create() throws Exception {
+                return new ISpeechAsr(configuration);
+            }
+        }));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testInfo() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                asr.tell(new GetAsrInfo(), observer);
+                final AsrResponse<AsrInfo> response = expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+                        AsrResponse.class);
+                assertTrue(response.succeeded());
+                final Set<String> languages = response.get().languages();
+                assertTrue(languages.contains("en"));
+                assertTrue(languages.contains("en-gb"));
+                assertTrue(languages.contains("es"));
+                assertTrue(languages.contains("it"));
+                assertTrue(languages.contains("fr"));
+                assertTrue(languages.contains("pl"));
+                assertTrue(languages.contains("pt"));
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testRecognition() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final File file = new File(getClass().getResource("/hello-world.wav").getPath());
+                final AsrRequest request = new AsrRequest(file, "en");
+                asr.tell(request, observer);
+                final AsrResponse<String> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+                        AsrResponse.class);
+                assertTrue(response.succeeded());
+                assertTrue(response.get().equals("hello world"));
+            }
+        };
+    }
 }

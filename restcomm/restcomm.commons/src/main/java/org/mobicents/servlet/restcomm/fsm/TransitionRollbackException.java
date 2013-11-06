@@ -21,30 +21,29 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class TransitionRollbackException extends Exception {
-  private static final long serialVersionUID = 1290752844732660182L;
-  private final Object event;
-  private final Transition transition;
+@NotThreadSafe
+public final class TransitionRollbackException extends Exception {
+    private static final long serialVersionUID = 1290752844732660182L;
+    private final Object event;
+    private final Transition transition;
 
-  public TransitionRollbackException(final String message, final Object event,
-      final Transition transition) {
-    super(message);
-    this.event = event;
-    this.transition = transition;
-  }
+    public TransitionRollbackException(final String message, final Object event, final Transition transition) {
+        super(message);
+        this.event = event;
+        this.transition = transition;
+    }
 
-  public TransitionRollbackException(final Throwable cause, final Object event,
-      final Transition transition) {
-    super(cause);
-    this.event = event;
-    this.transition = transition;
-  }
-  
-  public Object getEvent() {
-    return event;
-  }
-  
-  public Transition getTransition() {
-    return transition;
-  }
+    public TransitionRollbackException(final Throwable cause, final Object event, final Transition transition) {
+        super(cause);
+        this.event = event;
+        this.transition = transition;
+    }
+
+    public Object getEvent() {
+        return event;
+    }
+
+    public Transition getTransition() {
+        return transition;
+    }
 }

@@ -36,129 +36,136 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class MybatisClientsDao implements ClientsDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.ClientsDao.";
-  private final SqlSessionFactory sessions;
+@NotThreadSafe
+public final class MybatisClientsDao implements ClientsDao {
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.ClientsDao.";
+    private final SqlSessionFactory sessions;
 
-  public MybatisClientsDao(final SqlSessionFactory sessions) {
-    super();
-    this.sessions = sessions;
-  }
-  
-  @Override public void addClient(final Client client) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.insert(namespace + "addClient", toMap(client));
-      session.commit();
-    } finally {
-      session.close();
+    public MybatisClientsDao(final SqlSessionFactory sessions) {
+        super();
+        this.sessions = sessions;
     }
-  }
 
-  @Override public Client getClient(final Sid sid) {
-    return getClient(namespace + "getClient", sid.toString());
-  }
-
-  @Override public Client getClient(final String login) {
-    return getClient(namespace + "getClientByLogin", login);
-  }
-  
-  private Client getClient(final String selector, final String parameter) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final Map<String, Object> result = session.selectOne(selector, parameter);
-      if(result != null) {
-        return toClient(result);
-      } else {
-        return null;
-      }
-    } finally {
-      session.close();
-    }
-  }
-
-  @Override public List<Client> getClients(final Sid accountSid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final List<Map<String, Object>> results = session.selectList(namespace + "getClients", accountSid.toString());
-      final List<Client> clients = new ArrayList<Client>();
-      if(results != null && !results.isEmpty()) {
-        for(final Map<String, Object> result : results) {
-          clients.add(toClient(result));
+    @Override
+    public void addClient(final Client client) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.insert(namespace + "addClient", toMap(client));
+            session.commit();
+        } finally {
+            session.close();
         }
-      }
-      return clients;
-    } finally {
-     session.close();
     }
-  }
 
-  @Override public void removeClient(final Sid sid) {
-    removeClients(namespace + "removeClient", sid);
-  }
-
-  @Override public void removeClients(final Sid accountSid) {
-    removeClients(namespace + "removeClients", accountSid);
-  }
-  
-  private void removeClients(final String selector, final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.delete(selector, sid.toString());
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public Client getClient(final Sid sid) {
+        return getClient(namespace + "getClient", sid.toString());
     }
-  }
 
-  @Override public void updateClient(final Client client) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.update(namespace + "updateClient", toMap(client));
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public Client getClient(final String login) {
+        return getClient(namespace + "getClientByLogin", login);
     }
-  }
-  
-  private Client toClient(final Map<String, Object> map) {
-    final Sid sid = readSid(map.get("sid"));
-    final DateTime dateCreated = readDateTime(map.get("date_created"));
-    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
-    final Sid accountSid = readSid(map.get("account_sid"));
-    final String apiVersion = readString(map.get("api_version"));
-    final String friendlyName = readString(map.get("friendly_name"));
-    final String login = readString(map.get("login"));
-    final String password = readString(map.get("password"));
-    final int status = readInteger(map.get("status"));
-    final URI voiceUrl = readUri(map.get("voice_url"));
-    final String voiceMethod = readString(map.get("voice_method"));
-    final URI voiceFallbackUrl = readUri(map.get("voice_fallback_url"));
-    final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
-    final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
-    final URI uri = readUri(map.get("uri"));
-    return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion,
-        friendlyName, login, password, status, voiceUrl, voiceMethod, voiceFallbackUrl,
-        voiceFallbackMethod, voiceApplicationSid, uri);
-  }
-  
-  private Map<String, Object> toMap(final Client client) {
-    final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", writeSid(client.getSid()));
-    map.put("date_created", writeDateTime(client.getDateCreated()));
-    map.put("date_updated", writeDateTime(client.getDateUpdated()));
-    map.put("account_sid", writeSid(client.getAccountSid()));
-    map.put("api_version", client.getApiVersion());
-    map.put("friendly_name", client.getFriendlyName());
-    map.put("login", client.getLogin());
-    map.put("password", client.getPassword());
-    map.put("status", client.getStatus());
-    map.put("voice_url", writeUri(client.getVoiceUrl()));
-    map.put("voice_method", client.getVoiceMethod());
-    map.put("voice_fallback_url", writeUri(client.getVoiceFallbackUrl()));
-    map.put("voice_fallback_method", client.getVoiceFallbackMethod());
-    map.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
-    map.put("uri", writeUri(client.getUri()));
-    return map;
-  }
+
+    private Client getClient(final String selector, final String parameter) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(selector, parameter);
+            if (result != null) {
+                return toClient(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<Client> getClients(final Sid accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getClients", accountSid.toString());
+            final List<Client> clients = new ArrayList<Client>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    clients.add(toClient(result));
+                }
+            }
+            return clients;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void removeClient(final Sid sid) {
+        removeClients(namespace + "removeClient", sid);
+    }
+
+    @Override
+    public void removeClients(final Sid accountSid) {
+        removeClients(namespace + "removeClients", accountSid);
+    }
+
+    private void removeClients(final String selector, final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(selector, sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateClient(final Client client) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateClient", toMap(client));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    private Client toClient(final Map<String, Object> map) {
+        final Sid sid = readSid(map.get("sid"));
+        final DateTime dateCreated = readDateTime(map.get("date_created"));
+        final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+        final Sid accountSid = readSid(map.get("account_sid"));
+        final String apiVersion = readString(map.get("api_version"));
+        final String friendlyName = readString(map.get("friendly_name"));
+        final String login = readString(map.get("login"));
+        final String password = readString(map.get("password"));
+        final int status = readInteger(map.get("status"));
+        final URI voiceUrl = readUri(map.get("voice_url"));
+        final String voiceMethod = readString(map.get("voice_method"));
+        final URI voiceFallbackUrl = readUri(map.get("voice_fallback_url"));
+        final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
+        final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
+        final URI uri = readUri(map.get("uri"));
+        return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion, friendlyName, login, password, status,
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+    }
+
+    private Map<String, Object> toMap(final Client client) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("sid", writeSid(client.getSid()));
+        map.put("date_created", writeDateTime(client.getDateCreated()));
+        map.put("date_updated", writeDateTime(client.getDateUpdated()));
+        map.put("account_sid", writeSid(client.getAccountSid()));
+        map.put("api_version", client.getApiVersion());
+        map.put("friendly_name", client.getFriendlyName());
+        map.put("login", client.getLogin());
+        map.put("password", client.getPassword());
+        map.put("status", client.getStatus());
+        map.put("voice_url", writeUri(client.getVoiceUrl()));
+        map.put("voice_method", client.getVoiceMethod());
+        map.put("voice_fallback_url", writeUri(client.getVoiceFallbackUrl()));
+        map.put("voice_fallback_method", client.getVoiceFallbackMethod());
+        map.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
+        map.put("uri", writeUri(client.getUri()));
+        return map;
+    }
 }

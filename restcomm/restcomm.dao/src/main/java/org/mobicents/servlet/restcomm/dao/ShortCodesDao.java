@@ -25,10 +25,15 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface ShortCodesDao {
-  public void addShortCode(ShortCode shortCode);
-  public ShortCode getShortCode(Sid sid);
-  public List<ShortCode> getShortCodes(Sid accountSid);
-  public void removeShortCode(Sid sid);
-  public void removeShortCodes(Sid accountSid);
-  public void updateShortCode(ShortCode shortCode);
+    void addShortCode(ShortCode shortCode);
+
+    ShortCode getShortCode(Sid sid);
+
+    List<ShortCode> getShortCodes(Sid accountSid);
+
+    void removeShortCode(Sid sid);
+
+    void removeShortCodes(Sid accountSid);
+
+    void updateShortCode(ShortCode shortCode);
 }

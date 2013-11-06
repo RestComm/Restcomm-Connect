@@ -24,32 +24,32 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class AsrRequest {
-  private final File file;
-  private final String language;
-  private final Map<String, Object> attributes;
-  
-  public AsrRequest(final File file, final String language,
-    final Map<String, Object> attributes) {
-    super();
-    this.file = file;
-    this.language = language;
-    this.attributes = attributes;
-  }
-  
-  public AsrRequest(final File file, final String language) {
-    this(file, language, null);
-  }
-  
-  public Map<String, Object> attributes() {
-    return attributes;
-  }
-  
-  public File file() {
-    return file;
-  }
-  
-  public String language() {
-    return language;
-  }
+@Immutable
+public final class AsrRequest {
+    private final File file;
+    private final String language;
+    private final Map<String, Object> attributes;
+
+    public AsrRequest(final File file, final String language, final Map<String, Object> attributes) {
+        super();
+        this.file = file;
+        this.language = language;
+        this.attributes = attributes;
+    }
+
+    public AsrRequest(final File file, final String language) {
+        this(file, language, null);
+    }
+
+    public Map<String, Object> attributes() {
+        return attributes;
+    }
+
+    public File file() {
+        return file;
+    }
+
+    public String language() {
+        return language;
+    }
 }

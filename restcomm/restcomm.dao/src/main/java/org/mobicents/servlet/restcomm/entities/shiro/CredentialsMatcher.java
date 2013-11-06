@@ -25,14 +25,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class CredentialsMatcher extends SimpleCredentialsMatcher {
-  public CredentialsMatcher() {
-    super();
-  }
+@ThreadSafe
+public final class CredentialsMatcher extends SimpleCredentialsMatcher {
+    public CredentialsMatcher() {
+        super();
+    }
 
-  @Override public boolean doCredentialsMatch(final AuthenticationToken token, final AuthenticationInfo info) {
-    final String tokenCredentials = new String((char[])token.getCredentials());
-    final String accountCredentials = new String((char[])info.getCredentials());
-    return accountCredentials.equals(tokenCredentials);
-  }
+    @Override
+    public boolean doCredentialsMatch(final AuthenticationToken token, final AuthenticationInfo info) {
+        final String tokenCredentials = new String((char[]) token.getCredentials());
+        final String accountCredentials = new String((char[]) info.getCredentials());
+        return accountCredentials.equals(tokenCredentials);
+    }
 }

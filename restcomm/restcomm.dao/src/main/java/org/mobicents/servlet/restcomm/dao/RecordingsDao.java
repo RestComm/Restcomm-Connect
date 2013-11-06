@@ -25,10 +25,15 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface RecordingsDao {
-  public void addRecording(Recording recording);
-  public Recording getRecording(Sid sid);
-  public Recording getRecordingByCall(Sid callSid);
-  public List<Recording> getRecordings(Sid accountSid);
-  public void removeRecording(Sid sid);
-  public void removeRecordings(Sid accountSid);
+    void addRecording(Recording recording);
+
+    Recording getRecording(Sid sid);
+
+    Recording getRecordingByCall(Sid callSid);
+
+    List<Recording> getRecordings(Sid accountSid);
+
+    void removeRecording(Sid sid);
+
+    void removeRecordings(Sid accountSid);
 }

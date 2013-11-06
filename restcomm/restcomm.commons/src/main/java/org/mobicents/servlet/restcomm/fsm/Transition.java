@@ -23,60 +23,62 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Transition {
-  private final Guard guard;
-  private final State stateOnEnter;
-  private final State stateOnExit;
+@Immutable
+public final class Transition {
+    private final Guard guard;
+    private final State stateOnEnter;
+    private final State stateOnExit;
 
-  public Transition(final State stateOnEnter, final State stateOnExit,
-      final Guard guard) {
-    super();
-    checkNotNull(stateOnEnter, "A transition can not have a null value for the state on enter.");
-    checkNotNull(stateOnExit, "A transition can not have a null value for the state on exit.");
-    this.guard = guard;
-    this.stateOnEnter = stateOnEnter;
-    this.stateOnExit = stateOnExit;
-  }
-  
-  public Transition(final State stateOnEnter, final State stateOnExit) {
-    this(stateOnEnter, stateOnExit, null);
-  }
-  
-  @Override public boolean equals(final Object object) {
-  	if(this == object) {
-  	  return true;
-  	} else if(object == null) {
-  	  return false;
-  	} else if(getClass() != object.getClass()) {
-  	  return false;
-  	}
-  	final Transition transition = (Transition)object;
-  	if(!stateOnEnter.equals(transition.getStateOnEnter())) {
-  	  return false;
-  	}
-  	if(!stateOnExit.equals(transition.getStateOnExit())) {
-  	  return false;
-  	}
-  	return true;
-  }
-  
-  public Guard getGuard() {
-    return guard;
-  }
-  
-  public State getStateOnEnter() {
-    return stateOnEnter;
-  }
-  
-  public State getStateOnExit() {
-    return stateOnExit;
-  }
-  
-  @Override public int hashCode() { 
-  	final int prime = 5;
-  	int result = 1;
-  	result = prime * result + stateOnEnter.hashCode();
-  	result = prime * result + stateOnExit.hashCode();
-  	return result;
-  }
+    public Transition(final State stateOnEnter, final State stateOnExit, final Guard guard) {
+        super();
+        checkNotNull(stateOnEnter, "A transition can not have a null value for the state on enter.");
+        checkNotNull(stateOnExit, "A transition can not have a null value for the state on exit.");
+        this.guard = guard;
+        this.stateOnEnter = stateOnEnter;
+        this.stateOnExit = stateOnExit;
+    }
+
+    public Transition(final State stateOnEnter, final State stateOnExit) {
+        this(stateOnEnter, stateOnExit, null);
+    }
+
+    @Override
+    public boolean equals(final Object object) {
+        if (this == object) {
+            return true;
+        } else if (object == null) {
+            return false;
+        } else if (getClass() != object.getClass()) {
+            return false;
+        }
+        final Transition transition = (Transition) object;
+        if (!stateOnEnter.equals(transition.getStateOnEnter())) {
+            return false;
+        }
+        if (!stateOnExit.equals(transition.getStateOnExit())) {
+            return false;
+        }
+        return true;
+    }
+
+    public Guard getGuard() {
+        return guard;
+    }
+
+    public State getStateOnEnter() {
+        return stateOnEnter;
+    }
+
+    public State getStateOnExit() {
+        return stateOnExit;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 5;
+        int result = 1;
+        result = prime * result + stateOnEnter.hashCode();
+        result = prime * result + stateOnExit.hashCode();
+        return result;
+    }
 }

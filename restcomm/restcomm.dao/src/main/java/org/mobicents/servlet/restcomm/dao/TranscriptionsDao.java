@@ -25,11 +25,17 @@ import org.mobicents.servlet.restcomm.entities.Transcription;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface TranscriptionsDao {
-  public void addTranscription(Transcription transcription);
-  public Transcription getTranscription(Sid sid);
-  public Transcription getTranscriptionByRecording(Sid recordingSid);
-  public List<Transcription> getTranscriptions(Sid accountSid);
-  public void removeTranscription(Sid sid);
-  public void removeTranscriptions(Sid accountSid);
-  public void updateTranscription(Transcription transcription);
+    void addTranscription(Transcription transcription);
+
+    Transcription getTranscription(Sid sid);
+
+    Transcription getTranscriptionByRecording(Sid recordingSid);
+
+    List<Transcription> getTranscriptions(Sid accountSid);
+
+    void removeTranscription(Sid sid);
+
+    void removeTranscriptions(Sid accountSid);
+
+    void updateTranscription(Transcription transcription);
 }
