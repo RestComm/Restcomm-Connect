@@ -1153,15 +1153,12 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 		<section>
 
 	<warning>
+	<title>Uri noun depreciated</title>
 	<para>The Uri noun has been deprecated and will no longer be available in future releases. Please use the SIP noun instead.</para>
 	</warning>
-			<title>Uri</title>
-		<warning>
-			<title>Uri noun depreciated</title>
-			<para>
-				The Uri noun is depreciated and will be removed in future releases. Instead use Sip noun.
-			</para>
-		</warning>
+
+			
+		
 		</section>
 		<section>
 			<title>Sip</title>
@@ -1345,7 +1342,7 @@ Set a parameter on your SIP URI to specify what transport protocol you want to u
 
 
 <para>
-The url attribute allows you to specify a url for a TwiML document that runs on the called party's end, after they answer, but before the two parties are connected. You can use this RCML to privately Play or Say information to the called party, or provide a chance to decline the phone call using Gather and Hangup. The current caller continues to hear ringing while the RCML document executes on the other end. RCML documents executed in this manner cannot contain the Dial verb.
+The url attribute allows you to specify a url for a RCML document that runs on the called party's end, after they answer, but before the two parties are connected. You can use this RCML to privately Play or Say information to the called party, or provide a chance to decline the phone call using Gather and Hangup. The current caller continues to hear ringing while the RCML document executes on the other end. RCML documents executed in this manner cannot contain the Dial verb.
 </para>
 
 <formalpara>
@@ -1363,7 +1360,7 @@ The method attribute allows you to specify which HTTP method Restcomm should use
 
 
 <para>
-When a call is answered, Twilio passes the following parameters with its request to your screening URL (in addition to the standard RCML Voice request parameters):
+When a call is answered, Restcomm passes the following parameters with its request to your screening URL (in addition to the standard RCML Voice request parameters):
 </para>
 
 
