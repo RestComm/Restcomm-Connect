@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class AbstractObserverMessage {
-  private final ActorRef observer;
+@NotThreadSafe
+public abstract class AbstractObserverMessage {
+    private final ActorRef observer;
 
-  public AbstractObserverMessage(final ActorRef observer) {
-    super();
-    this.observer = observer;
-  }
-  
-  public ActorRef observer() {
-    return observer;
-  }
+    public AbstractObserverMessage(final ActorRef observer) {
+        super();
+        this.observer = observer;
+    }
+
+    public ActorRef observer() {
+        return observer;
+    }
 }

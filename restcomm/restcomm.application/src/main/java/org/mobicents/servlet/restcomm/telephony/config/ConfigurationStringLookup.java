@@ -25,23 +25,24 @@ import org.apache.commons.lang.text.StrLookup;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class ConfigurationStringLookup extends StrLookup {
-  private final Map<String, String> dictionary;
-  
-  public ConfigurationStringLookup() {
-    super();
-    dictionary = new HashMap<String, String>();
-  }
-  
-  public void addProperty(final String name, final String value) {
-    dictionary.put(name, value);
-  }
-  
-  @Override public String lookup(final String key) {
-	final String result = dictionary.get(key);
-    if(result != null) {
-      return result;
-    } else {
-      return key;
+    private final Map<String, String> dictionary;
+
+    public ConfigurationStringLookup() {
+        super();
+        dictionary = new HashMap<String, String>();
     }
-  }
+
+    public void addProperty(final String name, final String value) {
+        dictionary.put(name, value);
+    }
+
+    @Override
+    public String lookup(final String key) {
+        final String result = dictionary.get(key);
+        if (result != null) {
+            return result;
+        } else {
+            return key;
+        }
+    }
 }

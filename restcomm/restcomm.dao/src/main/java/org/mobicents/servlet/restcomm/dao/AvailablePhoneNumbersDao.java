@@ -24,11 +24,17 @@ import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface AvailablePhoneNumbersDao {
-  public void addAvailablePhoneNumber(AvailablePhoneNumber availablePhoneNumber);
-  public List<AvailablePhoneNumber> getAvailablePhoneNumbers();
-  public List<AvailablePhoneNumber> getAvailablePhoneNumbersByAreaCode(String areaCode);
-  public List<AvailablePhoneNumber> getAvailablePhoneNumbersByPattern(String pattern);
-  public List<AvailablePhoneNumber> getAvailablePhoneNumbersByRegion(String region);
-  public List<AvailablePhoneNumber> getAvailablePhoneNumbersByPostalCode(int postalCode);
-  public void removeAvailablePhoneNumber(String phoneNumber);
+    void addAvailablePhoneNumber(AvailablePhoneNumber availablePhoneNumber);
+
+    List<AvailablePhoneNumber> getAvailablePhoneNumbers();
+
+    List<AvailablePhoneNumber> getAvailablePhoneNumbersByAreaCode(String areaCode);
+
+    List<AvailablePhoneNumber> getAvailablePhoneNumbersByPattern(String pattern);
+
+    List<AvailablePhoneNumber> getAvailablePhoneNumbersByRegion(String region);
+
+    List<AvailablePhoneNumber> getAvailablePhoneNumbersByPostalCode(int postalCode);
+
+    void removeAvailablePhoneNumber(String phoneNumber);
 }

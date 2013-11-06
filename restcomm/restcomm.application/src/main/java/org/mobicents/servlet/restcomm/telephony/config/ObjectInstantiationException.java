@@ -20,21 +20,21 @@ package org.mobicents.servlet.restcomm.telephony.config;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class ObjectInstantiationException extends Exception {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public ObjectInstantiationException() {
-    super();
-  }
+    public ObjectInstantiationException() {
+        super();
+    }
 
-  public ObjectInstantiationException(final String message) {
-    super(message);
-  }
+    public ObjectInstantiationException(final String message) {
+        super(message);
+    }
 
-  public ObjectInstantiationException(final Throwable cause) {
-    super(cause);
-  }
+    public ObjectInstantiationException(final Throwable cause) {
+        super(cause);
+    }
 
-  public ObjectInstantiationException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    public ObjectInstantiationException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -25,10 +25,15 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface SmsMessagesDao {
-  public void addSmsMessage(SmsMessage smsMessage);
-  public SmsMessage getSmsMessage(Sid sid);
-  public List<SmsMessage> getSmsMessages(Sid accountSid);
-  public void removeSmsMessage(Sid sid);
-  public void removeSmsMessages(Sid accountSid);
-  public void updateSmsMessage(SmsMessage smsMessage);
+    void addSmsMessage(SmsMessage smsMessage);
+
+    SmsMessage getSmsMessage(Sid sid);
+
+    List<SmsMessage> getSmsMessages(Sid accountSid);
+
+    void removeSmsMessage(Sid sid);
+
+    void removeSmsMessages(Sid accountSid);
+
+    void updateSmsMessage(SmsMessage smsMessage);
 }

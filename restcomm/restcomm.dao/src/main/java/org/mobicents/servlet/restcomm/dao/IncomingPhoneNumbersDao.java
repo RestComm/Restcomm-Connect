@@ -25,11 +25,17 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface IncomingPhoneNumbersDao {
-  public void addIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
-  public IncomingPhoneNumber getIncomingPhoneNumber(Sid sid);
-  public List<IncomingPhoneNumber> getIncomingPhoneNumbers(Sid accountSid);
-  public IncomingPhoneNumber getIncomingPhoneNumber(String phoneNumber);
-  public void removeIncomingPhoneNumber(Sid sid);
-  public void removeIncomingPhoneNumbers(Sid accountSid);
-  public void updateIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
+    void addIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
+
+    IncomingPhoneNumber getIncomingPhoneNumber(Sid sid);
+
+    List<IncomingPhoneNumber> getIncomingPhoneNumbers(Sid accountSid);
+
+    IncomingPhoneNumber getIncomingPhoneNumber(String phoneNumber);
+
+    void removeIncomingPhoneNumber(Sid sid);
+
+    void removeIncomingPhoneNumbers(Sid accountSid);
+
+    void updateIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
 }

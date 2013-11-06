@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class RecordingList {
-  private final List<Recording> recordings;
+@NotThreadSafe
+public final class RecordingList {
+    private final List<Recording> recordings;
 
-  public RecordingList(final List<Recording> recordings) {
-    super();
-    this.recordings = recordings;
-  }
-  
-  public List<Recording> getRecordings() {
-    return recordings;
-  }
+    public RecordingList(final List<Recording> recordings) {
+        super();
+        this.recordings = recordings;
+    }
+
+    public List<Recording> getRecordings() {
+        return recordings;
+    }
 }

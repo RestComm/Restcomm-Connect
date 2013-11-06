@@ -28,168 +28,167 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Transcription implements Serializable {
-  private static final long serialVersionUID = 1L;
-  
-  private final Sid sid;
-  private final DateTime dateCreated;
-  private final DateTime dateUpdated;
-  private final Sid accountSid;
-  private final Status status;
-  private final Sid recordingSid;
-  private final Double duration;
-  private final String transcriptionText;
-  private final BigDecimal price;
-  private final URI uri;
+@Immutable
+public final class Transcription implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-  public Transcription(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-      final Status status, final Sid recordingSid, final Double duration, final String transcriptionText, final BigDecimal price,
-      final URI uri) {
-    super();
-    this.sid = sid;
-    this.dateCreated = dateCreated;
-    this.dateUpdated = dateUpdated;
-    this.accountSid = accountSid;
-    this.status = status;
-    this.recordingSid = recordingSid;
-    this.duration = duration;
-    this.transcriptionText = transcriptionText;
-    this.price = price;
-    this.uri = uri;
-  }
-  
-  public static Builder builder() {
-    return new Builder();
-  }
+    private final Sid sid;
+    private final DateTime dateCreated;
+    private final DateTime dateUpdated;
+    private final Sid accountSid;
+    private final Status status;
+    private final Sid recordingSid;
+    private final Double duration;
+    private final String transcriptionText;
+    private final BigDecimal price;
+    private final URI uri;
 
-  public Sid getSid() {
-    return sid;
-  }
-
-  public DateTime getDateCreated() {
-    return dateCreated;
-  }
-
-  public DateTime getDateUpdated() {
-    return dateUpdated;
-  }
-
-  public Sid getAccountSid() {
-    return accountSid;
-  }
-
-  public Status getStatus() {
-    return status;
-  }
-
-  public Sid getRecordingSid() {
-    return recordingSid;
-  }
-
-  public Double getDuration() {
-    return duration;
-  }
-
-  public String getTranscriptionText() {
-    return transcriptionText;
-  }
-
-  public BigDecimal getPrice() {
-    return price;
-  }
-
-  public URI getUri() {
-    return uri;
-  }
-  
-  public Transcription setStatus(final Status status) {
-    final DateTime now = DateTime.now();
-    return new Transcription(sid, dateCreated, now, accountSid, status,
-        recordingSid, duration, transcriptionText, price, uri);
-  }
-  
-  public Transcription setTranscriptionText(final String text) {
-	    final DateTime now = DateTime.now();
-	    return new Transcription(sid, dateCreated, now, accountSid, status,
-	        recordingSid, duration, text, price, uri);
-  }
-  
-  @NotThreadSafe public static final class Builder {
-	private Sid sid;
-    private Sid accountSid;
-    private Status status;
-    private Sid recordingSid;
-    private Double duration;
-    private String transcriptionText;
-    private BigDecimal price;
-    private URI uri;
-
-    private Builder() {
-      super();
+    public Transcription(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
+            final Status status, final Sid recordingSid, final Double duration, final String transcriptionText,
+            final BigDecimal price, final URI uri) {
+        super();
+        this.sid = sid;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
+        this.accountSid = accountSid;
+        this.status = status;
+        this.recordingSid = recordingSid;
+        this.duration = duration;
+        this.transcriptionText = transcriptionText;
+        this.price = price;
+        this.uri = uri;
     }
-    
-    public Transcription build() {
-      final DateTime now = DateTime.now();
-      return new Transcription(sid, now, now, accountSid, status, recordingSid, duration,
-          transcriptionText, price, uri);
+
+    public static Builder builder() {
+        return new Builder();
     }
-    
-    public void setSid(final Sid sid) {
-      this.sid = sid;
+
+    public Sid getSid() {
+        return sid;
     }
-    
-    public void setAccountSid(final Sid accountSid) {
-      this.accountSid = accountSid;
+
+    public DateTime getDateCreated() {
+        return dateCreated;
     }
-    
-    public void setStatus(final Status status) {
-      this.status = status;
+
+    public DateTime getDateUpdated() {
+        return dateUpdated;
     }
-    
-    public void setRecordingSid(final Sid recordingSid) {
-      this.recordingSid = recordingSid;
+
+    public Sid getAccountSid() {
+        return accountSid;
     }
-    
-    public void setDuration(final double duration) {
-      this.duration = duration;
+
+    public Status getStatus() {
+        return status;
     }
-    
-    public void setTranscriptionText(final String transcriptionText) {
-      this.transcriptionText = transcriptionText;
+
+    public Sid getRecordingSid() {
+        return recordingSid;
     }
-    
-    public void setPrice(final BigDecimal price) {
-      this.price = price;
+
+    public Double getDuration() {
+        return duration;
     }
-    
-    public void setUri(final URI uri) {
-      this.uri = uri;
+
+    public String getTranscriptionText() {
+        return transcriptionText;
     }
-  }
-  
-  public enum Status {
-    IN_PROGRESS("in-progress"),
-    COMPLETED("completed"),
-    FAILED("failed");
-    
-    private final String text;
-    
-    private Status(final String text) {
-      this.text = text;
+
+    public BigDecimal getPrice() {
+        return price;
     }
-    
-    public static Status getStatusValue(final String text) {
-      final Status[] values = values();
-      for(final Status value : values) {
-        if(value.toString().equals(text)) {
-          return value;
+
+    public URI getUri() {
+        return uri;
+    }
+
+    public Transcription setStatus(final Status status) {
+        final DateTime now = DateTime.now();
+        return new Transcription(sid, dateCreated, now, accountSid, status, recordingSid, duration, transcriptionText, price,
+                uri);
+    }
+
+    public Transcription setTranscriptionText(final String text) {
+        final DateTime now = DateTime.now();
+        return new Transcription(sid, dateCreated, now, accountSid, status, recordingSid, duration, text, price, uri);
+    }
+
+    @NotThreadSafe
+    public static final class Builder {
+        private Sid sid;
+        private Sid accountSid;
+        private Status status;
+        private Sid recordingSid;
+        private Double duration;
+        private String transcriptionText;
+        private BigDecimal price;
+        private URI uri;
+
+        private Builder() {
+            super();
         }
-      }
-      throw new IllegalArgumentException(text + " is not a valid status.");
+
+        public Transcription build() {
+            final DateTime now = DateTime.now();
+            return new Transcription(sid, now, now, accountSid, status, recordingSid, duration, transcriptionText, price, uri);
+        }
+
+        public void setSid(final Sid sid) {
+            this.sid = sid;
+        }
+
+        public void setAccountSid(final Sid accountSid) {
+            this.accountSid = accountSid;
+        }
+
+        public void setStatus(final Status status) {
+            this.status = status;
+        }
+
+        public void setRecordingSid(final Sid recordingSid) {
+            this.recordingSid = recordingSid;
+        }
+
+        public void setDuration(final double duration) {
+            this.duration = duration;
+        }
+
+        public void setTranscriptionText(final String transcriptionText) {
+            this.transcriptionText = transcriptionText;
+        }
+
+        public void setPrice(final BigDecimal price) {
+            this.price = price;
+        }
+
+        public void setUri(final URI uri) {
+            this.uri = uri;
+        }
     }
-    
-    @Override public String toString() {
-      return text;
+
+    public enum Status {
+        IN_PROGRESS("in-progress"), COMPLETED("completed"), FAILED("failed");
+
+        private final String text;
+
+        private Status(final String text) {
+            this.text = text;
+        }
+
+        public static Status getStatusValue(final String text) {
+            final Status[] values = values();
+            for (final Status value : values) {
+                if (value.toString().equals(text)) {
+                    return value;
+                }
+            }
+            throw new IllegalArgumentException(text + " is not a valid status.");
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
     }
-  }
 }

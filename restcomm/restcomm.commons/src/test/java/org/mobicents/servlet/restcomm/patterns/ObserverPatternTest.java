@@ -38,99 +38,109 @@ import org.mobicents.servlet.restcomm.patterns.TooManyObserversException;
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
 public class ObserverPatternTest {
-  private static ActorSystem system;
+    private static ActorSystem system;
 
-  public ObserverPatternTest() {
-    super();
-  }
-  
-  @BeforeClass public static void before() {
-    system = ActorSystem.create();
-  }
-  
-  @AfterClass public static void after() {
-    system.shutdown();
-  }
-
-  @Test public void testSuccessScenario() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      // Create an observable actor.
-      final Props properties = new Props(ObservableActor.class);
-      final ActorRef observable = system.actorOf(properties);
-      // Start observing the observable actor.
-      observable.tell(new Observe(observer), observer);
-      // Verify that we are now observing the observable actor.
-      Observing response = expectMsgClass(Observing.class);
-      assertTrue(response.succeeded());
-      // Tell the observable actor to broadcast an event.
-      observable.tell(new BroadcastHelloWorld(), observer);
-      // Verify we get the broadcasted event.
-      expectMsgEquals("Hello World!");
-      // Stop observing the observable actor.
-      observable.tell(new StopObserving(observer), observer);
-    }};
-  }
-  
-  @Test public void testTooManyObserversException() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      // Create an observable actor.
-      final Props properties = new Props(ObservableActor.class);
-      final ActorRef observable = system.actorOf(properties);
-      // Start observing the observable actor.
-      observable.tell(new Observe(observer), observer);
-      // Verify that we are now observing the observable actor.
-      Observing response = expectMsgClass(Observing.class);
-      assertTrue(response.succeeded());
-      // Try to observe twice.
-      observable.tell(new Observe(observer), observer);
-      // Verify that observing more than once is not allowed.
-      response = expectMsgClass(Observing.class);
-      assertFalse(response.succeeded());
-      assertTrue(response.cause() instanceof TooManyObserversException);
-      // Stop observing the observable actor.
-      observable.tell(new StopObserving(observer), observer);
-    }};
-  }
-  
-  private static final class BroadcastHelloWorld { }
-  
-  private static final class ObservableActor extends UntypedActor {
-    private final List<ActorRef> listeners;
-    
-	@SuppressWarnings("unused")
-	public ObservableActor() {
-      super();
-      listeners = new ArrayList<ActorRef>();
+    public ObserverPatternTest() {
+        super();
     }
 
-	@Override public void onReceive(final Object message) throws Exception {
-	  final Class<?> klass = message.getClass();
-	  final ActorRef self = self();
-	  final ActorRef sender = sender();
-	  if(Observe.class.equals(klass)) {
-	    final Observe request = (Observe)message;
-	    final ActorRef observer = request.observer();
-        if(!listeners.contains(observer)) {
-          listeners.add(observer);
-          final Observing response = new Observing(self);
-          sender.tell(response, self);
-        } else {
-          final Observing response = new Observing(new TooManyObserversException("Already observing this actor."));
-          sender.tell(response, self);
+    @BeforeClass
+    public static void before() {
+        system = ActorSystem.create();
+    }
+
+    @AfterClass
+    public static void after() {
+        system.shutdown();
+    }
+
+    @Test
+    public void testSuccessScenario() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                // Create an observable actor.
+                final Props properties = new Props(ObservableActor.class);
+                final ActorRef observable = system.actorOf(properties);
+                // Start observing the observable actor.
+                observable.tell(new Observe(observer), observer);
+                // Verify that we are now observing the observable actor.
+                Observing response = expectMsgClass(Observing.class);
+                assertTrue(response.succeeded());
+                // Tell the observable actor to broadcast an event.
+                observable.tell(new BroadcastHelloWorld(), observer);
+                // Verify we get the broadcasted event.
+                expectMsgEquals("Hello World!");
+                // Stop observing the observable actor.
+                observable.tell(new StopObserving(observer), observer);
+            }
+        };
+    }
+
+    @Test
+    public void testTooManyObserversException() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                // Create an observable actor.
+                final Props properties = new Props(ObservableActor.class);
+                final ActorRef observable = system.actorOf(properties);
+                // Start observing the observable actor.
+                observable.tell(new Observe(observer), observer);
+                // Verify that we are now observing the observable actor.
+                Observing response = expectMsgClass(Observing.class);
+                assertTrue(response.succeeded());
+                // Try to observe twice.
+                observable.tell(new Observe(observer), observer);
+                // Verify that observing more than once is not allowed.
+                response = expectMsgClass(Observing.class);
+                assertFalse(response.succeeded());
+                assertTrue(response.cause() instanceof TooManyObserversException);
+                // Stop observing the observable actor.
+                observable.tell(new StopObserving(observer), observer);
+            }
+        };
+    }
+
+    private static final class BroadcastHelloWorld {
+    }
+
+    private static final class ObservableActor extends UntypedActor {
+        private final List<ActorRef> listeners;
+
+        @SuppressWarnings("unused")
+        public ObservableActor() {
+            super();
+            listeners = new ArrayList<ActorRef>();
         }
-	  } else if(BroadcastHelloWorld.class.equals(klass)) {
-	    for(final ActorRef listener : listeners) {
-	      listener.tell("Hello World!", self());
-	    }
-	  } else if(StopObserving.class.equals(klass)) {
-		final StopObserving request = (StopObserving)message;
-		final ActorRef observer = request.observer();
-	    if(listeners.contains(observer)) {
-	      listeners.remove(observer);
-	    }
-	  }
-	}
-  }
+
+        @Override
+        public void onReceive(final Object message) throws Exception {
+            final Class<?> klass = message.getClass();
+            final ActorRef self = self();
+            final ActorRef sender = sender();
+            if (Observe.class.equals(klass)) {
+                final Observe request = (Observe) message;
+                final ActorRef observer = request.observer();
+                if (!listeners.contains(observer)) {
+                    listeners.add(observer);
+                    final Observing response = new Observing(self);
+                    sender.tell(response, self);
+                } else {
+                    final Observing response = new Observing(new TooManyObserversException("Already observing this actor."));
+                    sender.tell(response, self);
+                }
+            } else if (BroadcastHelloWorld.class.equals(klass)) {
+                for (final ActorRef listener : listeners) {
+                    listener.tell("Hello World!", self());
+                }
+            } else if (StopObserving.class.equals(klass)) {
+                final StopObserving request = (StopObserving) message;
+                final ActorRef observer = request.observer();
+                if (listeners.contains(observer)) {
+                    listeners.remove(observer);
+                }
+            }
+        }
+    }
 }

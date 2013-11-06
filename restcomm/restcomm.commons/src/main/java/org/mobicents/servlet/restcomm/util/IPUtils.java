@@ -23,19 +23,20 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class IPUtils {
-  private static final Pattern LOOPBACK = Pattern.compile("(^127\\.0\\.0\\.1)");
-  private static final Pattern NON_ROUTABLE_CLASS_A = Pattern.compile("(^10\\.\\d{0,3}\\.\\d{0,3}\\.\\d{0,3})");
-  private static final Pattern NON_ROUTABLE_CLASS_B = Pattern.compile("(^172\\.1[6-9]\\.\\d{0,3}\\.\\d{0,3})|" +
-      "(^172\\.2[0-9]\\.\\d{0,3}\\.\\d{0,3})|(^172\\.3[0-1]\\.\\d{0,3}\\.\\d{0,3})");
-  private static final Pattern NON_ROUTABLE_CLASS_C = Pattern.compile("(^192\\.168\\.\\d{0,3}\\.\\d{0,3})");
-  
-  private IPUtils() {
-    super();
-  }
-  
-  public static boolean isRoutableAddress(final String address) {
-    return !(LOOPBACK.matcher(address).matches() || NON_ROUTABLE_CLASS_A.matcher(address).matches() ||
-        NON_ROUTABLE_CLASS_B.matcher(address).matches() || NON_ROUTABLE_CLASS_C.matcher(address).matches());
-  }
+@ThreadSafe
+public final class IPUtils {
+    private static final Pattern LOOPBACK = Pattern.compile("(^127\\.0\\.0\\.1)");
+    private static final Pattern NON_ROUTABLE_CLASS_A = Pattern.compile("(^10\\.\\d{0,3}\\.\\d{0,3}\\.\\d{0,3})");
+    private static final Pattern NON_ROUTABLE_CLASS_B = Pattern.compile("(^172\\.1[6-9]\\.\\d{0,3}\\.\\d{0,3})|"
+            + "(^172\\.2[0-9]\\.\\d{0,3}\\.\\d{0,3})|(^172\\.3[0-1]\\.\\d{0,3}\\.\\d{0,3})");
+    private static final Pattern NON_ROUTABLE_CLASS_C = Pattern.compile("(^192\\.168\\.\\d{0,3}\\.\\d{0,3})");
+
+    private IPUtils() {
+        super();
+    }
+
+    public static boolean isRoutableAddress(final String address) {
+        return !(LOOPBACK.matcher(address).matches() || NON_ROUTABLE_CLASS_A.matcher(address).matches()
+                || NON_ROUTABLE_CLASS_B.matcher(address).matches() || NON_ROUTABLE_CLASS_C.matcher(address).matches());
+    }
 }

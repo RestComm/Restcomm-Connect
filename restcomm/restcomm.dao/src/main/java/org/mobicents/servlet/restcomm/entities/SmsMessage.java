@@ -27,225 +27,224 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class SmsMessage {
-  public static final int MAX_SIZE = 160;
-  private final Sid sid;
-  private final DateTime dateCreated;
-  private final DateTime dateUpdated;
-  private final DateTime dateSent;
-  private final Sid accountSid;
-  private final String sender;
-  private final String recipient;
-  private final String body;
-  private final Status status;
-  private final Direction direction;
-  private final BigDecimal price;
-  private final String apiVersion;
-  private final URI uri;
-  
-  public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
-      final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
-      final Direction direction, final BigDecimal price, final String apiVersion, final URI uri) {
-    super();
-    this.sid = sid;
-    this.dateCreated = dateCreated;
-    this.dateUpdated = dateUpdated;
-    this.dateSent = dateSent;
-    this.accountSid = accountSid;
-    this.sender = sender;
-    this.recipient = recipient;
-    this.body = body;
-    this.status = status;
-    this.direction = direction;
-    this.price = price;
-    this.apiVersion = apiVersion;
-    this.uri = uri;
-  }
-  
-  public static Builder builder() {
-    return new Builder();
-  }
+@Immutable
+public final class SmsMessage {
+    public static final int MAX_SIZE = 160;
+    private final Sid sid;
+    private final DateTime dateCreated;
+    private final DateTime dateUpdated;
+    private final DateTime dateSent;
+    private final Sid accountSid;
+    private final String sender;
+    private final String recipient;
+    private final String body;
+    private final Status status;
+    private final Direction direction;
+    private final BigDecimal price;
+    private final String apiVersion;
+    private final URI uri;
 
-  public Sid getSid() {
-    return sid;
-  }
+    public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
+            final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
+            final Direction direction, final BigDecimal price, final String apiVersion, final URI uri) {
+        super();
+        this.sid = sid;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
+        this.dateSent = dateSent;
+        this.accountSid = accountSid;
+        this.sender = sender;
+        this.recipient = recipient;
+        this.body = body;
+        this.status = status;
+        this.direction = direction;
+        this.price = price;
+        this.apiVersion = apiVersion;
+        this.uri = uri;
+    }
 
-  public DateTime getDateCreated() {
-    return dateCreated;
-  }
+    public static Builder builder() {
+        return new Builder();
+    }
 
-  public DateTime getDateUpdated() {
-    return dateUpdated;
-  }
+    public Sid getSid() {
+        return sid;
+    }
 
-  public DateTime getDateSent() {
-    return dateSent;
-  }
+    public DateTime getDateCreated() {
+        return dateCreated;
+    }
 
-  public Sid getAccountSid() {
-    return accountSid;
-  }
+    public DateTime getDateUpdated() {
+        return dateUpdated;
+    }
 
-  public String getSender() {
-    return sender;
-  }
+    public DateTime getDateSent() {
+        return dateSent;
+    }
 
-  public String getRecipient() {
-    return recipient;
-  }
+    public Sid getAccountSid() {
+        return accountSid;
+    }
 
-  public String getBody() {
-    return body;
-  }
+    public String getSender() {
+        return sender;
+    }
 
-  public Status getStatus() {
-    return status;
-  }
+    public String getRecipient() {
+        return recipient;
+    }
 
-  public Direction getDirection() {
-    return direction;
-  }
+    public String getBody() {
+        return body;
+    }
 
-  public BigDecimal getPrice() {
-    return price;
-  }
+    public Status getStatus() {
+        return status;
+    }
 
-  public String getApiVersion() {
-    return apiVersion;
-  }
+    public Direction getDirection() {
+        return direction;
+    }
 
-  public URI getUri() {
-    return uri;
-  }
-  
-  public SmsMessage setDateSent(final DateTime dateSent) {
-    return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient,
-        body, status, direction, price, apiVersion, uri);
-  }
-  
-  public SmsMessage setStatus(final Status status) {
-    return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient,
-        body, status, direction, price, apiVersion, uri);
-  }
-  
-  @NotThreadSafe public static final class Builder {
-    private Sid sid;
-    private DateTime dateSent;
-    private Sid accountSid;
-    private String sender;
-    private String recipient;
-    private String body;
-    private Status status;
-    private Direction direction;
-    private BigDecimal price;
-    private String apiVersion;
-    private URI uri;
-	  
-    private Builder() {
-      super();
+    public BigDecimal getPrice() {
+        return price;
     }
-    
-    public SmsMessage build() {
-      final DateTime now = DateTime.now();
-      return new SmsMessage(sid, now, now, dateSent, accountSid, sender, recipient, body, status,
-          direction, price, apiVersion, uri);
+
+    public String getApiVersion() {
+        return apiVersion;
     }
-    
-    public void setSid(final Sid sid) {
-      this.sid = sid;
+
+    public URI getUri() {
+        return uri;
     }
-    
-    public void setDateSent(final DateTime dateSent) {
-      this.dateSent = dateSent;
+
+    public SmsMessage setDateSent(final DateTime dateSent) {
+        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
+                direction, price, apiVersion, uri);
     }
-    
-    public void setAccountSid(final Sid accountSid) {
-      this.accountSid = accountSid;
+
+    public SmsMessage setStatus(final Status status) {
+        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
+                direction, price, apiVersion, uri);
     }
-    
-    public void setSender(final String sender) {
-      this.sender = sender;
-    }
-    
-    public void setRecipient(final String recipient) {
-      this.recipient = recipient;
-    }
-    
-    public void setBody(final String body) {
-      this.body = body;
-    }
-    
-    public void setStatus(final Status status) {
-      this.status = status;
-    }
-    
-    public void setDirection(final Direction direction) {
-      this.direction = direction;
-    }
-    
-    public void setPrice(final BigDecimal price) {
-      this.price = price;
-    }
-    
-    public void setApiVersion(final String apiVersion) {
-      this.apiVersion = apiVersion;
-    }
-    
-    public void setUri(final URI uri) {
-      this.uri = uri;
-    }
-  }
-  
-  public enum Direction {
-    INBOUND("inbound"),
-    OUTBOUND_API("outbound-api"),
-    OUTBOUND_CALL("outbound-call"),
-    OUTBOUND_REPLY("outbound-reply");
-    
-    private final String text;
-    private Direction(final String text) {
-      this.text = text;
-    }
-    
-    public static Direction getDirectionValue(final String text) {
-      final Direction[] values = values();
-      for(final Direction value : values) {
-        if(value.toString().equals(text)) {
-          return value;
+
+    @NotThreadSafe
+    public static final class Builder {
+        private Sid sid;
+        private DateTime dateSent;
+        private Sid accountSid;
+        private String sender;
+        private String recipient;
+        private String body;
+        private Status status;
+        private Direction direction;
+        private BigDecimal price;
+        private String apiVersion;
+        private URI uri;
+
+        private Builder() {
+            super();
         }
-      }
-      throw new IllegalArgumentException(text + " is not a valid direction.");
-    }
-    
-    @Override public String toString() {
-      return text;
-    }
-  }
-  
-  public enum Status {
-    QUEUED("queued"),
-    SENDING("sending"),
-    SENT("sent"),
-    FAILED("failed"),
-    RECEIVED("received");
-    
-    private final String text;
-    private Status(final String text) {
-      this.text = text;
-    }
-    
-    public static Status getStatusValue(final String text) {
-      final Status[] values = values();
-      for(final Status value : values) {
-        if(value.toString().equals(text)) {
-          return value;
+
+        public SmsMessage build() {
+            final DateTime now = DateTime.now();
+            return new SmsMessage(sid, now, now, dateSent, accountSid, sender, recipient, body, status, direction, price,
+                    apiVersion, uri);
         }
-      }
-      throw new IllegalArgumentException(text + " is not a valid status.");
+
+        public void setSid(final Sid sid) {
+            this.sid = sid;
+        }
+
+        public void setDateSent(final DateTime dateSent) {
+            this.dateSent = dateSent;
+        }
+
+        public void setAccountSid(final Sid accountSid) {
+            this.accountSid = accountSid;
+        }
+
+        public void setSender(final String sender) {
+            this.sender = sender;
+        }
+
+        public void setRecipient(final String recipient) {
+            this.recipient = recipient;
+        }
+
+        public void setBody(final String body) {
+            this.body = body;
+        }
+
+        public void setStatus(final Status status) {
+            this.status = status;
+        }
+
+        public void setDirection(final Direction direction) {
+            this.direction = direction;
+        }
+
+        public void setPrice(final BigDecimal price) {
+            this.price = price;
+        }
+
+        public void setApiVersion(final String apiVersion) {
+            this.apiVersion = apiVersion;
+        }
+
+        public void setUri(final URI uri) {
+            this.uri = uri;
+        }
     }
-    
-    @Override public String toString() {
-      return text;
+
+    public enum Direction {
+        INBOUND("inbound"), OUTBOUND_API("outbound-api"), OUTBOUND_CALL("outbound-call"), OUTBOUND_REPLY("outbound-reply");
+
+        private final String text;
+
+        private Direction(final String text) {
+            this.text = text;
+        }
+
+        public static Direction getDirectionValue(final String text) {
+            final Direction[] values = values();
+            for (final Direction value : values) {
+                if (value.toString().equals(text)) {
+                    return value;
+                }
+            }
+            throw new IllegalArgumentException(text + " is not a valid direction.");
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
     }
-  }
+
+    public enum Status {
+        QUEUED("queued"), SENDING("sending"), SENT("sent"), FAILED("failed"), RECEIVED("received");
+
+        private final String text;
+
+        private Status(final String text) {
+            this.text = text;
+        }
+
+        public static Status getStatusValue(final String text) {
+            final Status[] values = values();
+            for (final Status value : values) {
+                if (value.toString().equals(text)) {
+                    return value;
+                }
+            }
+            throw new IllegalArgumentException(text + " is not a valid status.");
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
 }

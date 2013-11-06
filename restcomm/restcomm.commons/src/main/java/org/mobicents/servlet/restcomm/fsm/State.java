@@ -23,54 +23,58 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public class State {
-  private final Action actionOnEnter;
-  private final Action actionOnExit;
-  private final String id;
-  
-  public State(final String id, final Action actionOnEnter, final Action actionOnExit) {
-    super();
-    checkNotNull(id, "A state can not have a null value for id.");
-    this.actionOnEnter = actionOnEnter;
-    this.actionOnExit = actionOnExit;
-    this.id = id;
-  }
-  
-  @Override public boolean equals(final Object object) {
-    if(object == null) {
-	  return false;
-    } else if(this == object) {
-	  return true;
-	} else if (getClass() != object.getClass()) {
-	  return false;
-	}
-	final State state = (State)object;
-	if(!id.equals(state.getId())) {
-	  return false;
-	}
-	return true;
-  }
+@Immutable
+public class State {
+    private final Action actionOnEnter;
+    private final Action actionOnExit;
+    private final String id;
 
-  public Action getActionOnEnter() {
-    return actionOnEnter;
-  }
-  
-  public Action getActionOnExit() {
-    return actionOnExit;
-  }
-  
-  public String getId() {
-    return id;
-  }
-  
-  @Override public int hashCode() {
-  	final int prime = 5;
-  	int result = 1;
-  	result = prime * result + id.hashCode();
-  	return result;
-  }
-  
-  @Override public String toString() {
-    return id;
-  }
+    public State(final String id, final Action actionOnEnter, final Action actionOnExit) {
+        super();
+        checkNotNull(id, "A state can not have a null value for id.");
+        this.actionOnEnter = actionOnEnter;
+        this.actionOnExit = actionOnExit;
+        this.id = id;
+    }
+
+    @Override
+    public boolean equals(final Object object) {
+        if (object == null) {
+            return false;
+        } else if (this == object) {
+            return true;
+        } else if (getClass() != object.getClass()) {
+            return false;
+        }
+        final State state = (State) object;
+        if (!id.equals(state.getId())) {
+            return false;
+        }
+        return true;
+    }
+
+    public Action getActionOnEnter() {
+        return actionOnEnter;
+    }
+
+    public Action getActionOnExit() {
+        return actionOnExit;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 5;
+        int result = 1;
+        result = prime * result + id.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
 }

@@ -22,15 +22,15 @@ import akka.actor.ActorRef;
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
 public final class Observing extends StandardResponse<ActorRef> {
-  public Observing(final ActorRef observable) {
-	super(observable);
-  }
+    public Observing(final ActorRef observable) {
+        super(observable);
+    }
 
-  public Observing(final Throwable cause) {
-    super(cause);
-  }
+    public Observing(final Throwable cause) {
+        super(cause);
+    }
 
-  public Observing(Throwable cause, String message) {
-    super(cause, message);
-  }
+    public Observing(Throwable cause, String message) {
+        super(cause, message);
+    }
 }

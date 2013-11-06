@@ -35,126 +35,133 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class MybatisHttpCookiesDao implements HttpCookiesDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.HttpCookiesDao.";
-  
-  private final SqlSessionFactory sessions;
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.HttpCookiesDao.";
 
-  public MybatisHttpCookiesDao(final SqlSessionFactory sessions) {
-    super();
-    this.sessions = sessions;
-  }
+    private final SqlSessionFactory sessions;
 
-  @Override public void addCookie(final Sid sid, final Cookie cookie) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.insert(namespace + "addCookie", toMap(sid, cookie));
-      session.commit();
-    } finally {
-      session.close();
+    public MybatisHttpCookiesDao(final SqlSessionFactory sessions) {
+        super();
+        this.sessions = sessions;
     }
-  }
 
-  @Override public List<Cookie> getCookies(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final List<Map<String, Object>> results = session.selectList(namespace + "getCookies", sid.toString());
-      final List<Cookie> cookies = new ArrayList<Cookie>();
-      if(results != null && !results.isEmpty()) {
-        for(final Map<String, Object> result : results) {
-          cookies.add(toCookie(result));
+    @Override
+    public void addCookie(final Sid sid, final Cookie cookie) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.insert(namespace + "addCookie", toMap(sid, cookie));
+            session.commit();
+        } finally {
+            session.close();
         }
-      }
-      return cookies;
-    } finally {
-      session.close();
     }
-  }
-  
-  @Override public boolean hasCookie(final Sid sid, final Cookie cookie) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final Integer result = session.selectOne(namespace + "hasCookie", toMap(sid, cookie));
-      if(result > 0) {
-        return true;
-      } else {
-        return false;
-      }
-    } finally {
-      session.close();
-    }
-  }
-  
-  @Override public boolean hasExpiredCookies(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final Integer result = session.selectOne(namespace + "hasExpiredCookies", sid.toString());
-      if(result > 0) {
-        return true;
-      } else {
-        return false;
-      }
-    } finally {
-      session.close();
-    }
-  }
 
-  @Override public void removeCookies(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.delete(namespace + "removeCookies", sid.toString());
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public List<Cookie> getCookies(final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getCookies", sid.toString());
+            final List<Cookie> cookies = new ArrayList<Cookie>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cookies.add(toCookie(result));
+                }
+            }
+            return cookies;
+        } finally {
+            session.close();
+        }
     }
-  }
 
-  @Override public void removeExpiredCookies(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.delete(namespace + "removeExpiredCookies", sid.toString());
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public boolean hasCookie(final Sid sid, final Cookie cookie) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer result = session.selectOne(namespace + "hasCookie", toMap(sid, cookie));
+            if (result > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } finally {
+            session.close();
+        }
     }
-  }
-  
-  @Override public void updateCookie(final Sid sid, final Cookie cookie) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.update(namespace + "updateCookie", toMap(sid, cookie));
-      session.commit();
-    } finally {
-      session.close();
+
+    @Override
+    public boolean hasExpiredCookies(final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer result = session.selectOne(namespace + "hasExpiredCookies", sid.toString());
+            if (result > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } finally {
+            session.close();
+        }
     }
-  }
-  
-  private Cookie toCookie(final Map<String, Object> map) {
-    final String comment = readString(map.get("comment"));
-    final String domain = readString(map.get("domain"));
-    final Date expirationDate = (Date)map.get("expiration_date");
-    final String name = readString(map.get("name"));
-    final String path = readString(map.get("path"));
-    final String value = readString(map.get("value"));
-    final int version = readInteger(map.get("version"));
-    final BasicClientCookie cookie = new BasicClientCookie(name, value);
-    cookie.setComment(comment);
-    cookie.setDomain(domain);
-    cookie.setExpiryDate(expirationDate);
-    cookie.setPath(path);
-    cookie.setVersion(version);
-    return cookie;
-  }
-  
-  private Map<String, Object> toMap(final Sid sid, final Cookie cookie) {
-    final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", writeSid(sid));
-    map.put("comment", cookie.getComment());
-    map.put("domain", cookie.getDomain());
-    map.put("expiration_date", cookie.getExpiryDate());
-    map.put("name", cookie.getName());
-    map.put("path", cookie.getPath());
-    map.put("value", cookie.getValue());
-    map.put("version", cookie.getVersion());
-    return map;
-  }
+
+    @Override
+    public void removeCookies(final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(namespace + "removeCookies", sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void removeExpiredCookies(final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(namespace + "removeExpiredCookies", sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateCookie(final Sid sid, final Cookie cookie) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateCookie", toMap(sid, cookie));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    private Cookie toCookie(final Map<String, Object> map) {
+        final String comment = readString(map.get("comment"));
+        final String domain = readString(map.get("domain"));
+        final Date expirationDate = (Date) map.get("expiration_date");
+        final String name = readString(map.get("name"));
+        final String path = readString(map.get("path"));
+        final String value = readString(map.get("value"));
+        final int version = readInteger(map.get("version"));
+        final BasicClientCookie cookie = new BasicClientCookie(name, value);
+        cookie.setComment(comment);
+        cookie.setDomain(domain);
+        cookie.setExpiryDate(expirationDate);
+        cookie.setPath(path);
+        cookie.setVersion(version);
+        return cookie;
+    }
+
+    private Map<String, Object> toMap(final Sid sid, final Cookie cookie) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("sid", writeSid(sid));
+        map.put("comment", cookie.getComment());
+        map.put("domain", cookie.getDomain());
+        map.put("expiration_date", cookie.getExpiryDate());
+        map.put("name", cookie.getName());
+        map.put("path", cookie.getPath());
+        map.put("value", cookie.getValue());
+        map.put("version", cookie.getVersion());
+        return map;
+    }
 }

@@ -25,62 +25,63 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  */
-@Immutable public final class Announcement {
-  private Sid sid;
-  private DateTime dateCreated;
-  private Sid accountSid;
-  private String gender;
-  private String language;
-  private String text;
-  private URI uri;
+@Immutable
+public final class Announcement {
+    private Sid sid;
+    private DateTime dateCreated;
+    private Sid accountSid;
+    private String gender;
+    private String language;
+    private String text;
+    private URI uri;
 
-  public Announcement(final Sid sid, final Sid accountSid, final String gender,
-      final String language, final String text, final URI uri) {
-    this.sid = sid;
-    this.dateCreated = DateTime.now();
-    this.accountSid = accountSid;
-    this.gender = gender;
-    this.language = language;
-    this.text = text;
-    this.uri = uri;
-  }
-	
-  public Announcement(final Sid sid, final DateTime dateCreated, final Sid accountSid,
-      final String gender, final String language, final String text, final URI uri) {
-    this.sid = sid;
-    this.dateCreated = dateCreated;
-    this.accountSid = accountSid;
-    this.gender = gender;
-    this.language = language;
-    this.text = text;
-    this.uri = uri;
-  }
-	
-  public Sid getSid() {
-    return sid;
-  }
+    public Announcement(final Sid sid, final Sid accountSid, final String gender, final String language, final String text,
+            final URI uri) {
+        this.sid = sid;
+        this.dateCreated = DateTime.now();
+        this.accountSid = accountSid;
+        this.gender = gender;
+        this.language = language;
+        this.text = text;
+        this.uri = uri;
+    }
 
-  public DateTime getDateCreated() {
-    return dateCreated;
-  }
+    public Announcement(final Sid sid, final DateTime dateCreated, final Sid accountSid, final String gender,
+            final String language, final String text, final URI uri) {
+        this.sid = sid;
+        this.dateCreated = dateCreated;
+        this.accountSid = accountSid;
+        this.gender = gender;
+        this.language = language;
+        this.text = text;
+        this.uri = uri;
+    }
 
-  public Sid getAccountSid() {
-    return accountSid;
-  }
+    public Sid getSid() {
+        return sid;
+    }
 
-  public String getGender() {
-    return gender;
-  }
+    public DateTime getDateCreated() {
+        return dateCreated;
+    }
 
-  public String getLanguage() {
-    return language;
-  }
+    public Sid getAccountSid() {
+        return accountSid;
+    }
 
-  public String getText() {
-    return text;
-  }
+    public String getGender() {
+        return gender;
+    }
 
-  public URI getUri() {
-    return uri;
-  }
+    public String getLanguage() {
+        return language;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public URI getUri() {
+        return uri;
+    }
 }

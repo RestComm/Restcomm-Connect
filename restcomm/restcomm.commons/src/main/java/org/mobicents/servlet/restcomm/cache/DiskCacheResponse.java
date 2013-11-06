@@ -24,16 +24,17 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class DiskCacheResponse extends StandardResponse<URI> {
-  public DiskCacheResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+@Immutable
+public final class DiskCacheResponse extends StandardResponse<URI> {
+    public DiskCacheResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 
-  public DiskCacheResponse(final Throwable cause) {
-    super(cause);
-  }
+    public DiskCacheResponse(final Throwable cause) {
+        super(cause);
+    }
 
-  public DiskCacheResponse(final URI object) {
-    super(object);
-  }
+    public DiskCacheResponse(final URI object) {
+        super(object);
+    }
 }

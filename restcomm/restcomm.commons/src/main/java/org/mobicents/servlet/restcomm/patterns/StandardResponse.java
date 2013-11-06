@@ -21,49 +21,50 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class StandardResponse<T> {
-  private final boolean succeeded;
-  private final Throwable cause;
-  private final String message;
-  private final T object;
+@NotThreadSafe
+public abstract class StandardResponse<T> {
+    private final boolean succeeded;
+    private final Throwable cause;
+    private final String message;
+    private final T object;
 
-  public StandardResponse(final T object) {
-    super();
-    this.succeeded = true;
-    this.cause = null;
-    this.message = null;
-    this.object = object;
-  }
-  
-  public StandardResponse(final Throwable cause) {
-    super();
-    this.succeeded = false;
-    this.cause = cause;
-    this.message = null;
-    this.object = null;
-  }
-  
-  public StandardResponse(final Throwable cause, final String message) {
-    super();
-    this.succeeded = false;
-    this.cause = cause;
-    this.message = message;
-    this.object = null;
-  }
-  
-  public Throwable cause() {
-    return cause;
-  }
-  
-  public String error() {
-    return message;
-  }
-  
-  public T get() {
-    return object;
-  }
-  
-  public boolean succeeded() {
-    return succeeded;
-  }
+    public StandardResponse(final T object) {
+        super();
+        this.succeeded = true;
+        this.cause = null;
+        this.message = null;
+        this.object = object;
+    }
+
+    public StandardResponse(final Throwable cause) {
+        super();
+        this.succeeded = false;
+        this.cause = cause;
+        this.message = null;
+        this.object = null;
+    }
+
+    public StandardResponse(final Throwable cause, final String message) {
+        super();
+        this.succeeded = false;
+        this.cause = cause;
+        this.message = message;
+        this.object = null;
+    }
+
+    public Throwable cause() {
+        return cause;
+    }
+
+    public String error() {
+        return message;
+    }
+
+    public T get() {
+        return object;
+    }
+
+    public boolean succeeded() {
+        return succeeded;
+    }
 }

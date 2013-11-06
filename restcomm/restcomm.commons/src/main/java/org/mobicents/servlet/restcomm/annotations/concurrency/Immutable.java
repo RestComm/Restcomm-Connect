@@ -19,4 +19,5 @@ package org.mobicents.servlet.restcomm.annotations.concurrency;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public @interface Immutable { }
+public @interface Immutable {
+}

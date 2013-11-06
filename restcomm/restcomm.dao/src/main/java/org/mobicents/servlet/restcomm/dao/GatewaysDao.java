@@ -25,9 +25,13 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface GatewaysDao {
-  public void addGateway(Gateway gateway);
-  public Gateway getGateway(Sid sid);
-  public List<Gateway> getGateways();
-  public void removeGateway(Sid sid);
-  public void updateGateway(Gateway gateway);
+    void addGateway(Gateway gateway);
+
+    Gateway getGateway(Sid sid);
+
+    List<Gateway> getGateways();
+
+    void removeGateway(Sid sid);
+
+    void updateGateway(Gateway gateway);
 }

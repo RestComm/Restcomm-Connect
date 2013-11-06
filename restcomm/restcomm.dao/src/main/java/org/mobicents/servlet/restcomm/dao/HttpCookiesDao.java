@@ -26,11 +26,17 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface HttpCookiesDao {
-  public void addCookie(Sid sid, Cookie cookie);
-  public List<Cookie> getCookies(Sid sid);
-  public boolean hasCookie(Sid sid, Cookie cookie);
-  public boolean hasExpiredCookies(Sid sid);
-  public void removeCookies(Sid sid);
-  public void removeExpiredCookies(Sid sid);
-  public void updateCookie(Sid sid, Cookie cookie);
+    void addCookie(Sid sid, Cookie cookie);
+
+    List<Cookie> getCookies(Sid sid);
+
+    boolean hasCookie(Sid sid, Cookie cookie);
+
+    boolean hasExpiredCookies(Sid sid);
+
+    void removeCookies(Sid sid);
+
+    void removeExpiredCookies(Sid sid);
+
+    void updateCookie(Sid sid, Cookie cookie);
 }

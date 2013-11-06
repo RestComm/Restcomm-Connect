@@ -20,5 +20,5 @@ package org.mobicents.servlet.restcomm.fsm;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Action {
-  public void execute(Object message) throws Exception;
+    void execute(Object message) throws Exception;
 }
