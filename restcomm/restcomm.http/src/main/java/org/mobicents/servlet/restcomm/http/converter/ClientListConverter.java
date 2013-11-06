@@ -27,23 +27,25 @@ import org.mobicents.servlet.restcomm.entities.ClientList;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class ClientListConverter extends AbstractConverter {
-  public ClientListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return ClientList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final ClientList list = (ClientList)object;
-    writer.startNode("Clients");
-    for(final Client client : list.getClients()) {
-      context.convertAnother(client);
+@ThreadSafe
+public final class ClientListConverter extends AbstractConverter {
+    public ClientListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return ClientList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final ClientList list = (ClientList) object;
+        writer.startNode("Clients");
+        for (final Client client : list.getClients()) {
+            context.convertAnother(client);
+        }
+        writer.endNode();
+    }
 }

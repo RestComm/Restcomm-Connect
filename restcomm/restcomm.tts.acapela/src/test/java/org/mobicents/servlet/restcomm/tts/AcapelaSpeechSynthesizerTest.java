@@ -55,127 +55,141 @@ import scala.concurrent.duration.FiniteDuration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class AcapelaSpeechSynthesizerTest {
-	private ActorSystem system;
-	private ActorRef tts;
-	private ActorRef cache;
+    private ActorSystem system;
+    private ActorRef tts;
+    private ActorRef cache;
 
-	public AcapelaSpeechSynthesizerTest() {
-		super();
-	}
+    public AcapelaSpeechSynthesizerTest() {
+        super();
+    }
 
-	@Before public void before() throws Exception {
-		system = ActorSystem.create();
-		final URL input = getClass().getResource("/acapela.xml");
-		final XMLConfiguration configuration = new XMLConfiguration(input);
-		tts = tts(configuration);
-		cache = cache("/tmp/cache","http://127.0.0.1:8080/restcomm/cache");
-	}
+    @Before
+    public void before() throws Exception {
+        system = ActorSystem.create();
+        final URL input = getClass().getResource("/acapela.xml");
+        final XMLConfiguration configuration = new XMLConfiguration(input);
+        tts = tts(configuration);
+        cache = cache("/tmp/cache", "http://127.0.0.1:8080/restcomm/cache");
+    }
 
-	@After public void after() throws Exception {
-		system.shutdown();
-	}
+    @After
+    public void after() throws Exception {
+        system.shutdown();
+    }
 
-	private ActorRef tts(final Configuration configuration) {
-		final String classpath = configuration.getString("[@class]");
+    private ActorRef tts(final Configuration configuration) {
+        final String classpath = configuration.getString("[@class]");
 
-		return system.actorOf(new Props(new UntypedActorFactory() {
-			private static final long serialVersionUID = 1L;
-			@Override public Actor create() throws Exception {			  
-				return (UntypedActor)Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
-			} 
-		}));
-	}
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
 
-	private ActorRef cache(final String path, final String uri) {
-		return system.actorOf(new Props(new UntypedActorFactory() {
-			private static final long serialVersionUID = 1L;
-			@Override public UntypedActor create() throws Exception {
-				return new DiskCache(path, uri, true);
-			}
-		}));
-	}
+            @Override
+            public Actor create() throws Exception {
+                return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
+            }
+        }));
+    }
 
-	@SuppressWarnings("unchecked")
-	@Test public void testInfo() {
-		new JavaTestKit(system) {{
-			final ActorRef observer = getRef();
-			tts.tell(new GetSpeechSynthesizerInfo(), observer);
-			final SpeechSynthesizerResponse<SpeechSynthesizerInfo> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
-					SpeechSynthesizerResponse.class);
-			assertTrue(response.succeeded());
-			final Set<String> languages = response.get().languages();
-			assertTrue(languages.contains("ca"));
-			assertTrue(languages.contains("it"));
-			assertTrue(languages.contains("tr"));
-			assertTrue(languages.contains("no"));
-			assertTrue(languages.contains("ar"));
-			assertTrue(languages.contains("cs"));
-			assertTrue(languages.contains("de"));
-			assertTrue(languages.contains("bp"));
-			assertTrue(languages.contains("el"));
-			assertTrue(languages.contains("dan"));
-			assertTrue(languages.contains("fi"));
-			assertTrue(languages.contains("pt"));
-			assertTrue(languages.contains("pl"));
-			assertTrue(languages.contains("bf"));
-			assertTrue(languages.contains("sv"));
-			assertTrue(languages.contains("fr"));
-			assertTrue(languages.contains("en"));
-			assertTrue(languages.contains("ru"));
-			assertTrue(languages.contains("es"));
-			assertTrue(languages.contains("cf"));
-			assertTrue(languages.contains("nl"));
-			assertTrue(languages.contains("en-gb"));
-			System.out.println(response.get().languages());
-		}};
-	}
+    private ActorRef cache(final String path, final String uri) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
 
-	@SuppressWarnings("unchecked")
-	@Test public void testSynthesis() {
-		new JavaTestKit(system) {{
-			final ActorRef observer = getRef();
-			String gender = "man";
-			String language = "en";
-			String message = "Hello TTS World!";
-			String hash = HashGenerator.hashMessage(gender,language,message);
-			
-			final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, message);
-			tts.tell(synthesize, observer);
-			final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
-					SpeechSynthesizerResponse.class);
-			assertTrue(response.succeeded());
+            @Override
+            public UntypedActor create() throws Exception {
+                return new DiskCache(path, uri, true);
+            }
+        }));
+    }
 
-			DiskCacheRequest diskCacheRequest = new DiskCacheRequest(response.get());
-			cache.tell(diskCacheRequest, observer);
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testInfo() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                tts.tell(new GetSpeechSynthesizerInfo(), observer);
+                final SpeechSynthesizerResponse<SpeechSynthesizerInfo> response = this.expectMsgClass(
+                        FiniteDuration.create(30, TimeUnit.SECONDS), SpeechSynthesizerResponse.class);
+                assertTrue(response.succeeded());
+                final Set<String> languages = response.get().languages();
+                assertTrue(languages.contains("ca"));
+                assertTrue(languages.contains("it"));
+                assertTrue(languages.contains("tr"));
+                assertTrue(languages.contains("no"));
+                assertTrue(languages.contains("ar"));
+                assertTrue(languages.contains("cs"));
+                assertTrue(languages.contains("de"));
+                assertTrue(languages.contains("bp"));
+                assertTrue(languages.contains("el"));
+                assertTrue(languages.contains("dan"));
+                assertTrue(languages.contains("fi"));
+                assertTrue(languages.contains("pt"));
+                assertTrue(languages.contains("pl"));
+                assertTrue(languages.contains("bf"));
+                assertTrue(languages.contains("sv"));
+                assertTrue(languages.contains("fr"));
+                assertTrue(languages.contains("en"));
+                assertTrue(languages.contains("ru"));
+                assertTrue(languages.contains("es"));
+                assertTrue(languages.contains("cf"));
+                assertTrue(languages.contains("nl"));
+                assertTrue(languages.contains("en-gb"));
+                System.out.println(response.get().languages());
+            }
+        };
+    }
 
-			final DiskCacheResponse diskCacheResponse = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
-					DiskCacheResponse.class);
-			assertTrue(diskCacheResponse.succeeded());
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSynthesis() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                String gender = "man";
+                String language = "en";
+                String message = "Hello TTS World!";
+                String hash = HashGenerator.hashMessage(gender, language, message);
 
-			assertEquals("hash="+hash,response.get().getFragment());
-			assertEquals("http://127.0.0.1:8080/restcomm/cache/"+hash+".wav",diskCacheResponse.get().toString());
+                final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, message);
+                tts.tell(synthesize, observer);
+                final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(
+                        FiniteDuration.create(30, TimeUnit.SECONDS), SpeechSynthesizerResponse.class);
+                assertTrue(response.succeeded());
 
-		}};
-	}
+                DiskCacheRequest diskCacheRequest = new DiskCacheRequest(response.get());
+                cache.tell(diskCacheRequest, observer);
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testHash() {
-		final String gender = "man";
-		final String language = "en";
-		final String text = "Hello There!";
-		final String calculatedHash = "hash="+HashGenerator.hashMessage(gender, language, text);
+                final DiskCacheResponse diskCacheResponse = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+                        DiskCacheResponse.class);
+                assertTrue(diskCacheResponse.succeeded());
 
-		new JavaTestKit(system) {{
-			final ActorRef observer = getRef();
-			final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, text);
-			tts.tell(synthesize, observer);
-			final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
-					SpeechSynthesizerResponse.class);
-			assertTrue(response.succeeded());
-			assertTrue(response.get().getFragment().equals(calculatedHash));
-			System.out.println(response.get().toString());
-		}};
-	}
+                assertEquals("hash=" + hash, response.get().getFragment());
+                assertEquals("http://127.0.0.1:8080/restcomm/cache/" + hash + ".wav", diskCacheResponse.get().toString());
+
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testHash() {
+        final String gender = "man";
+        final String language = "en";
+        final String text = "Hello There!";
+        final String calculatedHash = "hash=" + HashGenerator.hashMessage(gender, language, text);
+
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, text);
+                tts.tell(synthesize, observer);
+                final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(
+                        FiniteDuration.create(30, TimeUnit.SECONDS), SpeechSynthesizerResponse.class);
+                assertTrue(response.succeeded());
+                assertTrue(response.get().getFragment().equals(calculatedHash));
+                System.out.println(response.get().toString());
+            }
+        };
+    }
 
 }

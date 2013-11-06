@@ -36,55 +36,64 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts")
-@ThreadSafe public final class AccountsXmlEndpoint extends AccountsEndpoint {
-  public AccountsXmlEndpoint() {
-    super();
-  }
-  
-  @Path("/{sid}")
-  @DELETE public Response deleteAccountAsXml(@PathParam("sid") final String sid) {
-    return deleteAccount(sid);
-  }
-  
-  @Path("/{accountSid}")
-  @GET public Response getAccountAsXml(@PathParam("accountSid") final String accountSid) {
-    return getAccount(accountSid, APPLICATION_XML_TYPE);
-  } 
-  
-  @GET public Response getAccounts() {
-    return getAccounts(APPLICATION_XML_TYPE);
-  }
-  
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @POST public Response putAccount(final MultivaluedMap<String, String> data) {
-    return putAccount(data, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{accountSid}.json")
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @POST public Response updateAccountAsJsonPost(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{accountSid}.json")
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @PUT public Response updateAccountAsJsonPut(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{accountSid}")
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @POST public Response updateAccountAsXmlPost(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{accountSid}")
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @PUT public Response updateAccountAsXmlPut(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
-  }
+@ThreadSafe
+public final class AccountsXmlEndpoint extends AccountsEndpoint {
+    public AccountsXmlEndpoint() {
+        super();
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteAccountAsXml(@PathParam("sid") final String sid) {
+        return deleteAccount(sid);
+    }
+
+    @Path("/{accountSid}")
+    @GET
+    public Response getAccountAsXml(@PathParam("accountSid") final String accountSid) {
+        return getAccount(accountSid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getAccounts() {
+        return getAccounts(APPLICATION_XML_TYPE);
+    }
+
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response putAccount(final MultivaluedMap<String, String> data) {
+        return putAccount(data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{accountSid}.json")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response updateAccountAsJsonPost(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{accountSid}.json")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @PUT
+    public Response updateAccountAsJsonPut(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response updateAccountAsXmlPost(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @PUT
+    public Response updateAccountAsXmlPut(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
+    }
 }

@@ -23,28 +23,30 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class ConnectionStateChanged {
-  public static enum State { CLOSED, HALF_OPEN, OPEN };
-  
-  private final ConnectionDescriptor descriptor;
-  private final State state;
+@Immutable
+public final class ConnectionStateChanged {
+    public static enum State {
+        CLOSED, HALF_OPEN, OPEN
+    };
 
-  public ConnectionStateChanged(final ConnectionDescriptor descriptor,
-      final State state) {
-    super();
-    this.descriptor = descriptor;
-    this.state = state;
-  }
-  
-  public ConnectionStateChanged(final State state) {
-    this(null, state);
-  }
-  
-  public ConnectionDescriptor descriptor() {
-    return descriptor;
-  }
-  
-  public State state() {
-    return state;
-  }
+    private final ConnectionDescriptor descriptor;
+    private final State state;
+
+    public ConnectionStateChanged(final ConnectionDescriptor descriptor, final State state) {
+        super();
+        this.descriptor = descriptor;
+        this.state = state;
+    }
+
+    public ConnectionStateChanged(final State state) {
+        this(null, state);
+    }
+
+    public ConnectionDescriptor descriptor() {
+        return descriptor;
+    }
+
+    public State state() {
+        return state;
+    }
 }

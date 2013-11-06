@@ -27,23 +27,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class RegistrationListConverter extends AbstractConverter {
-  public RegistrationListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return RegistrationList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final RegistrationList list = (RegistrationList)object;
-    writer.startNode("Registrations");
-    for(final Registration registration : list.getRegistrations()) {
-      context.convertAnother(registration);
+@ThreadSafe
+public final class RegistrationListConverter extends AbstractConverter {
+    public RegistrationListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return RegistrationList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final RegistrationList list = (RegistrationList) object;
+        writer.startNode("Registrations");
+        for (final Registration registration : list.getRegistrations()) {
+            context.convertAnother(registration);
+        }
+        writer.endNode();
+    }
 }

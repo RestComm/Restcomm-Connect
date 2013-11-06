@@ -25,28 +25,29 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Play {
-  private final List<URI> uris;
-  private final int iterations;
-  
-  public Play(final List<URI> uris, final int iterations) {
-    super();
-    this.uris = uris;
-    this.iterations = iterations;
-  }
-  
-  public Play(final URI uri, final int iterations) {
-    super();
-    this.uris = new ArrayList<URI>();
-    uris.add(uri);
-    this.iterations = iterations;
-  }
-  
-  public List<URI> uris() {
-    return uris;
-  }
-  
-  public int iterations() {
-    return iterations;
-  }
+@Immutable
+public final class Play {
+    private final List<URI> uris;
+    private final int iterations;
+
+    public Play(final List<URI> uris, final int iterations) {
+        super();
+        this.uris = uris;
+        this.iterations = iterations;
+    }
+
+    public Play(final URI uri, final int iterations) {
+        super();
+        this.uris = new ArrayList<URI>();
+        uris.add(uri);
+        this.iterations = iterations;
+    }
+
+    public List<URI> uris() {
+        return uris;
+    }
+
+    public int iterations() {
+        return iterations;
+    }
 }

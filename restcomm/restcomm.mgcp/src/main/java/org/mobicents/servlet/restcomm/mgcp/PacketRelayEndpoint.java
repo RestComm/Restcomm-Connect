@@ -21,13 +21,12 @@ import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class PacketRelayEndpoint extends GenericEndpoint {
-  public PacketRelayEndpoint(final ActorRef gateway, final MediaSession session,
-      final NotifiedEntity entity, final String domain) {
-    super(gateway, session, entity, new EndpointIdentifier("mobicents/relay/$", domain));
-  }
+    public PacketRelayEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity entity,
+            final String domain) {
+        super(gateway, session, entity, new EndpointIdentifier("mobicents/relay/$", domain));
+    }
 }

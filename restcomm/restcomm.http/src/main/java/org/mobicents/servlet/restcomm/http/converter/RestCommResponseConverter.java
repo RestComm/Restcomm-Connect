@@ -26,19 +26,21 @@ import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class RestCommResponseConverter extends AbstractConverter {
-  public RestCommResponseConverter(final Configuration configuration) {
-    super(configuration);
-  }
+@ThreadSafe
+public final class RestCommResponseConverter extends AbstractConverter {
+    public RestCommResponseConverter(final Configuration configuration) {
+        super(configuration);
+    }
 
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return RestCommResponse.class.equals(klass);
-  }
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return RestCommResponse.class.equals(klass);
+    }
 
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final RestCommResponse response = (RestCommResponse)object;
-    context.convertAnother(response.getObject());
-  }
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final RestCommResponse response = (RestCommResponse) object;
+        context.convertAnother(response.getObject());
+    }
 }

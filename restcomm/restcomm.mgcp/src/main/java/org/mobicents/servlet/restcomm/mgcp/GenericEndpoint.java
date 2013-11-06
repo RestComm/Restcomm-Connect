@@ -22,35 +22,35 @@ import akka.actor.UntypedActor;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public abstract class GenericEndpoint extends UntypedActor {
-  protected final ActorRef gateway;
-  protected final MediaSession session;
-  protected final NotifiedEntity entity;
-  protected EndpointIdentifier id;
+    protected final ActorRef gateway;
+    protected final MediaSession session;
+    protected final NotifiedEntity entity;
+    protected EndpointIdentifier id;
 
-  public GenericEndpoint(final ActorRef gateway, final MediaSession session,
-      final NotifiedEntity entity, final EndpointIdentifier id) {
-    super();
-    this.gateway = gateway;
-    this.session = session;
-    this.entity = entity;
-    this.id = id;
-  }
-  
-  @Override public void onReceive(final Object message) throws Exception {
-    final Class<?> klass = message.getClass();
-    final ActorRef self = self();
-    final ActorRef sender = sender();
-	if(InviteEndpoint.class.equals(klass)) {
-	  final EndpointCredentials credentials = new EndpointCredentials(id);
-	  sender.tell(credentials, self);
-	} else if(UpdateEndpointId.class.equals(klass)) {
-      final UpdateEndpointId request = (UpdateEndpointId)message;
-      id = request.id();
+    public GenericEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity entity,
+            final EndpointIdentifier id) {
+        super();
+        this.gateway = gateway;
+        this.session = session;
+        this.entity = entity;
+        this.id = id;
     }
-  }
+
+    @Override
+    public void onReceive(final Object message) throws Exception {
+        final Class<?> klass = message.getClass();
+        final ActorRef self = self();
+        final ActorRef sender = sender();
+        if (InviteEndpoint.class.equals(klass)) {
+            final EndpointCredentials credentials = new EndpointCredentials(id);
+            sender.tell(credentials, self);
+        } else if (UpdateEndpointId.class.equals(klass)) {
+            final UpdateEndpointId request = (UpdateEndpointId) message;
+            id = request.id();
+        }
+    }
 }

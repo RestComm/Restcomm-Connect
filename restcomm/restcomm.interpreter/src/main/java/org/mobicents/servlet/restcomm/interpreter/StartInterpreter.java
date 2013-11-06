@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
-@Immutable public final class StartInterpreter {
-  private final ActorRef resource;
-  
-  public StartInterpreter(final ActorRef resource) {
-    super();
-    this.resource = resource;
-  }
-  
-  public ActorRef resource() {
-    return resource;
-  }
+@Immutable
+public final class StartInterpreter {
+    private final ActorRef resource;
+
+    public StartInterpreter(final ActorRef resource) {
+        super();
+        this.resource = resource;
+    }
+
+    public ActorRef resource() {
+        return resource;
+    }
 }

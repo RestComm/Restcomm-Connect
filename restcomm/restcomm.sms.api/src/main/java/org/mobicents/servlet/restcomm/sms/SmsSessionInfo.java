@@ -23,28 +23,28 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class SmsSessionInfo {
-  private final String from;
-  private final String to;
-  private final Map<String, Object> attributes;
-  
-  public SmsSessionInfo(final String from, final String to,
-      final Map<String, Object> attributes) {
-    super();
-    this.from = from;
-    this.to = to;
-    this.attributes = attributes;
-  }
-  
-  public String from() {
-    return from;
-  }
-  
-  public String to() {
-    return to;
-  }
-  
-  public Map<String, Object> attributes() {
-    return attributes;
-  }
+@Immutable
+public final class SmsSessionInfo {
+    private final String from;
+    private final String to;
+    private final Map<String, Object> attributes;
+
+    public SmsSessionInfo(final String from, final String to, final Map<String, Object> attributes) {
+        super();
+        this.from = from;
+        this.to = to;
+        this.attributes = attributes;
+    }
+
+    public String from() {
+        return from;
+    }
+
+    public String to() {
+        return to;
+    }
+
+    public Map<String, Object> attributes() {
+        return attributes;
+    }
 }

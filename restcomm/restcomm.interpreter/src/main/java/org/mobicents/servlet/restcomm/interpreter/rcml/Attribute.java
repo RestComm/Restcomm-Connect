@@ -21,21 +21,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Attribute {
-  private final String name;
-  private final String value;
-  
-  public Attribute(final String name, final String value) {
-    super();
-    this.name = name;
-    this.value = value;
-  }
+@Immutable
+public final class Attribute {
+    private final String name;
+    private final String value;
 
-  public String name() {
-    return name;
-  }
+    public Attribute(final String name, final String value) {
+        super();
+        this.name = name;
+        this.value = value;
+    }
 
-  public String value() {
-    return value;
-  }
+    public String name() {
+        return name;
+    }
+
+    public String value() {
+        return value;
+    }
 }

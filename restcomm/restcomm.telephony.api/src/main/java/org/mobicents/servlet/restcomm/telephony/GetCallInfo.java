@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
-@Immutable public final class GetCallInfo {
-  public GetCallInfo() {
-    super();
-  }
+@Immutable
+public final class GetCallInfo {
+    public GetCallInfo() {
+        super();
+    }
 }

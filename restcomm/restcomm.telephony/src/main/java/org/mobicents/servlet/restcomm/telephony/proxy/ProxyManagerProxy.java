@@ -39,48 +39,51 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class ProxyManagerProxy extends SipServlet {
-  private static final long serialVersionUID = 1L;
-  
-  private ActorSystem system;
-  private ActorRef manager;
+    private static final long serialVersionUID = 1L;
 
-  public ProxyManagerProxy() {
-    super();
-  }
-  
-  @Override public void destroy() {
-    system.stop(manager);
-  }
+    private ActorSystem system;
+    private ActorRef manager;
 
-  @Override protected void doRequest(final SipServletRequest request)
-      throws ServletException, IOException {
-    manager.tell(request, null);
-  }
+    public ProxyManagerProxy() {
+        super();
+    }
 
-  @Override protected void doResponse(final SipServletResponse response)
-      throws ServletException, 	IOException {
-    manager.tell(response, null);
-  }
-  
-  @Override public void init(final ServletConfig config) throws ServletException {
-    final ServletContext context = config.getServletContext();
-    final SipFactory factory = (SipFactory)context.getAttribute(SIP_FACTORY);
-    Configuration configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    configuration = configuration.subset("runtime-settings");
-    final String address = configuration.getString("external-ip");
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
-    manager = manager(config, factory, storage, address);
-  }
-  
-  private ActorRef manager(final ServletConfig configuration,
-      final SipFactory factory, final DaoManager storage,
-      final String address) {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-		private static final long serialVersionUID = 1L;
-		@Override public UntypedActor create() throws Exception {
-          return new ProxyManager(configuration, factory, storage, address);
-		}
-    }));
-  }
+    @Override
+    public void destroy() {
+        system.stop(manager);
+    }
+
+    @Override
+    protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
+        manager.tell(request, null);
+    }
+
+    @Override
+    protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
+        manager.tell(response, null);
+    }
+
+    @Override
+    public void init(final ServletConfig config) throws ServletException {
+        final ServletContext context = config.getServletContext();
+        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = configuration.subset("runtime-settings");
+        final String address = configuration.getString("external-ip");
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+        manager = manager(config, factory, storage, address);
+    }
+
+    private ActorRef manager(final ServletConfig configuration, final SipFactory factory, final DaoManager storage,
+            final String address) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new ProxyManager(configuration, factory, storage, address);
+            }
+        }));
+    }
 }

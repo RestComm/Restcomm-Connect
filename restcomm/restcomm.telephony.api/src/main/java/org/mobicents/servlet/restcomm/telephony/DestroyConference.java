@@ -21,15 +21,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class DestroyConference {
-  private final String name;
-  
-  public DestroyConference(final String name) {
-    super();
-    this.name = name;
-  }
-  
-  public String name() {
-    return name;
-  }
+@Immutable
+public final class DestroyConference {
+    private final String name;
+
+    public DestroyConference(final String name) {
+        super();
+        this.name = name;
+    }
+
+    public String name() {
+        return name;
+    }
 }

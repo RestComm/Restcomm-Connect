@@ -24,30 +24,30 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class UpdateConnection {
-  private final ConnectionDescriptor descriptor;
-  private final ConnectionMode mode;
-  
-  public UpdateConnection(final ConnectionDescriptor descriptor,
-      final ConnectionMode mode) {
-    super();
-    this.descriptor = descriptor;
-    this.mode = mode;
-  }
-  
-  public UpdateConnection(final ConnectionDescriptor descriptor) {
-    this(descriptor, null);
-  }
-  
-  public UpdateConnection(final ConnectionMode mode) {
-    this(null, mode);
-  }
-  
-  public ConnectionDescriptor descriptor() {
-    return descriptor;
-  }
-  
-  public ConnectionMode mode() { 
-    return mode;
-  }
+@Immutable
+public final class UpdateConnection {
+    private final ConnectionDescriptor descriptor;
+    private final ConnectionMode mode;
+
+    public UpdateConnection(final ConnectionDescriptor descriptor, final ConnectionMode mode) {
+        super();
+        this.descriptor = descriptor;
+        this.mode = mode;
+    }
+
+    public UpdateConnection(final ConnectionDescriptor descriptor) {
+        this(descriptor, null);
+    }
+
+    public UpdateConnection(final ConnectionMode mode) {
+        this(null, mode);
+    }
+
+    public ConnectionDescriptor descriptor() {
+        return descriptor;
+    }
+
+    public ConnectionMode mode() {
+        return mode;
+    }
 }

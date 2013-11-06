@@ -28,33 +28,36 @@ import org.mobicents.servlet.restcomm.mgcp.Play;
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
 public final class PlayTest {
-  public PlayTest() {
-    super();
-  }
+    public PlayTest() {
+        super();
+    }
 
-  @Test public void testFormatting() {
-    final List<URI> announcements = new ArrayList<URI>();
-    announcements.add(URI.create("hello.wav"));
-    final Play play = new Play(announcements, 1);
-    final String result = play.toString();
-    assertTrue("an=hello.wav it=1".equals(result));
-    System.out.println("Signal Parameters: " + result + "\n");
-  }
-  
-  @Test public void testFormattingWithMultipleAnnouncements() {
-    final List<URI> announcements = new ArrayList<URI>();
-    announcements.add(URI.create("hello.wav"));
-    announcements.add(URI.create("world.wav"));
-    final Play play = new Play(announcements, 1);
-    final String result = play.toString();
-    assertTrue("an=hello.wav;world.wav it=1".equals(result));
-    System.out.println("Signal Parameters: " + result + "\n");
-  }
-  
-  @Test public void testFormattingWithNoAnnouncements() {
-    final List<URI> announcements = new ArrayList<URI>();
-    final Play play = new Play(announcements, 1);
-    final String result = play.toString();
-    assertTrue(result.isEmpty());
-  }
+    @Test
+    public void testFormatting() {
+        final List<URI> announcements = new ArrayList<URI>();
+        announcements.add(URI.create("hello.wav"));
+        final Play play = new Play(announcements, 1);
+        final String result = play.toString();
+        assertTrue("an=hello.wav it=1".equals(result));
+        System.out.println("Signal Parameters: " + result + "\n");
+    }
+
+    @Test
+    public void testFormattingWithMultipleAnnouncements() {
+        final List<URI> announcements = new ArrayList<URI>();
+        announcements.add(URI.create("hello.wav"));
+        announcements.add(URI.create("world.wav"));
+        final Play play = new Play(announcements, 1);
+        final String result = play.toString();
+        assertTrue("an=hello.wav;world.wav it=1".equals(result));
+        System.out.println("Signal Parameters: " + result + "\n");
+    }
+
+    @Test
+    public void testFormattingWithNoAnnouncements() {
+        final List<URI> announcements = new ArrayList<URI>();
+        final Play play = new Play(announcements, 1);
+        final String result = play.toString();
+        assertTrue(result.isEmpty());
+    }
 }

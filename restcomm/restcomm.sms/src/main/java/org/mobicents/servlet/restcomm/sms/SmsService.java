@@ -59,198 +59,199 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
  * @author jean.deruelle@telestax.com
  */
 public final class SmsService extends UntypedActor {
-  private final ActorSystem system;
-  private final Configuration configuration;
-  private final ServletConfig servletConfig;
-  private final SipFactory sipFactory;
-  private final DaoManager storage;
-  
-  // configurable switch whether to use the To field in a SIP header to determine the callee address
-  // alternatively the Request URI can be used
-  private boolean useTo = true;
-    
-  
-  public SmsService(final ActorSystem system, final Configuration configuration,
-      final SipFactory factory, final DaoManager storage) {
-    super();
-    this.system = system;
-    this.configuration = configuration;
-    this.servletConfig = (ServletConfig)configuration.getProperty(ServletConfig.class.getName());
-    this.sipFactory = factory;
-    this.storage = storage;
-    // final Configuration runtime = configuration.subset("runtime-settings");
-    // TODO this.useTo = runtime.getBoolean("use-to");
-  }
-  
-  private void message(final Object message) throws IOException {
-	final ActorRef self = self();
-	final SipServletRequest request = (SipServletRequest)message;
-	
-	final SipURI fromURI = (SipURI)request.getFrom().getURI();
-	final String fromUser = fromURI.getUser();
-	final ClientsDao clients = storage.getClientsDao();
-	final Client client = clients.getClient(fromUser);
-	final AccountsDao accounts = storage.getAccountsDao();
-	final ApplicationsDao applications = storage.getApplicationsDao();
-	
-	// Make sure we force clients to authenticate.
-    if(client != null) {
-        // Make sure we force clients to authenticate.
-        if (!CallControlHelper.checkAuthentication(request, storage)) {
-        	// Since the client failed to authenticate, we will ignore the message and not process further
-        	return;
-  	  	}
-        
-	    // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not registered  
-	
-		final String toUser = CallControlHelper.getUserSipId(request, useTo);
-		// Try to see if the request is destined for an application we are hosting.
-		if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
-		    // Tell the sender we received the message okay.
-		    final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
-		    messageAccepted.send();
-		  	return;
-		} else {
-			// try to see if the request is destined to another registered client
-		  	if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
-			Client toClient = clients.getClient(toUser);
-			if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
-		          if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
-		      		// if all goes well with proxying the SIP MESSAGE on to the target client
-		      		// then we can end further processing of this request
-		          		return;
-		              }
-		  		}
-		  	}
-		}
-    }
-  }
+    private final ActorSystem system;
+    private final Configuration configuration;
+    private final ServletConfig servletConfig;
+    private final SipFactory sipFactory;
+    private final DaoManager storage;
 
-  
-/**
- * 
- * Try to locate a hosted sms app corresponding to the callee/To address.
- * If one is found, begin execution, otherwise return false;
- * 
- * @param self
- * @param request
- * @param accounts
- * @param applications
- * @param id
- * @throws IOException 
- */
-private boolean redirectToHostedSmsApp(final ActorRef self,
-		final SipServletRequest request, final AccountsDao accounts,
-		final ApplicationsDao applications, String id) throws IOException {
-	boolean isFoundHostedApp = false;
-	
-	// Handle the SMS message.
-	final SipURI uri = (SipURI)request.getRequestURI();
-	final String to = uri.getUser();
-	// There is no existing session so create a new one.
-	try {
-	  // Format the destination to an E.164 phone number.
-	  final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-	  final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"),
-	      PhoneNumberFormat.E164);
-	  // Try to find an application defined for the phone number.
-      final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-      final IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-      if(number != null) {
-        final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
-        builder.setSmsService(self);
-        builder.setConfiguration(configuration);
-        builder.setStorage(storage);
-        builder.setAccount(number.getAccountSid());
-        builder.setVersion(number.getApiVersion());
-        final Sid sid = number.getSmsApplicationSid();
-        if(sid != null) {
-          final Application application = applications.getApplication(sid);
-          builder.setUrl(application.getSmsUrl());
-          builder.setMethod(application.getSmsMethod());
-          builder.setFallbackUrl(application.getSmsFallbackUrl());
-          builder.setFallbackMethod(application.getSmsFallbackMethod());
-        } else {
-          builder.setUrl(number.getSmsUrl());
-          builder.setMethod(number.getSmsMethod());
-          builder.setFallbackUrl(number.getSmsFallbackUrl());
-          builder.setFallbackMethod(number.getSmsFallbackMethod());
-        }
-        final ActorRef interpreter = builder.build();
-        final ActorRef session = session();
-        session.tell(request, self);
-        final StartInterpreter start = new StartInterpreter(session);
-        interpreter.tell(start, self);
-        isFoundHostedApp = true;
-      }
-	} catch(final NumberParseException ignored) { };
-	return isFoundHostedApp;    
-}  
-  
-  
-  @Override public void onReceive(final Object message) throws Exception {
-    final UntypedActorContext context = getContext();
-    final Class<?> klass = message.getClass();
-    final ActorRef self = self();
-    final ActorRef sender = sender();
-    if(CreateSmsSession.class.equals(klass)) {
-      final ActorRef session = session();
-      final SmsServiceResponse<ActorRef> response =
-          new SmsServiceResponse<ActorRef>(session);
-      sender.tell(response, self);
-    } else if(DestroySmsSession.class.equals(klass)) {
-      final DestroySmsSession request = (DestroySmsSession)message;
-      final ActorRef session = request.session();
-      context.stop(session);
-    } else if(message instanceof SipServletRequest) {
-      final SipServletRequest request = (SipServletRequest)message;
-      final String method = request.getMethod();
-      if("MESSAGE".equalsIgnoreCase(method)) {
-        message(message);
-      }
-    } else if(message instanceof SipServletResponse) {
-      final SipServletResponse response = (SipServletResponse)message;
-      final SipServletRequest request = response.getRequest();
-      final String method = request.getMethod();
-      if("MESSAGE".equalsIgnoreCase(method)) {
-        response(message);
-      }
+    // configurable switch whether to use the To field in a SIP header to determine the callee address
+    // alternatively the Request URI can be used
+    private boolean useTo = true;
+
+    public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
+            final DaoManager storage) {
+        super();
+        this.system = system;
+        this.configuration = configuration;
+        this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
+        this.sipFactory = factory;
+        this.storage = storage;
+        // final Configuration runtime = configuration.subset("runtime-settings");
+        // TODO this.useTo = runtime.getBoolean("use-to");
     }
-  }
-  
-  private void response(final Object message) throws Exception {
-    final ActorRef self = self();
-  	final SipServletResponse response = (SipServletResponse)message;
-  	// https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
-  	if (B2BUAHelper.isB2BUASession(response)) {
-  	    B2BUAHelper.forwardResponse(response);
-  	    return;
-  	}
-    final SipApplicationSession application = response.getApplicationSession();
-    final ActorRef session = (ActorRef)application.getAttribute(SmsSession.class.getName());
-    session.tell(response, self);
-  }
-  
-  @SuppressWarnings("unchecked")
-  private SipURI outboundInterface() {
-	final ServletContext context = servletConfig.getServletContext();
-	SipURI result = null;
-	final List<SipURI> uris = (List<SipURI>)context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
-	for(final SipURI uri : uris) {
-	  final String transport = uri.getTransportParam();
-	  if("udp".equalsIgnoreCase(transport)) {
-	    result = uri;
-	  }
-	}
-	return result;
-  }
-  
-  private ActorRef session() {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-		private static final long serialVersionUID = 1L;
-		@Override public UntypedActor create() throws Exception {
-          return new SmsSession(configuration, sipFactory, outboundInterface());
-		}
-    }));
-  }
+
+    private void message(final Object message) throws IOException {
+        final ActorRef self = self();
+        final SipServletRequest request = (SipServletRequest) message;
+
+        final SipURI fromURI = (SipURI) request.getFrom().getURI();
+        final String fromUser = fromURI.getUser();
+        final ClientsDao clients = storage.getClientsDao();
+        final Client client = clients.getClient(fromUser);
+        final AccountsDao accounts = storage.getAccountsDao();
+        final ApplicationsDao applications = storage.getApplicationsDao();
+
+        // Make sure we force clients to authenticate.
+        if (client != null) {
+            // Make sure we force clients to authenticate.
+            if (!CallControlHelper.checkAuthentication(request, storage)) {
+                // Since the client failed to authenticate, we will ignore the message and not process further
+                return;
+            }
+
+            // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
+            // registered
+
+            final String toUser = CallControlHelper.getUserSipId(request, useTo);
+            // Try to see if the request is destined for an application we are hosting.
+            if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
+                // Tell the sender we received the message okay.
+                final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
+                messageAccepted.send();
+                return;
+            } else {
+                // try to see if the request is destined to another registered client
+                if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
+                                      // have little control over
+                    Client toClient = clients.getClient(toUser);
+                    if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
+                                            // to the b2bua
+                        if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
+                            // if all goes well with proxying the SIP MESSAGE on to the target client
+                            // then we can end further processing of this request
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * Try to locate a hosted sms app corresponding to the callee/To address. If one is found, begin execution, otherwise return
+     * false;
+     *
+     * @param self
+     * @param request
+     * @param accounts
+     * @param applications
+     * @param id
+     * @throws IOException
+     */
+    private boolean redirectToHostedSmsApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
+            final ApplicationsDao applications, String id) throws IOException {
+        boolean isFoundHostedApp = false;
+
+        // Handle the SMS message.
+        final SipURI uri = (SipURI) request.getRequestURI();
+        final String to = uri.getUser();
+        // There is no existing session so create a new one.
+        try {
+            // Format the destination to an E.164 phone number.
+            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+            final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
+            // Try to find an application defined for the phone number.
+            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+            final IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+            if (number != null) {
+                final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
+                builder.setSmsService(self);
+                builder.setConfiguration(configuration);
+                builder.setStorage(storage);
+                builder.setAccount(number.getAccountSid());
+                builder.setVersion(number.getApiVersion());
+                final Sid sid = number.getSmsApplicationSid();
+                if (sid != null) {
+                    final Application application = applications.getApplication(sid);
+                    builder.setUrl(application.getSmsUrl());
+                    builder.setMethod(application.getSmsMethod());
+                    builder.setFallbackUrl(application.getSmsFallbackUrl());
+                    builder.setFallbackMethod(application.getSmsFallbackMethod());
+                } else {
+                    builder.setUrl(number.getSmsUrl());
+                    builder.setMethod(number.getSmsMethod());
+                    builder.setFallbackUrl(number.getSmsFallbackUrl());
+                    builder.setFallbackMethod(number.getSmsFallbackMethod());
+                }
+                final ActorRef interpreter = builder.build();
+                final ActorRef session = session();
+                session.tell(request, self);
+                final StartInterpreter start = new StartInterpreter(session);
+                interpreter.tell(start, self);
+                isFoundHostedApp = true;
+            }
+        } catch (final NumberParseException ignored) {
+        }
+        return isFoundHostedApp;
+    }
+
+    @Override
+    public void onReceive(final Object message) throws Exception {
+        final UntypedActorContext context = getContext();
+        final Class<?> klass = message.getClass();
+        final ActorRef self = self();
+        final ActorRef sender = sender();
+        if (CreateSmsSession.class.equals(klass)) {
+            final ActorRef session = session();
+            final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
+            sender.tell(response, self);
+        } else if (DestroySmsSession.class.equals(klass)) {
+            final DestroySmsSession request = (DestroySmsSession) message;
+            final ActorRef session = request.session();
+            context.stop(session);
+        } else if (message instanceof SipServletRequest) {
+            final SipServletRequest request = (SipServletRequest) message;
+            final String method = request.getMethod();
+            if ("MESSAGE".equalsIgnoreCase(method)) {
+                message(message);
+            }
+        } else if (message instanceof SipServletResponse) {
+            final SipServletResponse response = (SipServletResponse) message;
+            final SipServletRequest request = response.getRequest();
+            final String method = request.getMethod();
+            if ("MESSAGE".equalsIgnoreCase(method)) {
+                response(message);
+            }
+        }
+    }
+
+    private void response(final Object message) throws Exception {
+        final ActorRef self = self();
+        final SipServletResponse response = (SipServletResponse) message;
+        // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
+        if (B2BUAHelper.isB2BUASession(response)) {
+            B2BUAHelper.forwardResponse(response);
+            return;
+        }
+        final SipApplicationSession application = response.getApplicationSession();
+        final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
+        session.tell(response, self);
+    }
+
+    @SuppressWarnings("unchecked")
+    private SipURI outboundInterface() {
+        final ServletContext context = servletConfig.getServletContext();
+        SipURI result = null;
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
+        for (final SipURI uri : uris) {
+            final String transport = uri.getTransportParam();
+            if ("udp".equalsIgnoreCase(transport)) {
+                result = uri;
+            }
+        }
+        return result;
+    }
+
+    private ActorRef session() {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new SmsSession(configuration, sipFactory, outboundInterface());
+            }
+        }));
+    }
 }

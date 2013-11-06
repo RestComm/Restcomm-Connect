@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
-@Immutable public final class CreateBridgeEndpoint extends AbstractCreateMessage {
-  public CreateBridgeEndpoint(final MediaSession session) {
-    super(session);
-  }
+@Immutable
+public final class CreateBridgeEndpoint extends AbstractCreateMessage {
+    public CreateBridgeEndpoint(final MediaSession session) {
+        super(session);
+    }
 }

@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CreatePacketRelayEndpoint extends AbstractCreateMessage {
-  public CreatePacketRelayEndpoint(final MediaSession session) {
-    super(session);
-  }
+@Immutable
+public final class CreatePacketRelayEndpoint extends AbstractCreateMessage {
+    public CreatePacketRelayEndpoint(final MediaSession session) {
+        super(session);
+    }
 }

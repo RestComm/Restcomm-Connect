@@ -28,12 +28,14 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/Notifications.json")
-@ThreadSafe public final class NotificationsJsonEndpoint extends NotificationsEndpoint {
-  public NotificationsJsonEndpoint() {
-    super();
-  }
-  
-  @GET public Response getNotifications(@PathParam("accountSid") final String accountSid) {
-    return getNotifications(accountSid, APPLICATION_JSON_TYPE);
-  }
+@ThreadSafe
+public final class NotificationsJsonEndpoint extends NotificationsEndpoint {
+    public NotificationsJsonEndpoint() {
+        super();
+    }
+
+    @GET
+    public Response getNotifications(@PathParam("accountSid") final String accountSid) {
+        return getNotifications(accountSid, APPLICATION_JSON_TYPE);
+    }
 }

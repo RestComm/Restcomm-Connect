@@ -21,28 +21,28 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class SpeechSynthesizerRequest {
-  private final String gender;
-  private final String language;
-  private final String text;
-  
-  public SpeechSynthesizerRequest(final String gender, final String language,
-      final String text) {
-    super();
-    this.gender = gender;
-    this.language = language;
-    this.text = text;
-  }
-  
-  public String gender() {
-    return gender;
-  }
-  
-  public String language() {
-    return language;
-  }
-  
-  public String text() {
-    return text;
-  }
+@Immutable
+public final class SpeechSynthesizerRequest {
+    private final String gender;
+    private final String language;
+    private final String text;
+
+    public SpeechSynthesizerRequest(final String gender, final String language, final String text) {
+        super();
+        this.gender = gender;
+        this.language = language;
+        this.text = text;
+    }
+
+    public String gender() {
+        return gender;
+    }
+
+    public String language() {
+        return language;
+    }
+
+    public String text() {
+        return text;
+    }
 }

@@ -27,23 +27,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class GatewayListConverter extends AbstractConverter {
-  public GatewayListConverter(final Configuration configuration) {
-	super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return GatewayList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, HierarchicalStreamWriter writer,
-      MarshallingContext context) {
-    final GatewayList list = (GatewayList)object;
-    writer.startNode("Gateways");
-    for(final Gateway gateway : list.getGateways()) {
-      context.convertAnother(gateway);
+@ThreadSafe
+public final class GatewayListConverter extends AbstractConverter {
+    public GatewayListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return GatewayList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
+        final GatewayList list = (GatewayList) object;
+        writer.startNode("Gateways");
+        for (final Gateway gateway : list.getGateways()) {
+            context.convertAnother(gateway);
+        }
+        writer.endNode();
+    }
 }

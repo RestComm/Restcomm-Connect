@@ -55,180 +55,191 @@ import org.mobicents.servlet.restcomm.patterns.StopObserving;
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
 public class IvrEndpointTest {
-  private static ActorSystem system;
-  
-  public IvrEndpointTest() {
-    super();
-  }
+    private static ActorSystem system;
 
-  @BeforeClass public static void before() throws Exception {
-    system = ActorSystem.create();
-  }
-
-  @AfterClass public static void after() throws Exception {
-    system.shutdown();
-  }
-
-  @SuppressWarnings("unchecked")
-  @Test public void testSuccessfulScenario() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-  	  // Create a new mock media gateway to simulate the real thing.
-      final ActorRef gateway = system.actorOf(new Props(MockMediaGateway.class));
-      // Create a media session. This is just an identifier that groups
-      // a set of end points, connections, and lists in to one call.
-      gateway.tell(new CreateMediaSession(), observer);
-  	  final MediaGatewayResponse<MediaSession> mediaSessionResponse = expectMsgClass(MediaGatewayResponse.class);
-      assertTrue(mediaSessionResponse.succeeded());
-      final MediaSession session = mediaSessionResponse.get();
-      // Create an IVR end point.
-      gateway.tell(new CreateIvrEndpoint(session), observer);
-      final MediaGatewayResponse<ActorRef> endpointResponse = expectMsgClass(MediaGatewayResponse.class);
-      assertTrue(endpointResponse.succeeded());
-      final ActorRef endpoint = endpointResponse.get();
-      // Start observing events from the IVR end point.
-      endpoint.tell(new Observe(observer), observer);
-	  final Observing observingResponse = expectMsgClass(Observing.class);
-	  assertTrue(observingResponse.succeeded());
-	  // Play some audio.
-	  final List<URI> announcements = new ArrayList<URI>();
-	  announcements.add(URI.create("hello.wav"));
-	  final Play play = new Play(announcements, 1);
-	  endpoint.tell(play, observer);
-	  final IvrEndpointResponse<String> ivrResponse = expectMsgClass(IvrEndpointResponse.class);
-	  assertTrue(ivrResponse.succeeded());
-	  // Stop observing events from the IVR end point.
-	  endpoint.tell(new StopObserving(observer), observer);
-    }};
-  }
-  
-  @SuppressWarnings("unchecked")
-  @Test public void testSuccessfulScenarioWithDigits() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-  	  // Create a new mock media gateway to simulate the real thing.
-      final ActorRef gateway = system.actorOf(new Props(MockMediaGateway.class));
-      // Create a media session. This is just an identifier that groups
-      // a set of end points, connections, and lists in to one call.
-      gateway.tell(new CreateMediaSession(), observer);
-  	  final MediaGatewayResponse<MediaSession> mediaSessionResponse = expectMsgClass(MediaGatewayResponse.class);
-      assertTrue(mediaSessionResponse.succeeded());
-      final MediaSession session = mediaSessionResponse.get();
-      // Create an IVR end point.
-      gateway.tell(new CreateIvrEndpoint(session), observer);
-      final MediaGatewayResponse<ActorRef> endpointResponse = expectMsgClass(MediaGatewayResponse.class);
-      assertTrue(endpointResponse.succeeded());
-      final ActorRef endpoint = endpointResponse.get();
-      // Start observing events from the IVR end point.
-      endpoint.tell(new Observe(observer), observer);
-	  final Observing observingResponse = expectMsgClass(Observing.class);
-	  assertTrue(observingResponse.succeeded());
-	  // Play some audio and collect digits.
-	  final PlayCollect.Builder builder = PlayCollect.builder();
-	  builder.addPrompt(URI.create("hello.wav"));
-	  final PlayCollect playCollect = builder.build();
-	  endpoint.tell(playCollect, observer);
-	  final IvrEndpointResponse<String> ivrResponse = expectMsgClass(IvrEndpointResponse.class);
-	  assertTrue(ivrResponse.succeeded());
-	  assertTrue("1".equals(ivrResponse.get()));
-	  // Stop observing events from the IVR end point.
-	  endpoint.tell(new StopObserving(observer), observer);
-    }};
-  }
-  
-  @SuppressWarnings("unchecked")
-  @Test public void testFailureScenario() {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-  	  // Create a new mock media gateway to simulate the real thing.
-      final ActorRef gateway = system.actorOf(new Props(FailingMockMediaGateway.class));
-      // Create a media session. This is just an identifier that groups
-      // a set of end points, connections, and lists in to one call.
-      gateway.tell(new CreateMediaSession(), observer);
-  	  final MediaGatewayResponse<MediaSession> mediaSessionResponse = expectMsgClass(MediaGatewayResponse.class);
-      assertTrue(mediaSessionResponse.succeeded());
-      final MediaSession session = mediaSessionResponse.get();
-      // Create an IVR end point.
-      gateway.tell(new CreateIvrEndpoint(session), observer);
-      final MediaGatewayResponse<ActorRef> endpointResponse = expectMsgClass(MediaGatewayResponse.class);
-      assertTrue(endpointResponse.succeeded());
-      final ActorRef endpoint = endpointResponse.get();
-      // Start observing events from the IVR end point.
-      endpoint.tell(new Observe(observer), observer);
-	  final Observing observingResponse = expectMsgClass(Observing.class);
-	  assertTrue(observingResponse.succeeded());
-	  // Play some audio.
-	  final List<URI> announcements = new ArrayList<URI>();
-	  announcements.add(URI.create("hello.wav"));
-	  final Play play = new Play(announcements, 1);
-	  endpoint.tell(play, observer);
-	  final IvrEndpointResponse<String> ivrResponse = expectMsgClass(IvrEndpointResponse.class);
-	  assertFalse(ivrResponse.succeeded());
-	  // Stop observing events from the IVR end point.
-	  endpoint.tell(new StopObserving(observer), observer);
-    }};
-  }
-  
-  private static final class MockMediaGateway extends AbstractMockMediaGateway {
-    @SuppressWarnings("unused")
-	public MockMediaGateway() {
-      super();
+    public IvrEndpointTest() {
+        super();
     }
-    
-	@Override protected void event(final Object message, final ActorRef sender) {
-	  final ActorRef self = self();
-	  if(message instanceof JainMgcpEvent) {
-        System.out.println(message.toString());
-      }
-      final Class<?> klass = message.getClass();
-      if(NotificationRequest.class.equals(klass)) {
-        // Send a successful response for this request.
-        final NotificationRequest request = (NotificationRequest)message;
-        final JainMgcpResponseEvent response = new NotificationRequestResponse(this,
-    	    ReturnCode.Transaction_Executed_Normally);
-        sender.tell(response, self);
-        System.out.println(response.toString());
-        // Send the notification.
-        final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
-        final EventName[] events = { new EventName(AUPackage.AU, event)} ;
-        final Notify notify = new Notify(this, request.getEndpointIdentifier(),
-            request.getRequestIdentifier(), events);
-        notify.setTransactionHandle((int)transactionIdPool.get());
-        sender.tell(notify, self);
-        System.out.println(notify.toString());
-      }
-	}
-  }
-  
-  private static final class FailingMockMediaGateway extends AbstractMockMediaGateway {
-    @SuppressWarnings("unused")
-	public FailingMockMediaGateway() {
-      super();
+
+    @BeforeClass
+    public static void before() throws Exception {
+        system = ActorSystem.create();
     }
-    
-	@Override protected void event(final Object message, final ActorRef sender) {
-	  final ActorRef self = self();
-	  if(message instanceof JainMgcpEvent) {
-        System.out.println(message.toString());
-      }
-      final Class<?> klass = message.getClass();
-      if(NotificationRequest.class.equals(klass)) {
-        // Send a successful response for this request.
-        final NotificationRequest request = (NotificationRequest)message;
-        final JainMgcpResponseEvent response = new NotificationRequestResponse(this,
-    	    ReturnCode.Transaction_Executed_Normally);
-        response.setTransactionHandle(request.getTransactionHandle());
-        sender.tell(response, self);
-        System.out.println(response.toString());
-        // Send the notification.
-        final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=300");
-        final EventName[] events = { new EventName(AUPackage.AU, event)} ;
-        final Notify notify = new Notify(this, request.getEndpointIdentifier(),
-            request.getRequestIdentifier(), events);
-        notify.setTransactionHandle((int)transactionIdPool.get());
-        sender.tell(notify, self);
-        System.out.println(notify.toString());
-      }
-	}
-  }
+
+    @AfterClass
+    public static void after() throws Exception {
+        system.shutdown();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSuccessfulScenario() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                // Create a new mock media gateway to simulate the real thing.
+                final ActorRef gateway = system.actorOf(new Props(MockMediaGateway.class));
+                // Create a media session. This is just an identifier that groups
+                // a set of end points, connections, and lists in to one call.
+                gateway.tell(new CreateMediaSession(), observer);
+                final MediaGatewayResponse<MediaSession> mediaSessionResponse = expectMsgClass(MediaGatewayResponse.class);
+                assertTrue(mediaSessionResponse.succeeded());
+                final MediaSession session = mediaSessionResponse.get();
+                // Create an IVR end point.
+                gateway.tell(new CreateIvrEndpoint(session), observer);
+                final MediaGatewayResponse<ActorRef> endpointResponse = expectMsgClass(MediaGatewayResponse.class);
+                assertTrue(endpointResponse.succeeded());
+                final ActorRef endpoint = endpointResponse.get();
+                // Start observing events from the IVR end point.
+                endpoint.tell(new Observe(observer), observer);
+                final Observing observingResponse = expectMsgClass(Observing.class);
+                assertTrue(observingResponse.succeeded());
+                // Play some audio.
+                final List<URI> announcements = new ArrayList<URI>();
+                announcements.add(URI.create("hello.wav"));
+                final Play play = new Play(announcements, 1);
+                endpoint.tell(play, observer);
+                final IvrEndpointResponse<String> ivrResponse = expectMsgClass(IvrEndpointResponse.class);
+                assertTrue(ivrResponse.succeeded());
+                // Stop observing events from the IVR end point.
+                endpoint.tell(new StopObserving(observer), observer);
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSuccessfulScenarioWithDigits() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                // Create a new mock media gateway to simulate the real thing.
+                final ActorRef gateway = system.actorOf(new Props(MockMediaGateway.class));
+                // Create a media session. This is just an identifier that groups
+                // a set of end points, connections, and lists in to one call.
+                gateway.tell(new CreateMediaSession(), observer);
+                final MediaGatewayResponse<MediaSession> mediaSessionResponse = expectMsgClass(MediaGatewayResponse.class);
+                assertTrue(mediaSessionResponse.succeeded());
+                final MediaSession session = mediaSessionResponse.get();
+                // Create an IVR end point.
+                gateway.tell(new CreateIvrEndpoint(session), observer);
+                final MediaGatewayResponse<ActorRef> endpointResponse = expectMsgClass(MediaGatewayResponse.class);
+                assertTrue(endpointResponse.succeeded());
+                final ActorRef endpoint = endpointResponse.get();
+                // Start observing events from the IVR end point.
+                endpoint.tell(new Observe(observer), observer);
+                final Observing observingResponse = expectMsgClass(Observing.class);
+                assertTrue(observingResponse.succeeded());
+                // Play some audio and collect digits.
+                final PlayCollect.Builder builder = PlayCollect.builder();
+                builder.addPrompt(URI.create("hello.wav"));
+                final PlayCollect playCollect = builder.build();
+                endpoint.tell(playCollect, observer);
+                final IvrEndpointResponse<String> ivrResponse = expectMsgClass(IvrEndpointResponse.class);
+                assertTrue(ivrResponse.succeeded());
+                assertTrue("1".equals(ivrResponse.get()));
+                // Stop observing events from the IVR end point.
+                endpoint.tell(new StopObserving(observer), observer);
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testFailureScenario() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                // Create a new mock media gateway to simulate the real thing.
+                final ActorRef gateway = system.actorOf(new Props(FailingMockMediaGateway.class));
+                // Create a media session. This is just an identifier that groups
+                // a set of end points, connections, and lists in to one call.
+                gateway.tell(new CreateMediaSession(), observer);
+                final MediaGatewayResponse<MediaSession> mediaSessionResponse = expectMsgClass(MediaGatewayResponse.class);
+                assertTrue(mediaSessionResponse.succeeded());
+                final MediaSession session = mediaSessionResponse.get();
+                // Create an IVR end point.
+                gateway.tell(new CreateIvrEndpoint(session), observer);
+                final MediaGatewayResponse<ActorRef> endpointResponse = expectMsgClass(MediaGatewayResponse.class);
+                assertTrue(endpointResponse.succeeded());
+                final ActorRef endpoint = endpointResponse.get();
+                // Start observing events from the IVR end point.
+                endpoint.tell(new Observe(observer), observer);
+                final Observing observingResponse = expectMsgClass(Observing.class);
+                assertTrue(observingResponse.succeeded());
+                // Play some audio.
+                final List<URI> announcements = new ArrayList<URI>();
+                announcements.add(URI.create("hello.wav"));
+                final Play play = new Play(announcements, 1);
+                endpoint.tell(play, observer);
+                final IvrEndpointResponse<String> ivrResponse = expectMsgClass(IvrEndpointResponse.class);
+                assertFalse(ivrResponse.succeeded());
+                // Stop observing events from the IVR end point.
+                endpoint.tell(new StopObserving(observer), observer);
+            }
+        };
+    }
+
+    private static final class MockMediaGateway extends AbstractMockMediaGateway {
+        @SuppressWarnings("unused")
+        public MockMediaGateway() {
+            super();
+        }
+
+        @Override
+        protected void event(final Object message, final ActorRef sender) {
+            final ActorRef self = self();
+            if (message instanceof JainMgcpEvent) {
+                System.out.println(message.toString());
+            }
+            final Class<?> klass = message.getClass();
+            if (NotificationRequest.class.equals(klass)) {
+                // Send a successful response for this request.
+                final NotificationRequest request = (NotificationRequest) message;
+                final JainMgcpResponseEvent response = new NotificationRequestResponse(this,
+                        ReturnCode.Transaction_Executed_Normally);
+                sender.tell(response, self);
+                System.out.println(response.toString());
+                // Send the notification.
+                final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
+                final EventName[] events = { new EventName(AUPackage.AU, event) };
+                final Notify notify = new Notify(this, request.getEndpointIdentifier(), request.getRequestIdentifier(), events);
+                notify.setTransactionHandle((int) transactionIdPool.get());
+                sender.tell(notify, self);
+                System.out.println(notify.toString());
+            }
+        }
+    }
+
+    private static final class FailingMockMediaGateway extends AbstractMockMediaGateway {
+        @SuppressWarnings("unused")
+        public FailingMockMediaGateway() {
+            super();
+        }
+
+        @Override
+        protected void event(final Object message, final ActorRef sender) {
+            final ActorRef self = self();
+            if (message instanceof JainMgcpEvent) {
+                System.out.println(message.toString());
+            }
+            final Class<?> klass = message.getClass();
+            if (NotificationRequest.class.equals(klass)) {
+                // Send a successful response for this request.
+                final NotificationRequest request = (NotificationRequest) message;
+                final JainMgcpResponseEvent response = new NotificationRequestResponse(this,
+                        ReturnCode.Transaction_Executed_Normally);
+                response.setTransactionHandle(request.getTransactionHandle());
+                sender.tell(response, self);
+                System.out.println(response.toString());
+                // Send the notification.
+                final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=300");
+                final EventName[] events = { new EventName(AUPackage.AU, event) };
+                final Notify notify = new Notify(this, request.getEndpointIdentifier(), request.getRequestIdentifier(), events);
+                notify.setTransactionHandle((int) transactionIdPool.get());
+                sender.tell(notify, self);
+                System.out.println(notify.toString());
+            }
+        }
+    }
 }

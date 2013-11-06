@@ -6,19 +6,22 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class AccountsTest {
-  public AccountsTest() {
-    super();
-  }
-	
-  @Before public void setUp() throws Exception {
-    
-  }
+    public AccountsTest() {
+        super();
+    }
 
-  @After public void tearDown() throws Exception {
-    
-  }
+    @Before
+    public void setUp() throws Exception {
 
-  @Test public void test() {
-    
-  }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+
+    }
+
+    @Test
+    public void test() {
+
+    }
 }

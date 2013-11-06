@@ -23,21 +23,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class LATA {
-  private final String name;
-  private final List<RateCenter> centers;
-  
-  public LATA(final String name, final List<RateCenter> centers) {
-    super();
-    this.name = name;
-    this.centers = centers;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public List<RateCenter> centers() {
-    return centers;
-  }
+@Immutable
+public final class LATA {
+    private final String name;
+    private final List<RateCenter> centers;
+
+    public LATA(final String name, final List<RateCenter> centers) {
+        super();
+        this.name = name;
+        this.centers = centers;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public List<RateCenter> centers() {
+        return centers;
+    }
 }

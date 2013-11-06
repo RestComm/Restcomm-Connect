@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class InitializeConnection {
-  private final ActorRef endpoint;
+@Immutable
+public final class InitializeConnection {
+    private final ActorRef endpoint;
 
-  public InitializeConnection(final ActorRef endpoint) {
-    super();
-    this.endpoint = endpoint;
-  }
+    public InitializeConnection(final ActorRef endpoint) {
+        super();
+        this.endpoint = endpoint;
+    }
 
-  public ActorRef endpoint() {
-    return endpoint;
-  }
+    public ActorRef endpoint() {
+        return endpoint;
+    }
 }

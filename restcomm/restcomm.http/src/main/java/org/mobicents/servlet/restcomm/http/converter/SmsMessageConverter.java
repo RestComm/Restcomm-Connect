@@ -33,91 +33,91 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class SmsMessageConverter extends AbstractConverter
-    implements JsonSerializer<SmsMessage> {
-  public SmsMessageConverter(final Configuration configuration) {
-    super(configuration);
-  }
-  
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return SmsMessage.class.equals(klass);
-  }
+public class SmsMessageConverter extends AbstractConverter implements JsonSerializer<SmsMessage> {
+    public SmsMessageConverter(final Configuration configuration) {
+        super(configuration);
+    }
 
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final SmsMessage smsMessage = (SmsMessage)object;
-    writer.startNode("SMSMessage");
-    writeSid(smsMessage.getSid(), writer);
-    writeDateCreated(smsMessage.getDateCreated(), writer);
-    writeDateUpdated(smsMessage.getDateUpdated(), writer);
-    writeDateSent(smsMessage.getDateSent(), writer);
-    writeAccountSid(smsMessage.getAccountSid(), writer);
-    writeFrom(smsMessage.getSender(), writer);
-    writeTo(smsMessage.getRecipient(), writer);
-    writeBody(smsMessage.getBody(), writer);
-    writeStatus(smsMessage.getStatus().toString(), writer);
-    writeDirection(smsMessage.getDirection().toString(), writer);
-    writePrice(smsMessage.getPrice(), writer);
-    writeApiVersion(smsMessage.getApiVersion(), writer);
-    writeUri(smsMessage.getUri(), writer);
-    writer.endNode();
-  }
-  
-  @Override public JsonElement serialize(final SmsMessage smsMessage, final Type type,
-      final JsonSerializationContext context) {
-  	final JsonObject object = new JsonObject();
-  	writeSid(smsMessage.getSid(), object);
-    writeDateCreated(smsMessage.getDateCreated(), object);
-    writeDateUpdated(smsMessage.getDateUpdated(), object);
-    writeDateSent(smsMessage.getDateSent(), object);
-    writeAccountSid(smsMessage.getAccountSid(), object);
-    writeFrom(smsMessage.getSender(), object);
-    writeTo(smsMessage.getRecipient(), object);
-    writeBody(smsMessage.getBody(), object);
-    writeStatus(smsMessage.getStatus().toString(), object);
-    writeDirection(smsMessage.getDirection().toString(), object);
-    writePrice(smsMessage.getPrice(), object);
-    writeApiVersion(smsMessage.getApiVersion(), object);
-    writeUri(smsMessage.getUri(), object);
-  	return object;
-  }
-  
-  private void writeBody(final String body, final HierarchicalStreamWriter writer) {
-    writer.startNode("Body");
-    if(body != null) {
-      writer.setValue(body);
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return SmsMessage.class.equals(klass);
     }
-    writer.endNode();
-  }
-  
-  private void writeBody(final String body, final JsonObject object) {
-    if(body != null) {
-      object.addProperty("body", body);
-    } else {
-      object.add("body", JsonNull.INSTANCE);
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final SmsMessage smsMessage = (SmsMessage) object;
+        writer.startNode("SMSMessage");
+        writeSid(smsMessage.getSid(), writer);
+        writeDateCreated(smsMessage.getDateCreated(), writer);
+        writeDateUpdated(smsMessage.getDateUpdated(), writer);
+        writeDateSent(smsMessage.getDateSent(), writer);
+        writeAccountSid(smsMessage.getAccountSid(), writer);
+        writeFrom(smsMessage.getSender(), writer);
+        writeTo(smsMessage.getRecipient(), writer);
+        writeBody(smsMessage.getBody(), writer);
+        writeStatus(smsMessage.getStatus().toString(), writer);
+        writeDirection(smsMessage.getDirection().toString(), writer);
+        writePrice(smsMessage.getPrice(), writer);
+        writeApiVersion(smsMessage.getApiVersion(), writer);
+        writeUri(smsMessage.getUri(), writer);
+        writer.endNode();
     }
-  }
-  
-  private void writeDateSent(final DateTime dateSent, final HierarchicalStreamWriter writer) {
-    writer.startNode("DateSent");
-    if(dateSent != null) {
-      writer.setValue(dateSent.toString());
+
+    @Override
+    public JsonElement serialize(final SmsMessage smsMessage, final Type type, final JsonSerializationContext context) {
+        final JsonObject object = new JsonObject();
+        writeSid(smsMessage.getSid(), object);
+        writeDateCreated(smsMessage.getDateCreated(), object);
+        writeDateUpdated(smsMessage.getDateUpdated(), object);
+        writeDateSent(smsMessage.getDateSent(), object);
+        writeAccountSid(smsMessage.getAccountSid(), object);
+        writeFrom(smsMessage.getSender(), object);
+        writeTo(smsMessage.getRecipient(), object);
+        writeBody(smsMessage.getBody(), object);
+        writeStatus(smsMessage.getStatus().toString(), object);
+        writeDirection(smsMessage.getDirection().toString(), object);
+        writePrice(smsMessage.getPrice(), object);
+        writeApiVersion(smsMessage.getApiVersion(), object);
+        writeUri(smsMessage.getUri(), object);
+        return object;
     }
-    writer.endNode();
-  }
-  
-  private void writeDateSent(final DateTime dateSent, final JsonObject object) {
-    object.addProperty("date_sent", dateSent.toString());
-  }
-  
-  private void writeDirection(final String direction, final HierarchicalStreamWriter writer) {
-    writer.startNode("Direction");
-    writer.setValue(direction);
-    writer.endNode();
-  }
-  
-  private void writeDirection(final String direction, final JsonObject object) {
-    object.addProperty("direction", direction);
-  }
+
+    private void writeBody(final String body, final HierarchicalStreamWriter writer) {
+        writer.startNode("Body");
+        if (body != null) {
+            writer.setValue(body);
+        }
+        writer.endNode();
+    }
+
+    private void writeBody(final String body, final JsonObject object) {
+        if (body != null) {
+            object.addProperty("body", body);
+        } else {
+            object.add("body", JsonNull.INSTANCE);
+        }
+    }
+
+    private void writeDateSent(final DateTime dateSent, final HierarchicalStreamWriter writer) {
+        writer.startNode("DateSent");
+        if (dateSent != null) {
+            writer.setValue(dateSent.toString());
+        }
+        writer.endNode();
+    }
+
+    private void writeDateSent(final DateTime dateSent, final JsonObject object) {
+        object.addProperty("date_sent", dateSent.toString());
+    }
+
+    private void writeDirection(final String direction, final HierarchicalStreamWriter writer) {
+        writer.startNode("Direction");
+        writer.setValue(direction);
+        writer.endNode();
+    }
+
+    private void writeDirection(final String direction, final JsonObject object) {
+        object.addProperty("direction", direction);
+    }
 }

@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Answer {
-  public Answer() {
-    super();
-  }
+@Immutable
+public final class Answer {
+    public Answer() {
+        super();
+    }
 }

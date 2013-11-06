@@ -21,16 +21,17 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class GetNextVerb {
-  private static final class Singleton {
-    private static final GetNextVerb instance = new GetNextVerb();
-  }
+@Immutable
+public final class GetNextVerb {
+    private static final class Singleton {
+        private static final GetNextVerb instance = new GetNextVerb();
+    }
 
-  private GetNextVerb() {
-    super();
-  }
-  
-  public static GetNextVerb instance() {
-    return Singleton.instance;
-  }
+    private GetNextVerb() {
+        super();
+    }
+
+    public static GetNextVerb instance() {
+        return Singleton.instance;
+    }
 }

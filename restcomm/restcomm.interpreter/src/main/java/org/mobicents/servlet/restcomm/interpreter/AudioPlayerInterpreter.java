@@ -22,11 +22,12 @@ import akka.actor.UntypedActor;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class AudioPlayerInterpreter extends UntypedActor {
-  public AudioPlayerInterpreter() {
-    super();
-  }
+    public AudioPlayerInterpreter() {
+        super();
+    }
 
-  @Override public void onReceive(final Object message) throws Exception {
-    
-  }
+    @Override
+    public void onReceive(final Object message) throws Exception {
+
+    }
 }

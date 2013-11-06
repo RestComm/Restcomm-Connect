@@ -21,17 +21,20 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class LinkStateChanged {
-  public static enum State { CLOSED, OPEN };
-  
-  private final State state;
+@Immutable
+public final class LinkStateChanged {
+    public static enum State {
+        CLOSED, OPEN
+    };
 
-  public LinkStateChanged(final State state) {
-    super();
-    this.state = state;
-  }
-  
-  public State state() {
-    return state;
-  }
+    private final State state;
+
+    public LinkStateChanged(final State state) {
+        super();
+        this.state = state;
+    }
+
+    public State state() {
+        return state;
+    }
 }

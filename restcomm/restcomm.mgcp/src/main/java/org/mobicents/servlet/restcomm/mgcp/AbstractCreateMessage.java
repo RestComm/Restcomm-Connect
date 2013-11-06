@@ -21,15 +21,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class AbstractCreateMessage {
-  private final MediaSession session;
-  
-  public AbstractCreateMessage(final MediaSession session) {
-    super();
-    this.session = session;
-  }
+@NotThreadSafe
+public abstract class AbstractCreateMessage {
+    private final MediaSession session;
 
-  public MediaSession session() {
-    return session;
-  }
+    public AbstractCreateMessage(final MediaSession session) {
+        super();
+        this.session = session;
+    }
+
+    public MediaSession session() {
+        return session;
+    }
 }

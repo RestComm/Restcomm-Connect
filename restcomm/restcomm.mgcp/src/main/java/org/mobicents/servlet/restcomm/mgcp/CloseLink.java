@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CloseLink {
-  public CloseLink() {
-    super();
-  }
+@Immutable
+public final class CloseLink {
+    public CloseLink() {
+        super();
+    }
 }
