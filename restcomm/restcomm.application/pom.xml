@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>6.1.2-TelScale-SNAPSHOT</version>
+		<version>7.1.2.GA-TelScale</version>
 	</parent>
 
 	<artifactId>restcomm.application</artifactId>
@@ -198,7 +198,7 @@
 								<configuration>
 									<tasks>
 										<copy verbose="true" todir="${JBOSS_HOME}/standalone/deployments/${project.build.finalName}.${project.packaging}">			
-											<fileset dir="${project.build.directory}/${project.build.finalName}" >
+											<fileset dir="${project.build.directory}/${project.build.finalName}">
 												<include name="**/*" />
 											</fileset>
 										</copy>
