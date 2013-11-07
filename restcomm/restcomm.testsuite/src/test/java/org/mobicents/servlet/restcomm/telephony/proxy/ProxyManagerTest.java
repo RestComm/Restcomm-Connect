@@ -15,6 +15,7 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 //import org.mobicents.servlet.restcomm.telephony.Version;
 
+
 import javax.sip.RequestEvent;
 import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
@@ -26,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Arquillian.class)
 @Ignore
 public final class ProxyManagerTest {
-    private static final String version = "6.1.2-TelScale-SNAPSHOT";// Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
 
     @ArquillianResource
     private Deployer deployer;

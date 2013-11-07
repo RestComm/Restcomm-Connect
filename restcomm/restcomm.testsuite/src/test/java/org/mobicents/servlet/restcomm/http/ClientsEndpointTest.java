@@ -34,7 +34,7 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class ClientsEndpointTest {
 
-    private static final String version = "6.1.2-TelScale-SNAPSHOT";
+    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
 
     @ArquillianResource
     private Deployer deployer;
