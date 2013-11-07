@@ -306,6 +306,19 @@
 			<artifactId>sipunit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+        <dependency>
+                <groupId>org.mobicents.commtesting</groupId>
+                <artifactId>mgcpUnit</artifactId>
+                <version>${mgcpunit.version}</version>
+                <scope>test</scope>
+        </dependency>	
+        
+        <dependency>
+                <groupId>org.mobicents.arquillian.container</groupId>
+                <artifactId>mss-arquillian-mediaserver-extension</artifactId>
+                <version>${mss.arquillian.version}</version>
+        </dependency>        	
 	</dependencies>
 
 	<build>
