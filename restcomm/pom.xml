@@ -112,6 +112,7 @@
         	<tomcat7.version>7.0.27</tomcat7.version>
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
+		<mgcpunit.version>1.0.0-ALPHA3-SNAPSHOT</mgcpunit.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
