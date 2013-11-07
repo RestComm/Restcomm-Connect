@@ -29,7 +29,7 @@ import com.google.gson.JsonObject;
 public class CallsEndpointTest {
     private final static Logger logger = Logger.getLogger(CallsEndpointTest.class.getName());
 
-    private static final String version = "6.1.2-TelScale-SNAPSHOT";
+    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
 
     @ArquillianResource
     private Deployer deployer;

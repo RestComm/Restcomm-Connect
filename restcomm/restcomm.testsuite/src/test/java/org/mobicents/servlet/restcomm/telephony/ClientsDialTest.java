@@ -15,6 +15,7 @@ import org.junit.*;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
+
 import java.net.URL;
 import java.text.ParseException;
 
@@ -28,6 +29,8 @@ import static org.junit.Assert.*;
  */
 // @RunWith(Arquillian.class)
 public class ClientsDialTest {
+    
+    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
 
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
             53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
@@ -193,7 +196,6 @@ public class ClientsDialTest {
 
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
-        String version = "6.1.2-TelScale-SNAPSHOT";
         final WebArchive archive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);

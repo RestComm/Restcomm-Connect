@@ -36,7 +36,7 @@ public class CreateCallsTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
 
-    private static final String version = "6.1.2-TelScale-SNAPSHOT";
+    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
 
     @ArquillianResource
     private Deployer deployer;

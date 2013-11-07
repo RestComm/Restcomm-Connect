@@ -35,7 +35,8 @@ import com.google.gson.JsonObject;
 public class LiveCallModificationTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
-
+    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    
     @ArquillianResource
     URL deploymentUrl;
 
@@ -267,7 +268,6 @@ public class LiveCallModificationTest {
     @Deployment(name = "LiveCallModificationTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        String version = "6.1.2-TelScale-SNAPSHOT";
         final WebArchive archive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
