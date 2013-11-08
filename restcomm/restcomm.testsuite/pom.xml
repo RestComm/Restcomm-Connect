@@ -313,7 +313,11 @@
                 <version>${mgcpunit.version}</version>
                 <scope>test</scope>
         </dependency>	
-        
+        <dependency>
+				<groupId>org.mobicents.arquillian.container</groupId>
+				<artifactId>mss-arquillian-mediaserver-api</artifactId>
+                <version>${mss.arquillian.version}</version>
+        </dependency>        
         <dependency>
                 <groupId>org.mobicents.arquillian.container</groupId>
                 <artifactId>mss-arquillian-mediaserver-extension</artifactId>

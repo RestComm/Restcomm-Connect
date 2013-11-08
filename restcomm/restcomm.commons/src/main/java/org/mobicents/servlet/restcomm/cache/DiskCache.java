@@ -30,11 +30,17 @@ import org.apache.shiro.crypto.hash.Sha256Hash;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class DiskCache extends UntypedActor {
+
+    // Logger.
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
     private final String location;
     private final String uri;
 
@@ -158,6 +164,7 @@ public final class DiskCache extends UntypedActor {
             try {
                 response = new DiskCacheResponse(cache(message));
             } catch (final Exception exception) {
+                logger.error("Error while chaching", exception);
                 response = new DiskCacheResponse(exception);
             }
             sender.tell(response, self);

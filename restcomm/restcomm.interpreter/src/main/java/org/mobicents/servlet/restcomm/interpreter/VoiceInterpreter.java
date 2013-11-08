@@ -966,6 +966,9 @@ public final class VoiceInterpreter extends UntypedActor {
                     fsm.transition(message, processingGatherChildren);
                 }
             } else {
+                if(logger.isDebugEnabled()){
+                    logger.debug("DiskCacheResponse is "+ response.toString());
+                }
                 if (checkingCache.equals(state)) {
                     fsm.transition(message, synthesizing);
                 } else {

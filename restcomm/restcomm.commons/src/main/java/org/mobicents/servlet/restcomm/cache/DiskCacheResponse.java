@@ -37,4 +37,9 @@ public final class DiskCacheResponse extends StandardResponse<URI> {
     public DiskCacheResponse(final URI object) {
         super(object);
     }
+
+    @Override
+    public String toString() {
+        return "DiskCacheResponse [" + super.toString() + "]";
+    }
 }
