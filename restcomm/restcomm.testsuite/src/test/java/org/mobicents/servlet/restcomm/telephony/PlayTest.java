@@ -76,7 +76,7 @@ public class PlayTest {
     private SipPhone bobPhone;
     private String bobContact = "sip:bob@127.0.0.1:5090";
 
-    @Mediaserver(IVR = 10, CONF = 10, RELAY = 10)
+    @Mediaserver(IVR = 10, CONF = 10, RELAY = 10, BRIDGE = 10)
     private EmbeddedMediaserver mediaserver;
     private MgcpUnit mgcpUnit;
     private MgcpEventListener mgcpEventListener;
@@ -118,6 +118,10 @@ public class PlayTest {
         mgcpUnit = null;
     }
 
+    /**
+     * Makes use of hello-play.xml which simply plays demo-prompt.wav
+     * @throws InterruptedException
+     */
     @Test
     public synchronized void testPlay() throws InterruptedException {
         deployer.deploy("PlayTest");
@@ -139,6 +143,20 @@ public class PlayTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        
+        // Start a new thread for bob to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(bobCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+        
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
     }
 
     @Deployment(name = "PlayTest", managed = false, testable = false)
