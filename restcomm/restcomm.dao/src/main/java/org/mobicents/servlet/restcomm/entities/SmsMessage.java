@@ -111,13 +111,13 @@ private final String apiVersion;
   }
 
   public BigDecimal getPrice() {
-    return price;
+    return (price == null) ? new BigDecimal("0.0") : price;
   }
-
+	  
   public Currency getPriceUnit() {
-	return priceUnit;
+	  return (priceUnit == null) ? Currency.getInstance("USD") : priceUnit;
   }
-
+  
   public String getApiVersion() {
     return apiVersion;
   }
