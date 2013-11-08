@@ -138,8 +138,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
   }
   
   public Currency getPriceUnit() {
-		return priceUnit;
-  }
+	  return (priceUnit == null) ? Currency.getInstance("USD") : priceUnit;  }
   
   public String getDirection() {
     return direction;
@@ -301,7 +300,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 		this.price = price;
 	}
 
-	public void setPriceUnit(Currency priceUnit) {
+	public void setPriceUnit(final Currency priceUnit) {
 		this.priceUnit = priceUnit;
 	}
 

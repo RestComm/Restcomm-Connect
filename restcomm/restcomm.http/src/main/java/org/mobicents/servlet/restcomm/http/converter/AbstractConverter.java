@@ -156,12 +156,20 @@ public abstract class AbstractConverter implements Converter {
   
   protected void writePriceUnit(final Currency priceUnit, final HierarchicalStreamWriter writer) {
     writer.startNode("PriceUnit");
-    writer.setValue(priceUnit.getCurrencyCode());
+    if(priceUnit != null) {
+    	writer.setValue(priceUnit.toString());
+    }
     writer.endNode();
   }
   
   protected void writePriceUnit(final Currency priceUnit, final JsonObject object) {
-    object.addProperty("price_unit", priceUnit.getCurrencyCode());
+    if(priceUnit != null) {
+    	object.addProperty("price_unit", priceUnit.toString());
+   	} else {
+        object.add("price_unit", JsonNull.INSTANCE);        
+    }
+	  
+    object.addProperty("price_unit", priceUnit.toString());
   }
   
  
