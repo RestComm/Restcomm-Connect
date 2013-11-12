@@ -138,14 +138,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 	final State acquiringAsrInfo;
 	final State acquiringSynthesizerInfo;
 	final State acquiringCallInfo;
-//	final State downloadingRcml;
-//	final State downloadingFallbackRcml;
-//	final State initializingCall;
-//	final State initializingCallMediaGroup;
-//	final State acquiringCallMediaGroup;
-//	final State ready;
-//	final State notFound;
-//	final State rejecting;
 	final State playingRejectionPrompt;
 	final State pausing;
 	final State caching;
@@ -249,19 +241,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 				new AcquiringSpeechSynthesizerInfo(source), null);
 		acquiringCallInfo = new State("acquiring call info",
 				new AcquiringCallInfo(source), null);
-//		acquiringCallMediaGroup = new State("acquiring call media group",
-//				new AcquiringCallMediaGroup(source), null);
-//		downloadingRcml = new State("downloading rcml",
-//				new DownloadingRcml(source), null);
-//		downloadingFallbackRcml = new State("downloading fallback rcml",
-//				new DownloadingFallbackRcml(source), null);
-//		initializingCall = new State("initializing call",
-//				new InitializingCall(source), null);
-//		initializingCallMediaGroup = new State("initializing call media group",
-//				new InitializingCallMediaGroup(source), null);
-//		ready = new State("ready", new Ready(source), null);
-//		notFound = new State("notFound", new NotFound(source), null);
-//		rejecting = new State("rejecting", new Rejecting(source), null);
 		playingRejectionPrompt = new State("playing rejection prompt",
 				new PlayingRejectionPrompt(source), null);
 		pausing = new State("pausing", new Pausing(source), null);
@@ -284,69 +263,14 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 				new CreatingSmsSession(source), null);
 		sendingSms = new State("sending sms", new SendingSms(source), null);
 		hangingUp = new State("hanging up", new HangingUp(source), null);
-//		finished = new State("finished", new Finished(source), null);
-		/*
-    dialing = new State("dialing", null, null);
-    bridging = new State("bridging", null, null);
-    conferencing = new State("conferencing", null, null);
-		 */
+		
 		// Initialize the transitions for the FSM.
 		transitions.add(new Transition(uninitialized, acquiringAsrInfo));
 		transitions.add(new Transition(acquiringAsrInfo, acquiringSynthesizerInfo));
-//		transitions.add(new Transition(acquiringAsrInfo, finished));
 		transitions.add(new Transition(acquiringSynthesizerInfo, acquiringCallInfo));
-//		transitions.add(new Transition(acquiringSynthesizerInfo, finished));
-//		transitions.add(new Transition(acquiringCallInfo, initializingCall));
-//		transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
-//		transitions.add(new Transition(acquiringCallInfo, finished));
-//		transitions.add(new Transition(initializingCall, acquiringCallMediaGroup));
-//		transitions.add(new Transition(initializingCall, hangingUp));
-//		transitions.add(new Transition(initializingCall, finished));
-//		transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
-//		transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
-//		transitions.add(new Transition(acquiringCallMediaGroup, finished));
-//		transitions.add(new Transition(initializingCallMediaGroup, faxing));
-//		transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
-//		transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
-//		transitions.add(new Transition(initializingCallMediaGroup, pausing));
-//		transitions.add(new Transition(initializingCallMediaGroup, checkingCache));
-//		transitions.add(new Transition(initializingCallMediaGroup, caching));
-//		transitions.add(new Transition(initializingCallMediaGroup, synthesizing));
-//		transitions.add(new Transition(initializingCallMediaGroup, redirecting));
-//		transitions.add(new Transition(initializingCallMediaGroup, processingGatherChildren));
-//		transitions.add(new Transition(initializingCallMediaGroup, creatingRecording));
-//		transitions.add(new Transition(initializingCallMediaGroup, creatingSmsSession));
-//		transitions.add(new Transition(initializingCallMediaGroup, hangingUp));
-//		transitions.add(new Transition(initializingCallMediaGroup, finished));
-//		transitions.add(new Transition(downloadingRcml, ready));
-//		transitions.add(new Transition(downloadingRcml, notFound));
-//		transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
-//		transitions.add(new Transition(downloadingRcml, hangingUp));
-//		transitions.add(new Transition(downloadingRcml, finished));
-//		transitions.add(new Transition(downloadingFallbackRcml, ready));
-//		transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
-//		transitions.add(new Transition(downloadingFallbackRcml, finished));
-//		transitions.add(new Transition(ready, initializingCall));
-//		transitions.add(new Transition(ready, faxing));
-//		transitions.add(new Transition(ready, pausing));
-//		transitions.add(new Transition(ready, checkingCache));
-//		transitions.add(new Transition(ready, caching));
-//		transitions.add(new Transition(ready, synthesizing));
-//		transitions.add(new Transition(ready, rejecting));
-//		transitions.add(new Transition(ready, redirecting));
-//		transitions.add(new Transition(ready, processingGatherChildren));
-//		transitions.add(new Transition(ready, creatingRecording));
-//		transitions.add(new Transition(ready, creatingSmsSession));
-//		transitions.add(new Transition(ready, hangingUp));
-//		transitions.add(new Transition(ready, finished));
-//		transitions.add(new Transition(pausing, ready));
 		transitions.add(new Transition(pausing, hangingUp));
-//		transitions.add(new Transition(pausing, finished));
-//		transitions.add(new Transition(rejecting, acquiringCallMediaGroup));
-//		transitions.add(new Transition(rejecting, finished));
 		transitions.add(new Transition(playingRejectionPrompt, hangingUp));
 		transitions.add(new Transition(faxing, faxing));
-//		transitions.add(new Transition(faxing, ready));
 		transitions.add(new Transition(faxing, caching));
 		transitions.add(new Transition(faxing, pausing));
 		transitions.add(new Transition(faxing, redirecting));
@@ -355,7 +279,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(faxing, creatingRecording));
 		transitions.add(new Transition(faxing, creatingSmsSession));
 		transitions.add(new Transition(faxing, hangingUp));
-//		transitions.add(new Transition(faxing, finished));
 		transitions.add(new Transition(caching, faxing));
 		transitions.add(new Transition(caching, playing));
 		transitions.add(new Transition(caching, caching));
@@ -366,13 +289,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(caching, creatingRecording));
 		transitions.add(new Transition(caching, creatingSmsSession));
 		transitions.add(new Transition(caching, hangingUp));
-//		transitions.add(new Transition(caching, finished));
 		transitions.add(new Transition(checkingCache, synthesizing));
 		transitions.add(new Transition(checkingCache, playing));
 		transitions.add(new Transition(checkingCache, checkingCache));
-//		transitions.add(new Transition(playing, ready));
 		transitions.add(new Transition(playing, hangingUp));
-//		transitions.add(new Transition(playing, finished));
 		transitions.add(new Transition(synthesizing, faxing));
 		transitions.add(new Transition(synthesizing, pausing));
 		transitions.add(new Transition(synthesizing, checkingCache));
@@ -383,9 +303,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(synthesizing, creatingSmsSession));
 		transitions.add(new Transition(synthesizing, synthesizing));
 		transitions.add(new Transition(synthesizing, hangingUp));
-//		transitions.add(new Transition(synthesizing, finished));
 		transitions.add(new Transition(redirecting, faxing));
-//		transitions.add(new Transition(redirecting, ready));
 		transitions.add(new Transition(redirecting, pausing));
 		transitions.add(new Transition(redirecting, checkingCache));
 		transitions.add(new Transition(redirecting, caching));
@@ -395,12 +313,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(redirecting, creatingRecording));
 		transitions.add(new Transition(redirecting, creatingSmsSession));
 		transitions.add(new Transition(redirecting, hangingUp));
-//		transitions.add(new Transition(redirecting, finished));
 		transitions.add(new Transition(creatingRecording, finishRecording));
 		transitions.add(new Transition(creatingRecording, hangingUp));
-//		transitions.add(new Transition(creatingRecording, finished));
 		transitions.add(new Transition(finishRecording, faxing));
-//		transitions.add(new Transition(finishRecording, ready));
 		transitions.add(new Transition(finishRecording, pausing));
 		transitions.add(new Transition(finishRecording, checkingCache));
 		transitions.add(new Transition(finishRecording, caching));
@@ -410,15 +325,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(finishRecording, creatingRecording));
 		transitions.add(new Transition(finishRecording, creatingSmsSession));
 		transitions.add(new Transition(finishRecording, hangingUp));
-//		transitions.add(new Transition(finishRecording, finished));
 		transitions.add(new Transition(processingGatherChildren, processingGatherChildren));
 		transitions.add(new Transition(processingGatherChildren, gathering));
 		transitions.add(new Transition(processingGatherChildren, hangingUp));
-//		transitions.add(new Transition(processingGatherChildren, finished));
 		transitions.add(new Transition(gathering, finishGathering));
 		transitions.add(new Transition(gathering, hangingUp));
-//		transitions.add(new Transition(gathering, finished));
-//		transitions.add(new Transition(finishGathering, ready));
 		transitions.add(new Transition(finishGathering, faxing));
 		transitions.add(new Transition(finishGathering, pausing));
 		transitions.add(new Transition(finishGathering, checkingCache));
@@ -429,12 +340,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(finishGathering, creatingRecording));
 		transitions.add(new Transition(finishGathering, creatingSmsSession));
 		transitions.add(new Transition(finishGathering, hangingUp));
-//		transitions.add(new Transition(finishGathering, finished));
 		transitions.add(new Transition(creatingSmsSession, sendingSms));
 		transitions.add(new Transition(creatingSmsSession, hangingUp));
-//		transitions.add(new Transition(creatingSmsSession, finished));
 		transitions.add(new Transition(sendingSms, faxing));
-//		transitions.add(new Transition(sendingSms, ready));
 		transitions.add(new Transition(sendingSms, pausing));
 		transitions.add(new Transition(sendingSms, caching));
 		transitions.add(new Transition(sendingSms, synthesizing));
@@ -443,8 +351,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		transitions.add(new Transition(sendingSms, creatingRecording));
 		transitions.add(new Transition(sendingSms, creatingSmsSession));
 		transitions.add(new Transition(sendingSms, hangingUp));
-//		transitions.add(new Transition(sendingSms, finished));
-//		transitions.add(new Transition(hangingUp, finished));
 	}
 	
 	@Override
@@ -769,211 +675,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 		}
 	}
 
-//	private final class InitializingCall extends AbstractAction {
-//		public InitializingCall(final ActorRef source) {
-//			super(source);
-//		}
-//
-//		@SuppressWarnings("unchecked")
-//		@Override public void execute(final Object message) throws Exception {
-//			final Class<?> klass = message.getClass();
-//			if(CallResponse.class.equals(klass)) {
-//				// Update the interpreter state.
-//				final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
-//				callInfo = response.get();
-//				callState = callInfo.state();
-//				// Update the storage.
-//				if(callRecord != null) {
-//				callRecord = callRecord.setStatus(callState.toString());
-//				final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-//				records.updateCallDetailRecord(callRecord);
-//				}
-//				// Update the application.
-//				callback();
-//				// Start dialing.
-//				call.tell(new Dial(), source);
-//			} else if(Tag.class.equals(klass)) {
-//				// Update the interpreter state.
-//				verb = (Tag)message;
-//				// Answer the call.
-//				call.tell(new Answer(), source);
-//			}
-//		}
-//	}
-
-//	private final class AcquiringCallMediaGroup extends AbstractAction {
-//		public AcquiringCallMediaGroup(final ActorRef source) {
-//			super(source);
-//		}
-//
-//		@Override public void execute(final Object message) throws Exception {
-//			final Class<?> klass = message.getClass();
-//			if(CallStateChanged.class.equals(klass)) {
-//				// Update the interpreter state.
-//				final CallStateChanged event = (CallStateChanged)message;
-//				callState = event.state();
-//				// Update the storage.
-//				if(callRecord != null){
-//				callRecord = callRecord.setStatus(callState.toString());
-//				callRecord = callRecord.setStartTime(DateTime.now());
-//				final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-//				records.updateCallDetailRecord(callRecord);
-//				}
-//				// Update the application.
-//				callback();
-//			}
-//			call.tell(new CreateMediaGroup(), source);
-//		}
-//	}
-
-//	private final class InitializingCallMediaGroup extends AbstractAction {
-//		public InitializingCallMediaGroup(final ActorRef source) {
-//			super(source);
-//		}
-//
-//		@SuppressWarnings("unchecked")
-//		@Override public void execute(final Object message) throws Exception {
-//			final Class<?> klass = message.getClass();
-//			if(CallResponse.class.equals(klass)) {
-//				final CallResponse<ActorRef> response = (CallResponse<ActorRef>)message;
-//				callMediaGroup = response.get();
-//				callMediaGroup.tell(new Observe(source), source);
-//				callMediaGroup.tell(new StartMediaGroup(), source);
-//			} else if(Tag.class.equals(klass)) {
-//				verb = (Tag)message;
-//			}
-//		}
-//	}
-
-//	private final class DownloadingRcml extends AbstractAction {
-//		public DownloadingRcml(final ActorRef source) {
-//			super(source);
-//		}
-//
-//		@SuppressWarnings("unchecked")
-//		@Override public void execute(final Object message) throws Exception {
-//			final Class<?> klass = message.getClass();
-//			final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-//			if(CallResponse.class.equals(klass)) {
-//				final CallResponse<CallInfo> response = (CallResponse<CallInfo>)message;
-//				callInfo = response.get();
-//				callState = callInfo.state();
-//				if(callInfo.direction().equals("inbound")) {
-//					// Create a call detail record for the call.
-//					final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-//					builder.setSid(callInfo.sid());
-//					builder.setDateCreated(callInfo.dateCreated());
-//					builder.setAccountSid(accountId);
-//					builder.setTo(callInfo.to());
-//					builder.setCallerName(callInfo.fromName());
-//					builder.setFrom(callInfo.from());
-//					builder.setForwardedFrom(callInfo.forwardedFrom());
-//					builder.setPhoneNumberSid(phoneId);
-//					builder.setStatus(callState.toString());
-//					final DateTime now = DateTime.now();
-//					builder.setStartTime(now);
-//					builder.setDirection(callInfo.direction());
-//					builder.setApiVersion(version);
-//					builder.setPrice(new BigDecimal("0.00"));
-//					final StringBuilder buffer = new StringBuilder();
-//					buffer.append("/").append(version).append("/Accounts/");
-//					buffer.append(accountId.toString()).append("/Calls/");
-//					buffer.append(callInfo.sid().toString());
-//					final URI uri = URI.create(buffer.toString());
-//					builder.setUri(uri);
-//					callRecord = builder.build();
-//					records.addCallDetailRecord(callRecord);
-//					// Update the application.
-//					callback();
-//				}
-//			}
-//			// Ask the downloader to get us the application that will be executed.
-//			final List<NameValuePair> parameters = parameters();
-//			request = new HttpRequestDescriptor(url, method, parameters);
-//			downloader.tell(request, source);
-//		}
-//	}
-
-//	private final class DownloadingFallbackRcml extends AbstractAction {
-//		public DownloadingFallbackRcml(final ActorRef source) {
-//			super(source);
-//		}
-//
-//		@Override public void execute(final Object message) throws Exception {
-//			final Class<?> klass = message.getClass();
-//			// Notify the account of the issue.
-//			if(DownloaderResponse.class.equals(klass)) {
-//				final DownloaderResponse result = (DownloaderResponse)message;
-//				final Throwable cause = result.cause();
-//				Notification notification = null;
-//				if(cause instanceof ClientProtocolException) {
-//					notification = notification(ERROR_NOTIFICATION, 11206, cause.getMessage());
-//				} else if(cause instanceof IOException) {
-//					notification = notification(ERROR_NOTIFICATION, 11205, cause.getMessage());
-//				} else if(cause instanceof URISyntaxException) {
-//					notification = notification(ERROR_NOTIFICATION, 11100, cause.getMessage());
-//				}
-//				if(notification != null) {
-//					final NotificationsDao notifications = storage.getNotificationsDao();
-//					notifications.addNotification(notification);
-//					sendMail(notification);
-//				}
-//			}
-//			// Try to use the fall back url and method.
-//			final List<NameValuePair> parameters = parameters();
-//			request = new HttpRequestDescriptor(fallbackUrl, fallbackMethod, parameters);
-//			downloader.tell(request, source);
-//		}
-//	}
-
-//	private final class Ready extends AbstractAction {
-//		public Ready(final ActorRef source) {
-//			super(source);
-//		}
-//
-//		@Override public void execute(final Object message) throws Exception {
-//			final UntypedActorContext context = getContext();
-//			final State state = fsm.state();
-//			if(initializingCallMediaGroup.equals(state)) {
-//				// Handle pending verbs.
-//				source.tell(verb, source);
-//				return;
-//			} else if(downloadingRcml.equals(state) ||
-//					downloadingFallbackRcml.equals(state) ||
-//					redirecting.equals(state) ||
-//					finishGathering.equals(state) ||
-//					finishRecording.equals(state) ||
-//					sendingSms.equals(state) ||
-//					finishDialing.equals(state) ||
-//					finishConferencing.equals(state)) {
-//				response = ((DownloaderResponse)message).get();
-//				if(parser != null) {
-//					context.stop(parser);
-//					parser = null;
-//				}
-//				final String type = response.getContentType();
-//				if(type.contains("text/xml") || type.contains("application/xml") ||
-//						type.contains("text/html")) {
-//					parser = parser(response.getContentAsString());
-//				} else if(type.contains("audio/wav") || type.contains("audio/wave") ||
-//						type.contains("audio/x-wav")) {
-//					parser = parser("<Play>" + request.getUri() + "</Play>");
-//				} else if(type.contains("text/plain")) {
-//					parser = parser("<Say>" + response.getContentAsString() + "</Say>");
-//				} else {
-//					final StopInterpreter stop = StopInterpreter.instance();
-//					source.tell(stop, source);
-//					return;
-//				}
-//			} else if(pausing.equals(state)) {
-//				context.setReceiveTimeout(Duration.Undefined());
-//			}
-//			// Ask the parser for the next action to take.
-//			final GetNextVerb next = GetNextVerb.instance();
-//			parser.tell(next, source);
-//		}
-//	}
-	
 	final class NotFound extends AbstractAction {
         public NotFound(final ActorRef source) {
             super(source);
@@ -2152,69 +1853,4 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 			parser.tell(next, source);
 		}
 	}
-
-//	private final class Finished extends AbstractAction {
-//		public Finished(final ActorRef source) {
-//			super(source);
-//		}
-//
-//		@Override public void execute(final Object message) throws Exception {
-//			final Class<?> klass = message.getClass();
-//			if(CallStateChanged.class.equals(klass)) {
-//				final CallStateChanged event = (CallStateChanged)message;
-//				callState = event.state();
-//				if (callRecord != null){
-//				callRecord = callRecord.setStatus(callState.toString());
-//				final DateTime end = DateTime.now();
-//				callRecord = callRecord.setEndTime(end);
-//				final int seconds = (int)(end.getMillis() -
-//						callRecord.getStartTime().getMillis()) / 1000;
-//				callRecord = callRecord.setDuration(seconds);
-//				final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-//				records.updateCallDetailRecord(callRecord);
-//				}
-//				callback();
-//			}
-//			// Cleanup the outbound call if necessary.
-//			final State state = fsm.state();
-//			if(bridged.equals(state)) {
-//				if(outboundCall != null) {
-//					outboundCall.tell(new StopObserving(source), source);
-//					outboundCall.tell(new Hangup(), source);
-//				}
-//			}
-//			// If we still have a conference media group release it.
-//			final StopMediaGroup stop = new StopMediaGroup();
-//			if(conferenceMediaGroup != null) {
-//				conferenceMediaGroup.tell(stop, source);  
-//				final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-//				conference.tell(destroy, source);
-//				conferenceMediaGroup = null;
-//			}
-//			// If the call is in a conference remove it.
-//			if(conference != null) {
-//				final RemoveParticipant remove = new RemoveParticipant(call);
-//				conference.tell(remove, source);
-//			}
-//			// Destroy the media group(s).
-//			if(callMediaGroup != null) {
-//				callMediaGroup.tell(stop, source);
-//				final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
-//				call.tell(destroy, source);
-//				callMediaGroup = null;
-//			}
-//			// Destroy the Call(s).
-//			callManager.tell(new DestroyCall(call), source);
-//			// Stop the dependencies.
-//			final UntypedActorContext context = getContext();
-//			context.stop(mailer);
-//			context.stop(downloader);
-//			context.stop(asrService);
-//			context.stop(faxService);
-//			context.stop(cache);
-//			context.stop(synthesizer);
-//			// Stop the interpreter.
-//			postCleanup();
-//		}
-//	}
 }
