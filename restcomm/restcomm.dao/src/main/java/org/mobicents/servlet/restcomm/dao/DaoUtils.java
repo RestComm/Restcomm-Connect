@@ -30,7 +30,8 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class DaoUtils {
+@ThreadSafe
+public final class DaoUtils {
   private DaoUtils() {
     super();
   }

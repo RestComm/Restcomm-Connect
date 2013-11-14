@@ -38,65 +38,77 @@ import scala.concurrent.duration.FiniteDuration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class DownloaderTest {
-  private ActorSystem system;
-  private ActorRef downloader;
+    private ActorSystem system;
+    private ActorRef downloader;
 
-  public DownloaderTest() {
-    super();
-  }
+    public DownloaderTest() {
+        super();
+    }
 
-  @Before public void before() throws Exception {
-    system = ActorSystem.create();
-    downloader = system.actorOf(new Props(Downloader.class));
-  }
+    @Before
+    public void before() throws Exception {
+        system = ActorSystem.create();
+        downloader = system.actorOf(new Props(Downloader.class));
+    }
 
-  @After public void after() throws Exception {
-    system.shutdown();
-  }
+    @After
+    public void after() throws Exception {
+        system.shutdown();
+    }
 
-  @Test public void testGet() throws URISyntaxException, IOException {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      final URI uri = URI.create("http://www.restcomm.org");
-      final String method = "GET";
-      final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
-      downloader.tell(request, observer);
-      final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
-      final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
-      assertTrue(response.succeeded());
-      final HttpResponseDescriptor descriptor = response.get();
-      System.out.println("Result: "+descriptor.getContentAsString());
-      assertTrue(descriptor.getContentAsString().contains("<title>RestComm - Home</title>"));
-    }};
-  }
-  
-  @Test @Ignore public void testPost() throws URISyntaxException, IOException {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      final URI uri = URI.create("http://www.restcomm.org");
-      final String method = "POST";
-      final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
-      downloader.tell(request, observer);
-      final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
-      final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
-      assertTrue(response.succeeded());
-      final HttpResponseDescriptor descriptor = response.get();
-      assertTrue(descriptor.getContentAsString().contains("<title>RestComm - Home</title>"));
-    }};
-  }
-  
-  @Test public void testNotFound() throws URISyntaxException, IOException {
-    new JavaTestKit(system) {{
-      final ActorRef observer = getRef();
-      final URI uri = URI.create("http://www.telestax.com/not-found.html");
-      final String method = "GET";
-      final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
-      downloader.tell(request, observer);
-      final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
-      final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
-      assertTrue(response.succeeded());
-      final HttpResponseDescriptor descriptor = response.get();
-      assertTrue(descriptor.getStatusCode() == 404);
-    }};
-  }
+    @Test
+    public void testGet() throws URISyntaxException, IOException {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final URI uri = URI.create("http://www.restcomm.org");
+                final String method = "GET";
+                final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
+                downloader.tell(request, observer);
+                final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
+                final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
+                assertTrue(response.succeeded());
+                final HttpResponseDescriptor descriptor = response.get();
+                System.out.println("Result: " + descriptor.getContentAsString());
+                assertTrue(descriptor.getContentAsString().contains("<title>RestComm - Home</title>"));
+            }
+        };
+    }
+
+    @Test
+    @Ignore
+    public void testPost() throws URISyntaxException, IOException {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final URI uri = URI.create("http://www.restcomm.org");
+                final String method = "POST";
+                final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
+                downloader.tell(request, observer);
+                final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
+                final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
+                assertTrue(response.succeeded());
+                final HttpResponseDescriptor descriptor = response.get();
+                assertTrue(descriptor.getContentAsString().contains("<title>RestComm - Home</title>"));
+            }
+        };
+    }
+
+    @Test
+    public void testNotFound() throws URISyntaxException, IOException {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final URI uri = URI.create("http://www.telestax.com/not-found.html");
+                final String method = "GET";
+                final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
+                downloader.tell(request, observer);
+                final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
+                final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
+                assertTrue(response.succeeded());
+                final HttpResponseDescriptor descriptor = response.get();
+                assertTrue(descriptor.getStatusCode() == 404);
+            }
+        };
+    }
 }
