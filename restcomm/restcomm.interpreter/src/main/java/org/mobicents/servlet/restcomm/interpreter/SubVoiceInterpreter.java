@@ -103,7 +103,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
     private final State rejecting;
     private final State finished;
     private final State checkingMediaGroupState;
-    
+
     // application data.
     private DownloaderResponse downloaderResponse;
     private ActorRef source;
@@ -134,85 +134,85 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         finished = new State("finished", new Finished(source), null);
         checkingMediaGroupState = new State("checkingMediaGroupState", new CheckMediaGroupState(source), null);
 
-		transitions.add(new Transition(acquiringAsrInfo, finished));
-		transitions.add(new Transition(acquiringSynthesizerInfo, finished));
-		transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
-		transitions.add(new Transition(acquiringCallInfo, finished));
-		
-		transitions.add(new Transition(acquiringCallMediaGroup, checkingMediaGroupState));
-		transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
-		transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
-		transitions.add(new Transition(acquiringCallMediaGroup, finished));
-		
-		transitions.add(new Transition(checkingMediaGroupState, initializingCallMediaGroup));
-		transitions.add(new Transition(checkingMediaGroupState, faxing));
-		transitions.add(new Transition(checkingMediaGroupState, downloadingRcml));
-		transitions.add(new Transition(checkingMediaGroupState, playingRejectionPrompt));
-		transitions.add(new Transition(checkingMediaGroupState, pausing));
-		transitions.add(new Transition(checkingMediaGroupState, checkingCache));
-		transitions.add(new Transition(checkingMediaGroupState, caching));
-		transitions.add(new Transition(checkingMediaGroupState, synthesizing));
-		transitions.add(new Transition(checkingMediaGroupState, redirecting));
-		transitions.add(new Transition(checkingMediaGroupState, processingGatherChildren));
-		transitions.add(new Transition(checkingMediaGroupState, creatingRecording));
-		transitions.add(new Transition(checkingMediaGroupState, creatingSmsSession));
-		transitions.add(new Transition(checkingMediaGroupState, hangingUp));
-		transitions.add(new Transition(checkingMediaGroupState, finished));
-		transitions.add(new Transition(checkingMediaGroupState, ready));
-		
-		transitions.add(new Transition(initializingCallMediaGroup, faxing));
-		transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
-		transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
-		transitions.add(new Transition(initializingCallMediaGroup, pausing));
-		transitions.add(new Transition(initializingCallMediaGroup, checkingCache));
-		transitions.add(new Transition(initializingCallMediaGroup, caching));
-		transitions.add(new Transition(initializingCallMediaGroup, synthesizing));
-		transitions.add(new Transition(initializingCallMediaGroup, redirecting));
-		transitions.add(new Transition(initializingCallMediaGroup, processingGatherChildren));
-		transitions.add(new Transition(initializingCallMediaGroup, creatingRecording));
-		transitions.add(new Transition(initializingCallMediaGroup, creatingSmsSession));
-		transitions.add(new Transition(initializingCallMediaGroup, hangingUp));
-		transitions.add(new Transition(initializingCallMediaGroup, finished));
-		transitions.add(new Transition(initializingCallMediaGroup, ready));
-		transitions.add(new Transition(downloadingRcml, ready));
-		transitions.add(new Transition(downloadingRcml, notFound));
-		transitions.add(new Transition(downloadingRcml, hangingUp));
-		transitions.add(new Transition(downloadingRcml, finished));
-		transitions.add(new Transition(downloadingRcml, acquiringCallMediaGroup));
-		transitions.add(new Transition(ready, faxing));
-		transitions.add(new Transition(ready, pausing));
-		transitions.add(new Transition(ready, checkingCache));
-		transitions.add(new Transition(ready, caching));
-		transitions.add(new Transition(ready, synthesizing));
-		transitions.add(new Transition(ready, rejecting));
-		transitions.add(new Transition(ready, redirecting));
-		transitions.add(new Transition(ready, processingGatherChildren));
-		transitions.add(new Transition(ready, creatingRecording));
-		transitions.add(new Transition(ready, creatingSmsSession));
-		transitions.add(new Transition(ready, hangingUp));
-		transitions.add(new Transition(ready, finished));
-		transitions.add(new Transition(pausing, ready));
-		transitions.add(new Transition(pausing, finished));
-		transitions.add(new Transition(rejecting, acquiringCallMediaGroup));
-		transitions.add(new Transition(rejecting, finished));
-		transitions.add(new Transition(faxing, ready));
-		transitions.add(new Transition(faxing, finished));
-		transitions.add(new Transition(caching, finished));
-		transitions.add(new Transition(playing, ready));
-		transitions.add(new Transition(playing, finished));
-		transitions.add(new Transition(synthesizing, finished));
-		transitions.add(new Transition(redirecting, ready));
-		transitions.add(new Transition(redirecting, finished));
-		transitions.add(new Transition(creatingRecording, finished));
-		transitions.add(new Transition(finishRecording, ready));
-		transitions.add(new Transition(finishRecording, finished));
-		transitions.add(new Transition(processingGatherChildren, finished));
-		transitions.add(new Transition(gathering, finished));
-		transitions.add(new Transition(finishGathering, finished));
-		transitions.add(new Transition(creatingSmsSession, finished));
-		transitions.add(new Transition(sendingSms, ready));
-		transitions.add(new Transition(sendingSms, finished));
-		transitions.add(new Transition(hangingUp, finished));
+        transitions.add(new Transition(acquiringAsrInfo, finished));
+        transitions.add(new Transition(acquiringSynthesizerInfo, finished));
+        transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
+        transitions.add(new Transition(acquiringCallInfo, finished));
+
+        transitions.add(new Transition(acquiringCallMediaGroup, checkingMediaGroupState));
+        transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
+        transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
+        transitions.add(new Transition(acquiringCallMediaGroup, finished));
+
+        transitions.add(new Transition(checkingMediaGroupState, initializingCallMediaGroup));
+        transitions.add(new Transition(checkingMediaGroupState, faxing));
+        transitions.add(new Transition(checkingMediaGroupState, downloadingRcml));
+        transitions.add(new Transition(checkingMediaGroupState, playingRejectionPrompt));
+        transitions.add(new Transition(checkingMediaGroupState, pausing));
+        transitions.add(new Transition(checkingMediaGroupState, checkingCache));
+        transitions.add(new Transition(checkingMediaGroupState, caching));
+        transitions.add(new Transition(checkingMediaGroupState, synthesizing));
+        transitions.add(new Transition(checkingMediaGroupState, redirecting));
+        transitions.add(new Transition(checkingMediaGroupState, processingGatherChildren));
+        transitions.add(new Transition(checkingMediaGroupState, creatingRecording));
+        transitions.add(new Transition(checkingMediaGroupState, creatingSmsSession));
+        transitions.add(new Transition(checkingMediaGroupState, hangingUp));
+        transitions.add(new Transition(checkingMediaGroupState, finished));
+        transitions.add(new Transition(checkingMediaGroupState, ready));
+
+        transitions.add(new Transition(initializingCallMediaGroup, faxing));
+        transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
+        transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
+        transitions.add(new Transition(initializingCallMediaGroup, pausing));
+        transitions.add(new Transition(initializingCallMediaGroup, checkingCache));
+        transitions.add(new Transition(initializingCallMediaGroup, caching));
+        transitions.add(new Transition(initializingCallMediaGroup, synthesizing));
+        transitions.add(new Transition(initializingCallMediaGroup, redirecting));
+        transitions.add(new Transition(initializingCallMediaGroup, processingGatherChildren));
+        transitions.add(new Transition(initializingCallMediaGroup, creatingRecording));
+        transitions.add(new Transition(initializingCallMediaGroup, creatingSmsSession));
+        transitions.add(new Transition(initializingCallMediaGroup, hangingUp));
+        transitions.add(new Transition(initializingCallMediaGroup, finished));
+        transitions.add(new Transition(initializingCallMediaGroup, ready));
+        transitions.add(new Transition(downloadingRcml, ready));
+        transitions.add(new Transition(downloadingRcml, notFound));
+        transitions.add(new Transition(downloadingRcml, hangingUp));
+        transitions.add(new Transition(downloadingRcml, finished));
+        transitions.add(new Transition(downloadingRcml, acquiringCallMediaGroup));
+        transitions.add(new Transition(ready, faxing));
+        transitions.add(new Transition(ready, pausing));
+        transitions.add(new Transition(ready, checkingCache));
+        transitions.add(new Transition(ready, caching));
+        transitions.add(new Transition(ready, synthesizing));
+        transitions.add(new Transition(ready, rejecting));
+        transitions.add(new Transition(ready, redirecting));
+        transitions.add(new Transition(ready, processingGatherChildren));
+        transitions.add(new Transition(ready, creatingRecording));
+        transitions.add(new Transition(ready, creatingSmsSession));
+        transitions.add(new Transition(ready, hangingUp));
+        transitions.add(new Transition(ready, finished));
+        transitions.add(new Transition(pausing, ready));
+        transitions.add(new Transition(pausing, finished));
+        transitions.add(new Transition(rejecting, acquiringCallMediaGroup));
+        transitions.add(new Transition(rejecting, finished));
+        transitions.add(new Transition(faxing, ready));
+        transitions.add(new Transition(faxing, finished));
+        transitions.add(new Transition(caching, finished));
+        transitions.add(new Transition(playing, ready));
+        transitions.add(new Transition(playing, finished));
+        transitions.add(new Transition(synthesizing, finished));
+        transitions.add(new Transition(redirecting, ready));
+        transitions.add(new Transition(redirecting, finished));
+        transitions.add(new Transition(creatingRecording, finished));
+        transitions.add(new Transition(finishRecording, ready));
+        transitions.add(new Transition(finishRecording, finished));
+        transitions.add(new Transition(processingGatherChildren, finished));
+        transitions.add(new Transition(gathering, finished));
+        transitions.add(new Transition(finishGathering, finished));
+        transitions.add(new Transition(creatingSmsSession, finished));
+        transitions.add(new Transition(sendingSms, ready));
+        transitions.add(new Transition(sendingSms, finished));
+        transitions.add(new Transition(hangingUp, finished));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -509,7 +509,8 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see org.mobicents.servlet.restcomm.interpreter.BaseVoiceInterpreter#parameters()
      */
     List<NameValuePair> parameters() {
@@ -566,7 +567,6 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             this.source = source;
         }
     }
-
 
     private final class AcquiringCallMediaGroup extends AbstractAction {
         public AcquiringCallMediaGroup(final ActorRef source) {
