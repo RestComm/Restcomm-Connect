@@ -59,6 +59,7 @@ public final class TranscriptionConverter extends AbstractConverter implements J
         writeDuration(transcription.getDuration(), writer);
         writeTranscriptionText(transcription.getTranscriptionText(), writer);
         writePrice(transcription.getPrice(), writer);
+        writePriceUnit(transcription.getPriceUnit(), writer);
         writeUri(transcription.getUri(), writer);
         writer.endNode();
     }
@@ -75,6 +76,7 @@ public final class TranscriptionConverter extends AbstractConverter implements J
         writeDuration(transcription.getDuration(), object);
         writeTranscriptionText(transcription.getTranscriptionText(), object);
         writePrice(transcription.getPrice(), object);
+        writePriceUnit(transcription.getPriceUnit(), object);
         writeUri(transcription.getUri(), object);
         return object;
     }

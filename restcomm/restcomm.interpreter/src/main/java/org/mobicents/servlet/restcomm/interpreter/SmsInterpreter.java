@@ -34,6 +34,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -456,6 +457,8 @@ public final class SmsInterpreter extends UntypedActor {
             builder.setDirection(Direction.INBOUND);
             builder.setStatus(Status.RECEIVED);
             builder.setPrice(new BigDecimal("0.00"));
+            // TODO implement currency property to be read from Configuration
+            builder.setPriceUnit(Currency.getInstance("USD"));
             final StringBuilder buffer = new StringBuilder();
             buffer.append("/").append(version).append("/Accounts/");
             buffer.append(accountId.toString()).append("/SMS/Messages/");
@@ -705,6 +708,8 @@ public final class SmsInterpreter extends UntypedActor {
                 builder.setDirection(Direction.OUTBOUND_REPLY);
                 builder.setStatus(Status.RECEIVED);
                 builder.setPrice(new BigDecimal("0.00"));
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
                 final StringBuilder buffer = new StringBuilder();
                 buffer.append("/").append(version).append("/Accounts/");
                 buffer.append(accountId.toString()).append("/SMS/Messages/");

@@ -71,6 +71,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
         writeEndTime(cdr.getEndTime(), writer);
         writeDuration(cdr.getDuration(), writer);
         writePrice(cdr.getPrice(), writer);
+        writePriceUnit(cdr.getPriceUnit(), writer);
         writeDirection(cdr.getDirection(), writer);
         writeAnsweredBy(cdr.getAnsweredBy(), writer);
         writeApiVersion(cdr.getApiVersion(), writer);
@@ -104,7 +105,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
         writeStartTime(cdr.getStartTime(), object);
         writeEndTime(cdr.getEndTime(), object);
         writeDuration(cdr.getDuration(), object);
-        writePrice(cdr.getPrice(), object);
+        writePriceUnit(cdr.getPriceUnit(), object);
         writeDirection(cdr.getDirection(), object);
         writeAnsweredBy(cdr.getAnsweredBy(), object);
         writeApiVersion(cdr.getApiVersion(), object);

@@ -17,7 +17,9 @@
 package org.mobicents.servlet.restcomm.entities;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
+import java.util.Currency;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
@@ -25,6 +27,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author pavel.slegr@telestax.com
  */
 @Immutable
 public final class CallDetailRecord {
@@ -41,6 +44,7 @@ public final class CallDetailRecord {
     private final DateTime endTime;
     private final Integer duration;
     private final BigDecimal price;
+    private final Currency priceUnit;
     private final String direction;
     private final String answeredBy;
     private final String apiVersion;
@@ -53,8 +57,8 @@ public final class CallDetailRecord {
     public CallDetailRecord(final Sid sid, final Sid parentCallSid, final DateTime dateCreated, final DateTime dateUpdated,
             final Sid accountSid, final String to, final String from, final Sid phoneNumberSid, final String status,
             final DateTime startTime, final DateTime endTime, final Integer duration, final BigDecimal price,
-            final String direction, final String answeredBy, final String apiVersion, final String forwardedFrom,
-            final String callerName, final URI uri, final String callPath) {
+            final Currency priceUnit, final String direction, final String answeredBy, final String apiVersion,
+            final String forwardedFrom, final String callerName, final URI uri, final String callPath) {
         super();
         this.sid = sid;
         this.parentCallSid = parentCallSid;
@@ -69,6 +73,7 @@ public final class CallDetailRecord {
         this.endTime = endTime;
         this.duration = duration;
         this.price = price;
+        this.priceUnit = priceUnit;
         this.direction = direction;
         this.answeredBy = answeredBy;
         this.apiVersion = apiVersion;
@@ -134,6 +139,10 @@ public final class CallDetailRecord {
         return (price == null) ? new BigDecimal("0.0") : price;
     }
 
+    public Currency getPriceUnit() {
+        return (priceUnit == null) ? Currency.getInstance("USD") : priceUnit;
+    }
+
     public String getDirection() {
         return direction;
     }
@@ -164,38 +173,38 @@ public final class CallDetailRecord {
 
     public CallDetailRecord setStatus(final String status) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
-                status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri,
-                callPath);
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath);
     }
 
     public CallDetailRecord setStartTime(final DateTime startTime) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
-                status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri,
-                callPath);
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath);
     }
 
     public CallDetailRecord setEndTime(final DateTime endTime) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
-                status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri,
-                callPath);
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath);
     }
 
     public CallDetailRecord setDuration(final Integer duration) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
-                status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri,
-                callPath);
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath);
     }
 
     public CallDetailRecord setPrice(final BigDecimal price) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
-                status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri,
-                callPath);
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath);
     }
 
     public CallDetailRecord setAnsweredBy(final String answeredBy) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
-                status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName, uri,
-                callPath);
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath);
     }
 
     @NotThreadSafe
@@ -213,6 +222,7 @@ public final class CallDetailRecord {
         private DateTime endTime;
         private Integer duration;
         private BigDecimal price;
+        private Currency priceUnit;
         private String direction;
         private String answeredBy;
         private String apiVersion;
@@ -248,8 +258,8 @@ public final class CallDetailRecord {
 
         public CallDetailRecord build() {
             return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid,
-                    status, startTime, endTime, duration, price, direction, answeredBy, apiVersion, forwardedFrom, callerName,
-                    uri, callPath);
+                    status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                    callerName, uri, callPath);
         }
 
         public void setSid(final Sid sid) {
@@ -298,6 +308,10 @@ public final class CallDetailRecord {
 
         public void setPrice(final BigDecimal price) {
             this.price = price;
+        }
+
+        public void setPriceUnit(final Currency priceUnit) {
+            this.priceUnit = priceUnit;
         }
 
         public void setDirection(final String direction) {
