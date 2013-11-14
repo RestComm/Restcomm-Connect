@@ -35,7 +35,14 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -960,8 +967,8 @@ public final class VoiceInterpreter extends UntypedActor {
                     fsm.transition(message, processingGatherChildren);
                 }
             } else {
-                if(logger.isDebugEnabled()){
-                    logger.debug("DiskCacheResponse is "+ response.toString());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("DiskCacheResponse is " + response.toString());
                 }
                 if (checkingCache.equals(state)) {
                     fsm.transition(message, synthesizing);

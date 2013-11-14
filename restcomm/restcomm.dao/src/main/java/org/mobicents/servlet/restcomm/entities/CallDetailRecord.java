@@ -17,7 +17,6 @@
 package org.mobicents.servlet.restcomm.entities;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.net.URI;
 import java.util.Currency;
 
