@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.entities;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 
 import org.joda.time.DateTime;
 
@@ -41,11 +42,12 @@ public final class Transcription implements Serializable {
     private final Double duration;
     private final String transcriptionText;
     private final BigDecimal price;
+    private Currency priceUnit;
     private final URI uri;
 
     public Transcription(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
             final Status status, final Sid recordingSid, final Double duration, final String transcriptionText,
-            final BigDecimal price, final URI uri) {
+            final BigDecimal price, final Currency priceUnit, final URI uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -56,6 +58,7 @@ public final class Transcription implements Serializable {
         this.duration = duration;
         this.transcriptionText = transcriptionText;
         this.price = price;
+        this.priceUnit = priceUnit;
         this.uri = uri;
     }
 
@@ -99,6 +102,10 @@ public final class Transcription implements Serializable {
         return price;
     }
 
+    public Currency getPriceUnit() {
+        return priceUnit;
+    }
+
     public URI getUri() {
         return uri;
     }
@@ -106,12 +113,12 @@ public final class Transcription implements Serializable {
     public Transcription setStatus(final Status status) {
         final DateTime now = DateTime.now();
         return new Transcription(sid, dateCreated, now, accountSid, status, recordingSid, duration, transcriptionText, price,
-                uri);
+                priceUnit, uri);
     }
 
     public Transcription setTranscriptionText(final String text) {
         final DateTime now = DateTime.now();
-        return new Transcription(sid, dateCreated, now, accountSid, status, recordingSid, duration, text, price, uri);
+        return new Transcription(sid, dateCreated, now, accountSid, status, recordingSid, duration, text, price, priceUnit, uri);
     }
 
     @NotThreadSafe
@@ -123,6 +130,8 @@ public final class Transcription implements Serializable {
         private Double duration;
         private String transcriptionText;
         private BigDecimal price;
+        private Currency priceUnit;
+
         private URI uri;
 
         private Builder() {
@@ -131,7 +140,8 @@ public final class Transcription implements Serializable {
 
         public Transcription build() {
             final DateTime now = DateTime.now();
-            return new Transcription(sid, now, now, accountSid, status, recordingSid, duration, transcriptionText, price, uri);
+            return new Transcription(sid, now, now, accountSid, status, recordingSid, duration, transcriptionText, price,
+                    priceUnit, uri);
         }
 
         public void setSid(final Sid sid) {
@@ -160,6 +170,10 @@ public final class Transcription implements Serializable {
 
         public void setPrice(final BigDecimal price) {
             this.price = price;
+        }
+
+        public void setPriceUnit(Currency priceUnit) {
+            this.priceUnit = priceUnit;
         }
 
         public void setUri(final URI uri) {

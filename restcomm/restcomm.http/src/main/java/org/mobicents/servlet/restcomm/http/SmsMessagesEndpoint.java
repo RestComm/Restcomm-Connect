@@ -34,6 +34,7 @@ import com.thoughtworks.xstream.XStream;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Currency;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -242,6 +243,8 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         builder.setStatus(status);
         builder.setDirection(direction);
         builder.setPrice(new BigDecimal(0.00));
+        // TODO - this needs to be added as property to Configuration somehow
+        builder.setPriceUnit(Currency.getInstance("USD"));
         builder.setApiVersion(apiVersion);
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");

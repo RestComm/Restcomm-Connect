@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.dao.mybatis;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,6 +143,7 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
         map.put("duration", transcription.getDuration());
         map.put("transcription_text", transcription.getTranscriptionText());
         map.put("price", writeBigDecimal(transcription.getPrice()));
+        map.put("price_unit", writeCurrency(transcription.getPriceUnit()));
         map.put("uri", writeUri(transcription.getUri()));
         return map;
     }
@@ -157,8 +159,9 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
         final Double duration = readDouble(map.get("duration"));
         final String transcriptionText = readString(map.get("transcription_text"));
         final BigDecimal price = readBigDecimal(map.get("price"));
+        final Currency priceUnit = readCurrency(map.get("price_unit"));
         final URI uri = readUri(map.get("uri"));
         return new Transcription(sid, dateCreated, dateUpdated, accountSid, status, recordingSid, duration, transcriptionText,
-                price, uri);
+                price, priceUnit, uri);
     }
 }
