@@ -1021,6 +1021,10 @@ public final class Call extends UntypedActor {
                 } else {
                     answer = response.descriptor().toString();
                 }
+
+                // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+                answer = patchSdpDescription(answer);
+
                 okay.setContent(answer, "application/sdp");
                 okay.send();
             }
@@ -1034,6 +1038,19 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+        }
+
+        /**
+         * Patches an SDP description by trimming and making sure it ends with a new line.
+         * @param sdpDescription The SDP description to be patched.
+         * @return The patched SDP description
+         * @author hrosa
+         */
+        private String patchSdpDescription(String sdpDescription) {
+            if (sdpDescription == null || sdpDescription.isEmpty()) {
+                throw new IllegalArgumentException("The SDP description cannot be null or empty");
+            }
+            return sdpDescription.trim().concat("\n");
         }
     }
 
