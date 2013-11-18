@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @RunWith(Arquillian.class)
-@Ignore
 public final class SmsSessionTest {
     private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
 

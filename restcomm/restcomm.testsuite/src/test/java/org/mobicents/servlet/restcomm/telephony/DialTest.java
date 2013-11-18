@@ -602,6 +602,8 @@ public class DialTest {
         }
     }
 
+
+    @Ignore
     @Test
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // in auth manner
@@ -896,7 +898,6 @@ public class DialTest {
     @Deployment(name = "DialTest", managed = false, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        String version = "6.1.2-TelScale-SNAPSHOT";
         final WebArchive archive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);

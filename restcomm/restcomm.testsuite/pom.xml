@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<artifactId>restcomm</artifactId>
 		<groupId>com.telestax.servlet</groupId>
@@ -306,23 +307,23 @@
 			<artifactId>sipunit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
-        <dependency>
-                <groupId>org.mobicents.commtesting</groupId>
-                <artifactId>mgcpUnit</artifactId>
-                <version>${mgcpunit.version}</version>
-                <scope>test</scope>
-        </dependency>	
-        <dependency>
-				<groupId>org.mobicents.arquillian.container</groupId>
-				<artifactId>mss-arquillian-mediaserver-api</artifactId>
-                <version>${mss.arquillian.version}</version>
-        </dependency>        
-        <dependency>
-                <groupId>org.mobicents.arquillian.container</groupId>
-                <artifactId>mss-arquillian-mediaserver-extension</artifactId>
-                <version>${mss.arquillian.version}</version>
-        </dependency>        	
+
+		<dependency>
+			<groupId>org.mobicents.commtesting</groupId>
+			<artifactId>mgcpUnit</artifactId>
+			<version>${mgcpunit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.arquillian.container</groupId>
+			<artifactId>mss-arquillian-mediaserver-api</artifactId>
+			<version>${mss.arquillian.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.arquillian.container</groupId>
+			<artifactId>mss-arquillian-mediaserver-extension</artifactId>
+			<version>${mss.arquillian.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -354,8 +355,7 @@
 					<version>2.16</version>
 					<configuration>
 						<argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
-						<!-- <excludes> <exclude>**/ClientDialTest.java</exclude> <exclude>**/ClientsEndpointTest.java</exclude> 
-							</excludes> -->
+						<!-- <excludes> <exclude>**/SmsSessionTest.java</exclude> </excludes> -->
 						<forkCount>1</forkCount>
 						<reuseForks>false</reuseForks>
 					</configuration>
