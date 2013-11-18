@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Dial callerId="+13055872294">
-        <Number url="http://localhost:8080/restcomm.application-6.1.2-TelScale-SNAPSHOT/hello-play.xml">
+        <Number url="http://localhost:8080/restcomm.application-7.1.3-TelScale-SNAPSHOT/hello-play.xml">
             131313
         </Number>
     </Dial>
