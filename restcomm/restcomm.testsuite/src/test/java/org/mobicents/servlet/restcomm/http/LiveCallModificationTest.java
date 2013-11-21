@@ -195,7 +195,6 @@ public class LiveCallModificationTest {
     }
 
     @Test
-    @Ignore
     // Redirect a call to a different URL using the Live Call Modification API. Non-regression test for issue:
     // https://bitbucket.org/telestax/telscale-restcomm/issue/139
     // TODO: This test is expected to fail because of issue https://bitbucket.org/telestax/telscale-restcomm/issue/192
@@ -229,6 +228,8 @@ public class LiveCallModificationTest {
         assertTrue(bobCall
                 .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
 
+        assertTrue(bobCall.waitForAck(5000));
+        
         // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -237,13 +238,19 @@ public class LiveCallModificationTest {
         assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
                 null, null));
 
-        Thread.sleep(3000);
-
+        assertTrue(georgeCall.waitForAck(5000));
+        
+        Thread.sleep(10000);
+        System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
         rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.3-TelScale-SNAPSHOT/dial-client-entry.xml";
 
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);
 
+        georgeCall.listenForDisconnect();
+        assertTrue(georgeCall.waitForDisconnect(5000));
+        assertTrue(georgeCall.respondToDisconnect());
+        
         // Restcomm now should execute the new RCML and create a call to Alice Restcomm client
         // TODO: This test is expected to fail because of issue https://bitbucket.org/telestax/telscale-restcomm/issue/192
         assertTrue(aliceCall.waitForIncomingCall(5000));
@@ -333,6 +340,7 @@ public class LiveCallModificationTest {
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-number-entry.xml");
         archive.addAsWebResource("dial-client-entry.xml");
+        archive.addAsWebResource("hello-play.xml");
         logger.info("Packaged Test App");
         return archive;
     }

@@ -50,7 +50,6 @@ import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
-import org.mobicents.servlet.restcomm.interpreter.SubVoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
@@ -191,11 +190,8 @@ public final class CallManager extends UntypedActor {
         response.send();
     }
 
-    /**
-     *
-     * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
+    /**Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
-     *
      * @param self
      * @param request
      * @param accounts
@@ -254,10 +250,7 @@ public final class CallManager extends UntypedActor {
         return isFoundHostedApp;
     }
 
-    /**
-     *
-     * If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
-     *
+    /**If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
      * @param self
      * @param request
      * @param accounts
@@ -404,7 +397,7 @@ public final class CallManager extends UntypedActor {
             getContext().stop(interpreter);
         }
 
-        final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
@@ -418,7 +411,6 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
-        builder.setHangupOnEnd(true);
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);
 
