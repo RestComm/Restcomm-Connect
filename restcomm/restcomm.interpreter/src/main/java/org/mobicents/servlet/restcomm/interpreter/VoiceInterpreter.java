@@ -211,6 +211,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
+        transitions.add(new Transition(acquiringCallInfo, acquiringCallMediaGroup));
         transitions.add(new Transition(initializingCall, acquiringCallMediaGroup));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
@@ -834,6 +835,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
                 callInfo = response.get();
                 callState = callInfo.state();
+                if (callState.name().equalsIgnoreCase(CallStateChanged.State.IN_PROGRESS.name())) {
+                    final CallStateChanged event = new CallStateChanged(CallStateChanged.State.IN_PROGRESS);
+                    source.tell(event, source);
+                    // fsm.transition(event, acquiringCallMediaGroup);
+                    return;
+                }
                 // Update the storage.
                 if (callRecord != null) {
                     callRecord = callRecord.setStatus(callState.toString());
@@ -1361,14 +1368,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 builder.setMethod(method);
                 final ActorRef interpreter = builder.build();
                 StartInterpreter start = new StartInterpreter(outboundCall);
-                Timeout expires = new Timeout(Duration.create(600, TimeUnit.SECONDS));
+                Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
                 Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                Object object = Await.result(future, Duration.create(600, TimeUnit.SECONDS));
+                Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
 
                 if (!End.class.equals(object.getClass())) {
                     fsm.transition(message, hangingUp);
                     return;
                 }
+
+                // Stop SubVoiceInterpreter
+                outboundCall.tell(new StopObserving(interpreter), null);
+                getContext().stop(interpreter);
 
             }
 
@@ -1833,5 +1844,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Stop the interpreter.
             postCleanup();
         }
+    }
+
+    @Override
+    public void postStop() {
+        if (fsm.state().equals(bridged) && outboundCall != null) {
+            outboundCall.tell(new Hangup(), null);
+        }
+        super.postStop();
     }
 }

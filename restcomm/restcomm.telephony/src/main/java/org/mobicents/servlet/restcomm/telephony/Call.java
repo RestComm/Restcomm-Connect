@@ -488,8 +488,10 @@ public final class Call extends UntypedActor {
             }
         } else if (inProgress.equals(state)) {
             if (CreateMediaGroup.class.equals(klass)) {
-                if (group == null)
-                    group = getMediaGroup(message);
+                if (group != null) {
+                    context.stop(group);
+                }
+                group = getMediaGroup(message);
                 sender.tell(new CallResponse<ActorRef>(group), self);
             } else if (DestroyMediaGroup.class.equals(klass)) {
                 final DestroyMediaGroup request = (DestroyMediaGroup) message;
