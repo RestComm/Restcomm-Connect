@@ -31,17 +31,20 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/IncomingPhoneNumbers.json")
-@ThreadSafe public final class IncomingPhoneNumbersJsonEndpoint extends IncomingPhoneNumbersEndpoint {
-  public IncomingPhoneNumbersJsonEndpoint() {
-    super();
-  }
-  
-  @GET public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid) {
-    return getIncomingPhoneNumbers(accountSid, APPLICATION_JSON_TYPE);
-  }
-  
-  @POST public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putIncomingPhoneNumber(accountSid, data, APPLICATION_JSON_TYPE);
-  }
+@ThreadSafe
+public final class IncomingPhoneNumbersJsonEndpoint extends IncomingPhoneNumbersEndpoint {
+    public IncomingPhoneNumbersJsonEndpoint() {
+        super();
+    }
+
+    @GET
+    public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid) {
+        return getIncomingPhoneNumbers(accountSid, APPLICATION_JSON_TYPE);
+    }
+
+    @POST
+    public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putIncomingPhoneNumber(accountSid, data, APPLICATION_JSON_TYPE);
+    }
 }

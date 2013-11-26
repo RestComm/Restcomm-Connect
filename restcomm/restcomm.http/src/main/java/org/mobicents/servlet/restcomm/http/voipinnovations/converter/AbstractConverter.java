@@ -26,29 +26,30 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public abstract class AbstractConverter implements Converter {
-  public AbstractConverter() {
-    super();
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public abstract boolean canConvert(final Class klass);
-
-  @Override public void marshal(final Object object, HierarchicalStreamWriter writer,
-      MarshallingContext context) {
-    // We will not be marshalling these objects.
-  }
-
-  @Override public abstract Object unmarshal(HierarchicalStreamReader reader,
-       UnmarshallingContext context);
-  
-  protected int getInteger(final String number) {
-    if(number != null && !number.isEmpty()) {
-      try {
-        return Integer.parseInt(number);
-      } catch(final Exception exception) {
-        return -1;
-      }
+    public AbstractConverter() {
+        super();
     }
-    return -1;
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public abstract boolean canConvert(final Class klass);
+
+    @Override
+    public void marshal(final Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
+        // We will not be marshalling these objects.
+    }
+
+    @Override
+    public abstract Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context);
+
+    protected int getInteger(final String number) {
+        if (number != null && !number.isEmpty()) {
+            try {
+                return Integer.parseInt(number);
+            } catch (final Exception exception) {
+                return -1;
+            }
+        }
+        return -1;
+    }
 }

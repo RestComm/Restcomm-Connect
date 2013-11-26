@@ -21,37 +21,36 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public class TransitionNotFoundException extends Exception {
-  private static final long serialVersionUID = -3062590067048473837L;
-  private final Object event;
-  private final State currrent;
-  private final State target;
+@NotThreadSafe
+public class TransitionNotFoundException extends Exception {
+    private static final long serialVersionUID = -3062590067048473837L;
+    private final Object event;
+    private final State currrent;
+    private final State target;
 
-  public TransitionNotFoundException(final String message, final Object event, final State current,
-      final State target) {
-    super(message);
-    this.event = event;
-    this.currrent = current;
-    this.target = target;
-  }
-  
-  public TransitionNotFoundException(final Throwable cause, final Object event, final State current,
-      final State target) {
-    super(cause);
-    this.event = event;
-    this.currrent = current;
-    this.target = target;
-  }
-  
-  public State getCurrentState() {
-    return currrent;
-  }
-  
-  public Object getEvent() {
-    return event;
-  }
-  
-  public State getTargetState() {
-    return target;
-  }
+    public TransitionNotFoundException(final String message, final Object event, final State current, final State target) {
+        super(message);
+        this.event = event;
+        this.currrent = current;
+        this.target = target;
+    }
+
+    public TransitionNotFoundException(final Throwable cause, final Object event, final State current, final State target) {
+        super(cause);
+        this.event = event;
+        this.currrent = current;
+        this.target = target;
+    }
+
+    public State getCurrentState() {
+        return currrent;
+    }
+
+    public Object getEvent() {
+        return event;
+    }
+
+    public State getTargetState() {
+        return target;
+    }
 }

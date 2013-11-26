@@ -20,21 +20,21 @@ package org.mobicents.servlet.restcomm.fax;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class FaxServiceException extends Exception {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public FaxServiceException() {
-	super();
-  }
+    public FaxServiceException() {
+        super();
+    }
 
-  public FaxServiceException(final String message) {
-	super(message);
-  }
+    public FaxServiceException(final String message) {
+        super(message);
+    }
 
-  public FaxServiceException(final Throwable cause) {
-	super(cause);
-  }
-  
-  public FaxServiceException(final String message, final Throwable cause) {
-	super(message, cause);
-  }
+    public FaxServiceException(final Throwable cause) {
+        super(cause);
+    }
+
+    public FaxServiceException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

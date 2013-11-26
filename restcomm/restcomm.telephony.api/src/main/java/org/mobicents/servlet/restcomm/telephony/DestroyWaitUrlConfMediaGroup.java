@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.mobicents.servlet.restcomm.telephony;
 
@@ -9,19 +9,19 @@ import akka.actor.ActorRef;
 
 /**
  * @author Amit Bhayani
- * 
+ *
  */
 @Immutable
 public class DestroyWaitUrlConfMediaGroup {
 
-	private final ActorRef waitUrlConfMediaGroup;
+    private final ActorRef waitUrlConfMediaGroup;
 
-	public DestroyWaitUrlConfMediaGroup(final ActorRef waitUrlConfMediaGroup) {
-		super();
-		this.waitUrlConfMediaGroup = waitUrlConfMediaGroup;
-	}
+    public DestroyWaitUrlConfMediaGroup(final ActorRef waitUrlConfMediaGroup) {
+        super();
+        this.waitUrlConfMediaGroup = waitUrlConfMediaGroup;
+    }
 
-	public ActorRef getWaitUrlConfMediaGroup() {
-		return waitUrlConfMediaGroup;
-	}
+    public ActorRef getWaitUrlConfMediaGroup() {
+        return waitUrlConfMediaGroup;
+    }
 }

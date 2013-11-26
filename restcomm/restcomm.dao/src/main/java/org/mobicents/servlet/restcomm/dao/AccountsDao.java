@@ -25,10 +25,15 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface AccountsDao {
-  public void addAccount(Account account);
-  public Account getAccount(Sid sid);
-  public Account getAccount(String name);
-  public List<Account> getAccounts(Sid sid);
-  public void removeAccount(Sid sid);
-  public void updateAccount(Account account);
+    void addAccount(Account account);
+
+    Account getAccount(Sid sid);
+
+    Account getAccount(String name);
+
+    List<Account> getAccounts(Sid sid);
+
+    void removeAccount(Sid sid);
+
+    void updateAccount(Account account);
 }

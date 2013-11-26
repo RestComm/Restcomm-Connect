@@ -21,13 +21,11 @@ import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class BridgeEndpoint extends GenericEndpoint {
-  public BridgeEndpoint(final ActorRef gateway, final MediaSession session,
-      final NotifiedEntity agent, final String domain) {
-    super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain));
-  }
+    public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain) {
+        super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain));
+    }
 }

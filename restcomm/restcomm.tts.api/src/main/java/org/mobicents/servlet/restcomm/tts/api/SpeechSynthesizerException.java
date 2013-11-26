@@ -20,21 +20,21 @@ package org.mobicents.servlet.restcomm.tts.api;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SpeechSynthesizerException extends RuntimeException {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public SpeechSynthesizerException() {
-    super();
-  }
+    public SpeechSynthesizerException() {
+        super();
+    }
 
-  public SpeechSynthesizerException(final String message) {
-    super(message);
-  }
+    public SpeechSynthesizerException(final String message) {
+        super(message);
+    }
 
-  public SpeechSynthesizerException(final Throwable cause) {
-    super(cause);
-  }
+    public SpeechSynthesizerException(final Throwable cause) {
+        super(cause);
+    }
 
-  public SpeechSynthesizerException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    public SpeechSynthesizerException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -20,5 +20,5 @@ package org.mobicents.servlet.restcomm.fsm;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface Guard {
-  public boolean accept(Object message, Transition transition) throws Exception;
+    boolean accept(Object message, Transition transition) throws Exception;
 }

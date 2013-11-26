@@ -25,10 +25,15 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface ApplicationsDao {
-  public void addApplication(Application application);
-  public Application getApplication(Sid sid);
-  public List<Application> getApplications(Sid accountSid);
-  public void removeApplication(Sid sid);
-  public void removeApplications(Sid accountSid);
-  public void updateApplication(Application application);
+    void addApplication(Application application);
+
+    Application getApplication(Sid sid);
+
+    List<Application> getApplications(Sid accountSid);
+
+    void removeApplication(Sid sid);
+
+    void removeApplications(Sid accountSid);
+
+    void updateApplication(Application application);
 }

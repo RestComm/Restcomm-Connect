@@ -50,66 +50,73 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class RecordingsEndpoint extends AbstractEndpoint {
-  @Context protected ServletContext context;
-  protected Configuration configuration;
-  protected RecordingsDao dao;
-  protected Gson gson;
-  protected XStream xstream;
+@NotThreadSafe
+public abstract class RecordingsEndpoint extends AbstractEndpoint {
+    @Context
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected RecordingsDao dao;
+    protected Gson gson;
+    protected XStream xstream;
 
-  public RecordingsEndpoint() {
-    super();
-  }
-  
-  @PostConstruct
-  public void init() {
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    configuration = configuration.subset("runtime-settings");
-    super.init(configuration);
-    dao = storage.getRecordingsDao();
-    final RecordingConverter converter = new RecordingConverter(configuration);
-    final GsonBuilder builder = new GsonBuilder();
-    builder.registerTypeAdapter(Recording.class, converter);
-    builder.setPrettyPrinting();
-    gson = builder.create();
-    xstream = new XStream();
-    xstream.alias("RestcommResponse", RestCommResponse.class);
-    xstream.registerConverter(converter);
-    xstream.registerConverter(new RecordingListConverter(configuration));
-    xstream.registerConverter(new RestCommResponseConverter(configuration));
-  }
-  
-  protected Response getRecording(final String accountSid, final String sid,
-      final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Recordings"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final Recording recording = dao.getRecording(new Sid(sid));
-    if(recording == null) {
-      return status(NOT_FOUND).build();
-    } else {
-      if(APPLICATION_JSON_TYPE == responseType) {
-        return ok(gson.toJson(recording), APPLICATION_JSON).build();
-      } else if(APPLICATION_XML_TYPE == responseType) {
-        final RestCommResponse response = new RestCommResponse(recording);
-        return ok(xstream.toXML(response), APPLICATION_XML).build();
-      } else {
-        return null;
-      }
+    public RecordingsEndpoint() {
+        super();
     }
-  }
-  
-  protected Response getRecordings(final String accountSid, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Recordings"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final List<Recording> recordings = dao.getRecordings(new Sid(accountSid));
-    if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(recordings), APPLICATION_JSON).build();
-    } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else {
-      return null;
+
+    @PostConstruct
+    public void init() {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = configuration.subset("runtime-settings");
+        super.init(configuration);
+        dao = storage.getRecordingsDao();
+        final RecordingConverter converter = new RecordingConverter(configuration);
+        final GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(Recording.class, converter);
+        builder.setPrettyPrinting();
+        gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new RecordingListConverter(configuration));
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
-  }
+
+    protected Response getRecording(final String accountSid, final String sid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:Recordings");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Recording recording = dao.getRecording(new Sid(sid));
+        if (recording == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(recording), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(recording);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    protected Response getRecordings(final String accountSid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:Recordings");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final List<Recording> recordings = dao.getRecordings(new Sid(accountSid));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(recordings), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
 }

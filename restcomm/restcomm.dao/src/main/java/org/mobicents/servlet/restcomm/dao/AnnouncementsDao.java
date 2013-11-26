@@ -10,9 +10,13 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  */
 
 public interface AnnouncementsDao {
-	public void addAnnouncement(Announcement announcement);
-	public Announcement getAnnouncement(Sid sid);
-	public List<Announcement> getAnnouncements(Sid accountSid);
-	public void removeAnnouncement(Sid sid);
-	public void removeAnnouncements(Sid accountSid);
+    void addAnnouncement(Announcement announcement);
+
+    Announcement getAnnouncement(Sid sid);
+
+    List<Announcement> getAnnouncements(Sid accountSid);
+
+    void removeAnnouncement(Sid sid);
+
+    void removeAnnouncements(Sid accountSid);
 }

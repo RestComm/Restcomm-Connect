@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class DestroyEndpoint {
-  private final ActorRef endpoint;
+@Immutable
+public final class DestroyEndpoint {
+    private final ActorRef endpoint;
 
-  public DestroyEndpoint(final ActorRef endpoint) {
-    super();
-    this.endpoint = endpoint;
-  }
-  
-  public ActorRef endpoint() {
-    return endpoint;
-  }
+    public DestroyEndpoint(final ActorRef endpoint) {
+        super();
+        this.endpoint = endpoint;
+    }
+
+    public ActorRef endpoint() {
+        return endpoint;
+    }
 }

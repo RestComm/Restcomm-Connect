@@ -21,70 +21,71 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class AvailablePhoneNumber {
-  private final String friendlyName;
-  private final String phoneNumber;
-  private final Integer lata;
-  private final String rateCenter;
-  private final Double latitude;
-  private final Double longitude;
-  private final String region;
-  private final Integer postalCode;
-  private final String isoCountry;
-  
-  public AvailablePhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata,
-      final String rateCenter, final Double latitude, final Double longitude, final String region,
-      final Integer postalCode, final String isoCountry) {
-    super();
-    this.friendlyName = friendlyName;
-    this.phoneNumber = phoneNumber;
-    this.lata = lata;
-    this.rateCenter = rateCenter;
-    this.latitude = latitude;
-    this.longitude = longitude;
-    this.region = region;
-    this.postalCode = postalCode;
-    this.isoCountry = isoCountry;
-  }
-  
-  public String getFriendlyName() {
-    return friendlyName;
-  }
-  
-  public String getPhoneNumber() {
-    return phoneNumber;
-  }
-  
-  public Integer getLata() {
-    return lata;
-  }
-  
-  public String getRateCenter() {
-    return rateCenter;
-  }
-  
-  public Double getLatitude() {
-	return latitude;  
-  }
-  
-  public Double getLongitude() {
-    return longitude;
-  }
-  
-  public String getRegion() {
-    return region;
-  }
-  
-  public Integer getPostalCode() {
-    return postalCode;
-  }
-  
-  public String getIsoCountry() {
-    return isoCountry;
-  }
-  
-  public AvailablePhoneNumber setFriendlyName(final String friendlyName) {
-    return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude,
-        region, postalCode, isoCountry);
-  }
+@Immutable
+public final class AvailablePhoneNumber {
+    private final String friendlyName;
+    private final String phoneNumber;
+    private final Integer lata;
+    private final String rateCenter;
+    private final Double latitude;
+    private final Double longitude;
+    private final String region;
+    private final Integer postalCode;
+    private final String isoCountry;
+
+    public AvailablePhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata,
+            final String rateCenter, final Double latitude, final Double longitude, final String region,
+            final Integer postalCode, final String isoCountry) {
+        super();
+        this.friendlyName = friendlyName;
+        this.phoneNumber = phoneNumber;
+        this.lata = lata;
+        this.rateCenter = rateCenter;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.region = region;
+        this.postalCode = postalCode;
+        this.isoCountry = isoCountry;
+    }
+
+    public String getFriendlyName() {
+        return friendlyName;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public Integer getLata() {
+        return lata;
+    }
+
+    public String getRateCenter() {
+        return rateCenter;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public Integer getPostalCode() {
+        return postalCode;
+    }
+
+    public String getIsoCountry() {
+        return isoCountry;
+    }
+
+    public AvailablePhoneNumber setFriendlyName(final String friendlyName) {
+        return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode,
+                isoCountry);
+    }
 }

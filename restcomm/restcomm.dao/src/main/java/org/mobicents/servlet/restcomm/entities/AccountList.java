@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class AccountList {
-  private final List<Account> accounts;
+@NotThreadSafe
+public final class AccountList {
+    private final List<Account> accounts;
 
-  public AccountList(final List<Account> accounts) {
-    super();
-    this.accounts = accounts;
-  }
-  
-  public List<Account> getAccounts() {
-    return accounts;
-  }
+    public AccountList(final List<Account> accounts) {
+        super();
+        this.accounts = accounts;
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
 }

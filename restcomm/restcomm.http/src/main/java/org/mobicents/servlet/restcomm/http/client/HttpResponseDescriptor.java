@@ -29,145 +29,146 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class HttpResponseDescriptor {
-  private final URI uri;
-  private final int statusCode;
-  private final String statusDescription;
-  private final InputStream content;
-  private final long contentLength;
-  private final String contentEncoding;
-  private final String contentType;
-  private final boolean isChunked;
-  private final Header[] headers;
-  
-  private volatile String buffer;
-  
-  private HttpResponseDescriptor(final URI uri, final int statusCode, final String statusDescription,
-	  final InputStream content, final long contentLength, final String contentEncoding,
-	  final String contentType, final boolean isChunked, final Header[] headers) {
-    super();
-    this.uri = uri;
-    this.statusCode = statusCode;
-    this.statusDescription = statusDescription;
-    this.content = content;
-    this.contentLength = contentLength;
-    this.contentEncoding = contentEncoding;
-    this.contentType = contentType;
-    this.isChunked = isChunked;
-    this.headers = headers;
-  }
+@ThreadSafe
+public final class HttpResponseDescriptor {
+    private final URI uri;
+    private final int statusCode;
+    private final String statusDescription;
+    private final InputStream content;
+    private final long contentLength;
+    private final String contentEncoding;
+    private final String contentType;
+    private final boolean isChunked;
+    private final Header[] headers;
 
-  public int getStatusCode() {
-	return statusCode;
-  }
+    private volatile String buffer;
 
-  public String getStatusDescription() {
-	return statusDescription;
-  }
-  
-  public InputStream getContent() {
-    return content;
-  }
+    private HttpResponseDescriptor(final URI uri, final int statusCode, final String statusDescription,
+            final InputStream content, final long contentLength, final String contentEncoding, final String contentType,
+            final boolean isChunked, final Header[] headers) {
+        super();
+        this.uri = uri;
+        this.statusCode = statusCode;
+        this.statusDescription = statusDescription;
+        this.content = content;
+        this.contentLength = contentLength;
+        this.contentEncoding = contentEncoding;
+        this.contentType = contentType;
+        this.isChunked = isChunked;
+        this.headers = headers;
+    }
 
-  public String getContentAsString() throws IOException {
-    if(buffer != null) {
-      return buffer;
-    } else {
-      synchronized(this) {
-        if(buffer == null) {
-          buffer = StringUtils.toString(content);
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public String getStatusDescription() {
+        return statusDescription;
+    }
+
+    public InputStream getContent() {
+        return content;
+    }
+
+    public String getContentAsString() throws IOException {
+        if (buffer != null) {
+            return buffer;
+        } else {
+            synchronized (this) {
+                if (buffer == null) {
+                    buffer = StringUtils.toString(content);
+                }
+            }
+            return buffer;
         }
-      }
-      return buffer;
     }
-  }
-  
-  public long getContentLength() {
-    return contentLength;
-  }
 
-  public String getContentEncoding() {
-	return contentEncoding;
-  }
+    public long getContentLength() {
+        return contentLength;
+    }
 
-  public String getContentType() {
-	return contentType;
-  }
-  
-  public boolean isChunked() {
-    return isChunked;
-  }
+    public String getContentEncoding() {
+        return contentEncoding;
+    }
 
-  public Header[] getHeaders() {
-	return headers;
-  }
-  
-  public String getHeadersAsString() {
-    return HttpUtils.toString(headers);
-  }
-  
-  public URI getURI() {
-    return uri;
-  }
+    public String getContentType() {
+        return contentType;
+    }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-  
-  public static final class Builder {
-    private URI uri;
-    private int statusCode;
-    private String statusDescription;
-    private InputStream content;
-    private long contentLength;
-    private String contentEncoding;
-    private String contentType;
-    private boolean isChunked;
-    private Header[] headers;
-    
-    private Builder() {
-      super();
+    public boolean isChunked() {
+        return isChunked;
     }
-    
-    public HttpResponseDescriptor build() {
-      return new HttpResponseDescriptor(uri, statusCode, statusDescription, content, contentLength,
-          contentEncoding, contentType, isChunked, headers);
+
+    public Header[] getHeaders() {
+        return headers;
     }
-    
-    public void setStatusCode(final int statusCode) {
-      this.statusCode = statusCode;
+
+    public String getHeadersAsString() {
+        return HttpUtils.toString(headers);
     }
-    
-    public void setStatusDescription(final String statusDescription) {
-      this.statusDescription = statusDescription;
+
+    public URI getURI() {
+        return uri;
     }
-    
-    public void setContent(final InputStream content) {
-      this.content = content;
+
+    public static Builder builder() {
+        return new Builder();
     }
-    
-    public void setContentLength(final long contentLength) {
-      this.contentLength = contentLength;
+
+    public static final class Builder {
+        private URI uri;
+        private int statusCode;
+        private String statusDescription;
+        private InputStream content;
+        private long contentLength;
+        private String contentEncoding;
+        private String contentType;
+        private boolean isChunked;
+        private Header[] headers;
+
+        private Builder() {
+            super();
+        }
+
+        public HttpResponseDescriptor build() {
+            return new HttpResponseDescriptor(uri, statusCode, statusDescription, content, contentLength, contentEncoding,
+                    contentType, isChunked, headers);
+        }
+
+        public void setStatusCode(final int statusCode) {
+            this.statusCode = statusCode;
+        }
+
+        public void setStatusDescription(final String statusDescription) {
+            this.statusDescription = statusDescription;
+        }
+
+        public void setContent(final InputStream content) {
+            this.content = content;
+        }
+
+        public void setContentLength(final long contentLength) {
+            this.contentLength = contentLength;
+        }
+
+        public void setContentEncoding(final String contentEncoding) {
+            this.contentEncoding = contentEncoding;
+        }
+
+        public void setContentType(final String contentType) {
+            this.contentType = contentType;
+        }
+
+        public void setIsChunked(final boolean isChunked) {
+            this.isChunked = isChunked;
+        }
+
+        public void setHeaders(final Header[] headers) {
+            this.headers = headers;
+        }
+
+        public void setURI(final URI uri) {
+            this.uri = uri;
+        }
     }
-    
-    public void setContentEncoding(final String contentEncoding) {
-      this.contentEncoding = contentEncoding;
-    }
-    
-    public void setContentType(final String contentType) {
-      this.contentType = contentType;
-    }
-    
-    public void setIsChunked(final boolean isChunked) {
-      this.isChunked = isChunked;
-    }
-    
-    public void setHeaders(final Header[] headers) {
-      this.headers = headers;
-    }
-    
-    public void setURI(final URI uri) {
-      this.uri = uri;
-    }
-  }
 }

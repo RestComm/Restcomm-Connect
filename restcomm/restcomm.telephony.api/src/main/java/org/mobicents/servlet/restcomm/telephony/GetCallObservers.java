@@ -21,10 +21,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class GetCallObservers {
-  
-	public GetCallObservers() {
-    super();
-  }
+@Immutable
+public final class GetCallObservers {
+
+    public GetCallObservers() {
+        super();
+    }
 
 }

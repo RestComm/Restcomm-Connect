@@ -27,11 +27,12 @@ import javax.ws.rs.core.Response;
  */
 @Path("/Accounts/{accountSid}/Transcriptions.json")
 public final class TranscriptionsJsonEndpoint extends TranscriptionsEndpoint {
-  public TranscriptionsJsonEndpoint() {
-    super();
-  }
-  
-  @GET public Response getTranscriptions(@PathParam("accountSid") final String accountSid) {
-    return getTranscriptions(accountSid, APPLICATION_JSON_TYPE);
-  }
+    public TranscriptionsJsonEndpoint() {
+        super();
+    }
+
+    @GET
+    public Response getTranscriptions(@PathParam("accountSid") final String accountSid) {
+        return getTranscriptions(accountSid, APPLICATION_JSON_TYPE);
+    }
 }

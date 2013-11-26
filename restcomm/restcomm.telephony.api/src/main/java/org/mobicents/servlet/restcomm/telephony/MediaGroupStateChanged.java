@@ -21,17 +21,20 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class MediaGroupStateChanged {
-  public static enum State { ACTIVE, INACTIVE };
-  
-  private final State state;
-  
-  public MediaGroupStateChanged(final State state) {
-    super();
-    this.state = state;
-  }
-  
-  public State state() {
-    return state;
-  }
+@Immutable
+public final class MediaGroupStateChanged {
+    public static enum State {
+        ACTIVE, INACTIVE
+    };
+
+    private final State state;
+
+    public MediaGroupStateChanged(final State state) {
+        super();
+        this.state = state;
+    }
+
+    public State state() {
+        return state;
+    }
 }

@@ -63,298 +63,318 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
-  @Context protected ServletContext context;
-  protected Configuration configuration;
-  protected IncomingPhoneNumbersDao dao;
-  protected Gson gson;
-  protected XStream xstream;
-  
-  private String header;
-  
-  public IncomingPhoneNumbersEndpoint() {
-    super();
-  }
-  
-  @PostConstruct
-  public void init() {
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    final Configuration runtime = configuration.subset("runtime-settings");
-    super.init(runtime);
-    dao = storage.getIncomingPhoneNumbersDao();
-    final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(runtime);
-    final GsonBuilder builder = new GsonBuilder();
-    builder.registerTypeAdapter(IncomingPhoneNumber.class, converter);
-    builder.setPrettyPrinting();
-    gson = builder.create();
-    xstream = new XStream();
-    xstream.alias("RestcommResponse", RestCommResponse.class);
-    xstream.registerConverter(converter);
-    xstream.registerConverter(new IncomingPhoneNumberListConverter(runtime));
-    xstream.registerConverter(new RestCommResponseConverter(runtime));
-    final Configuration vi = configuration.subset("voip-innovations");
-    header = header(vi.getString("login"), vi.getString("password"));
-  }
-  
-  private String header(final String login, final String password) {
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append("<header><sender>");
-    buffer.append("<login>").append(login).append("</login>");
-    buffer.append("<password>").append(password).append("</password>");
-    buffer.append("</sender></header>");
-    return buffer.toString();
-  }
-  
-  protected boolean assignDid(final String did) {
-    if(did != null && !did.isEmpty()) {
-      final Configuration vi = configuration.subset("voip-innovations");
-      final StringBuilder buffer = new StringBuilder();
-      buffer.append("<request id=\"\">");
-      buffer.append(header);
-      buffer.append("<body>");
-      buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
-      buffer.append("<item>");
-      buffer.append("<did>").append(did).append("</did>");
-      buffer.append("<endpointgroup>").append(vi.getString("endpoint")).append("</endpointgroup>");
-      buffer.append("</item>");
-      buffer.append("</body>");
-      buffer.append("</request>");
-      final String body = buffer.toString();
-      final HttpPost post = new HttpPost(vi.getString("uri"));
-      try {
-        List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-        parameters.add(new BasicNameValuePair("apidata", body));
-        post.setEntity(new UrlEncodedFormEntity(parameters));
-        final DefaultHttpClient client = new DefaultHttpClient();
-        final HttpResponse response = client.execute(post);
-        if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-          final String content = StringUtils.toString(response.getEntity().getContent());
-          if(content.contains("<statuscode>100</statuscode>")) {
-            return true;
-          }
+@NotThreadSafe
+public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
+    @Context
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected IncomingPhoneNumbersDao dao;
+    protected Gson gson;
+    protected XStream xstream;
+
+    private String header;
+
+    public IncomingPhoneNumbersEndpoint() {
+        super();
+    }
+
+    @PostConstruct
+    public void init() {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        final Configuration runtime = configuration.subset("runtime-settings");
+        super.init(runtime);
+        dao = storage.getIncomingPhoneNumbersDao();
+        final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(runtime);
+        final GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(IncomingPhoneNumber.class, converter);
+        builder.setPrettyPrinting();
+        gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new IncomingPhoneNumberListConverter(runtime));
+        xstream.registerConverter(new RestCommResponseConverter(runtime));
+        final Configuration vi = configuration.subset("voip-innovations");
+        header = header(vi.getString("login"), vi.getString("password"));
+    }
+
+    private String header(final String login, final String password) {
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append("<header><sender>");
+        buffer.append("<login>").append(login).append("</login>");
+        buffer.append("<password>").append(password).append("</password>");
+        buffer.append("</sender></header>");
+        return buffer.toString();
+    }
+
+    protected boolean assignDid(final String did) {
+        if (did != null && !did.isEmpty()) {
+            final Configuration vi = configuration.subset("voip-innovations");
+            final StringBuilder buffer = new StringBuilder();
+            buffer.append("<request id=\"\">");
+            buffer.append(header);
+            buffer.append("<body>");
+            buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
+            buffer.append("<item>");
+            buffer.append("<did>").append(did).append("</did>");
+            buffer.append("<endpointgroup>").append(vi.getString("endpoint")).append("</endpointgroup>");
+            buffer.append("</item>");
+            buffer.append("</body>");
+            buffer.append("</request>");
+            final String body = buffer.toString();
+            final HttpPost post = new HttpPost(vi.getString("uri"));
+            try {
+                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+                parameters.add(new BasicNameValuePair("apidata", body));
+                post.setEntity(new UrlEncodedFormEntity(parameters));
+                final DefaultHttpClient client = new DefaultHttpClient();
+                final HttpResponse response = client.execute(post);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    final String content = StringUtils.toString(response.getEntity().getContent());
+                    if (content.contains("<statuscode>100</statuscode>")) {
+                        return true;
+                    }
+                }
+            } catch (final Exception ignored) {
+            }
         }
-      } catch(final Exception ignored) { }
+        return false;
     }
-    return false;
-  }
-  
-  protected boolean isValidDid(final String did) {
-    if(did != null && !did.isEmpty()) {
-      final StringBuilder buffer = new StringBuilder();
-      buffer.append("<request id=\"\">");
-      buffer.append(header);
-      buffer.append("<body>");
-      buffer.append("<requesttype>").append("queryDID").append("</requesttype>");
-      buffer.append("<item>");
-      buffer.append("<did>").append(did).append("</did>");
-      buffer.append("</item>");
-      buffer.append("</body>");
-      buffer.append("</request>");
-      final String body = buffer.toString();
-      final Configuration vi = configuration.subset("voip-innovations");
-      final HttpPost post = new HttpPost(vi.getString("uri"));
-      try {
-        List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-        parameters.add(new BasicNameValuePair("apidata", body));
-        post.setEntity(new UrlEncodedFormEntity(parameters));
-        final DefaultHttpClient client = new DefaultHttpClient();
-        final HttpResponse response = client.execute(post);
-        if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-          final String content = StringUtils.toString(response.getEntity().getContent());
-          if(content.contains("<statusCode>100</statusCode>")) {
-            return true;
-          }
+
+    protected boolean isValidDid(final String did) {
+        if (did != null && !did.isEmpty()) {
+            final StringBuilder buffer = new StringBuilder();
+            buffer.append("<request id=\"\">");
+            buffer.append(header);
+            buffer.append("<body>");
+            buffer.append("<requesttype>").append("queryDID").append("</requesttype>");
+            buffer.append("<item>");
+            buffer.append("<did>").append(did).append("</did>");
+            buffer.append("</item>");
+            buffer.append("</body>");
+            buffer.append("</request>");
+            final String body = buffer.toString();
+            final Configuration vi = configuration.subset("voip-innovations");
+            final HttpPost post = new HttpPost(vi.getString("uri"));
+            try {
+                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+                parameters.add(new BasicNameValuePair("apidata", body));
+                post.setEntity(new UrlEncodedFormEntity(parameters));
+                final DefaultHttpClient client = new DefaultHttpClient();
+                final HttpResponse response = client.execute(post);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    final String content = StringUtils.toString(response.getEntity().getContent());
+                    if (content.contains("<statusCode>100</statusCode>")) {
+                        return true;
+                    }
+                }
+            } catch (final Exception ignored) {
+            }
         }
-      } catch(final Exception ignored) { }
+        return false;
     }
-    return false;
-  }
-  
-  private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
-    final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
-    final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
-    builder.setSid(sid);
-    builder.setAccountSid(accountSid);
-    final PhoneNumber phoneNumber = getPhoneNumber(data);
-    final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-    builder.setPhoneNumber(phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164));
-    builder.setFriendlyName(getFriendlyName(phoneNumber, data));
-    final String apiVersion = getApiVersion(data);
-    builder.setApiVersion(apiVersion);
-    builder.setVoiceUrl(getUrl("VoiceUrl", data));
-    builder.setVoiceMethod(getMethod("VoiceMethod", data));
-    builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
-    builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-    builder.setStatusCallback(getUrl("StatusCallback", data));
-    builder.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
-    builder.setHasVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
-    builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
-    builder.setSmsUrl(getUrl("SmsUrl", data));
-    builder.setSmsMethod(getMethod("SmsMethod", data));
-    builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
-    builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
-    builder.setSmsApplicationSid(getSid("SmsApplicationSid", data));
-    final Configuration configuration = this.configuration.subset("runtime-settings");
-    String rootUri = configuration.getString("root-uri");
-    rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
-        .append("/IncomingPhoneNumbers/").append(sid.toString());
-    builder.setUri(URI.create(buffer.toString()));
-    return builder.build();
-  }
-  
-  private String e164(final String number) {
-    final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
-    try {
-      final PhoneNumber result = numbersUtil.parse(number, "US");
-      return numbersUtil.format(result, PhoneNumberFormat.E164);
-    } catch(final NumberParseException ignored) {
-      return number;
+
+    private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+        final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
+        final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
+        builder.setSid(sid);
+        builder.setAccountSid(accountSid);
+        final PhoneNumber phoneNumber = getPhoneNumber(data);
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        builder.setPhoneNumber(phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164));
+        builder.setFriendlyName(getFriendlyName(phoneNumber, data));
+        final String apiVersion = getApiVersion(data);
+        builder.setApiVersion(apiVersion);
+        builder.setVoiceUrl(getUrl("VoiceUrl", data));
+        builder.setVoiceMethod(getMethod("VoiceMethod", data));
+        builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+        builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+        builder.setStatusCallback(getUrl("StatusCallback", data));
+        builder.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
+        builder.setHasVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
+        builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        builder.setSmsUrl(getUrl("SmsUrl", data));
+        builder.setSmsMethod(getMethod("SmsMethod", data));
+        builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
+        builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
+        builder.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+        final Configuration configuration = this.configuration.subset("runtime-settings");
+        String rootUri = configuration.getString("root-uri");
+        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
+                .append("/IncomingPhoneNumbers/").append(sid.toString());
+        builder.setUri(URI.create(buffer.toString()));
+        return builder.build();
     }
-  }
-  
-  private String getFriendlyName(final PhoneNumber phoneNumber, final MultivaluedMap<String, String> data) {
-    final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-    String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.NATIONAL);
-    if(data.containsKey("FriendlyName")) {
-      friendlyName = data.getFirst("FriendlyName");
+
+    private String e164(final String number) {
+        final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
+        try {
+            final PhoneNumber result = numbersUtil.parse(number, "US");
+            return numbersUtil.format(result, PhoneNumberFormat.E164);
+        } catch (final NumberParseException ignored) {
+            return number;
+        }
     }
-    return friendlyName;
-  }
-  
-  protected Response getIncomingPhoneNumber(final String accountSid, final String sid,
-      final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:IncomingPhoneNumbers"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-    if(incomingPhoneNumber == null) {
-      return status(NOT_FOUND).build();
-    } else {
-      if(APPLICATION_JSON_TYPE == responseType) {
-        return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-      } else if(APPLICATION_XML_TYPE == responseType) {
-        final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
-        return ok(xstream.toXML(response), APPLICATION_XML).build();
-      } else {
-        return null;
-      }
+
+    private String getFriendlyName(final PhoneNumber phoneNumber, final MultivaluedMap<String, String> data) {
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.NATIONAL);
+        if (data.containsKey("FriendlyName")) {
+            friendlyName = data.getFirst("FriendlyName");
+        }
+        return friendlyName;
     }
-  }
-  
-  protected Response getIncomingPhoneNumbers(final String accountSid, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:IncomingPhoneNumbers"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbers(new Sid(accountSid));
-    if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(incomingPhoneNumbers), APPLICATION_JSON).build();
-    } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(new IncomingPhoneNumberList(incomingPhoneNumbers));
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else {
-      return null;
+
+    protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        if (incomingPhoneNumber == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
+            }
+        }
     }
-  }
-  
-  protected Response putIncomingPhoneNumber(final String accountSid,
-      final MultivaluedMap<String, String> data, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Create:IncomingPhoneNumbers"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    try { validate(data); } catch(final NullPointerException exception) { 
-      return status(BAD_REQUEST).entity(exception.getMessage()).build();
+
+    protected Response getIncomingPhoneNumbers(final String accountSid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbers(new Sid(accountSid));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(incomingPhoneNumbers), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new IncomingPhoneNumberList(incomingPhoneNumbers));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
     }
-    final String number = data.getFirst("PhoneNumber");
-    IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(e164(number));
-    if(incomingPhoneNumber == null) {
-      incomingPhoneNumber = createFrom(new Sid(accountSid), data);
-      dao.addIncomingPhoneNumber(incomingPhoneNumber);
-      // Provision the number from VoIP Innovations if they own it.
-      if(isValidDid(number)) {
-        assignDid(number);
-      }
+
+    protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
+            final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        try {
+            validate(data);
+        } catch (final NullPointerException exception) {
+            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        }
+        final String number = data.getFirst("PhoneNumber");
+        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(e164(number));
+        if (incomingPhoneNumber == null) {
+            incomingPhoneNumber = createFrom(new Sid(accountSid), data);
+            dao.addIncomingPhoneNumber(incomingPhoneNumber);
+            // Provision the number from VoIP Innovations if they own it.
+            if (isValidDid(number)) {
+                assignDid(number);
+            }
+        }
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
     }
-    if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-    } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else {
-      return null;
+
+    public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
+            final MultivaluedMap<String, String> data, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Modify:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
     }
-  }
-  
-  public Response updateIncomingPhoneNumber(final String accountSid,final String sid,
-      final MultivaluedMap<String, String> data, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Modify:IncomingPhoneNumbers"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-    dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
-    if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-    } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else {
-      return null;
+
+    private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
+        if (!data.containsKey("PhoneNumber")) {
+            throw new NullPointerException("Phone number can not be null.");
+        }
+        try {
+            PhoneNumberUtil.getInstance().parse(data.getFirst("PhoneNumber"), "US");
+        } catch (final NumberParseException exception) {
+            throw new IllegalArgumentException("Invalid phone number.");
+        }
     }
-  }
-  
-  private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
-    if(!data.containsKey("PhoneNumber")){
-      throw new NullPointerException("Phone number can not be null.");
+
+    private IncomingPhoneNumber update(final IncomingPhoneNumber incomingPhoneNumber, final MultivaluedMap<String, String> data) {
+        IncomingPhoneNumber result = incomingPhoneNumber;
+        if (data.containsKey("ApiVersion")) {
+            result = result.setApiVersion(getApiVersion(data));
+        }
+        if (data.containsKey("FriendlyName")) {
+            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+        }
+        if (data.containsKey("VoiceUrl")) {
+            result = result.setVoiceUrl(getUrl("VoiceUrl", data));
+        }
+        if (data.containsKey("VoiceMethod")) {
+            result = result.setVoiceMethod(getMethod("VoiceMethod", data));
+        }
+        if (data.containsKey("VoiceFallbackUrl")) {
+            result = result.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+        }
+        if (data.containsKey("VoiceFallbackMethod")) {
+            result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+        }
+        if (data.containsKey("StatusCallback")) {
+            result = result.setStatusCallback(getUrl("StatusCallback", data));
+        }
+        if (data.containsKey("StatusCallbackMethod")) {
+            result = result.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
+        }
+        if (data.containsKey("VoiceCallerIdLookup")) {
+            result = result.setVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
+        }
+        if (data.containsKey("VoiceApplicationSid")) {
+            result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        }
+        if (data.containsKey("SmsUrl")) {
+            result = result.setSmsUrl(getUrl("SmsUrl", data));
+        }
+        if (data.containsKey("SmsMethod")) {
+            result = result.setSmsMethod(getMethod("SmsMethod", data));
+        }
+        if (data.containsKey("SmsFallbackUrl")) {
+            result = result.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
+        }
+        if (data.containsKey("SmsFallbackMethod")) {
+            result = result.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
+        }
+        if (data.containsKey("SmsApplicationSid")) {
+            result = result.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+        }
+        return result;
     }
-    try { PhoneNumberUtil.getInstance().parse(data.getFirst("PhoneNumber"), "US"); }
-    catch(final NumberParseException exception) { throw new IllegalArgumentException("Invalid phone number."); }
-  }
-  
-  private IncomingPhoneNumber update(final IncomingPhoneNumber incomingPhoneNumber, final MultivaluedMap<String, String> data) {
-    IncomingPhoneNumber result = incomingPhoneNumber;
-    if(data.containsKey("ApiVersion")) {
-      result = result.setApiVersion(getApiVersion(data));
-    }
-    if(data.containsKey("FriendlyName")) {
-      result = result.setFriendlyName(data.getFirst("FriendlyName"));
-    }
-    if(data.containsKey("VoiceUrl")) {
-      result = result.setVoiceUrl(getUrl("VoiceUrl", data));
-    }
-    if(data.containsKey("VoiceMethod")) {
-      result = result.setVoiceMethod(getMethod("VoiceMethod", data));
-    }
-    if(data.containsKey("VoiceFallbackUrl")) {
-      result = result.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
-    }
-    if(data.containsKey("VoiceFallbackMethod")) {
-      result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-    }
-    if(data.containsKey("StatusCallback")) {
-      result = result.setStatusCallback(getUrl("StatusCallback", data));
-    }
-    if(data.containsKey("StatusCallbackMethod")) {
-      result = result.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
-    }
-    if(data.containsKey("VoiceCallerIdLookup")) {
-      result = result.setVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
-    }
-    if(data.containsKey("VoiceApplicationSid")) {
-      result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
-    }
-    if(data.containsKey("SmsUrl")) {
-      result = result.setSmsUrl(getUrl("SmsUrl", data));
-    }
-    if(data.containsKey("SmsMethod")) {
-      result = result.setSmsMethod(getMethod("SmsMethod", data));
-    }
-    if(data.containsKey("SmsFallbackUrl")) {
-      result = result.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
-    }
-    if(data.containsKey("SmsFallbackMethod")) {
-      result = result.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
-    }
-    if(data.containsKey("SmsApplicationSid")) {
-      result = result.setSmsApplicationSid(getSid("SmsApplicationSid", data));
-    }
-    return result;
-  }
 }

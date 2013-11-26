@@ -23,15 +23,16 @@ import akka.actor.ActorRef;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class DestroySmsSession {
-  private final ActorRef session;
-  
-  public DestroySmsSession(final ActorRef session) {
-    super();
-    this.session = session;
-  }
-  
-  public ActorRef session() {
-    return session;
-  }
+@Immutable
+public final class DestroySmsSession {
+    private final ActorRef session;
+
+    public DestroySmsSession(final ActorRef session) {
+        super();
+        this.session = session;
+    }
+
+    public ActorRef session() {
+        return session;
+    }
 }

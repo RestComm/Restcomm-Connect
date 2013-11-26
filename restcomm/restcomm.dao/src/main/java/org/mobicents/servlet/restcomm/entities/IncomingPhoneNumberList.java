@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class IncomingPhoneNumberList {
-  private final List<IncomingPhoneNumber> incomingPhoneNumbers;
+@NotThreadSafe
+public final class IncomingPhoneNumberList {
+    private final List<IncomingPhoneNumber> incomingPhoneNumbers;
 
-  public IncomingPhoneNumberList(final List<IncomingPhoneNumber> incomingPhoneNumbers) {
-    super();
-    this.incomingPhoneNumbers = incomingPhoneNumbers;
-  }
-  
-  public List<IncomingPhoneNumber> getIncomingPhoneNumbers() {
-    return incomingPhoneNumbers;
-  }
+    public IncomingPhoneNumberList(final List<IncomingPhoneNumber> incomingPhoneNumbers) {
+        super();
+        this.incomingPhoneNumbers = incomingPhoneNumbers;
+    }
+
+    public List<IncomingPhoneNumber> getIncomingPhoneNumbers() {
+        return incomingPhoneNumbers;
+    }
 }

@@ -48,140 +48,159 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class MybatisDaoManager implements DaoManager {
-	private Configuration configuration;
-	private AccountsDao accountsDao;
-	private ApplicationsDao applicationsDao;
-	private AvailablePhoneNumbersDao availablePhoneNumbersDao;
-	private CallDetailRecordsDao callDetailRecordsDao;
-	private ClientsDao clientsDao;
-	private HttpCookiesDao httpCookiesDao;
-	private IncomingPhoneNumbersDao incomingPhoneNumbersDao;
-	private NotificationsDao notificationsDao;
-	private OutgoingCallerIdsDao outgoingCallerIdsDao;
-	private RegistrationsDao presenceRecordsDao;
-	private RecordingsDao recordingsDao;
-	private ShortCodesDao shortCodesDao;
-	private SmsMessagesDao smsMessagesDao;
-	private TranscriptionsDao transcriptionsDao;
-	private GatewaysDao gatewaysDao;
-	private AnnouncementsDao announcementsDao;
+@ThreadSafe
+public final class MybatisDaoManager implements DaoManager {
+    private Configuration configuration;
+    private AccountsDao accountsDao;
+    private ApplicationsDao applicationsDao;
+    private AvailablePhoneNumbersDao availablePhoneNumbersDao;
+    private CallDetailRecordsDao callDetailRecordsDao;
+    private ClientsDao clientsDao;
+    private HttpCookiesDao httpCookiesDao;
+    private IncomingPhoneNumbersDao incomingPhoneNumbersDao;
+    private NotificationsDao notificationsDao;
+    private OutgoingCallerIdsDao outgoingCallerIdsDao;
+    private RegistrationsDao presenceRecordsDao;
+    private RecordingsDao recordingsDao;
+    private ShortCodesDao shortCodesDao;
+    private SmsMessagesDao smsMessagesDao;
+    private TranscriptionsDao transcriptionsDao;
+    private GatewaysDao gatewaysDao;
+    private AnnouncementsDao announcementsDao;
 
-	public MybatisDaoManager() {
-		super();
-	}
+    public MybatisDaoManager() {
+        super();
+    }
 
-	@Override public void configure(final Configuration configuration) {
-		this.configuration = configuration;
-	}
+    @Override
+    public void configure(final Configuration configuration) {
+        this.configuration = configuration;
+    }
 
-	@Override public AccountsDao getAccountsDao() {
-		return accountsDao;
-	}
+    @Override
+    public AccountsDao getAccountsDao() {
+        return accountsDao;
+    }
 
-	@Override public ApplicationsDao getApplicationsDao() {
-		return applicationsDao;
-	}
+    @Override
+    public ApplicationsDao getApplicationsDao() {
+        return applicationsDao;
+    }
 
-	@Override
-	public AnnouncementsDao getAnnouncementsDao(){
-		return announcementsDao;
-	}
+    @Override
+    public AnnouncementsDao getAnnouncementsDao() {
+        return announcementsDao;
+    }
 
-	@Override public AvailablePhoneNumbersDao getAvailablePhoneNumbersDao() {
-		return availablePhoneNumbersDao;
-	}
+    @Override
+    public AvailablePhoneNumbersDao getAvailablePhoneNumbersDao() {
+        return availablePhoneNumbersDao;
+    }
 
-	@Override public CallDetailRecordsDao getCallDetailRecordsDao() {
-		return callDetailRecordsDao;
-	}
+    @Override
+    public CallDetailRecordsDao getCallDetailRecordsDao() {
+        return callDetailRecordsDao;
+    }
 
-	@Override public ClientsDao getClientsDao() {
-		return clientsDao;
-	}
-	
-	@Override public HttpCookiesDao getHttpCookiesDao() {
-	  return httpCookiesDao;
-	}
+    @Override
+    public ClientsDao getClientsDao() {
+        return clientsDao;
+    }
 
-	@Override public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao() {
-		return incomingPhoneNumbersDao;
-	}
+    @Override
+    public HttpCookiesDao getHttpCookiesDao() {
+        return httpCookiesDao;
+    }
 
-	@Override public NotificationsDao getNotificationsDao() {
-		return notificationsDao;
-	}
+    @Override
+    public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao() {
+        return incomingPhoneNumbersDao;
+    }
 
-	@Override public RegistrationsDao getRegistrationsDao() {
-		return presenceRecordsDao;
-	}
+    @Override
+    public NotificationsDao getNotificationsDao() {
+        return notificationsDao;
+    }
 
-	@Override public OutgoingCallerIdsDao getOutgoingCallerIdsDao() {
-		return outgoingCallerIdsDao;
-	}
+    @Override
+    public RegistrationsDao getRegistrationsDao() {
+        return presenceRecordsDao;
+    }
 
-	@Override public RecordingsDao getRecordingsDao() {
-		return recordingsDao;
-	}
+    @Override
+    public OutgoingCallerIdsDao getOutgoingCallerIdsDao() {
+        return outgoingCallerIdsDao;
+    }
 
-	@Override public ShortCodesDao getShortCodesDao() {
-		return shortCodesDao;
-	}
+    @Override
+    public RecordingsDao getRecordingsDao() {
+        return recordingsDao;
+    }
 
-	@Override public SmsMessagesDao getSmsMessagesDao() {
-		return smsMessagesDao;
-	}
+    @Override
+    public ShortCodesDao getShortCodesDao() {
+        return shortCodesDao;
+    }
 
-	@Override public TranscriptionsDao getTranscriptionsDao() {
-		return transcriptionsDao;
-	}
+    @Override
+    public SmsMessagesDao getSmsMessagesDao() {
+        return smsMessagesDao;
+    }
 
-	@Override public GatewaysDao getGatewaysDao() {
-		return gatewaysDao;
-	}
+    @Override
+    public TranscriptionsDao getTranscriptionsDao() {
+        return transcriptionsDao;
+    }
 
-	@Override public void shutdown() {
-		// Nothing to do.
-	}
+    @Override
+    public GatewaysDao getGatewaysDao() {
+        return gatewaysDao;
+    }
 
-	@Override public void start() throws RuntimeException {
-		// This must be called before any other MyBatis methods.
-		org.apache.ibatis.logging.LogFactory.useSlf4jLogging();
-		// Load the configuration file.
-		final SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
-		final String path = configuration.getString("configuration-file");
-		Reader reader = null;
-		try {
-			reader = new FileReader(path);
-		} catch(final FileNotFoundException exception) {
-			throw new RuntimeException(exception);
-		}
-		final Properties properties = new Properties();
-		final String dataFiles = configuration.getString("data-files");
-		final String sqlFiles = configuration.getString("sql-files");
-		properties.setProperty("data", dataFiles);
-		properties.setProperty("sql", sqlFiles);
-		final SqlSessionFactory sessions = builder.build(reader, properties);
-		start(sessions);
-	}
-	
-	public void start(final SqlSessionFactory sessions) {
-	  // Instantiate the DAO objects.
-	  accountsDao = new MybatisAccountsDao(sessions);
-	  applicationsDao = new MybatisApplicationsDao(sessions);
-	  announcementsDao = new MybatisAnnouncementsDao(sessions);
-	  availablePhoneNumbersDao = new MybatisAvailablePhoneNumbersDao(sessions);
-	  callDetailRecordsDao = new MybatisCallDetailRecordsDao(sessions);
-	  clientsDao = new MybatisClientsDao(sessions);
-	  httpCookiesDao = new MybatisHttpCookiesDao(sessions);
-	  incomingPhoneNumbersDao = new MybatisIncomingPhoneNumbersDao(sessions);
-	  notificationsDao = new MybatisNotificationsDao(sessions);
-	  outgoingCallerIdsDao = new MybatisOutgoingCallerIdsDao(sessions);
-	  presenceRecordsDao = new MybatisRegistrationsDao(sessions);
-      recordingsDao = new MybatisRecordingsDao(sessions);
-	  shortCodesDao = new MybatisShortCodesDao(sessions);
-	  smsMessagesDao = new MybatisSmsMessagesDao(sessions);
-	  transcriptionsDao = new MybatisTranscriptionsDao(sessions);
-	  gatewaysDao = new MybatisGatewaysDao(sessions);
-	}
+    @Override
+    public void shutdown() {
+        // Nothing to do.
+    }
+
+    @Override
+    public void start() throws RuntimeException {
+        // This must be called before any other MyBatis methods.
+        org.apache.ibatis.logging.LogFactory.useSlf4jLogging();
+        // Load the configuration file.
+        final SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+        final String path = configuration.getString("configuration-file");
+        Reader reader = null;
+        try {
+            reader = new FileReader(path);
+        } catch (final FileNotFoundException exception) {
+            throw new RuntimeException(exception);
+        }
+        final Properties properties = new Properties();
+        final String dataFiles = configuration.getString("data-files");
+        final String sqlFiles = configuration.getString("sql-files");
+        properties.setProperty("data", dataFiles);
+        properties.setProperty("sql", sqlFiles);
+        final SqlSessionFactory sessions = builder.build(reader, properties);
+        start(sessions);
+    }
+
+    public void start(final SqlSessionFactory sessions) {
+        // Instantiate the DAO objects.
+        accountsDao = new MybatisAccountsDao(sessions);
+        applicationsDao = new MybatisApplicationsDao(sessions);
+        announcementsDao = new MybatisAnnouncementsDao(sessions);
+        availablePhoneNumbersDao = new MybatisAvailablePhoneNumbersDao(sessions);
+        callDetailRecordsDao = new MybatisCallDetailRecordsDao(sessions);
+        clientsDao = new MybatisClientsDao(sessions);
+        httpCookiesDao = new MybatisHttpCookiesDao(sessions);
+        incomingPhoneNumbersDao = new MybatisIncomingPhoneNumbersDao(sessions);
+        notificationsDao = new MybatisNotificationsDao(sessions);
+        outgoingCallerIdsDao = new MybatisOutgoingCallerIdsDao(sessions);
+        presenceRecordsDao = new MybatisRegistrationsDao(sessions);
+        recordingsDao = new MybatisRecordingsDao(sessions);
+        shortCodesDao = new MybatisShortCodesDao(sessions);
+        smsMessagesDao = new MybatisSmsMessagesDao(sessions);
+        transcriptionsDao = new MybatisTranscriptionsDao(sessions);
+        gatewaysDao = new MybatisGatewaysDao(sessions);
+    }
 }

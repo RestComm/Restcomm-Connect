@@ -30,17 +30,20 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/OutgoingCallerIds.json")
-@ThreadSafe public final class OutgoingCallerIdsJsonEndpoint extends OutgoingCallerIdsEndpoint {
-  public OutgoingCallerIdsJsonEndpoint() {
-    super();
-  }
-  
-  @GET public Response getCallerIds(@PathParam("accountSid") final String accountSid) {
-    return getCallerIds(accountSid, APPLICATION_JSON_TYPE);
-  }
-  
-  @POST public Response putOutgoingCallerId(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putOutgoingCallerId(accountSid, data, APPLICATION_JSON_TYPE);
-  }
+@ThreadSafe
+public final class OutgoingCallerIdsJsonEndpoint extends OutgoingCallerIdsEndpoint {
+    public OutgoingCallerIdsJsonEndpoint() {
+        super();
+    }
+
+    @GET
+    public Response getCallerIds(@PathParam("accountSid") final String accountSid) {
+        return getCallerIds(accountSid, APPLICATION_JSON_TYPE);
+    }
+
+    @POST
+    public Response putOutgoingCallerId(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putOutgoingCallerId(accountSid, data, APPLICATION_JSON_TYPE);
+    }
 }

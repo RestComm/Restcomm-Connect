@@ -12,18 +12,19 @@ import javax.ws.rs.core.Response;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 @Path("/Accounts/{accountSid}/AvailablePhoneNumbers/US/Local")
-@ThreadSafe public final class AvailablePhoneNumbersXmlEndpoint extends
-    AvailablePhoneNumbersEndpoint {
-  public AvailablePhoneNumbersXmlEndpoint() {
-    super();
-  }
-  
-  @GET public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
-      @QueryParam("AreaCode") String areaCode) {
-    if(areaCode != null && !areaCode.isEmpty()) {
-      return getAvailablePhoneNumbersByAreaCode(accountSid, areaCode, APPLICATION_XML_TYPE);
-    } else {
-      return status(BAD_REQUEST).build();
+@ThreadSafe
+public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumbersEndpoint {
+    public AvailablePhoneNumbersXmlEndpoint() {
+        super();
     }
-  }
+
+    @GET
+    public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
+            @QueryParam("AreaCode") String areaCode) {
+        if (areaCode != null && !areaCode.isEmpty()) {
+            return getAvailablePhoneNumbersByAreaCode(accountSid, areaCode, APPLICATION_XML_TYPE);
+        } else {
+            return status(BAD_REQUEST).build();
+        }
+    }
 }

@@ -43,77 +43,86 @@ import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener {
-  private static final long serialVersionUID = 1L;
-  
-  private ActorSystem system;
-  private ActorRef manager;
+    private static final long serialVersionUID = 1L;
 
-  public CallManagerProxy() {
-    super();
-  }
-  
-  @Override public void destroy() {
-    system.shutdown();
-    system.awaitTermination();
-  }
-  
-  @Override protected void doRequest(final SipServletRequest request)
-      throws ServletException, IOException {
-    manager.tell(request, null);
-  }
+    private ActorSystem system;
+    private ActorRef manager;
 
-  @Override protected void doResponse(final SipServletResponse response)
-      throws ServletException, IOException {
-    manager.tell(response, null);
-  }
-  
-  @Override public void init(final ServletConfig config) throws ServletException {
-    final ServletContext context = config.getServletContext();
-    final Configuration xml = (Configuration)context.getAttribute(Configuration.class.getName());
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    final ActorRef gateway = (ActorRef)context.getAttribute(MediaGateway.class.getName());
-    system = (ActorSystem)context.getAttribute(ActorSystem.class.getName());
-    // Create the call manager.
-    final SipFactory factory = (SipFactory)context.getAttribute(SIP_FACTORY);
-    final ActorRef conferences = conferences(gateway);
-    final ActorRef sms = (ActorRef)context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
-    manager = manager(xml, gateway, conferences, sms, factory, storage);
-    context.setAttribute(CallManager.class.getName(), manager);
-  }
-  
-  private ActorRef manager(final Configuration configuration, final ActorRef gateway,
-      final ActorRef conferences, final ActorRef sms, final SipFactory factory,
-      final DaoManager storage) {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-		private static final long serialVersionUID = 1L;
-		@Override public UntypedActor create() throws Exception {
-          return new CallManager(configuration, system, gateway, conferences, sms, factory, storage);
-		}
-    }));
-  }
-  
-  private ActorRef conferences(final ActorRef gateway) {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-		private static final long serialVersionUID = 1L;
-		@Override public UntypedActor create() throws Exception {
-          return new ConferenceCenter(gateway);
-		}
-    }));
-  }
+    public CallManagerProxy() {
+        super();
+    }
 
-  @Override public void sessionCreated(final SipApplicationSessionEvent event) {
-    // Nothing to do.
-  }
+    @Override
+    public void destroy() {
+        system.shutdown();
+        system.awaitTermination();
+    }
 
-  @Override public void sessionDestroyed(final SipApplicationSessionEvent event) {
-	// Nothing to do.
-  }
+    @Override
+    protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
+        manager.tell(request, null);
+    }
 
-  @Override public void sessionExpired(final SipApplicationSessionEvent event) {
-    manager.tell(event, null);
-  }
+    @Override
+    protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
+        manager.tell(response, null);
+    }
 
-  @Override public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
-	// Nothing to do.
-  }
+    @Override
+    public void init(final ServletConfig config) throws ServletException {
+        final ServletContext context = config.getServletContext();
+        final Configuration xml = (Configuration) context.getAttribute(Configuration.class.getName());
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        final ActorRef gateway = (ActorRef) context.getAttribute(MediaGateway.class.getName());
+        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+        // Create the call manager.
+        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+        final ActorRef conferences = conferences(gateway);
+        final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
+        manager = manager(xml, gateway, conferences, sms, factory, storage);
+        context.setAttribute(CallManager.class.getName(), manager);
+    }
+
+    private ActorRef manager(final Configuration configuration, final ActorRef gateway, final ActorRef conferences,
+            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new CallManager(configuration, system, gateway, conferences, sms, factory, storage);
+            }
+        }));
+    }
+
+    private ActorRef conferences(final ActorRef gateway) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new ConferenceCenter(gateway);
+            }
+        }));
+    }
+
+    @Override
+    public void sessionCreated(final SipApplicationSessionEvent event) {
+        // Nothing to do.
+    }
+
+    @Override
+    public void sessionDestroyed(final SipApplicationSessionEvent event) {
+        // Nothing to do.
+    }
+
+    @Override
+    public void sessionExpired(final SipApplicationSessionEvent event) {
+        manager.tell(event, null);
+    }
+
+    @Override
+    public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
+        // Nothing to do.
+    }
 }

@@ -32,61 +32,62 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class ShortCodeConverter extends AbstractConverter
-    implements JsonSerializer<ShortCode> {
-  public ShortCodeConverter(final Configuration configuration) {
-    super(configuration);
-  }
-  
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return ShortCode.class.equals(klass);
-  }
+@ThreadSafe
+public final class ShortCodeConverter extends AbstractConverter implements JsonSerializer<ShortCode> {
+    public ShortCodeConverter(final Configuration configuration) {
+        super(configuration);
+    }
 
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final ShortCode shortCode = (ShortCode)object;
-    writer.startNode("ShortCode");
-    writeSid(shortCode.getSid(), writer);
-    writeDateCreated(shortCode.getDateCreated(), writer);
-    writeDateUpdated(shortCode.getDateUpdated(), writer);
-    writeFriendlyName(shortCode.getFriendlyName(), writer);
-    writeAccountSid(shortCode.getAccountSid(), writer);
-    writeShortCode(Integer.toString(shortCode.getShortCode()), writer);
-    writeApiVersion(shortCode.getApiVersion(), writer);
-    writeSmsUrl(shortCode.getSmsUrl(), writer);
-    writeSmsMethod(shortCode.getSmsMethod(), writer);
-    writeSmsFallbackUrl(shortCode.getSmsFallbackUrl(), writer);
-    writeSmsFallbackMethod(shortCode.getSmsFallbackMethod(), writer);
-    writeUri(shortCode.getUri(), writer);
-    writer.endNode();
-  }
-  
-  @Override public JsonElement serialize(final ShortCode shortCode, final Type type,
-      final JsonSerializationContext context) {
-  	final JsonObject object = new JsonObject();
-  	writeSid(shortCode.getSid(), object);
-    writeDateCreated(shortCode.getDateCreated(), object);
-    writeDateUpdated(shortCode.getDateUpdated(), object);
-    writeFriendlyName(shortCode.getFriendlyName(), object);
-    writeAccountSid(shortCode.getAccountSid(), object);
-    writeShortCode(Integer.toString(shortCode.getShortCode()), object);
-    writeApiVersion(shortCode.getApiVersion(), object);
-    writeSmsUrl(shortCode.getSmsUrl(), object);
-    writeSmsMethod(shortCode.getSmsMethod(), object);
-    writeSmsFallbackUrl(shortCode.getSmsFallbackUrl(), object);
-    writeSmsFallbackMethod(shortCode.getSmsFallbackMethod(), object);
-    writeUri(shortCode.getUri(), object);
-  	return object;
-  }
-  
-  private void writeShortCode(final String shortCode, final HierarchicalStreamWriter writer) {
-    writer.startNode("ShortCode");
-    writer.setValue(shortCode);
-    writer.endNode();
-  }
-  
-  private void writeShortCode(final String shortCode, final JsonObject object) {
-    object.addProperty("short_code", shortCode);
-  }
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return ShortCode.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final ShortCode shortCode = (ShortCode) object;
+        writer.startNode("ShortCode");
+        writeSid(shortCode.getSid(), writer);
+        writeDateCreated(shortCode.getDateCreated(), writer);
+        writeDateUpdated(shortCode.getDateUpdated(), writer);
+        writeFriendlyName(shortCode.getFriendlyName(), writer);
+        writeAccountSid(shortCode.getAccountSid(), writer);
+        writeShortCode(Integer.toString(shortCode.getShortCode()), writer);
+        writeApiVersion(shortCode.getApiVersion(), writer);
+        writeSmsUrl(shortCode.getSmsUrl(), writer);
+        writeSmsMethod(shortCode.getSmsMethod(), writer);
+        writeSmsFallbackUrl(shortCode.getSmsFallbackUrl(), writer);
+        writeSmsFallbackMethod(shortCode.getSmsFallbackMethod(), writer);
+        writeUri(shortCode.getUri(), writer);
+        writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(final ShortCode shortCode, final Type type, final JsonSerializationContext context) {
+        final JsonObject object = new JsonObject();
+        writeSid(shortCode.getSid(), object);
+        writeDateCreated(shortCode.getDateCreated(), object);
+        writeDateUpdated(shortCode.getDateUpdated(), object);
+        writeFriendlyName(shortCode.getFriendlyName(), object);
+        writeAccountSid(shortCode.getAccountSid(), object);
+        writeShortCode(Integer.toString(shortCode.getShortCode()), object);
+        writeApiVersion(shortCode.getApiVersion(), object);
+        writeSmsUrl(shortCode.getSmsUrl(), object);
+        writeSmsMethod(shortCode.getSmsMethod(), object);
+        writeSmsFallbackUrl(shortCode.getSmsFallbackUrl(), object);
+        writeSmsFallbackMethod(shortCode.getSmsFallbackMethod(), object);
+        writeUri(shortCode.getUri(), object);
+        return object;
+    }
+
+    private void writeShortCode(final String shortCode, final HierarchicalStreamWriter writer) {
+        writer.startNode("ShortCode");
+        writer.setValue(shortCode);
+        writer.endNode();
+    }
+
+    private void writeShortCode(final String shortCode, final JsonObject object) {
+        object.addProperty("short_code", shortCode);
+    }
 }

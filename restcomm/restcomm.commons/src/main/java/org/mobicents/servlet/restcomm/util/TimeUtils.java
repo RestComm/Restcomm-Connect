@@ -21,23 +21,24 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class TimeUtils {
-  public static final long SECOND_IN_MILLIS = 1000;
-  public static final long MINUTE_IN_MILLIS = SECOND_IN_MILLIS * 60;
-  public static final long HOURS_IN_MILLIES = MINUTE_IN_MILLIS * 60;
-  
-  private TimeUtils() {
-    super();
-  }
-  
-  public static int millisToMinutes(final long milliseconds) {
-    final long minute = 60 * 1000;
-    final long remainder = milliseconds % minute;
-    if(remainder != 0) {
-      final long delta = minute - remainder;
-      return (int)((milliseconds + delta) / minute);
-    } else {
-      return (int)(milliseconds / minute);
+@ThreadSafe
+public final class TimeUtils {
+    public static final long SECOND_IN_MILLIS = 1000;
+    public static final long MINUTE_IN_MILLIS = SECOND_IN_MILLIS * 60;
+    public static final long HOURS_IN_MILLIES = MINUTE_IN_MILLIS * 60;
+
+    private TimeUtils() {
+        super();
     }
-  }
+
+    public static int millisToMinutes(final long milliseconds) {
+        final long minute = 60 * 1000;
+        final long remainder = milliseconds % minute;
+        if (remainder != 0) {
+            final long delta = minute - remainder;
+            return (int) ((milliseconds + delta) / minute);
+        } else {
+            return (int) (milliseconds / minute);
+        }
+    }
 }

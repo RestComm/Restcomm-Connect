@@ -50,66 +50,73 @@ import org.mobicents.servlet.restcomm.http.converter.TranscriptionListConverter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
-  @Context protected ServletContext context;
-  protected Configuration configuration;
-  protected TranscriptionsDao dao;
-  protected Gson gson;
-  protected XStream xstream;
-  
-  public TranscriptionsEndpoint() {
-    super();
-  }
-  
-  @PostConstruct
-  public void init() {
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    configuration = configuration.subset("runtime-settings");
-    super.init(configuration);
-    dao = storage.getTranscriptionsDao();
-    final TranscriptionConverter converter = new TranscriptionConverter(configuration);
-    final GsonBuilder builder = new GsonBuilder();
-    builder.registerTypeAdapter(Transcription.class, converter);
-    builder.setPrettyPrinting();
-    gson = builder.create();
-    xstream = new XStream();
-    xstream.alias("RestcommResponse", RestCommResponse.class);
-    xstream.registerConverter(converter);
-    xstream.registerConverter(new TranscriptionListConverter(configuration));
-    xstream.registerConverter(new RestCommResponseConverter(configuration));
-  }
-  
-  protected Response getTranscription(final String accountSid, final String sid,
-      final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Transcriptions"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final Transcription transcription = dao.getTranscription(new Sid(sid));
-    if(transcription == null) {
-      return status(NOT_FOUND).build();
-    } else {
-      if(APPLICATION_JSON_TYPE == responseType) {
-        return ok(gson.toJson(transcription), APPLICATION_JSON).build();
-      } else if(APPLICATION_XML_TYPE == responseType) {
-    	final RestCommResponse response = new RestCommResponse(transcription);
-        return ok(xstream.toXML(response), APPLICATION_XML).build();
-      }  else {
-        return null;
-      }
+@NotThreadSafe
+public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
+    @Context
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected TranscriptionsDao dao;
+    protected Gson gson;
+    protected XStream xstream;
+
+    public TranscriptionsEndpoint() {
+        super();
     }
-  }
-  
-  protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Transcriptions"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
-    if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(transcriptions), APPLICATION_JSON).build();
-    } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(new TranscriptionList(transcriptions));
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    }  else {
-      return null;
+
+    @PostConstruct
+    public void init() {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = configuration.subset("runtime-settings");
+        super.init(configuration);
+        dao = storage.getTranscriptionsDao();
+        final TranscriptionConverter converter = new TranscriptionConverter(configuration);
+        final GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(Transcription.class, converter);
+        builder.setPrettyPrinting();
+        gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new TranscriptionListConverter(configuration));
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
-  }
+
+    protected Response getTranscription(final String accountSid, final String sid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:Transcriptions");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Transcription transcription = dao.getTranscription(new Sid(sid));
+        if (transcription == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(transcription), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(transcription);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:Transcriptions");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(transcriptions), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new TranscriptionList(transcriptions));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
 }

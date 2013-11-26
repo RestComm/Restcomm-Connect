@@ -25,46 +25,48 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Play {
-  private final List<URI> announcements;
-  private final int iterations;
+@Immutable
+public final class Play {
+    private final List<URI> announcements;
+    private final int iterations;
 
-  public Play(final List<URI> announcements, final int iterations) {
-    super();
-    this.announcements = announcements;
-    this.iterations = iterations;
-  }
-  
-  public Play(final URI announcement, final int iterations) {
-    super();
-    this.announcements = new ArrayList<URI>();
-    announcements.add(announcement);
-    this.iterations = iterations;
-  }
-  
-  public List<URI> announcements() {
-    return announcements;
-  }
-  
-  public int iterations() {
-    return iterations;
-  }
-  
-  @Override public String toString() {
-    final StringBuilder buffer = new StringBuilder();
-    if(!announcements.isEmpty()) {
-      buffer.append("an=");
-      for(int index = 0; index < announcements.size(); index++) {
-        buffer.append(announcements.get(index));
-        if(index < announcements.size() - 1) {
-          buffer.append(";");
-        }
-      }
-      if(iterations > 0) {
-        buffer.append(" ");
-        buffer.append("it=").append(iterations);
-      }
+    public Play(final List<URI> announcements, final int iterations) {
+        super();
+        this.announcements = announcements;
+        this.iterations = iterations;
     }
-    return buffer.toString();
-  }
+
+    public Play(final URI announcement, final int iterations) {
+        super();
+        this.announcements = new ArrayList<URI>();
+        announcements.add(announcement);
+        this.iterations = iterations;
+    }
+
+    public List<URI> announcements() {
+        return announcements;
+    }
+
+    public int iterations() {
+        return iterations;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buffer = new StringBuilder();
+        if (!announcements.isEmpty()) {
+            buffer.append("an=");
+            for (int index = 0; index < announcements.size(); index++) {
+                buffer.append(announcements.get(index));
+                if (index < announcements.size() - 1) {
+                    buffer.append(";");
+                }
+            }
+            if (iterations > 0) {
+                buffer.append(" ");
+                buffer.append("it=").append(iterations);
+            }
+        }
+        return buffer.toString();
+    }
 }

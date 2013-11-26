@@ -24,34 +24,34 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class AsrResponse<T> extends StandardResponse<T> {
-  private final Map<String, Object> attributes;
-  
-  public AsrResponse(final T object, final Map<String, Object> attributes) {
-    super(object);
-    this.attributes = attributes;
-  }
-  
-  public AsrResponse(T object) {
-    this(object, null);
-  }
+@Immutable
+public final class AsrResponse<T> extends StandardResponse<T> {
+    private final Map<String, Object> attributes;
 
-  public AsrResponse(final Throwable cause, final Map<String, Object> attributes) {
-    super(cause);
-    this.attributes = attributes;
-  }
-  
-  public AsrResponse(final Throwable cause) {
-    this(cause, null);
-  }
+    public AsrResponse(final T object, final Map<String, Object> attributes) {
+        super(object);
+        this.attributes = attributes;
+    }
 
-  public AsrResponse(final Throwable cause, final String message,
-      final Map<String, Object> attributes) {
-    super(cause, message);
-    this.attributes = attributes;
-  }
-  
-  public Map<String, Object> attributes() {
-    return attributes;
-  }
+    public AsrResponse(T object) {
+        this(object, null);
+    }
+
+    public AsrResponse(final Throwable cause, final Map<String, Object> attributes) {
+        super(cause);
+        this.attributes = attributes;
+    }
+
+    public AsrResponse(final Throwable cause) {
+        this(cause, null);
+    }
+
+    public AsrResponse(final Throwable cause, final String message, final Map<String, Object> attributes) {
+        super(cause, message);
+        this.attributes = attributes;
+    }
+
+    public Map<String, Object> attributes() {
+        return attributes;
+    }
 }

@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class ShortCodeList {
-  private final List<ShortCode> shortCodes;
+@NotThreadSafe
+public final class ShortCodeList {
+    private final List<ShortCode> shortCodes;
 
-  public ShortCodeList(final List<ShortCode> shortCodes) {
-    super();
-    this.shortCodes = shortCodes;
-  }
-  
-  public List<ShortCode> getShortCodes() {
-   return shortCodes;
-  }
+    public ShortCodeList(final List<ShortCode> shortCodes) {
+        super();
+        this.shortCodes = shortCodes;
+    }
+
+    public List<ShortCode> getShortCodes() {
+        return shortCodes;
+    }
 }

@@ -23,21 +23,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class NPA {
-  private final String name;
-  private final List<NXX> nxxs;
-  
-  public NPA(final String name, final List<NXX> nxxs) {
-    super();
-    this.name = name;
-    this.nxxs = nxxs;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public List<NXX> nxxs() {
-    return nxxs;
-  }
+@Immutable
+public final class NPA {
+    private final String name;
+    private final List<NXX> nxxs;
+
+    public NPA(final String name, final List<NXX> nxxs) {
+        super();
+        this.name = name;
+        this.nxxs = nxxs;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public List<NXX> nxxs() {
+        return nxxs;
+    }
 }

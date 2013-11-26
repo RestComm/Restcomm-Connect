@@ -24,27 +24,28 @@ import org.mobicents.servlet.restcomm.entities.ShortCodeList;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class ShortCodeListConverter extends AbstractConverter {
-  public ShortCodeListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return ShortCodeList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final ShortCodeList list = (ShortCodeList)object;
-    writer.startNode("ShortCodes");
-    for(final ShortCode shortCode : list.getShortCodes()) {
-     context.convertAnother(shortCode);
+@ThreadSafe
+public final class ShortCodeListConverter extends AbstractConverter {
+    public ShortCodeListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return ShortCodeList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final ShortCodeList list = (ShortCodeList) object;
+        writer.startNode("ShortCodes");
+        for (final ShortCode shortCode : list.getShortCodes()) {
+            context.convertAnother(shortCode);
+        }
+        writer.endNode();
+    }
 }

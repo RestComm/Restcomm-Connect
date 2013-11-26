@@ -25,10 +25,15 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface OutgoingCallerIdsDao {
-  public void addOutgoingCallerId(OutgoingCallerId outgoingCallerId);
-  public OutgoingCallerId getOutgoingCallerId(Sid sid);
-  public List<OutgoingCallerId> getOutgoingCallerIds(Sid accountSid);
-  public void removeOutgoingCallerId(Sid sid);
-  public void removeOutgoingCallerIds(Sid accountSid);
-  public void updateOutgoingCallerId(OutgoingCallerId outgoingCallerId);
+    void addOutgoingCallerId(OutgoingCallerId outgoingCallerId);
+
+    OutgoingCallerId getOutgoingCallerId(Sid sid);
+
+    List<OutgoingCallerId> getOutgoingCallerIds(Sid accountSid);
+
+    void removeOutgoingCallerId(Sid sid);
+
+    void removeOutgoingCallerIds(Sid accountSid);
+
+    void updateOutgoingCallerId(OutgoingCallerId outgoingCallerId);
 }

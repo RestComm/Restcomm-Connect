@@ -23,21 +23,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class State {
-  private final String name;
-  private final List<LATA> latas;
-  
-  public State(final String name, final List<LATA> latas) {
-    super();
-    this.name = name;
-    this.latas = latas;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public List<LATA> latas() {
-    return latas;
-  }
+@Immutable
+public final class State {
+    private final String name;
+    private final List<LATA> latas;
+
+    public State(final String name, final List<LATA> latas) {
+        super();
+        this.name = name;
+        this.latas = latas;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public List<LATA> latas() {
+        return latas;
+    }
 }

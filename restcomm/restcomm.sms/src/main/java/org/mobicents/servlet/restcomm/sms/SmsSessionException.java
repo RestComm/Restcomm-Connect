@@ -20,17 +20,17 @@ package org.mobicents.servlet.restcomm.sms;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SmsSessionException extends Exception {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public SmsSessionException(final String message) {
-    super(message);
-  }
+    public SmsSessionException(final String message) {
+        super(message);
+    }
 
-  public SmsSessionException(final Throwable cause) {
-    super(cause);
-  }
+    public SmsSessionException(final Throwable cause) {
+        super(cause);
+    }
 
-  public SmsSessionException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    public SmsSessionException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

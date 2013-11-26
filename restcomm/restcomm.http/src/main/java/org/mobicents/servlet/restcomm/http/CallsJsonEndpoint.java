@@ -33,28 +33,30 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/Calls.json")
-@ThreadSafe public final class CallsJsonEndpoint extends CallsEndpoint {
-  public CallsJsonEndpoint() {
-    super();
-  }
-  
-//Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
-//Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
-  @GET 
-  public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-    return getCalls(accountSid, info, APPLICATION_JSON_TYPE);
-  }
-  
-  @POST public Response putCall(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putCall(accountSid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  //Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
-  @Path("/{sid}")
-  @POST
-  public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data){
-	  return updateCall(accountSid, sid, data, APPLICATION_JSON_TYPE);
-  }
-  
+@ThreadSafe
+public final class CallsJsonEndpoint extends CallsEndpoint {
+    public CallsJsonEndpoint() {
+        super();
+    }
+
+    // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+    // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
+    @GET
+    public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+        return getCalls(accountSid, info, APPLICATION_JSON_TYPE);
+    }
+
+    @POST
+    public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putCall(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
+    // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
+    @Path("/{sid}")
+    @POST
+    public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data) {
+        return updateCall(accountSid, sid, data, APPLICATION_JSON_TYPE);
+    }
+
 }

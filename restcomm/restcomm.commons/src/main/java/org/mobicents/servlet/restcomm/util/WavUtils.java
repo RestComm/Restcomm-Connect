@@ -18,10 +18,8 @@ package org.mobicents.servlet.restcomm.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 
-import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -32,36 +30,35 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class WavUtils {
-  private WavUtils() {
-    super();
-  }
-  
-  public static double getAudioDuration(final URI wavFile)
-      throws MalformedURLException, UnsupportedAudioFileException, IOException {
-    return getAudioDuration(new File(wavFile));
-  }
-  
-  public static double getAudioDuration(final File wavFile)
-      throws MalformedURLException, UnsupportedAudioFileException, IOException {
-	AudioInputStream audio = null;
-    try {
-      if(wavFile != null && wavFile.exists()) {
-        audio = AudioSystem.getAudioInputStream(wavFile);
-        final AudioFormat format = audio.getFormat();
-        return wavFile.length() / format.getSampleRate() / (format.getSampleSizeInBits() / 8.0) / format.getChannels();
-      }
-      return 0;
-    }  catch (UnsupportedAudioFileException exception){
-    	//Return calculation based on MMS defaults
-    	int sampleRate = 8000;
-    	int sampleSize = 16;
-    	int channels = 1;
-    	return wavFile.length() / (sampleRate / 8.0) / sampleSize / channels;
-    } finally {
-      if(audio != null) {
-        audio.close();
-      }
+@ThreadSafe
+public final class WavUtils {
+    private WavUtils() {
+        super();
     }
-  }
+
+    public static double getAudioDuration(final URI wavFile) throws UnsupportedAudioFileException, IOException {
+        return getAudioDuration(new File(wavFile));
+    }
+
+    public static double getAudioDuration(final File wavFile) throws UnsupportedAudioFileException, IOException {
+        AudioInputStream audio = null;
+        try {
+            if (wavFile != null && wavFile.exists()) {
+                audio = AudioSystem.getAudioInputStream(wavFile);
+                final AudioFormat format = audio.getFormat();
+                return wavFile.length() / format.getSampleRate() / (format.getSampleSizeInBits() / 8.0) / format.getChannels();
+            }
+            return 0;
+        } catch (UnsupportedAudioFileException exception) {
+            // Return calculation based on MMS defaults
+            int sampleRate = 8000;
+            int sampleSize = 16;
+            int channels = 1;
+            return wavFile.length() / (sampleRate / 8.0) / sampleSize / channels;
+        } finally {
+            if (audio != null) {
+                audio.close();
+            }
+        }
+    }
 }

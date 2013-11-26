@@ -36,103 +36,110 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class MybatisRecordingsDao implements RecordingsDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.RecordingsDao.";
-  private final SqlSessionFactory sessions;
-  
-  public MybatisRecordingsDao(final SqlSessionFactory sessions) {
-    super();
-    this.sessions = sessions;
-  }
-	
-  @Override public void addRecording(final Recording recording) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.insert(namespace + "addRecording", toMap(recording));
-      session.commit();
-    } finally {
-      session.close();
+@ThreadSafe
+public final class MybatisRecordingsDao implements RecordingsDao {
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.RecordingsDao.";
+    private final SqlSessionFactory sessions;
+
+    public MybatisRecordingsDao(final SqlSessionFactory sessions) {
+        super();
+        this.sessions = sessions;
     }
-  }
 
-  @Override public Recording getRecording(final Sid sid) {
-    return getRecording(namespace + "getRecording", sid);
-  }
-
-  @Override public Recording getRecordingByCall(final Sid callSid) {
-    return getRecording(namespace + "getRecordingByCall", callSid);
-  }
-  
-  private Recording getRecording(final String selector, final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final Map<String, Object> result = session.selectOne(selector, sid.toString());
-      if(result != null) {
-        return toRecording(result);
-      } else {
-        return null;
-      }
-    } finally {
-      session.close();
-    }
-  }
-
-  @Override public List<Recording> getRecordings(final Sid accountSid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final List<Map<String, Object>> results = session.selectList(namespace + "getRecordings", accountSid.toString());
-      final List<Recording> recordings = new ArrayList<Recording>();
-      if(results != null && !results.isEmpty()) {
-        for(final Map<String, Object> result : results) {
-          recordings.add(toRecording(result));
+    @Override
+    public void addRecording(final Recording recording) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.insert(namespace + "addRecording", toMap(recording));
+            session.commit();
+        } finally {
+            session.close();
         }
-      }
-      return recordings;
-    } finally {
-     session.close();
     }
-  }
 
-  @Override public void removeRecording(final Sid sid) {
-    removeRecording(namespace + "removeRecording", sid);
-  }
-
-  @Override public void removeRecordings(final Sid accountSid) {
-    removeRecording(namespace + "removeRecordings", accountSid);
-  }
-  
-  private void removeRecording(final String selector, final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.delete(selector, sid.toString());
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public Recording getRecording(final Sid sid) {
+        return getRecording(namespace + "getRecording", sid);
     }
-  }
-  
-  private Map<String, Object> toMap(final Recording recording) {
-    final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", writeSid(recording.getSid()));
-    map.put("date_created", writeDateTime(recording.getDateCreated()));
-    map.put("date_updated", writeDateTime(recording.getDateUpdated()));
-    map.put("account_sid", writeSid(recording.getAccountSid()));
-    map.put("call_sid", writeSid(recording.getCallSid()));
-    map.put("duration", recording.getDuration());
-    map.put("api_version", recording.getApiVersion());
-    map.put("uri", writeUri(recording.getUri()));
-    return map;
-  }
-  
-  private Recording toRecording(final Map<String, Object> map) {
-    final Sid sid = readSid(map.get("sid"));
-    final DateTime dateCreated = readDateTime(map.get("date_created"));
-    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
-    final Sid accountSid = readSid(map.get("account_sid"));
-    final Sid callSid = readSid(map.get("call_sid"));
-    final Double duration = readDouble(map.get("duration"));
-    final String apiVersion = readString(map.get("api_version"));
-    final URI uri = readUri(map.get("uri"));
-    return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri);
-  }
+
+    @Override
+    public Recording getRecordingByCall(final Sid callSid) {
+        return getRecording(namespace + "getRecordingByCall", callSid);
+    }
+
+    private Recording getRecording(final String selector, final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(selector, sid.toString());
+            if (result != null) {
+                return toRecording(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<Recording> getRecordings(final Sid accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRecordings", accountSid.toString());
+            final List<Recording> recordings = new ArrayList<Recording>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    recordings.add(toRecording(result));
+                }
+            }
+            return recordings;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void removeRecording(final Sid sid) {
+        removeRecording(namespace + "removeRecording", sid);
+    }
+
+    @Override
+    public void removeRecordings(final Sid accountSid) {
+        removeRecording(namespace + "removeRecordings", accountSid);
+    }
+
+    private void removeRecording(final String selector, final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(selector, sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    private Map<String, Object> toMap(final Recording recording) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("sid", writeSid(recording.getSid()));
+        map.put("date_created", writeDateTime(recording.getDateCreated()));
+        map.put("date_updated", writeDateTime(recording.getDateUpdated()));
+        map.put("account_sid", writeSid(recording.getAccountSid()));
+        map.put("call_sid", writeSid(recording.getCallSid()));
+        map.put("duration", recording.getDuration());
+        map.put("api_version", recording.getApiVersion());
+        map.put("uri", writeUri(recording.getUri()));
+        return map;
+    }
+
+    private Recording toRecording(final Map<String, Object> map) {
+        final Sid sid = readSid(map.get("sid"));
+        final DateTime dateCreated = readDateTime(map.get("date_created"));
+        final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+        final Sid accountSid = readSid(map.get("account_sid"));
+        final Sid callSid = readSid(map.get("call_sid"));
+        final Double duration = readDouble(map.get("duration"));
+        final String apiVersion = readString(map.get("api_version"));
+        final URI uri = readUri(map.get("uri"));
+        return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri);
+    }
 }

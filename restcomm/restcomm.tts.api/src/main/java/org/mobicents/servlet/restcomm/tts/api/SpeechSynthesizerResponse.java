@@ -22,16 +22,17 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class SpeechSynthesizerResponse<T> extends StandardResponse<T> {
-  public SpeechSynthesizerResponse(final T object) {
-    super(object);
-  }
+@Immutable
+public final class SpeechSynthesizerResponse<T> extends StandardResponse<T> {
+    public SpeechSynthesizerResponse(final T object) {
+        super(object);
+    }
 
-  public SpeechSynthesizerResponse(final Throwable cause) {
-    super(cause);
-  }
+    public SpeechSynthesizerResponse(final Throwable cause) {
+        super(cause);
+    }
 
-  public SpeechSynthesizerResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+    public SpeechSynthesizerResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

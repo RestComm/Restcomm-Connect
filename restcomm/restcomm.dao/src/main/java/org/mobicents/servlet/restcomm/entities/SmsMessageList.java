@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class SmsMessageList {
-  private final List<SmsMessage> messages;
+@NotThreadSafe
+public final class SmsMessageList {
+    private final List<SmsMessage> messages;
 
-  public SmsMessageList(final List<SmsMessage> messages) {
-    super();
-    this.messages = messages;
-  }
-  
-  public List<SmsMessage> getSmsMessages() {
-    return messages;
-  }
+    public SmsMessageList(final List<SmsMessage> messages) {
+        super();
+        this.messages = messages;
+    }
+
+    public List<SmsMessage> getSmsMessages() {
+        return messages;
+    }
 }

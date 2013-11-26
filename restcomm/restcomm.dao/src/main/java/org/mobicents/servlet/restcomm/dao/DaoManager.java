@@ -22,21 +22,36 @@ import org.mobicents.servlet.restcomm.LifeCycle;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface DaoManager extends Configurable, LifeCycle{
-  public AccountsDao getAccountsDao();
-  public ApplicationsDao getApplicationsDao();
-  public AnnouncementsDao getAnnouncementsDao();
-  public AvailablePhoneNumbersDao getAvailablePhoneNumbersDao();
-  public CallDetailRecordsDao getCallDetailRecordsDao();
-  public ClientsDao getClientsDao();
-  public HttpCookiesDao getHttpCookiesDao();
-  public IncomingPhoneNumbersDao getIncomingPhoneNumbersDao();
-  public NotificationsDao getNotificationsDao();
-  public OutgoingCallerIdsDao getOutgoingCallerIdsDao();
-  public RegistrationsDao getRegistrationsDao();
-  public RecordingsDao getRecordingsDao();
-  public ShortCodesDao getShortCodesDao();
-  public SmsMessagesDao getSmsMessagesDao();
-  public TranscriptionsDao getTranscriptionsDao();
-  public GatewaysDao getGatewaysDao();
+public interface DaoManager extends Configurable, LifeCycle {
+    AccountsDao getAccountsDao();
+
+    ApplicationsDao getApplicationsDao();
+
+    AnnouncementsDao getAnnouncementsDao();
+
+    AvailablePhoneNumbersDao getAvailablePhoneNumbersDao();
+
+    CallDetailRecordsDao getCallDetailRecordsDao();
+
+    ClientsDao getClientsDao();
+
+    HttpCookiesDao getHttpCookiesDao();
+
+    IncomingPhoneNumbersDao getIncomingPhoneNumbersDao();
+
+    NotificationsDao getNotificationsDao();
+
+    OutgoingCallerIdsDao getOutgoingCallerIdsDao();
+
+    RegistrationsDao getRegistrationsDao();
+
+    RecordingsDao getRecordingsDao();
+
+    ShortCodesDao getShortCodesDao();
+
+    SmsMessagesDao getSmsMessagesDao();
+
+    TranscriptionsDao getTranscriptionsDao();
+
+    GatewaysDao getGatewaysDao();
 }

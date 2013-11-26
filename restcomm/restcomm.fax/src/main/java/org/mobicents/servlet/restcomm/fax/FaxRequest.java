@@ -23,21 +23,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class FaxRequest {
-  private final String to;
-  private final File file;
-  
-  public FaxRequest(final String to, final File file) {
-    super();
-    this.to = to;
-    this.file = file;
-  }
-  
-  public String to() {
-    return to;
-  }
-  
-  public File file() {
-    return file;
-  }
+@Immutable
+public final class FaxRequest {
+    private final String to;
+    private final File file;
+
+    public FaxRequest(final String to, final File file) {
+        super();
+        this.to = to;
+        this.file = file;
+    }
+
+    public String to() {
+        return to;
+    }
+
+    public File file() {
+        return file;
+    }
 }

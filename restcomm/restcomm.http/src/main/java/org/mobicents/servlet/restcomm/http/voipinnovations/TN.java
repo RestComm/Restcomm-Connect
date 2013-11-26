@@ -21,34 +21,34 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class TN {
-  private final String tier;
-  private final boolean t38;
-  private final boolean cnam;
-  private final String number;
+@Immutable
+public final class TN {
+    private final String tier;
+    private final boolean t38;
+    private final boolean cnam;
+    private final String number;
 
-  public TN(final String tier, final boolean t38, final boolean cnam,
-      final String number) {
-    super();
-    this.tier = tier;
-    this.t38 = t38;
-    this.cnam = cnam;
-    this.number = number;
-  }
-  
-  public String tier() {
-    return tier;
-  }
-  
-  public boolean t38() {
-    return t38;
-  }
-  
-  public boolean cnam() {
-    return cnam;
-  }
-  
-  public String number() {
-    return number;
-  }
+    public TN(final String tier, final boolean t38, final boolean cnam, final String number) {
+        super();
+        this.tier = tier;
+        this.t38 = t38;
+        this.cnam = cnam;
+        this.number = number;
+    }
+
+    public String tier() {
+        return tier;
+    }
+
+    public boolean t38() {
+        return t38;
+    }
+
+    public boolean cnam() {
+        return cnam;
+    }
+
+    public String number() {
+        return number;
+    }
 }

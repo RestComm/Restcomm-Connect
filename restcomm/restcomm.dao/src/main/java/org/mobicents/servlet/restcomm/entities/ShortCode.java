@@ -25,108 +25,109 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class ShortCode {
-  private final Sid sid;
-  private final DateTime dateCreated;
-  private final DateTime dateUpdated;
-  private final String friendlyName;
-  private final Sid accountSid;
-  private final Integer shortCode;
-  private final String apiVersion;
-  private final URI smsUrl;
-  private final String smsMethod;
-  private final URI smsFallbackUrl;
-  private final String smsFallbackMethod;
-  private final URI uri;
-  
-  public ShortCode(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
-      final Sid accountSid, final Integer shortCode, final String apiVersion, final URI smsUrl, final String smsMethod,
-      final URI smsFallbackUrl, final String smsFallbackMethod, final URI uri) {
-    super();
-    this.sid = sid;
-    this.dateCreated = dateCreated;
-    this.dateUpdated = dateUpdated;
-    this.friendlyName = friendlyName;
-    this.accountSid = accountSid;
-    this.shortCode = shortCode;
-    this.apiVersion = apiVersion;
-    this.smsUrl = smsUrl;
-    this.smsMethod = smsMethod;
-    this.smsFallbackUrl = smsFallbackUrl;
-    this.smsFallbackMethod = smsFallbackMethod;
-    this.uri = uri;
-  }
+@Immutable
+public final class ShortCode {
+    private final Sid sid;
+    private final DateTime dateCreated;
+    private final DateTime dateUpdated;
+    private final String friendlyName;
+    private final Sid accountSid;
+    private final Integer shortCode;
+    private final String apiVersion;
+    private final URI smsUrl;
+    private final String smsMethod;
+    private final URI smsFallbackUrl;
+    private final String smsFallbackMethod;
+    private final URI uri;
 
-  public Sid getSid() {
-    return sid;
-  }
+    public ShortCode(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
+            final Sid accountSid, final Integer shortCode, final String apiVersion, final URI smsUrl, final String smsMethod,
+            final URI smsFallbackUrl, final String smsFallbackMethod, final URI uri) {
+        super();
+        this.sid = sid;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
+        this.friendlyName = friendlyName;
+        this.accountSid = accountSid;
+        this.shortCode = shortCode;
+        this.apiVersion = apiVersion;
+        this.smsUrl = smsUrl;
+        this.smsMethod = smsMethod;
+        this.smsFallbackUrl = smsFallbackUrl;
+        this.smsFallbackMethod = smsFallbackMethod;
+        this.uri = uri;
+    }
 
-  public DateTime getDateCreated() {
-    return dateCreated;
-  }
+    public Sid getSid() {
+        return sid;
+    }
 
-  public DateTime getDateUpdated() {
-    return dateUpdated;
-  }
+    public DateTime getDateCreated() {
+        return dateCreated;
+    }
 
-  public String getFriendlyName() {
-    return friendlyName;
-  }
+    public DateTime getDateUpdated() {
+        return dateUpdated;
+    }
 
-  public Sid getAccountSid() {
-    return accountSid;
-  }
+    public String getFriendlyName() {
+        return friendlyName;
+    }
 
-  public Integer getShortCode() {
-    return shortCode;
-  }
+    public Sid getAccountSid() {
+        return accountSid;
+    }
 
-  public String getApiVersion() {
-    return apiVersion;
-  }
+    public Integer getShortCode() {
+        return shortCode;
+    }
 
-  public URI getSmsUrl() {
-    return smsUrl;
-  }
+    public String getApiVersion() {
+        return apiVersion;
+    }
 
-  public String getSmsMethod() {
-    return smsMethod;
-  }
+    public URI getSmsUrl() {
+        return smsUrl;
+    }
 
-  public URI getSmsFallbackUrl() {
-    return smsFallbackUrl;
-  }
+    public String getSmsMethod() {
+        return smsMethod;
+    }
 
-  public String getSmsFallbackMethod() {
-    return smsFallbackMethod;
-  }
+    public URI getSmsFallbackUrl() {
+        return smsFallbackUrl;
+    }
 
-  public URI getUri() {
-    return uri;
-  }
-  
-  public ShortCode setApiVersion(final String apiVersion) {
-    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
-        smsFallbackUrl, smsFallbackMethod, uri);
-  }
-  
-  public ShortCode setSmsUrl(final URI smsUrl) {
-    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
-	    smsFallbackUrl, smsFallbackMethod, uri);
-  }
-  
-  public ShortCode setSmsMethod(final String smsMethod) {
-    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
-	    smsFallbackUrl, smsFallbackMethod, uri);
-  }
-  
-  public ShortCode setSmsFallbackUrl(final URI smsFallbackUrl) {
-    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
-	    smsFallbackUrl, smsFallbackMethod, uri);
-  }
-  
-  public ShortCode setSmsFallbackMethod(final String smsFallbackMethod) {
-    return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl, smsMethod,
-	    smsFallbackUrl, smsFallbackMethod, uri);
-  }
+    public String getSmsFallbackMethod() {
+        return smsFallbackMethod;
+    }
+
+    public URI getUri() {
+        return uri;
+    }
+
+    public ShortCode setApiVersion(final String apiVersion) {
+        return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl,
+                smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+    }
+
+    public ShortCode setSmsUrl(final URI smsUrl) {
+        return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl,
+                smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+    }
+
+    public ShortCode setSmsMethod(final String smsMethod) {
+        return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl,
+                smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+    }
+
+    public ShortCode setSmsFallbackUrl(final URI smsFallbackUrl) {
+        return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl,
+                smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+    }
+
+    public ShortCode setSmsFallbackMethod(final String smsFallbackMethod) {
+        return new ShortCode(sid, dateCreated, DateTime.now(), friendlyName, accountSid, shortCode, apiVersion, smsUrl,
+                smsMethod, smsFallbackUrl, smsFallbackMethod, uri);
+    }
 }

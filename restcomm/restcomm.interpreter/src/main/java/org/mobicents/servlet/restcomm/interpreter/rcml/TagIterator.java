@@ -25,34 +25,38 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class TagIterator implements Iterator<Tag> {
-  private final Stack<Tag> stack;
-  
-  public TagIterator(final Tag tag) {
-    super();
-    stack = new Stack<Tag>();
-    stack.push(tag);
-  }
-  
-  @Override public boolean hasNext() {
-    return stack.isEmpty() ? false : true;
-  }
+@NotThreadSafe
+public final class TagIterator implements Iterator<Tag> {
+    private final Stack<Tag> stack;
 
-  @Override public Tag next() {
-    if(stack.isEmpty()) {
-      return null;
+    public TagIterator(final Tag tag) {
+        super();
+        stack = new Stack<Tag>();
+        stack.push(tag);
     }
-    final Tag tag = stack.pop();
-    if(tag.hasChildren()) {
-      final List<Tag> children = tag.children();
-      for(int index = (children.size() - 1); index >= 0; index--) {
-        stack.push(children.get(index));
-      }
-    }
-	return tag;
-  }
 
-  @Override public void remove() {
-    throw new UnsupportedOperationException("remove() is not a supported operation.");
-  }
+    @Override
+    public boolean hasNext() {
+        return stack.isEmpty() ? false : true;
+    }
+
+    @Override
+    public Tag next() {
+        if (stack.isEmpty()) {
+            return null;
+        }
+        final Tag tag = stack.pop();
+        if (tag.hasChildren()) {
+            final List<Tag> children = tag.children();
+            for (int index = (children.size() - 1); index >= 0; index--) {
+                stack.push(children.get(index));
+            }
+        }
+        return tag;
+    }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("remove() is not a supported operation.");
+    }
 }

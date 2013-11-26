@@ -23,21 +23,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class NXX {
-  private final String name;
-  private final List<TN> tns;
-  
-  public NXX(final String name, final List<TN> tns) {
-    super();
-    this.name = name;
-    this.tns = tns;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public List<TN> tns() {
-    return tns;
-  }
+@Immutable
+public final class NXX {
+    private final String name;
+    private final List<TN> tns;
+
+    public NXX(final String name, final List<TN> tns) {
+        super();
+        this.name = name;
+        this.tns = tns;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public List<TN> tns() {
+        return tns;
+    }
 }

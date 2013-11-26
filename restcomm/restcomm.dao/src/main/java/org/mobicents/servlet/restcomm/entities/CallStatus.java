@@ -5,7 +5,7 @@ package org.mobicents.servlet.restcomm.entities;
  */
 
 public enum CallStatus {
-	//May be queued, ringing, in-progress, canceled, completed, failed, busy, or no-answer
-	QUEUED, RINGING, INPROGRESS, CANCELED, COMPLETED, FAILED, BUSY, NOANSWER;
+    // May be queued, ringing, in-progress, canceled, completed, failed, busy, or no-answer
+    QUEUED, RINGING, INPROGRESS, CANCELED, COMPLETED, FAILED, BUSY, NOANSWER;
 
 }

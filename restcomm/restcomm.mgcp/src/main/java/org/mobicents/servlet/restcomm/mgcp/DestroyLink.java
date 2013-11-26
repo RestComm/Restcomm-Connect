@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class DestroyLink {
-  private final ActorRef link;
-  
-  public DestroyLink(final ActorRef link) {
-    super();
-    this.link = link;
-  }
-  
-  public ActorRef link() {
-    return link;
-  }
+@Immutable
+public final class DestroyLink {
+    private final ActorRef link;
+
+    public DestroyLink(final ActorRef link) {
+        super();
+        this.link = link;
+    }
+
+    public ActorRef link() {
+        return link;
+    }
 }
