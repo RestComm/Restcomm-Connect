@@ -24,11 +24,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class ConferencesEndpoint extends AbstractEndpoint {
-  @Context 
-  private ServletContext context;
-  
-  public ConferencesEndpoint() {
-    super();
-  }
+@NotThreadSafe
+public abstract class ConferencesEndpoint extends AbstractEndpoint {
+    @Context
+    private ServletContext context;
+
+    public ConferencesEndpoint() {
+        super();
+    }
 }

@@ -32,43 +32,44 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class RecordingConverter extends AbstractConverter
-    implements JsonSerializer<Recording> {
-  public RecordingConverter(final Configuration configuration) {
-    super(configuration);
-  }
-  
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return Recording.class.equals(klass);
-  }
+@ThreadSafe
+public final class RecordingConverter extends AbstractConverter implements JsonSerializer<Recording> {
+    public RecordingConverter(final Configuration configuration) {
+        super(configuration);
+    }
 
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final Recording recording = (Recording)object;
-    writer.startNode("Recording");
-    writeSid(recording.getSid(), writer);
-    writeDateCreated(recording.getDateCreated(), writer);
-    writeDateUpdated(recording.getDateUpdated(), writer);
-    writeAccountSid(recording.getAccountSid(), writer);
-    writeCallSid(recording.getCallSid(), writer);
-    writeDuration(recording.getDuration(), writer);
-    writeApiVersion(recording.getApiVersion(), writer);
-    writeUri(recording.getUri(), writer);
-    writer.endNode();
-  }
-  
-  @Override public JsonElement serialize(final Recording recording, final Type type,
-      final JsonSerializationContext context) {
-  	final JsonObject object = new JsonObject();
-  	writeSid(recording.getSid(), object);
-    writeDateCreated(recording.getDateCreated(), object);
-    writeDateUpdated(recording.getDateUpdated(), object);
-    writeAccountSid(recording.getAccountSid(), object);
-    writeCallSid(recording.getCallSid(), object);
-    writeDuration(recording.getDuration(), object);
-    writeApiVersion(recording.getApiVersion(), object);
-    writeUri(recording.getUri(), object);
-  	return object;
-  }
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return Recording.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final Recording recording = (Recording) object;
+        writer.startNode("Recording");
+        writeSid(recording.getSid(), writer);
+        writeDateCreated(recording.getDateCreated(), writer);
+        writeDateUpdated(recording.getDateUpdated(), writer);
+        writeAccountSid(recording.getAccountSid(), writer);
+        writeCallSid(recording.getCallSid(), writer);
+        writeDuration(recording.getDuration(), writer);
+        writeApiVersion(recording.getApiVersion(), writer);
+        writeUri(recording.getUri(), writer);
+        writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(final Recording recording, final Type type, final JsonSerializationContext context) {
+        final JsonObject object = new JsonObject();
+        writeSid(recording.getSid(), object);
+        writeDateCreated(recording.getDateCreated(), object);
+        writeDateUpdated(recording.getDateUpdated(), object);
+        writeAccountSid(recording.getAccountSid(), object);
+        writeCallSid(recording.getCallSid(), object);
+        writeDuration(recording.getDuration(), object);
+        writeApiVersion(recording.getApiVersion(), object);
+        writeUri(recording.getUri(), object);
+        return object;
+    }
 }

@@ -25,11 +25,17 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface ClientsDao {
-  public void addClient(Client client);
-  public Client getClient(Sid sid);
-  public Client getClient(String user);
-  public List<Client> getClients(Sid accountSid);
-  public void removeClient(Sid sid);
-  public void removeClients(Sid accountSid);
-  public void updateClient(Client client);
+    void addClient(Client client);
+
+    Client getClient(Sid sid);
+
+    Client getClient(String user);
+
+    List<Client> getClients(Sid accountSid);
+
+    void removeClient(Sid sid);
+
+    void removeClients(Sid accountSid);
+
+    void updateClient(Client client);
 }

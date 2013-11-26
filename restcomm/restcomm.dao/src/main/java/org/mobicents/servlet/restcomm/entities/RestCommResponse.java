@@ -21,15 +21,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class RestCommResponse {
-  private final Object object;
-  
-  public RestCommResponse(final Object object) {
-    super();
-    this.object = object;
-  }
-  
-  public Object getObject() {
-    return object;
-  }
+@Immutable
+public final class RestCommResponse {
+    private final Object object;
+
+    public RestCommResponse(final Object object) {
+        super();
+        this.object = object;
+    }
+
+    public Object getObject() {
+        return object;
+    }
 }

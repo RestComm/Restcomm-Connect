@@ -31,56 +31,54 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class HttpRequestDescriptor {
-  private final URI uri;
-  private final String method;
-  private final List<NameValuePair> parameters;
-  
-  public HttpRequestDescriptor(final URI uri, final String method,
-      final List<NameValuePair> parameters) {
-    super();
-    this.uri = base(uri);
-    this.method = method;
-    if(parameters != null) {
-      this.parameters = parameters;
-    } else {
-      this.parameters = new ArrayList<NameValuePair>();
+@Immutable
+public final class HttpRequestDescriptor {
+    private final URI uri;
+    private final String method;
+    private final List<NameValuePair> parameters;
+
+    public HttpRequestDescriptor(final URI uri, final String method, final List<NameValuePair> parameters) {
+        super();
+        this.uri = base(uri);
+        this.method = method;
+        if (parameters != null) {
+            this.parameters = parameters;
+        } else {
+            this.parameters = new ArrayList<NameValuePair>();
+        }
+        final String query = uri.getQuery();
+        if (query != null) {
+            final List<NameValuePair> other = URLEncodedUtils.parse(uri, "UTF-8");
+            parameters.addAll(other);
+        }
     }
-    final String query = uri.getQuery();
-    if(query != null) {
-      final List<NameValuePair> other = URLEncodedUtils.parse(uri, "UTF-8");
-      parameters.addAll(other);
+
+    public HttpRequestDescriptor(final URI uri, final String method) throws UnsupportedEncodingException, URISyntaxException {
+        this(uri, method, null);
     }
-  }
-  
-  public HttpRequestDescriptor(final URI uri, final String method)
-      throws UnsupportedEncodingException, URISyntaxException {
-    this(uri, method, null);
-  }
-  
-  private URI base(final URI uri) {
-    try {
-      return URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(),
-          uri.getPath(), null, null);
-    } catch(final URISyntaxException ignored) {
-      // This should never happen since we are using a valid URI to construct ours.
-      return null;
+
+    private URI base(final URI uri) {
+        try {
+            return URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(), null, null);
+        } catch (final URISyntaxException ignored) {
+            // This should never happen since we are using a valid URI to construct ours.
+            return null;
+        }
     }
-  }
-  
-  public String getMethod() {
-    return method;
-  }
-  
-  public List<NameValuePair> getParameters() {
-    return parameters;
-  }
-  
-  public String getParametersAsString() {
-    return URLEncodedUtils.format(parameters, "UTF-8");
-  }
-  
-  public URI getUri() {
-    return uri;
-  }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public List<NameValuePair> getParameters() {
+        return parameters;
+    }
+
+    public String getParametersAsString() {
+        return URLEncodedUtils.format(parameters, "UTF-8");
+    }
+
+    public URI getUri() {
+        return uri;
+    }
 }

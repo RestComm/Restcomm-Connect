@@ -20,20 +20,20 @@ package org.mobicents.servlet.restcomm.sms;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SmsSessionResponse {
-  private final SmsSessionInfo info;
-  private final boolean success;
-  
-  public SmsSessionResponse(final SmsSessionInfo info, final boolean success) {
-    super();
-    this.info = info;
-    this.success = success;
-  }
-  
-  public SmsSessionInfo info() {
-    return info;
-  }
-  
-  public boolean succeeded() {
-    return success;
-  }
+    private final SmsSessionInfo info;
+    private final boolean success;
+
+    public SmsSessionResponse(final SmsSessionInfo info, final boolean success) {
+        super();
+        this.info = info;
+        this.success = success;
+    }
+
+    public SmsSessionInfo info() {
+        return info;
+    }
+
+    public boolean succeeded() {
+        return success;
+    }
 }

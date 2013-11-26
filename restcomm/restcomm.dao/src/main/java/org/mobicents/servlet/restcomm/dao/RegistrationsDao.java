@@ -24,10 +24,15 @@ import org.mobicents.servlet.restcomm.entities.Registration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface RegistrationsDao {
-  public void addRegistration(Registration registration);
-  public Registration getRegistration(String user);
-  public List<Registration> getRegistrations();
-  public boolean hasRegistration(Registration registration);
-  public void removeRegistration(Registration registration);
-  public void updateRegistration(Registration registration);
+    void addRegistration(Registration registration);
+
+    Registration getRegistration(String user);
+
+    List<Registration> getRegistrations();
+
+    boolean hasRegistration(Registration registration);
+
+    void removeRegistration(Registration registration);
+
+    void updateRegistration(Registration registration);
 }

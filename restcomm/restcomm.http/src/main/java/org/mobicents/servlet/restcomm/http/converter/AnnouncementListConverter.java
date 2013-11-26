@@ -14,24 +14,23 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 @ThreadSafe
 public class AnnouncementListConverter extends AbstractConverter {
 
-	public AnnouncementListConverter(Configuration configuration) {
-		super(configuration);
-	}
+    public AnnouncementListConverter(Configuration configuration) {
+        super(configuration);
+    }
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public boolean canConvert(Class klass) {
-		return AnnouncementList.class.equals(klass);
-	}
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(Class klass) {
+        return AnnouncementList.class.equals(klass);
+    }
 
-	@Override
-	public void marshal(final Object object, final HierarchicalStreamWriter writer,
-			final MarshallingContext context) {
-		final AnnouncementList list = (AnnouncementList)object;
-		writer.startNode("Announcements");
-		for(final Announcement anno : list.getAnnouncements()) {
-			context.convertAnother(anno);
-		}
-		writer.endNode();
-	}
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final AnnouncementList list = (AnnouncementList) object;
+        writer.startNode("Announcements");
+        for (final Announcement anno : list.getAnnouncements()) {
+            context.convertAnother(anno);
+        }
+        writer.endNode();
+    }
 }

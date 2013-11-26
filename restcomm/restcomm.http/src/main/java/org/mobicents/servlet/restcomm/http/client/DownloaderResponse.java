@@ -22,15 +22,15 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class DownloaderResponse extends StandardResponse<HttpResponseDescriptor> {
-  public DownloaderResponse(final HttpResponseDescriptor object) {
-    super(object);
-  }
+    public DownloaderResponse(final HttpResponseDescriptor object) {
+        super(object);
+    }
 
-  public DownloaderResponse(final Throwable cause) {
-    super(cause);
-  }
+    public DownloaderResponse(final Throwable cause) {
+        super(cause);
+    }
 
-  public DownloaderResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+    public DownloaderResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

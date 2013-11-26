@@ -49,66 +49,73 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public abstract class NotificationsEndpoint extends AbstractEndpoint {
-  @Context protected ServletContext context;
-  protected Configuration configuration;
-  protected NotificationsDao dao;
-  protected Gson gson;
-  protected XStream xstream;
-  
-  public NotificationsEndpoint() {
-    super();
-  }
-  
-  @PostConstruct
-  public void init() {
-    final DaoManager storage = (DaoManager)context.getAttribute(DaoManager.class.getName());
-    configuration = (Configuration)context.getAttribute(Configuration.class.getName());
-    configuration = configuration.subset("runtime-settings");
-    super.init(configuration);
-    dao = storage.getNotificationsDao();
-    final NotificationConverter converter = new NotificationConverter(configuration);
-    final GsonBuilder builder = new GsonBuilder();
-    builder.registerTypeAdapter(Notification.class, converter);
-    builder.setPrettyPrinting();
-    gson = builder.create();
-    xstream = new XStream();
-    xstream.alias("RestcommResponse", RestCommResponse.class);
-    xstream.registerConverter(converter);
-    xstream.registerConverter(new NotificationListConverter(configuration));
-    xstream.registerConverter(new RestCommResponseConverter(configuration));
-  }
-  
-  protected Response getNotification(final String accountSid, final String sid,
-      final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Notifications"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final Notification notification = dao.getNotification(new Sid(sid));
-    if(notification == null) {
-      return status(NOT_FOUND).build();
-    } else {
-      if(APPLICATION_JSON_TYPE == responseType) {
-        return ok(gson.toJson(notification), APPLICATION_JSON).build();
-      } else if(APPLICATION_XML_TYPE == responseType) {
-        final RestCommResponse response = new RestCommResponse(notification);
-        return ok(xstream.toXML(response), APPLICATION_XML).build();
-      } else {
-        return null;
-      }
+@NotThreadSafe
+public abstract class NotificationsEndpoint extends AbstractEndpoint {
+    @Context
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected NotificationsDao dao;
+    protected Gson gson;
+    protected XStream xstream;
+
+    public NotificationsEndpoint() {
+        super();
     }
-  }
-  
-  protected Response getNotifications(final String accountSid, final MediaType responseType) {
-    try { secure(new Sid(accountSid), "RestComm:Read:Notifications"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
-    if(APPLICATION_JSON_TYPE == responseType) {
-      return ok(gson.toJson(notifications), APPLICATION_JSON).build();
-    } else if(APPLICATION_XML_TYPE == responseType) {
-      final RestCommResponse response = new RestCommResponse(new NotificationList(notifications));
-      return ok(xstream.toXML(response), APPLICATION_XML).build();
-    } else {
-      return null;
+
+    @PostConstruct
+    public void init() {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = configuration.subset("runtime-settings");
+        super.init(configuration);
+        dao = storage.getNotificationsDao();
+        final NotificationConverter converter = new NotificationConverter(configuration);
+        final GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(Notification.class, converter);
+        builder.setPrettyPrinting();
+        gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new NotificationListConverter(configuration));
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
-  }
+
+    protected Response getNotification(final String accountSid, final String sid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:Notifications");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Notification notification = dao.getNotification(new Sid(sid));
+        if (notification == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(notification), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(notification);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    protected Response getNotifications(final String accountSid, final MediaType responseType) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Read:Notifications");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(notifications), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new NotificationList(notifications));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
 }

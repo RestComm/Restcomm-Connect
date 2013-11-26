@@ -23,23 +23,26 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class UpdateLink {
-  public static enum Type { PRIMARY, SECONDARY };
-  
-  private final ConnectionMode mode;
-  private final Type type;
+@Immutable
+public final class UpdateLink {
+    public static enum Type {
+        PRIMARY, SECONDARY
+    };
 
-  public UpdateLink(final ConnectionMode mode, final Type type) {
-    super();
-    this.mode = mode;
-    this.type = type;
-  }
-  
-  public ConnectionMode mode() {
-    return mode;
-  }
-  
-  public Type type() {
-    return type;
-  }
+    private final ConnectionMode mode;
+    private final Type type;
+
+    public UpdateLink(final ConnectionMode mode, final Type type) {
+        super();
+        this.mode = mode;
+        this.type = type;
+    }
+
+    public ConnectionMode mode() {
+        return mode;
+    }
+
+    public Type type() {
+        return type;
+    }
 }

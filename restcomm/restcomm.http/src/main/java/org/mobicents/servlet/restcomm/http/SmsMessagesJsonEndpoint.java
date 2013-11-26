@@ -30,17 +30,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/SMS/Messages.json")
-@ThreadSafe public final class SmsMessagesJsonEndpoint extends SmsMessagesEndpoint {
-  public SmsMessagesJsonEndpoint() {
-    super();
-  }
-  
-  @GET public Response getSmsMessages(@PathParam("accountSid") final String accountSid) {
-    return getSmsMessages(accountSid, APPLICATION_JSON_TYPE);
-  }
-  
-  @POST public Response putSmsMessage(@PathParam("accountSid") final String accountSid,
-      final MultivaluedMap<String, String> data) {
-    return putSmsMessage(accountSid, data, APPLICATION_JSON_TYPE);
-  }
+@ThreadSafe
+public final class SmsMessagesJsonEndpoint extends SmsMessagesEndpoint {
+    public SmsMessagesJsonEndpoint() {
+        super();
+    }
+
+    @GET
+    public Response getSmsMessages(@PathParam("accountSid") final String accountSid) {
+        return getSmsMessages(accountSid, APPLICATION_JSON_TYPE);
+    }
+
+    @POST
+    public Response putSmsMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putSmsMessage(accountSid, data, APPLICATION_JSON_TYPE);
+    }
 }

@@ -7,10 +7,9 @@ import org.apache.shiro.crypto.hash.Sha256Hash;
  */
 
 public class HashGenerator {
-	
-	public static String hashMessage(String first, String second, String third) {
-		return new Sha256Hash(first+second+third).toHex();
-	}
-	
+
+    public static String hashMessage(String first, String second, String third) {
+        return new Sha256Hash(first + second + third).toHex();
+    }
 
 }

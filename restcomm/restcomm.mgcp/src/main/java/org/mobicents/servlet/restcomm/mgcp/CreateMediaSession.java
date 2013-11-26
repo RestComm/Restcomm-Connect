@@ -21,8 +21,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class CreateMediaSession {
-  public CreateMediaSession() {
-    super();
-  }
+@Immutable
+public final class CreateMediaSession {
+    public CreateMediaSession() {
+        super();
+    }
 }

@@ -28,12 +28,14 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/Recordings.json")
-@ThreadSafe public final class RecordingsJsonEndpoint extends RecordingsEndpoint {
-  public RecordingsJsonEndpoint() {
-    super();
-  }
-  
-  @GET public Response getRecordings(@PathParam("accountSid") final String accountSid) {
-    return getRecordings(accountSid, APPLICATION_JSON_TYPE);
-  }
+@ThreadSafe
+public final class RecordingsJsonEndpoint extends RecordingsEndpoint {
+    public RecordingsJsonEndpoint() {
+        super();
+    }
+
+    @GET
+    public Response getRecordings(@PathParam("accountSid") final String accountSid) {
+        return getRecordings(accountSid, APPLICATION_JSON_TYPE);
+    }
 }

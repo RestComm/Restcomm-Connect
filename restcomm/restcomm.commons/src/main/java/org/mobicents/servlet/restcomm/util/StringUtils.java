@@ -27,36 +27,37 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class StringUtils {
-  private static final Pattern numberPattern = Pattern.compile("\\d+");
+@ThreadSafe
+public final class StringUtils {
+    private static final Pattern numberPattern = Pattern.compile("\\d+");
 
-  private StringUtils() {
-    super();
-  }
-  
-  public static String addSuffixIfNotPresent(final String text, final String suffix) {
-    if(text.endsWith(suffix)) {
-      return text;
-    } else {
-      return text + suffix;
+    private StringUtils() {
+        super();
     }
-  }
-  
-  public static boolean isPositiveInteger(final String text) {
-    return numberPattern.matcher(text).matches();
-  }
-  
-  public static String toString(final InputStream input) throws IOException {
-    final InputStreamReader reader = new InputStreamReader(input);
-    final StringWriter writer = new StringWriter();
-    final char[] data = new char[512];
-    int bytesRead = -1;
-    do {
-      bytesRead = reader.read(data);
-      if(bytesRead > 0) {
-        writer.write(data, 0, bytesRead);
-      }
-    } while(bytesRead != -1);
-    return writer.getBuffer().toString();
-  }
+
+    public static String addSuffixIfNotPresent(final String text, final String suffix) {
+        if (text.endsWith(suffix)) {
+            return text;
+        } else {
+            return text + suffix;
+        }
+    }
+
+    public static boolean isPositiveInteger(final String text) {
+        return numberPattern.matcher(text).matches();
+    }
+
+    public static String toString(final InputStream input) throws IOException {
+        final InputStreamReader reader = new InputStreamReader(input);
+        final StringWriter writer = new StringWriter();
+        final char[] data = new char[512];
+        int bytesRead = -1;
+        do {
+            bytesRead = reader.read(data);
+            if (bytesRead > 0) {
+                writer.write(data, 0, bytesRead);
+            }
+        } while (bytesRead != -1);
+        return writer.getBuffer().toString();
+    }
 }

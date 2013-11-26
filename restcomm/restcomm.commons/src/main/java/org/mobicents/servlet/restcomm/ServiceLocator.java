@@ -24,36 +24,37 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class ServiceLocator {
-  private static final class SingletonHolder {
-    private static final ServiceLocator instance = new ServiceLocator();
-  }
-  
-  private final Map<Class<?>, Object> services;
-  
-  private ServiceLocator() {
-    super();
-    this.services = new ConcurrentHashMap<Class<?>, Object>();
-  }
-  
-  public <T> T get(final Class<T> klass) {
-    synchronized(klass) {
-      final Object service = services.get(klass);
-      if(service != null) {
-        return klass.cast(service);
-      } else {
-        return null;
-      }
+@ThreadSafe
+public final class ServiceLocator {
+    private static final class SingletonHolder {
+        private static final ServiceLocator instance = new ServiceLocator();
     }
-  }
-  
-  public static ServiceLocator getInstance() {
-    return SingletonHolder.instance;
-  }
-  
-  public <T> void set(final Class<T> klass, final T instance) {
-    synchronized(klass) {
-      services.put(klass, instance);
+
+    private final Map<Class<?>, Object> services;
+
+    private ServiceLocator() {
+        super();
+        this.services = new ConcurrentHashMap<Class<?>, Object>();
     }
-  }
+
+    public <T> T get(final Class<T> klass) {
+        synchronized (klass) {
+            final Object service = services.get(klass);
+            if (service != null) {
+                return klass.cast(service);
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public static ServiceLocator getInstance() {
+        return SingletonHolder.instance;
+    }
+
+    public <T> void set(final Class<T> klass, final T instance) {
+        synchronized (klass) {
+            services.put(klass, instance);
+        }
+    }
 }

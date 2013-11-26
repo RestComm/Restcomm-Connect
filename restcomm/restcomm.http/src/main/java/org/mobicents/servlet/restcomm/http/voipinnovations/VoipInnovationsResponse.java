@@ -20,21 +20,20 @@ package org.mobicents.servlet.restcomm.http.voipinnovations;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class VoipInnovationsResponse {
-  private final VoipInnovationsHeader header;
-  private final VoipInnovationsBody body;
+    private final VoipInnovationsHeader header;
+    private final VoipInnovationsBody body;
 
-  public VoipInnovationsResponse(final VoipInnovationsHeader header,
-      final VoipInnovationsBody body) {
-    super();
-    this.header = header;
-    this.body = body;
-  }
-  
-  public VoipInnovationsHeader header() {
-    return header;
-  }
-  
-  public VoipInnovationsBody body() {
-    return body;
-  }
+    public VoipInnovationsResponse(final VoipInnovationsHeader header, final VoipInnovationsBody body) {
+        super();
+        this.header = header;
+        this.body = body;
+    }
+
+    public VoipInnovationsHeader header() {
+        return header;
+    }
+
+    public VoipInnovationsBody body() {
+        return body;
+    }
 }

@@ -27,19 +27,30 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface CallDetailRecordsDao {
-	public void addCallDetailRecord(CallDetailRecord cdr);
-	public CallDetailRecord getCallDetailRecord(Sid sid);
-	public List<CallDetailRecord> getCallDetailRecords(Sid accountSid);
-	public List<CallDetailRecord> getCallDetailRecordsByRecipient(String recipient);
-	public List<CallDetailRecord> getCallDetailRecordsBySender(String sender);
-	public List<CallDetailRecord> getCallDetailRecordsByStatus(String status);
-	public List<CallDetailRecord> getCallDetailRecordsByStartTime(DateTime startTime);
-	public List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parentCallSid);
-	public void removeCallDetailRecord(Sid sid);
-	public void removeCallDetailRecords(Sid accountSid);
-	public void updateCallDetailRecord(CallDetailRecord cdr);
-	
-	//Support for filtering of calls list result, Issue 153
-	public List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
-	Integer getTotalCallDetailRecords(CallDetailRecordFilter filter);
+    void addCallDetailRecord(CallDetailRecord cdr);
+
+    CallDetailRecord getCallDetailRecord(Sid sid);
+
+    List<CallDetailRecord> getCallDetailRecords(Sid accountSid);
+
+    List<CallDetailRecord> getCallDetailRecordsByRecipient(String recipient);
+
+    List<CallDetailRecord> getCallDetailRecordsBySender(String sender);
+
+    List<CallDetailRecord> getCallDetailRecordsByStatus(String status);
+
+    List<CallDetailRecord> getCallDetailRecordsByStartTime(DateTime startTime);
+
+    List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parentCallSid);
+
+    void removeCallDetailRecord(Sid sid);
+
+    void removeCallDetailRecords(Sid accountSid);
+
+    void updateCallDetailRecord(CallDetailRecord cdr);
+
+    // Support for filtering of calls list result, Issue 153
+    List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
+
+    Integer getTotalCallDetailRecords(CallDetailRecordFilter filter);
 }

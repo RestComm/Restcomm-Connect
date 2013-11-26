@@ -21,27 +21,28 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class SmsSessionRequest {
-  private final String from;
-  private final String to;
-  private final String body;
-  
-  public SmsSessionRequest(final String from, final String to, final String body) {
-    super();
-    this.from = from;
-    this.to = to;
-    this.body = body;
-  }
-  
-  public String from() {
-    return from;
-  }
-  
-  public String to() {
-    return to;
-  }
-  
-  public String body() {
-    return body;
-  }
+@Immutable
+public final class SmsSessionRequest {
+    private final String from;
+    private final String to;
+    private final String body;
+
+    public SmsSessionRequest(final String from, final String to, final String body) {
+        super();
+        this.from = from;
+        this.to = to;
+        this.body = body;
+    }
+
+    public String from() {
+        return from;
+    }
+
+    public String to() {
+        return to;
+    }
+
+    public String body() {
+        return body;
+    }
 }

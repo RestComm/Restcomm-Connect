@@ -32,37 +32,39 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts/{accountSid}/Recordings")
-@ThreadSafe public final class RecordingsXmlEndpoint extends RecordingsEndpoint {
-  public RecordingsXmlEndpoint() {
-    super();
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getRecordingAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getRecording(accountSid, sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}.wav")
-  @GET public Response getRecordingAsWav(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    final StringBuilder buffer = new StringBuilder();
-    buffer.append(baseRecordingsPath).append(sid).append(".wav");
-    final File file = new File(buffer.toString());
-    if(!file.exists()) {
-      return status(NOT_FOUND).build();
-    } else {
-      return ok(file, "audio/wav").build();
+@ThreadSafe
+public final class RecordingsXmlEndpoint extends RecordingsEndpoint {
+    public RecordingsXmlEndpoint() {
+        super();
     }
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getRecordingAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getRecording(accountSid, sid, APPLICATION_XML_TYPE);
-  }
-  
-  @GET public Response getRecordings(@PathParam("accountSid") final String accountSid) {
-    return getRecordings(accountSid, APPLICATION_XML_TYPE);
-  }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getRecordingAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getRecording(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}.wav")
+    @GET
+    public Response getRecordingAsWav(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(baseRecordingsPath).append(sid).append(".wav");
+        final File file = new File(buffer.toString());
+        if (!file.exists()) {
+            return status(NOT_FOUND).build();
+        } else {
+            return ok(file, "audio/wav").build();
+        }
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getRecordingAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getRecording(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getRecordings(@PathParam("accountSid") final String accountSid) {
+        return getRecordings(accountSid, APPLICATION_XML_TYPE);
+    }
 }

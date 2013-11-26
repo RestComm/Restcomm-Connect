@@ -34,31 +34,36 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  */
 @Path("/Accounts/{accountSid}/Transcriptions")
 public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
-  public TranscriptionsXmlEndpoint() {
-    super();
-  }
-  
-  @Path("/{sid}")
-  @DELETE public Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
-    try { secure(new Sid(accountSid), "RestComm:Delete:Transcriptions"); }
-    catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    dao.removeTranscription(new Sid(sid));
-    return ok().build();
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getTranscriptionAsJson(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getTranscription(accountSid, sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getTranscriptionAsXml(@PathParam("accountSid") final String accountSid,
-      @PathParam("sid") final String sid) {
-    return getTranscription(accountSid, sid, APPLICATION_XML_TYPE);
-  }
-  
-  @GET public Response getTranscriptions(@PathParam("accountSid") final String accountSid) {
-    return getTranscriptions(accountSid, APPLICATION_XML_TYPE);
-  }
+    public TranscriptionsXmlEndpoint() {
+        super();
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+        try {
+            secure(new Sid(accountSid), "RestComm:Delete:Transcriptions");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        dao.removeTranscription(new Sid(sid));
+        return ok().build();
+    }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getTranscriptionAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getTranscription(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getTranscriptionAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getTranscription(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getTranscriptions(@PathParam("accountSid") final String accountSid) {
+        return getTranscriptions(accountSid, APPLICATION_XML_TYPE);
+    }
 }

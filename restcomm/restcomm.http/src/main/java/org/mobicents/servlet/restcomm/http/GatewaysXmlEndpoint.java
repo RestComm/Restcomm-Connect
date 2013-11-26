@@ -37,68 +37,78 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Management/Gateways")
-@ThreadSafe public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
-  public GatewaysXmlEndpoint() {
-    super();
-  }
-  
-  private Response deleteGateway(final String sid) {
-    final Sid accountSid = Sid.generate(Sid.Type.INVALID);
-	try { secure(accountSid, "RestComm:Modify:Gateways"); }
-	catch(final AuthorizationException exception) { return status(UNAUTHORIZED).build(); }
-    dao.removeGateway(new Sid(sid));
-    return ok().build();
-  }
-  
-  @Path("/{sid}.json")
-  @DELETE public Response deleteGatewayAsJson(@PathParam("sid") final String sid) {
-    return deleteGateway(sid);
-  }
-  
-  @Path("/{sid}")
-  @DELETE public Response deleteGatewayAsXml(@PathParam("sid") final String sid) {
-    return deleteGateway(sid);
-  }
-  
-  @Path("/{sid}.json")
-  @GET public Response getGatewayAsJson(@PathParam("sid") final String sid) {
-    return getGateway(sid, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @GET public Response getGatewayAsXml(@PathParam("sid") final String sid) {
-    return getGateway(sid, APPLICATION_XML_TYPE);
-  }
-  
-  @GET public Response getGateways() {
-    return getGateways(APPLICATION_XML_TYPE);
-  }
-  
-  @POST public Response putGateway(final MultivaluedMap<String, String> data) {
-    return putGateway(data, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{sid}.json")
-  @POST public Response updateGatewayAsJsonPost(@PathParam("sid") final String sid,
-      final MultivaluedMap<String, String> data) {
-    return updateGateway(sid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}.json")
-  @PUT public Response updateGatewayAsJsonPut(@PathParam("sid") final String sid,
-      final MultivaluedMap<String, String> data) {
-    return updateGateway(sid, data, APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @POST public Response updateGatewayAsXmlPost(@PathParam("sid") final String sid,
-      final MultivaluedMap<String, String> data) {
-    return updateGateway(sid, data, APPLICATION_XML_TYPE);
-  }
-  
-  @Path("/{sid}")
-  @PUT public Response updateGatewayAsXmlPut(@PathParam("sid") final String sid,
-      final MultivaluedMap<String, String> data) {
-    return updateGateway(sid, data, APPLICATION_XML_TYPE);
-  }
+@ThreadSafe
+public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
+    public GatewaysXmlEndpoint() {
+        super();
+    }
+
+    private Response deleteGateway(final String sid) {
+        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+        try {
+            secure(accountSid, "RestComm:Modify:Gateways");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        dao.removeGateway(new Sid(sid));
+        return ok().build();
+    }
+
+    @Path("/{sid}.json")
+    @DELETE
+    public Response deleteGatewayAsJson(@PathParam("sid") final String sid) {
+        return deleteGateway(sid);
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteGatewayAsXml(@PathParam("sid") final String sid) {
+        return deleteGateway(sid);
+    }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getGatewayAsJson(@PathParam("sid") final String sid) {
+        return getGateway(sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getGatewayAsXml(@PathParam("sid") final String sid) {
+        return getGateway(sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getGateways() {
+        return getGateways(APPLICATION_XML_TYPE);
+    }
+
+    @POST
+    public Response putGateway(final MultivaluedMap<String, String> data) {
+        return putGateway(data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{sid}.json")
+    @POST
+    public Response updateGatewayAsJsonPost(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(sid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}.json")
+    @PUT
+    public Response updateGatewayAsJsonPut(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(sid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @POST
+    public Response updateGatewayAsXmlPost(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(sid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{sid}")
+    @PUT
+    public Response updateGatewayAsXmlPut(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(sid, data, APPLICATION_XML_TYPE);
+    }
 }

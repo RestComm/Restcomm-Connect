@@ -25,38 +25,40 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class RevolvingCounter {
-  private final long start;
-  private final long limit;
-  private final AtomicLong count;
-  private final Lock lock;
-  
-  public RevolvingCounter(final long limit) {
-    this(0, limit);
-  }
-  
-  public RevolvingCounter(final long start, final long limit) {
-    super();
-    this.start = start;
-    this.limit = limit;
-    this.count = new AtomicLong();
-    this.count.set(start);
-    this.lock = new ReentrantLock();
-  }
-  
-  public long get() {
-    long result = count.getAndIncrement();
-    if(result >= limit) {
-      while(!lock.tryLock()) { /* Spin */ }
-      if(count.get() >= limit) {
-        result = start;
-        count.set(start + 1);
-        lock.unlock();
-      } else {
-        lock.unlock();
-        result = get();
-      }
+@ThreadSafe
+public final class RevolvingCounter {
+    private final long start;
+    private final long limit;
+    private final AtomicLong count;
+    private final Lock lock;
+
+    public RevolvingCounter(final long limit) {
+        this(0, limit);
     }
-    return result;
-  }
+
+    public RevolvingCounter(final long start, final long limit) {
+        super();
+        this.start = start;
+        this.limit = limit;
+        this.count = new AtomicLong();
+        this.count.set(start);
+        this.lock = new ReentrantLock();
+    }
+
+    public long get() {
+        long result = count.getAndIncrement();
+        if (result >= limit) {
+            while (!lock.tryLock()) { /* Spin */
+            }
+            if (count.get() >= limit) {
+                result = start;
+                count.set(start + 1);
+                lock.unlock();
+            } else {
+                lock.unlock();
+                result = get();
+            }
+        }
+        return result;
+    }
 }

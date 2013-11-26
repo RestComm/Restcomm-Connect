@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class AddParticipant {
-  private final ActorRef call;
+@Immutable
+public final class AddParticipant {
+    private final ActorRef call;
 
-  public AddParticipant(final ActorRef call) {
-    super();
-    this.call = call;
-  }
-  
-  public ActorRef call() {
-    return call;
-  }
+    public AddParticipant(final ActorRef call) {
+        super();
+        this.call = call;
+    }
+
+    public ActorRef call() {
+        return call;
+    }
 }

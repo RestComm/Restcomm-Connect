@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class OpenLink {
-  private final ConnectionMode mode;
-  
-  public OpenLink(final ConnectionMode mode) {
-    super();
-    this.mode = mode;
-  }
-  
-  public ConnectionMode mode() {
-    return mode;
-  }
+@Immutable
+public final class OpenLink {
+    private final ConnectionMode mode;
+
+    public OpenLink(final ConnectionMode mode) {
+        super();
+        this.mode = mode;
+    }
+
+    public ConnectionMode mode() {
+        return mode;
+    }
 }

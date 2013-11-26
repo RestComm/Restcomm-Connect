@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.dao.mybatis;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,116 +38,124 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class MybatisSmsMessagesDao implements SmsMessagesDao {
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao.";
-  private final SqlSessionFactory sessions;
-  
-  public MybatisSmsMessagesDao(final SqlSessionFactory sessions) {
-    super();
-    this.sessions = sessions;
-  }
-  
-  @Override public void addSmsMessage(final SmsMessage smsMessage) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.insert(namespace + "addSmsMessage", toMap(smsMessage));
-      session.commit();
-    } finally {
-      session.close();
-    }
-  }
+@ThreadSafe
+public final class MybatisSmsMessagesDao implements SmsMessagesDao {
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.SmsMessagesDao.";
+    private final SqlSessionFactory sessions;
 
-  @Override public SmsMessage getSmsMessage(final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final Map<String, Object> result = session.selectOne(namespace + "getSmsMessage", sid.toString());
-      if(result != null) {
-        return toSmsMessage(result);
-      } else {
-        return null;
-      }
-    } finally {
-      session.close();
+    public MybatisSmsMessagesDao(final SqlSessionFactory sessions) {
+        super();
+        this.sessions = sessions;
     }
-  }
 
-  @Override public List<SmsMessage> getSmsMessages(final Sid accountSid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final List<Map<String, Object>> results = session.selectList(namespace + "getSmsMessages", accountSid.toString());
-      final List<SmsMessage> smsMessages = new ArrayList<SmsMessage>();
-      if(results != null && !results.isEmpty()) {
-        for(final Map<String, Object> result : results) {
-          smsMessages.add(toSmsMessage(result));
+    @Override
+    public void addSmsMessage(final SmsMessage smsMessage) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.insert(namespace + "addSmsMessage", toMap(smsMessage));
+            session.commit();
+        } finally {
+            session.close();
         }
-      }
-      return smsMessages;
-    } finally {
-      session.close();
     }
-  }
 
-  @Override public void removeSmsMessage(final Sid sid) {
-    deleteSmsMessage(namespace + "removeSmsMessage", sid);
-  }
+    @Override
+    public SmsMessage getSmsMessage(final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(namespace + "getSmsMessage", sid.toString());
+            if (result != null) {
+                return toSmsMessage(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
 
-  @Override public void removeSmsMessages(final Sid accountSid) {
-    deleteSmsMessage(namespace + "removeSmsMessages", accountSid);
-  }
-  
-  private void deleteSmsMessage(final String selector, final Sid sid) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.delete(selector, sid.toString());
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public List<SmsMessage> getSmsMessages(final Sid accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getSmsMessages", accountSid.toString());
+            final List<SmsMessage> smsMessages = new ArrayList<SmsMessage>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    smsMessages.add(toSmsMessage(result));
+                }
+            }
+            return smsMessages;
+        } finally {
+            session.close();
+        }
     }
-  }
-  
-  public void updateSmsMessage(final SmsMessage smsMessage) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.update(namespace + "updateSmsMessage", toMap(smsMessage));
-      session.commit();
-    } finally {
-      session.close();
+
+    @Override
+    public void removeSmsMessage(final Sid sid) {
+        deleteSmsMessage(namespace + "removeSmsMessage", sid);
     }
-  }
-  
-  private Map<String, Object> toMap(final SmsMessage smsMessage) {
-    final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", writeSid(smsMessage.getSid()));
-    map.put("date_created", writeDateTime(smsMessage.getDateCreated()));
-    map.put("date_updated", writeDateTime(smsMessage.getDateUpdated()));
-    map.put("date_sent", writeDateTime(smsMessage.getDateSent()));
-    map.put("account_sid", writeSid(smsMessage.getAccountSid()));
-    map.put("sender", smsMessage.getSender());
-    map.put("recipient", smsMessage.getRecipient());
-    map.put("body", smsMessage.getBody());
-    map.put("status", smsMessage.getStatus().toString());
-    map.put("direction", smsMessage.getDirection().toString());
-    map.put("price", writeBigDecimal(smsMessage.getPrice()));
-    map.put("api_version", smsMessage.getApiVersion());
-    map.put("uri", writeUri(smsMessage.getUri()));
-    return map;
-  }
-  
-  private SmsMessage toSmsMessage(final Map<String, Object> map) {
-    final Sid sid = readSid(map.get("sid"));
-    final DateTime dateCreated = readDateTime(map.get("date_created"));
-    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
-    final DateTime dateSent = readDateTime(map.get("date_sent"));
-    final Sid accountSid = readSid(map.get("account_sid"));
-    final String sender = readString(map.get("sender"));
-    final String recipient = readString(map.get("recipient"));
-    final String body = readString(map.get("body"));
-    final SmsMessage.Status status = SmsMessage.Status.getStatusValue(readString(map.get("status")));
-    final SmsMessage.Direction direction = SmsMessage.Direction.getDirectionValue(readString(map.get("direction")));
-    final BigDecimal price = readBigDecimal(map.get("price"));
-    final String apiVersion = readString(map.get("api_version"));
-    final URI uri = readUri(map.get("uri"));
-    return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status,
-        direction, price, apiVersion, uri);
-  }
+
+    @Override
+    public void removeSmsMessages(final Sid accountSid) {
+        deleteSmsMessage(namespace + "removeSmsMessages", accountSid);
+    }
+
+    private void deleteSmsMessage(final String selector, final Sid sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(selector, sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    public void updateSmsMessage(final SmsMessage smsMessage) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateSmsMessage", toMap(smsMessage));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    private Map<String, Object> toMap(final SmsMessage smsMessage) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("sid", writeSid(smsMessage.getSid()));
+        map.put("date_created", writeDateTime(smsMessage.getDateCreated()));
+        map.put("date_updated", writeDateTime(smsMessage.getDateUpdated()));
+        map.put("date_sent", writeDateTime(smsMessage.getDateSent()));
+        map.put("account_sid", writeSid(smsMessage.getAccountSid()));
+        map.put("sender", smsMessage.getSender());
+        map.put("recipient", smsMessage.getRecipient());
+        map.put("body", smsMessage.getBody());
+        map.put("status", smsMessage.getStatus().toString());
+        map.put("direction", smsMessage.getDirection().toString());
+        map.put("price", writeBigDecimal(smsMessage.getPrice()));
+        map.put("price_unit", writeCurrency(smsMessage.getPriceUnit()));
+        map.put("api_version", smsMessage.getApiVersion());
+        map.put("uri", writeUri(smsMessage.getUri()));
+        return map;
+    }
+
+    private SmsMessage toSmsMessage(final Map<String, Object> map) {
+        final Sid sid = readSid(map.get("sid"));
+        final DateTime dateCreated = readDateTime(map.get("date_created"));
+        final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+        final DateTime dateSent = readDateTime(map.get("date_sent"));
+        final Sid accountSid = readSid(map.get("account_sid"));
+        final String sender = readString(map.get("sender"));
+        final String recipient = readString(map.get("recipient"));
+        final String body = readString(map.get("body"));
+        final SmsMessage.Status status = SmsMessage.Status.getStatusValue(readString(map.get("status")));
+        final SmsMessage.Direction direction = SmsMessage.Direction.getDirectionValue(readString(map.get("direction")));
+        final BigDecimal price = readBigDecimal(map.get("price"));
+        final Currency priceUnit = readCurrency(map.get("price_unit"));
+        final String apiVersion = readString(map.get("api_version"));
+        final URI uri = readUri(map.get("uri"));
+        return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction,
+                price, priceUnit, apiVersion, uri);
+    }
 }

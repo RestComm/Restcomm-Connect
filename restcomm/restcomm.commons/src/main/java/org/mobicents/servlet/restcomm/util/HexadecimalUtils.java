@@ -21,28 +21,25 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class HexadecimalUtils {
-  private static final char[] HEX_DIGITS = {
-    '0', '1', '2', '3', '4', '5', '6',
-    '7', '8', '9', 'a', 'b', 'c', 'd',
-    'e', 'f'
-  };
-  
-  private HexadecimalUtils() {
-    super();
-  }
-  
-  public static char[] toHex(final byte[] input) {
-    int position = 0;
-    char[] characters = new char[input.length * 2];
-    for(int index = 0; index < input.length; index++) {
-      characters[position++] = HEX_DIGITS[(input[index] >> 4) & 0x0F];
-      characters[position++] = HEX_DIGITS[input[index] & 0x0f];
+@ThreadSafe
+public final class HexadecimalUtils {
+    private static final char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+    private HexadecimalUtils() {
+        super();
     }
-    return characters;
-  }
-  
-  public static String toHex(final String input) {
-    return new String(toHex(input.getBytes()));
-  }
+
+    public static char[] toHex(final byte[] input) {
+        int position = 0;
+        char[] characters = new char[input.length * 2];
+        for (int index = 0; index < input.length; index++) {
+            characters[position++] = HEX_DIGITS[(input[index] >> 4) & 0x0F];
+            characters[position++] = HEX_DIGITS[input[index] & 0x0f];
+        }
+        return characters;
+    }
+
+    public static String toHex(final String input) {
+        return new String(toHex(input.getBytes()));
+    }
 }

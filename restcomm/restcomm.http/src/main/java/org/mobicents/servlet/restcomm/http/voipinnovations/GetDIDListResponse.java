@@ -21,34 +21,34 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class GetDIDListResponse {
-  private final String name;
-  private final String status;
-  private final int code;
-  private final State state;
+@Immutable
+public final class GetDIDListResponse {
+    private final String name;
+    private final String status;
+    private final int code;
+    private final State state;
 
-  public GetDIDListResponse(final String name, final String status, final int code,
-      final State state) {
-    super();
-    this.name = name;
-    this.status = status;
-    this.code = code;
-    this.state = state;
-  }
-  
-  public String name() {
-    return name;
-  }
-  
-  public String status() {
-    return status;
-  }
-  
-  public int code() {
-    return code;
-  }
-  
-  public State state() {
-    return state;
-  }
+    public GetDIDListResponse(final String name, final String status, final int code, final State state) {
+        super();
+        this.name = name;
+        this.status = status;
+        this.code = code;
+        this.state = state;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public String status() {
+        return status;
+    }
+
+    public int code() {
+        return code;
+    }
+
+    public State state() {
+        return state;
+    }
 }

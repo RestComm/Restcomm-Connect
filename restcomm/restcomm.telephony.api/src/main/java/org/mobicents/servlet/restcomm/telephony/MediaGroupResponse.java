@@ -17,19 +17,20 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import org.mobicents.servlet.restcomm.patterns.StandardResponse;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class MediaGroupResponse<T> extends StandardResponse<T> {
-  public MediaGroupResponse(final T object) {
-    super(object);
-  }
+    public MediaGroupResponse(final T object) {
+        super(object);
+    }
 
-  public MediaGroupResponse(final Throwable cause) {
-    super(cause);
-  }
+    public MediaGroupResponse(final Throwable cause) {
+        super(cause);
+    }
 
-  public MediaGroupResponse(final Throwable cause, final String message) {
-    super(cause, message);
-  }
+    public MediaGroupResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
 }

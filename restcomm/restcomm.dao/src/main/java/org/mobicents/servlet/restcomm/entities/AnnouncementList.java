@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  */
-@NotThreadSafe public final class AnnouncementList {
-  private final List<Announcement> announcements;
+@NotThreadSafe
+public final class AnnouncementList {
+    private final List<Announcement> announcements;
 
-  public AnnouncementList(final List<Announcement> announcements) {
-    super();
-    this.announcements = announcements;
-  }
-	  
-  public List<Announcement> getAnnouncements() {
-    return announcements;
-  }
+    public AnnouncementList(final List<Announcement> announcements) {
+        super();
+        this.announcements = announcements;
+    }
+
+    public List<Announcement> getAnnouncements() {
+        return announcements;
+    }
 }

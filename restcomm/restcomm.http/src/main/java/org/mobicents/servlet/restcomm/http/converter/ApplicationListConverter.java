@@ -27,23 +27,25 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe public final class ApplicationListConverter extends AbstractConverter {
-  public ApplicationListConverter(final Configuration configuration) {
-    super(configuration);
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override public boolean canConvert(final Class klass) {
-    return ApplicationList.class.equals(klass);
-  }
-
-  @Override public void marshal(final Object object, final HierarchicalStreamWriter writer,
-      final MarshallingContext context) {
-    final ApplicationList list = (ApplicationList)object;
-    writer.startNode("Applications");
-    for(final Application application : list.getApplications()) {
-      context.convertAnother(application);
+@ThreadSafe
+public final class ApplicationListConverter extends AbstractConverter {
+    public ApplicationListConverter(final Configuration configuration) {
+        super(configuration);
     }
-    writer.endNode();
-  }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean canConvert(final Class klass) {
+        return ApplicationList.class.equals(klass);
+    }
+
+    @Override
+    public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        final ApplicationList list = (ApplicationList) object;
+        writer.startNode("Applications");
+        for (final Application application : list.getApplications()) {
+            context.convertAnother(application);
+        }
+        writer.endNode();
+    }
 }

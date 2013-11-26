@@ -42,125 +42,133 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@gmail.com (Jean Deruelle)
  */
-@ThreadSafe public final class MybatisRegistrationsDao implements RegistrationsDao {
-  private static final Logger logger = Logger.getLogger(MybatisRegistrationsDao.class);
-    
-  private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao.";
-  private final SqlSessionFactory sessions;
-  
-  public MybatisRegistrationsDao(final SqlSessionFactory sessions) {
-    super();
-    this.sessions = sessions;
-  }
-	
-  @Override public void addRegistration(final Registration registration) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.insert(namespace + "addRegistration", toMap(registration));
-      session.commit();
-    } finally {
-      session.close();
+@ThreadSafe
+public final class MybatisRegistrationsDao implements RegistrationsDao {
+    private static final Logger logger = Logger.getLogger(MybatisRegistrationsDao.class);
+
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao.";
+    private final SqlSessionFactory sessions;
+
+    public MybatisRegistrationsDao(final SqlSessionFactory sessions) {
+        super();
+        this.sessions = sessions;
     }
-  }
-  
-  @Override public Registration getRegistration(String user) {
-	final SqlSession session = sessions.openSession();
-    try {
-      // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
-      // we get all registrations and sort them by latest updated date so that we target the device where the user last updated the registration
-      final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
-      final List<Registration> records = new ArrayList<Registration>();
-      if(results != null && !results.isEmpty()) {
-        for(final Map<String, Object> result : results) {
-          records.add(toPresenceRecord(result));
-        }        
-        if(records.isEmpty()) {
-            return null;
-        } else {
-            Collections.sort(records);
-            return records.get(0);
+
+    @Override
+    public void addRegistration(final Registration registration) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.insert(namespace + "addRegistration", toMap(registration));
+            session.commit();
+        } finally {
+            session.close();
         }
-      } else {
-        return null;
-      }
-    } finally {
-      session.close();
     }
-  }
 
-  @Override public List<Registration> getRegistrations() {
-	final SqlSession session = sessions.openSession();
-    try {
-      final List<Map<String, Object>> results = session.selectList(namespace + "getRegistrations");
-      final List<Registration> records = new ArrayList<Registration>();
-      if(results != null && !results.isEmpty()) {
-        for(final Map<String, Object> result : results) {
-          records.add(toPresenceRecord(result));
+    @Override
+    public Registration getRegistration(String user) {
+        final SqlSession session = sessions.openSession();
+        try {
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
+            // we get all registrations and sort them by latest updated date so that we target the device where the user last
+            // updated the registration
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            final List<Registration> records = new ArrayList<Registration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    records.add(toPresenceRecord(result));
+                }
+                if (records.isEmpty()) {
+                    return null;
+                } else {
+                    Collections.sort(records);
+                    return records.get(0);
+                }
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
         }
-      }
-      return records;
-    } finally {
-     session.close();
     }
-  }
-  
-  @Override public boolean hasRegistration(final Registration registration) {
-    final SqlSession session = sessions.openSession();
-    try {
-      final Integer result = (Integer)session.selectOne(namespace + "hasRegistration", toMap(registration));
-      return result != null && result > 0;
-    } finally {
-      session.close();
-    }
-  }
 
-  @Override public void removeRegistration(final Registration registration) {
-	final SqlSession session = sessions.openSession();
-    try {
-      session.delete(namespace + "removeRegistration", toMap(registration));
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public List<Registration> getRegistrations() {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistrations");
+            final List<Registration> records = new ArrayList<Registration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    records.add(toPresenceRecord(result));
+                }
+            }
+            return records;
+        } finally {
+            session.close();
+        }
     }
-  }
 
-  @Override public void updateRegistration(final Registration registration) {
-    final SqlSession session = sessions.openSession();
-    try {
-      session.update(namespace + "updateRegistration", toMap(registration));
-      session.commit();
-    } finally {
-      session.close();
+    @Override
+    public boolean hasRegistration(final Registration registration) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer result = (Integer) session.selectOne(namespace + "hasRegistration", toMap(registration));
+            return result != null && result > 0;
+        } finally {
+            session.close();
+        }
     }
-  }
-  
-  private Map<String, Object> toMap(final Registration registration) {
-    final Map<String, Object> map = new HashMap<String, Object>();
-    map.put("sid", writeSid(registration.getSid()));
-    map.put("date_created", writeDateTime(registration.getDateCreated()));
-    map.put("date_updated", writeDateTime(registration.getDateUpdated()));
-    map.put("date_expires", writeDateTime(registration.getDateExpires()));
-    map.put("address_of_record", registration.getAddressOfRecord());
-    map.put("display_name", registration.getDisplayName());
-    map.put("user_name", registration.getUserName());
-    map.put("location", registration.getLocation());
-    map.put("user_agent", registration.getUserAgent());
-    map.put("ttl", registration.getTimeToLive());
-    return map;
-  }
-  
-  private Registration toPresenceRecord(final Map<String, Object> map) {
-    final Sid sid = readSid(map.get("sid"));
-    final DateTime dateCreated = readDateTime(map.get("date_created"));
-    final DateTime dateUpdated = readDateTime(map.get("date_updated"));
-    final DateTime dateExpires = readDateTime(map.get("date_expires"));
-    final String addressOfRecord = readString(map.get("address_of_record"));
-    final String dislplayName = readString(map.get("display_name"));
-    final String userName = readString(map.get("user_name"));
-    final String location = readString(map.get("location"));
-    final String userAgent = readString(map.get("user_agent"));
-    final Integer timeToLive = readInteger(map.get("ttl"));
-    return new Registration(sid, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName,
-        userAgent, timeToLive, location);
-  }
+
+    @Override
+    public void removeRegistration(final Registration registration) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(namespace + "removeRegistration", toMap(registration));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateRegistration(final Registration registration) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateRegistration", toMap(registration));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    private Map<String, Object> toMap(final Registration registration) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("sid", writeSid(registration.getSid()));
+        map.put("date_created", writeDateTime(registration.getDateCreated()));
+        map.put("date_updated", writeDateTime(registration.getDateUpdated()));
+        map.put("date_expires", writeDateTime(registration.getDateExpires()));
+        map.put("address_of_record", registration.getAddressOfRecord());
+        map.put("display_name", registration.getDisplayName());
+        map.put("user_name", registration.getUserName());
+        map.put("location", registration.getLocation());
+        map.put("user_agent", registration.getUserAgent());
+        map.put("ttl", registration.getTimeToLive());
+        return map;
+    }
+
+    private Registration toPresenceRecord(final Map<String, Object> map) {
+        final Sid sid = readSid(map.get("sid"));
+        final DateTime dateCreated = readDateTime(map.get("date_created"));
+        final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+        final DateTime dateExpires = readDateTime(map.get("date_expires"));
+        final String addressOfRecord = readString(map.get("address_of_record"));
+        final String dislplayName = readString(map.get("display_name"));
+        final String userName = readString(map.get("user_name"));
+        final String location = readString(map.get("location"));
+        final String userAgent = readString(map.get("user_agent"));
+        final Integer timeToLive = readInteger(map.get("ttl"));
+        return new Registration(sid, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
+                timeToLive, location);
+    }
 }

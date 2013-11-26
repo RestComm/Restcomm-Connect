@@ -25,22 +25,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class ConferenceInfo {
-  private final List<ActorRef> participants;
-  private final ConferenceStateChanged.State state;
-  
-  public ConferenceInfo(final List<ActorRef> participants,
-      final ConferenceStateChanged.State state) {
-    super();
-    this.participants = participants;
-    this.state = state;
-  }
-  
-  public List<ActorRef> participants() {
-    return participants;
-  }
-  
-  public ConferenceStateChanged.State state() {
-    return state;
-  }
+@Immutable
+public final class ConferenceInfo {
+    private final List<ActorRef> participants;
+    private final ConferenceStateChanged.State state;
+
+    public ConferenceInfo(final List<ActorRef> participants, final ConferenceStateChanged.State state) {
+        super();
+        this.participants = participants;
+        this.state = state;
+    }
+
+    public List<ActorRef> participants() {
+        return participants;
+    }
+
+    public ConferenceStateChanged.State state() {
+        return state;
+    }
 }

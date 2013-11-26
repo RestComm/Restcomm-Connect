@@ -23,15 +23,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe public final class CallDetailRecordList {
-  private final List<CallDetailRecord> cdrs;
-  
-  public CallDetailRecordList(final List<CallDetailRecord> cdrs) {
-    super();
-    this.cdrs = cdrs;
-  }
-  
-  public List<CallDetailRecord> getCallDetailRecords() {
-    return cdrs;
-  }
+@NotThreadSafe
+public final class CallDetailRecordList {
+    private final List<CallDetailRecord> cdrs;
+
+    public CallDetailRecordList(final List<CallDetailRecord> cdrs) {
+        super();
+        this.cdrs = cdrs;
+    }
+
+    public List<CallDetailRecord> getCallDetailRecords() {
+        return cdrs;
+    }
 }

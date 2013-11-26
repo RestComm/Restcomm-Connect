@@ -23,8 +23,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  */
-@Immutable public final class StopObserving extends AbstractObserverMessage {
-  public StopObserving(final ActorRef observer) {
-    super(observer);
-  }
+@Immutable
+public final class StopObserving extends AbstractObserverMessage {
+    public StopObserving(final ActorRef observer) {
+        super(observer);
+    }
 }

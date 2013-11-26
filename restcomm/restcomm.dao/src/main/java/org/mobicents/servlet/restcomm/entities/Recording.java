@@ -26,104 +26,106 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class Recording {
-  private final Sid sid;
-  private final DateTime dateCreated;
-  private final DateTime dateUpdated;
-  private final Sid accountSid;
-  private final Sid callSid;
-  private final Double duration;
-  private final String apiVersion;
-  private final URI uri;
+@Immutable
+public final class Recording {
+    private final Sid sid;
+    private final DateTime dateCreated;
+    private final DateTime dateUpdated;
+    private final Sid accountSid;
+    private final Sid callSid;
+    private final Double duration;
+    private final String apiVersion;
+    private final URI uri;
 
-  public Recording(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-      final Sid callSid, final Double duration, final String apiVersion, final URI uri) {
-    super();
-    this.sid = sid;
-    this.dateCreated = dateCreated;
-    this.dateUpdated = dateUpdated;
-    this.accountSid = accountSid;
-    this.callSid = callSid;
-    this.duration = duration;
-    this.apiVersion = apiVersion;
-    this.uri = uri;
-  }
-  
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public Sid getSid() {
-    return sid;
-  }
-
-  public DateTime getDateCreated() {
-    return dateCreated;
-  }
-
-  public DateTime getDateUpdated() {
-    return dateUpdated;
-  }
-
-  public Sid getAccountSid() {
-    return accountSid;
-  }
-
-  public Sid getCallSid() {
-    return callSid;
-  }
-
-  public Double getDuration() {
-    return duration;
-  }
-
-  public String getApiVersion() {
-    return apiVersion;
-  }
-
-  public URI getUri() {
-    return uri;
-  }
-  
-  @NotThreadSafe public static final class Builder {
-	private Sid sid;
-    private Sid accountSid;
-    private Sid callSid;
-    private Double duration;
-    private String apiVersion;
-    private URI uri;
-
-    private Builder() {
-      super();
+    public Recording(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
+            final Sid callSid, final Double duration, final String apiVersion, final URI uri) {
+        super();
+        this.sid = sid;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
+        this.accountSid = accountSid;
+        this.callSid = callSid;
+        this.duration = duration;
+        this.apiVersion = apiVersion;
+        this.uri = uri;
     }
-    
-    public Recording build() {
-      final DateTime now = DateTime.now();
-      return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri);
+
+    public static Builder builder() {
+        return new Builder();
     }
-    
-    public void setSid(final Sid sid) {
-      this.sid = sid;
+
+    public Sid getSid() {
+        return sid;
     }
-    
-    public void setAccountSid(final Sid accountSid) {
-      this.accountSid = accountSid;
+
+    public DateTime getDateCreated() {
+        return dateCreated;
     }
-    
-    public void setCallSid(final Sid callSid) {
-      this.callSid = callSid;
+
+    public DateTime getDateUpdated() {
+        return dateUpdated;
     }
-    
-    public void setDuration(final double duration) {
-      this.duration = duration;
+
+    public Sid getAccountSid() {
+        return accountSid;
     }
-    
-    public void setApiVersion(final String apiVersion) {
-      this.apiVersion = apiVersion;
+
+    public Sid getCallSid() {
+        return callSid;
     }
-    
-    public void setUri(final URI uri) {
-      this.uri = uri;
+
+    public Double getDuration() {
+        return duration;
     }
-  }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public URI getUri() {
+        return uri;
+    }
+
+    @NotThreadSafe
+    public static final class Builder {
+        private Sid sid;
+        private Sid accountSid;
+        private Sid callSid;
+        private Double duration;
+        private String apiVersion;
+        private URI uri;
+
+        private Builder() {
+            super();
+        }
+
+        public Recording build() {
+            final DateTime now = DateTime.now();
+            return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri);
+        }
+
+        public void setSid(final Sid sid) {
+            this.sid = sid;
+        }
+
+        public void setAccountSid(final Sid accountSid) {
+            this.accountSid = accountSid;
+        }
+
+        public void setCallSid(final Sid callSid) {
+            this.callSid = callSid;
+        }
+
+        public void setDuration(final double duration) {
+            this.duration = duration;
+        }
+
+        public void setApiVersion(final String apiVersion) {
+            this.apiVersion = apiVersion;
+        }
+
+        public void setUri(final URI uri) {
+            this.uri = uri;
+        }
+    }
 }

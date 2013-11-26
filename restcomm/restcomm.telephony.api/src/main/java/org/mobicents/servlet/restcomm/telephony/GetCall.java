@@ -21,17 +21,18 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable public final class GetCall {
- 
-	private String callPath;
-  
-	public GetCall(final String callPath) {
-    super();
-    this.callPath = callPath;
-  }
+@Immutable
+public final class GetCall {
 
-	public String callPath() {
-		return callPath;
-	}
+    private String callPath;
+
+    public GetCall(final String callPath) {
+        super();
+        this.callPath = callPath;
+    }
+
+    public String callPath() {
+        return callPath;
+    }
 
 }

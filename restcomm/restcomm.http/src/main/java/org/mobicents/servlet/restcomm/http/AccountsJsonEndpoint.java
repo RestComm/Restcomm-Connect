@@ -34,27 +34,32 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Path("/Accounts.json")
-@ThreadSafe public final class AccountsJsonEndpoint extends AccountsEndpoint {
-  public AccountsJsonEndpoint() {
-    super();
-  }
-  
-  @Path("/{accountSid}")
-  @GET public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {
-    return getAccount(accountSid, APPLICATION_JSON_TYPE);
-  }
-  
-  @GET public Response getAccounts() {
-    return getAccounts(APPLICATION_JSON_TYPE);
-  }
-  
-  @Path("/{sid}.json")
-  @DELETE public Response deleteAccountAsJson(@PathParam("sid") final String sid) {
-	  return deleteAccount(sid);
-  }
-  
-  @Consumes(APPLICATION_FORM_URLENCODED)
-  @POST public Response putAccount(final MultivaluedMap<String, String> data) {
-    return putAccount(data, APPLICATION_JSON_TYPE);
-  }
+@ThreadSafe
+public final class AccountsJsonEndpoint extends AccountsEndpoint {
+    public AccountsJsonEndpoint() {
+        super();
+    }
+
+    @Path("/{accountSid}")
+    @GET
+    public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {
+        return getAccount(accountSid, APPLICATION_JSON_TYPE);
+    }
+
+    @GET
+    public Response getAccounts() {
+        return getAccounts(APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}.json")
+    @DELETE
+    public Response deleteAccountAsJson(@PathParam("sid") final String sid) {
+        return deleteAccount(sid);
+    }
+
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response putAccount(final MultivaluedMap<String, String> data) {
+        return putAccount(data, APPLICATION_JSON_TYPE);
+    }
 }
