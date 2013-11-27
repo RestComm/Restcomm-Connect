@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
@@ -59,7 +59,16 @@ public final class HttpRequestDescriptor {
 
     private URI base(final URI uri) {
         try {
-            return URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(), null, null);
+            URIBuilder uriBuilder = new URIBuilder();
+            uriBuilder.setScheme(uri.getScheme());
+            uriBuilder.setHost(uri.getHost());
+            uriBuilder.setPort(uri.getPort());
+            uriBuilder.setPath(uri.getPath());
+            
+            if(uri.getUserInfo() != null){
+                uriBuilder.setUserInfo(uri.getUserInfo());
+            }
+            return uriBuilder.build();
         } catch (final URISyntaxException ignored) {
             // This should never happen since we are using a valid URI to construct ours.
             return null;
