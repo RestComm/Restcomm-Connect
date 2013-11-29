@@ -50,6 +50,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
@@ -489,10 +490,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest
                 // response received
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                callInfo = response.get();
+                //Check from whom is the message (initial call or outbound call) and update info accordingly
+                if(sender == call) {
+                    callInfo = response.get();
+                } else {
+                    outboundCallInfo = response.get();
+                }
             } else if (acquiringCallInfo.equals(state)) {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                callInfo = response.get();
+              //Check from whom is the message (initial call or outbound call) and update info accordingly
+                if(sender == call) {
+                    callInfo = response.get();
+                } else {
+                    outboundCallInfo = response.get();
+                }
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
                     fsm.transition(message, downloadingRcml);
@@ -508,6 +519,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final CallStateChanged event = (CallStateChanged) message;
             callState = event.state();
             if (CallStateChanged.State.RINGING == event.state()) {
+                if (forking.equals(state)) {
+                    outboundCall = sender;
+                }
                 // update db and callback statusCallback url.
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
@@ -515,7 +529,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
-                    outboundCall = sender;
+                    // outboundCall = sender;
                     fsm.transition(message, acquiringOutboundCallInfo);
                 } else if (joiningCalls.equals(state)) {
                     fsm.transition(message, bridged);
@@ -542,6 +556,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, processingDialChildren);
                 }
             } else {
+                if (state.equals(processingDialChildren)) {
+                    executeDialAction(message, outboundCall);
+                }
                 fsm.transition(message, hangingUp);
             }
         } else if (StartForking.class.equals(klass)) {
@@ -1345,6 +1362,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
             outboundCallInfo = response.get();
 
+            // Check for any Dial verbs with url attributes (call screening url)
             logger.info("Checking for tag with attributes for this outboundcall");
             Tag child = dialChildrenWithAttributes.get(outboundCall);
             if (child != null && child.attribute("url") != null) {
@@ -1402,6 +1420,118 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    private void executeDialAction(final Object message, final ActorRef outboundCall) {
+        final List<NameValuePair> parameters = parameters();
+
+        if (outboundCall != null) {
+            try {
+                logger.info("Trying to get outboundCall Info");
+                final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                Future<Object> future = (Future<Object>) ask(outboundCall, new GetCallInfo(), expires);
+                CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
+                        Duration.create(10, TimeUnit.SECONDS));
+                outboundCallInfo = callResponse.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Handle Failed Calls
+        if (message instanceof CallManagerResponse && !(((CallManagerResponse<ActorRef>) message).succeeded())) {
+            parameters.add(new BasicNameValuePair("DialCallSid", null));
+            parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.name()));
+            parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
+            parameters.add(new BasicNameValuePair("RecordingUrl", null));
+        }
+        // Handle No-Answer calls
+        else if (message instanceof ReceiveTimeout) {
+            if (outboundCallInfo != null) {
+                final String dialCallSid = this.outboundCallInfo.sid().toString();
+                final CallStateChanged.State dialCallStatus = this.outboundCallInfo.state();
+                final long dialCallDuration = new Interval(this.outboundCallInfo.dateCreated(), DateTime.now()).toDuration()
+                        .getStandardSeconds();
+                final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
+
+                parameters.add(new BasicNameValuePair("DialCallSid", dialCallSid));
+                // parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
+                // .toString()));
+                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
+                parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
+                parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
+            } else {
+                parameters.add(new BasicNameValuePair("DialCallSid", null));
+                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
+                parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
+                parameters.add(new BasicNameValuePair("RecordingUrl", null));
+            }
+        }
+        // Handle the rest of the cases
+        else {
+            if (outboundCallInfo != null) {
+                final String dialCallSid = this.outboundCallInfo.sid().toString();
+                final CallStateChanged.State dialCallStatus = this.outboundCallInfo.state();
+                final long dialCallDuration = new Interval(this.outboundCallInfo.dateCreated(), DateTime.now()).toDuration()
+                        .getStandardSeconds();
+                final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
+
+                parameters.add(new BasicNameValuePair("DialCallSid", dialCallSid));
+                parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
+                        .toString()));
+                parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
+                parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
+            } else {
+                parameters.add(new BasicNameValuePair("DialCallSid", null));
+                parameters.add(new BasicNameValuePair("DialCallStatus", null));
+                parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
+                parameters.add(new BasicNameValuePair("RecordingUrl", null));
+            }
+        }
+
+        final NotificationsDao notifications = storage.getNotificationsDao();
+        Attribute attribute = verb.attribute("action");
+        if (attribute != null) {
+            String action = attribute.value();
+            if (action != null && !action.isEmpty()) {
+                URI target = null;
+                try {
+                    target = URI.create(action);
+                } catch (final Exception exception) {
+                    final Notification notification = notification(ERROR_NOTIFICATION, 11100, action + " is an invalid URI.");
+                    notifications.addNotification(notification);
+                    sendMail(notification);
+                    final StopInterpreter stop = StopInterpreter.instance();
+                    self().tell(stop, self());
+                    return;
+                }
+                final URI base = request.getUri();
+                final URI uri = resolve(base, target);
+                // Parse "method".
+                String method = "POST";
+                attribute = verb.attribute("method");
+                if (attribute != null) {
+                    method = attribute.value();
+                    if (method != null && !method.isEmpty()) {
+                        if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                            final Notification notification = notification(WARNING_NOTIFICATION, 13210, method
+                                    + " is not a valid HTTP method for <Dial>");
+                            notifications.addNotification(notification);
+                            method = "POST";
+                        }
+                    } else {
+                        method = "POST";
+                    }
+                }
+                // Redirect to the action url.
+                request = new HttpRequestDescriptor(uri, method, parameters);
+                // Tell the downloader to send the Dial Parameters to the Action url but we don't need a reply back so sender ==
+                // null
+                downloader.tell(request, null);
+                return;
+            }
+
+        }
+    }
+
     private final class FinishDialing extends AbstractDialAction {
         public FinishDialing(final ActorRef source) {
             super(source);
@@ -1410,64 +1540,26 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
+
+            if (outboundCall != null)
+                executeDialAction(message, outboundCall);
+
             if (message instanceof ReceiveTimeout) {
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
                     for (final ActorRef branch : dialBranches) {
+                        executeDialAction(message, branch);
                         branch.tell(new Cancel(), source);
                         callManager.tell(new DestroyCall(branch), source);
                     }
                     dialBranches = null;
+                    return;
                 } else if (bridged.equals(state)) {
                     outboundCall.tell(new Hangup(), source);
                 }
             }
-            // Parses "action".
-            final NotificationsDao notifications = storage.getNotificationsDao();
-            Attribute attribute = verb.attribute("action");
-            if (attribute != null) {
-                String action = attribute.value();
-                if (action != null && !action.isEmpty()) {
-                    URI target = null;
-                    try {
-                        target = URI.create(action);
-                    } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
-                                + " is an invalid URI.");
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
-                        source.tell(stop, source);
-                        return;
-                    }
-                    final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
-                    // Parse "method".
-                    String method = "POST";
-                    attribute = verb.attribute("method");
-                    if (attribute != null) {
-                        method = attribute.value();
-                        if (method != null && !method.isEmpty()) {
-                            if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                                final Notification notification = notification(WARNING_NOTIFICATION, 13210, method
-                                        + " is not a valid HTTP method for <Dial>");
-                                notifications.addNotification(notification);
-                                method = "POST";
-                            }
-                        } else {
-                            method = "POST";
-                        }
-                    }
-                    // Redirect to the action url.
-                    final List<NameValuePair> parameters = parameters();
-                    request = new HttpRequestDescriptor(uri, method, parameters);
-                    downloader.tell(request, source);
-                    dialChildren = null;
-                    outboundCall = null;
-                    return;
-                }
-            }
+
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);
