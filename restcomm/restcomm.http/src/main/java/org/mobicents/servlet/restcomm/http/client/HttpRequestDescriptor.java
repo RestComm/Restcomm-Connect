@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
@@ -64,7 +63,7 @@ public final class HttpRequestDescriptor {
             uriBuilder.setHost(uri.getHost());
             uriBuilder.setPort(uri.getPort());
             uriBuilder.setPath(uri.getPath());
-            
+
             if(uri.getUserInfo() != null){
                 uriBuilder.setUserInfo(uri.getUserInfo());
             }
