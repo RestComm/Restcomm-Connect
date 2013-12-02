@@ -1,0 +1,28 @@
+
+
+<div class="step panel panel-info">
+		<div class="panel-heading"><h4 class="panel-title"><span ng-click='step.isCollapsed = !step.isCollapsed' class="glyphicon toggle_step" ng-class="{'glyphicon-plus-sign': step.isCollapsed, 'glyphicon-minus': !step.isCollapsed}">&nbsp;</span> <span  tooltip='{{step.name}}'>{{step.title}}</span> &nbsp;<small>{{step.fileurl}}</small> <span ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='close_step glyphicon glyphicon-trash'></span> </h4></div>
+		<div class="panel-body" ng-hide='step.isCollapsed'>
+			
+			<div class="row">
+				<div class="col-lg-12 col-md-12">
+					<div class="form-group">
+						<span class="help-block">A URL to an audio file resource</span>
+						<input ng-model='step.fileurl' type="url" id="audioFileURL" class="form-control" placeholder="http://server/resources/message.wav" tooltip="A URL to an audio file resource" required>
+					</div>
+				</div>
+			</div>
+			
+			<div ng-show="step.iface.optionsVisible" class="row step-options">
+				<div class="col-lg-6">
+					<div class="form-group">
+						<span class="help-block">How many times to repeat the message</span>
+						<input ng-model='step.loop' type="number" id='loopTextInput' class="form-control" placeholder='3' data-toggle='tooltip' title='Times to repeat the message. Leave it blank to loop until the call is hung up.'>
+					</div>
+				</div>
+			</div>
+			
+			<a ng-click="step.iface.optionsVisible = !step.iface.optionsVisible"><span ng-show="!step.iface.optionsVisible">Options</span><span ng-show="step.iface.optionsVisible">Hide options</span></a>				
+			
+		</div>
+</div>
