@@ -1,0 +1,44 @@
+
+	<div class="step say-step panel panel-rvdstep">
+		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <em><small ng-show='step.isCollapsed'>{{step.phrase}}</small></em><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+		<div class="panel-body" ng-hide='step.isCollapsed'>
+			<div class="row">
+				<div class="col-lg-12 col-md-12">
+					<div class="form-group">
+						<!--<label for="phraseTextInput">Phrase</label>-->
+						<span class="help-block">Type the text that will be read to the user</span>
+						<!--<input ng-model='step.phrase' type="text" id="phraseTextInput" class="small form-control" placeholder="say something..." tooltip="The text that will be read to the user" required>-->
+						<textarea ng-model='step.phrase' class="form-control"></textarea>	
+					</div>
+				</div>
+			</div>
+					
+			<i ng-click="step.iface.optionsVisible = !step.iface.optionsVisible" class='fa fa-cog rvd-clickable' ng-class="{'rvd-active': step.iface.optionsVisible }"></i>
+			<div ng-show="step.iface.optionsVisible" class="row step-options">
+				<br/>
+				<div class="col-lg-6">
+					<div class="form-group">
+						<label for="phraseTextInput">Voice</label>
+						<div class="radio">		
+							<label><input type="radio" value="man" ng-model='step.voice'>man</label>
+						</div>
+						<div class="radio">
+							<label><input type="radio" value="woman" ng-model='step.voice'>woman</label>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-6">
+					<div class="form-group">
+						<label for="languageSelect">Language</label>
+						<select ng-model='step.language' ng-options='language.name as language.text for language in languages'  id="languageSelect" class="form-control" tooltip="The 'language' attribute allows you pick a specific language for speech synthesis">
+						</select>
+						<span class="help-block">Pick a language</span>
+					</div>
+				</div>
+			</div>
+		
+			<!--<a ng-click="step.iface.optionsVisible = !step.iface.optionsVisible"><span ng-show="!step.iface.optionsVisible">Options</span><span ng-show="step.iface.optionsVisible">Hide options</span></a> -->
+			
+
+		</div>
+	</div>
