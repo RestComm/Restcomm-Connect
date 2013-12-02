@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm;
+package org.mobicents.servlet.restcomm.rvd;
 
 public class RvdController {
 
