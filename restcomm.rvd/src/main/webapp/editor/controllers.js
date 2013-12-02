@@ -394,12 +394,12 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	}
 	
 	$scope.refreshProjectList = function() {
-		$http({url: '../manager.php?action=list',
+		$http({url: '../rvdservices/manager/projects/list',
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
 			//console.log( data );
-			$scope.projectList = data.data;
+			$scope.projectList = data;
 			$scope.appView = "projects";
 		});
 	}
