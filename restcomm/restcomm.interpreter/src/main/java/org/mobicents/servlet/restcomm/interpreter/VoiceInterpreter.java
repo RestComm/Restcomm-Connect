@@ -1721,7 +1721,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
 
                 // Parse wait url.
-                URI waitUrl = null;
+                URI waitUrl = new URL("http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav").toURI();
                 attribute = child.attribute("waitUrl");
                 if (attribute != null) {
                     String value = attribute.value();
@@ -1739,6 +1739,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             // TODO shouldn't we return here?
                         }
                     }
+                }
 
                     final URI base = request.getUri();
                     waitUrl = resolve(base, waitUrl);
@@ -1779,7 +1780,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 confInterpreter);
                         conference.tell(createWaitUrlConfMediaGroup, source);
                     }
-                }
+                
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 conference.tell(new ConferenceModeratorPresent(), source);
             }
