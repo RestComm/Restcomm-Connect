@@ -54,11 +54,11 @@
 				<li ng-show="projectName != ''" class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{nodeNamed(startNodeName).label}} <b class="caret"></b></a>
 					<ul  class="dropdown-menu">
-						<li ng-repeat='node in nodes["voice"]'><a ng-click="setStartNode(node.name)" href="#">{{node.label}}</a></li>
+						<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)" href="#">{{node.label}}</a></li>
 					</ul>
 				</li>	
 				
-				<li ng-show="projectName != ''"><a ng-click="addNode('voice')" href="#"><i class='fa fa-file-o'></i>&nbsp; New Node</a></li>
+				<li ng-show="projectName != ''"><a ng-click="addNode()" href="#"><i class='fa fa-file-o'></i>&nbsp; New Node</a></li>
 					
 			</ul>
 			
@@ -82,36 +82,34 @@
 					<a target="_blank" href='{{getStartUrl()}}'>Startup URL</a>
 				</div>		
 			</div>
+			
+			
 
 			<!-- Workspace on the right -->
 			<div class="col-md-10">
 				<div class="editor" >			
-						<div ng-show="visibleNodes=='voice'"  class="panel-body editor">	
+						<div class="panel-body editor">	
 							<ul class="verbs nav nav-pills">
 								<li my-draggable='.sortable-steps' id='buttonsay'  class="active verb bs-callout-draggable verb-button kind-say"><a href="#"><i class='fa fa-comments'></i> &nbsp;Say</a></li>
 								<li my-draggable='.sortable-steps' id='buttongather'  class="active verb bs-callout-draggable verb-button kind-gather"><a href="#"><i class='fa fa-th'></i> &nbsp;Collect</a></li>
 								<li my-draggable='.sortable-steps' id='buttondial'  class="active verb bs-callout-draggable verb-button kind-dial"><a href="#"><i class='fa fa-phone'></i> &nbsp;Dial</a></li>
 								<li my-draggable='.sortable-steps' id='buttonredirect'  class="active verb bs-callout-draggable verb-button kind-redirect"><a href="#"><i class='fa fa-link'></i> &nbsp;Redirect</a></li>
-								<!-- <li my-draggable='.sortable-steps' ng-repeat='stepName in stepService.stepNames' id='button{{stepService.stepProto[stepName].kind}}'  class="active verb bs-callout-draggable verb-button kind-{{stepService.stepProto[stepName].kind}}"><a href="#">{{stepService.stepProto[stepName].label}}</a></li> -->
 							</ul>
 							<ul class="nav nav-tabs" > <!-- tabs -->
-								<li ng-repeat='node in nodes["voice"]' ng-class="{active:isActiveNode('voice',node)}">	
-									<span ng-click='setActiveNode("voice",node)' href="#" class='navtab' tooltip='{{node.name}}'>
+								<li ng-repeat='node in nodes' ng-class="{active:isActiveNode(node)}">	
+									<span ng-click='setActiveNode(node)' href="#" class='navtab' tooltip='{{node.name}}'>
 										<span ng-show='!node.iface.editLabel'>
 											<!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
 											<a ng-click='editLabelIfSelected(node)'>{{node.label}}</a>
-											 &nbsp;&nbsp;&nbsp;<i ng-click='removeNode("voice",$index)' ng-show="isActiveNode('voice',node)" class='fa fa-trash-o rvd-clickable'></i>
-											<!--({{node.name}})-->
-											<!-- <button ng-click='removeNode("voice",$index)' type="button" class="close" aria-hidden="true">&times;</button> -->
+											 &nbsp;&nbsp;&nbsp;<i ng-click='removeNode($index)' ng-show="isActiveNode(node)" class='fa fa-trash-o rvd-clickable'></i>
 										</span>
-										<div ng-show='node.iface.editLabel'><input type='text' ng-model='node.label' ng-focus='node.iface.editLabel' ng-focus-lost="node.iface.editLabel=!node.iface.editLabel" /> &nbsp;<!--<a ng-click='node.iface.editLabel=!node.iface.editLabel'>Save</a>--></div>
+										<div ng-show='node.iface.editLabel'><input type='text' ng-model='node.label' ng-focus='node.iface.editLabel' ng-focus-lost="node.iface.editLabel=!node.iface.editLabel" /> &nbsp;</div>
 									</span>
 								</li>					
 							</ul>	
 						
-							<div class="rvd-node" ng-repeat="node in nodes['voice']" ng-show="isActiveNode('voice',node)">
-								<div ng-switch on="node.kind">
-									<div ng-switch-when="voice">
+							<div class="rvd-node" ng-repeat="node in nodes" ng-show="isActiveNode(node)">
+									<div>
 										<br/>	
 										<!--
 										<div class="node-bootstrap">
@@ -135,17 +133,8 @@
 										</div>
 
 									</div>
-									<div ng-switch-when="controller">
-										<br/>
-											<label>Customize controller</label>
-											<textarea ng-model='node.ctrl_customize' class="texteditor-field form-control">{{node.ctrl_customize}}</textarea>
-											<p class="node-header" >
-												<button ng-click="buildController()" type="button" class="btn btn-default pull-right"> Generate</button> <i class="icon-large icon-cogwheels pull-right"></i>									
-											</p>
-											<label>Compiled controller</label>
-											<textarea class="texteditor-field form-control" readonly>{{node.ctrl_src}}</textarea>
-									</div>
-								</div>
+									
+								
 							</div>
 							
 						</div>					
