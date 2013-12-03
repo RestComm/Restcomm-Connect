@@ -120,10 +120,6 @@ App.directive('sortableSteps',function(stepService){
 				scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
 			})
 		  }
-
-//		  console.log( scope.stepnames );
-//		  console.log( scope.steps );
-		  
 		  
 		  if ( $(this).hasClass('nested') )
 			event.stopImmediatePropagation();
@@ -158,9 +154,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	$scope.stepService = stepService;
 	
 	// Prototype and constant data structures
-	$scope.nodesProto = {
-		voice:{name:'rcmlnode', kind:'voice', label:'Unititled node', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}}, 
-	};
+	$scope.nodesProto =	{name:'rcmlnode', label:'Unititled node', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}};
 	$scope.languages = [{name:'en',text:'English'},{name:'fr',text:'French'},{name:'it',text:'Italian'},{name:'sp',text:'Spanish'},{name:'el',text:'Greek'}];
 	$scope.methods = ['POST', 'GET'];
 	
@@ -170,10 +164,10 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	$scope.startNodeName = 'start';
 	
 	$scope.nodes = {voice: [] /*[angular.copy($scope.nodesProto.voice)]*/, control: []}		
-	$scope.activeNodes = {voice:0, control:0} 	// contains the currently active node for all kinds of nodes
-	$scope.lastNodesId = {voice:0, control:0}	// id generators for all kinds of nodes
-	$scope.visibleNodes = "voice"; // or "control"	// view Voice Nodes or Control Nodes panel ?
-	$scope.appView = 'spinner'; // spinner | projects | editor
+	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
+	$scope.lastNodesId = 0	// id generators for all kinds of nodes
+	//$scope.visibleNodes = "voice"; // or "control"	// view Voice Nodes or Control Nodes panel ?
+	$scope.appView = 'projects'; // spinner | projects | editor
 	
 	// Project management
 	$scope.projectList = [];
@@ -186,9 +180,6 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	// Functionality
 	// ------------------
 
-	$scope.setVisibleNodes = function(nodekind) { 
-		$scope.visibleNodes = nodekind; 
-	};
 	$scope.loseFocus = function () {
 		//console.log('lost focus');
 	}
@@ -197,8 +188,8 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 	// nodes
 	$scope.nodeNamed = function (name) {
-		for ( var i=0; i<$scope.nodes['voice'].length; i++ ) {
-			var anynode = $scope.nodes['voice'][i];
+		for ( var i=0; i<$scope.nodes.length; i++ ) {
+			var anynode = $scope.nodes[i];
 			if (anynode.name == name)
 				return anynode;
 		}
@@ -220,48 +211,48 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		return '';
 	}
 	
-	$scope.isActiveNodeByIndex = function (kind, index) { 
-		return index == $scope.activeNodes[kind]; 
+	$scope.isActiveNodeByIndex = function ( index) { 
+		return index == $scope.activeNode; 
 	};
-	$scope.isActiveNode = function (kind,node) {
-		return $scope.nodes[kind].indexOf(node) == $scope.activeNodes[kind];
+	$scope.isActiveNode = function (node) {
+		return $scope.nodes.indexOf(node) == $scope.activeNode;
 	}
-	$scope.setActiveNodeByIndex = function (kind,newindex) {
-		$scope.activeNodes[kind] = (newindex != -1) ? newindex : 0 ;
+	$scope.setActiveNodeByIndex = function (newindex) {
+		$scope.activeNode = (newindex != -1) ? newindex : 0 ;
 	};
-	$scope.setActiveNode = function (kind, node) {
+	$scope.setActiveNode = function ( node) {
 		//console.log( "in setActiveNode" );
-		$scope.setActiveNodeByIndex( kind, $scope.nodes[kind].indexOf(node) );
+		$scope.setActiveNodeByIndex( $scope.nodes.indexOf(node) );
 	};
-	$scope.setActiveNodeByName = function (kind, nodename) {
-		for ( node in $scope.nodes[kind] )
+	$scope.setActiveNodeByName = function ( nodename) {
+		for ( node in $scope.nodes )
 			if ( node.name == nodename ) {
-				$scope.setActiveNode(kind, node); // TODO : focus too!
+				$scope.setActiveNode( node); // TODO : focus too!
 				break;
 			}
 	};
-	$scope.addNode = function( kind, name ) {
-		$newnode = angular.copy($scope.nodesProto[kind]);
+	$scope.addNode = function( name ) {
+		$newnode = angular.copy($scope.nodesProto);
 		if ( typeof(name) === 'undefined' )
-			$newnode.name += ++$scope.lastNodesId[kind];
+			$newnode.name += ++$scope.lastNodesId;
 		else
 			$newnode.name = name;
-		$scope.nodes[kind].push( $newnode );
+		$scope.nodes.push( $newnode );
 		return $newnode;
 	};
-	$scope.addNodeAndFocus = function (kind,editLabel) {
-		$scope.setVisibleNodes(kind);
-		var node = $scope.addNode(kind);
+	$scope.addNodeAndFocus = function (editLabel) {
+		//$scope.setVisibleNodes(kind);
+		var node = $scope.addNode();
 		if (typeof editLabel !== undefined  && editLabel)
 			node.iface.editLabel = true;
-		$scope.setActiveNode(kind,node);
+		$scope.setActiveNode(node);
 		return node;
 	};
-	$scope.removeNode = function(kind, index) {
-		if ( index < $scope.nodes[kind].length ) {
-			$scope.nodes[kind].splice(index,1);
-			if ( $scope.activeNodes[kind] == index )
-				$scope.setActiveNode(kind,0);
+	$scope.removeNode = function( index) {
+		if ( index < $scope.nodes.length ) {
+			$scope.nodes.splice(index,1);
+			if ( $scope.activeNode == index )
+				$scope.setActiveNode(0);
 		}
 	};
 	
@@ -269,8 +260,8 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 	$scope.getAllTargets = function() {
 		var alltargets = [];
-		for ( var i = 0; i < $scope.nodes.voice.length; i++ ) {
-			var anynode = $scope.nodes.voice[i];
+		for ( var i = 0; i < $scope.nodes.length; i++ ) {
+			var anynode = $scope.nodes[i];
 			alltargets.push( {label: anynode.label, name:anynode.name} );
 			for ( var j=0; j < anynode.stepnames.length; j++ ) {
 				var stepname = anynode.stepnames[j];
@@ -286,7 +277,6 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 					alltargets.push( {label: label, name: name} );
 			}
 		}
-		//console.log( alltargets );
 		return alltargets;	
 	}
 	
@@ -337,56 +327,30 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 
 		return false;
 	};
-	$scope.expandAll = function() {
-		$.each($scope.nodes['voice'][$scope.activeNodes['voice']].steps, function (index, step) {
-			step.isCollapsed = false;
-		});
-	}
-	$scope.collapseAll = function() {
-		$.each($scope.nodes['voice'][$scope.activeNodes['voice']].steps, function (index, step) {
-			step.isCollapsed = true;
-		});		
-	}
 	
-	/*
-	$scope.getServerInfo = function () {
-		$http({url: '../manager.php?action=getServerInfo',
-				method: "GET",
-		})
-		.success(function (data, status, headers, config) {
-			if ( data.success ) {
-				console.log( data );
-			} else
-				console.log( data.message );
-		 }).error(function (data, status, headers, config) {
-				console.log('ERROR');
-		 });
-	}*/
 	
 	$scope.saveProject = function(onsuccess) {
 		//console.log("saving");
 		var state = {};
 		state.lastStepId = stepService.lastStepId;
 		state.nodes = $scope.nodes;
-		state.activeNodes = $scope.activeNodes;
+		state.activeNode = $scope.activeNode;
 		state.lastNodeId = $scope.lastNodesId;
 		state.visibleNodes = $scope.visibleNodes;
 		state.startNodeName = $scope.startNodeName;
 		
 		
 		// transmit state to the server
-		$http({url: '../manager.php?action=updateState',
+		$http({url: '../rvdservices/manager/projects/',
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}
 		})
 		.success(function (data, status, headers, config) {
-			//console.log( data );
-			if ( data.success ) {
-				console.log( data.message );
-				if (typeof (onsuccess) === "function")
-					onsuccess();
-			} else
+			console.log( "project saved" );
+			if (typeof (onsuccess) === "function")
+				onsuccess();
+			else
 				console.log( data.message );
 		 }).error(function (data, status, headers, config) {
 				console.log('ERROR');
@@ -400,24 +364,22 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		.success(function (data, status, headers, config) {
 			//console.log( data );
 			$scope.projectList = data;
-			$scope.appView = "projects";
+			//$scope.appView = "projects";
 		});
 	}
 	
 	$scope.closeProject = function() {
-		$http({url: '../manager.php?action=close',
+		$http({url: '../rvdservices/manager/projects/close',
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
-			console.log( data );
 			$scope.projectName = '';
-			//$scope.refreshProjectList();
 			$scope.appView = "projects";
 		 });	
 	}
 	
 	$scope.openProject = function(name) {
-		$http({url: '../manager.php?action=open&name=' + name,
+		$http({url: '../rvdservices/manager/projects?name=' + name,
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -426,7 +388,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 			
 			stepService.lastStepId = data.lastStepId;
 			$scope.nodes = data.nodes;
-			$scope.activeNodes = data.activeNodes;
+			$scope.activeNode = data.activeNode;
 			$scope.lastNodesId = data.lastNodeId;
 			$scope.visibleNodes = data.visibleNodes;
 			$scope.startNodeName = data.startNodeName;	
@@ -438,28 +400,25 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 	$scope.createNewProject = function(name) {
 		console.log( "creating new project " + name );
-		$http({url: '../manager.php?action=create&name=' + name,
-				method: "GET"
+		$http({url: '../rvdservices/manager/projects?name=' + name,
+				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
-			console.log( data );
+			console.log( "project created");
 			$scope.refreshProjectList();
-			if ( data.success ) {
-				$scope.openProject(name);
-				//$scope.projectName = name;
-				$scope.newProjectName = '';
-			}
+			$scope.openProject(name);
+			$scope.newProjectName = '';
 		 });
 	}
 	
 	// First saves and then builds
 	$scope.buildProject = function() {
 		$scope.saveProject(function() {
-			$http({url: '../manager.php?action=build', method: "GET"})
+			$http({url: '../rvdservices/manager/projects/build', method: "POST"})
 			.success(function (data, status, headers, config) {
-				console.log(data.message);
+				console.log("Build succesfull");
 			 }).error(function (data, status, headers, config) {
-				console.log(data.message);
+				console.log("Error building");
 			 });
 		});
 	}
@@ -470,14 +429,11 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	//$scope.getServerInfo();
 	
 	// Open active project in client
-	$http({url: '../manager.php?action=getActive',
+	$http({url: '../rvdservices/manager/projects/active',
 			method: "GET",
 	})
 	.success(function (data, status, headers, config) {
-		//console.log( data );
-		if ( data.success ) {
-			$scope.openProject(data.data.projectName);
-		}
+		$scope.openProject(data.name);
      }).error(function (data, status, headers, config) {
             console.log('ERROR');
      });
@@ -490,7 +446,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
      
      
 	$scope.editLabelIfSelected = function (node) {
-		if ( $scope.isActiveNode('voice', node) ) {
+		if ( $scope.isActiveNode( node ) ) {
 			node.iface.editLabel=!node.iface.editLabel;
 		}
 	}
