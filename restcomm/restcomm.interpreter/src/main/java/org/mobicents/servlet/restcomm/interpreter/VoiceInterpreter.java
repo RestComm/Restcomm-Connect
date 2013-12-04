@@ -109,6 +109,7 @@ import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.Unmute;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -1504,7 +1505,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
                 final URI base = request.getUri();
-                final URI uri = resolve(base, target);
+                final URI uri = UriUtils.resolve(base, target);
                 // Parse "method".
                 String method = "POST";
                 attribute = verb.attribute("method");
@@ -1741,7 +1742,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
 
                     final URI base = request.getUri();
-                    waitUrl = resolve(base, waitUrl);
+                    waitUrl = UriUtils.resolve(base, waitUrl);
                     // Parse method.
                     String method = "POST";
                     attribute = child.attribute("waitMethod");
@@ -1843,7 +1844,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
