@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.mobicents.servlet.restcomm.rvd.dto.ProjectState;
+import org.mobicents.servlet.restcomm.rvd.dto.Step;
 
 import com.google.gson.Gson;
 
@@ -27,7 +28,7 @@ public class BuildService {
 		
 		// process the steps one-by-one
 		for ( String stepname : node.getSteps().keySet() ) {
-			ProjectState.Step step = node.getSteps().get(stepname);
+			Step step = node.getSteps().get(stepname);
 				FileUtils.writeStringToFile(new File(projectPath +"data/" + node.getName() + "." + step.getName()), gson.toJson(step), "UTF-8");			
 		}
 	}
