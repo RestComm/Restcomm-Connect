@@ -1,16 +1,13 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -31,7 +28,6 @@ import com.google.gson.Gson;
 
 import org.mobicents.servlet.restcomm.rvd.dto.ActiveProjectInfo;
 import org.mobicents.servlet.restcomm.rvd.dto.ProjectItem;
-import org.mobicents.servlet.restcomm.rvd.dto.ProjectState;
 
 
 
@@ -39,47 +35,23 @@ import org.mobicents.servlet.restcomm.rvd.dto.ProjectState;
 @Path("/manager/projects")
 public class RvdManagerResource  {
 	
-	private static final String workspaceDirectoryName = "workspace"; // TODO Maybe load this from...somewhere
-	private static final String protoDirectoryName = "_proto"; // the prototype project directory name
 	private static final String projectSessionAttribute = "project"; // the name of the session variable where the active project will be stored
 	
 	@Context ServletContext servletContext;
-
+	private ProjectService projectService;
+	
+	@PostConstruct
+	void init() {
+		projectService = new ProjectService(servletContext);
+	}
+	
 	@GET @Path("/list")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listProjects() {
 		
-        String workspaceBasePath = servletContext.getRealPath(File.separator) + workspaceDirectoryName + File.separator;
-        System.out.println( "workspacePath: " + workspaceBasePath);
-        File workspaceDir = new File(workspaceBasePath);
-        if ( !workspaceDir.exists() )
-        	;
-        	//TODO handle the error;
-        
-        File[] entries = workspaceDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File anyfile) {
-            	if ( anyfile.isDirectory() && !anyfile.getName().equals(protoDirectoryName) )
-            		return true;
-            	return false;
-            }
-        });
-        Arrays.sort(entries, new Comparator<File>() {
-            public int compare(File f1, File f2) {
-                return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
-            } 
-        });
-        
-		List<ProjectItem> items = new ArrayList<ProjectItem>();
-        for ( File entry : entries ) {
-    		System.out.println( "entry: " + entry.getName() );
-    		ProjectItem item = new ProjectItem();
-    		item.setName(entry.getName());
-    		item.setStartupUrl(entry.getName());
-    		items.add(item);
-        }
-				  
-		Gson gson = new Gson(); // TODO - maybe inject this and create it all the time. See https://bitbucket.org/telestax/telscale-restcomm/src/dec355993594e902f3155324f49b57ee76727548/restcomm/restcomm.http/src/main/java/org/mobicents/servlet/restcomm/http/IncomingPhoneNumbersEndpoint.java?at=ts713#cl-242
+        List<ProjectItem> items = projectService.getAvailableProjects();		  
+		
+        Gson gson = new Gson(); // TODO - maybe inject this and create it all the time. See https://bitbucket.org/telestax/telscale-restcomm/src/dec355993594e902f3155324f49b57ee76727548/restcomm/restcomm.http/src/main/java/org/mobicents/servlet/restcomm/http/IncomingPhoneNumbersEndpoint.java?at=ts713#cl-242
 		return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
 	}
 	
@@ -89,9 +61,9 @@ public class RvdManagerResource  {
 		
 		// TODO IMPORTANT!!! sanitize the project name!!
 		
-		String directoryBasePath = servletContext.getRealPath(File.separator) + workspaceDirectoryName + File.separator;
-		File sourceDir = new File(directoryBasePath + "_proto");
-		File destDir = new File(directoryBasePath + name);
+		String workspaceBasePath = projectService.getWorkspaceBasePath(); 
+		File sourceDir = new File(workspaceBasePath + File.separator + "_proto");
+		File destDir = new File(workspaceBasePath + File.separator + name);
 		if ( !destDir.exists() ) {
 			try {
 				FileUtils.copyDirectory(sourceDir, destDir);
@@ -111,11 +83,11 @@ public class RvdManagerResource  {
 		String projectName = (String) request.getSession().getAttribute(projectSessionAttribute);
 		if ( projectName != null && !projectName.equals("") ) {
 			System.out.println("saveProject " + projectName);
-			String workspaceBasePath = servletContext.getRealPath(File.separator) + workspaceDirectoryName + File.separator;
+			String workspaceBasePath = projectService.getWorkspaceBasePath();
 			
 			FileOutputStream stateFile_os;
 			try {
-				stateFile_os = new FileOutputStream(workspaceBasePath + projectName + File.separator + "state");
+				stateFile_os = new FileOutputStream(workspaceBasePath + File.separator + projectName + File.separator + "state");
 				IOUtils.copy(request.getInputStream(), stateFile_os);
 				stateFile_os.close();
 				return Response.ok().build(); 
@@ -138,8 +110,8 @@ public class RvdManagerResource  {
 		// TODO CAUTION!!! sanitize name
 		// ...
 		
-		String workspaceBasePath = servletContext.getRealPath(File.separator) + workspaceDirectoryName + File.separator;
-		File stateFile = new File( workspaceBasePath + name + File.separator + "state");
+		String workspaceBasePath = projectService.getWorkspaceBasePath();
+		File stateFile = new File( workspaceBasePath + File.separator + name + File.separator + "state");
 		try {
 			FileInputStream stateFileStream = new FileInputStream(stateFile);
 			request.getSession().setAttribute(projectSessionAttribute, name); // mark the open project in the session
@@ -178,12 +150,12 @@ public class RvdManagerResource  {
 		String name = (String) request.getSession().getAttribute(projectSessionAttribute);
 		if ( name != null && !name.equals("") ) {
 			
-			String workspaceBasePath = servletContext.getRealPath(File.separator) + workspaceDirectoryName + File.separator;
-			File projectDir = new File( workspaceBasePath + name);
+			String workspaceBasePath = projectService.getWorkspaceBasePath();
+			File projectDir = new File( workspaceBasePath + File.separator + name);
 			
 			if ( projectDir.exists() ) {
 				
-				String projectPath = workspaceBasePath + name + File.separator;
+				String projectPath = workspaceBasePath + File.separator + name + File.separator;
 				File dataDir = new File( projectPath + "data");
 
 				// delete all files in directory
