@@ -196,10 +196,7 @@ public class RvdManagerResource  {
 					
 					String state_json = FileUtils.readFileToString( new File( projectPath + "state"), "UTF-8" );
 					System.out.println("state: " + state_json);
-					
-					ProjectState projectState = new Gson().fromJson(state_json, ProjectState.class);
-					System.out.println( "startNodeName: " + projectState.getStartNodeName() );
-					BuildService.buildProject(projectState, projectPath);
+					BuildService.buildProject(state_json, projectPath);
 					
 					return Response.ok().build();
 
