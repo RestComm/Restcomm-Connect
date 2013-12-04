@@ -42,6 +42,7 @@ import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -165,14 +166,14 @@ public final class SmsService extends UntypedActor {
                 final Sid sid = number.getSmsApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(application.getSmsUrl());
+                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsUrl()));
                     builder.setMethod(application.getSmsMethod());
-                    builder.setFallbackUrl(application.getSmsFallbackUrl());
+                    builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
                     builder.setFallbackMethod(application.getSmsFallbackMethod());
                 } else {
-                    builder.setUrl(number.getSmsUrl());
+                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsUrl()));
                     builder.setMethod(number.getSmsMethod());
-                    builder.setFallbackUrl(number.getSmsFallbackUrl());
+                    builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
                     builder.setFallbackMethod(number.getSmsFallbackMethod());
                 }
                 final ActorRef interpreter = builder.build();

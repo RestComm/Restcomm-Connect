@@ -54,6 +54,7 @@ import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -190,7 +191,8 @@ public final class CallManager extends UntypedActor {
         response.send();
     }
 
-    /**Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
+    /**
+     * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
      * @param self
      * @param request
@@ -201,6 +203,7 @@ public final class CallManager extends UntypedActor {
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
             final ApplicationsDao applications, String id) {
         boolean isFoundHostedApp = false;
+
         try {
             // Format the destination to an E.164 phone number.
             final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
@@ -222,14 +225,14 @@ public final class CallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(application.getVoiceUrl());
+                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
                     builder.setMethod(application.getVoiceMethod());
                     builder.setFallbackUrl(application.getVoiceFallbackUrl());
                     builder.setFallbackMethod(application.getVoiceFallbackMethod());
                     builder.setStatusCallback(application.getStatusCallback());
                     builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
                 } else {
-                    builder.setUrl(number.getVoiceUrl());
+                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
                     builder.setMethod(number.getVoiceMethod());
                     builder.setFallbackUrl(number.getVoiceFallbackUrl());
                     builder.setFallbackMethod(number.getVoiceFallbackMethod());
@@ -250,7 +253,8 @@ public final class CallManager extends UntypedActor {
         return isFoundHostedApp;
     }
 
-    /**If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
+    /**
+     * If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
      * @param self
      * @param request
      * @param accounts
