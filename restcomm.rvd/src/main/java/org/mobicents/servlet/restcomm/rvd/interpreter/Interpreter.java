@@ -34,6 +34,7 @@ public class Interpreter {
 	private String projectBasePath;
 	private HttpServletRequest httpRequest;
 	private String rcmlResult;
+	private Map<String,String> variables = new HashMap<String,String>();
 	
 	public Interpreter() {
 		xstream = new XStream();
@@ -148,10 +149,23 @@ public class Interpreter {
 				if ( !handled ) {
 					interpret( target.nodename+"."+target.stepname, projectBasePath, httpRequest );
 				}
+			} if ( "collectdigits".equals(gatherStep.getGatherType()) ) {
+				
+				String variableName = gatherStep.getCollectVariable();
+				variables.put(variableName, httpRequest.getParameter("Digits")); // put the string directly
+				interpret(gatherStep.getNext(), projectBasePath, httpRequest);
 			}
 		} else 	{
 			throw new RVDUnsupportedHandlerVerb();
 		}
+	}
+	
+	/**
+	 * Processes a block of text typically used for <Say/>ing that may contain variable expressions. Replaces variable 
+	 * expressions with their corresponding values 
+	 */
+	public String populateVariables( String sourceText ) {
+		return "";
 	}
 
 	public RcmlStep renderStep( Step step ) {

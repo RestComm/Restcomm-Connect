@@ -47,13 +47,7 @@ App.factory('stepService', function($rootScope) {
 
 App.directive('sortableSteps',function(stepService){
   return {
-	  scope: true,
-	  /*scope: {
-		steps: '=',
-		stepnames: '=',
-		stepService: '=',
-	  },*/ 
-	  
+	  scope: true,	  
 	  
     link:function(scope,el,attrs){
 		
