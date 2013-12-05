@@ -12,6 +12,7 @@ import org.mobicents.servlet.restcomm.rvd.dto.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.dto.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.dto.SayStep;
 import org.mobicents.servlet.restcomm.rvd.dto.Step;
+import org.mobicents.servlet.restcomm.rvd.interpreter.SayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlResponse;
@@ -36,30 +37,15 @@ public class Interpreter {
 	
 	public Interpreter() {
 		xstream = new XStream();
+		xstream.registerConverter( new SayStepConverter() );
 		xstream.alias("Response", RcmlResponse.class);
 		xstream.addImplicitCollection(RcmlResponse.class, "steps");
 		xstream.alias("Say", RcmlSayStep.class);
 		xstream.alias("Gather", RcmlGatherStep.class);
-		Gson gson = new GsonBuilder().registerTypeAdapter(Step.class, new JsonDeserializer<Step>() {
-			@Override
-			public Step deserialize(JsonElement rootElement, Type arg1, 
-					JsonDeserializationContext arg2) throws JsonParseException {
-				
-				JsonObject step_object = rootElement.getAsJsonObject();
-				String kind = step_object.get("kind").getAsString();
-				
-				Gson gson = new Gson();
-				Step step;
-				if ( "say".equals(kind) )
-					step = gson.fromJson(step_object, SayStep.class);
-				else if ( "gather".equals(kind) )
-					step = gson.fromJson(step_object, GatherStep.class);
-				else
-					step = null;
-								
-				return step;
-			}
-		}).create();
+		xstream.useAttributeFor(RcmlGatherStep.class, "action");
+
+		//xstream.aliasField(alias, definedIn, fieldName);
+		gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer() ).create();
 	}
 	
 	public String interpret(String targetParam, String projectBasePath) {
@@ -85,9 +71,7 @@ public class Interpreter {
 					startstep_found = true;
 				
 				if ( startstep_found )
-				{
-					System.out.println("starting rendering ");
-					
+				{					
 					// we found our starting step. Let's start processing
 					String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + "." + stepname ));
 					Step step = gson.fromJson(stepfile_json, Step.class);					
@@ -124,6 +108,9 @@ public class Interpreter {
 		
 		RcmlGatherStep rcmlStep = new RcmlGatherStep();
 		rcmlStep.setAction(step.getAction());
+		
+		for ( String nestedStepName : step.getStepnames() )
+			rcmlStep.getSteps().add( renderStep(step.getSteps().get(nestedStepName)) );
 		
 		return rcmlStep;
 	}
