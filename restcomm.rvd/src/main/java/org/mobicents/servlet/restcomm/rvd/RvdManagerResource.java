@@ -168,7 +168,8 @@ public class RvdManagerResource  {
 					
 					String state_json = FileUtils.readFileToString( new File( projectPath + "state"), "UTF-8" );
 					System.out.println("state: " + state_json);
-					BuildService.buildProject(state_json, projectPath);
+					BuildService buildService = new BuildService();
+					buildService.buildProject(state_json, projectPath);
 					
 					return Response.ok().build();
 

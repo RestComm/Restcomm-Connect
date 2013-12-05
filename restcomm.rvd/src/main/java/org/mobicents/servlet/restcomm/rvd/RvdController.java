@@ -49,13 +49,6 @@ public class RvdController {
 		projectService = new ProjectService(servletContext);
 	}
 	
-	@GET @Path("/list")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response listProjects(@PathParam("appname") String appname) {
-		Gson gson  = new Gson();
-		return Response.ok(gson.toJson("asdf " + appname)).build();
-	}
-	
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response controller( @PathParam("appname") String appname, @QueryParam("target") String targetParam ) {
@@ -63,19 +56,12 @@ public class RvdController {
 		if ( !projectService.projectExists(appname) )
 			return Response.status(Status.NOT_FOUND).build();
 		
-		String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;
-		System.out.println( "Working on project path " + projectBasePath);
-		
+		String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;		
 		Interpreter interpreter = new Interpreter();
-		
 		String rcmlResponse = interpreter.interpret(targetParam, projectBasePath);
-		//interpreter.interpret()
 		
 		System.out.println("result: " + rcmlResponse);
-		
-			
-	//	System.out.println( "from service. Workspacebasepath: " + projectService.getWorkspaceBasePath() );
-		
+				
 		return Response.ok("Running application " + appname + ". workspaceBasePath " + workspaceBasePath).build();
 	}
 	
