@@ -3,7 +3,6 @@ package org.mobicents.servlet.restcomm.rvd.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mobicents.servlet.restcomm.rvd.dto.Step;
 
 public class RcmlGatherStep extends RcmlStep {
 	private String action;

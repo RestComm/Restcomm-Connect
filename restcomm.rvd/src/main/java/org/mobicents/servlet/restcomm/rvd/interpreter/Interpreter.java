@@ -1,19 +1,16 @@
-package org.mobicents.servlet.restcomm.rvd;
+package org.mobicents.servlet.restcomm.rvd.interpreter;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.mobicents.servlet.restcomm.rvd.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.dto.GatherStep;
-import org.mobicents.servlet.restcomm.rvd.dto.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.dto.SayStep;
 import org.mobicents.servlet.restcomm.rvd.dto.Step;
-import org.mobicents.servlet.restcomm.rvd.interpreter.SayStepConverter;
-import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlSayStep;
@@ -21,11 +18,6 @@ import org.mobicents.servlet.restcomm.rvd.model.RcmlStep;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.XStream;
 
@@ -42,6 +34,7 @@ public class Interpreter {
 		xstream.addImplicitCollection(RcmlResponse.class, "steps");
 		xstream.alias("Say", RcmlSayStep.class);
 		xstream.alias("Gather", RcmlGatherStep.class);
+		xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
 		xstream.useAttributeFor(RcmlGatherStep.class, "action");
 
 		//xstream.aliasField(alias, definedIn, fieldName);
@@ -50,7 +43,6 @@ public class Interpreter {
 	
 	public String interpret(String targetParam, String projectBasePath) {
 		RcmlResponse rcmlModel = new RcmlResponse();
-		StringBuffer stringResponse = new StringBuffer();
 		
 		Target target = Interpreter.parseTarget(targetParam);
 		// TODO make sure all the required components of the target are available here

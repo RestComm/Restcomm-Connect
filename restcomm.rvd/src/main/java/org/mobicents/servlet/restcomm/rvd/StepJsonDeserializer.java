@@ -14,7 +14,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-class StepJsonDeserializer implements JsonDeserializer<Step> {
+public class StepJsonDeserializer implements JsonDeserializer<Step> {
 
 	@Override
 	public Step deserialize(JsonElement rootElement, Type arg1, 

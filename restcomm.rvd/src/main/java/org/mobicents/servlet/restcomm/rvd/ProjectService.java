@@ -7,9 +7,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
 
 import org.mobicents.servlet.restcomm.rvd.dto.ProjectItem;
 
@@ -23,10 +21,10 @@ public class ProjectService {
 	
 	private String workspaceBasePath;
 	
-	 ProjectService(ServletContext servletContext) {
+	public ProjectService(ServletContext servletContext) {
 		 this.servletContext = servletContext;
 		 
-		 workspaceBasePath = servletContext.getRealPath(File.separator) + workspaceDirectoryName;
+		 workspaceBasePath = this.servletContext.getRealPath(File.separator) + workspaceDirectoryName;
 	 }
 		
 	public String getWorkspaceBasePath() {
