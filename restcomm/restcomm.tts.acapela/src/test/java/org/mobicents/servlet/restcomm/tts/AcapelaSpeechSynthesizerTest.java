@@ -140,7 +140,7 @@ public final class AcapelaSpeechSynthesizerTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
+    @Test @Ignore //Acapela account is expired
     public void testSynthesis() {
         new JavaTestKit(system) {
             {
@@ -171,7 +171,7 @@ public final class AcapelaSpeechSynthesizerTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
+    @Test @Ignore //Acapela account is expired
     public void testHash() {
         final String gender = "man";
         final String language = "en";
