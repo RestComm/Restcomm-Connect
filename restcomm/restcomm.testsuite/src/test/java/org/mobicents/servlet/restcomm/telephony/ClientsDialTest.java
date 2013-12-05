@@ -7,12 +7,18 @@ import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
+import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.http.CreateClientsTool;
 
+import gov.nist.javax.sip.stack.SIPDialog;
+
+import javax.sip.Dialog;
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 
@@ -27,16 +33,16 @@ import static org.junit.Assert.*;
  * 
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-// @RunWith(Arquillian.class)
+@RunWith(Arquillian.class)
 public class ClientsDialTest {
-    
+
     private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
 
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
-            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
-            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
-            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
-            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
+        53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
+        48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
+        13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
+        86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
     private static final String body = new String(bytes);
 
     @ArquillianResource
@@ -116,7 +122,6 @@ public class ClientsDialTest {
     }
 
     @Test
-    @Ignore
     public void testRegisterClients() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -136,16 +141,15 @@ public class ClientsDialTest {
     }
 
     @Test
-    @Ignore
     public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-        Thread.sleep(3000);
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        //
+        //        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        //        Thread.sleep(3000);
         assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 3600, 3600));
         Thread.sleep(3000);
         assertTrue(dimitriPhone.register(uri, "dimitri", "1234", dimitriContact, 3600, 3600));
@@ -162,35 +166,53 @@ public class ClientsDialTest {
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
+        final SipCall dimitriCall = dimitriPhone.createSipCall();
+        dimitriCall.listenForIncomingCall();
+
         // Start a new thread for Dimitri to wait disconnect
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final SipCall dimitriCall = dimitriPhone.createSipCall();
-                dimitriCall.listenForIncomingCall();
-
                 assertTrue(dimitriCall.waitForIncomingCall(3000));
-                assertTrue(dimitriCall.sendIncomingCallResponse(180, "Ringing", 1800));
-                assertTrue(dimitriCall.sendIncomingCallResponse(200, "OK", 1800));
-
+                assertTrue(dimitriCall.sendIncomingCallResponse(100, "Trying-Dimitri", 1800));
+                assertTrue(dimitriCall.sendIncomingCallResponse(180, "Ringing-Dimitri", 1800));
+                String receivedBody = new String(dimitriCall.getLastReceivedRequest().getRawContent());
+                assertTrue(dimitriCall.sendIncomingCallResponse(Response.OK, "OK-Dimitri", 3600, receivedBody, "application", "sdp", null,
+                        null));
+//                assertTrue(dimitriCall.sendIncomingCallResponse(200, "OK", 1800));
+                assertTrue(dimitriCall.waitForAck(3000));
             }
-        }).start();
+        }).run(); //.start();
 
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
         assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
 
+        Dialog mariaDialog = null;
+
         if (responseMaria == Response.TRYING) {
             assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+            mariaDialog = mariaCall.getDialog();
         }
 
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
         mariaCall.sendInviteOkAck();
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
+
         assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        Thread.sleep(3000);
+//        dimitriCall.listenForDisconnect();
         assertTrue(mariaCall.disconnect());
+
+        //TODO: Dimitris call never receives the BYE and his 200 OK to the call never gets ACK.
+        //For a wierd reason the session of the BYE request is a new session that doesn't have the attributes that B2BUAHelper attached.
+        
+//        assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
+//        assertTrue(dimitriCall.respondToDisconnect());
 
     }
 
