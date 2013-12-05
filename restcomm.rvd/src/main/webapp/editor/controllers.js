@@ -163,7 +163,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	$scope.projectName = ''; // not stored in the state
 	$scope.startNodeName = 'start';
 	
-	$scope.nodes = {voice: [] /*[angular.copy($scope.nodesProto.voice)]*/, control: []}		
+	$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
 	//$scope.visibleNodes = "voice"; // or "control"	// view Voice Nodes or Control Nodes panel ?

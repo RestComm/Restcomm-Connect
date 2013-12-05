@@ -101,6 +101,9 @@
                     </select>
                     <input type="text" class="input-large" id="new-number-voice-request-url" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="newNumber.voiceURL" />
                 </dd>
+                <dd class="form-inline">
+					<select class="input-small add-on"></select> 
+                </dd>
                 <dt>Voice Fallback URL</dt>
                 <dd class="form-inline">
                     <select class="input-small add-on" ng-init="newNumber.voiceFallbackMethod='POST'" ng-model="newNumber.voiceFallbackMethod">
