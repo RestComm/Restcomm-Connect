@@ -3,10 +3,23 @@
 		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <small>{{step.phrase}}</small><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
 		<div class="panel-body" ng-hide='step.isCollapsed'>
 			<div class='row'>
-				<div class="form-group col-lg-4">
-					<label for="numberToCall">Number to dial</label>
-					<input ng-model='step.numberToCall' id='numberToCall' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to this number">
-				</div>			
+				<div class="col-lg-4">
+					<input ng-show='step.dialType=="number"' ng-model='step.number' id='numberToCall' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
+					<input ng-show='step.dialType=="client"' ng-model='step.client' id='numberToCall' type='text' class='form-control' placeholder='tomas' tooltip="Dial to client">
+					<input ng-show='step.dialType=="conference"' ng-model='step.conference' id='numberToCall' type='text' class='form-control' placeholder='1234' tooltip="Dial to conference">
+					<input ng-show='step.dialType=="sipuri"' ng-model='step.sipuri' id='numberToCall' type='text' class='form-control' placeholder='sip:123@123.214.222.123' tooltip="Dial to  Sip URI">
+				</div>
+				
+				<div class="col-lg-6">
+					<div class="btn-toolbar" role="toolbar">
+					  <div class="btn-group">
+						<button ng-click='step.dialType="number"' ng-class="{active:step.dialType=='number'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Number</button>
+						<button ng-click='step.dialType="client"' ng-class="{active:step.dialType=='client'}" type="button" class="btn btn-default"><i class='fa fa-user'></i>&nbsp; Client</button>
+						<button ng-click='step.dialType="conference"' ng-class="{active:step.dialType=='conference'}" type="button" class="btn btn-default"><i class='fa fa-group'></i>&nbsp; Conference</button>
+						<button ng-click='step.dialType="sipuri"' ng-class="{active:step.dialType=='sipuri'}" type="button" class="btn btn-default">Sip Uri</button>
+					  </div>
+					</div>
+				</div>		
 				<!--		
 				<div class="form-group col-lg-3">
 					<label for="timeLimit">Time limit</label>
