@@ -250,6 +250,9 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             final String hash = new Md5Hash(data.getFirst("Password")).toString();
             result = result.setAuthToken(hash);
         }
+        if (data.containsKey("Auth_Token")) {
+            result = result.setAuthToken(data.getFirst("Auth_Token"));
+        }
         return result;
     }
 
