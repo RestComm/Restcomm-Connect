@@ -5,6 +5,7 @@ import java.io.File;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -43,14 +44,14 @@ public class RvdController {
 	
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response controller( @PathParam("appname") String appname, @QueryParam("target") String targetParam ) {
-
+	public Response controller( @PathParam("appname") String appname, @QueryParam("target") String targetParam,  @Context HttpServletRequest httpRequest ) {
+		
 		if ( !projectService.projectExists(appname) )
 			return Response.status(Status.NOT_FOUND).build();
 		
 		String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;		
 		Interpreter interpreter = new Interpreter();
-		String rcmlResponse = interpreter.interpret(targetParam, projectBasePath);
+		String rcmlResponse = interpreter.interpret(targetParam, projectBasePath, httpRequest);
 		
 		System.out.println("result: " + rcmlResponse);
 				

@@ -20,7 +20,7 @@ public class GatherStep extends Step {
 	
 	public static class Mapping {
 		private Integer digits;
-		private String node;
+		private String next;
 		
 		public Integer getDigits() {
 			return digits;
@@ -28,12 +28,13 @@ public class GatherStep extends Step {
 		public void setDigits(Integer digits) {
 			this.digits = digits;
 		}
-		public String getNode() {
-			return node;
+		public String getNext() {
+			return next;
 		}
-		public void setNode(String node) {
-			this.node = node;
+		public void setNext(String next) {
+			this.next = next;
 		}
+
 	}
 	
 	public static class Iface {

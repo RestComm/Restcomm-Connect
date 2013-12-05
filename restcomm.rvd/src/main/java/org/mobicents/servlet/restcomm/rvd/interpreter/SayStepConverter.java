@@ -21,6 +21,8 @@ public class SayStepConverter implements Converter {
 		RcmlSayStep step = (RcmlSayStep) value;
 		//writer.startNode("Say");
 		writer.setValue(step.getPhrase());
+		//if ( step.getVoice() != null )
+		//	writer.addAttribute("voice", step.getVoice());
 		//writer.endNode();
 		
 	}
