@@ -2,9 +2,6 @@ package org.mobicents.servlet.restcomm.rvd;
 
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -18,14 +15,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.commons.io.FileUtils;
-import org.mobicents.servlet.restcomm.rvd.dto.ProjectState;
-import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
-import org.mobicents.servlet.restcomm.rvd.model.RcmlResponse;
-import org.mobicents.servlet.restcomm.rvd.model.RcmlStep;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 
 
@@ -40,7 +32,7 @@ public class RvdController {
 	
 	@Context ServletContext servletContext;
 	private ProjectService projectService; // use a proper way to initialize this in init()
-	Gson gson;
+	private Gson gson;
 	
 	@PostConstruct
 	void init() {
@@ -62,7 +54,7 @@ public class RvdController {
 		
 		System.out.println("result: " + rcmlResponse);
 				
-		return Response.ok("Running application " + appname + ". workspaceBasePath " + workspaceBasePath).build();
+		return Response.ok().build();
 	}
 	
 		
