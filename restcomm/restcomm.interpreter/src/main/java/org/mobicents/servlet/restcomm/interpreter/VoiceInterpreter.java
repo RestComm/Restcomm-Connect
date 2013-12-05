@@ -1780,7 +1780,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 confInterpreter);
                         conference.tell(createWaitUrlConfMediaGroup, source);
                     }
-                
+
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 conference.tell(new ConferenceModeratorPresent(), source);
             }
