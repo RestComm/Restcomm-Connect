@@ -14,9 +14,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
 import org.mobicents.servlet.restcomm.rvd.StepJsonDeserializer;
+import org.mobicents.servlet.restcomm.rvd.dto.DialStep;
 import org.mobicents.servlet.restcomm.rvd.dto.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.dto.SayStep;
 import org.mobicents.servlet.restcomm.rvd.dto.Step;
+import org.mobicents.servlet.restcomm.rvd.model.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlSayStep;
@@ -45,6 +47,7 @@ public class Interpreter {
 		xstream.addImplicitCollection(RcmlResponse.class, "steps");
 		xstream.alias("Say", RcmlSayStep.class);
 		xstream.alias("Gather", RcmlGatherStep.class);
+		xstream.alias("Dial", RcmlDialStep.class);
 		xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
 		xstream.useAttributeFor(RcmlGatherStep.class, "action");
 		xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -54,6 +57,11 @@ public class Interpreter {
 		xstream.useAttributeFor(RcmlSayStep.class, "voice");		
 		xstream.useAttributeFor(RcmlSayStep.class, "language");
 		xstream.useAttributeFor(RcmlSayStep.class, "loop");
+		xstream.aliasField("Number", RcmlDialStep.class, "number");
+		xstream.aliasField("Client", RcmlDialStep.class, "client");
+		xstream.aliasField("Conference", RcmlDialStep.class, "conference");
+		xstream.aliasField("Uri", RcmlDialStep.class, "sipuri");
+		
 		
 		//xstream.aliasField(alias, definedIn, fieldName);
 		gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer() ).create();
@@ -206,21 +214,38 @@ public class Interpreter {
 		
 		return buffer.toString();
 	}
+	
+	public RcmlDialStep renderDialStep( DialStep step ) {
+		
+		RcmlDialStep rcmlStep = new RcmlDialStep();
+		if ( "number".equals(step.getDialType()) && step.getNumber() != null && !"".equals(step.getNumber()) )
+			rcmlStep.setNumber(step.getNumber());
+		else if ( "client".equals(step.getDialType())  && step.getClient() != null && !"".equals(step.getClient()))
+			rcmlStep.setClient(step.getClient());
+		else if ( "conference".equals(step.getDialType())  && step.getConference() != null && !"".equals(step.getConference() ) )
+			rcmlStep.setConference(step.getConference());
+		else if ( "sipuri".equals(step.getDialType())  && step.getSipuri() != null && !"".equals(step.getSipuri()) )
+			rcmlStep.setSipuri(step.getSipuri());
+		// TODO else ... 
+		
+		return rcmlStep;
+	}
 
 	public RcmlStep renderStep( Step step ) {
-		if ( "say".equals(step.getKind()) ) {
+		if ( "say".equals(step.getKind()) )
 			return renderSayStep( (SayStep) step);
-		} else
-		if ( "gather".equals(step.getKind()) ) {
+		else if ( "gather".equals(step.getKind()) ) 
 			return renderGatherStep( (GatherStep) step);
-		} else
+		else if ( "dial".equals(step.getKind() ))
+			return renderDialStep( (DialStep) step);
+		else
 			return null; // TODO Raise an exception here!
 	}
 	
 	public RcmlSayStep renderSayStep( SayStep step ) {
 		
 		RcmlSayStep sayStep = new RcmlSayStep();
-		sayStep.setPhrase(step.getPhrase());
+		sayStep.setPhrase( populateVariables( step.getPhrase() ) );
 		sayStep.setVoice(step.getVoice());
 		sayStep.setLanguage(step.getLanguage());
 		sayStep.setLoop(step.getLoop());
