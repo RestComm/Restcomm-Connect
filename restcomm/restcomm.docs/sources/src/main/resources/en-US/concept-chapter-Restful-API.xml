@@ -1483,7 +1483,7 @@ Make sure alice is using the port 5061
 The "From=" could be any number of your choice
 The Url is the default sample example provided with Restcomm
 
-curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:7f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5061" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5061" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
 
 You will see an output similar to the one below:
 
@@ -1513,7 +1513,7 @@ Notice that the Call ID is referenced
 The call will now be redirected to the Url specified(hello-world.xml)
 
 
-curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:7f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-world.xml"
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-world.xml"
 
 The output showing the same Call ID
 
@@ -1962,7 +1962,7 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 <note>
 <title>Using SMS and making DID calls</title>
-<para>You need to configure Restcomm to send SMS messages and DID phone calls to a Service Provider for provisioning. In the <filename>restcomm.xml</filename> file, the outbound-proxy-uri and the SMS outbound-endpoint must point to the Service Provider IP address. You may also decide to use <ulink url="http://www.telestax.com/restcomm-amazon-ami/">Restcomm AMI.</ulink> </para>
+<para>You need to configure Restcomm to send SMS messages and DID phone calls to a Service Provider for provisioning. In the <filename>restcomm.xml</filename> file, the outbound-proxy-uri and the SMS outbound-endpoint must point to the Service Provider IP address. You may also decide to use <ulink url="http://www.telestax.com/docs/">Restcomm AMI.</ulink> </para>
 </note>
 
 
@@ -1970,6 +1970,14 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 <title>Send SMS Messages</title>
 </formalpara>
 <para>Note the encoding used <filename>%2B13216549878</filename> instead of the <filename>+13216549878</filename> The + sign is encoded to to send SMS from the command line. </para>
+
+
+<note>
+<title>"From" DID number</title>
+<para> 
+The "From" number should be the DID SMS enabled number from VoIP Innovations. 
+</para>
+</note>
 <para>From the bash terminal, you can run the command below:</para>
 <programlisting>
 <![CDATA[
