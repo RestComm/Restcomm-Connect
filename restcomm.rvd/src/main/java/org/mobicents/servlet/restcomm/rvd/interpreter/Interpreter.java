@@ -2,6 +2,8 @@ package org.mobicents.servlet.restcomm.rvd.interpreter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,10 +164,47 @@ public class Interpreter {
 	
 	/**
 	 * Processes a block of text typically used for <Say/>ing that may contain variable expressions. Replaces variable 
-	 * expressions with their corresponding values 
+	 * expressions with their corresponding values from interpreter's variables map
 	 */
 	public String populateVariables( String sourceText ) {
-		return "";
+		
+		// This class serves strictly the purposes of the following algorithm
+		final class VariableInText {
+			String variableName;
+			Integer position;
+			
+			VariableInText( String variableName, Integer position ) {
+				this.variableName = variableName;
+				this.position = position;
+			}
+		}
+		
+		Pattern pattern = Pattern.compile( "\\$([A-Za-z]+[A-Za-z0-9_-]*)" );
+		Matcher matches = pattern.matcher(sourceText);
+		
+		int searchStart = 0;
+		List<VariableInText> variablesInText = new ArrayList<VariableInText>();
+		while ( matches.find(searchStart)) 
+		{
+			variablesInText.add( new VariableInText(matches.group(1), matches.start() ) ); // always at position 1 (second position) 
+			searchStart = matches.end();
+		}
+		
+		//for ( VariableInText v : variablesInText ) {
+		//	System.out.printf( "found variable %s at %d\n", v.variableName, v.position );
+		//}
+		
+		StringBuffer buffer = new StringBuffer( sourceText );
+		Collections.reverse(variablesInText);
+		for ( VariableInText v : variablesInText ) {
+			String replaceValue = "";
+			if ( variables.containsKey(v.variableName) )
+				replaceValue = variables.get(v.variableName);
+			
+			buffer.replace( v.position, v.position + v.variableName.length()+1, replaceValue); // +1 is for the $ character
+		}
+		
+		return buffer.toString();
 	}
 
 	public RcmlStep renderStep( Step step ) {
