@@ -4,7 +4,7 @@ package org.mobicents.servlet.restcomm.rvd.dto;
 public class ProjectItem {
 	
 	private String name;
-	private String startupUrl;
+	private String startUrl;
 	
 	
 	public String getName() {
@@ -13,10 +13,10 @@ public class ProjectItem {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public String getStartupUrl() {
-		return startupUrl;
+	public String getStartUrl() {
+		return startUrl;
 	}
-	public void setStartupUrl(String startupUrl) {
-		this.startupUrl = startupUrl;
+	public void setStartUrl(String startUrl) {
+		this.startUrl = startUrl;
 	}
 }

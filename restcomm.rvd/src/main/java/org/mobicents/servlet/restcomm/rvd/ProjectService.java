@@ -57,7 +57,7 @@ public class ProjectService {
 	        for ( File entry : entries ) {
 	    		ProjectItem item = new ProjectItem();
 	    		item.setName(entry.getName());
-	    		item.setStartupUrl(entry.getName());
+	    		item.setStartUrl(entry.getName());
 	    		items.add(item);
 	        }
         }
