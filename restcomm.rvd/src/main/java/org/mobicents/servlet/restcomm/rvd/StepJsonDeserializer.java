@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 import org.mobicents.servlet.restcomm.rvd.dto.DialStep;
 import org.mobicents.servlet.restcomm.rvd.dto.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.dto.HungupStep;
 import org.mobicents.servlet.restcomm.rvd.dto.SayStep;
 import org.mobicents.servlet.restcomm.rvd.dto.Step;
 
@@ -34,6 +35,8 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
 			step = gson.fromJson(step_object, GatherStep.class);
 		else if ( "dial".equals(kind) )
 			step = gson.fromJson(step_object, DialStep.class);		
+		else if ( "hungup".equals(kind) )
+			step = gson.fromJson(step_object, HungupStep.class);			
 		else {
 			step = null;
 			System.out.println("Error deserializing step. Unknown step found!"); //TODO remove me and return a nice value!!!
