@@ -12,8 +12,9 @@ App.factory('stepService', function($rootScope) {
 					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'Dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
 					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
 					redirect: {kind:'redirect', label:'redirect', title:'redirect', next:''},
+					hungup: {kind:'hungup', label:'hungup', title:'hungup', next:''},
 		},
-		stepNames: ['say','gather','dial','redirect'],
+		stepNames: ['say','gather','dial','redirect','hungup'],
 		lastStepId: 0,
 			
 		getMapValuesByIndex: function (map, index) {

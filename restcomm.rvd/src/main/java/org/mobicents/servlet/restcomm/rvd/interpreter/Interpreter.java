@@ -20,6 +20,7 @@ import org.mobicents.servlet.restcomm.rvd.dto.SayStep;
 import org.mobicents.servlet.restcomm.rvd.dto.Step;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlGatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.RcmlHungupStep;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlSayStep;
 import org.mobicents.servlet.restcomm.rvd.model.RcmlStep;
@@ -48,6 +49,7 @@ public class Interpreter {
 		xstream.alias("Say", RcmlSayStep.class);
 		xstream.alias("Gather", RcmlGatherStep.class);
 		xstream.alias("Dial", RcmlDialStep.class);
+		xstream.alias("Hungup", RcmlHungupStep.class);
 		xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
 		xstream.useAttributeFor(RcmlGatherStep.class, "action");
 		xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -238,6 +240,8 @@ public class Interpreter {
 			return renderGatherStep( (GatherStep) step);
 		else if ( "dial".equals(step.getKind() ))
 			return renderDialStep( (DialStep) step);
+		else if ( "hungup".equals(step.getKind() ))
+			return new RcmlHungupStep(); // trivial implementation. No need for seperate function 	
 		else
 			return null; // TODO Raise an exception here!
 	}
