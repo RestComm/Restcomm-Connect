@@ -8,3 +8,5 @@ bin
 logs
 **/*.iml
 **/*~
+.DS_Store
+.checkstyle
