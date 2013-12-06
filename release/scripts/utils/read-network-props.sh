@@ -17,26 +17,26 @@ getPrivateIP() {
 ## Description: Gets the public IP of the instance 
 ## Parameters : none
 getPublicIP() {
-  dig +short myip.opendns.com @resolver1.opendns.com
+	wget -qO- http://ipecho.net/plain
 }
 
 ## Description: Gets the broadcast address of the instance 
 ## Parameters : none
 getBroadcastAddress() {
-  /sbin/ifconfig $INTERFACE | grep "inet addr" | awk -F: '{print $3}' | awk '{print $1}';
+	/sbin/ifconfig $INTERFACE | grep "inet addr" | awk -F: '{print $3}' | awk '{print $1}';
 }
 
 ## Description: Gets the Subnet Mask of the instance 
 ## Parameters : none
 getSubnetMask() {
-  /sbin/ifconfig $INTERFACE | grep "inet addr" | awk -F: '{print $4}' | awk '{print $1}';
+	/sbin/ifconfig $INTERFACE | grep "inet addr" | awk -F: '{print $4}' | awk '{print $1}';
 }
 
 ## Description: Gets the Network of the instance 
 ## Parameters : 1.Private IP
 ## 				2.Subnet Mask
 getNetwork() {
-  ipcalc -n $1 $2 | grep -i "Network" | awk -F= '{print $2}';
+	ipcalc -n $1 $2 | grep -i "Network" | awk -F= '{print $2}';
 }
 
 # MAIN

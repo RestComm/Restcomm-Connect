@@ -50,7 +50,7 @@ configRestcomm() {
 	    -e "s|<external-address>.*<\/external-address>|<external-address>$2<\/external-address>|" \
 	    -e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$2<\/external-address>|" \
 	    -e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$2:8080\/restcomm\/audio<\/prompts-uri>|" \
-	    -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$1:8080\/restcomm\/cache<\/cache-uri>|" \
+	    -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$2:8080\/restcomm\/cache<\/cache-uri>|" \
 	    -e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$2:8080\/restcomm\/recordings<\/recordings-uri>|" \
 	    -e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$2:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
 	    -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_IP<\/outbound-proxy-uri>|" \
@@ -155,5 +155,4 @@ configFaxService $INTERFAX_USER $INTERFAX_PASSWORD
 configSpeechRecognizer $ISPEECH_KEY
 configAcapela $ACAPELA_APPLICATION $ACAPELA_LOGIN $ACAPELA_PASSWORD
 configVoiceRSS $VOICERSS_KEY
-updateDemoBindings $PUBLIC_IP
 echo 'Configured RestComm!'
