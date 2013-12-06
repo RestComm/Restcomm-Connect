@@ -335,7 +335,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		
 		
 		// transmit state to the server
-		$http({url: '../rvdservices/manager/projects/',
+		$http({url: '../services/manager/projects/',
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}
@@ -352,7 +352,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	}
 	
 	$scope.refreshProjectList = function() {
-		$http({url: '../rvdservices/manager/projects/list',
+		$http({url: '../services/manager/projects/list',
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -363,7 +363,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	}
 	
 	$scope.closeProject = function() {
-		$http({url: '../rvdservices/manager/projects/close',
+		$http({url: '../services/manager/projects/close',
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -373,7 +373,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	}
 	
 	$scope.openProject = function(name) {
-		$http({url: '../rvdservices/manager/projects?name=' + name,
+		$http({url: '../services/manager/projects?name=' + name,
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -394,7 +394,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 	$scope.createNewProject = function(name) {
 		console.log( "creating new project " + name );
-		$http({url: '../rvdservices/manager/projects?name=' + name,
+		$http({url: '../services/manager/projects?name=' + name,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
@@ -408,7 +408,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	// First saves and then builds
 	$scope.buildProject = function() {
 		$scope.saveProject(function() {
-			$http({url: '../rvdservices/manager/projects/build', method: "POST"})
+			$http({url: '../services/manager/projects/build', method: "POST"})
 			.success(function (data, status, headers, config) {
 				console.log("Build succesfull");
 			 }).error(function (data, status, headers, config) {
@@ -423,7 +423,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	//$scope.getServerInfo();
 	
 	// Open active project in client
-	$http({url: '../rvdservices/manager/projects/active',
+	$http({url: '../services/manager/projects/active',
 			method: "GET",
 	})
 	.success(function (data, status, headers, config) {

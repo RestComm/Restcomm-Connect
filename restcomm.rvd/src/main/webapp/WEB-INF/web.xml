@@ -29,7 +29,7 @@
   
   <servlet-mapping>
     <servlet-name>RVD Services</servlet-name>
-    <url-pattern>/rvdservices/*</url-pattern>
+    <url-pattern>/services/*</url-pattern>
   </servlet-mapping>  
   
 </web-app>
