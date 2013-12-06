@@ -43,7 +43,7 @@ public class RvdController {
 	}
 	
 	@GET
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_XML)
 	public Response controller( @PathParam("appname") String appname, @QueryParam("target") String targetParam,  @Context HttpServletRequest httpRequest ) {
 		
 		if ( !projectService.projectExists(appname) )
@@ -53,9 +53,8 @@ public class RvdController {
 		Interpreter interpreter = new Interpreter();
 		String rcmlResponse = interpreter.interpret(targetParam, projectBasePath, httpRequest);
 		
-		System.out.println("result: " + rcmlResponse);
-				
-		return Response.ok().build();
+		System.out.println(rcmlResponse);		
+		return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
 	}
 	
 		
