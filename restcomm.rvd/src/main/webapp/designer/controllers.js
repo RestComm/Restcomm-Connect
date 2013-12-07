@@ -7,7 +7,7 @@ App.factory('stepService', function($rootScope) {
 		serviceName: 'stepService',
 		stepProto: {
 					say: {kind:'say', label:'say', title:'say', phrase:'', voice:'man', language:'bf', loop:1, isCollapsed:false, iface:{optionsVisible:false}},
-					//play: {kind:'play', label:'play', title:'Play audio file', fileurl:'', loop:1, isCollapsed:false},
+					play: {playType:'local', kind:'play', label:'play', title:'Play audio file', wavUrl:'', wavLocalFilename:'', loop:null, isCollapsed:false},
 					gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:'5', finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
 					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'Dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
 					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
@@ -162,6 +162,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
 	//$scope.visibleNodes = "voice"; // or "control"	// view Voice Nodes or Control Nodes panel ?
+	$scope.wavList = [];
 	$scope.appView = 'projects'; // spinner | projects | editor
 	
 	// Project management
@@ -390,6 +391,14 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 					
 			//$scope.refreshProjectList();
 			$scope.appView = "editor";
+			
+			$http({url: '../services/manager/projects/wavlist?name=' + name, method: "GET"})
+			.success(function (data, status, headers, config) {
+				console.log('getting wav list')
+				console.log( data );
+				$scope.wavList = data;
+			});
+			// maybe override .error() also to display a message?
 		 });
 	}
 	
