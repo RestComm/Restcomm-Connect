@@ -9,7 +9,9 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
 
 public class ProjectService {
 
@@ -31,7 +33,7 @@ public class ProjectService {
 		return workspaceBasePath;
 	}
 	
-	public List<ProjectItem> getAvailableProjects() {
+	public List<ProjectItem> getAvailableProjects() throws BadWorkspaceDirectoryStructure {
 		
 		List<ProjectItem> items = new ArrayList<ProjectItem>();
 		
@@ -60,16 +62,50 @@ public class ProjectService {
 	    		item.setStartUrl(entry.getName());
 	    		items.add(item);
 	        }
-        }
+        } else
+        	throw new BadWorkspaceDirectoryStructure();
+        
         return items;
 	}
 
-	public boolean projectExists( String projectName ) {
+	public boolean projectExists( String projectName ) throws BadWorkspaceDirectoryStructure {
 		List<ProjectItem> projects = getAvailableProjects();
 		for ( ProjectItem project : projects ) {
 			if ( project.getName().equals(projectName) )
 				return true;
 		}
 		return false;
+	}
+	
+	public List<WavFileItem> getWavs(String appName) throws BadWorkspaceDirectoryStructure {
+		List<WavFileItem> items = new ArrayList<WavFileItem>();
+		
+		File workspaceDir = new File(workspaceBasePath + File.separator + appName + File.separator + "wavs" );
+        if ( workspaceDir.exists() )
+        {
+        	
+			File[] entries = workspaceDir.listFiles(new FileFilter() {
+	            @Override
+	            public boolean accept(File anyfile) {
+	            	if ( anyfile.isFile() )
+	            		return true;
+	            	return false;
+	            }
+	        });
+	        Arrays.sort(entries, new Comparator<File>() {
+	            public int compare(File f1, File f2) {
+	                return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+	            } 
+	        });
+	        			
+	        for ( File entry : entries ) {
+	        	WavFileItem item = new WavFileItem();
+	        	item.setFilename(entry.getName());
+	    		items.add(item);
+	        }
+        } else
+        	throw new BadWorkspaceDirectoryStructure();
+        
+        return items;
 	}
 }

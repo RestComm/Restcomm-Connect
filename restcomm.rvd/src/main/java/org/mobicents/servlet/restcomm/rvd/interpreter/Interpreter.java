@@ -18,11 +18,13 @@ import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
@@ -39,6 +41,7 @@ public class Interpreter {
 	private Gson gson;
 	private Target target;
 	private String projectBasePath;
+	private String appName;
 	private HttpServletRequest httpRequest;
 	private String rcmlResult;
 	private Map<String,String> variables = new HashMap<String,String>();
@@ -71,11 +74,12 @@ public class Interpreter {
 		gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer() ).create();
 	}
 	
-	public String interpret(String targetParam, String projectBasePath, HttpServletRequest httpRequest) {
+	public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest) {
 		
 		System.out.println( "starting interpeter for " + targetParam );
 		
 		this.projectBasePath = projectBasePath;
+		this.appName = appName;
 		this.httpRequest = httpRequest;
 		target = Interpreter.parseTarget(targetParam);
 		
@@ -156,18 +160,18 @@ public class Interpreter {
 					if( mapping.getDigits() != null  &&  mapping.getDigits().equals(digits) ) {
 						// seems we found out menu selection
 						System.out.println( "seems we found out menu selection" );
-						interpret(mapping.getNext(), projectBasePath, httpRequest);
+						interpret(mapping.getNext(), projectBasePath, appName, httpRequest);
 						handled = true;
 					}
 				}
 				if ( !handled ) {
-					interpret( target.nodename+"."+target.stepname, projectBasePath, httpRequest );
+					interpret( target.nodename+"."+target.stepname, projectBasePath, appName, httpRequest );
 				}
 			} if ( "collectdigits".equals(gatherStep.getGatherType()) ) {
 				
 				String variableName = gatherStep.getCollectVariable();
 				variables.put(variableName, httpRequest.getParameter("Digits")); // put the string directly
-				interpret(gatherStep.getNext(), projectBasePath, httpRequest);
+				interpret(gatherStep.getNext(), projectBasePath, appName, httpRequest);
 			}
 		} else 	{
 			throw new RVDUnsupportedHandlerVerb();
@@ -257,6 +261,20 @@ public class Interpreter {
 		sayStep.setLoop(step.getLoop());
 		
 		return sayStep;
+	}
+	
+	public RcmlPlayStep renderPlayStep( PlayStep step ) {
+		RcmlPlayStep playStep = new RcmlPlayStep();
+		String url = "";
+		if ( "local".equals( step.getPlayType() ) )
+			url = httpRequest.getContextPath() + "/workspace/" + appName + "/wavs/" + step.getWavLocalFilename(); 
+		else
+			url = step.getWavUrl();
+		
+		System.out.println( "play url: " + url );
+		playStep.setWavurl(url);
+		
+		return playStep;
 	}
 	
 	public RcmlGatherStep renderGatherStep( GatherStep step ) {

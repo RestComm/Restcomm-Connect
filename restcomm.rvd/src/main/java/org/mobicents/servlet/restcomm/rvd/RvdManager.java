@@ -26,8 +26,10 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.model.client.ActiveProjectInfo;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
 
 
 
@@ -49,11 +51,36 @@ public class RvdManager  {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listProjects() {
 		
-        List<ProjectItem> items = projectService.getAvailableProjects();		  
+        List<ProjectItem> items;
+		try {
+			items = projectService.getAvailableProjects();
+		} catch (BadWorkspaceDirectoryStructure e) {
+			e.printStackTrace(); // TODO remove this and log the error
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}		  
 		
-        Gson gson = new Gson(); // TODO - maybe inject this and create it all the time. See https://bitbucket.org/telestax/telscale-restcomm/src/dec355993594e902f3155324f49b57ee76727548/restcomm/restcomm.http/src/main/java/org/mobicents/servlet/restcomm/http/IncomingPhoneNumbersEndpoint.java?at=ts713#cl-242
+        Gson gson = new Gson(); 
 		return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
 	}
+	
+	@GET @Path("/wavlist")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response listWavs(@QueryParam("name") String name) {
+		
+		List<WavFileItem> items;	
+		try {
+			if ( !projectService.projectExists(name) )
+				return Response.status(Status.NOT_FOUND).build();
+			items = projectService.getWavs(name);
+		} catch (BadWorkspaceDirectoryStructure e) {
+			e.printStackTrace(); // TODO remove this and log the error
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+					  		
+        Gson gson = new Gson(); 
+		return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
+	}	
+	
 	
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)

@@ -16,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 
 import com.google.gson.Gson;
@@ -46,12 +47,17 @@ public class RvdController {
 	@Produces(MediaType.APPLICATION_XML)
 	public Response controller( @PathParam("appname") String appname, @QueryParam("target") String targetParam,  @Context HttpServletRequest httpRequest ) {
 		
-		if ( !projectService.projectExists(appname) )
-			return Response.status(Status.NOT_FOUND).build();
+		try {
+			if ( !projectService.projectExists(appname) )
+				return Response.status(Status.NOT_FOUND).build();
+		} catch (BadWorkspaceDirectoryStructure e) {
+			e.printStackTrace(); // TODO Auto-generated catch block
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
 		
 		String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;		
 		Interpreter interpreter = new Interpreter();
-		String rcmlResponse = interpreter.interpret(targetParam, projectBasePath, httpRequest);
+		String rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
 		
 		System.out.println(rcmlResponse);		
 		return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
