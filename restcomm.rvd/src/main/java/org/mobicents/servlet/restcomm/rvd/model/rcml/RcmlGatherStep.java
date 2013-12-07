@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd.model;
+package org.mobicents.servlet.restcomm.rvd.model.rcml;
 
 import java.util.ArrayList;
 import java.util.List;

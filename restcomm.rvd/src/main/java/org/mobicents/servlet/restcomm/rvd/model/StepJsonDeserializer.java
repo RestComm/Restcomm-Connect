@@ -1,12 +1,12 @@
-package org.mobicents.servlet.restcomm.rvd;
+package org.mobicents.servlet.restcomm.rvd.model;
 
 import java.lang.reflect.Type;
 
-import org.mobicents.servlet.restcomm.rvd.dto.DialStep;
-import org.mobicents.servlet.restcomm.rvd.dto.GatherStep;
-import org.mobicents.servlet.restcomm.rvd.dto.HungupStep;
-import org.mobicents.servlet.restcomm.rvd.dto.SayStep;
-import org.mobicents.servlet.restcomm.rvd.dto.Step;
+import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.HungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd.dto;
+package org.mobicents.servlet.restcomm.rvd.model.client;
 
 // Used for transferring the current project information (only name is used) back to the client
 public class ActiveProjectInfo {

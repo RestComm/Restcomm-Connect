@@ -1,6 +1,6 @@
-package org.mobicents.servlet.restcomm.rvd.interpreter;
+package org.mobicents.servlet.restcomm.rvd.model;
 
-import org.mobicents.servlet.restcomm.rvd.model.RcmlSayStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
 
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;

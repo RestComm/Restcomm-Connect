@@ -16,7 +16,7 @@
 			class specified below -->
 		<init-param>
 			<param-name>javax.ws.rs.Application</param-name>
-			<param-value>org.mobicents.servlet.restcomm.rvd.RvdRestApplication</param-value>
+			<param-value>org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
