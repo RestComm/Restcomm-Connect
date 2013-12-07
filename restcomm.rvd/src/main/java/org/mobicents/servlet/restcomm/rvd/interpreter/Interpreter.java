@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
+import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
@@ -49,9 +50,11 @@ public class Interpreter {
 	public Interpreter() {
 		xstream = new XStream();
 		xstream.registerConverter( new SayStepConverter() );
+		xstream.registerConverter( new PlayStepConverter() );
 		xstream.alias("Response", RcmlResponse.class);
 		xstream.addImplicitCollection(RcmlResponse.class, "steps");
 		xstream.alias("Say", RcmlSayStep.class);
+		xstream.alias("Play", RcmlPlayStep.class);
 		xstream.alias("Gather", RcmlGatherStep.class);
 		xstream.alias("Dial", RcmlDialStep.class);
 		xstream.alias("Hungup", RcmlHungupStep.class);
@@ -64,6 +67,7 @@ public class Interpreter {
 		xstream.useAttributeFor(RcmlSayStep.class, "voice");		
 		xstream.useAttributeFor(RcmlSayStep.class, "language");
 		xstream.useAttributeFor(RcmlSayStep.class, "loop");
+		xstream.useAttributeFor(RcmlPlayStep.class, "loop");
 		xstream.aliasField("Number", RcmlDialStep.class, "number");
 		xstream.aliasField("Client", RcmlDialStep.class, "client");
 		xstream.aliasField("Conference", RcmlDialStep.class, "conference");
@@ -242,6 +246,8 @@ public class Interpreter {
 	public RcmlStep renderStep( Step step ) {
 		if ( "say".equals(step.getKind()) )
 			return renderSayStep( (SayStep) step);
+		else if ( "play".equals(step.getKind()))
+			return renderPlayStep( (PlayStep) step);
 		else if ( "gather".equals(step.getKind()) ) 
 			return renderGatherStep( (GatherStep) step);
 		else if ( "dial".equals(step.getKind() ))
