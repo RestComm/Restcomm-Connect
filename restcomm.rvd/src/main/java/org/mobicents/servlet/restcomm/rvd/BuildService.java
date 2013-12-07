@@ -4,13 +4,20 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.mobicents.servlet.restcomm.rvd.dto.ProjectState;
-import org.mobicents.servlet.restcomm.rvd.dto.Step;
+import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
+import org.mobicents.servlet.restcomm.rvd.model.StepJsonSerializer;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
+import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-
+/**
+ * This class is responsible for breaking the project state from a big JSON object 
+ * to separate files per node/step. The resulting files will be easily processed 
+ * from the interpreter when the application is run.  
+ * 
+ */
 public class BuildService {
 	
 	private Gson gson;
@@ -21,6 +28,15 @@ public class BuildService {
 		gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).registerTypeAdapter(Step.class, new StepJsonSerializer()).create();
 	}
 	
+	/**
+	 * Breaks the project state from a big JSON object 
+	 * to separate files per node/step. The resulting files will be easily processed 
+	 * from the interpreter when the application is run.
+	 * 
+	 * @param projectStateJson	string representation of a big JSON object representing the project's state in the client
+	 * @param projectPath		absolute filesystem path of the project. This is where the generated files will be stored 
+	 * @throws IOException
+	 */
 	public void buildProject( String projectStateJson, String projectPath) throws IOException {
 		ProjectState projectState = gson.fromJson(projectStateJson, ProjectState.class);
 		
@@ -29,6 +45,12 @@ public class BuildService {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param node
+	 * @param projectPath
+	 * @throws IOException
+	 */
 	private void buildNode( ProjectState.Node node, String projectPath) throws IOException {
 		System.out.println("building node " + node.getName() );
 		

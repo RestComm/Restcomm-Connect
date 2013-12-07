@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd.interpreter;
+package org.mobicents.servlet.restcomm.rvd.interpreter.exceptions;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 

@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd.model;
+package org.mobicents.servlet.restcomm.rvd.model.rcml;
 
 public class RcmlDialStep extends RcmlStep {
 	private String number;

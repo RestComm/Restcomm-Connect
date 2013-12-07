@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
-import org.mobicents.servlet.restcomm.rvd.dto.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 
 public class ProjectService {
 

@@ -26,14 +26,14 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;
 
-import org.mobicents.servlet.restcomm.rvd.dto.ActiveProjectInfo;
-import org.mobicents.servlet.restcomm.rvd.dto.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.ActiveProjectInfo;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 
 
 
 
 @Path("/manager/projects")
-public class RvdManagerResource  {
+public class RvdManager  {
 	
 	private static final String projectSessionAttribute = "project"; // the name of the session variable where the active project will be stored
 	

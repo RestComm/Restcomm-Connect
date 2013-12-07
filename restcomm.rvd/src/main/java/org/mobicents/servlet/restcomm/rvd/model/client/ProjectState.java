@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd.dto;
+package org.mobicents.servlet.restcomm.rvd.model.client;
 
 import java.util.List;
 import java.util.Map;
