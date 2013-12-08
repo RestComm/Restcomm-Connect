@@ -106,8 +106,8 @@ App.directive('sortableSteps',function(stepService){
 			  // just reordering steps
 			  
 			  var from_index = scope.stepnames.indexOf( ui.item.scope().step.name );
-			  console.log( 'inserting element from position: ' + from_index );
-			  console.log( 'inserting element at position: ' + to_index );
+			  //console.log( 'inserting element from position: ' + from_index );
+			  //console.log( 'inserting element at position: ' + to_index );
 			  var temp = scope.stepnames[to_index];
 			  scope.$apply( function () {
 				scope.stepnames[to_index] = scope.stepnames[from_index];
@@ -149,7 +149,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	$scope.stepService = stepService;
 	
 	// Prototype and constant data structures
-	$scope.nodesProto =	{name:'rcmlnode', label:'Unititled node', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}};
+	$scope.nodesProto =	{name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}};
 	$scope.languages = [{name:'en',text:'English'},{name:'fr',text:'French'},{name:'it',text:'Italian'},{name:'sp',text:'Spanish'},{name:'el',text:'Greek'}];
 	$scope.methods = ['POST', 'GET'];
 	
