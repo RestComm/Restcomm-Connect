@@ -231,7 +231,7 @@ public class Interpreter {
 		
 		RcmlDialStep rcmlStep = new RcmlDialStep();
 		if ( "number".equals(step.getDialType()) && step.getNumber() != null && !"".equals(step.getNumber()) )
-			rcmlStep.setNumber(step.getNumber());
+			rcmlStep.setNumber(populateVariables( step.getNumber() ) );
 		else if ( "client".equals(step.getDialType())  && step.getClient() != null && !"".equals(step.getClient()))
 			rcmlStep.setClient(step.getClient());
 		else if ( "conference".equals(step.getDialType())  && step.getConference() != null && !"".equals(step.getConference() ) )
@@ -286,16 +286,11 @@ public class Interpreter {
 	public RcmlGatherStep renderGatherStep( GatherStep step ) {
 		
 		RcmlGatherStep rcmlStep = new RcmlGatherStep();
-		//rcmlStep.setAction(step.getAction());
-		
-		//action='" . build_action($scope, array('target'=>$newtarget)) ."'
-		// $newtarget = $targetparts['nodename'] . "." . $step->name . "." . "handle";
 		String newtarget = target.nodename + "." + step.getName() + ".handle";
 		Map<String,String> pairs = new HashMap<String,String>();
 		pairs.put("target", newtarget);	
 		String action = buildAction(pairs);
 		
-		System.out.println( "action: " + action );
 		rcmlStep.setAction( action );
 		rcmlStep.setTimeout( step.getTimeout() );
 		rcmlStep.setFinishOnKey( step.getFinishOnKey() );
