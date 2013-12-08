@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
+import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
@@ -29,6 +30,7 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
+import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -78,61 +80,64 @@ public class Interpreter {
 		gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer() ).create();
 	}
 	
-	public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest) {
-		
-		System.out.println( "starting interpeter for " + targetParam );
-		
+	public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest) throws IOException, RVDUnsupportedHandlerVerb, UndefinedTarget {
 		this.projectBasePath = projectBasePath;
 		this.appName = appName;
 		this.httpRequest = httpRequest;
+	
+		if ( targetParam == null  ||  "".equals(targetParam) ) {
+			// No target has been spacified. Load the default from project file
+			String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project" ));
+			ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>(){}.getType());
+			targetParam = projectOptions.getDefaultTarget();
+			if ( targetParam == null )
+				throw new UndefinedTarget();
+			System.out.println( "override default target to " + targetParam);
+		}
+		return interpret(targetParam);
+	
+	}
+	
+	private String interpret(String targetParam) throws RVDUnsupportedHandlerVerb, IOException {
+		
+		System.out.println( "starting interpeter for " + targetParam );
+		
 		target = Interpreter.parseTarget(targetParam);
 		
 		// TODO make sure all the required components of the target are available here
 		
-		try {
+		if ( target.action != null ) {
+			// Event handling
+			handleAction( target.action );
+		} else
+		{
+			// RCML Generation
 			
-			if ( target.action != null ) {
+			RcmlResponse rcmlModel = new RcmlResponse();
+			String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
+			List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>(){}.getType());
+			
+			// if no starting step has been specified in the target, use the first step of the node as default
+			if ( target.getStepname() == null && !nodeStepnames.isEmpty() )
+				target.setStepname(nodeStepnames.get(0));
+			
+			boolean startstep_found = false;
+			for ( String stepname : nodeStepnames ) {
 				
-				// Event handling
-				handleAction( target.action );
+				if ( stepname.equals(target.getStepname() ) )
+					startstep_found = true;
 				
-			} else
-			{
-				// RCML Generation
-				
-				RcmlResponse rcmlModel = new RcmlResponse();
-				String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
-				List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>(){}.getType());
-				
-				// if no starting step has been specified in the target, use the first step of the node as default
-				if ( target.getStepname() == null && !nodeStepnames.isEmpty() )
-					target.setStepname(nodeStepnames.get(0));
-				
-				boolean startstep_found = false;
-				for ( String stepname : nodeStepnames ) {
-					
-					if ( stepname.equals(target.getStepname() ) )
-						startstep_found = true;
-					
-					if ( startstep_found )
-					{					
-						// we found our starting step. Let's start processing
-						Step step = loadStep( stepname );
-						rcmlModel.steps.add( renderStep(step) );
-					}
+				if ( startstep_found )
+				{					
+					// we found our starting step. Let's start processing
+					Step step = loadStep( stepname );
+					rcmlModel.steps.add( renderStep(step) );
 				}
-				
-				rcmlResult = xstream.toXML(rcmlModel);  
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "error";
-		} catch (RVDUnsupportedHandlerVerb e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "error";
-		}		
+			
+			rcmlResult = xstream.toXML(rcmlModel);  
+		}
+	
 	
 		return rcmlResult; // this is in case of an error
 	}
@@ -164,18 +169,18 @@ public class Interpreter {
 					if( mapping.getDigits() != null  &&  mapping.getDigits().equals(digits) ) {
 						// seems we found out menu selection
 						System.out.println( "seems we found out menu selection" );
-						interpret(mapping.getNext(), projectBasePath, appName, httpRequest);
+						interpret(mapping.getNext());
 						handled = true;
 					}
 				}
 				if ( !handled ) {
-					interpret( target.nodename+"."+target.stepname, projectBasePath, appName, httpRequest );
+					interpret( target.nodename+"."+target.stepname );
 				}
 			} if ( "collectdigits".equals(gatherStep.getGatherType()) ) {
 				
 				String variableName = gatherStep.getCollectVariable();
 				variables.put(variableName, httpRequest.getParameter("Digits")); // put the string directly
-				interpret(gatherStep.getNext(), projectBasePath, appName, httpRequest);
+				interpret(gatherStep.getNext());
 			}
 		} else 	{
 			throw new RVDUnsupportedHandlerVerb();

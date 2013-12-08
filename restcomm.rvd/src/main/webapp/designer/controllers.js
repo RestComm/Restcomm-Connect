@@ -189,6 +189,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 			if (anynode.name == name)
 				return anynode;
 		}
+		return null;
 	}
 	$scope.setStartNode = function (name) {
 		console.log( 'set start node to ' + name );
@@ -344,7 +345,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		state.activeNode = $scope.activeNode;
 		state.lastNodeId = $scope.lastNodesId;
 		state.visibleNodes = $scope.visibleNodes;
-		state.startNodeName = $scope.startNodeName;
+		state.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
 		
 		
 		// transmit state to the server

@@ -8,6 +8,7 @@ import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonSerializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -40,6 +41,15 @@ public class BuildService {
 	public void buildProject( String projectStateJson, String projectPath) throws IOException {
 		ProjectState projectState = gson.fromJson(projectStateJson, ProjectState.class);
 		
+		ProjectOptions projectOptions = new ProjectOptions();
+		
+		// Save general purpose project information
+		// Use the start node name as a default target. We could use a more specialized target too here
+		projectOptions.setDefaultTarget( projectState.getStartNodeName() ); 
+		File outFile = new File( projectPath + "data/" + "project" );
+		FileUtils.writeStringToFile(outFile, gson.toJson(projectOptions), "UTF-8");		
+		
+		// Build the nodes one by one
 		for ( ProjectState.Node node : projectState.getNodes() ) {
 			buildNode( node, projectPath );
 		}
