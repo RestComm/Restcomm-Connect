@@ -7,9 +7,9 @@ App.factory('stepService', function($rootScope) {
 		serviceName: 'stepService',
 		stepProto: {
 					say: {kind:'say', label:'say', title:'say', phrase:'', voice:'man', language:'bf', loop:1, isCollapsed:false, iface:{optionsVisible:false}},
-					play: {playType:'local', kind:'play', label:'play', title:'Play audio file', wavUrl:'', wavLocalFilename:'', loop:null, isCollapsed:false},
+					play: {playType:'local', kind:'play', label:'play', title:'play', wavUrl:'', wavLocalFilename:'', loop:null, isCollapsed:false},
 					gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:'5', finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
-					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'Dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
+					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
 					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
 					redirect: {kind:'redirect', label:'redirect', title:'redirect', next:''},
 					hungup: {kind:'hungup', label:'hungup', title:'hungup', next:''},
@@ -203,9 +203,10 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		r = new RegExp("^(.+)/[^/]+\/$");
 		m = r.exec(document.baseURI);
 		if ( m != null )
-			return m[1] + "/workspace/" + $scope.projectName + "/index.php?target=" + $scope.startNodeName;
+			return m[1] + "/services/apps/" + $scope.projectName + "/controller?target=" + $scope.startNodeName;
 		return '';
 	}
+
 	
 	$scope.isActiveNodeByIndex = function ( index) { 
 		return index == $scope.activeNode; 
@@ -265,8 +266,18 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 					var step = anynode.steps[stepname];
 					var label = '';
 					switch ( step.kind ) {
-						case 'say': label = " - Say " + step.phrase.substring(0, Math.min(step.phrase.length,10)); break;
-						case 'gather': label = " - Gather "; break;
+						case 'say': 
+							var max_phrase_length = 10;
+							label = " - Say " + step.phrase.substring(0, Math.min(step.phrase.length,10));
+							if ( step.phrase.length > max_phrase_length )
+								label += "...";
+						break;
+						default: label = " - " + step.label + " "; break;
+							
+						//case 'gather': label = " - Gather "; break;
+						//case 'dial': label = " - Dial "; break;
+						//case 'hungup': label = " - Hungup "; break;
+						//case 'dial': label = " - Dial "; break;
 					}
 					var name = anynode.name + "." + step.name;
 					label = anynode.label + "." + step.name + label;
