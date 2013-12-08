@@ -204,7 +204,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		r = new RegExp("^(.+)/[^/]+\/$");
 		m = r.exec(document.baseURI);
 		if ( m != null )
-			return m[1] + "/services/apps/" + $scope.projectName + "/controller?target=" + $scope.startNodeName;
+			return m[1] + "/services/apps/" + $scope.projectName + "/controller";
 		return '';
 	}
 
