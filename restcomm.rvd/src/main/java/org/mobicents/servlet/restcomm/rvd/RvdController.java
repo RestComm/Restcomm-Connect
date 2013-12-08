@@ -83,7 +83,6 @@ public class RvdController {
 		return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
 	}
 	
-	/*
 	@POST
 	@Produces(MediaType.APPLICATION_XML)
 	public Response controllerPost( @PathParam("appname") String appname, @QueryParam("target") String targetParam,  @Context HttpServletRequest httpRequest ) {
@@ -98,12 +97,27 @@ public class RvdController {
 		
 		String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;		
 		Interpreter interpreter = new Interpreter();
-		String rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
+		
+		String rcmlResponse;
+		try {
+			rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
+		} catch (RVDUnsupportedHandlerVerb e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		} catch (UndefinedTarget e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(); 
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 		
 		System.out.println(rcmlResponse);		
 		return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
 	}
-	*/
 	
 		
 }
