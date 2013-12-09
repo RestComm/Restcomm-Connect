@@ -76,7 +76,10 @@ CREATE TABLE "restcomm_incoming_phone_numbers" (
 "sms_fallback_url" LONGVARCHAR,
 "sms_fallback_method" VARCHAR(4),
 "sms_application_sid" VARCHAR(34),
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"voice_capable" BOOLEAN, 
+"sms_capable" BOOLEAN, 
+"mms_capable" BOOLEAN
 );
 
 CREATE TABLE "restcomm_applications" (

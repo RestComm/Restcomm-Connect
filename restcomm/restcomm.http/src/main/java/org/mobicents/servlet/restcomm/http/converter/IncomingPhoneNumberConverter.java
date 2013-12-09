@@ -69,6 +69,7 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
         writeSmsFallbackUrl(incomingPhoneNumber.getSmsFallbackUrl(), writer);
         writeSmsFallbackMethod(incomingPhoneNumber.getSmsFallbackMethod(), writer);
         writeSmsApplicationSid(incomingPhoneNumber.getSmsApplicationSid(), writer);
+        writeCapabilities(incomingPhoneNumber.isVoiceCapable(), incomingPhoneNumber.isSmsCapable(), incomingPhoneNumber.isMmsCapable(), incomingPhoneNumber.isFaxCapable(), writer);
         writeApiVersion(incomingPhoneNumber.getApiVersion(), writer);
         writeUri(incomingPhoneNumber.getUri(), writer);
         writer.endNode();
@@ -97,6 +98,7 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
         writeSmsFallbackUrl(incomingPhoneNumber.getSmsFallbackUrl(), object);
         writeSmsFallbackMethod(incomingPhoneNumber.getSmsFallbackMethod(), object);
         writeSmsApplicationSid(incomingPhoneNumber.getSmsApplicationSid(), object);
+        writeCapabilities(incomingPhoneNumber.isVoiceCapable(), incomingPhoneNumber.isSmsCapable(), incomingPhoneNumber.isMmsCapable(), incomingPhoneNumber.isFaxCapable(), object);
         writeApiVersion(incomingPhoneNumber.getApiVersion(), object);
         writeUri(incomingPhoneNumber.getUri(), object);
         return object;
