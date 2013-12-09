@@ -33,23 +33,28 @@
 						</div>
 						<div ng-show="step.gatherType=='menu'">
 							<div ng-repeat="mapping in step.mappings" class='form-group row'>
-								<div class='col-md-4'>
-									<div class="input-group form-group input-group-sm">
-										<span class="input-group-addon">Digit</span>
-										<input class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="123" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits'></input>
+								<form name="form" novalidate>
+									<div class='col-md-4'>
+										
+											<div class="input-group form-group input-group-sm">
+												<span class="input-group-addon">Digit</span>
+												<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="123" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits' required></input>
+											</div>
+											<div ng-show="form.digits.$invalid">Invalid digit value</div>
+										
+	
 									</div>
-									<!--<label ng-show="$index==0">Digit</label>
-									<input ng-model='mapping.digit' type="number" class="form-control input-sm">-->
-								</div>
-								<div class='col-md-6'>
-									<div class="input-group form-group input-group-sm">
-										<span class="input-group-addon">Target</span>
-										<select ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm"></select>
+									<div class='col-md-6'>
+										<div class="input-group form-group input-group-sm">
+											<span class="input-group-addon">Target</span>
+											<select name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required></select>
+										</div>
+										<div ng-show="form.next.$invalid">No target specified</div>
+									</div>	
+									<div class='col-md-1'>
+										<button ng-click="removeGatherMapping(step,mapping)" type="button" class="close" aria-hidden="true">&times;</button>
 									</div>
-								</div>	
-								<div class='col-md-1'>
-									<button ng-click="removeGatherMapping(step,mapping)" type="button" class="close" aria-hidden="true">&times;</button>
-								</div>							
+								</form>							
 							</div>					
 							<div class="form-group">
 								<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>Add mapping</span></button>
