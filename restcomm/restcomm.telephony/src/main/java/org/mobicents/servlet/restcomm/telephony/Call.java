@@ -19,9 +19,12 @@ package org.mobicents.servlet.restcomm.telephony;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.math.BigDecimal;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +48,8 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -166,6 +171,8 @@ public final class Call extends UntypedActor {
 
     private ActorRef group;
     private ActorRef conference;
+    private CallDetailRecord outgoingCallRecord;
+    private CallDetailRecordsDao recordsDao;
 
     public Call(final SipFactory factory, final ActorRef gateway) {
         super();
@@ -604,6 +611,7 @@ public final class Call extends UntypedActor {
             username = request.username();
             password = request.password();
             type = request.type();
+            recordsDao = request.recordsDao();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
@@ -632,6 +640,33 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+
+            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+            builder.setSid(id);
+            builder.setDateCreated(created);
+            builder.setAccountSid(accountId);
+            builder.setTo(to.getUser());
+            builder.setCallerName(name);
+            String fromString = from.getUser() != null ? from.getUser() : "rcml app";
+            builder.setFrom(fromString);
+            // builder.setForwardedFrom(callInfo.forwardedFrom());
+//             builder.setPhoneNumberSid(phoneId);
+            builder.setStatus(external.name());
+            builder.setDirection("outbound-api");
+            builder.setApiVersion(apiVersion);
+            builder.setPrice(new BigDecimal("0.00"));
+            // TODO implement currency property to be read from Configuration
+            builder.setPriceUnit(Currency.getInstance("USD"));
+            final StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(apiVersion).append("/Accounts/");
+            buffer.append(accountId.toString()).append("/Calls/");
+            buffer.append(id.toString());
+            final URI uri = URI.create(buffer.toString());
+            builder.setUri(uri);
+
+            outgoingCallRecord = builder.build();
+            recordsDao.addCallDetailRecord(outgoingCallRecord);
+
         }
     }
 
@@ -802,6 +837,10 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
         }
     }
 
@@ -843,6 +882,10 @@ public final class Call extends UntypedActor {
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
@@ -900,6 +943,10 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
         }
     }
 
@@ -920,6 +967,10 @@ public final class Call extends UntypedActor {
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
@@ -944,6 +995,10 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
         }
     }
 
@@ -966,6 +1021,10 @@ public final class Call extends UntypedActor {
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
@@ -1039,6 +1098,13 @@ public final class Call extends UntypedActor {
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                final DateTime now = DateTime.now();
+                outgoingCallRecord = outgoingCallRecord.setStartTime(now);
+                outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
 
@@ -1222,6 +1288,14 @@ public final class Call extends UntypedActor {
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")){
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                final DateTime now = DateTime.now();
+                outgoingCallRecord = outgoingCallRecord.setEndTime(now);
+                final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
