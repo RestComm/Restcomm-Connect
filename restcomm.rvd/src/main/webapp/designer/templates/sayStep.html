@@ -14,31 +14,29 @@
 			</div>
 					
 			<i ng-click="step.iface.optionsVisible = !step.iface.optionsVisible" class='fa fa-cog rvd-clickable' ng-class="{'rvd-active': step.iface.optionsVisible }"></i>
-			<div ng-show="step.iface.optionsVisible" class="row step-options">
+			<div ng-show="step.iface.optionsVisible" class="row "> <!--  add step_options class  -->
 				<br/>
-				<div class="col-lg-6">
-					<div class="form-group">
-						<label for="phraseTextInput">Voice</label>
-						<div class="radio">		
-							<label><input type="radio" value="man" ng-model='step.voice'>man</label>
-						</div>
-						<div class="radio">
-							<label><input type="radio" value="woman" ng-model='step.voice'>woman</label>
-						</div>
+				<div class="col-lg-12">
+					<div class="input-group form-group input-group-sm">
+						<span class="input-group-addon ">Language</span>
+						<!-- <select name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required></select> -->
+						<select ng-model='step.language' ng-options='language.name as language.text for language in languages'  id="languageSelect" class="form-control input-sm say-language-dropdown" ></select>  <!--  tooltip="The 'language' attribute allows you pick a specific language for speech synthesis" -->
+					</div>
+					<div class="btn-toolbar" role="toolbar">
+						
+					  
+					  <span class="btn-group">
+						<button ng-click='step.voice="man"' ng-class="{active:step.voice=='man'}"  type="button" class="btn btn-default btn-sm"><i class='fa fa-male'></i></button>
+						<button ng-click='step.voice="woman"' ng-class="{active:step.voice=='woman'}" type="button" class="btn btn-default btn-sm"><i class='fa fa-female'></i></button>
+						<!-- <button ng-click='step.voice=""' ng-class="{active:step.voice==''}" type="button" class="btn btn-default btn-sm">auto</button> -->
+					  </span>
 					</div>
 				</div>
+				<!-- 
 				<div class="col-lg-6">
-					<div class="form-group">
-						<label for="languageSelect">Language</label>
-						<select ng-model='step.language' ng-options='language.name as language.text for language in languages'  id="languageSelect" class="form-control" tooltip="The 'language' attribute allows you pick a specific language for speech synthesis">
-						</select>
-						<span class="help-block">Pick a language</span>
-					</div>
+					
 				</div>
+				 -->
 			</div>
-		
-			<!--<a ng-click="step.iface.optionsVisible = !step.iface.optionsVisible"><span ng-show="!step.iface.optionsVisible">Options</span><span ng-show="step.iface.optionsVisible">Hide options</span></a> -->
-			
-
 		</div>
 	</div>
