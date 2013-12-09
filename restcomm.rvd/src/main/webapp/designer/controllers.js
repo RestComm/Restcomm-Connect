@@ -358,8 +358,6 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 			console.log( "project saved" );
 			if (typeof (onsuccess) === "function")
 				onsuccess();
-			else
-				console.log( data.message );
 		 }).error(function (data, status, headers, config) {
 				console.log('ERROR');
 		 });	
@@ -466,6 +464,8 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 			node.iface.editLabel=!node.iface.editLabel;
 		}
 	}
+	
+
 			
 });
 
