@@ -429,4 +429,94 @@ public abstract class AbstractConverter implements Converter {
             object.add("voice_url", JsonNull.INSTANCE);
         }
     }
+
+    protected void writeCapabilities(final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final HierarchicalStreamWriter writer) {
+        writer.startNode("Capabilities");
+        writeVoiceCapability(voiceCapable, writer);
+        writeSmsCapability(smsCapable, writer);
+        writeMmsCapability(mmsCapable, writer);
+        writeFaxCapability(faxCapable, writer);
+        writer.endNode();
+    }
+
+    protected void writeCapabilities(final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final JsonObject object) {
+        JsonObject capabilities = new JsonObject();
+        writeVoiceCapability(voiceCapable, capabilities);
+        writeSmsCapability(smsCapable, capabilities);
+        writeMmsCapability(mmsCapable, capabilities);
+        writeFaxCapability(faxCapable, capabilities);
+        object.add("capabilities", capabilities);
+    }
+
+    protected void writeVoiceCapability(final Boolean voiceCapable, final HierarchicalStreamWriter writer) {
+        writer.startNode("Voice");
+        if (voiceCapable == null) {
+            writer.setValue("unknown");
+        } else {
+            writer.setValue(voiceCapable.toString());
+        }
+        writer.endNode();
+    }
+
+    protected void writeVoiceCapability(final Boolean voiceCapable, final JsonObject object) {
+        if (voiceCapable != null) {
+            object.addProperty("voice_capable", voiceCapable);
+        } else {
+            object.addProperty("voice_capable", "");
+        }
+    }
+
+    protected void writeSmsCapability(final Boolean smsCapable, final HierarchicalStreamWriter writer) {
+        writer.startNode("Sms");
+        if (smsCapable == null) {
+            writer.setValue("unknown");
+        } else {
+            writer.setValue(smsCapable.toString());
+        }
+        writer.endNode();
+    }
+
+    protected void writeSmsCapability(final Boolean smsCapable, final JsonObject object) {
+        if (smsCapable != null) {
+            object.addProperty("sms_capable", smsCapable);
+        } else {
+            object.addProperty("sms_capable", "");
+        }
+    }
+
+    protected void writeMmsCapability(final Boolean mmsCapable, final HierarchicalStreamWriter writer) {
+        writer.startNode("Mms");
+        if (mmsCapable == null) {
+            writer.setValue("unknown");
+        } else {
+            writer.setValue(mmsCapable.toString());
+        }
+        writer.endNode();
+    }
+
+    protected void writeMmsCapability(final Boolean mmsCapable, final JsonObject object) {
+        if (mmsCapable != null) {
+            object.addProperty("mms_capable", mmsCapable);
+        } else {
+            object.addProperty("mms_capable", "");
+        }
+    }
+
+    protected void writeFaxCapability(final Boolean faxCapable, final HierarchicalStreamWriter writer) {
+        writer.startNode("Fax");
+        if (faxCapable == null) {
+            writer.setValue("unknown");
+        } else {
+            writer.setValue(faxCapable.toString());
+        }
+        writer.endNode();
+    }
+
+    protected void writeFaxCapability(final Boolean faxCapable, final JsonObject object) {
+        if (faxCapable != null) {
+            object.addProperty("fax_capable", faxCapable);
+        } else {
+            object.addProperty("fax_capable", "");
+        }
+    }
 }
