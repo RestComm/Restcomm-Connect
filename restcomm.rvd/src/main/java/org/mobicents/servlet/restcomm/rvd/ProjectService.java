@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
@@ -19,7 +20,8 @@ public class ProjectService {
 	
 	// configuration parameters 
 	private static final String workspaceDirectoryName = "workspace";
-	private static final String protoDirectoryName = "_proto"; // the prototype project directory name	
+	private static final String protoDirectoryName = "_proto"; // the prototype project directory name
+	
 	
 	private String workspaceBasePath;
 	
@@ -31,6 +33,40 @@ public class ProjectService {
 		
 	public String getWorkspaceBasePath() {
 		return workspaceBasePath;
+	}
+	
+	/**
+	 * Builds the startUrl for an application based on the application name and the incoming 
+	 * httpRequest. It is depending on the initial REST request that called this function.
+	 * Usually this httpRequest comes either from user's browser when he runs Admin-UI
+	 * or RVD. However, this url will be used in Restcomm too. Make sure that Restcomm can access 
+	 * the generated the same way client's browser does.    
+	 *  
+	 * 
+	 * @param projectName
+	 * @param httpRequest
+	 * @return An absolute url pointing to the starting URL of the application
+	 */
+	public static String getStartUrlForProject( String projectName, HttpServletRequest httpRequest ) {
+		String startUrl = httpRequest.getScheme() + "://" + 
+				httpRequest.getServerName() + 
+				(httpRequest.getServerPort() == 80 ? "" : (":"+ httpRequest.getServerPort())) + 
+				httpRequest.getContextPath() + 
+				httpRequest.getServletPath() + 
+				"/apps/" + projectName + "/controller";
+		
+		return startUrl; 
+	}
+
+	/**
+	 * Populates an application list with startup urls for each application 
+	 * @param items	
+	 * @param httpRequest
+	 */
+	public static void fillStartUrlsForProjects( List<ProjectItem> items, HttpServletRequest httpRequest ) {
+		for ( ProjectItem item : items ) {
+			item.setStartUrl( getStartUrlForProject(item.getName(), httpRequest) );
+		}
 	}
 	
 	public List<ProjectItem> getAvailableProjects() throws BadWorkspaceDirectoryStructure {

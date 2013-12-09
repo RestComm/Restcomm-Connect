@@ -49,11 +49,13 @@ public class RvdManager  {
 	
 	@GET @Path("/list")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response listProjects() {
+	public Response listProjects(@Context HttpServletRequest request) {
 		
         List<ProjectItem> items;
 		try {
 			items = projectService.getAvailableProjects();
+			ProjectService.fillStartUrlsForProjects(items, request);
+
 		} catch (BadWorkspaceDirectoryStructure e) {
 			e.printStackTrace(); // TODO remove this and log the error
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
