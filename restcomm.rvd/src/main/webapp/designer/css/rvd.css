@@ -115,6 +115,10 @@ label {
 }
 
 
+.say-language-dropdown {
+	max-width: 200px;
+}
+
 
 /* override jquery-ui colors since theme-roller never responded */
 /*
