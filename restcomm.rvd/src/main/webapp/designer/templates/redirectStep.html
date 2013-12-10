@@ -4,9 +4,21 @@
 	<div class="panel-body" ng-hide='step.isCollapsed'>
 		<div class="row">
 			<div class="col-md-4">
-				<div class="form-group">
+<!-- 			<div class="form-group">
 					Continue to <select ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm"></select>
 				</div>
+ -->
+				
+				<form name="form" novalidate>
+					<div class="input-group form-group input-group-sm">
+						<span class="input-group-addon">Continue to</span>
+						<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
+							<option value=""></option>
+						</select>
+					</div>
+					<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
+				</form>
+				
 			</div>
 		</div>
 	</div>

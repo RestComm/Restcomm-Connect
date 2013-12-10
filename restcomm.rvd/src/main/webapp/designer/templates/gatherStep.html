@@ -27,9 +27,7 @@
 						<div class="form-group">
 								<input type="radio" ng-model="step.gatherType" value="menu"> Menu 
 								<input type="radio" ng-model="step.gatherType" value="collectdigits"> Collect digits
-								<!-- <input type="radio" ng-model="step.gatherType" value="custom"> Custom -->
-						
-						
+								<!-- <input type="radio" ng-model="step.gatherType" value="custom"> Custom -->						
 						</div>
 						<div ng-show="step.gatherType=='menu'">
 							<div ng-repeat="mapping in step.mappings" class='form-group row'>
@@ -40,16 +38,18 @@
 												<span class="input-group-addon">Digit</span>
 												<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="123" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits' required></input>
 											</div>
-											<div ng-show="form.digits.$invalid">Invalid digit value</div>
+											<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div>
 										
 	
 									</div>
 									<div class='col-md-6'>
 										<div class="input-group form-group input-group-sm">
 											<span class="input-group-addon">Target</span>
-											<select name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required></select>
+											<select sync-model name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
+												<option value=""></option>
+											</select>
 										</div>
-										<div ng-show="form.next.$invalid">No target specified</div>
+										<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
 									</div>	
 									<div class='col-md-1'>
 										<button ng-click="removeGatherMapping(step,mapping)" type="button" class="close" aria-hidden="true">&times;</button>
@@ -68,10 +68,12 @@
 								</div>
 	
 								<div class="input-group form-group input-group-sm">
-									<span class="input-group-addon">Continue to node</span>
-									<select name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm"></select>
+									<span class="input-group-addon">Continue to</span>
+									<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
+										<option value=""></option>
+									</select>
 								</div>
-								<div ng-show="form.next.$invalid">No target specified</div>
+								<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
 							</form>
 
 						</div>				

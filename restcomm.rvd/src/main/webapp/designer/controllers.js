@@ -46,6 +46,29 @@ App.factory('stepService', function($rootScope) {
 });
 
 
+
+/*
+ * Used in <select/> elements. Clears the select element model when the selection 
+ * option has been removed. It works together with a separate mechanism that broadcasts 
+ * the appropriate event (refreshTargetDropdowns) when the option is removed.   
+ */
+App.directive("syncModel", function(){
+
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs, controller) {
+            	scope.$on("refreshTargetDropdowns", function () {
+            		//console.log( 'element ' + element + ' received refreshTargetDropdowns');
+            		//console.log( 'selected value: ' + $(element).val() )
+            		if ( $(element).val() =="" )
+            			scope.$eval(attrs.ngModel + " = ''");
+            	});            	
+            }
+        }
+   });
+
+
+
 App.directive('sortableSteps',function(stepService){
   return {
 	  scope: true,	  
@@ -139,7 +162,7 @@ App.directive('myDraggable',function(){
 })
 
 
-App.controller('projectController', function($scope, stepService, $http, $dialog) {
+App.controller('projectController', function($scope, stepService, $http, $dialog, $timeout) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -254,7 +277,6 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		}
 	};
 	
-
 	
 	$scope.getAllTargets = function() {
 		var alltargets = [];
@@ -287,6 +309,18 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		}
 		return alltargets;	
 	}
+	
+
+	/*
+	 * When targets change, broadcast an events so that all <select syncModel/> elements
+	 * update appropriately. It is uses as a workaround for cases when a selected target is
+	 * removed thus leaving the <select>'s model out of sync. 
+	 */
+	$scope.$watch('getAllTargets().length', function(newValue, oldValue) {
+		$timeout( function () {
+			$scope.$broadcast("refreshTargetDropdowns");
+		});
+	});
 	
 	
 	// Utility functions
@@ -338,7 +372,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 	
 	$scope.saveProject = function(onsuccess) {
-		//console.log("saving");
+		
 		var state = {};
 		state.lastStepId = stepService.lastStepId;
 		state.nodes = $scope.nodes;
