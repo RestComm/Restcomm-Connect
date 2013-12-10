@@ -34,7 +34,7 @@
 								<form name="form" novalidate>
 									<div class='col-md-4'>
 										
-											<div class="input-group form-group input-group-sm">
+											<div class="input-group input-group-sm">
 												<span class="input-group-addon">Digit</span>
 												<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="123" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits' required></input>
 											</div>
@@ -43,7 +43,7 @@
 	
 									</div>
 									<div class='col-md-6'>
-										<div class="input-group form-group input-group-sm">
+										<div class="input-group input-group-sm">
 											<span class="input-group-addon">Target</span>
 											<select sync-model name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
 												<option value=""></option>
@@ -62,20 +62,28 @@
 						</div>
 						<div ng-show="step.gatherType=='collectdigits'">
 							<form name="form" novalidate>
-								<div class="input-group form-group input-group-sm">
-									<span class="input-group-addon">Assign to</span>
-									<input class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectVariable"></input>
+								<div class='form-group row'>
+									<div class='col-md-12'>
+										<div class="input-group input-group-sm">
+											<span class="input-group-addon">Assign to</span>
+											<input name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectVariable" required></input>
+										</div>
+										<div class="validation-error" ng-show="form.collectVariable.$invalid">Type a valid variable name</div>
+									</div>
 								</div>
-	
-								<div class="input-group form-group input-group-sm">
-									<span class="input-group-addon">Continue to</span>
-									<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
-										<option value=""></option>
-									</select>
+								<div class='form-group row'>
+									<div class='col-md-12'>
+										<div class="input-group input-group-sm">
+											<span class="input-group-addon">Continue to</span>
+											<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
+												<option value=""></option>
+											</select>
+										</div>
+										<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+									</div>
+									
 								</div>
-								<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
 							</form>
-
 						</div>				
 						<!--
 						<div ng-show="step.gatherType=='custom'">

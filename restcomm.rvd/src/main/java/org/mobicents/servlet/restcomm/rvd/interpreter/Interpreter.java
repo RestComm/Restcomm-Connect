@@ -298,7 +298,8 @@ public class Interpreter {
 		
 		rcmlStep.setAction( action );
 		rcmlStep.setTimeout( step.getTimeout() );
-		rcmlStep.setFinishOnKey( step.getFinishOnKey() );
+		if ( step.getFinishOnKey() != null  &&  !"".equals(step.getFinishOnKey() ))
+			rcmlStep.setFinishOnKey( step.getFinishOnKey() );
 		rcmlStep.setMethod( step.getMethod() );
 		rcmlStep.setNumDigits( step.getNumDigits() );
 				
