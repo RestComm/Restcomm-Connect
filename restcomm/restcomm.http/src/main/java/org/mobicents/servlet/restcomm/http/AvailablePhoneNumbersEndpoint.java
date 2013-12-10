@@ -190,8 +190,10 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
                     for (final NXX nxx : npa.nxxs()) {
                         for (final TN tn : nxx.tns()) {
                             final String name = getFriendlyName(tn.number());
+                            // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
                             final AvailablePhoneNumber number = new AvailablePhoneNumber(name, tn.number(),
-                                    Integer.parseInt(lata.name()), center.name(), null, null, state.name(), null, "US");
+                                    Integer.parseInt(lata.name()), center.name(), null, null, state.name(), null, "US", true,
+                                    null, null, tn.t38());
                             numbers.add(number);
                         }
                     }

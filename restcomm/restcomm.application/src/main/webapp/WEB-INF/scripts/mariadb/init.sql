@@ -34,7 +34,11 @@ latitude DOUBLE,
 longitude DOUBLE,
 region VARCHAR(2),
 postal_code INT,
-iso_country VARCHAR(2) NOT NULL
+iso_country VARCHAR(2) NOT NULL,
+voice_capable BOOLEAN,
+sms_capable BOOLEAN,
+mms_capable BOOLEAN,
+fax_capable BOOLEAN
 );
 
 CREATE TABLE restcomm_outgoing_caller_ids (
@@ -79,7 +83,11 @@ sms_method VARCHAR(4),
 sms_fallback_url MEDIUMTEXT,
 sms_fallback_method VARCHAR(4),
 sms_application_sid VARCHAR(34),
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL,
+voice_capable BOOLEAN,
+sms_capable BOOLEAN,
+mms_capable BOOLEAN,
+fax_capable BOOLEAN
 );
 
 CREATE TABLE restcomm_applications (
