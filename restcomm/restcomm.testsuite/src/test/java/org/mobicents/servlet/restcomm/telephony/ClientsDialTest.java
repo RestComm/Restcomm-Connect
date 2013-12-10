@@ -1,5 +1,17 @@
 package org.mobicents.servlet.restcomm.telephony;
 
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+
+import javax.sip.Dialog;
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -12,21 +24,16 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.CreateClientsTool;
+import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 
-import gov.nist.javax.sip.stack.SIPDialog;
-
-import javax.sip.Dialog;
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-
-import java.net.URL;
-import java.text.ParseException;
-
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -71,6 +78,9 @@ public class ClientsDialTest {
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5091";
+    
+    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -180,7 +190,7 @@ public class ClientsDialTest {
                 assertTrue(dimitriCall.sendIncomingCallResponse(Response.OK, "OK-Dimitri", 3600, receivedBody, "application", "sdp", null,
                         null));
 //                assertTrue(dimitriCall.sendIncomingCallResponse(200, "OK", 1800));
-                assertTrue(dimitriCall.waitForAck(3000));
+//                assertTrue(dimitriCall.waitForAck(3000));
             }
         }).run(); //.start();
 
@@ -214,6 +224,12 @@ public class ClientsDialTest {
 //        assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
 //        assertTrue(dimitriCall.respondToDisconnect());
 
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(cdrs);
+        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
+        assertTrue(cdrsArray.size() == 1);
+        
     }
 
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)

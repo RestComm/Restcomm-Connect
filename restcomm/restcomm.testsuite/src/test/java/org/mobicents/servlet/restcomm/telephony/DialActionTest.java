@@ -51,7 +51,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 import org.mobicents.servlet.restcomm.telephony.RestResources.DialActionResources;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
@@ -105,6 +109,9 @@ public class DialActionTest {
     private String georgeContact = "sip:+131313@127.0.0.1:5070";
 
     private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5080";
+    
+    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -209,7 +216,9 @@ public class DialActionTest {
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
 
-
+        String sid = data.getFirst("DialCallSid");
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
     }
 
     @Test
@@ -280,6 +289,10 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
+        
+        String sid = data.getFirst("DialCallSid");
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
     }
 
     @Test
@@ -346,6 +359,10 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
+        
+        String sid = data.getFirst("DialCallSid");
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
     }
 
     @Test
@@ -411,6 +428,10 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
+        
+        String sid = data.getFirst("DialCallSid");
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)
