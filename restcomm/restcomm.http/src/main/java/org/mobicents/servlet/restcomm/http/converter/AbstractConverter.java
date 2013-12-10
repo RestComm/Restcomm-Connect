@@ -451,7 +451,7 @@ public abstract class AbstractConverter implements Converter {
     protected void writeVoiceCapability(final Boolean voiceCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Voice");
         if (voiceCapable == null) {
-            writer.setValue("unknown");
+            writer.setValue("");
         } else {
             writer.setValue(voiceCapable.toString());
         }
@@ -469,7 +469,7 @@ public abstract class AbstractConverter implements Converter {
     protected void writeSmsCapability(final Boolean smsCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Sms");
         if (smsCapable == null) {
-            writer.setValue("unknown");
+            writer.setValue("");
         } else {
             writer.setValue(smsCapable.toString());
         }
@@ -487,7 +487,7 @@ public abstract class AbstractConverter implements Converter {
     protected void writeMmsCapability(final Boolean mmsCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Mms");
         if (mmsCapable == null) {
-            writer.setValue("unknown");
+            writer.setValue("");
         } else {
             writer.setValue(mmsCapable.toString());
         }
@@ -505,7 +505,7 @@ public abstract class AbstractConverter implements Converter {
     protected void writeFaxCapability(final Boolean faxCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Fax");
         if (faxCapable == null) {
-            writer.setValue("unknown");
+            writer.setValue("");
         } else {
             writer.setValue(faxCapable.toString());
         }
