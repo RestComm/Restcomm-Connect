@@ -33,9 +33,23 @@ public final class AvailablePhoneNumber {
     private final Integer postalCode;
     private final String isoCountry;
 
+    // Capabilities
+    private final Boolean voiceCapable;
+    private final Boolean smsCapable;
+    private final Boolean mmsCapable;
+    private final Boolean faxCapable;
+
     public AvailablePhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata,
             final String rateCenter, final Double latitude, final Double longitude, final String region,
             final Integer postalCode, final String isoCountry) {
+        this(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode, isoCountry, null, null,
+                null, null);
+    }
+
+    public AvailablePhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata,
+            final String rateCenter, final Double latitude, final Double longitude, final String region,
+            final Integer postalCode, final String isoCountry, final Boolean voiceCapable, final Boolean smsCapable,
+            final Boolean mmsCapable, final Boolean faxCapable) {
         super();
         this.friendlyName = friendlyName;
         this.phoneNumber = phoneNumber;
@@ -46,6 +60,10 @@ public final class AvailablePhoneNumber {
         this.region = region;
         this.postalCode = postalCode;
         this.isoCountry = isoCountry;
+        this.voiceCapable = voiceCapable;
+        this.smsCapable = smsCapable;
+        this.mmsCapable = mmsCapable;
+        this.faxCapable = faxCapable;
     }
 
     public String getFriendlyName() {
@@ -84,8 +102,24 @@ public final class AvailablePhoneNumber {
         return isoCountry;
     }
 
+    public Boolean isVoiceCapable() {
+        return this.voiceCapable;
+    }
+
+    public Boolean isSmsCapable() {
+        return smsCapable;
+    }
+
+    public Boolean isMmsCapable() {
+        return mmsCapable;
+    }
+
+    public Boolean isFaxCapable() {
+        return faxCapable;
+    }
+
     public AvailablePhoneNumber setFriendlyName(final String friendlyName) {
         return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode,
-                isoCountry);
+                isoCountry, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 }

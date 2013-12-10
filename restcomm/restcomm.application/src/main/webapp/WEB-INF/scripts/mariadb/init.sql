@@ -34,7 +34,11 @@ latitude DOUBLE,
 longitude DOUBLE,
 region VARCHAR(2),
 postal_code INT,
-iso_country VARCHAR(2) NOT NULL
+iso_country VARCHAR(2) NOT NULL,
+voice_capable BOOLEAN,
+sms_capable BOOLEAN,
+mms_capable BOOLEAN,
+fax_capable BOOLEAN
 );
 
 CREATE TABLE restcomm_outgoing_caller_ids (
