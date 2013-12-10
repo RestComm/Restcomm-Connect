@@ -1,0 +1,286 @@
+
+.ng-invalid {
+	/*background-color: #0ff;*/
+}
+
+.separator {
+	min-height: 60px;
+	margin-bottom: 5px;
+	margin-top: 5px;
+	color: #BBBBBB;
+}
+
+.separator-active {
+	background-color: #D9EDF7;
+	/*height: 20px;*/
+}
+
+.editor .panel-heading {
+	padding: 5px 10px;
+}
+
+.header .cogs {
+	font-size: 41px;
+}
+
+.editor {
+	min-height: 504px;
+	background-color: rgb(240, 240, 240);
+}
+
+.toggle_step:hover {
+	opacity:0.6;
+}
+
+.step.panel {
+	margin-bottom: 5px;
+}
+
+.node-bootstrap {
+	margin-bottom: 15px;
+	text-align: right;
+}
+
+.node-bootstrap textarea {
+	margin-top: 10px;
+	height: 170px;
+}
+
+.collapse-button {
+	font-size: 21px;
+	font-weight: bold;
+}
+
+
+.navbar-telestax {
+	/*margin-top: 10px;*/
+}
+
+.navbar-rvd {
+	font-size: 21px;
+}
+.navbar-rvd img {
+	height: 25px;
+	margin-top: 18px;
+	float: left;
+}
+
+.container {
+	margin-top: 112px;
+}
+
+.panel-rvdstep > .panel-heading {
+	background-color: #f0f0f0;
+}
+
+.panel-rvdstep {
+	/*border: none;*/
+	box-shadow: 1px 1px 1px 1px #ccc;
+}
+
+label {
+	font-weight: normal;
+}
+
+.ng-invalid.form-control:focus {
+	border-color: rgba(255, 0, 0, 0.6);
+	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 0, 0, 0.6)
+}
+
+.validation-error {
+	font-size: 85%;
+	color: rgba(255, 0, 0, 0.6);
+	font-style: italic;
+}
+
+.navbar-rvd-centered {
+	float: none;
+	text-align: center;
+}
+
+.rvd-clickable {
+	cursor: pointer;
+	opacity: 0.6
+}
+
+.rvd-clickable:hover {
+	opacity: 1.0;
+}
+
+.project-list {
+	list-style-type: none;
+}
+
+.rvd-active {
+	color: rgb(66, 139, 202);
+	opacity: 1.0;
+}
+
+.rvd-starturl {
+	text-align: center;
+}
+
+
+.say-language-dropdown {
+	max-width: 200px;
+}
+
+
+/* override jquery-ui colors since theme-roller never responded */
+/*
+.ui-widget-header {
+	background: none;
+	background-color: #428BCA;
+
+	border: 1px solid #428BCA;
+	color: #fff;
+}
+*/
+
+
+.node-header { /* refers the the band that contains the expand/collapse buttons */
+	margin-top: 10px;
+	min-height: 34px;
+}
+
+.node-header input {
+	width: 100px;
+	display: inline;
+}
+
+.node-header a {
+		padding: 6px 12px;
+		cursor: pointer;
+}
+
+/*
+textarea.texteditor-field {
+	width: 100%;
+	height: 370px;
+}
+*/
+
+.advancedView.bs-callout {
+		margin-top: 5px;
+		margin-bottom: 0px;
+		border-left: 5px solid #CCC;
+		background-color: #eee;
+}
+
+.step .help-block {
+	margin-bottom: 5px;
+}
+
+.separator-hint {
+	text-align: center;
+	color: #aaa;
+	margin-bottom: 2px;
+	font-style: italic;
+}
+
+
+
+.say-step .step-options {
+	width: 304px;
+}
+
+.nav-tabs > li.controlnodes {
+	float: right;
+}
+
+li.verb {
+	/*text-transform: uppercase;*/
+	margin-right: 10px;
+	z-index: 1;
+}
+
+ul.verbs {
+	margin-bottom: 14px;
+}
+
+.leftmenu > li {
+	width: 100%;
+	margin-bottom: 5px;
+}
+
+
+.sortable-steps {
+	min-height: 300px;
+	padding-bottom: 50px;
+}
+
+.sortable-steps.nested {
+	min-height: 50px;
+	padding-bottom: 5px;
+}
+
+.rvd-spinner {
+	min-height: 400px;
+}
+
+
+
+/* 
+ * 
+ * BOOTSTRAP CUSTOMIZATIONS 
+ * 
+ * /
+
+
+/* Bootstrap extension for having a lot of stuff on nav-tabs */
+
+.nav-tabs > li > span.navtab {
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+    line-height: 1.42857;
+    margin-right: 2px;
+    cursor: pointer;
+}
+.nav > li > span.navtab {
+    display: block;
+    padding: 10px 15px;
+    position: relative;
+}
+
+.nav-tabs > li > span.navtab:hover {
+  border-color: #eeeeee #eeeeee #dddddd;
+}
+
+.nav-tabs > li.active > span.navtab,
+.nav-tabs > li.active > span.navtab:hover,
+.nav-tabs > li.active > span.navtab:focus {
+  color: #555555;
+  cursor: default;
+  background-color: #ffffff;
+  border: 1px solid #dddddd;
+  border-bottom-color: transparent;
+}
+
+.nav > li > span.navtab:hover,
+.nav > li > span.navtab:focus {
+  text-decoration: none;
+  background-color: #eeeeee;
+}
+
+
+.navtab input {
+	background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px 4px 4px 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    color: #555555;
+    font-size: 12px;
+    line-height: 1.42857;
+    padding: 2px 7px;
+    transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+    vertical-align: middle;
+   
+}
+
+.glyphicon {
+	margin-right: 10px;
+}
+
+/* /Bootstrap extension for having a lot of stuff on nav-tabs */
+
+
