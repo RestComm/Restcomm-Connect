@@ -61,27 +61,19 @@
 							</div>	
 						</div>
 						<div ng-show="step.gatherType=='collectdigits'">
-							<div class="input-group form-group input-group-sm">
-								<span class="input-group-addon">Assign to</span>
-								<input class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectVariable"></input>
-							</div>
-
-							<div class="input-group form-group input-group-sm">
-								<span class="input-group-addon">Continue to node</span>
-								<select ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm"></select>
-							</div>
-							
-							<!--
-							<div class='form-group'>
-								<div class="row">
-									<div class='col-md-6'>What do you want to do next ?</div>
-									<div class='col-md-6'>
-										<select ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm"></select>
-									</div>
-									
+							<form name="form" novalidate>
+								<div class="input-group form-group input-group-sm">
+									<span class="input-group-addon">Assign to</span>
+									<input class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectVariable"></input>
 								</div>
-							</div>
-							-->
+	
+								<div class="input-group form-group input-group-sm">
+									<span class="input-group-addon">Continue to node</span>
+									<select name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm"></select>
+								</div>
+								<div ng-show="form.next.$invalid">No target specified</div>
+							</form>
+
 						</div>				
 						<!--
 						<div ng-show="step.gatherType=='custom'">
