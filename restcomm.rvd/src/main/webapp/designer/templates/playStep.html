@@ -2,20 +2,25 @@
 <div class="step panel panel-rvdstep">
 		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
 		<div class="panel-body" ng-hide='step.isCollapsed'>
-			<div class='row'>
-				<div class="col-lg-4">
-					<input ng-show='step.playType=="remote"' ng-model='step.wavUrl' type='text' class='form-control' placeholder='http://remoteserver/hello.wav' tooltip="Insert an external url to the .wav resource">
-					<select ng-show='step.playType=="local"' ng-model='step.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control"></select>
-				</div>
-				
-				<div class="col-lg-6">
-					<div class="btn-toolbar" role="toolbar">
-					  <div class="btn-group">
-						<button ng-click='step.playType="local"' ng-class="{active:step.playType=='local'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Stored locally</button>
-						<button ng-click='step.playType="remote"' ng-class="{active:step.playType=='remote'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Remote resource </button>
-					  </div>
+			<form name="form" novalidate>
+				<div class='form-group row'>
+					<div class="col-lg-6">
+						<div class="input-group">
+							<span class="help-block">Type the URL resource of the .wav file</span>
+							<input name='wavUrl' ng-show='step.playType=="remote"' ng-model='step.wavUrl' type='url' required class='form-control' placeholder='http://remoteserver/hello.wav'>
+							<select ng-show='step.playType=="local"' ng-model='step.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control"></select>
+						</div>
+						<div class="validation-error" ng-show="form.wavUrl.$invalid">Type a valid .wav resource URL</div>
 					</div>
-				</div>		
-
-			</div>		
+					
+					<div class="col-lg-6 hidden">
+						<div class="btn-toolbar" role="toolbar">
+						  <div class="btn-group">
+							<button ng-click='step.playType="local"' ng-class="{active:step.playType=='local'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Stored locally</button>
+							<button ng-click='step.playType="remote"' ng-class="{active:step.playType=='remote'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Remote resource </button>
+						  </div>
+						</div>
+					</div>		
+				</div>	
+			</form>	
 </div>
