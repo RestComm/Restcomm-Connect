@@ -59,7 +59,7 @@ public class Interpreter {
 		xstream.alias("Play", RcmlPlayStep.class);
 		xstream.alias("Gather", RcmlGatherStep.class);
 		xstream.alias("Dial", RcmlDialStep.class);
-		xstream.alias("Hungup", RcmlHungupStep.class);
+		xstream.alias("Hangup", RcmlHungupStep.class);
 		xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
 		xstream.useAttributeFor(RcmlGatherStep.class, "action");
 		xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
