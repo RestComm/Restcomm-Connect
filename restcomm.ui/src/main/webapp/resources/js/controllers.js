@@ -153,6 +153,9 @@ function NumbersCtrl($scope, $resource, $dialog, SessionService) {
             update: {method:'POST', url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/:phoneSid.:format', headers : {'Content-Type': 'application/x-www-form-urlencoded'}}
         }
     );
+
+    var Apps = $resource('/restcomm-rvd/services/manager/projects/list');
+
     // edit incoming number friendly name --------------------------------------
     $scope.editingFriendlyName = "";
 
@@ -177,6 +180,7 @@ function NumbersCtrl($scope, $resource, $dialog, SessionService) {
         $scope.newNumber = [];
         $scope.registeringNewNumber = true;
         $scope.isCollapsed = true;
+        $scope.availableApps = Apps.query();
     };
 
     $scope.closeRegisterIncomingNumber = function () {
@@ -348,6 +352,9 @@ function ClientsCtrl($scope, $resource, $dialog, SessionService) {
             update: {method:'POST', url: '/restcomm/2012-04-24/Accounts/:accountSid/Clients/:clientSid.:format', headers : {'Content-Type': 'application/x-www-form-urlencoded'}}
         }
     );
+
+    var Apps = $resource('/restcomm-rvd/services/manager/projects/list');
+
     // edit incoming client friendly name --------------------------------------
     $scope.editingFriendlyName = "";
 
@@ -372,6 +379,7 @@ function ClientsCtrl($scope, $resource, $dialog, SessionService) {
         $scope.newClient = [];
         $scope.registeringNewClient = true;
         $scope.isCollapsed = true;
+        $scope.availableApps = Apps.query();
     };
 
     $scope.closeRegisterSIPClient = function () {
