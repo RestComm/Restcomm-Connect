@@ -446,7 +446,10 @@ public final class CallManager extends UntypedActor {
         }
         final ActorRef call = call();
         final ActorRef self = self();
-        final CallDetailRecordsDao recordsDao = storage.getCallDetailRecordsDao();
+        final CallDetailRecordsDao recordsDao = null;
+        if (request.isCreateCDR()){
+                storage.getCallDetailRecordsDao();
+        }
         final InitializeOutbound init = new InitializeOutbound(null, from, to, request.username(), request.password(),
                 request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), recordsDao);
         call.tell(init, self);
