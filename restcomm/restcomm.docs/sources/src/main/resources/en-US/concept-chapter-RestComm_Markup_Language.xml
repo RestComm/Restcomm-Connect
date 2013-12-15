@@ -893,6 +893,12 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 					<entry>DialCallDuration</entry>
 					<entry>The duration in seconds of the dialed call. This parameter is not sent after dialing a conference.</entry>
 				</row>
+
+<row>
+					<entry>RecordingUrl</entry>
+					<entry>The URL of the recorded audio. This parameter is only sent if record="true" is set on the <filename>Dial</filename> verb, and does not include recordings from the <filename>Record</filename>  verb or Record=True on REST API calls..</entry>
+				</row>
+
 			</tbody>
 		</tgroup>
 	    </table>
