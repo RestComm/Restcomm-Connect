@@ -152,10 +152,14 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final String smsFallbackMethod = readString(map.get("sms_fallback_method"));
         final Sid smsApplicationSid = readSid(map.get("sms_application_sid"));
         final URI uri = readUri(map.get("uri"));
+        final Boolean voiceCapable = readBoolean(map.get("voice_capable"));
+        final Boolean smsCapable = readBoolean(map.get("sms_capable"));
+        final Boolean mmsCapable = readBoolean(map.get("mms_capable"));
+        final Boolean faxCapable = readBoolean(map.get("fax_capable"));
         return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri);
+                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     private Map<String, Object> toMap(final IncomingPhoneNumber incomingPhoneNumber) {
@@ -181,6 +185,10 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("sms_fallback_method", incomingPhoneNumber.getSmsFallbackMethod());
         map.put("sms_application_sid", writeSid(incomingPhoneNumber.getSmsApplicationSid()));
         map.put("uri", writeUri(incomingPhoneNumber.getUri()));
+        map.put("voice_capable", incomingPhoneNumber.isVoiceCapable());
+        map.put("sms_capable", incomingPhoneNumber.isSmsCapable());
+        map.put("mms_capable", incomingPhoneNumber.isMmsCapable());
+        map.put("fax_capable", incomingPhoneNumber.isFaxCapable());
         return map;
     }
 }

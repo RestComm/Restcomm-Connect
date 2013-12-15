@@ -1,0 +1,70 @@
+
+<div class="step panel panel-rvdstep">
+		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <small>{{step.phrase}}</small><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+		<div class="panel-body" ng-hide='step.isCollapsed'>
+			<div class='row'>
+				<div class="col-lg-4">
+					
+					<input ng-show='step.dialType=="number"' ng-model='step.number' id='numberToCall' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
+					<input ng-show='step.dialType=="client"' ng-model='step.client' id='numberToCall' type='text' class='form-control' placeholder='thomas' tooltip="Dial to client">
+					<input ng-show='step.dialType=="conference"' ng-model='step.conference' id='numberToCall' type='text' class='form-control' placeholder='1234' tooltip="Dial to conference">
+					<input ng-show='step.dialType=="sipuri"' ng-model='step.sipuri' id='numberToCall' type='text' class='form-control' placeholder='sip:thomas@127.0.0.1:5080' tooltip="Dial to  Sip URI">
+				</div>
+				
+				<div class="col-lg-6">
+				
+					<div class="btn-toolbar" role="toolbar">
+					  <div class="btn-group">
+						<button ng-click='step.dialType="number"' ng-class="{active:step.dialType=='number'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Number</button>
+						<button ng-click='step.dialType="client"' ng-class="{active:step.dialType=='client'}" type="button" class="btn btn-default"><i class='fa fa-user'></i>&nbsp; Client</button>
+						<button ng-click='step.dialType="conference"' ng-class="{active:step.dialType=='conference'}" type="button" class="btn btn-default"><i class='fa fa-group'></i>&nbsp; Conference</button>
+						<button ng-click='step.dialType="sipuri"' ng-class="{active:step.dialType=='sipuri'}" type="button" class="btn btn-default">Sip Uri</button>
+					  </div>
+					</div>
+				</div>		
+				<!--		
+				<div class="form-group col-lg-3">
+					<label for="timeLimit">Time limit</label>
+					<input ng-model='step.timeLimit' id='timeLimit' type='number' class='form-control' tooltip="The 'timeLimit' attribute sets the maximum duration of the <Dial> in seconds">
+				</div>
+				<div class="form-group col-lg-4">
+					<label for="callerId">Caller ID</label>
+					<input ng-model='step.callerId' id='callerId' type='text' class='form-control' tooltip="The 'callerId' attribute lets you specify the caller ID that will appear to the called party when RestComm calls.">
+				</div>												
+				-->
+			</div>	
+			<!--		
+			<div class='row'>
+				<div class="form-group col-lg-6">
+					<label for="actionURL">OnEnd URL</label>
+					<input ng-model='step.action' type="text" id="actionURL" class="form-control" placeholder="http://server/action.php" tooltip="The 'action' attribute takes a URL as an argument. When the dialed call ends, RestComm will make a GET or POST request to this URL">
+					<span class="help-block">Make this request when call ends</span>
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="actionMethod">Method</label>
+					<select ng-model='step.method' ng-options='method for method in methods' id='actionMethod' class='form-control'></select>
+				</div>
+				<div class="form-group col-lg-3">
+					<label for="gatherTimeout">Timeout</label>
+					<input ng-model='step.timeout' type="number" id="gatherTimeout" class="form-control" placeholder="5" tooltip-placement='left' tooltip='Time (in seconds) to wait for the caller to press another digit'>
+				</div>
+			</div>
+			-->
+
+			<!--
+			<small>
+			<div ng-repeat='step in step.steps'>
+				<div ng-switch on="step.kind">
+					<div ng-switch-when="number">
+						<ng-include src="'templates/numberNoun.html'"></ng-include>
+					</div>
+					<div ng-switch-when="client">
+						<ng-include src="'templates/clientNoun.html'"></ng-include>
+					</div>																										
+				</div>
+			</div>
+			<div class="separator bs-callout bs-callout-droppable text-center" data-drop='true' ng-model='step.steps' jqyoui-droppable="{index:{{$index+1}}, insert:true}" data-jqyoui-options="{accept:'.kind-number,.kind-client', activeClass:'separator-active'}"><h5>Nest any <em>Number</em> or <em>Client</em> <strong>nouns</strong> here</h5></div>
+			</small>
+			-->
+	
+</div>

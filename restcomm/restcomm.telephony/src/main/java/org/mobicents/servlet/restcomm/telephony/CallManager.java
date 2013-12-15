@@ -39,6 +39,7 @@ import javax.servlet.sip.SipURI;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
@@ -445,8 +446,9 @@ public final class CallManager extends UntypedActor {
         }
         final ActorRef call = call();
         final ActorRef self = self();
+        final CallDetailRecordsDao recordsDao = storage.getCallDetailRecordsDao();
         final InitializeOutbound init = new InitializeOutbound(null, from, to, request.username(), request.password(),
-                request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type());
+                request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), recordsDao);
         call.tell(init, self);
         return call;
     }

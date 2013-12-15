@@ -99,7 +99,16 @@
                         <option>GET</option>
                         <option>POST</option>
                     </select>
-                    <input type="text" class="input-large" id="new-number-voice-request-url" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="newNumber.voiceURL" />
+                    <input type="text" id="new-number-voice-request-url" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="newNumber.voiceURL" />
+                    <i class="icon-list dropdown-toggle clickable" title="Select from list..."
+                            onclick="var elUL = $(this).next('ul'); $(this).next('ul').css({ top: ($(this).position().top-$(elUL).height()/2), left: ($(this).position().left-$(elUL).width()) });"></i>
+                    <ul class="dropdown-menu">
+                        <li ng-repeat="app in availableApps">
+                            <a onclick="$(this).parent().parent().parent().children('input').val($(this).attr('title')); return false;" title="{{app.startUrl}}" href="#">{{app.name}}</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li><a href="/restcomm-rvd/" target="_blank"><i class="icon-sitemap"></i> Create New...</a></li>
+                    </ul>
                 </dd>
                 <dt>Voice Fallback URL</dt>
                 <dd class="form-inline">
@@ -107,7 +116,16 @@
                         <option>GET</option>
                         <option>POST</option>
                     </select>
-                    <input type="text" class="input-large" id="new-number-voice-fallback-url" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="newNumber.voiceFallbackURL" />
+                    <input type="text" id="new-number-voice-fallback-url" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="newNumber.voiceFallbackURL" />
+                    <i class="icon-list dropdown-toggle clickable" title="Select from list..."
+                       onclick="var elUL = $(this).next('ul'); $(this).next('ul').css({ top: ($(this).position().top-$(elUL).height()/2), left: ($(this).position().left-$(elUL).width()) });"></i>
+                    <ul class="dropdown-menu">
+                        <li ng-repeat="app in availableApps">
+                            <a onclick="$(this).parent().parent().parent().children('input').val($(this).attr('title')); return false;" title="{{app.startUrl}}" href="#">{{app.name}}</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li><a href="/restcomm-rvd/" target="_blank"><i class="icon-sitemap"></i> Create New...</a></li>
+                    </ul>
                 </dd>
                 <dt>Status Callback URL</dt>
                 <dd class="form-inline">
@@ -115,7 +133,7 @@
                         <option>GET</option>
                         <option>POST</option>
                     </select>
-                    <input type="text" class="input-large" id="new-number-status-callback-url" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="newNumber.statusCallbackURL" />
+                    <input type="text" id="new-number-status-callback-url" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="newNumber.statusCallbackURL" />
                 </dd>
             </dl>
             <h4>SMS Messaging</h4>

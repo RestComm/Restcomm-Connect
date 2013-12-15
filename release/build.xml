@@ -16,6 +16,7 @@
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
 	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
 	<property name="workspace.telscale-restcomm-ui.dir" value="${checkout.dir}/telscale-restcomm/restcomm.ui" />
+	<property name="workspace.telscale-restcomm-rvd.dir" value="${checkout.dir}/telscale-restcomm/restcomm.rvd" />
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
 	<property name="telscale.restcomm.release.version" value="7.1.3-SNAPSHOT"/>
 	<property name="telscale.restcomm.branch.name" value="ts713"/>
@@ -85,10 +86,10 @@
 		</classpath>
 	</taskdef>
 	
-	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
-	<target name="release-for-ami" depends="clean,get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
-	<target name="release-for-ami-no-clean" depends="get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
-	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-for-ami" depends="clean,get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-for-ami-no-clean" depends="get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
 	
     <target name="deploy">
     	<ant antfile="${ant.file.telscale.restcomm.release}" target="release">
@@ -307,6 +308,14 @@
         </exec>
 	</target>
 
+	<target name="build-telscale-restcomm-rvd">
+        <echo>Building Telscale Restcomm Visual Designer</echo>
+	<echo>Restcomm workspace dir: "${workspace.telscale-restcomm-rvd.dir}"</echo>
+        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm-rvd.dir}">
+                <arg line="clean install" />
+        </exec>
+	</target>
+
     <target name="copy-restcomm">
         <echo>Copy restcomm </echo>
 		<!--JBOSS AS5 default profile-->
@@ -323,6 +332,13 @@
 	<!-- Copy Admin UI -->
         <copy tofile="${release.dir}/server/default/deploy/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+
+	<!-- Copy RVD -->
+        <copy todir="${release.dir}/server/default/deploy/restcomm-rvd.war" failonerror="true">
+		<fileset dir="${workspace.telscale-restcomm-rvd.dir}/target/restcomm-rvd">
+                        <include name="**/*" />
+                </fileset> 
+        </copy>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.dir}/Telestax-EULA.pdf" failonerror="true" 
@@ -343,6 +359,13 @@
         <copy tofile="${release.dir}/server/all/deploy/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
 
+	<!-- Copy RVD -->
+        <copy todir="${release.dir}/server/all/deploy/restcomm-rvd.war" failonerror="true" >
+        	<fileset dir="${workspace.telscale-restcomm-rvd.dir}/target/restcomm-rvd">
+                        <include name="**/*" />
+                </fileset> 
+        </copy>
+
 	<chmod dir="${release.dir}/bin" perm="ugo+rx" 
        		includes="**/*.sh"/>
 
@@ -360,8 +383,15 @@
                 </fileset>
         </copy>
 	<!-- Copy Admin UI -->
-        <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true" 
-        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+        <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
+	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+
+	<!-- Copy RVD -->
+        <copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
+		<fileset dir="${workspace.telscale-restcomm-rvd.dir}/target/restcomm-rvd">
+                        <include name="**/*" />
+                </fileset> 
+        </copy>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.tomcat.dir}/Telestax-EULA.pdf" failonerror="true" 
@@ -388,6 +418,14 @@
         <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
+
+	<!-- Copy RVD -->
+        <copy todir="${release.as7.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
+		<fileset dir="${workspace.telscale-restcomm-rvd.dir}/target/restcomm-rvd">
+                        <include name="**/*" />
+                </fileset> 
+        </copy>
+	<touch file="${release.as7.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
 
 	<!-- Copy EULA -->
         <copy tofile="${release.as7.dir}/Telestax-EULA.pdf" failonerror="true" 
@@ -419,6 +457,14 @@
         <copy tofile="${release.eap6.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
 	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
+
+	<!-- Copy RVD -->
+        <copy todir="${release.eap6.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
+		<fileset dir="${workspace.telscale-restcomm-rvd.dir}/target/restcomm-rvd">
+                        <include name="**/*" />
+                </fileset> 
+        </copy>
+	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
 
 	<!-- Copy EULA -->
         <copy tofile="${release.eap6.dir}/Telestax-EULA.pdf" failonerror="true" 
