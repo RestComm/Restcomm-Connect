@@ -31,7 +31,11 @@ CREATE TABLE "restcomm_available_phone_numbers" (
 "longitude" DOUBLE,
 "region" VARCHAR(2),
 "postal_code" INT,
-"iso_country" VARCHAR(2) NOT NULL
+"iso_country" VARCHAR(2) NOT NULL,
+"voice_capable" BOOLEAN, 
+"sms_capable" BOOLEAN, 
+"mms_capable" BOOLEAN,
+"fax_capable" BOOLEAN
 );
 
 CREATE TABLE "restcomm_outgoing_caller_ids" (
@@ -76,7 +80,11 @@ CREATE TABLE "restcomm_incoming_phone_numbers" (
 "sms_fallback_url" LONGVARCHAR,
 "sms_fallback_method" VARCHAR(4),
 "sms_application_sid" VARCHAR(34),
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"voice_capable" BOOLEAN, 
+"sms_capable" BOOLEAN, 
+"mms_capable" BOOLEAN,
+"fax_capable" BOOLEAN
 );
 
 CREATE TABLE "restcomm_applications" (

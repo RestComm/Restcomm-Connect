@@ -1,0 +1,201 @@
+<!doctype html>
+<html ng-app="drag-and-drop">
+
+<head>
+
+	<title>Restcomm Designer</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+	<link href="css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+	<!--<link href="css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">-->
+	<!--<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">-->
+	<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<link href="css/custom-bootstrap.css" rel="stylesheet" media="screen">
+	<!-- <link href="../css/bootstrap.icon-large.css" rel="stylesheet" media="screen"> -->
+	<link href="css/rvd.css" rel="stylesheet" media="screen">
+
+
+</head>
+
+
+
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top bs-docs-nav">
+		<div class="navbar-header">
+			<span class='navbar-brand'>
+				<img src='images/telestax-logo-dark.png' class='navbar-telestax' />
+			</span>
+			
+			<span class='navbar-rvd'>
+				<img  src="images/restcomm-logo.png" />
+				<span class='navbar-text'>RESTCOMM visual service designer</span>
+			</span>
+			
+			
+		</div>
+	</div>
+
+	<div class="container"  ng-controller="projectController">
+			
+		<!-- Navigation bar -->
+		<nav class="navbar navbar-default"  role="navigation">
+
+		  <!-- Collect the nav links, forms, and other content for toggling -->
+		  <div class="collapse navbar-collapse navbar-ex1-collapse">
+
+			<div ng-show="projectName==''"  class='navbar-text navbar-rvd-centered'><em>Please chose a project from the list below or create a new one</em></div>
+			<ul class="nav navbar-nav">
+							
+				<li ng-show="projectName != ''"><span class='navbar-text'><i class='fa fa-share'></i> <em>Startup module</em></span></li>
+				<li ng-show="projectName != ''" class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{nodeNamed(startNodeName).label}} <b class="caret"></b></a>
+					<ul  class="dropdown-menu">
+						<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)" href="#">{{node.label}}</a></li>
+					</ul>
+				</li>	
+				
+				<li ng-show="projectName != ''"><a ng-click="addNode()" href="#"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
+					
+			</ul>
+			
+			<ul class="nav navbar-nav navbar-right">
+				<li><a ng-click='closeProject()' ng-show='projectName != ""' href="#"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
+			</ul>
+
+		  </div><!-- /.navbar-collapse -->
+		</nav>
+		
+		<div class="row" ng-show="appView == 'editor'">
+			
+			<!-- Left menu -->
+			<div class="col-md-2">
+				<!-- <button class="btn btn-default btn-block btn-lg" ng-click='saveProject()' >save &nbsp;<span class="glyphicon glyphicon-save"></span></button> -->
+			
+				<div class="form-group">
+					<button class="btn btn-primary btn-block" ng-click='saveProject()' >Save draft &nbsp;&nbsp;<i class='fa fa-save'></i></button>
+				</div>
+				
+				<div class="form-group">
+					<button class="btn btn-primary btn-block" ng-click='buildProject()' >Deploy </button>
+				</div>
+				<div ng-show="startNodeSet()" class="form-group rvd-starturl">
+					<a target="_blank" href='{{getStartUrl()}}'>Startup URL</a>
+				</div>		
+			</div>
+			
+			
+
+			<!-- Workspace on the right -->
+			<div class="col-md-10">
+				<div class="editor" >			
+						<div class="panel-body editor">	
+							<ul class="verbs nav nav-pills">
+								<li my-draggable='.sortable-steps' id='buttonsay'  class="active verb bs-callout-draggable verb-button kind-say"><a href="#"><i class='fa fa-comments'></i> &nbsp;Say</a></li>
+								<li my-draggable='.sortable-steps' id='buttonplay'  class="active verb bs-callout-draggable verb-button kind-play"><a href="#"><i class='fa fa-comments'></i> &nbsp;Play</a></li>
+								<li my-draggable='.sortable-steps' id='buttongather'  class="active verb bs-callout-draggable verb-button kind-gather"><a href="#"><i class='fa fa-th'></i> &nbsp;Collect</a></li>
+								<li my-draggable='.sortable-steps' id='buttondial'  class="active verb bs-callout-draggable verb-button kind-dial"><a href="#"><i class='fa fa-phone'></i> &nbsp;Dial</a></li>
+								<!-- <li my-draggable='.sortable-steps' id='buttonredirect'  class="active verb bs-callout-draggable verb-button kind-redirect"><a href="#"><i class='fa fa-link'></i> &nbsp;Redirect</a></li> -->
+								<li my-draggable='.sortable-steps' id='buttonhungup'  class="active verb bs-callout-draggable verb-button kind-hungup"><a href="#"><i class='fa fa-times'></i> &nbsp;Hungup</a></li>
+							</ul>
+							<ul class="nav nav-tabs" > <!-- tabs -->
+								<li ng-repeat='node in nodes' ng-class="{active:isActiveNode(node)}">	
+									<span ng-click='setActiveNode(node)' href="#" class='navtab' tooltip='{{node.name}}'>
+										<span ng-show='!node.iface.editLabel'>
+											<!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
+											<a ng-click='editLabelIfSelected(node)'>{{node.label}}</a>
+											 &nbsp;&nbsp;&nbsp;<i ng-click='removeNode($index)' ng-show="isActiveNode(node)" class='fa fa-trash-o rvd-clickable'></i>
+										</span>
+										<div ng-show='node.iface.editLabel'><input type='text' ng-model='node.label' ng-focus='node.iface.editLabel' ng-focus-lost="node.iface.editLabel=!node.iface.editLabel" /> &nbsp;</div>
+									</span>
+								</li>					
+							</ul>	
+						
+							<div class="rvd-node" ng-repeat="node in nodes" ng-show="isActiveNode(node)">
+									<div>
+										<br/>	
+										<!--
+										<div class="node-bootstrap">
+											<a ng-click='node.iface.bootstrapVisible = !node.iface.bootstrapVisible' href=''><span class="glyphicon glyphicon-wrench"></span>Bootstrap <span ng-show='node.iface.bootstrapVisible' class="collapse-button">&times;</span></a>
+											<div ng-show='node.iface.bootstrapVisible'>
+												<textarea ng-model='node.bootstrapSrc' class="texteditor-field form-control">{{bootstrapSrc}}</textarea>
+											</div>
+										</div>
+										-->
+										<!-- <div>{{node.stepnames}}</div> -->
+										<div class='sortable-steps' sortable-steps>
+											<div class='step' ng-repeat='step in orderedSteps'>
+												<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
+												<div class="separator-hint">
+													<div ng-show="areSuccessiveSteps(node, $index,'say','play')">Say followed by play</div>
+													<div ng-show="areSuccessiveSteps(node, $index,'play','say')">Play followed by Say</div>
+													<div ng-show="areSuccessiveSteps(node, $index,'say','gather')">Say followed by Gather</div>
+													<div ng-show="areSuccessiveSteps(node, $index,'gather',null)">Gather is the last element</div>
+												</div>
+											</div>
+										</div>
+
+									</div>
+									
+								
+							</div>
+							
+						</div>					
+				</div>
+			</div>
+		</div><!-- row -->
+
+		<div class="row" ng-show="appView == 'projects'">
+			<div class="col-md-4 col-md-offset-5">
+				<h3>Existing projects</h3>
+				<br/>
+				<ul class='project-list'>
+					<li ng-repeat="projectItem in projectList"><a href="#" ng-click="openProject(projectItem.name)">{{projectItem.name}}</a></li>
+				</ul>
+				<h3>Create new project</h3>
+				<br/>
+				
+				<div class="row">
+					<div class="col-md-8">
+						<input type="text" class="form-control" ng-model="newProjectName"/>
+					</div>
+				</div>
+				<br/>
+				<div class="row">
+					<div class="col-md-8">
+						<button type="button" ng-click="createNewProject(newProjectName)" class="btn btn-primary form-control">Create</button>
+					</div>
+				</div>
+			</div>		
+		</div>
+		
+		<div class="row" ng-show="appView == 'spinner'">
+			<div class='rvd-spinner' us-spinner="{radius:30, width:8, length: 16}">
+			</div>
+		</div>
+		<hr>
+	</div><!-- container -->
+	
+		
+	<script src="//code.jquery.com/jquery.js"></script>
+	<!-- <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script> -->
+	<script src="js/jquery-ui-1.10.3.custom.js"></script>
+	<script src="js/spin.min.js"></script>
+	
+	<!-- <script src="js/angular.min.js"></script> -->
+	<script src="js/angular-1.2.4.min.js"></script>
+	<script src="js/angular-dragdrop.js"></script>
+	<script src="js/angular-spinner.js"></script>
+	<script src="js/sortable.js"></script>
+	<script src="js/ui-bootstrap-tpls-0.5.0.js"></script>
+	
+	<script src="controllers.js"></script>
+	
+	
+</body>
+
+
+</html>

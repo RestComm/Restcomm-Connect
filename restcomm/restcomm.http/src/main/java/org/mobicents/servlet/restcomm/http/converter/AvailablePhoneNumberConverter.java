@@ -49,6 +49,7 @@ public final class AvailablePhoneNumberConverter extends AbstractConverter {
         writeRegion(number.getRegion(), writer);
         writePostalCode(number.getPostalCode(), writer);
         writeIsoCountry(number.getIsoCountry(), writer);
+        writeCapabilities(number.isVoiceCapable(), number.isSmsCapable(), number.isMmsCapable(), number.isFaxCapable(), writer);
         writer.endNode();
     }
 

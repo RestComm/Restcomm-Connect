@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.AvailablePhoneNumbersDao">
   <insert id="addAvailablePhoneNumber" parameterType="map">
-    INSERT INTO restcomm_available_phone_numbers (friendly_name, phone_number, lata, rate_center, latitude, longitude, region, postal_code, iso_country)
-    VALUES (#{friendly_name}, #{phone_number}, #{lata}, #{rate_center}, #{latitude}, #{longitude}, #{region}, #{postal_code}, #{iso_country});
+    INSERT INTO restcomm_available_phone_numbers (friendly_name, phone_number, lata, rate_center, latitude, longitude, region, postal_code, iso_country, voice_capable, sms_capable, mms_capable, fax_capable)
+    VALUES (#{friendly_name}, #{phone_number}, #{lata}, #{rate_center}, #{latitude}, #{longitude}, #{region}, #{postal_code}, #{iso_country}, #{voice_capable}, #{sms_capable}, #{mms_capable}, #{fax_capable});
   </insert>
   
   <select id="getAvailablePhoneNumbers" resultType="hashmap">
