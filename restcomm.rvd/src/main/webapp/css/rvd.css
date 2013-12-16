@@ -224,7 +224,11 @@ ul.verbs {
  * 
  * BOOTSTRAP CUSTOMIZATIONS 
  * 
- * /
+ */
+
+.navbar-header {
+	float: none;
+}
 
 
 /* Bootstrap extension for having a lot of stuff on nav-tabs */
