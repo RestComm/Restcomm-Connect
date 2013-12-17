@@ -167,6 +167,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // The conferencing stuff.
     private ActorRef conference;
     private ConferenceInfo conferenceInfo;
+    private ActorRef confInterpreter;
     private ConferenceStateChanged.State conferenceState;
     private boolean callMuted;
     private boolean startConferenceOnEnter = true;
@@ -1775,7 +1776,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     confVoiceInterpreterBuilder.setUrl(waitUrl);
                     confVoiceInterpreterBuilder.setVersion(version);
 
-                    final ActorRef confInterpreter = confVoiceInterpreterBuilder.build();
+                    confInterpreter = confVoiceInterpreterBuilder.build();
 
                     CreateWaitUrlConfMediaGroup createWaitUrlConfMediaGroup = new CreateWaitUrlConfMediaGroup(confInterpreter);
                     conference.tell(createWaitUrlConfMediaGroup, source);
@@ -1944,6 +1945,37 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (fsm.state().equals(bridged) && outboundCall != null) {
             outboundCall.tell(new Hangup(), null);
         }
+
+        // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
+        final StopMediaGroup stop = new StopMediaGroup();
+        if (confInterpreter != null) {
+            confInterpreter.tell(StopInterpreter.instance(), null);
+            getContext().stop(confInterpreter);
+            confInterpreter = null;
+
+            final RemoveParticipant remove = new RemoveParticipant(call);
+            conference.tell(remove, null);
+
+            conferenceMediaGroup.tell(stop, null);
+            conference.tell(new StopObserving(self()), null);
+
+            final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
+            conference.tell(destroy, null);
+            getContext().stop(conferenceMediaGroup);
+            getContext().stop(conference);
+            conferenceMediaGroup = null;
+        }
+
+        // Destroy the media group(s).
+        if (callMediaGroup != null) {
+            callMediaGroup.tell(stop, null);
+            final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
+            call.tell(destroy, null);
+            getContext().stop(callMediaGroup);
+            callMediaGroup = null;
+        }
+
+        postCleanup();
         super.postStop();
     }
 }

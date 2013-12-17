@@ -113,7 +113,7 @@ public final class ConferenceCenter extends UntypedActor {
         final ActorRef self = self();
         // Check to see if the conference already exists.
         ActorRef conference = conferences.get(name);
-        if (conference != null) {
+        if (conference != null && !conference.isTerminated()) {
             sender.tell(new ConferenceCenterResponse(conference), self);
             return;
         }

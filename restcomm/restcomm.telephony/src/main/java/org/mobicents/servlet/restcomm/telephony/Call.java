@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -286,7 +287,7 @@ public final class Call extends UntypedActor {
         // Initialize the runtime stuff.
         this.id = Sid.generate(Sid.Type.CALL);
         this.created = DateTime.now();
-        this.observers = new ArrayList<ActorRef>();
+        this.observers = Collections.synchronizedList(new ArrayList<ActorRef>());
     }
 
     private ActorRef getMediaGroup(final Object message) {
@@ -502,7 +503,11 @@ public final class Call extends UntypedActor {
                 sender.tell(new CallResponse<ActorRef>(group), self);
             } else if (DestroyMediaGroup.class.equals(klass)) {
                 final DestroyMediaGroup request = (DestroyMediaGroup) message;
-                context.stop(request.group());
+//                context.stop(request.group());
+                if(group != null && !group.isTerminated()) {
+                    context.stop(group);
+                    group = null;
+                }
             } else if (AddParticipant.class.equals(klass)) {
                 invite(message);
             } else if (RemoveParticipant.class.equals(klass)) {
@@ -527,6 +532,12 @@ public final class Call extends UntypedActor {
             if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass)) {
                 fsm.transition(message, notFound);
             }
+        } else if (CreateMediaGroup.class.equals(klass)) {
+            if (group != null) {
+                context.stop(group);
+            }
+            group = getMediaGroup(message);
+            sender.tell(new CallResponse<ActorRef>(group), self);
         }
     }
 
