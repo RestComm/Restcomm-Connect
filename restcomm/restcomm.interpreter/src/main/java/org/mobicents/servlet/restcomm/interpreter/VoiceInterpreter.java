@@ -1955,15 +1955,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             final RemoveParticipant remove = new RemoveParticipant(call);
             conference.tell(remove, null);
-
-            conferenceMediaGroup.tell(stop, null);
             conference.tell(new StopObserving(self()), null);
 
-            final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-            conference.tell(destroy, null);
-            getContext().stop(conferenceMediaGroup);
+            if(conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated()) {
+                conferenceMediaGroup.tell(stop, null);
+                final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
+                conference.tell(destroy, null);
+                getContext().stop(conferenceMediaGroup);
+                conferenceMediaGroup = null;
+            }
+
             getContext().stop(conference);
-            conferenceMediaGroup = null;
         }
 
         // Destroy the media group(s).
