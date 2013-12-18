@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -13,6 +14,9 @@ import javax.servlet.http.HttpServletRequest;
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class ProjectService {
 
@@ -46,24 +50,37 @@ public class ProjectService {
 	 * @param projectName
 	 * @param httpRequest
 	 * @return An absolute url pointing to the starting URL of the application
+	 * @throws UnsupportedEncodingException 
+	 * @throws URISyntaxException 
 	 */
-	public static String getStartUrlForProject( String projectName, HttpServletRequest httpRequest ) {
-		String startUrl = httpRequest.getScheme() + "://" + 
+	public static String getStartUrlForProject( String projectName, HttpServletRequest httpRequest ) throws  URISyntaxException {		
+		URI startURI = new URI(httpRequest.getScheme(),
+				null, 
+				httpRequest.getServerName(), 
+				(httpRequest.getServerPort() == 80 ? -1 : httpRequest.getServerPort()), 
+				httpRequest.getContextPath() + httpRequest.getServletPath() + "/apps/" + projectName + "/controller", 
+				null, 
+				null 
+		);
+		
+		/*String startUrl = httpRequest.getScheme() + "://" + 
 				httpRequest.getServerName() + 
 				(httpRequest.getServerPort() == 80 ? "" : (":"+ httpRequest.getServerPort())) + 
-				httpRequest.getContextPath() + 
-				httpRequest.getServletPath() + 
-				"/apps/" + projectName + "/controller";
-		
+				httpRequest.getContextPath() + httpRequest.getServletPath() + "/apps/" + projectName + "/controller"; 
 		return startUrl; 
+		*/
+		
+		return startURI.toASCIIString();
 	}
 
 	/**
 	 * Populates an application list with startup urls for each application 
 	 * @param items	
 	 * @param httpRequest
+	 * @throws URISyntaxException 
+	 * @throws UnsupportedEncodingException 
 	 */
-	public static void fillStartUrlsForProjects( List<ProjectItem> items, HttpServletRequest httpRequest ) {
+	public static void fillStartUrlsForProjects( List<ProjectItem> items, HttpServletRequest httpRequest ) throws URISyntaxException  {
 		for ( ProjectItem item : items ) {
 			item.setStartUrl( getStartUrlForProject(item.getName(), httpRequest) );
 		}
