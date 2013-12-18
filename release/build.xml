@@ -86,7 +86,7 @@
 		</classpath>
 	</taskdef>
 	
-	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
+	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, copy-telscale-restcomm-ui,build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-for-ami" depends="clean,get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-for-ami-no-clean" depends="get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, build-telscale-restcomm-ui, build-telscale-restcomm-rvd, copy-restcomm, copy-docs, make-final-zip" />
@@ -307,6 +307,25 @@
                 <arg line="clean install" />
         </exec>
 	</target>
+	
+	<target name="copy-telscale-restcomm-ui">
+        <echo>Copy Telscale Restcomm New Admin UI into Restcomm</echo>
+        <copy todir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm/modules" failonerror="true">
+                <fileset dir="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management/modules">
+                        <include name="**/*" />
+                </fileset>
+        </copy>
+        <copy todir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm/resources" failonerror="true">
+                <fileset dir="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management/resources">
+                        <include name="**/*" />
+                </fileset>
+        </copy>
+		<copy tofile="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm/WEB-INF/classes/rebel.xml" failonerror="true" 
+		        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management/WEB-INF/classes/rebel.xml"/>		
+		<copy tofile="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm/index.html" failonerror="true" 
+		        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management/index.html" overwrite="true"/>		
+	</target>
+	
 
 	<target name="build-telscale-restcomm-rvd">
         <echo>Building Telscale Restcomm Visual Designer</echo>
@@ -330,8 +349,8 @@
                 </fileset>
         </copy>
 	<!-- Copy Admin UI -->
-        <copy tofile="${release.dir}/server/default/deploy/restcomm-management.war" failonerror="true" 
-        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+        <!--copy tofile="${release.dir}/server/default/deploy/restcomm-management.war" failonerror="true" 
+        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/-->
 
 	<!-- Copy RVD -->
         <copy todir="${release.dir}/server/default/deploy/restcomm-rvd.war" failonerror="true">
@@ -356,8 +375,8 @@
                 </fileset>
         </copy>
 	<!-- Copy Admin UI -->
-        <copy tofile="${release.dir}/server/all/deploy/restcomm-management.war" failonerror="true" 
-        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+        <!--copy tofile="${release.dir}/server/all/deploy/restcomm-management.war" failonerror="true" 
+        	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/-->
 
 	<!-- Copy RVD -->
         <copy todir="${release.dir}/server/all/deploy/restcomm-rvd.war" failonerror="true" >
@@ -383,8 +402,8 @@
                 </fileset>
         </copy>
 	<!-- Copy Admin UI -->
-        <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
-	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
+        <!--copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
+	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/-->
 
 	<!-- Copy RVD -->
         <copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
@@ -415,9 +434,9 @@
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm.war.dodeploy" />
 
 	<!-- Copy Admin UI -->
-        <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
+        <!--copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
-	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
+	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" /-->
 
 	<!-- Copy RVD -->
         <copy todir="${release.as7.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
@@ -454,9 +473,9 @@
 	<touch file="${release.eap6.dir}/standalone/deployments/restcomm.war.dodeploy" />
 
 	<!-- Copy Admin UI -->
-        <copy tofile="${release.eap6.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
+        <!--copy tofile="${release.eap6.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm-ui.dir}/target/restcomm-management.war"/>
-	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
+	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-management.war.dodeploy" /-->
 
 	<!-- Copy RVD -->
         <copy todir="${release.eap6.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
