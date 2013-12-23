@@ -375,6 +375,31 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if (data.containsKey("SmsApplicationSid")) {
             result = result.setSmsApplicationSid(getSid("SmsApplicationSid", data));
         }
+
+        if (data.containsKey("VoiceCapable")) {
+            result = result.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
+        } else {
+            result = result.setVoiceCapable(Boolean.TRUE);
+        }
+
+        if (data.containsKey("SmsCapable")) {
+            result = result.setSmsCapable(Boolean.parseBoolean(data.getFirst("SmsCapable")));
+        } else {
+            result = result.setSmsCapable(Boolean.FALSE);
+        }
+
+        if (data.containsKey("MmsCapable")) {
+            result = result.setMmsCapable(Boolean.parseBoolean(data.getFirst("MmsCapable")));
+        } else {
+            result = result.setMmsCapable(Boolean.FALSE);
+        }
+
+        if (data.containsKey("FaxCapable")) {
+            result = result.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
+        } else {
+            result = result.setFaxCapable(Boolean.FALSE);
+        }
+
         return result;
     }
 }

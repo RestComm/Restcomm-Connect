@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -59,7 +61,10 @@ public class RvdManager  {
 		} catch (BadWorkspaceDirectoryStructure e) {
 			e.printStackTrace(); // TODO remove this and log the error
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-		}		  
+		} catch (URISyntaxException e) {
+			e.printStackTrace(); // probably caused by a bad project name
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		} 	  
 		
         Gson gson = new Gson(); 
 		return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();

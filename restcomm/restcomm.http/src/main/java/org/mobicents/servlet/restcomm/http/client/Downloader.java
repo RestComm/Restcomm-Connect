@@ -35,7 +35,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.client.utils.URIUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import akka.actor.ActorRef;
@@ -126,7 +126,13 @@ public final class Downloader extends UntypedActor {
             final String query = descriptor.getParametersAsString();
             URI result = null;
             if (query != null && !query.isEmpty()) {
-                result = URIUtils.createURI(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(), query, null);
+                result = new URIBuilder()
+                .setScheme(uri.getScheme())
+                .setHost(uri.getHost())
+                .setPort(uri.getPort())
+                .setPath(uri.getPath())
+                .setQuery(query)
+                .build();
             } else {
                 result = uri;
             }

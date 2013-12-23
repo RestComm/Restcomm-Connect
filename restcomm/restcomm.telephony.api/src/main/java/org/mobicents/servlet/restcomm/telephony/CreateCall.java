@@ -37,6 +37,7 @@ public final class CreateCall {
     private final int timeout;
     private final Type type;
     private final Sid accountId;
+    private boolean createCDR = true;
 
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final Type type, final Sid accountId) {
@@ -81,5 +82,13 @@ public final class CreateCall {
 
     public String password() {
         return password;
+    }
+
+    public boolean isCreateCDR() {
+        return createCDR;
+    }
+
+    public void setCreateCDR(boolean createCDR) {
+        this.createCDR = createCDR;
     }
 }

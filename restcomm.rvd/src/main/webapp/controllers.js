@@ -12,7 +12,7 @@ App.factory('stepService', function($rootScope) {
 					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
 					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
 					redirect: {kind:'redirect', label:'redirect', title:'redirect', next:''},
-					hungup: {kind:'hungup', label:'hungup', title:'hungup', next:''},
+					hungup: {kind:'hungup', label:'hang up', title:'hang up', next:''},
 		},
 		stepNames: ['say','gather','dial','redirect','hungup'],
 		lastStepId: 0,
