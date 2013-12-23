@@ -167,6 +167,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // The conferencing stuff.
     private ActorRef conference;
     private ConferenceInfo conferenceInfo;
+    private ActorRef confInterpreter;
     private ConferenceStateChanged.State conferenceState;
     private boolean callMuted;
     private boolean startConferenceOnEnter = true;
@@ -490,16 +491,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest
                 // response received
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                //Check from whom is the message (initial call or outbound call) and update info accordingly
-                if(sender == call) {
+                // Check from whom is the message (initial call or outbound call) and update info accordingly
+                if (sender == call) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
                 }
             } else if (acquiringCallInfo.equals(state)) {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-              //Check from whom is the message (initial call or outbound call) and update info accordingly
-                if(sender == call) {
+                // Check from whom is the message (initial call or outbound call) and update info accordingly
+                if (sender == call) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
@@ -1721,7 +1722,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
 
                 // Parse wait url.
-                URI waitUrl = new URL("http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav").toURI();
+                URI waitUrl = new URL(
+                        "http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav").toURI();
                 attribute = child.attribute("waitUrl");
                 if (attribute != null) {
                     String value = attribute.value();
@@ -1741,45 +1743,44 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
 
-                    final URI base = request.getUri();
-                    waitUrl = resolve(base, waitUrl);
-                    // Parse method.
-                    String method = "POST";
-                    attribute = child.attribute("waitMethod");
-                    if (attribute != null) {
-                        method = attribute.value();
-                        if (method != null && !method.isEmpty()) {
-                            if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                                final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
-                                        + " is not a valid waitMethod value for <Conference>");
-                                notifications.addNotification(notification);
-                                method = "POST";
-                            }
-                        } else {
+                final URI base = request.getUri();
+                waitUrl = resolve(base, waitUrl);
+                // Parse method.
+                String method = "POST";
+                attribute = child.attribute("waitMethod");
+                if (attribute != null) {
+                    method = attribute.value();
+                    if (method != null && !method.isEmpty()) {
+                        if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                            final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
+                                    + " is not a valid waitMethod value for <Conference>");
+                            notifications.addNotification(notification);
                             method = "POST";
                         }
+                    } else {
+                        method = "POST";
                     }
-                    // Start the waitUrl media player.
+                }
+                // Start the waitUrl media player.
 
-                    if (waitUrl != null) {
-                        final ConfVoiceInterpreterBuilder confVoiceInterpreterBuilder = new ConfVoiceInterpreterBuilder(
-                                getContext().system());
-                        confVoiceInterpreterBuilder.setAccount(accountId);
-                        confVoiceInterpreterBuilder.setCallInfo(callInfo);
-                        confVoiceInterpreterBuilder.setConference(conference);
-                        confVoiceInterpreterBuilder.setConfiguration(configuration);
-                        confVoiceInterpreterBuilder.setEmailAddress(emailAddress);
-                        confVoiceInterpreterBuilder.setMethod(method);
-                        confVoiceInterpreterBuilder.setStorage(storage);
-                        confVoiceInterpreterBuilder.setUrl(waitUrl);
-                        confVoiceInterpreterBuilder.setVersion(version);
+                if (waitUrl != null) {
+                    final ConfVoiceInterpreterBuilder confVoiceInterpreterBuilder = new ConfVoiceInterpreterBuilder(
+                            getContext().system());
+                    confVoiceInterpreterBuilder.setAccount(accountId);
+                    confVoiceInterpreterBuilder.setCallInfo(callInfo);
+                    confVoiceInterpreterBuilder.setConference(conference);
+                    confVoiceInterpreterBuilder.setConfiguration(configuration);
+                    confVoiceInterpreterBuilder.setEmailAddress(emailAddress);
+                    confVoiceInterpreterBuilder.setMethod(method);
+                    confVoiceInterpreterBuilder.setStorage(storage);
+                    confVoiceInterpreterBuilder.setUrl(waitUrl);
+                    confVoiceInterpreterBuilder.setVersion(version);
 
-                        final ActorRef confInterpreter = confVoiceInterpreterBuilder.build();
+                    confInterpreter = confVoiceInterpreterBuilder.build();
 
-                        CreateWaitUrlConfMediaGroup createWaitUrlConfMediaGroup = new CreateWaitUrlConfMediaGroup(
-                                confInterpreter);
-                        conference.tell(createWaitUrlConfMediaGroup, source);
-                    }
+                    CreateWaitUrlConfMediaGroup createWaitUrlConfMediaGroup = new CreateWaitUrlConfMediaGroup(confInterpreter);
+                    conference.tell(createWaitUrlConfMediaGroup, source);
+                }
 
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 conference.tell(new ConferenceModeratorPresent(), source);
@@ -1944,6 +1945,39 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (fsm.state().equals(bridged) && outboundCall != null) {
             outboundCall.tell(new Hangup(), null);
         }
+
+        // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
+        final StopMediaGroup stop = new StopMediaGroup();
+        if (confInterpreter != null) {
+            confInterpreter.tell(StopInterpreter.instance(), null);
+            getContext().stop(confInterpreter);
+            confInterpreter = null;
+
+            final RemoveParticipant remove = new RemoveParticipant(call);
+            conference.tell(remove, null);
+            conference.tell(new StopObserving(self()), null);
+
+            if(conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated()) {
+                conferenceMediaGroup.tell(stop, null);
+                final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
+                conference.tell(destroy, null);
+                getContext().stop(conferenceMediaGroup);
+                conferenceMediaGroup = null;
+            }
+
+            getContext().stop(conference);
+        }
+
+        // Destroy the media group(s).
+        if (callMediaGroup != null) {
+            callMediaGroup.tell(stop, null);
+            final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
+            call.tell(destroy, null);
+            getContext().stop(callMediaGroup);
+            callMediaGroup = null;
+        }
+
+        postCleanup();
         super.postStop();
     }
 }

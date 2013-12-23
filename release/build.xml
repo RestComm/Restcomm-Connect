@@ -516,33 +516,82 @@
 	
 	
 	<target name="make-final-zip" depends="set-time-stamp">
-		<zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
-			<zipfileset dir="${release.dir}" prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}">
-				<include name="**" />
-			</zipfileset>
-		</zip>
+		<fixcrlf srcdir="${release.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
+		<fixcrlf srcdir="${release.as7.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
+		<fixcrlf srcdir="${release.eap6.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
-		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
-			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin">
-                                <include name="*.sh" />
-                        </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin">
-                                <include name="*.sh" />
-                        </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}">
-				<include name="**" />
-			</zipfileset>
+		<zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}.zip" filesonly="false">
+			<zipfileset dir="${release.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.dir}/bin" prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
+				prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.dir}/telscale-media/telscale-media-server/bin" 
+				prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+            <zipfileset dir="${release.dir}" prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}" 
+            	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
 		</zip>
-                <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
-                        <zipfileset dir="${release.as7.dir}" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}">
-                                <include name="**" />
-                        </zipfileset>
-                </zip>
-                <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
-                        <zipfileset dir="${release.eap6.dir}" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}">
-                                <include name="**" />
-                        </zipfileset>
-                </zip>
+        <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}.zip" filesonly="false">
+			<zipfileset dir="${release.as7.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.as7.dir}/bin" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.as7.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
+				prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.as7.dir}/telscale-media/telscale-media-server/bin" 
+				prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+            <zipfileset dir="${release.as7.dir}" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}" 
+            	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
+        </zip>
+        <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}.zip" filesonly="false">
+			<zipfileset dir="${release.eap6.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.eap6.dir}/bin" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.eap6.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
+				prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.eap6.dir}/telscale-media/telscale-media-server/bin" 
+				prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+            <zipfileset dir="${release.eap6.dir}" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}" 
+            	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
+        </zip>
+		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
+			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.tomcat.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
+				prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.tomcat.dir}/telscale-media/telscale-media-server/bin" 
+				prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}"
+				excludes="**/bin/**"/>
+		</zip>
 	</target>
 	
 	<target name="set-time-stamp" unless="skip.timestamp">

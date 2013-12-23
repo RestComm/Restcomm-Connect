@@ -9,6 +9,8 @@
 	<meta name="description" content="">
 	<meta name="author" content="">
 
+	<link rel="icon" type="image/png" href="images/favicon.png">
+	
 	<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 	<link href="css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">
 	<!--<link href="css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">-->
@@ -75,12 +77,14 @@
 			<div class="col-md-2">
 				<!-- <button class="btn btn-default btn-block btn-lg" ng-click='saveProject()' >save &nbsp;<span class="glyphicon glyphicon-save"></span></button> -->
 			
+			<!-- 
 				<div class="form-group">
 					<button class="btn btn-primary btn-block" ng-click='saveProject()' >Save draft &nbsp;&nbsp;<i class='fa fa-save'></i></button>
 				</div>
+			 -->
 				
 				<div class="form-group">
-					<button class="btn btn-primary btn-block" ng-click='buildProject()' >Deploy </button>
+					<button class="btn btn-primary btn-block" ng-click='buildProject()' >save </button>
 				</div>
 				<div ng-show="startNodeSet()" class="form-group rvd-starturl">
 					<a target="_blank" href='{{getStartUrl()}}'>Startup URL</a>
@@ -95,11 +99,11 @@
 						<div class="panel-body editor">	
 							<ul class="verbs nav nav-pills">
 								<li my-draggable='.sortable-steps' id='buttonsay'  class="active verb bs-callout-draggable verb-button kind-say"><a href="#"><i class='fa fa-comments'></i> &nbsp;Say</a></li>
-								<li my-draggable='.sortable-steps' id='buttonplay'  class="active verb bs-callout-draggable verb-button kind-play"><a href="#"><i class='fa fa-comments'></i> &nbsp;Play</a></li>
-								<li my-draggable='.sortable-steps' id='buttongather'  class="active verb bs-callout-draggable verb-button kind-gather"><a href="#"><i class='fa fa-th'></i> &nbsp;Collect</a></li>
-								<li my-draggable='.sortable-steps' id='buttondial'  class="active verb bs-callout-draggable verb-button kind-dial"><a href="#"><i class='fa fa-phone'></i> &nbsp;Dial</a></li>
+								<li my-draggable='.sortable-steps.root' id='buttonplay'  class="active verb bs-callout-draggable verb-button kind-play"><a href="#"><i class='fa fa-comments'></i> &nbsp;Play</a></li>
+								<li my-draggable='.sortable-steps.root' id='buttongather'  class="active verb bs-callout-draggable verb-button kind-gather"><a href="#"><i class='fa fa-th'></i> &nbsp;Collect</a></li>
+								<li my-draggable='.sortable-steps.root' id='buttondial'  class="active verb bs-callout-draggable verb-button kind-dial"><a href="#"><i class='fa fa-phone'></i> &nbsp;Dial</a></li>
 								<!-- <li my-draggable='.sortable-steps' id='buttonredirect'  class="active verb bs-callout-draggable verb-button kind-redirect"><a href="#"><i class='fa fa-link'></i> &nbsp;Redirect</a></li> -->
-								<li my-draggable='.sortable-steps' id='buttonhungup'  class="active verb bs-callout-draggable verb-button kind-hungup"><a href="#"><i class='fa fa-times'></i> &nbsp;Hungup</a></li>
+								<li my-draggable='.sortable-steps.root' id='buttonhungup'  class="active verb bs-callout-draggable verb-button kind-hungup"><a href="#"><i class='fa fa-times'></i> &nbsp;Hang Up</a></li>
 							</ul>
 							<ul class="nav nav-tabs" > <!-- tabs -->
 								<li ng-repeat='node in nodes' ng-class="{active:isActiveNode(node)}">	
@@ -126,7 +130,7 @@
 										</div>
 										-->
 										<!-- <div>{{node.stepnames}}</div> -->
-										<div class='sortable-steps' sortable-steps>
+										<div class='sortable-steps root' sortable-steps>
 											<div class='step' ng-repeat='step in orderedSteps'>
 												<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
 												<div class="separator-hint">

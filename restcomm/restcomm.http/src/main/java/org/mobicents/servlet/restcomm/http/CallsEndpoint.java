@@ -258,6 +258,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                 create = new CreateCall(from, to, null, null, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
                         accountId);
             }
+            create.setCreateCDR(false);
             Future<Object> future = (Future<Object>) ask(callManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
