@@ -36,6 +36,13 @@ You can go to the following sites to see how to increase the maximum number of o
 
 <itemizedlist mark='opencircle'>
 <title>Running RestComm on JBoss</title>
+<note>
+<title>JBoss Security</title>
+<para>
+Running a secure application is dependent on multiple factors. Restcomm runs on JBoss which implies that system security implemention can be handled at JBoss level. Please see the link below on how you can make your server environment more secure. <ulink url="https://community.jboss.org/wiki/SecureJboss?_sscc=t"/>
+</para>
+</note>
+
 <listitem>
 <para>
 Download <filename> TelScale-Restcomm-JBoss-AS7-XX.XX.GA.zip </filename>
