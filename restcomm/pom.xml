@@ -4,7 +4,7 @@
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>7.1.3-TelScale-SNAPSHOT</version>
+	<version>7.1.3.GA-TelScale</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -57,7 +57,7 @@
 		<connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
 		<developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
 		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
-		<tag>HEAD</tag>
+		<tag>ts713ga</tag>
 	</scm>
 
 	<distributionManagement>
@@ -113,7 +113,7 @@
         	<tomcat7.version>7.0.27</tomcat7.version>
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
-		<mgcpunit.version>7.0.0-TelScale-SNAPSHOT</mgcpunit.version>
+		<mgcpunit.version>7.0.0.CR1-TelScale</mgcpunit.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
