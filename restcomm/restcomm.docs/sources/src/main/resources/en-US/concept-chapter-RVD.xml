@@ -1,0 +1,313 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: rvd -->
+<chapter>
+	<title>Restcomm Visual Designer</title>
+<para>
+Restcomm Visual Designer is a practical feature that lets you create applications easily using a GUI based interface.
+</para>
+
+<section>
+<title>Getting Started</title>
+<para>
+In order to access the designer, open your web browser and go to this url <ulink url="http://127.0.0.1:8080/restcomm-rvd">http://127.0.0.1:8080/restcomm-rvd</ulink>. You will see a screenshot similar to the one below. To start, enter a name for your project and press the button "Create" 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-homepage.png"/>
+	</imageobject>
+</mediaobject>
+
+
+<para>
+In the screenshot below, you will see the main dashboard of the designer.
+</para>
+
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-dashboard.png"/>
+	</imageobject>
+</mediaobject>
+
+
+
+<table frame='all'>
+			<title>Dashboard Description</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Number</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>1</entry>
+						<entry>Default module name when you start the Visual Designer. Modules are the root folder in which your can create Restcomm application.</entry>
+					</row>
+					<row>
+						<entry>2</entry>
+						<entry>Use this to create another module instead of the default Welcome module.</entry>
+					</row>
+			<row>
+						<entry>3</entry>
+						<entry>To close the current project in which you are working.</entry>
+					</row>
+
+<row>
+						<entry>4</entry>
+						<entry>The Say verb that can be dragged-and-dropped into the module window. Use for text-to-speech applications</entry>
+					</row>
+<row>
+						<entry>5</entry>
+						<entry>The Play verb that can be dragged-and-dropped into the module window. Used to playback any audio file through an http url</entry>
+					</row>
+<row>
+						<entry>6</entry>
+						<entry>The Collect verb that can be dragged-and-dropped into the module window. Used to create interactive apps and collect DTMF response from clients</entry>
+					</row>
+
+<row>
+						<entry>7</entry>
+						<entry>The Dial verb that can be dragged-and-dropped into the module window. Used to make calls to SIP clients, SIP apps, join a conference or dial a DID number</entry>
+					</row>
+					
+<row>
+						<entry>8</entry>
+						<entry>The Hangup verb that can be dragged-and-dropped into the module window. It terminates an exiting call.</entry>
+					</row>
+<row>
+						<entry>9</entry>
+						<entry>The name of the current module and the bin button to delete the module.</entry>
+					</row>
+<row>
+						<entry>10</entry>
+						<entry>The save button to permanently preserve the changes you make.</entry>
+					</row>
+<row>
+						<entry>11</entry>
+						<entry>The Startup Url button shows you the xml file generated from you the Visual Designer</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+
+<section>
+<title>Say Verb</title>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-say.png"/>
+	</imageobject>
+</mediaobject>
+
+<para>
+This is used for the Text-to-speech feature of Restcomm. You must have VoiceRSS enable. See the getting started chapter for more information.
+</para>
+</section>
+
+<section>
+<title>Play Verb</title>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-play.png"/>
+	</imageobject>
+</mediaobject>
+
+<para>
+The Play verb accepts audio files. Restcomm will playback the http link placed in the text window
+</para>
+</section>
+
+<section>
+<para>
+The Gather verb is used to create Interactive Voice Response (IVR) and other complex application.
+</para>
+
+<title>Gather Verb</title>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-collect.png"/>
+	</imageobject>
+</mediaobject>
+
+<table frame='all'>
+			<title>Gather Verb Description</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Gather Feature</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Prompt</entry>
+						<entry>This is where you drag and drop the Say verb to tell the user what to do</entry>
+					</row>
+					<row>
+						<entry>Menu</entry>
+						<entry>This allows you to create a menu mapping for you appliaction. Ex. For Sales press 1, for Support press 3, etc.</entry>
+					</row>
+			<row>
+						<entry>Collect Digits</entry>
+						<entry>Lets you specify DTMF digits and how to process them</entry>
+					</row>
+					<row>
+						<entry>Assign to</entry>
+						<entry>You must specify the name of a variable to process the collected digits</entry>
+					</row>
+<row>
+						<entry>Continue to</entry>
+						<entry>Specify the name of the application that will process the digits</entry>
+					</row>
+
+<row>
+						<entry>Finish on Key</entry>
+						<entry>Tells Restcomm to proceed with the application when this character ha been received.</entry>
+					</row>
+<row>
+						<entry>Number of digits</entry>
+						<entry>Specify the number of digits to collect</entry>
+					</row>
+
+				</tbody>
+			</tgroup>
+		</table>
+
+
+</section>
+
+<section>
+<title>Dial Verb</title>
+<para>
+The Dial verb lets you make calls to multiple SIP endpoints.
+</para>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-dial.png"/>
+	</imageobject>
+</mediaobject>
+</section>
+
+
+
+<table frame='all'>
+			<title>Dial Verb Description</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Dial Feature</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Number</entry>
+						<entry>This is any DID number you want to dial when running your application. Ex. 1-444-555-666</entry>
+					</row>
+					<row>
+						<entry>Client</entry>
+						<entry>This is any Restcomm client. Like Alice and Bob created in the default demo applications.</entry>
+					</row>
+			<row>
+						<entry>Conference</entry>
+						<entry>Any number that is not already in use that will be dialed to join a Restcomm conference. Ex. 1234</entry>
+					</row>
+					<row>
+						<entry>Sip Uri</entry>
+						<entry>You can also make calls to any SIP uri using this feature. Ex. sip:alice@127.0.0.1</entry>
+					</row>
+
+				</tbody>
+			</tgroup>
+		</table>
+
+
+
+<section>
+<title>Hangup Verb</title>
+
+<para>
+The hangup verb doesn't require any configuration. It terminates the current SIP connection.
+</para>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-hangup.png"/>
+	</imageobject>
+</mediaobject>
+</section>
+
+</section>
+
+<section>
+<title>Demo Application</title>
+<para>
+In this section, you will learn how to build a sample application.
+</para>
+<para>
+Create a new project called Demo. The result will be similar to the screenshot below. 
+</para>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-demo.png"/>
+	</imageobject>
+</mediaobject>
+<para>
+Press the save button and click on the Startup Url to make sure the project is correctly saved. The result will be similar to the screenshot below. 
+</para>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-demo2.png"/>
+	</imageobject>
+</mediaobject>
+<para>
+Next you need to go to the Restcomm Admin User Interface <ulink url="http://127.0.0.1:8080/restcomm-management/">http://127.0.0.1:8080/restcomm-management/</ulink> . Login and press the menu "Numbers", then press the button, "Register Number". You will see a window similar to the screenshot below. 
+</para>
+
+<para>
+Leave Account SID as default. Enter a "Phone Number" you want to use. In the demo we shall be using 9999. 
+</para>
+<para>
+Under "Voice" -> Voice Request URL, click on the List icon to reveal the Demo application you created using the Restcomm Visual Designer. See screenshot below.
+</para>
+
+<para>
+Press "Register" to save your work and return to the list of available phone numbers.
+</para>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-demo3.png"/>
+	</imageobject>
+</mediaobject>
+
+
+<para>
+You have just created a new phone number "9999" and have linked it to your Demo application. See below.
+</para>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-rvd-demo4.png"/>
+	</imageobject>
+</mediaobject>
+
+
+<para>
+You can then start a SIP phone to test your Demo application. Note that you must have enabled Text-to-speech for this application to work. See the Getting started chapter to learn how to configure VoiceRSS.
+</para>
+
+
+</section>
+
+
+</chapter>
