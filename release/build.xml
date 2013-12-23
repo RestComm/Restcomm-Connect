@@ -18,7 +18,7 @@
 	<property name="workspace.telscale-restcomm-ui.dir" value="${checkout.dir}/telscale-restcomm/restcomm.ui" />
 	<property name="workspace.telscale-restcomm-rvd.dir" value="${checkout.dir}/telscale-restcomm/restcomm.rvd" />
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
-	<property name="telscale.restcomm.release.version" value="7.1.3-SNAPSHOT"/>
+	<property name="telscale.restcomm.release.version" value="7.1.3.GA"/>
 	<property name="telscale.restcomm.branch.name" value="ts713"/>
 	
 	<!--Telscale binaries versions-->
@@ -339,6 +339,13 @@
                         <include name="**/*" />
                 </fileset> 
         </copy>
+	
+	<!-- Copy Config scripts -->
+	<copy toDir="${release.dir}/tools/" failonerror="true">
+		<fileset dir="${basedir}/config-scipts">
+			<include name="**/*" />
+		</fileset>
+	</copy>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.dir}/Telestax-EULA.pdf" failonerror="true" 
@@ -393,6 +400,13 @@
                 </fileset> 
         </copy>
 
+	<!-- Copy Config scripts -->
+	<copy toDir="${release.tomcat.dir}/tools/" failonerror="true">
+		<fileset dir="${basedir}/config-scipts">
+			<include name="**/*" />
+		</fileset>
+	</copy>
+
 	<!-- Copy EULA -->
         <copy tofile="${release.tomcat.dir}/Telestax-EULA.pdf" failonerror="true" 
         	file="${basedir}/Telestax-EULA.pdf"/>
@@ -426,6 +440,13 @@
                 </fileset> 
         </copy>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
+
+	<!-- Copy Config scripts -->
+	<copy toDir="${release.as7.dir}/tools/" failonerror="true">
+		<fileset dir="${basedir}/config-scipts">
+			<include name="**/*" />
+		</fileset>
+	</copy>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.as7.dir}/Telestax-EULA.pdf" failonerror="true" 
@@ -465,6 +486,13 @@
                 </fileset> 
         </copy>
 	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
+
+	<!-- Copy Config scripts -->
+	<copy toDir="${release.eap6.dir}/tools/" failonerror="true">
+		<fileset dir="${basedir}/config-scipts">
+			<include name="**/*" />
+		</fileset>
+	</copy>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.eap6.dir}/Telestax-EULA.pdf" failonerror="true" 
