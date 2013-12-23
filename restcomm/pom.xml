@@ -106,7 +106,7 @@
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
 		<sip-ri.version>7.0.0.GA-TelScale</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
-		<mss.arquillian.version>7.0.0-TelScale-SNAPSHOT</mss.arquillian.version>
+		<mss.arquillian.version>7.0.0.CR1-TelScale</mss.arquillian.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
 		<sipunit.version>2.0.0</sipunit.version>
 		<tomcat.version>6.0.35</tomcat.version>
