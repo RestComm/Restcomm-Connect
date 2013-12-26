@@ -1,173 +1,40 @@
-
-var App = angular.module('drag-and-drop', ['ngDragDrop','ui.bootstrap','ui.bootstrap.collapse', 'ui.bootstrap.dialog','ui.sortable','angularSpinner']);
-
-
-App.factory('stepService', function($rootScope) {
-	var stepService = {
-		serviceName: 'stepService',
-		stepProto: {
-					say: {kind:'say', label:'say', title:'say', phrase:'', voice:'man', language:'bf', loop:1, isCollapsed:false, iface:{optionsVisible:false}},
-					play: {playType:'remote', kind:'play', label:'play', title:'play', wavUrl:'', wavLocalFilename:'', loop:null, isCollapsed:false},
-					gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
-					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
-					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
-					redirect: {kind:'redirect', label:'redirect', title:'redirect', next:''},
-					hungup: {kind:'hungup', label:'hang up', title:'hang up', next:''},
-		},
-		stepNames: ['say','gather','dial','redirect','hungup'],
-		lastStepId: 0,
-			
-		getMapValuesByIndex: function (map, index) {
-			var values = [];
-			for ( var i = 0; i < index.length; i ++ ) {
-				if ( typeof (map[ index[i] ]) !== 'undefined' )
-					values.push (map [index [i]]);
-			}
-			return values;
-		}, 
-		addStep: function ( steps, stepnames, kind, index ) {
-			var newstep = angular.copy(this.stepProto[kind])
-			newstep.name = 'step' + (++this.lastStepId);
-			steps[newstep.name] = newstep;
-			stepnames.splice(index, 0, newstep.name);
-			//stepnames.push(newstep.name) ;
-		},	
-		removeStep: function (steps, stepnames, removed_step, orderedSteps ) {
-			delete steps[removed_step.name];
-			stepnames.splice( stepnames.indexOf(removed_step.name), 1 );
-			orderedSteps.length = 0; //.splice(0, orderedSteps.length, this.getMapValuesByIndex(steps, stepnames) );
-			orderedSteps.push.apply(orderedSteps, this.getMapValuesByIndex(steps, stepnames) );
-			//console.log( orderedSteps );
-		},
-		 
-	};
+App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 	
-	return stepService;
+	console.log( 'initializing projectManager controller');
+	
+	$scope.refreshProjectList = function() {
+		$http({url: 'services/manager/projects/list',
+				method: "GET"
+		})
+		.success(function (data, status, headers, config) {
+			$scope.projectList = data;
+		});
+	}
+	
+	$scope.createNewProject = function(name) {
+		console.log( "creating new project " + name );
+		$http({url: 'services/manager/projects?name=' + name,
+				method: "PUT"
+		})
+		.success(function (data, status, headers, config) {
+			console.log( "project created");
+			$location.path("/designer/" + name);
+		 });
+	}
+	
+    $scope.refreshProjectList();	
+	
 });
 
 
-
-/*
- * Used in <select/> elements. Clears the select element model when the selection 
- * option has been removed. It works together with a separate mechanism that broadcasts 
- * the appropriate event (refreshTargetDropdowns) when the option is removed.   
- */
-App.directive("syncModel", function(){
-
-        return {
-            restrict: 'A',
-            link: function(scope, element, attrs, controller) {
-            	scope.$on("refreshTargetDropdowns", function () {
-            		//console.log( 'element ' + element + ' received refreshTargetDropdowns');
-            		//console.log( 'selected value: ' + $(element).val() )
-            		if ( $(element).val() =="" )
-            			scope.$eval(attrs.ngModel + " = ''");
-            	});            	
-            }
-        }
-   });
-
-
-
-App.directive('sortableSteps',function(stepService){
-  return {
-	  scope: true,	  
-	  
-    link:function(scope,el,attrs){
-		
-		if ( typeof(scope.step) === 'undefined' ) {
-			//console.log( 'PARENT SCOPE' );
-			//console.log(scope);
-			scope.steps = scope.node.steps;
-			scope.stepnames = scope.node.stepnames;
-		}
-		else {
-			//console.log( 'NESTED SCOPE' );
-			//console.log(scope);
-			scope.steps = scope.step.steps;
-			scope.stepnames = scope.step.stepnames;
-		}
-		scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-		
-		el.sortable({
-			revert: true,
-			handle: '.panel-heading',
-			//scrollSensitivity: 20,
-			tolerance: 'pointer',
-		});
-		//el.disableSelection();
-      
-	  function getMapValuesByIndex(map, index) {
-			var values = [];
-			for ( var i = 0; i < index.length; i ++ ) {
-				if ( typeof (map[ index[i] ]) !== 'undefined' )
-					values.push (map [index [i]]);
-			}
-			return values;
-	  }      
-   
-      el.on( "sortbeforestop", function( event, ui ) { 
-		  
-		  //if ( $(this).hasClass('nested') != ui.item.hasClass('nested') )
-			//return;
-		  
-		  var to_index = el.children().index(ui.item);		  
-		  if ( ui.item.hasClass('verb-button') ) {
-			  // a new step should be created
-			  var r = /kind-([^ ]+)/
-			  var m = r.exec(ui.item.attr('class'));
-			  ui.item.remove();
-			  if ( m != null ) {
-				  var kind = m[1];
-				  scope.$apply( function () {
-					stepService.addStep( scope.steps, scope.stepnames, kind, to_index );
-			        scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-				  });  
-			  }
-		  } else
-		  if ( ui.item.hasClass('step') ) {
-			  // just reordering steps
-			  
-			  var from_index = scope.stepnames.indexOf( ui.item.scope().step.name );
-			  //console.log( 'inserting element from position: ' + from_index );
-			  //console.log( 'inserting element at position: ' + to_index );
-			  var temp = scope.stepnames[to_index];
-			  scope.$apply( function () {
-				scope.stepnames[to_index] = scope.stepnames[from_index];
-				scope.stepnames[from_index] = temp;
-				scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-			})
-		  }
-		  
-		  if ( $(this).hasClass('nested') )
-			event.stopImmediatePropagation();
-      } );
-    }
-  }
-})
-
-App.directive('myDraggable',function(){
-  
-  return 	{
-				link:function(scope,el,attrs){
-					el.draggable({
-						connectToSortable: attrs.myDraggable,
-						helper: "clone",
-						//revert: "invalid"
-					});
-					/*el.disableSelection(); */
-				}
-			}
-  
-})
-
-
-App.controller('projectController', function($scope, stepService, $http, $dialog, $timeout) {
+App.controller('designerCtrl', function($scope, $routeParams, $location, stepService, $http, $dialog, $timeout) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
 	};
 		
+	console.log("routeParam:");
+	console.log( $routeParams );
 	
 	$scope.stepService = stepService;
 	
@@ -178,7 +45,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 		
 	// State variables
-	$scope.projectName = ''; // not stored in the state
+	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
 	
 	$scope.nodes = [];		
@@ -186,11 +53,10 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
 	//$scope.visibleNodes = "voice"; // or "control"	// view Voice Nodes or Control Nodes panel ?
 	$scope.wavList = [];
-	$scope.appView = 'projects'; // spinner | projects | editor
 	
 	// Project management
 	$scope.projectList = [];
-	$scope.newProjectName = '';
+	//$scope.newProjectName = $routeParams.projectName;
 	
 
 	//console.log("projectController stepService: " + stepService.stepNames );
@@ -224,10 +90,10 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		return false;
 	}
 	$scope.getStartUrl = function () {
-		r = new RegExp("^(.+/[^/]+)\/[^/]*$");
+		r = new RegExp("^([^#]+/)[^/#]*#");
 		m = r.exec(document.baseURI);
 		if ( m != null )
-			return m[1] + "/services/apps/" + $scope.projectName + "/controller";
+			return m[1] + "services/apps/" + $scope.projectName + "/controller";
 		return '';
 	}
 
@@ -397,25 +263,10 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		 });	
 	}
 	
-	$scope.refreshProjectList = function() {
-		$http({url: 'services/manager/projects/list',
-				method: "GET"
-		})
-		.success(function (data, status, headers, config) {
-			//console.log( data );
-			$scope.projectList = data;
-			//$scope.appView = "projects";
-		});
-	}
+
 	
 	$scope.closeProject = function() {
-		$http({url: 'services/manager/projects/close',
-				method: "GET"
-		})
-		.success(function (data, status, headers, config) {
-			$scope.projectName = '';
-			$scope.appView = "projects";
-		 });	
+		$location.path("/project-manager");		
 	}
 	
 	$scope.openProject = function(name) {
@@ -432,9 +283,6 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 			$scope.lastNodesId = data.lastNodeId;
 			$scope.visibleNodes = data.visibleNodes;
 			$scope.startNodeName = data.startNodeName;	
-					
-			//$scope.refreshProjectList();
-			$scope.appView = "editor";
 			
 			$http({url: 'services/manager/projects/wavlist?name=' + name, method: "GET"})
 			.success(function (data, status, headers, config) {
@@ -446,18 +294,7 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 		 });
 	}
 	
-	$scope.createNewProject = function(name) {
-		console.log( "creating new project " + name );
-		$http({url: 'services/manager/projects?name=' + name,
-				method: "PUT"
-		})
-		.success(function (data, status, headers, config) {
-			console.log( "project created");
-			$scope.refreshProjectList();
-			$scope.openProject(name);
-			$scope.newProjectName = '';
-		 });
-	}
+
 	
 	// First saves and then builds
 	$scope.buildProject = function() {
@@ -474,20 +311,10 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 	// Run the following after all initialization are complete
 	
-	//$scope.getServerInfo();
 	
-	// Open active project in client
-	$http({url: 'services/manager/projects/active',
-			method: "GET",
-	})
-	.success(function (data, status, headers, config) {
-		$scope.openProject(data.name);
-     }).error(function (data, status, headers, config) {
-            console.log('ERROR');
-     });
-     
-     // Initialize project list
-     $scope.refreshProjectList();	
+	console.log( "opening project: " + $scope.projectName);
+	$scope.openProject( $scope.projectName );
+		
      
      // UNSORTED
      // -------------
@@ -501,39 +328,6 @@ App.controller('projectController', function($scope, stepService, $http, $dialog
 	
 
 			
-});
-
-App.filter('excludeNode', function() {
-    return function(items, exclude_named) {
-        var result = [];
-        items.forEach(function (item) {
-            if (item.name !== exclude_named) {
-                result.push(item);
-            }
-        });                
-        return result;
-    }
-});
-
-// use it this way: <input type="text" ng-focus="isFocused" ng-focus-lost="loseFocus()">
-// for more information: http://stackoverflow.com/questions/14859266/input-autofocus-attribute/14859639#14859639 
-angular.module('ng').directive('ngFocus', function($timeout) {
-    return {
-        link: function ( scope, element, attrs ) {
-            scope.$watch( attrs.ngFocus, function ( val ) {
-                if ( angular.isDefined( val ) && val ) {
-                    $timeout( function () { element[0].focus(); } );
-                }
-            }, true);
-
-            element.bind('blur', function () {
-                if ( angular.isDefined( attrs.ngFocusLost ) ) {
-                    scope.$apply( attrs.ngFocusLost );
-
-                }
-            });
-        }
-    };
 });
 
 

@@ -1,0 +1,132 @@
+<div ng-controller="designerCtrl">
+
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="collapse navbar-collapse navbar-ex1-collapse">
+
+			<ul class="nav navbar-nav">
+
+				<li><span class='navbar-text'><i class='fa fa-share'></i>
+						<em>Startup module</em></span></li>
+				<li class="dropdown"><a href="#" class="dropdown-toggle"
+					data-toggle="dropdown">{{nodeNamed(startNodeName).label}} <b
+						class="caret"></b></a>
+					<ul class="dropdown-menu">
+						<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+					</ul></li>
+				<li><a ng-click="addNode()"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
+			</ul>
+
+			<ul class="nav navbar-nav navbar-right">
+				<li><a ng-click='closeProject()' href="#"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
+			</ul>
+
+		</div>
+	</nav>
+
+	<div class="row">
+
+		<!-- Left menu -->
+		<div class="col-md-2">
+			<!-- <button class="btn btn-default btn-block btn-lg" ng-click='saveProject()' >save &nbsp;<span class="glyphicon glyphicon-save"></span></button> -->
+
+			<!-- 
+				<div class="form-group">
+					<button class="btn btn-primary btn-block" ng-click='saveProject()' >Save draft &nbsp;&nbsp;<i class='fa fa-save'></i></button>
+				</div>
+			 -->
+
+			<div class="form-group">
+				<button class="btn btn-primary btn-block" ng-click='buildProject()'>save
+				</button>
+			</div>
+			<div ng-show="startNodeSet()" class="form-group rvd-starturl">
+				<a target="_blank" href='{{getStartUrl()}}'>Startup URL</a>
+			</div>
+		</div>
+
+		<!-- Workspace on the right -->
+		<div class="col-md-10">
+			<div class="editor">
+				<div class="panel-body editor">
+					<ul class="verbs nav nav-pills">
+						<li my-draggable='.sortable-steps' id='buttonsay'
+							class="active verb bs-callout-draggable verb-button kind-say"><a
+							href="#"><i class='fa fa-comments'></i> &nbsp;Say</a></li>
+						<li my-draggable='.sortable-steps.root' id='buttonplay'
+							class="active verb bs-callout-draggable verb-button kind-play"><a
+							href="#"><i class='fa fa-comments'></i> &nbsp;Play</a></li>
+						<li my-draggable='.sortable-steps.root' id='buttongather'
+							class="active verb bs-callout-draggable verb-button kind-gather"><a
+							href="#"><i class='fa fa-th'></i> &nbsp;Collect</a></li>
+						<li my-draggable='.sortable-steps.root' id='buttondial'
+							class="active verb bs-callout-draggable verb-button kind-dial"><a
+							href="#"><i class='fa fa-phone'></i> &nbsp;Dial</a></li>
+						<!-- <li my-draggable='.sortable-steps' id='buttonredirect'  class="active verb bs-callout-draggable verb-button kind-redirect"><a href="#"><i class='fa fa-link'></i> &nbsp;Redirect</a></li> -->
+						<li my-draggable='.sortable-steps.root' id='buttonhungup'
+							class="active verb bs-callout-draggable verb-button kind-hungup"><a
+							href="#"><i class='fa fa-times'></i> &nbsp;Hang Up</a></li>
+					</ul>
+					<ul class="nav nav-tabs">
+						<!-- tabs -->
+						<li ng-repeat='node in nodes'
+							ng-class="{active:isActiveNode(node)}"><span
+							ng-click='setActiveNode(node)' href="#" class='navtab'
+							tooltip='{{node.name}}'> <span
+								ng-show='!node.iface.editLabel'> <!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
+									<a ng-click='editLabelIfSelected(node)'>{{node.label}}</a>
+									&nbsp;&nbsp;&nbsp;<i ng-click='removeNode($index)'
+									ng-show="isActiveNode(node)"
+									class='fa fa-trash-o rvd-clickable'></i>
+							</span>
+								<div ng-show='node.iface.editLabel'>
+									<input type='text' ng-model='node.label'
+										ng-focus='node.iface.editLabel'
+										ng-focus-lost="node.iface.editLabel=!node.iface.editLabel" />
+									&nbsp;
+								</div>
+						</span></li>
+					</ul>
+
+					<div class="rvd-node" ng-repeat="node in nodes"
+						ng-show="isActiveNode(node)">
+						<div>
+							<br />
+							<!--
+										<div class="node-bootstrap">
+											<a ng-click='node.iface.bootstrapVisible = !node.iface.bootstrapVisible' href=''><span class="glyphicon glyphicon-wrench"></span>Bootstrap <span ng-show='node.iface.bootstrapVisible' class="collapse-button">&times;</span></a>
+											<div ng-show='node.iface.bootstrapVisible'>
+												<textarea ng-model='node.bootstrapSrc' class="texteditor-field form-control">{{bootstrapSrc}}</textarea>
+											</div>
+										</div>
+										-->
+							<!-- <div>{{node.stepnames}}</div> -->
+							<div class='sortable-steps root' sortable-steps>
+								<div class='step' ng-repeat='step in orderedSteps'>
+									<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
+									<div class="separator-hint">
+										<div ng-show="areSuccessiveSteps(node, $index,'say','play')">Say
+											followed by play</div>
+										<div ng-show="areSuccessiveSteps(node, $index,'play','say')">Play
+											followed by Say</div>
+										<div ng-show="areSuccessiveSteps(node, $index,'say','gather')">Say
+											followed by Gather</div>
+										<div ng-show="areSuccessiveSteps(node, $index,'gather',null)">Gather
+											is the last element</div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+
+
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+
+	</div>
+	<!-- row -->
+
+</div>
