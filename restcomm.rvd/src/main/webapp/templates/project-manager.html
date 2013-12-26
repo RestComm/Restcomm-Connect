@@ -1,0 +1,40 @@
+<div ng-controller="projectManagerCtrl">
+
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="collapse navbar-collapse navbar-ex1-collapse">
+			<div class='navbar-text navbar-rvd-centered'>
+				<em>Please chose a project from the list below or create a new
+					one</em>
+			</div>
+			<ul class="nav navbar-nav">
+			</ul>
+		</div>
+	</nav>
+
+	<div class="row">
+		<div class="col-md-4 col-md-offset-5">
+			<h3>Existing projects</h3>
+			<br />
+			<ul class='project-list'>
+				<li ng-repeat="projectItem in projectList"><a href="#/designer/{{projectItem.name}}" ng-click="openProject(projectItem.name)">{{projectItem.name}}</a></li>
+			</ul>
+			<h3>Create new project</h3>
+			<br />
+
+			<div class="row">
+				<div class="col-md-8">
+					<input type="text" class="form-control" ng-model="newProjectName" />
+				</div>
+			</div>
+			<br />
+			<div class="row">
+				<div class="col-md-8">
+					<button type="button" ng-click="createNewProject(newProjectName)"
+						class="btn btn-primary form-control">Create</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+</div>
