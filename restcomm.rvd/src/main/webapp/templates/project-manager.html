@@ -21,18 +21,20 @@
 			<h3>Create new project</h3>
 			<br />
 
-			<div class="row">
-				<div class="col-md-8">
-					<input type="text" class="form-control" ng-model="newProjectName" />
+			<form name="form" novalidate>	
+				<div class="row">
+					<div class="col-md-8">
+						<input name="newProjectName" type="text" class="form-control" ng-model="newProjectName" ng-pattern="/^[^:;@#!$%^&*()+|~=`{}\\\[\]&quot;'<>?,\/]+$/" required/>
+					</div>
 				</div>
-			</div>
-			<br />
-			<div class="row">
-				<div class="col-md-8">
-					<button type="button" ng-click="createNewProject(newProjectName)"
-						class="btn btn-primary form-control">Create</button>
+				<br />
+				<div class="row">
+					<div class="col-md-8">
+						<button type="button" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid"  ng-click="createNewProject(newProjectName)"
+							class="btn btn-primary form-control">Create</button>
+					</div>
 				</div>
-			</div>
+			</form>
 		</div>
 	</div>
 
