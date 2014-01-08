@@ -9,6 +9,11 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
@@ -146,6 +151,25 @@ public class ProjectService {
 		} else {
 			throw new ProjectDirectoryAlreadyExists();
 		}
+	}
+	
+	public boolean updateProject( HttpServletRequest request, String projectName ) {
+		
+		String workspaceBasePath = getWorkspaceBasePath();
+			
+		FileOutputStream stateFile_os;
+		try {
+			stateFile_os = new FileOutputStream(workspaceBasePath + File.separator + projectName + File.separator + "state");
+			IOUtils.copy(request.getInputStream(), stateFile_os);
+			stateFile_os.close();	
+			return true;		
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} 
 	}
 	
 	
