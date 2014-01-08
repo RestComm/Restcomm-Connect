@@ -249,7 +249,8 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		
 		
 		// transmit state to the server
-		$http({url: 'services/manager/projects/',
+		console.log( "saving project: " + $scope.projectName );
+		$http({url: 'services/manager/projects?name=' + $scope.projectName,
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}

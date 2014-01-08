@@ -111,28 +111,18 @@ public class RvdManager  {
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response updateProject(@Context HttpServletRequest request) {
-		String projectName = (String) request.getSession().getAttribute(projectSessionAttribute);
+	public Response updateProject(@Context HttpServletRequest request, @QueryParam("name") String projectName ) {
+		
+		// TODO IMPORTANT!!! sanitize the project name!!
+		
 		if ( projectName != null && !projectName.equals("") ) {
-			System.out.println("saveProject " + projectName);
-			String workspaceBasePath = projectService.getWorkspaceBasePath();
-			
-			FileOutputStream stateFile_os;
-			try {
-				stateFile_os = new FileOutputStream(workspaceBasePath + File.separator + projectName + File.separator + "state");
-				IOUtils.copy(request.getInputStream(), stateFile_os);
-				stateFile_os.close();
-				return Response.ok().build(); 
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-		}
-		return Response.status(Status.NOT_FOUND).build();
+			System.out.println("savingProject " + projectName);
+			if ( projectService.updateProject( request, projectName ) )
+				return Response.ok().build();
+			else
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		} else
+			return Response.status(Status.BAD_REQUEST).build();
 	}	
 	
 	@GET
