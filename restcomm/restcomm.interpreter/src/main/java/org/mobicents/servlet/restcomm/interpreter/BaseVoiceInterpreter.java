@@ -99,6 +99,7 @@ import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
@@ -532,18 +533,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         }
     }
 
-    URI resolve(final URI base, final URI uri) {
-        if (base.equals(uri)) {
-            return uri;
-        } else {
-            if (!uri.isAbsolute()) {
-                return base.resolve(uri);
-            } else {
-                return uri;
-            }
-        }
-    }
-
     void sendMail(final Notification notification) {
         if (emailAddress == null || emailAddress.isEmpty()) {
             return;
@@ -902,7 +891,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     final DiskCacheRequest request = new DiskCacheRequest(uri);
                     cache.tell(request, source);
                 } else {
@@ -1106,7 +1095,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
                 final URI base = request.getUri();
-                final URI uri = resolve(base, target);
+                final URI uri = UriUtils.resolve(base, target);
                 final List<NameValuePair> parameters = parameters();
                 request = new HttpRequestDescriptor(uri, method, parameters);
                 downloader.tell(request, source);
@@ -1210,7 +1199,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 return;
                             }
                             final URI base = request.getUri();
-                            final URI uri = resolve(base, target);
+                            final URI uri = UriUtils.resolve(base, target);
                             // Cache the prompt.
                             final DiskCacheRequest request = new DiskCacheRequest(uri);
                             cache.tell(request, source);
@@ -1387,7 +1376,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
@@ -1635,7 +1624,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
@@ -1786,7 +1775,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             return;
                         }
                         final URI base = request.getUri();
-                        final URI uri = resolve(base, target);
+                        final URI uri = UriUtils.resolve(base, target);
                         session.tell(new SmsSessionAttribute("callback", uri), source);
                     }
                 }
@@ -1836,7 +1825,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");

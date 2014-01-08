@@ -109,6 +109,7 @@ import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.Unmute;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -491,16 +492,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest
                 // response received
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == call) {
+                //Check from whom is the message (initial call or outbound call) and update info accordingly
+                if(sender == call) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
                 }
             } else if (acquiringCallInfo.equals(state)) {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == call) {
+              //Check from whom is the message (initial call or outbound call) and update info accordingly
+                if(sender == call) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
@@ -1505,7 +1506,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
                 final URI base = request.getUri();
-                final URI uri = resolve(base, target);
+                final URI uri = UriUtils.resolve(base, target);
                 // Parse "method".
                 String method = "POST";
                 attribute = verb.attribute("method");
@@ -1743,20 +1744,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
 
-                final URI base = request.getUri();
-                waitUrl = resolve(base, waitUrl);
-                // Parse method.
-                String method = "POST";
-                attribute = child.attribute("waitMethod");
-                if (attribute != null) {
-                    method = attribute.value();
-                    if (method != null && !method.isEmpty()) {
-                        if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                            final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
-                                    + " is not a valid waitMethod value for <Conference>");
-                            notifications.addNotification(notification);
-                            method = "POST";
-                        }
+                    final URI base = request.getUri();
+                    waitUrl = UriUtils.resolve(base, waitUrl);
+                    // Parse method.
+                    String method = "POST";
+                    attribute = child.attribute("waitMethod");
+                    if (attribute != null) {
+                        method = attribute.value();
+                        if (method != null && !method.isEmpty()) {
+                            if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                                final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
+                                        + " is not a valid waitMethod value for <Conference>");
+                                notifications.addNotification(notification);
+                                method = "POST";
+                            }
                     } else {
                         method = "POST";
                     }
@@ -1845,7 +1846,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
