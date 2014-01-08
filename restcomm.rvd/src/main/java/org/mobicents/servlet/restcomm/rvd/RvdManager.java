@@ -29,6 +29,7 @@ import org.apache.commons.io.IOUtils;
 import com.google.gson.Gson;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.model.client.ActiveProjectInfo;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
@@ -95,20 +96,17 @@ public class RvdManager  {
 		
 		// TODO IMPORTANT!!! sanitize the project name!!
 		
-		String workspaceBasePath = projectService.getWorkspaceBasePath(); 
-		File sourceDir = new File(workspaceBasePath + File.separator + "_proto");
-		File destDir = new File(workspaceBasePath + File.separator + name);
-		if ( !destDir.exists() ) {
-			try {
-				FileUtils.copyDirectory(sourceDir, destDir);
-				return Response.ok().build();
-			} catch (IOException e) {
-				// TODO - do some logging or custom handling
-				e.printStackTrace();
-			}
+		try {
+			projectService.createProject( name );
+		} catch ( IOException e ) {
+			e.printStackTrace();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		} catch ( ProjectDirectoryAlreadyExists e) {
+			e.printStackTrace();
+			return Response.status(Status.CONFLICT).build();
 		}
-
-		return Response.status(Status.BAD_REQUEST).build(); // TODO This is not the correct return code for all cases of error 
+		
+		return Response.ok().build(); 
 	}
 
 	@POST
@@ -170,6 +168,7 @@ public class RvdManager  {
 		}
 		return Response.status(Status.NOT_FOUND).build(); 
 	}
+	
 	
 	@GET @Path("/close")
 	public Response closeActiveProject(@Context HttpServletRequest request) {

@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -12,11 +13,16 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 
 public class ProjectService {
 
@@ -129,6 +135,20 @@ public class ProjectService {
 		}
 		return false;
 	}
+	
+	public void createProject( String projectName ) throws ProjectDirectoryAlreadyExists, IOException {
+		
+		String workspaceBasePath = getWorkspaceBasePath(); 
+		File sourceDir = new File(workspaceBasePath + File.separator + "_proto");
+		File destDir = new File(workspaceBasePath + File.separator + projectName);
+		if ( !destDir.exists() ) {
+			FileUtils.copyDirectory(sourceDir, destDir);
+		} else {
+			throw new ProjectDirectoryAlreadyExists();
+		}
+	}
+	
+	
 	
 	public List<WavFileItem> getWavs(String appName) throws BadWorkspaceDirectoryStructure {
 		List<WavFileItem> items = new ArrayList<WavFileItem>();
