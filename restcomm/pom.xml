@@ -133,6 +133,8 @@
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
         	<module>restcomm.testsuite</module>
+		<module>restcomm.ui</module>
+		<module>restcomm.rvd</module>
     </modules>
 
 
