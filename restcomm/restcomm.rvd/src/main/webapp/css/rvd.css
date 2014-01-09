@@ -222,6 +222,20 @@ ul.verbs {
 	margin: -10px 0 10px 10px;
 }
 
+.rvd-project-item {
+	margin-bottom:4px;
+}
+
+.rvd-project-item .buttonarea i {
+	margin: 10px 5px 5px 0px;
+}
+
+.rvd-project-item .confirm-delete {
+	margin-top:5px; 
+	margin-bottom:15px;
+}
+
+
 
 
 /* 
@@ -230,9 +244,16 @@ ul.verbs {
  * 
  */
 
+.col-centered{
+    float: none;
+    margin: 0 auto;
+}
+
 .navbar-header {
 	float: none;
 }
+
+
 
 
 /* Bootstrap extension for having a lot of stuff on nav-tabs */

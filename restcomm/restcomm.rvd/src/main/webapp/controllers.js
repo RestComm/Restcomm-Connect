@@ -1,6 +1,7 @@
 App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 	
-	console.log( 'initializing projectManager controller');
+	
+	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	
 	$scope.refreshProjectList = function() {
 		$http({url: 'services/manager/projects/list',
@@ -8,11 +9,12 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 		})
 		.success(function (data, status, headers, config) {
 			$scope.projectList = data;
+			for ( var i=0; i < $scope.projectList.length; i ++)
+				$scope.projectList[i].viewMode = 'view';
 		});
 	}
 	
 	$scope.createNewProject = function(name) {
-		console.log( "creating new project " + name );
 		$http({url: 'services/manager/projects?name=' + name,
 				method: "PUT"
 		})
@@ -20,6 +22,43 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 			console.log( "project created");
 			$location.path("/designer/" + name);
 		 });
+	}
+	
+	
+	$scope.editProjectName = function(projectItem) {
+		projectItem.viewMode = 'edit';
+		projectItem.newProjectName = projectItem.name;
+		projectItem.errorMessage = "";
+	}
+	
+	$scope.applyNewProjectName = function(projectItem) {
+		if ( projectItem.name == projectItem.newProjectName ) {
+			projectItem.viewMode = 'view';
+			return;
+		}
+		$http({ method: "PUT", url: 'services/manager/projects/rename?name=' + projectItem.name + "&newName=" + projectItem.newProjectName })
+			.success(function (data, status, headers, config) { 
+				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
+				projectItem.name = projectItem.newProjectName;
+				projectItem.viewMode = 'view';
+				
+			})
+			.error(function (data, status, headers, config) {
+				if (status == 409)
+					projectItem.errorMessage = "Project already exists!";
+				else
+					projectItem.errorMessage = "Cannot rename project";
+			});
+	}
+	
+	$scope.deleteProject = function(projectItem) {
+		$http({ method: "DELETE", url: 'services/manager/projects/delete?name=' + projectItem.name })
+		.success(function (data, status, headers, config) { 
+			console.log( "project " + projectItem.name + " deleted " );
+			$scope.refreshProjectList();
+			projectItem.showConfirmation = false;
+		})
+		.error(function (data, status, headers, config) { console.log("cannot delete project"); });		
 	}
 	
     $scope.refreshProjectList();	
@@ -294,7 +333,6 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 			// maybe override .error() also to display a message?
 		 });
 	}
-	
 
 	
 	// First saves and then builds

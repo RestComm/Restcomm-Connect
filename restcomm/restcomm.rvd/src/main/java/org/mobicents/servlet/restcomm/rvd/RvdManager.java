@@ -10,25 +10,28 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.FileUtils;
+
+import com.google.gson.Gson;
+
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ActiveProjectInfo;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
-
-import com.google.gson.Gson;
 
 @Path("/manager/projects")
 public class RvdManager {
@@ -117,6 +120,47 @@ public class RvdManager {
                 return Response.ok().build();
             else
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } else
+            return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    @PUT
+    @Path("/rename")
+    public Response renameProject(@QueryParam("name") String projectName, @QueryParam("newName") String projectNewName) {
+
+        // TODO IMPORTANT!!! sanitize the project name!!
+        if ((projectName != null && !projectName.equals("")) && (projectNewName != null && !projectNewName.equals(""))) {
+            try {
+                if (projectService.renameProject(projectName, projectNewName))
+                    return Response.ok().build();
+                else
+                    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            } catch (ProjectDoesNotExist e) {
+                e.printStackTrace();
+                return Response.status(Status.NOT_FOUND).build();
+            } catch (ProjectDirectoryAlreadyExists e) {
+                e.printStackTrace();
+                return Response.status(Status.CONFLICT).build();
+            }
+        } else
+            return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    @DELETE
+    @Path("/delete")
+    public Response deleteProject(@QueryParam("name") String projectName) {
+
+        // TODO IMPORTANT!!! sanitize the project name!!
+        if (projectName != null && !projectName.equals("")) {
+            try {
+                if (projectService.deleteProject(projectName))
+                    return Response.ok().build();
+                else
+                    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            } catch (ProjectDoesNotExist e) {
+                e.printStackTrace();
+                return Response.status(Status.NOT_FOUND).build();
+            }
         } else
             return Response.status(Status.BAD_REQUEST).build();
     }
