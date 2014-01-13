@@ -235,12 +235,19 @@ ul.verbs {
 	margin-bottom:15px;
 }
 
-/*
-.assignment select {
-	width: 150px;
+.assignment .btn.pull-right {
+	margin-left: 5px;
+}
+
+.assignment .remove-button {
+	margin-top: 7px;
 	
 }
-*/
+
+.service-url-wrap {
+	margin-bottom: 25px;
+	margin-top: 10px;
+}
 
 
 /* 
