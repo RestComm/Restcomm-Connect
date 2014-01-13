@@ -364,6 +364,9 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		console.log("adding assignment");
 		step.assignments.push({destVariable:'', accessOperations:[], lastOperation: angular.copy($scope.accessOperationProtos.object) });
 	}
+	$scope.removeAssignment = function(step,assignment) {
+		step.assignments.splice( step.assignments.indexOf(assignment), 1 );
+	}
 	
 	$scope.addOperation = function (assignment) {
 		console.log("adding operation");
@@ -376,12 +379,6 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		$scope.addOperation(assignment);
 		assignment.lastOperation = null;
 	}
-	/*
-	$scope.doneOperation = function (assignment) {
-		$scope.addOperation(assignment);
-		assignment.lastOperation = null;
-	}
-	*/
 	
 	$scope.popOperation = function (assignment) { // removes last operation
 		if ( assignment.accessOperations.length > 0 ) {
