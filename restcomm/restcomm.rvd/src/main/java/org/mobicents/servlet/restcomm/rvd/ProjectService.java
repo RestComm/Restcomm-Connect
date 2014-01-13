@@ -2,25 +2,29 @@ package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 public class ProjectService {
 
@@ -47,7 +51,6 @@ public class ProjectService {
      * initial REST request that called this function. Usually this httpRequest comes either from user's browser when he runs
      * Admin-UI or RVD. However, this url will be used in Restcomm too. Make sure that Restcomm can access the generated the
      * same way client's browser does.
-     *
      *
      * @param projectName
      * @param httpRequest
@@ -152,6 +155,53 @@ public class ProjectService {
             e.printStackTrace();
             return false;
         } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Rename a project named "$projectName" to "$newProjectName".
+     */
+    public boolean renameProject(String projectName, String newProjectName) throws ProjectDoesNotExist,
+            ProjectDirectoryAlreadyExists {
+
+        try {
+            if (!projectExists(projectName)) {
+                throw new ProjectDoesNotExist();
+            } else if (projectExists(newProjectName)) {
+                throw new ProjectDirectoryAlreadyExists();
+            }
+            try {
+                String workspaceBasePath = getWorkspaceBasePath();
+                File sourceDir = new File(workspaceBasePath + File.separator + projectName);
+                File destDir = new File(workspaceBasePath + File.separator + newProjectName);
+                FileUtils.moveDirectory(sourceDir, destDir);
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        } catch (BadWorkspaceDirectoryStructure e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteProject(String projectName) throws ProjectDoesNotExist {
+        try {
+            if (!projectExists(projectName))
+                throw new ProjectDoesNotExist();
+            try {
+                String workspaceBasePath = getWorkspaceBasePath();
+                File projectDir = new File(workspaceBasePath + File.separator + projectName);
+                FileUtils.deleteDirectory(projectDir);
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        } catch (BadWorkspaceDirectoryStructure e) {
             e.printStackTrace();
             return false;
         }

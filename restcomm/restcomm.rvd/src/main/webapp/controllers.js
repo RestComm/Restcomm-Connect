@@ -1,6 +1,7 @@
 App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 	
-	console.log( 'initializing projectManager controller');
+	
+	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	
 	$scope.refreshProjectList = function() {
 		$http({url: 'services/manager/projects/list',
@@ -8,11 +9,12 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 		})
 		.success(function (data, status, headers, config) {
 			$scope.projectList = data;
+			for ( var i=0; i < $scope.projectList.length; i ++)
+				$scope.projectList[i].viewMode = 'view';
 		});
 	}
 	
 	$scope.createNewProject = function(name) {
-		console.log( "creating new project " + name );
 		$http({url: 'services/manager/projects?name=' + name,
 				method: "PUT"
 		})
@@ -20,6 +22,43 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 			console.log( "project created");
 			$location.path("/designer/" + name);
 		 });
+	}
+	
+	
+	$scope.editProjectName = function(projectItem) {
+		projectItem.viewMode = 'edit';
+		projectItem.newProjectName = projectItem.name;
+		projectItem.errorMessage = "";
+	}
+	
+	$scope.applyNewProjectName = function(projectItem) {
+		if ( projectItem.name == projectItem.newProjectName ) {
+			projectItem.viewMode = 'view';
+			return;
+		}
+		$http({ method: "PUT", url: 'services/manager/projects/rename?name=' + projectItem.name + "&newName=" + projectItem.newProjectName })
+			.success(function (data, status, headers, config) { 
+				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
+				projectItem.name = projectItem.newProjectName;
+				projectItem.viewMode = 'view';
+				
+			})
+			.error(function (data, status, headers, config) {
+				if (status == 409)
+					projectItem.errorMessage = "Project already exists!";
+				else
+					projectItem.errorMessage = "Cannot rename project";
+			});
+	}
+	
+	$scope.deleteProject = function(projectItem) {
+		$http({ method: "DELETE", url: 'services/manager/projects/delete?name=' + projectItem.name })
+		.success(function (data, status, headers, config) { 
+			console.log( "project " + projectItem.name + " deleted " );
+			$scope.refreshProjectList();
+			projectItem.showConfirmation = false;
+		})
+		.error(function (data, status, headers, config) { console.log("cannot delete project"); });		
 	}
 	
     $scope.refreshProjectList();	
@@ -294,7 +333,6 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 			// maybe override .error() also to display a message?
 		 });
 	}
-	
 
 	
 	// First saves and then builds
@@ -308,6 +346,83 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 			 });
 		});
 	}
+	
+	
+	$scope.accessOperationKinds = ['object', 'array', 'string', 'float', 'boolean'];
+	$scope.accessOperationProtos = {
+			object:{kind:'object',fixed:false, terminal:false},
+			array:{kind:'array',fixed:false, terminal:false},
+			string:{kind:'string',fixed:false, terminal:true},
+			float:{kind:'float',fixed:false, terminal:true},
+			boolean:{kind:'boolean',fixed:false, terminal:true},	
+	};
+	$scope.objectActions = ['propertyNamed'];
+	$scope.arrayActions = ['itemAtPosition'];
+	
+	
+	$scope.addAssignment = function(step) {
+		console.log("adding assignment");
+		step.assignments.push({destVariable:'', accessOperations:[], lastOperation: angular.copy($scope.accessOperationProtos.object) });
+	}
+	$scope.removeAssignment = function(step,assignment) {
+		step.assignments.splice( step.assignments.indexOf(assignment), 1 );
+	}
+	
+	$scope.addOperation = function (assignment) {
+		console.log("adding operation");
+		assignment.lastOperation.fixed = true;
+		assignment.lastOperation.expression = $scope.operationExpression( assignment.lastOperation );
+		assignment.accessOperations.push(assignment.lastOperation);
+		assignment.lastOperation = angular.copy($scope.accessOperationProtos.object)
+	}
+	$scope.doneAddingOperations = function (assignment) {
+		$scope.addOperation(assignment);
+		assignment.lastOperation = null;
+	}
+	
+	$scope.popOperation = function (assignment) { // removes last operation
+		if ( assignment.accessOperations.length > 0 ) {
+			assignment.lastOperation = assignment.accessOperations.pop();
+			assignment.lastOperation.fixed = false;
+		}
+	}
+	
+	$scope.operationExpression = function (operation) {
+		switch (operation.kind) {
+		case 'object':
+			switch (operation.action) {
+			case 'propertyNamed':
+				return "."+operation.property;
+			}
+		break;
+		case 'array':
+			switch (operation.action) {
+			case 'itemAtPosition':
+				return "[" + operation.position + "]";
+			}
+		break;
+		case 'string':
+			return " get String value";
+		break;
+		case 'float':
+			return " get Float value";
+		break;	
+		case 'boolean':
+			return " get Boolean value";
+		break;		
+		}
+		return "UNKNOWN";
+	}
+	
+	$scope.assignmentExpression = function (assignment) {
+		var expr = '';
+		for ( var i=0; i < assignment.accessOperations.length; i++ ) {
+			expr += $scope.operationExpression(assignment.accessOperations[i]);
+		} 
+		return expr;
+	}
+
+	
 	
 	
 	// Run the following after all initialization are complete
