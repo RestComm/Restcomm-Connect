@@ -348,6 +348,86 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 	}
 	
 	
+	$scope.accessOperationKinds = ['object', 'array', 'string', 'float', 'boolean'];
+	$scope.accessOperationProtos = {
+			object:{kind:'object',fixed:false, terminal:false},
+			array:{kind:'array',fixed:false, terminal:false},
+			string:{kind:'string',fixed:false, terminal:true},
+			float:{kind:'float',fixed:false, terminal:true},
+			boolean:{kind:'boolean',fixed:false, terminal:true},	
+	};
+	$scope.objectActions = ['propertyNamed'];
+	$scope.arrayActions = ['itemAtPosition'];
+	
+	
+	$scope.addAssignment = function(step) {
+		console.log("adding assignment");
+		step.assignments.push({destVariable:'', accessOperations:[], lastOperation: angular.copy($scope.accessOperationProtos.object) });
+	}
+	
+	$scope.addOperation = function (assignment) {
+		console.log("adding operation");
+		assignment.lastOperation.fixed = true;
+		assignment.lastOperation.expression = $scope.operationExpression( assignment.lastOperation );
+		assignment.accessOperations.push(assignment.lastOperation);
+		assignment.lastOperation = angular.copy($scope.accessOperationProtos.object)
+	}
+	$scope.doneAddingOperations = function (assignment) {
+		$scope.addOperation(assignment);
+		assignment.lastOperation = null;
+	}
+	/*
+	$scope.doneOperation = function (assignment) {
+		$scope.addOperation(assignment);
+		assignment.lastOperation = null;
+	}
+	*/
+	
+	$scope.popOperation = function (assignment) { // removes last operation
+		if ( assignment.accessOperations.length > 0 ) {
+			assignment.lastOperation = assignment.accessOperations.pop();
+			assignment.lastOperation.fixed = false;
+		}
+	}
+	
+	$scope.operationExpression = function (operation) {
+		switch (operation.kind) {
+		case 'object':
+			switch (operation.action) {
+			case 'propertyNamed':
+				return "."+operation.property;
+			}
+		break;
+		case 'array':
+			switch (operation.action) {
+			case 'itemAtPosition':
+				return "[" + operation.position + "]";
+			}
+		break;
+		case 'string':
+			return " get String value";
+		break;
+		case 'float':
+			return " get Float value";
+		break;	
+		case 'boolean':
+			return " get Boolean value";
+		break;		
+		}
+		return "UNKNOWN";
+	}
+	
+	$scope.assignmentExpression = function (assignment) {
+		var expr = '';
+		for ( var i=0; i < assignment.accessOperations.length; i++ ) {
+			expr += $scope.operationExpression(assignment.accessOperations[i]);
+		} 
+		return expr;
+	}
+
+	
+	
+	
 	// Run the following after all initialization are complete
 	
 	

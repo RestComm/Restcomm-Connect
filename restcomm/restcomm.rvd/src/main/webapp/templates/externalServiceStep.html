@@ -1,0 +1,58 @@
+	<div class="step externalService-step panel panel-rvdstep">
+		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <em><small ng-show='step.isCollapsed'>{{step.phrase}}</small></em><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+		<div class="panel-body" ng-hide='step.isCollapsed'>
+			<div class="row">
+				<div class="col-md-12">
+				
+					<div class="input-group input-group-sm form-group">
+						<span class="input-group-addon">Url</span>
+						<input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
+					</div>
+					<!--<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div> -->
+					
+					<div ng-repeat="assignment in step.assignments" class="row assignment form-group">
+						<div class="col-md-3">
+							<div class="input-group input-group-sm form-group">
+								<span class="input-group-addon">Assign to</span>
+							 	<input ng-model='assignment.destVariable' type="text" class="form-control" placeholder='type variable name' required></input>
+							</div>
+						</div>
+						
+						<div class="col-md-9">
+							<form name="form{{$index}}" novalidate>
+								<div class="input-group input-group-sm form-group">
+									<span class="input-group-addon">{{assignmentExpression(assignment)}}</span>
+									
+									<select ng-show='assignment.lastOperation != null' ng-change='assignment.lastOperation.action=""' ng-model='assignment.lastOperation.kind' ng-options='operationKind as operationKind for operationKind in accessOperationKinds' class="form-control input-sm" required></select>
+
+									<span ng-if='assignment.lastOperation.kind=="object"' class="input-group-addon"></span>
+									<select ng-if='assignment.lastOperation.kind=="object"' ng-change='assignment.lastOperation.property=""' ng-model='assignment.lastOperation.action' ng-options='objectAction as objectAction for objectAction in objectActions' class="form-control input-sm" required></select>
+									<span ng-if='assignment.lastOperation.action=="propertyNamed"' class="input-group-addon"></span>
+									<input ng-if='assignment.lastOperation.action=="propertyNamed"' name='property'  ng-model='assignment.lastOperation.property' placeholder='type the object property to access' class="form-control" required></input>
+
+									<span ng-if='assignment.lastOperation.kind=="array"' class="input-group-addon"></span>
+									<select ng-if='assignment.lastOperation.kind=="array"' ng-change='assignment.lastOperation.position=""'  ng-model='assignment.lastOperation.action' ng-options='arrayAction as arrayAction for arrayAction in arrayActions' class="form-control input-sm" required></select>
+									<span ng-if='assignment.lastOperation.action=="itemAtPosition"' class="input-group-addon"></span>
+									<input ng-if='assignment.lastOperation.action=="itemAtPosition"' name='position' ng-model='assignment.lastOperation.position' placeholder='type array item index'  class="form-control" required></input>
+									
+									<span class="input-group-addon"></span>
+								</div>
+								<!-- <div class="validation-error" ng-show="form{{$index}}.property.$error.required">property required</div>
+								<div class="validation-error" ng-show="form{{$index}}.position.$error.required">item position required</div>
+								-->
+								<button ng-show='!accessOperationProtos[assignment.lastOperation.kind].terminal' ng-disabled='form{{$index}}.$invalid' ng-click="addOperation(assignment)" type="button" class="btn btn-primary btn-xs pull-right"><span>Add operation</span></button>
+								<button ng-show='accessOperationProtos[assignment.lastOperation.kind].terminal' ng-click="doneAddingOperations(assignment)" type="button" class="btn btn-primary btn-xs pull-right"><span>Done</span></button>
+								<button ng-show='assignment.accessOperations.length > 0' ng-click='popOperation(assignment)' type='button' class="btn btn-primary btn-xs pull-right"><i  class="fa fa-undo" ></i></button>
+
+							</form>
+						</div>
+
+					</div>
+					<button ng-click="addAssignment(step)" type="button" class="btn btn-primary btn-xs"><span>Add assignment</span></button>
+					
+				
+				</div>
+			</div>
+					
+		</div>
+	</div>
