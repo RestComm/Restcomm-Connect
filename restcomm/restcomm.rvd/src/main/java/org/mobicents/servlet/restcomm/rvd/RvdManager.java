@@ -29,15 +29,11 @@ import com.google.gson.Gson;
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.model.client.ActiveProjectInfo;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
 
 @Path("/manager/projects")
 public class RvdManager {
-
-    private static final String projectSessionAttribute = "project"; // the name of the session variable where the active
-                                                                     // project will be stored
 
     @Context
     ServletContext servletContext;
@@ -176,7 +172,7 @@ public class RvdManager {
         File stateFile = new File(workspaceBasePath + File.separator + name + File.separator + "state");
         try {
             FileInputStream stateFileStream = new FileInputStream(stateFile);
-            request.getSession().setAttribute(projectSessionAttribute, name); // mark the open project in the session
+            //request.getSession().setAttribute(projectSessionAttribute, name); // mark the open project in the session
             return Response.ok().entity(stateFileStream).build();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
@@ -186,34 +182,13 @@ public class RvdManager {
         return Response.status(Status.BAD_REQUEST).build(); // TODO This is not the correct return code for all cases of error
     }
 
-    @GET
-    @Path("/active")
-    public Response getActiveProject(@Context HttpServletRequest request) {
-        String name = (String) request.getSession().getAttribute(projectSessionAttribute);
-        if (name != null && !name.equals("")) {
-            ActiveProjectInfo projectInfo = new ActiveProjectInfo();
-            projectInfo.setName(name);
-
-            Gson gson = new Gson(); // TODO - maybe inject this and create it all the time. See
-                                    // https://bitbucket.org/telestax/telscale-restcomm/src/dec355993594e902f3155324f49b57ee76727548/restcomm/restcomm.http/src/main/java/org/mobicents/servlet/restcomm/http/IncomingPhoneNumbersEndpoint.java?at=ts713#cl-242
-            return Response.ok(gson.toJson(projectInfo), MediaType.APPLICATION_JSON).build();
-        }
-        return Response.status(Status.NOT_FOUND).build();
-    }
-
-    @GET
-    @Path("/close")
-    public Response closeActiveProject(@Context HttpServletRequest request) {
-        if (request.getSession().getAttribute(projectSessionAttribute) != null)
-            request.getSession().removeAttribute(projectSessionAttribute);
-
-        return Response.ok().build();
-    }
 
     @POST
     @Path("/build")
-    public Response buildProject(@Context HttpServletRequest request) {
-        String name = (String) request.getSession().getAttribute(projectSessionAttribute);
+    public Response buildProject( @QueryParam("name") String name ) {
+
+        // !!! SANITIZE project name
+
         if (name != null && !name.equals("")) {
 
             String workspaceBasePath = projectService.getWorkspaceBasePath();
@@ -248,7 +223,7 @@ public class RvdManager {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        return Response.status(Status.NOT_FOUND).build();
+        return Response.status(Status.BAD_REQUEST).build();
     }
 
 }

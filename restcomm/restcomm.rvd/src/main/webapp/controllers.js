@@ -338,7 +338,7 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 	// First saves and then builds
 	$scope.buildProject = function() {
 		$scope.saveProject(function() {
-			$http({url: 'services/manager/projects/build', method: "POST"})
+			$http({url: 'services/manager/projects/build?name=' + $scope.projectName, method: "POST"})
 			.success(function (data, status, headers, config) {
 				console.log("Build succesfull");
 			 }).error(function (data, status, headers, config) {
