@@ -1000,8 +1000,10 @@ public final class Call extends UntypedActor {
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
+            if(invite.getSession().isValid())
+                invite.getSession().invalidate();
+            if(invite.getApplicationSession().isValid())
+                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1027,8 +1029,10 @@ public final class Call extends UntypedActor {
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
+            if(invite.getSession().isValid())
+                invite.getSession().invalidate();
+            if(invite.getApplicationSession().isValid())
+                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);

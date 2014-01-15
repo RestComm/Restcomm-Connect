@@ -58,5 +58,4 @@ public final class CallsJsonEndpoint extends CallsEndpoint {
             final MultivaluedMap<String, String> data) {
         return updateCall(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
-
 }
