@@ -36,11 +36,23 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- Parameters for outbound proxy. -->
-		<outbound-proxy-user></outbound-proxy-user>
-		<outbound-proxy-password></outbound-proxy-password>
-		<outbound-proxy-uri>127.0.0.1:5070</outbound-proxy-uri>
-
+		<outbound-proxy>
+			<!-- Parameters for primary outbound proxy. -->
+			<outbound-proxy-user></outbound-proxy-user>
+			<outbound-proxy-password></outbound-proxy-password>
+			<outbound-proxy-uri>127.0.0.1:5070</outbound-proxy-uri>
+	
+			<!-- Parameters for fallback outbound proxy. -->
+			<fallback-outbound-proxy-user></fallback-outbound-proxy-user>
+			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
+			<fallback-outbound-proxy-uri>127.0.0.1:5090</fallback-outbound-proxy-uri>
+			
+			<!-- Number of maximum failed calls before switching from primary to the fallback outbound proxy -->
+			<allow-fallback>false</allow-fallback>
+			<max-failed-calls>20</max-failed-calls>
+			<allow-fallback-to-primary>true</allow-fallback-to-primary>
+		</outbound-proxy>
+		
 		<!-- Each permission is represented as three columns Domain:Action:Target 
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
@@ -61,6 +73,7 @@
 				<permission>RestComm:*:ShortCodes</permission>
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
+				<permission>RestComm:*:OutboundProxies</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>

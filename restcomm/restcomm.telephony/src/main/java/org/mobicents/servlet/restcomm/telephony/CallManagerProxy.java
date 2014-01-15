@@ -16,12 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-
 import java.io.IOException;
 
 import javax.servlet.ServletConfig;
@@ -35,9 +29,14 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
-
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -47,6 +46,8 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     private ActorSystem system;
     private ActorRef manager;
+
+    private Configuration configuration;
 
     public CallManagerProxy() {
         super();
@@ -65,13 +66,13 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
-        manager.tell(response, null);
-    }
+            manager.tell(response, null);
+        }
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
         final ServletContext context = config.getServletContext();
-        final Configuration xml = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         final ActorRef gateway = (ActorRef) context.getAttribute(MediaGateway.class.getName());
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
@@ -79,7 +80,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
         final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
         final ActorRef conferences = conferences(gateway);
         final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
-        manager = manager(xml, gateway, conferences, sms, factory, storage);
+        manager = manager(configuration, gateway, conferences, sms, factory, storage);
         context.setAttribute(CallManager.class.getName(), manager);
     }
 

@@ -23,9 +23,15 @@ import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
@@ -37,17 +43,20 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
@@ -82,6 +91,13 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
  * @author jean.deruelle@telestax.com
  */
 public final class CallManager extends UntypedActor {
+
+    static final int ERROR_NOTIFICATION = 0;
+    static final int WARNING_NOTIFICATION = 1;
+    static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
+    static final String EMAIL_SENDER = "restcomm@restcomm.org";
+    static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
+
     private final ActorSystem system;
     private final Configuration configuration;
     private final ActorRef conferences;
@@ -94,7 +110,19 @@ public final class CallManager extends UntypedActor {
     // alternatively the Request URI can be used
     private boolean useTo;
 
+    private AtomicInteger numberOfFailedCalls;
+    private AtomicBoolean useFallbackProxy;
+    private boolean allowFallback;
+    private boolean allowFallbackToPrimary;
+    private int maxNumberOfFailedCalls;
+
+    private String primaryProxyUri;
+    private String fallBackProxyUri;
+    private String activeProxy;
+
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    private CreateCall createCallRequest;
+    private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ActorSystem system, final ActorRef gateway,
             final ActorRef conferences, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
@@ -107,7 +135,37 @@ public final class CallManager extends UntypedActor {
         this.sipFactory = factory;
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
+        final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         this.useTo = runtime.getBoolean("use-to");
+        this.primaryProxyUri = outboundProxyConfig.getString("outbound-proxy-uri");
+        this.fallBackProxyUri = outboundProxyConfig.getString("fallback-outbound-proxy-uri");
+        this.activeProxy = primaryProxyUri;
+
+        numberOfFailedCalls = new AtomicInteger();
+        numberOfFailedCalls.set(0);
+        useFallbackProxy = new AtomicBoolean();
+        useFallbackProxy.set(false);
+
+        Boolean bool = outboundProxyConfig.getBoolean("allow-fallback");
+        if (bool != null) {
+            allowFallback = bool;
+        } else {
+            allowFallback = false;
+        }
+
+        final Integer value = outboundProxyConfig.getInt("max-failed-calls");
+        if (value != null) {
+            maxNumberOfFailedCalls = value.intValue();
+        } else {
+            maxNumberOfFailedCalls = 20;
+        }
+
+        bool = outboundProxyConfig.getBoolean("allow-fallback-to-primary");
+        if (bool != null) {
+            allowFallbackToPrimary = bool;
+        } else {
+            allowFallbackToPrimary = false;
+        }
     }
 
     private ActorRef call() {
@@ -175,10 +233,10 @@ public final class CallManager extends UntypedActor {
             // Next try to see if the request is destined to another registered client
         } else {
             if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have
-                                  // little control over
+                // little control over
                 Client toClient = clients.getClient(toUser);
                 if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
-                                        // the b2bua
+                    // the b2bua
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
                         // if all goes well with proxying the invitation on to the next client
                         // then we can end further processing of this INVITE
@@ -195,6 +253,7 @@ public final class CallManager extends UntypedActor {
     /**
      * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
+     *
      * @param self
      * @param request
      * @param accounts
@@ -256,6 +315,7 @@ public final class CallManager extends UntypedActor {
 
     /**
      * If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
+     *
      * @param self
      * @param request
      * @param accounts
@@ -328,6 +388,7 @@ public final class CallManager extends UntypedActor {
             }
         } else if (CreateCall.class.equals(klass)) {
             try {
+                this.createCallRequest = (CreateCall) message;
                 sender.tell(new CallManagerResponse<ActorRef>(outbound(message)), self);
             } catch (final Exception exception) {
                 sender.tell(new CallManagerResponse<ActorRef>(exception), self);
@@ -349,6 +410,13 @@ public final class CallManager extends UntypedActor {
             timeout(message);
         } else if (GetCall.class.equals(klass)) {
             sender.tell(lookup(message), self);
+        } else if (GetActiveProxy.class.equals(klass)) {
+            sender.tell(getActiveProxy(), self);
+        } else if (SwitchProxy.class.equals(klass)) {
+            this.switchProxyRequest = (SwitchProxy) message;
+            sender.tell(switchProxy(), self);
+        } else if (GetProxies.class.equals(klass)) {
+            sender.tell(getProxies(message), self);
         }
     }
 
@@ -424,7 +492,8 @@ public final class CallManager extends UntypedActor {
     private ActorRef outbound(final Object message) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
         final Configuration runtime = configuration.subset("runtime-settings");
-        final String uri = runtime.getString("outbound-proxy-uri");
+        // final String uri = runtime.getString("outbound-proxy-uri");
+        final String uri = getActiveProxy().get("ActiveProxy");
         final SipURI from = sipFactory.createSipURI(request.from(), uri);
         SipURI to = null;
         switch (request.type()) {
@@ -451,11 +520,12 @@ public final class CallManager extends UntypedActor {
         final ActorRef call = call();
         final ActorRef self = self();
         final CallDetailRecordsDao recordsDao = null;
-        if (request.isCreateCDR()){
-                storage.getCallDetailRecordsDao();
+        if (request.isCreateCDR()) {
+            storage.getCallDetailRecordsDao();
         }
         final InitializeOutbound init = new InitializeOutbound(null, from, to, request.username(), request.password(),
-                request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), recordsDao);
+                request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(),
+                recordsDao);
         call.tell(init, self);
         return call;
     }
@@ -504,6 +574,11 @@ public final class CallManager extends UntypedActor {
     public void response(final Object message) throws IOException {
         final ActorRef self = self();
         final SipServletResponse response = (SipServletResponse) message;
+
+        // If Allow-Falback is true, check for error reponses and switch proxy if needed
+        if (allowFallback)
+            checkErrorResponse(response);
+
         final SipApplicationSession application = response.getApplicationSession();
 
         // if this response is coming from a client that is in a p2p session with another registered client
@@ -511,9 +586,11 @@ public final class CallManager extends UntypedActor {
         if (B2BUAHelper.isB2BUASession(response)) {
             B2BUAHelper.forwardResponse(response);
         } else {
-            // otherwise the response is coming back to a Voice app hosted by Restcomm
-            final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-            call.tell(response, self);
+            if (application.isValid()) {
+                // otherwise the response is coming back to a Voice app hosted by Restcomm
+                final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
+                call.tell(response, self);
+            }
         }
     }
 
@@ -534,5 +611,104 @@ public final class CallManager extends UntypedActor {
         final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
         final ReceiveTimeout timeout = ReceiveTimeout.getInstance();
         call.tell(timeout, self);
+    }
+
+    public void checkErrorResponse(SipServletResponse response) {
+        // Response should not be a proxy branch response and request should be initial and INVITE
+        if (!response.isBranchResponse()
+                && (response.getRequest().getMethod().equalsIgnoreCase("INVITE") && response.getRequest().isInitial())) {
+
+            final int status = response.getStatus();
+            // Response status should be > 400 BUT NOT 401, 404, 407
+            if (status != SipServletResponse.SC_UNAUTHORIZED && status != SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED
+                    && status != SipServletResponse.SC_NOT_FOUND && status > 400) {
+
+                int failures = numberOfFailedCalls.incrementAndGet();
+                logger.info("A total number of " + failures + " failures have now been counted.");
+
+                if (failures >= maxNumberOfFailedCalls) {
+                    logger.info("Max number of failed calls has been reached trying to switch over proxy.");
+                    logger.info("Current proxy: " + getActiveProxy());
+                    switchProxy();
+                    logger.info("Switched to proxy: " + getActiveProxy());
+                    numberOfFailedCalls.set(0);
+                }
+            }
+        }
+    }
+
+    public Map<String, String> getActiveProxy() {
+        Map<String, String> activeProxyMap = new ConcurrentHashMap<String, String>();
+        activeProxyMap.put("ActiveProxy", this.activeProxy);
+        return activeProxyMap;
+    }
+
+    public Map<String, String> switchProxy() {
+        if (activeProxy.equalsIgnoreCase(primaryProxyUri)) {
+            activeProxy = fallBackProxyUri;
+            useFallbackProxy.set(true);
+        } else if (allowFallbackToPrimary) {
+            activeProxy = primaryProxyUri;
+            useFallbackProxy.set(false);
+        }
+        final Notification notification = notification(WARNING_NOTIFICATION, 14110, "Max number of failed calls has been reached! Outbound proxy switched");
+        final NotificationsDao notifications = storage.getNotificationsDao();
+        notifications.addNotification(notification);
+        return getActiveProxy();
+    }
+
+    public Map<String, String> getProxies(final Object message) {
+        Map<String, String> proxies = new ConcurrentHashMap<String, String>();
+
+        proxies.put("ActiveProxy", activeProxy);
+        proxies.put("UsingFallBackProxy", useFallbackProxy.toString());
+        proxies.put("AllowFallbackToPrimary", String.valueOf(allowFallbackToPrimary));
+        proxies.put("PrimaryProxy", primaryProxyUri);
+        proxies.put("FallbackProxy", fallBackProxyUri);
+
+        return proxies;
+    }
+
+    private Notification notification(final int log, final int error, final String message) {
+        String version = configuration.subset("runtime-settings").getString("api-version");
+        Sid accountId = null;
+        if (createCallRequest != null) {
+            accountId = createCallRequest.accountId();
+        } else if(switchProxyRequest != null) {
+            accountId = switchProxyRequest.getSid();
+        }
+        final Notification.Builder builder = Notification.builder();
+        final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+        builder.setSid(sid);
+        builder.setAccountSid(accountId);
+        builder.setApiVersion(version);
+        builder.setLog(log);
+        builder.setErrorCode(error);
+        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(base);
+        if (!base.endsWith("/")) {
+            buffer.append("/");
+        }
+        buffer.append(error).append(".html");
+        final URI info = URI.create(buffer.toString());
+        builder.setMoreInfo(info);
+        builder.setMessageText(message);
+        final DateTime now = DateTime.now();
+        builder.setMessageDate(now);
+        try {
+            builder.setRequestUrl(new URI(""));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        builder.setRequestMethod("");
+        builder.setRequestVariables("");
+        buffer = new StringBuilder();
+        buffer.append("/").append(version).append("/Accounts/");
+        buffer.append(accountId.toString()).append("/Notifications/");
+        buffer.append(sid.toString());
+        final URI uri = URI.create(buffer.toString());
+        builder.setUri(uri);
+        return builder.build();
     }
 }

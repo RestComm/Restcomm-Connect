@@ -162,7 +162,10 @@ public class B2BUAHelper {
     }
 
     public static SipSession getLinkedSession(SipServletMessage message) {
-        SipSession sipSession = (SipSession) message.getSession().getAttribute(B2BUA_LINKED_SESSION);
+        SipSession sipSession = null;
+        if (message.getSession().isValid()){
+            sipSession = (SipSession) message.getSession().getAttribute(B2BUA_LINKED_SESSION);
+        }
         if (sipSession == null) {
             logger.info("SIP SESSION is NULL");
         }
