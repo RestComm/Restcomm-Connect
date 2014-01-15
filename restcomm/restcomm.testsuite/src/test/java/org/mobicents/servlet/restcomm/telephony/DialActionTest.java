@@ -54,7 +54,6 @@ import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 import org.mobicents.servlet.restcomm.telephony.RestResources.DialActionResources;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**
