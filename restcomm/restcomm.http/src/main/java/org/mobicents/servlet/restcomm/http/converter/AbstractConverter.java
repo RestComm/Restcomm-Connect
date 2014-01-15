@@ -35,6 +35,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public abstract class AbstractConverter implements Converter {
     protected final Configuration configuration;
@@ -77,13 +78,16 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeCallSid(final Sid callSid, final HierarchicalStreamWriter writer) {
-        writer.startNode("CallSid");
-        writer.setValue(callSid.toString());
-        writer.endNode();
+        if (callSid != null) {
+            writer.startNode("CallSid");
+            writer.setValue(callSid.toString());
+            writer.endNode();
+        }
     }
 
     protected void writeCallSid(final Sid callSid, final JsonObject object) {
-        object.addProperty("call_sid", callSid.toString());
+        if (callSid != null)
+            object.addProperty("call_sid", callSid.toString());
     }
 
     protected void writeDateCreated(final DateTime dateCreated, final HierarchicalStreamWriter writer) {
@@ -430,7 +434,8 @@ public abstract class AbstractConverter implements Converter {
         }
     }
 
-    protected void writeCapabilities(final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final HierarchicalStreamWriter writer) {
+    protected void writeCapabilities(final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable,
+            final Boolean faxCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Capabilities");
         writeVoiceCapability(voiceCapable, writer);
         writeSmsCapability(smsCapable, writer);
@@ -439,7 +444,8 @@ public abstract class AbstractConverter implements Converter {
         writer.endNode();
     }
 
-    protected void writeCapabilities(final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final JsonObject object) {
+    protected void writeCapabilities(final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable,
+            final Boolean faxCapable, final JsonObject object) {
         JsonObject capabilities = new JsonObject();
         writeVoiceCapability(voiceCapable, capabilities);
         writeSmsCapability(smsCapable, capabilities);
