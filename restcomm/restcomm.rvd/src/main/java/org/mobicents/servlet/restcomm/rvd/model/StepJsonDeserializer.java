@@ -8,6 +8,8 @@ import org.mobicents.servlet.restcomm.rvd.model.client.HungupStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.model.client.AccessRawOperation;
+import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,7 +27,10 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
         JsonObject step_object = rootElement.getAsJsonObject();
         String kind = step_object.get("kind").getAsString();
 
-        Gson gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
+        Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Step.class, new StepJsonDeserializer())
+            .registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
+            .create();
 
         Step step;
         if ("say".equals(kind))
@@ -38,6 +43,8 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
             step = gson.fromJson(step_object, HungupStep.class);
         else if ("play".equals(kind))
             step = gson.fromJson(step_object, PlayStep.class);
+        else if ("externalService".equals(kind))
+            step = gson.fromJson(step_object, ExternalServiceStep.class);
         else {
             step = null;
             System.out.println("Error deserializing step. Unknown step found!"); // TODO remove me and return a nice value!!!
