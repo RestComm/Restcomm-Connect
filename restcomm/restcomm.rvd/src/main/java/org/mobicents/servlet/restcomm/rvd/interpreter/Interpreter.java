@@ -110,11 +110,11 @@ public class Interpreter {
                 throw new UndefinedTarget();
             System.out.println("override default target to " + targetParam);
         }
-        return interpret(targetParam);
+        return interpret(targetParam, null);
 
     }
 
-    private String interpret(String targetParam) throws IOException, InterpreterException {
+    private String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
 
         System.out.println("starting interpeter for " + targetParam);
 
@@ -128,7 +128,8 @@ public class Interpreter {
         } else {
             // RCML Generation
 
-            RcmlResponse rcmlModel = new RcmlResponse();
+            if (rcmlModel == null )
+                rcmlModel = new RcmlResponse();
             String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
                     + target.getNodename() + ".node"));
             List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>() {
@@ -147,7 +148,11 @@ public class Interpreter {
                 if (startstep_found) {
                     // we found our starting step. Let's start processing
                     Step step = loadStep(stepname);
-                    processStep(step); // is meaningful only for some of the steps like ExternalService steps
+                    String rerouteTo = processStep(step); // is meaningful only for some of the steps like ExternalService steps
+                    // check if we have to break the currently rendered module
+                    if ( rerouteTo != null )
+                        return interpret(rerouteTo, rcmlModel);
+                    // otherwise continue rendering the current module
                     RcmlStep rcmlStep = renderStep(step);
                     if ( rcmlStep != null)
                         rcmlModel.steps.add(rcmlStep);
@@ -201,8 +206,9 @@ public class Interpreter {
      * @param step
      * @throws IOException
      * @throws ClientProtocolException
+     * @return String Break the module being currently rendered and continue with rendering the named target.
      */
-    private void processStep(Step step) throws IOException, InterpreterException {
+    private String processStep(Step step) throws IOException, InterpreterException {
         if (step.getClass().equals(ExternalServiceStep.class)) {
 
             ExternalServiceStep esStep = (ExternalServiceStep) step;
@@ -237,9 +243,17 @@ public class Interpreter {
                 response.close();
             }
 
+            if ( esStep.getDoRouting() ) {
+                if ( "fixed".equals( esStep.getNextType() ) )
+                    return esStep.getNext();
+                else
+                if ( "variable".equals( esStep.getNextType() ))
+                    return variables.get( esStep.getNextVariable() );
+            }
         }
-
+        return null;
     }
+
 
     public void handleAction(String action) throws IOException, InterpreterException {
 
@@ -261,19 +275,19 @@ public class Interpreter {
                     if (mapping.getDigits() != null && mapping.getDigits().equals(digits)) {
                         // seems we found out menu selection
                         System.out.println("seems we found out menu selection");
-                        interpret(mapping.getNext());
+                        interpret(mapping.getNext(),null);
                         handled = true;
                     }
                 }
                 if (!handled) {
-                    interpret(target.nodename + "." + target.stepname);
+                    interpret(target.nodename + "." + target.stepname,null);
                 }
             }
             if ("collectdigits".equals(gatherStep.getGatherType())) {
 
                 String variableName = gatherStep.getCollectVariable();
                 variables.put(variableName, httpRequest.getParameter("Digits")); // put the string directly
-                interpret(gatherStep.getNext());
+                interpret(gatherStep.getNext(),null);
             }
         } else {
             throw new RVDUnsupportedHandlerVerb();

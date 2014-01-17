@@ -49,4 +49,12 @@ public class ExternalServiceStep extends Step {
     public void setNextType(String nextType) {
         this.nextType = nextType;
     }
+
+    public String getNextVariable() {
+        return nextVariable;
+    }
+
+    public void setNextVariable(String nextVariable) {
+        this.nextVariable = nextVariable;
+    }
 }

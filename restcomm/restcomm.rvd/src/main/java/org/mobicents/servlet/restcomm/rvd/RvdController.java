@@ -30,7 +30,7 @@ public class RvdController {
     // private static final String workspaceDirectoryName = "workspace";
     // private static final String protoDirectoryName = "_proto"; // the prototype project directory name
 
-    private String workspaceBasePath;
+    //private String workspaceBasePath;
 
     @Context
     ServletContext servletContext;
