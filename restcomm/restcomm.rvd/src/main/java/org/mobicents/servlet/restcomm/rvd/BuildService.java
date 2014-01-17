@@ -24,7 +24,8 @@ public class BuildService {
 
     public BuildService() {
         // Parse the big project state object into a nice dto model
-        gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer())
+        gson = new GsonBuilder()
+                .registerTypeAdapter(Step.class, new StepJsonDeserializer())
                 .registerTypeAdapter(Step.class, new StepJsonSerializer())
                 //.registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
                 .create();

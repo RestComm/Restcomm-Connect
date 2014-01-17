@@ -103,6 +103,13 @@ label {
 	opacity: 0.6
 }
 
+.rvd-clickable-text {
+	cursor: pointer;
+}
+.rvd-clickable-text:hover {
+	opacity: 1.0;
+}
+
 .rvd-pickable {
 	cursor: move;
 }
