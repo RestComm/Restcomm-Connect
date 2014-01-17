@@ -9,8 +9,6 @@ import org.mobicents.servlet.restcomm.rvd.model.StepJsonSerializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
-import org.mobicents.servlet.restcomm.rvd.model.client.AccessRawOperation;
-import org.mobicents.servlet.restcomm.rvd.model.AccessRawOperationJsonDeserializer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,7 +26,7 @@ public class BuildService {
         // Parse the big project state object into a nice dto model
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer())
                 .registerTypeAdapter(Step.class, new StepJsonSerializer())
-                .registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
+                //.registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
                 .create();
     }
 
