@@ -13,7 +13,7 @@
 						<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
 					</ul>
 				</li>
-				<li><a ng-click="addNode()"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
+				<li><a ng-click="addNode()" class="rvd-clickable-text"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
 			</ul>
 
 			<ul class="nav navbar-nav navbar-right">
@@ -58,7 +58,7 @@
 						<li my-draggable='.sortable-steps' id='buttonsay'
 							class="active verb bs-callout-draggable verb-button kind-say rvd-pickable"><a
 							><i class='fa fa-comments'></i> &nbsp;Say</a></li>
-						<li my-draggable='.sortable-steps.root' id='buttonplay'
+						<li my-draggable='.sortable-steps' id='buttonplay'
 							class="active verb bs-callout-draggable verb-button kind-play rvd-pickable"><a
 							><i class='fa fa-comments'></i> &nbsp;Play</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttongather'
