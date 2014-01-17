@@ -188,6 +188,7 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		for ( var i = 0; i < $scope.nodes.length; i++ ) {
 			var anynode = $scope.nodes[i];
 			alltargets.push( {label: anynode.label, name:anynode.name} );
+			/*
 			for ( var j=0; j < anynode.stepnames.length; j++ ) {
 				var stepname = anynode.stepnames[j];
 				if ( anynode.steps.hasOwnProperty(stepname) )
@@ -211,6 +212,7 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 					label = anynode.label + "." + step.name + label;
 					alltargets.push( {label: label, name: name} );
 			}
+			*/
 		}
 		return alltargets;	
 	}
