@@ -348,13 +348,13 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 	}
 	
 	
-	$scope.accessOperationKinds = ['object', 'array', 'string', 'float', 'boolean'];
+	$scope.accessOperationKinds = ['object', 'array', 'string']; //, 'float', 'boolean'];
 	$scope.accessOperationProtos = {
 			object:{kind:'object',fixed:false, terminal:false},
 			array:{kind:'array',fixed:false, terminal:false},
 			string:{kind:'string',fixed:false, terminal:true},
-			float:{kind:'float',fixed:false, terminal:true},
-			boolean:{kind:'boolean',fixed:false, terminal:true},	
+			//float:{kind:'float',fixed:false, terminal:true},
+			//boolean:{kind:'boolean',fixed:false, terminal:true},	
 	};
 	$scope.objectActions = ['propertyNamed'];
 	$scope.arrayActions = ['itemAtPosition'];
@@ -402,14 +402,14 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 			}
 		break;
 		case 'string':
-			return " get String value";
+			return " string value";
 		break;
-		case 'float':
+		/*case 'float':
 			return " get Float value";
 		break;	
 		case 'boolean':
 			return " get Boolean value";
-		break;		
+		break;*/		
 		}
 		return "UNKNOWN";
 	}

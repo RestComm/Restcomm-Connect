@@ -8,7 +8,6 @@ import org.mobicents.servlet.restcomm.rvd.model.client.HungupStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
-import org.mobicents.servlet.restcomm.rvd.model.client.AccessRawOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 
 import com.google.gson.Gson;
@@ -29,7 +28,7 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
 
         Gson gson = new GsonBuilder()
             .registerTypeAdapter(Step.class, new StepJsonDeserializer())
-            .registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
+            //.registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
             .create();
 
         Step step;

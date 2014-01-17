@@ -6,6 +6,7 @@ public class ExternalServiceStep extends Step {
     private String url;
     private List<Assignment> assignments;
     private String next;
+    private String nextVariable;
     private Boolean doRouting;
     private String nextType;
 
