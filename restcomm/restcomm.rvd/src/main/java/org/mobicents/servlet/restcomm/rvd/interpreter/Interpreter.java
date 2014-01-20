@@ -42,6 +42,7 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
+import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
 import org.mobicents.servlet.restcomm.rvd.model.client.Assignment;
 
@@ -62,6 +63,7 @@ public class Interpreter {
     private HttpServletRequest httpRequest;
     private String rcmlResult;
     private Map<String, String> variables = new HashMap<String, String>();
+    private List<NodeName> nodeNames;
 
     public Interpreter() {
         xstream = new XStream();
@@ -108,6 +110,7 @@ public class Interpreter {
             targetParam = projectOptions.getDefaultTarget();
             if (targetParam == null)
                 throw new UndefinedTarget();
+            nodeNames = projectOptions.getNodeNames();
             System.out.println("override default target to " + targetParam);
         }
         return interpret(targetParam, null);
@@ -244,11 +247,13 @@ public class Interpreter {
             }
 
             if ( esStep.getDoRouting() ) {
+                String nextLabel = "";
                 if ( "fixed".equals( esStep.getNextType() ) )
-                    return esStep.getNext();
+                    nextLabel = esStep.getNext();
                 else
                 if ( "variable".equals( esStep.getNextType() ))
-                    return variables.get( esStep.getNextVariable() );
+                    nextLabel = variables.get( esStep.getNextVariable() );
+                return getNodeNameByLabel(nextLabel);
             }
         }
         return null;
@@ -464,5 +469,17 @@ public class Interpreter {
         }
 
         return target;
+    }
+
+    /**
+     * @param label
+     * @return The 'name' of the first node with the specified label. If not found returns null
+     */
+    private String getNodeNameByLabel( String label ) {
+        for ( NodeName nodename : nodeNames ) {
+            if ( label.equals(nodename.getLabel()) )
+                return nodename.getName();
+        }
+        return null;
     }
 }

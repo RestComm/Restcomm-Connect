@@ -8,6 +8,7 @@ import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonSerializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
 
 import com.google.gson.Gson;
@@ -46,14 +47,20 @@ public class BuildService {
 
         // Save general purpose project information
         // Use the start node name as a default target. We could use a more specialized target too here
-        projectOptions.setDefaultTarget(projectState.getStartNodeName());
-        File outFile = new File(projectPath + "data/" + "project");
-        FileUtils.writeStringToFile(outFile, gson.toJson(projectOptions), "UTF-8");
 
         // Build the nodes one by one
         for (ProjectState.Node node : projectState.getNodes()) {
             buildNode(node, projectPath);
+            NodeName nodeName = new NodeName();
+            nodeName.setName(node.getName());
+            nodeName.setLabel(node.getLabel());
+            projectOptions.getNodeNames().add( nodeName );
         }
+
+        projectOptions.setDefaultTarget(projectState.getStartNodeName());
+        // Save the nodename-node-label mapping
+        File outFile = new File(projectPath + "data/" + "project");
+        FileUtils.writeStringToFile(outFile, gson.toJson(projectOptions), "UTF-8");
     }
 
     /**
