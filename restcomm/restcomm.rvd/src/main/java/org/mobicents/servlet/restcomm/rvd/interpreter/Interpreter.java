@@ -217,7 +217,9 @@ public class Interpreter {
             ExternalServiceStep esStep = (ExternalServiceStep) step;
 
             CloseableHttpClient client = HttpClients.createDefault();
-            HttpGet get = new HttpGet(esStep.getUrl());
+            String url = populateVariables(esStep.getUrl());
+            System.out.println( "External Service url: " + url);
+            HttpGet get = new HttpGet( url );
             CloseableHttpResponse response = client.execute( get );
 
             JsonParser parser = new JsonParser();
