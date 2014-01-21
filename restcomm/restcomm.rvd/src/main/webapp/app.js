@@ -25,7 +25,7 @@ App.factory('stepService', function($rootScope) {
 					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
 					redirect: {kind:'redirect', label:'redirect', title:'redirect', next:''},
 					hungup: {kind:'hungup', label:'hang up', title:'hang up', next:''},
-					externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:''},
+					externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:''},
 		},
 		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
 		lastStepId: 0,
