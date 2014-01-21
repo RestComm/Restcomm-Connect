@@ -2,6 +2,8 @@ package org.mobicents.servlet.restcomm.rvd.interpreter;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,12 +18,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.UnsupportedRVDStep;
@@ -211,6 +215,7 @@ public class Interpreter {
      * @throws IOException
      * @throws ClientProtocolException
      * @return String Break the module being currently rendered and continue with rendering the named target.
+     * @throws ErrorParsingExternalServiceUrl
      */
     private String processStep(Step step) throws IOException, InterpreterException {
         if (step.getClass().equals(ExternalServiceStep.class)) {
@@ -220,19 +225,16 @@ public class Interpreter {
             CloseableHttpClient client = HttpClients.createDefault();
             //String url = populateVariables(esStep.getUrl());
 
-            String url = esStep.getUrl();
-            boolean first_iteration = true;
-            boolean contains_params = url.contains("?");
-            for ( UrlParam urlParam : esStep.getUrlParams() ) {
-                if ( first_iteration && !contains_params ) {
-                    url += "?" + urlParam.getName() + "=" + urlParam.getValue();
-                    first_iteration = false;
+            URI url;
+            try {
+                URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
+                for ( UrlParam urlParam : esStep.getUrlParams() ) {
+                    uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
                 }
-                else
-                    url += "&" + urlParam.getName() + "=" + urlParam.getValue();
+                url = uri_builder.build();
+            } catch (URISyntaxException e) {
+                throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
             }
-
-            url = populateVariables( url );
 
             System.out.println( "External Service url: " + url);
             HttpGet get = new HttpGet( url );
@@ -241,7 +243,7 @@ public class Interpreter {
             JsonParser parser = new JsonParser();
 
             try {
-                System.out.println(response);
+                //System.out.println(response);
 
                 HttpEntity entity = response.getEntity();
                 if ( entity != null ) {
