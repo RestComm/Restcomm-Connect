@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
@@ -217,7 +218,22 @@ public class Interpreter {
             ExternalServiceStep esStep = (ExternalServiceStep) step;
 
             CloseableHttpClient client = HttpClients.createDefault();
-            String url = populateVariables(esStep.getUrl());
+            //String url = populateVariables(esStep.getUrl());
+
+            String url = esStep.getUrl();
+            boolean first_iteration = true;
+            boolean contains_params = url.contains("?");
+            for ( UrlParam urlParam : esStep.getUrlParams() ) {
+                if ( first_iteration && !contains_params ) {
+                    url += "?" + urlParam.getName() + "=" + urlParam.getValue();
+                    first_iteration = false;
+                }
+                else
+                    url += "&" + urlParam.getName() + "=" + urlParam.getValue();
+            }
+
+            url = populateVariables( url );
+
             System.out.println( "External Service url: " + url);
             HttpGet get = new HttpGet( url );
             CloseableHttpResponse response = client.execute( get );
