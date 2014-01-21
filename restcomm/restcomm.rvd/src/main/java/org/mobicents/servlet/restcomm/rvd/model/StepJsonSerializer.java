@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.model;
 import java.lang.reflect.Type;
 
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 
@@ -21,6 +22,8 @@ public class StepJsonSerializer implements JsonSerializer<Step> {
         JsonElement resultElement = null; // TODO update this default value to something or throw an exception or something
         if (step.getClass().equals(SayStep.class)) {
             resultElement = gson.toJsonTree((SayStep) step);
+        } else if (step.getClass().equals(PlayStep.class)  ) {
+            resultElement = gson.toJsonTree((PlayStep) step);
         } else if (step.getClass().equals(GatherStep.class)) {
             resultElement = gson.toJsonTree((GatherStep) step);
         }

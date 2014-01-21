@@ -41,7 +41,7 @@
 										<span ng-if='assignment.lastOperation.kind=="array"' class="input-group-addon"></span>
 										<select ng-if='assignment.lastOperation.kind=="array"' ng-change='assignment.lastOperation.position=""'  ng-model='assignment.lastOperation.action' ng-options='arrayAction as arrayAction for arrayAction in arrayActions' class="form-control input-sm" required></select>
 										<span ng-if='assignment.lastOperation.action=="itemAtPosition"' class="input-group-addon"></span>
-										<input ng-if='assignment.lastOperation.action=="itemAtPosition"' name='position' ng-model='assignment.lastOperation.position' placeholder='type array item index'  class="form-control" required></input>
+										<input ng-if='assignment.lastOperation.action=="itemAtPosition"' type='number' name='position' ng-model='assignment.lastOperation.position' placeholder='type array item index'  class="form-control" required></input>
 																				
 									</div>
 									<!-- <div class="validation-error" ng-show="form{{$index}}.property.$error.required">property required</div>
@@ -79,7 +79,11 @@
 									<span>variable &nbsp;</span>
 									<input ng-model='step.nextType' value='variable' class='form-control' type="radio">
 								</span>								
-								<input ng-show='step.doRouting' type="text" class="form-control">
+								<!--  <input ng-show='step.doRouting' type="text" class="form-control"> -->
+								<select ng-show='step.doRouting && step.nextType=="variable"' ng-model='step.nextVariable' ng-options='assignment.destVariable as assignment.destVariable for assignment in step.assignments' class="form-control input-sm" required></select>
+								<select sync-model ng-show='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
+												<option value=""></option>
+								</select>
 								
 								<!-- this is just a placeholder -->
 								<input ng-hide='step.doRouting' class="form-control">

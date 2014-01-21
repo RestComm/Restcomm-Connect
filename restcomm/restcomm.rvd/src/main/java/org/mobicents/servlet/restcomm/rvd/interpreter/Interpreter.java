@@ -13,12 +13,24 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.UnsupportedRVDStep;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
+import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
@@ -30,10 +42,14 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
+import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
+import org.mobicents.servlet.restcomm.rvd.model.client.Assignment;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.XStream;
 
@@ -47,6 +63,7 @@ public class Interpreter {
     private HttpServletRequest httpRequest;
     private String rcmlResult;
     private Map<String, String> variables = new HashMap<String, String>();
+    private List<NodeName> nodeNames;
 
     public Interpreter() {
         xstream = new XStream();
@@ -79,7 +96,7 @@ public class Interpreter {
     }
 
     public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest)
-            throws IOException, RVDUnsupportedHandlerVerb, UndefinedTarget {
+            throws IOException, InterpreterException {
         this.projectBasePath = projectBasePath;
         this.appName = appName;
         this.httpRequest = httpRequest;
@@ -93,13 +110,14 @@ public class Interpreter {
             targetParam = projectOptions.getDefaultTarget();
             if (targetParam == null)
                 throw new UndefinedTarget();
+            nodeNames = projectOptions.getNodeNames();
             System.out.println("override default target to " + targetParam);
         }
-        return interpret(targetParam);
+        return interpret(targetParam, null);
 
     }
 
-    private String interpret(String targetParam) throws RVDUnsupportedHandlerVerb, IOException {
+    private String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
 
         System.out.println("starting interpeter for " + targetParam);
 
@@ -113,7 +131,8 @@ public class Interpreter {
         } else {
             // RCML Generation
 
-            RcmlResponse rcmlModel = new RcmlResponse();
+            if (rcmlModel == null )
+                rcmlModel = new RcmlResponse();
             String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
                     + target.getNodename() + ".node"));
             List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>() {
@@ -132,7 +151,14 @@ public class Interpreter {
                 if (startstep_found) {
                     // we found our starting step. Let's start processing
                     Step step = loadStep(stepname);
-                    rcmlModel.steps.add(renderStep(step));
+                    String rerouteTo = processStep(step); // is meaningful only for some of the steps like ExternalService steps
+                    // check if we have to break the currently rendered module
+                    if ( rerouteTo != null )
+                        return interpret(rerouteTo, rcmlModel);
+                    // otherwise continue rendering the current module
+                    RcmlStep rcmlStep = renderStep(step);
+                    if ( rcmlStep != null)
+                        rcmlModel.steps.add(rcmlStep);
                 }
             }
 
@@ -150,7 +176,93 @@ public class Interpreter {
         return step;
     }
 
-    public void handleAction(String action) throws IOException, RVDUnsupportedHandlerVerb {
+    private String evaluateAssignmentExpression( Assignment assignment, JsonElement response_element) throws InvalidAccessOperationAction, BadExternalServiceResponse {
+        String value = "";
+
+        JsonElement element = response_element;
+        for ( AccessOperation operation : assignment.getAccessOperations() ) {
+            if ( element == null )
+                throw new BadExternalServiceResponse();
+
+            if ( "object".equals(operation.getKind()) ) {
+                if ("propertyNamed".equals(operation.getAction()) )
+                    element = element.getAsJsonObject().get( operation.getProperty() );
+                else
+                    throw new InvalidAccessOperationAction();
+            } else
+            if ( "array".equals(operation.getKind()) ) {
+                if ("itemAtPosition".equals(operation.getAction()) )
+                    element = element.getAsJsonArray().get( operation.getPosition() );
+                else
+                    throw new InvalidAccessOperationAction();
+            } else
+            if ( "string".equals(operation.getKind()) ) {
+                value = element.getAsString();
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * If the step is capable of executing like ExternalService steps it executes them
+     * @param step
+     * @throws IOException
+     * @throws ClientProtocolException
+     * @return String Break the module being currently rendered and continue with rendering the named target.
+     */
+    private String processStep(Step step) throws IOException, InterpreterException {
+        if (step.getClass().equals(ExternalServiceStep.class)) {
+
+            ExternalServiceStep esStep = (ExternalServiceStep) step;
+
+            CloseableHttpClient client = HttpClients.createDefault();
+            String url = populateVariables(esStep.getUrl());
+            System.out.println( "External Service url: " + url);
+            HttpGet get = new HttpGet( url );
+            CloseableHttpResponse response = client.execute( get );
+
+            JsonParser parser = new JsonParser();
+
+            try {
+                System.out.println(response);
+
+                HttpEntity entity = response.getEntity();
+                if ( entity != null ) {
+                    String entity_string = EntityUtils.toString(entity);
+                    JsonElement response_element = parser.parse(entity_string);
+
+                    // Initialize the variables of the assignments one by one
+                    for ( Assignment assignment : esStep.getAssignments() ) {
+                        //try {
+                            String value = evaluateAssignmentExpression(assignment, response_element);
+                            variables.put(assignment.getDestVariable(), value );
+                        //} catch ( BadExternalServiceResponse e ) {
+                        //    e.printStackTrace();
+                        //}
+                    }
+                    System.out.println("variables after processing ExternalService step: " + variables.toString() );
+                }
+
+            } finally {
+                response.close();
+            }
+
+            if ( esStep.getDoRouting() ) {
+                String nextLabel = "";
+                if ( "fixed".equals( esStep.getNextType() ) )
+                    nextLabel = esStep.getNext();
+                else
+                if ( "variable".equals( esStep.getNextType() ))
+                    nextLabel = variables.get( esStep.getNextVariable() );
+                return getNodeNameByLabel(nextLabel);
+            }
+        }
+        return null;
+    }
+
+
+    public void handleAction(String action) throws IOException, InterpreterException {
 
         System.out.println("handling action ");
 
@@ -170,19 +282,19 @@ public class Interpreter {
                     if (mapping.getDigits() != null && mapping.getDigits().equals(digits)) {
                         // seems we found out menu selection
                         System.out.println("seems we found out menu selection");
-                        interpret(mapping.getNext());
+                        interpret(mapping.getNext(),null);
                         handled = true;
                     }
                 }
                 if (!handled) {
-                    interpret(target.nodename + "." + target.stepname);
+                    interpret(target.nodename + "." + target.stepname,null);
                 }
             }
             if ("collectdigits".equals(gatherStep.getGatherType())) {
 
                 String variableName = gatherStep.getCollectVariable();
                 variables.put(variableName, httpRequest.getParameter("Digits")); // put the string directly
-                interpret(gatherStep.getNext());
+                interpret(gatherStep.getNext(),null);
             }
         } else {
             throw new RVDUnsupportedHandlerVerb();
@@ -250,7 +362,13 @@ public class Interpreter {
         return rcmlStep;
     }
 
-    public RcmlStep renderStep(Step step) {
+    /**
+     *
+     * @param step
+     * @return a RcmlStep model object or null if there is no RCML for this step
+     * @throws UnsupportedRVDStep
+     */
+    public RcmlStep renderStep(Step step) throws UnsupportedRVDStep {
         if ("say".equals(step.getKind()))
             return renderSayStep((SayStep) step);
         else if ("play".equals(step.getKind()))
@@ -261,8 +379,10 @@ public class Interpreter {
             return renderDialStep((DialStep) step);
         else if ("hungup".equals(step.getKind()))
             return new RcmlHungupStep(); // trivial implementation. No need for seperate function
+        else if ("externalService".equals(step.getKind()))
+            return null;
         else
-            return null; // TODO Raise an exception here!
+            throw new UnsupportedRVDStep(); // raise an exception here
     }
 
     public RcmlSayStep renderSayStep(SayStep step) {
@@ -290,7 +410,7 @@ public class Interpreter {
         return playStep;
     }
 
-    public RcmlGatherStep renderGatherStep(GatherStep step) {
+    public RcmlGatherStep renderGatherStep(GatherStep step) throws UnsupportedRVDStep {
 
         RcmlGatherStep rcmlStep = new RcmlGatherStep();
         String newtarget = target.nodename + "." + step.getName() + ".handle";
@@ -351,5 +471,17 @@ public class Interpreter {
         }
 
         return target;
+    }
+
+    /**
+     * @param label
+     * @return The 'name' of the first node with the specified label. If not found returns null
+     */
+    private String getNodeNameByLabel( String label ) {
+        for ( NodeName nodename : nodeNames ) {
+            if ( label.equals(nodename.getLabel()) )
+                return nodename.getName();
+        }
+        return null;
     }
 }
