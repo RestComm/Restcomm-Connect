@@ -18,9 +18,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
+import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 
 import com.google.gson.Gson;
 
@@ -31,7 +30,7 @@ public class RvdController {
     // private static final String workspaceDirectoryName = "workspace";
     // private static final String protoDirectoryName = "_proto"; // the prototype project directory name
 
-    private String workspaceBasePath;
+    //private String workspaceBasePath;
 
     @Context
     ServletContext servletContext;
@@ -64,18 +63,12 @@ public class RvdController {
         String rcmlResponse;
         try {
             rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (RVDUnsupportedHandlerVerb e) {
-            // TODO Auto-generated catch block
+        } catch (InterpreterException e) {
             e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (UndefinedTarget e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return Response.status(Status.BAD_REQUEST).build();
         }
 
         System.out.println(rcmlResponse);
@@ -101,7 +94,7 @@ public class RvdController {
         String rcmlResponse;
         try {
             rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (RVDUnsupportedHandlerVerb e) {
+        } catch (InterpreterException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -109,10 +102,6 @@ public class RvdController {
             // TODO Auto-generated catch block
             e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (UndefinedTarget e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return Response.status(Status.BAD_REQUEST).build();
         }
 
         System.out.println(rcmlResponse);

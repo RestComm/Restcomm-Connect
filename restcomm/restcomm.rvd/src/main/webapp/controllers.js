@@ -188,6 +188,7 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		for ( var i = 0; i < $scope.nodes.length; i++ ) {
 			var anynode = $scope.nodes[i];
 			alltargets.push( {label: anynode.label, name:anynode.name} );
+			/*
 			for ( var j=0; j < anynode.stepnames.length; j++ ) {
 				var stepname = anynode.stepnames[j];
 				if ( anynode.steps.hasOwnProperty(stepname) )
@@ -211,6 +212,7 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 					label = anynode.label + "." + step.name + label;
 					alltargets.push( {label: label, name: name} );
 			}
+			*/
 		}
 		return alltargets;	
 	}
@@ -348,13 +350,13 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 	}
 	
 	
-	$scope.accessOperationKinds = ['object', 'array', 'string', 'float', 'boolean'];
+	$scope.accessOperationKinds = ['object', 'array', 'string']; //, 'float', 'boolean'];
 	$scope.accessOperationProtos = {
 			object:{kind:'object',fixed:false, terminal:false},
 			array:{kind:'array',fixed:false, terminal:false},
 			string:{kind:'string',fixed:false, terminal:true},
-			float:{kind:'float',fixed:false, terminal:true},
-			boolean:{kind:'boolean',fixed:false, terminal:true},	
+			//float:{kind:'float',fixed:false, terminal:true},
+			//boolean:{kind:'boolean',fixed:false, terminal:true},	
 	};
 	$scope.objectActions = ['propertyNamed'];
 	$scope.arrayActions = ['itemAtPosition'];
@@ -402,14 +404,14 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 			}
 		break;
 		case 'string':
-			return " get String value";
+			return " string value";
 		break;
-		case 'float':
+		/*case 'float':
 			return " get Float value";
 		break;	
 		case 'boolean':
 			return " get Boolean value";
-		break;		
+		break;*/		
 		}
 		return "UNKNOWN";
 	}
