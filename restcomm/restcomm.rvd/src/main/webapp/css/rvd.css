@@ -261,6 +261,11 @@ ul.verbs {
 }
 
 
+/* a fix for displaying small <select>s inside input groups */
+.routing-decision-controls.input-group-sm .height-fix {
+    height: 32px;
+}
+
 /* 
  * 
  * BOOTSTRAP CUSTOMIZATIONS 
