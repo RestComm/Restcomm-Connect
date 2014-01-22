@@ -423,6 +423,13 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		} 
 		return expr;
 	}
+    
+    $scope.addUrlParam = function (step) {
+        step.urlParams.push({name:'',value:''});
+    }
+	$scope.removeUrlParam = function(step,urlParam) {
+		step.urlParams.splice( step.urlParams.indexOf(urlParam), 1 );
+	}    
 
 	
 	

@@ -2,8 +2,11 @@ package org.mobicents.servlet.restcomm.rvd.model.client;
 
 import java.util.List;
 
+
 public class ExternalServiceStep extends Step {
+
     private String url;
+    private List<UrlParam> urlParams;
     private List<Assignment> assignments;
     private String next;
     private String nextVariable;
@@ -56,5 +59,8 @@ public class ExternalServiceStep extends Step {
 
     public void setNextVariable(String nextVariable) {
         this.nextVariable = nextVariable;
+    }
+    public List<UrlParam> getUrlParams() {
+        return this.urlParams;
     }
 }

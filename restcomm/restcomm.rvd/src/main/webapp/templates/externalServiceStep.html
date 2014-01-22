@@ -4,12 +4,27 @@
 			<div class="row">
 				<div class="col-md-12">
 				
-					<div class="input-group input-group-sm form-group service-url-wrap">
-						<span class="input-group-addon">Url</span>
-						<input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
-					</div>
-					<!--<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div> -->
-					
+                    <div class="service-url-wrap">
+                        <div class="input-group input-group-sm form-group">
+                            <span class="input-group-addon">Service Url</span>
+                            <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
+                        </div>
+                        <!--<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div> -->
+                        
+                        <div class='row'>
+                            <div ng-repeat='urlParam in step.urlParams' class="col-md-4">
+                                <div  class="input-group input-group-sm form-group">
+                                    <span class="input-group-addon">Name</span>
+                                    <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
+                                    <span class="input-group-addon">Value</span>
+                                    <input ng-model='urlParam.value' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
+                                    <span ng-click='removeUrlParam(step,urlParam)' class="input-group-addon fa fa-times rvd-clickable"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button ng-click="addUrlParam(step)" type="button" class="btn btn-xs"><span>Add URL parameter</span></button>
+                     </div>
+                        
 					<h4>Assign response to variables</h4>
 
 					<div class="form-group">
@@ -66,27 +81,27 @@
 					
 					<div class="row">
 						<div class="col-md-12">
-							<div class="input-group input-group-sm">
-								<span class="input-group-addon">
-									<input ng-model='step.doRouting' class="form-control" type="checkbox">
+                            <div class="input-group input-group-sm routing-decision-controls">
+                                <span class="input-group-addon">
+									<input ng-model='step.doRouting' type="checkbox">
 								</span>
+                                
 								<span ng-class="{'text-muted': !step.doRouting}"  ng-model='step.next' class="input-group-addon">Continue to</span>
-								<span ng-show='step.doRouting' class="input-group-addon">
+								<span ng-if='step.doRouting' class="input-group-addon">
 									<span>fixed &nbsp;</span>
-									<input ng-model='step.nextType' value='fixed' class='form-control' type="radio">
+									<input ng-model='step.nextType' value='fixed' type="radio">
 								</span>
-								<span ng-show='step.doRouting' class="input-group-addon">
+								<span ng-if='step.doRouting' class="input-group-addon">
 									<span>variable &nbsp;</span>
-									<input ng-model='step.nextType' value='variable' class='form-control' type="radio">
+									<input ng-model='step.nextType' value='variable' type="radio">
 								</span>								
-								<!--  <input ng-show='step.doRouting' type="text" class="form-control"> -->
-								<select ng-show='step.doRouting && step.nextType=="variable"' ng-model='step.nextVariable' ng-options='assignment.destVariable as assignment.destVariable for assignment in step.assignments' class="form-control input-sm" required></select>
-								<select sync-model ng-show='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
+								<select ng-if='step.doRouting && step.nextType=="variable"' ng-model='step.nextVariable' ng-options='assignment.destVariable as assignment.destVariable for assignment in step.assignments' class="form-control height-fix" required></select>
+								<select sync-model ng-if='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
 												<option value=""></option>
 								</select>
-								
+                                
 								<!-- this is just a placeholder -->
-								<input ng-hide='step.doRouting' class="form-control">
+								<input ng-hide='step.doRouting' ng-disabled='true' class="form-control height-fix">
 							</div>
 														
 						</div>
