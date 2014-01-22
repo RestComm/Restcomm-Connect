@@ -106,16 +106,16 @@ public class Interpreter {
         this.appName = appName;
         this.httpRequest = httpRequest;
 
+        String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
+        ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
+        }.getType());
+        nodeNames = projectOptions.getNodeNames();
+
         if (targetParam == null || "".equals(targetParam)) {
-            // No target has been spacified. Load the default from project file
-            String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data"
-                    + File.separator + "project"));
-            ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
-            }.getType());
+            // No target has been specified. Load the default from project file
             targetParam = projectOptions.getDefaultTarget();
             if (targetParam == null)
                 throw new UndefinedTarget();
-            nodeNames = projectOptions.getNodeNames();
             System.out.println("override default target to " + targetParam);
         }
         return interpret(targetParam, null);
