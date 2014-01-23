@@ -94,6 +94,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private CallDetailRecordListConverter listConverter;
 
+    private boolean normalizePhoneNumbers;
+
     public CallsEndpoint() {
         super();
     }
@@ -117,6 +119,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
+
+        normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
@@ -238,7 +242,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         }
         try {
             validate(data);
-            normalize(data);
+            if (normalizePhoneNumbers)
+                normalize(data);
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }

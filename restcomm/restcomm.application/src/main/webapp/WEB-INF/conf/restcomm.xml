@@ -36,6 +36,9 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
+		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) when creating an outbound call -->
+		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
@@ -47,9 +50,11 @@
 			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
 			<fallback-outbound-proxy-uri>127.0.0.1:5090</fallback-outbound-proxy-uri>
 			
-			<!-- Number of maximum failed calls before switching from primary to the fallback outbound proxy -->
+			<!-- Allow fallback to backup proxy -->
 			<allow-fallback>false</allow-fallback>
+			<!-- Number of maximum failed calls before switching from primary to the fallback outbound proxy -->
 			<max-failed-calls>20</max-failed-calls>
+			<!-- Allow fallback to Primary proxy in case backup proxy fails also -->
 			<allow-fallback-to-primary>true</allow-fallback-to-primary>
 		</outbound-proxy>
 		
