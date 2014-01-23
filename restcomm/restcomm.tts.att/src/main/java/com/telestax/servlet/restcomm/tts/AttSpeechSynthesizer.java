@@ -1,4 +1,8 @@
 /*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2013, Telestax Inc and individual contributors
+ * by the @authors tag. 
+ *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation; either version 2.1 of
@@ -14,7 +18,8 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.tts;
+	
+package com.telestax.servlet.restcomm.tts;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,9 +28,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import naturalvoices.ClientPlayer;
+import naturalvoices.Player;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.Header;
@@ -52,69 +60,24 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ *
  */
-public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
+public final class AttSpeechSynthesizer extends UntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-
-    private static final List<NameValuePair> parameters;
-    static {
-        parameters = new ArrayList<NameValuePair>();
-        parameters.add(new BasicNameValuePair("c", "WAV"));
-        parameters.add(new BasicNameValuePair("f", "8khz_16bit_mono"));
-    }
-
-    private final URI service;
     private final Map<String, String> men;
-
-    public VoiceRSSSpeechSynthesizer(final Configuration configuration) {
+    private final Map<String, String> women;
+    
+    private final Player player;
+    
+    
+    public AttSpeechSynthesizer(final Configuration configuration) {
         super();
-        // Add the credentials.
-        final String apiKey = configuration.getString("apikey");
-        BasicNameValuePair apiNameValuePair = new BasicNameValuePair("key", apiKey);
-        if (!parameters.contains(apiNameValuePair))
-            parameters.add(apiNameValuePair);
-
-        // Initialize the speech synthesizer state.
-        service = URI.create(configuration.getString("service-root"));
-
-        men = new HashMap<String, String>();
+        men = new ConcurrentHashMap<String, String>();
+        women = new ConcurrentHashMap<String, String>();
         load(configuration);
-    }
-
-    private SpeechSynthesizerInfo info() {
-        return new SpeechSynthesizerInfo(men.keySet());
-    }
-
-    private void load(final Configuration configuration) throws RuntimeException {
-        // Initialize male voices.
-        men.put("ca", configuration.getString("languages.catalan"));
-        men.put("zh", configuration.getString("languages.chinese-china"));
-        men.put("zh-hk", configuration.getString("languages.chinese-hongkong"));
-        men.put("zh-tw", configuration.getString("languages.chinese-taiwan"));
-        men.put("da", configuration.getString("languages.danish"));
-        men.put("nl", configuration.getString("languages.dutch"));
-        men.put("en-au", configuration.getString("languages.english-australia"));
-        men.put("en-ca", configuration.getString("languages.english-canada"));
-        men.put("en-gb", configuration.getString("languages.english-greatbritain"));
-        men.put("en-in", configuration.getString("languages.english-india"));
-        men.put("en", configuration.getString("languages.english-us"));
-        men.put("fi", configuration.getString("languages.finish"));
-        men.put("fr-ca", configuration.getString("languages.french-canada"));
-        men.put("fr", configuration.getString("languages.french-france"));
-        men.put("de", configuration.getString("languages.german"));
-        men.put("it", configuration.getString("languages.italina"));
-        men.put("ja", configuration.getString("languages.japanese"));
-        men.put("ko", configuration.getString("languages.korean"));
-        men.put("nb", configuration.getString("languages.norwegian"));
-        men.put("pl", configuration.getString("languages.polish"));
-        men.put("pt-br", configuration.getString("languages.portuguese-brasil"));
-        men.put("pt", configuration.getString("languages.portuguese-portugal"));
-        men.put("ru", configuration.getString("languages.russian"));
-        men.put("es-mx", configuration.getString("languages.spanish-mexico"));
-        men.put("es", configuration.getString("languages.spanish-spain"));
-        men.put("sv", configuration.getString("languages.swedish"));
+        player = new ClientPlayer("rootDir");
     }
 
     @Override
@@ -139,6 +102,32 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
         }
     }
 
+    private SpeechSynthesizerInfo info() {
+        return new SpeechSynthesizerInfo(men.keySet());
+    }
+    
+    private void load(final Configuration configuration) throws RuntimeException {
+        // Initialize female voices.
+        women.put("en", configuration.getString("speakers.english.female"));
+        women.put("en-uk", configuration.getString("speakers.english-uk.female"));
+        women.put("es-us", configuration.getString("speakers.spanish.female"));
+        women.put("fr-fr", configuration.getString("speakers.french.female"));
+        women.put("fr-ca", configuration.getString("speakers.canadian-french.female"));
+        women.put("de-de", configuration.getString("speakers.german.female"));
+        women.put("it-it", configuration.getString("speakers.italian.female"));
+        women.put("pt-br", configuration.getString("speakers.brazilian-portuguese.female"));
+
+        // Initialize male voices.
+        men.put("en", configuration.getString("speakers.english.male"));
+        men.put("en-uk", configuration.getString("speakers.english-uk.male"));        
+        men.put("es-us", configuration.getString("speakers.spanish.male"));
+        men.put("fr-fr", configuration.getString("speakers.french.male"));
+        men.put("fr-ca", configuration.getString("speakers.canadian-french.male"));
+        men.put("de-de", configuration.getString("speakers.german.male"));
+        men.put("it-it", configuration.getString("speakers.italian.male"));
+        men.put("pt_br", configuration.getString("speakers.brazilian-portuguese.male"));
+    }
+    
     private String getLanguage(final String language) {
         String languageCode = men.get(language);
         return languageCode;
@@ -158,6 +147,22 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 
         final String hash = HashGenerator.hashMessage(gender, language, text);
 
+//        //enable stderr output
+//        player.Verbose = true;
+        
+        //setup parameters as needed
+        player.setVoice("mike8");
+        player.setLatin1(true);
+
+        //source text to play
+        player.setSourceText(textSample);
+    
+        //play it to the speakers
+        player.Play();
+        
+        //save it to a file
+        player.Convert("DemoOutput/tts_client_demo.wav");
+        
         final List<NameValuePair> query = new ArrayList<NameValuePair>();
         query.addAll(parameters);
         query.add(new BasicNameValuePair("hl", getLanguage(language)));
@@ -207,4 +212,5 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
             throw new SpeechSynthesizerException(buffer.toString());
         }
     }
+    
 }
