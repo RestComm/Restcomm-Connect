@@ -281,10 +281,14 @@
 		</languages>
 	</speech-synthesizer>
 
+<!-- AT&T Speech Synthesizer plugin -->
+<!-- 
 	<speech-synthesizer
 		class="org.mobicents.servlet.restcomm.tts.AttSpeechSynthesizer">
 		<host>127.0.0.1</host>
 		<port>7000</port>
+		<tts-client-directory>/home/gvagenas/Desktop/temp/HS/ATT_TTS_Server_Sent_Jan21_2014/att_naturalvoices_v5.1_server_live</tts-client-directory>
+		<verbose-output>false</verbose-output>
 		<speakers>
 			<english>
 				<female>crystal8</female>
@@ -320,5 +324,5 @@
 			</brazilian-portuguese>
 		</speakers>
 	</speech-synthesizer>
-
+ -->
 </restcomm>

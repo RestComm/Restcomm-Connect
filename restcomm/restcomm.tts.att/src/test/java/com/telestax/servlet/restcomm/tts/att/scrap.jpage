@@ -1,1 +1,0 @@
-System.out.println("Architecture: "+System.getProperty("os.arch"));
