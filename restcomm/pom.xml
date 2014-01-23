@@ -465,7 +465,7 @@
 				<configuration>
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
-					<failsOnError>true</failsOnError>
+					<failsOnError>false</failsOnError>
 					<useFile/>
 				</configuration>
 				<dependencies>

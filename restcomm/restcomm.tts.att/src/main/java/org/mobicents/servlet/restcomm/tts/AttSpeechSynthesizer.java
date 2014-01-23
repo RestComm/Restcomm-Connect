@@ -19,7 +19,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 	
-package com.telestax.servlet.restcomm.tts;
+package org.mobicents.servlet.restcomm.tts;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -68,16 +68,25 @@ public final class AttSpeechSynthesizer extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final Map<String, String> men;
     private final Map<String, String> women;
-    
+
+    private String rootDir = "";
     private final Player player;
-    
-    
+
     public AttSpeechSynthesizer(final Configuration configuration) {
         super();
         men = new ConcurrentHashMap<String, String>();
         women = new ConcurrentHashMap<String, String>();
         load(configuration);
-        player = new ClientPlayer("rootDir");
+//        if(System.getProperty("os.arch").contains("64")) {
+//            rootDir = this.getClass().getClassLoader().getResource("").toString().replaceFirst("file:", "");
+//            rootDir = rootDir.substring(0, rootDir.length()-1);
+//        } else {
+//            rootDir = this.getClass().getClassLoader().getResource("bin32").toString();
+//            rootDir = rootDir.substring(0, rootDir.length()-1);
+//        }
+        rootDir = configuration.getString("tts-client-directory");
+        player = new ClientPlayer(rootDir, configuration.getString("host"), configuration.getInt("port", 7000));
+        player.Verbose = configuration.getBoolean("verbose-output",false);
     }
 
     @Override
@@ -147,70 +156,76 @@ public final class AttSpeechSynthesizer extends UntypedActor {
 
         final String hash = HashGenerator.hashMessage(gender, language, text);
 
-//        //enable stderr output
-//        player.Verbose = true;
+
         
         //setup parameters as needed
-        player.setVoice("mike8");
+        if(gender.equalsIgnoreCase("man")) {
+            player.setVoice(men.get(language));
+        } else {
+            player.setVoice(women.get(language));
+        }
+        
         player.setLatin1(true);
 
         //source text to play
-        player.setSourceText(textSample);
+        player.setSourceText(text);
     
         //play it to the speakers
         player.Play();
         
         //save it to a file
-        player.Convert("DemoOutput/tts_client_demo.wav");
-        
-        final List<NameValuePair> query = new ArrayList<NameValuePair>();
-        query.addAll(parameters);
-        query.add(new BasicNameValuePair("hl", getLanguage(language)));
-        query.add(new BasicNameValuePair("src", text));
-
-        final HttpPost post = new HttpPost(service);
-        final UrlEncodedFormEntity entity = new UrlEncodedFormEntity(query, "UTF-8");
-        post.setEntity(entity);
-        final HttpClient client = new DefaultHttpClient();
-        final HttpResponse response = client.execute(post);
-        final StatusLine line = response.getStatusLine();
-        final int status = line.getStatusCode();
-
-        if (status == HttpStatus.SC_OK) {
-
-            Header[] contentType = response.getHeaders("Content-Type");
-
-            if (contentType[0].getValue().startsWith("text")) {
-                final StringBuilder buffer = new StringBuilder();
-                String error = EntityUtils.toString(response.getEntity());
-                logger.error("VoiceRSSSpeechSynthesizer error: " + error);
-                buffer.append(error);
-                throw new SpeechSynthesizerException(buffer.toString());
-            }
-
-            logger.info("VoiceRSSSpeechSynthesizer success!");
-            InputStream is = response.getEntity().getContent();
-            File file = new File(System.getProperty("java.io.tmpdir") + File.separator + hash + ".wav");
-            final OutputStream ostream = new FileOutputStream(file);
-
-            final byte[] buffer = new byte[1024 * 8];
-            while (true) {
-                final int len = is.read(buffer);
-                if (len <= 0) {
-                    break;
-                }
-                ostream.write(buffer, 0, len);
-            }
-            ostream.close();
-            is.close();
-            return file.toURI();
-        } else {
-            logger.info("VoiceRSSSpeechSynthesizer error, status code: " + line.getStatusCode() + (" reason phrase: ")
-                    + line.getReasonPhrase());
-            final StringBuilder buffer = new StringBuilder();
-            buffer.append(line.getStatusCode()).append(" ").append(line.getReasonPhrase());
-            throw new SpeechSynthesizerException(buffer.toString());
-        }
+        File file = new File(System.getProperty("java.io.tmpdir") + File.separator + hash + ".wav");
+        player.Convert(file.getAbsolutePath());
+        return file.toURI();
+//        
+//        final List<NameValuePair> query = new ArrayList<NameValuePair>();
+//        query.addAll(parameters);
+//        query.add(new BasicNameValuePair("hl", getLanguage(language)));
+//        query.add(new BasicNameValuePair("src", text));
+//
+//        final HttpPost post = new HttpPost(service);
+//        final UrlEncodedFormEntity entity = new UrlEncodedFormEntity(query, "UTF-8");
+//        post.setEntity(entity);
+//        final HttpClient client = new DefaultHttpClient();
+//        final HttpResponse response = client.execute(post);
+//        final StatusLine line = response.getStatusLine();
+//        final int status = line.getStatusCode();
+//
+//        if (status == HttpStatus.SC_OK) {
+//
+//            Header[] contentType = response.getHeaders("Content-Type");
+//
+//            if (contentType[0].getValue().startsWith("text")) {
+//                final StringBuilder buffer = new StringBuilder();
+//                String error = EntityUtils.toString(response.getEntity());
+//                logger.error("VoiceRSSSpeechSynthesizer error: " + error);
+//                buffer.append(error);
+//                throw new SpeechSynthesizerException(buffer.toString());
+//            }
+//
+//            logger.info("VoiceRSSSpeechSynthesizer success!");
+//            InputStream is = response.getEntity().getContent();
+//            File file = new File(System.getProperty("java.io.tmpdir") + File.separator + hash + ".wav");
+//            final OutputStream ostream = new FileOutputStream(file);
+//
+//            final byte[] buffer = new byte[1024 * 8];
+//            while (true) {
+//                final int len = is.read(buffer);
+//                if (len <= 0) {
+//                    break;
+//                }
+//                ostream.write(buffer, 0, len);
+//            }
+//            ostream.close();
+//            is.close();
+//            return file.toURI();
+//        } else {
+//            logger.info("VoiceRSSSpeechSynthesizer error, status code: " + line.getStatusCode() + (" reason phrase: ")
+//                    + line.getReasonPhrase());
+//            final StringBuilder buffer = new StringBuilder();
+//            buffer.append(line.getStatusCode()).append(" ").append(line.getReasonPhrase());
+//            throw new SpeechSynthesizerException(buffer.toString());
+//        }
     }
     
 }
