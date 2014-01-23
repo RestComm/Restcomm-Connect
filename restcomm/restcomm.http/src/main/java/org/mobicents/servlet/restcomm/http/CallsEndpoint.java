@@ -244,18 +244,20 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         }
         final String from = data.getFirst("From");
         final String to = data.getFirst("To");
+        final String username = data.getFirst("Username");
+        final String password = data.getFirst("Password");
         final Integer timeout = getTimeout(data);
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, null, null, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
                         accountId);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, null, null, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
                         accountId);
             } else {
-                create = new CreateCall(from, to, null, null, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
                         accountId);
             }
             create.setCreateCDR(false);
