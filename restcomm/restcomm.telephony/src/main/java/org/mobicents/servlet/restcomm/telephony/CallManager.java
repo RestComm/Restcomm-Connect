@@ -117,8 +117,11 @@ public final class CallManager extends UntypedActor {
     private int maxNumberOfFailedCalls;
 
     private String primaryProxyUri;
+    private String primaryProxyUsername, primaryProxyPassword;
     private String fallBackProxyUri;
+    private String fallBackProxyUsername, fallBackProxyPassword;
     private String activeProxy;
+    private String activeProxyUsername, activeProxyPassword;
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private CreateCall createCallRequest;
@@ -137,9 +140,18 @@ public final class CallManager extends UntypedActor {
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         this.useTo = runtime.getBoolean("use-to");
+
         this.primaryProxyUri = outboundProxyConfig.getString("outbound-proxy-uri");
+        this.primaryProxyUsername = outboundProxyConfig.getString("outbound-proxy-user");
+        this.primaryProxyPassword = outboundProxyConfig.getString("outbound-proxy-password");
+
         this.fallBackProxyUri = outboundProxyConfig.getString("fallback-outbound-proxy-uri");
+        this.fallBackProxyUsername = outboundProxyConfig.getString("fallback-outbound-proxy-user");
+        this.fallBackProxyPassword = outboundProxyConfig.getString("fallback-outbound-proxy-password");
+
         this.activeProxy = primaryProxyUri;
+        this.activeProxyUsername = primaryProxyUsername;
+        this.activeProxyPassword = primaryProxyPassword;
 
         numberOfFailedCalls = new AtomicInteger();
         numberOfFailedCalls.set(0);
@@ -493,7 +505,9 @@ public final class CallManager extends UntypedActor {
         final CreateCall request = (CreateCall) message;
         final Configuration runtime = configuration.subset("runtime-settings");
         // final String uri = runtime.getString("outbound-proxy-uri");
-        final String uri = getActiveProxy().get("ActiveProxy");
+        final String uri = activeProxy;
+        final String proxyUsername = (request.username() != null) ? request.username():activeProxyUsername;
+        final String proxyPassword = (request.password() != null) ? request.password():activeProxyPassword;
         final SipURI from = sipFactory.createSipURI(request.from(), uri);
         SipURI to = null;
         switch (request.type()) {
@@ -523,7 +537,7 @@ public final class CallManager extends UntypedActor {
         if (request.isCreateCDR()) {
             storage.getCallDetailRecordsDao();
         }
-        final InitializeOutbound init = new InitializeOutbound(null, from, to, request.username(), request.password(),
+        final InitializeOutbound init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword,
                 request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(),
                 recordsDao);
         call.tell(init, self);
@@ -628,9 +642,9 @@ public final class CallManager extends UntypedActor {
 
                 if (failures >= maxNumberOfFailedCalls) {
                     logger.info("Max number of failed calls has been reached trying to switch over proxy.");
-                    logger.info("Current proxy: " + getActiveProxy());
+                    logger.info("Current proxy: " + getActiveProxy().get("ActiveProxy"));
                     switchProxy();
-                    logger.info("Switched to proxy: " + getActiveProxy());
+                    logger.info("Switched to proxy: " + getActiveProxy().get("ActiveProxy"));
                     numberOfFailedCalls.set(0);
                 }
             }
@@ -646,9 +660,13 @@ public final class CallManager extends UntypedActor {
     public Map<String, String> switchProxy() {
         if (activeProxy.equalsIgnoreCase(primaryProxyUri)) {
             activeProxy = fallBackProxyUri;
+            activeProxyUsername = fallBackProxyUsername;
+            activeProxyPassword = fallBackProxyPassword;
             useFallbackProxy.set(true);
         } else if (allowFallbackToPrimary) {
             activeProxy = primaryProxyUri;
+            activeProxyUsername = primaryProxyUsername;
+            activeProxyPassword = primaryProxyPassword;
             useFallbackProxy.set(false);
         }
         final Notification notification = notification(WARNING_NOTIFICATION, 14110, "Max number of failed calls has been reached! Outbound proxy switched");
