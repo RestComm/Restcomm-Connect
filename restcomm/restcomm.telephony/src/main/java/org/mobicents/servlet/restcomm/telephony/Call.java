@@ -451,7 +451,8 @@ public final class Call extends UntypedActor {
                 }
                 case SipServletResponse.SC_RINGING:
                 case SipServletResponse.SC_SESSION_PROGRESS: {
-                    fsm.transition(message, ringing);
+                    if(!state.equals(ringing))
+                        fsm.transition(message, ringing);
                     break;
                 }
                 case SipServletResponse.SC_BUSY_HERE:

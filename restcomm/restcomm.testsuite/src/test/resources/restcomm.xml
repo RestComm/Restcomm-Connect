@@ -36,6 +36,9 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
+		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) when creating an outbound call -->
+		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
