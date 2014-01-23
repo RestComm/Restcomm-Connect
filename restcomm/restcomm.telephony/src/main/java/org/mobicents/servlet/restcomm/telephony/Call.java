@@ -451,7 +451,8 @@ public final class Call extends UntypedActor {
                 }
                 case SipServletResponse.SC_RINGING:
                 case SipServletResponse.SC_SESSION_PROGRESS: {
-                    fsm.transition(message, ringing);
+                    if(!state.equals(ringing))
+                        fsm.transition(message, ringing);
                     break;
                 }
                 case SipServletResponse.SC_BUSY_HERE:
@@ -817,6 +818,7 @@ public final class Call extends UntypedActor {
             } else {
                 offer = response.descriptor().toString();
             }
+            offer = patchSdpDescription(offer);
             invite.setContent(offer, "application/sdp");
             // Send the invite.
             invite.send();
@@ -1151,20 +1153,20 @@ public final class Call extends UntypedActor {
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
+    }
 
-        /**
-         * Patches an SDP description by trimming and making sure it ends with a new line.
-         *
-         * @param sdpDescription The SDP description to be patched.
-         * @return The patched SDP description
-         * @author hrosa
-         */
-        private String patchSdpDescription(String sdpDescription) {
-            if (sdpDescription == null || sdpDescription.isEmpty()) {
-                throw new IllegalArgumentException("The SDP description cannot be null or empty");
-            }
-            return sdpDescription.trim().concat("\n");
+    /**
+     * Patches an SDP description by trimming and making sure it ends with a new line.
+     *
+     * @param sdpDescription The SDP description to be patched.
+     * @return The patched SDP description
+     * @author hrosa
+     */
+    private String patchSdpDescription(String sdpDescription) {
+        if (sdpDescription == null || sdpDescription.isEmpty()) {
+            throw new IllegalArgumentException("The SDP description cannot be null or empty");
         }
+        return sdpDescription.trim().concat("\n");
     }
 
     private final class AcquiringInternalLink extends AbstractAction {
