@@ -7,6 +7,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.HungupStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.RedirectStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.RejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
@@ -47,6 +48,8 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
             step = gson.fromJson(step_object, ExternalServiceStep.class);
         else if ("redirect".equals(kind))
             step = gson.fromJson(step_object, RedirectStep.class);
+        else if ("reject".equals(kind))
+            step = gson.fromJson(step_object, RejectStep.class);
         else {
             step = null;
             System.out.println("Error deserializing step. Unknown step found!"); // TODO remove me and return a nice value!!!
