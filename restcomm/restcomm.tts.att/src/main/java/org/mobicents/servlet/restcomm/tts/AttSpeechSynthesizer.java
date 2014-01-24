@@ -1,7 +1,7 @@
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag. 
+ * by the @authors tag.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,33 +22,15 @@
 package org.mobicents.servlet.restcomm.tts;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.management.Notification;
 
 import naturalvoices.ClientPlayer;
 import naturalvoices.Player;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.mobicents.servlet.restcomm.cache.HashGenerator;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerException;
@@ -71,7 +53,7 @@ public final class AttSpeechSynthesizer extends UntypedActor {
     private final Map<String, String> men;
     private final Map<String, String> women;
 
-    private String rootDir = "";
+    private final String rootDir;
     private final Player player;
 
     public AttSpeechSynthesizer(final Configuration configuration) {
@@ -114,27 +96,21 @@ public final class AttSpeechSynthesizer extends UntypedActor {
         // Initialize female voices.
         women.put("en", configuration.getString("speakers.english.female"));
         women.put("en-uk", configuration.getString("speakers.english-uk.female"));
-        women.put("es-us", configuration.getString("speakers.spanish.female"));
-        women.put("fr-fr", configuration.getString("speakers.french.female"));
-        women.put("fr-ca", configuration.getString("speakers.canadian-french.female"));
+        women.put("es", configuration.getString("speakers.spanish.female"));
+        women.put("fr", configuration.getString("speakers.french.female"));
         women.put("de-de", configuration.getString("speakers.german.female"));
         women.put("it-it", configuration.getString("speakers.italian.female"));
         women.put("pt-br", configuration.getString("speakers.brazilian-portuguese.female"));
 
         // Initialize male voices.
         men.put("en", configuration.getString("speakers.english.male"));
-        men.put("en-uk", configuration.getString("speakers.english-uk.male"));        
-        men.put("es-us", configuration.getString("speakers.spanish.male"));
-        men.put("fr-fr", configuration.getString("speakers.french.male"));
+        men.put("en-uk", configuration.getString("speakers.english-uk.male"));
+        men.put("es", configuration.getString("speakers.spanish.male"));
+        men.put("fr", configuration.getString("speakers.french.male"));
         men.put("fr-ca", configuration.getString("speakers.canadian-french.male"));
-        men.put("de-de", configuration.getString("speakers.german.male"));
-        men.put("it-it", configuration.getString("speakers.italian.male"));
+        men.put("de", configuration.getString("speakers.german.male"));
+        men.put("it", configuration.getString("speakers.italian.male"));
         men.put("pt-br", configuration.getString("speakers.brazilian-portuguese.male"));
-    }
-
-    private String getLanguage(final String language) {
-        String languageCode = men.get(language);
-        return languageCode;
     }
 
     private URI synthesize(final Object message) throws IOException, SpeechSynthesizerException {

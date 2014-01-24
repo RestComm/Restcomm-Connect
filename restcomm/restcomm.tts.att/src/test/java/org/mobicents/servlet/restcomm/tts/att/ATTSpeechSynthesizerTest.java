@@ -31,6 +31,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
@@ -51,8 +52,9 @@ import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com (George Vagenas)
  */
+@Ignore //Needs AT&T TTS server to be running so we ignore it and run it manually only
 public final class ATTSpeechSynthesizerTest {
     private ActorSystem system;
     private ActorRef tts;
@@ -117,11 +119,11 @@ public final class ATTSpeechSynthesizerTest {
                 final Set<String> languages = response.get().languages();            
                 assertTrue(languages.contains("en"));
                 assertTrue(languages.contains("en-uk"));
-                assertTrue(languages.contains("es-us"));
-                assertTrue(languages.contains("fr-fr"));
+                assertTrue(languages.contains("es"));
+                assertTrue(languages.contains("fr"));
                 assertTrue(languages.contains("fr-ca"));
-                assertTrue(languages.contains("de-de"));
-                assertTrue(languages.contains("it-it"));
+                assertTrue(languages.contains("de"));
+                assertTrue(languages.contains("it"));
                 assertTrue(languages.contains("pt-br"));
             }
         };
@@ -205,7 +207,7 @@ public final class ATTSpeechSynthesizerTest {
                 final ActorRef observer = getRef();
                 String gender = "man";
                 String woman = "woman";
-                String language = "es-us";
+                String language = "es";
                 String message = "Hola TTS mundo! Esta es una prueba para el motor TTS AT&T utilizando la voz del hombre";
 
                 String hash = HashGenerator.hashMessage(gender, language, message);
@@ -241,7 +243,7 @@ public final class ATTSpeechSynthesizerTest {
             {
                 final ActorRef observer = getRef();
                 String gender = "woman";
-                String language = "es-us";
+                String language = "es";
                 String message = "Hola TTS mundo! Esta es una prueba para el motor TTS AT & T utilizando la mujer de voz";
 
                 String hash = HashGenerator.hashMessage(gender, language, message);
