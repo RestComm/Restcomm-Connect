@@ -52,7 +52,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com (George Vagenas)
  */
 public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 
