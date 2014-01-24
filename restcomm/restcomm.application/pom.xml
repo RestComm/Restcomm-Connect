@@ -154,6 +154,12 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.att</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.tts.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>

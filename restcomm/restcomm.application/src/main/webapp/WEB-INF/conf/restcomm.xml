@@ -287,7 +287,7 @@
 		class="org.mobicents.servlet.restcomm.tts.AttSpeechSynthesizer">
 		<host>127.0.0.1</host>
 		<port>7000</port>
-		<tts-client-directory>/home/gvagenas/Desktop/temp/HS/ATT_TTS_Server_Sent_Jan21_2014/att_naturalvoices_v5.1_server_live</tts-client-directory>
+		<tts-client-directory></tts-client-directory>
 		<verbose-output>false</verbose-output>
 		<speakers>
 			<english>
@@ -307,7 +307,6 @@
 				<male>alain8</male>
 			</french>
 			<canadian-french>
-				<female>arnaud8</female>
 				<male>arnaud8</male>
 			</canadian-french>
 			<german>
