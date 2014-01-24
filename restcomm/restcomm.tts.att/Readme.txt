@@ -12,6 +12,7 @@ AT&T Version
 	1. AT&T TTS Server: att_naturalvoices_v5.1_server_live
 	2. AT&T Java Wrapper: NV51-Java
 
+*** AT&T TTS server and Java wrapper can be found here: https://app.box.com/files/0/f/1517925593
 
 Prerequisite
 ==============
