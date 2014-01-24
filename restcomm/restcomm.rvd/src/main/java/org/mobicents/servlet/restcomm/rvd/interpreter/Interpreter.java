@@ -37,6 +37,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.PauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.RedirectStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.RejectStep;
@@ -46,6 +47,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRedirectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRejectStep;
@@ -89,6 +91,7 @@ public class Interpreter {
         xstream.alias("Hangup", RcmlHungupStep.class);
         xstream.alias("Redirect", RcmlRedirectStep.class);
         xstream.alias("Reject", RcmlRejectStep.class);
+        xstream.alias("Pause", RcmlPauseStep.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -100,6 +103,7 @@ public class Interpreter {
         xstream.useAttributeFor(RcmlSayStep.class, "loop");
         xstream.useAttributeFor(RcmlPlayStep.class, "loop");
         xstream.useAttributeFor(RcmlRejectStep.class, "reason");
+        xstream.useAttributeFor(RcmlPauseStep.class, "length");
         xstream.aliasField("Number", RcmlDialStep.class, "number");
         xstream.aliasField("Client", RcmlDialStep.class, "client");
         xstream.aliasField("Conference", RcmlDialStep.class, "conference");
@@ -412,8 +416,17 @@ public class Interpreter {
             return renderRedirectStep((RedirectStep) step);
         else if ("reject".equals(step.getKind()))
             return renderRejectStep((RejectStep) step);
+        else if ("pause".equals(step.getKind()))
+            return renderPauseStep((PauseStep) step);
         else
             throw new UnsupportedRVDStep(); // raise an exception here
+    }
+
+    private RcmlPauseStep renderPauseStep(PauseStep step) {
+        RcmlPauseStep rcmlStep = new RcmlPauseStep();
+        if ( step.getLength() != null )
+            rcmlStep.setLength(step.getLength());
+        return rcmlStep;
     }
 
     private RcmlRejectStep renderRejectStep(RejectStep step) {
