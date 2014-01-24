@@ -31,7 +31,6 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
@@ -115,47 +114,29 @@ public final class ATTSpeechSynthesizerTest {
                 final SpeechSynthesizerResponse<SpeechSynthesizerInfo> response = this.expectMsgClass(
                         FiniteDuration.create(30, TimeUnit.SECONDS), SpeechSynthesizerResponse.class);
                 assertTrue(response.succeeded());
-                final Set<String> languages = response.get().languages();
-                assertTrue(languages.contains("ca"));
-                assertTrue(languages.contains("zh"));
-                assertTrue(languages.contains("zh-hk"));
-                assertTrue(languages.contains("zh-tw"));
-                assertTrue(languages.contains("da"));
-                assertTrue(languages.contains("nl"));
-                assertTrue(languages.contains("en-au"));
-                assertTrue(languages.contains("en-ca"));
-                assertTrue(languages.contains("en-gb"));
-                assertTrue(languages.contains("en-in"));
+                final Set<String> languages = response.get().languages();            
                 assertTrue(languages.contains("en"));
-                assertTrue(languages.contains("fi"));
+                assertTrue(languages.contains("en-uk"));
+                assertTrue(languages.contains("es-us"));
+                assertTrue(languages.contains("fr-fr"));
                 assertTrue(languages.contains("fr-ca"));
-                assertTrue(languages.contains("fr"));
-                assertTrue(languages.contains("de"));
-                assertTrue(languages.contains("it"));
-                assertTrue(languages.contains("ja"));
-                assertTrue(languages.contains("ko"));
-                assertTrue(languages.contains("nb"));
-                assertTrue(languages.contains("pl"));
+                assertTrue(languages.contains("de-de"));
+                assertTrue(languages.contains("it-it"));
                 assertTrue(languages.contains("pt-br"));
-                assertTrue(languages.contains("pt"));
-                assertTrue(languages.contains("ru"));
-                assertTrue(languages.contains("es-mx"));
-                assertTrue(languages.contains("es"));
-                assertTrue(languages.contains("sv"));
             }
         };
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testSynthesisMan() {
+    public void testSynthesisManEnglish() {
         new JavaTestKit(system) {
             {
                 final ActorRef observer = getRef();
                 String gender = "man";
                 String woman = "woman";
                 String language = "en";
-                String message = "Hello TTS World! This is a test for AT&T TTS Engine using Man Voice";
+                String message = "Hello TTS World! This is a test for AT&T TTS engine using man voice";
 
                 String hash = HashGenerator.hashMessage(gender, language, message);
                 String womanHash = HashGenerator.hashMessage(woman, language, message);
@@ -185,13 +166,13 @@ public final class ATTSpeechSynthesizerTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testSynthesisWoman() {
+    public void testSynthesisWomanEnglish() {
         new JavaTestKit(system) {
             {
                 final ActorRef observer = getRef();
                 String gender = "woman";
                 String language = "en";
-                String message = "Hello TTS World! This is a test for AT&T TTS Engine using Women Voice";
+                String message = "Hello TTS World! This is a test for AT&T TTS engine using women voice";
 
                 String hash = HashGenerator.hashMessage(gender, language, message);
 
@@ -215,5 +196,75 @@ public final class ATTSpeechSynthesizerTest {
             }
         };
     }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSynthesisManSpanish() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                String gender = "man";
+                String woman = "woman";
+                String language = "es-us";
+                String message = "Hola TTS mundo! Esta es una prueba para el motor TTS AT&T utilizando la voz del hombre";
 
+                String hash = HashGenerator.hashMessage(gender, language, message);
+                String womanHash = HashGenerator.hashMessage(woman, language, message);
+
+                assertTrue(!hash.equalsIgnoreCase(womanHash));
+
+                final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, message);
+                tts.tell(synthesize, observer);
+                final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(
+                        FiniteDuration.create(30, TimeUnit.SECONDS), SpeechSynthesizerResponse.class);
+                assertTrue(response.succeeded());
+
+                DiskCacheRequest diskCacheRequest = new DiskCacheRequest(response.get());
+                cache.tell(diskCacheRequest, observer);
+
+                final DiskCacheResponse diskCacheResponse = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+                        DiskCacheResponse.class);
+                assertTrue(diskCacheResponse.succeeded());
+
+                assertEquals(tempSystemDirectory + hash + ".wav", response.get().toString());
+                assertEquals("http://127.0.0.1:8080/restcomm/cache/" + hash + ".wav", diskCacheResponse.get().toString());
+
+                FileUtils.deleteQuietly(new File(response.get()));
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSynthesisWomanSpanish() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                String gender = "woman";
+                String language = "es-us";
+                String message = "Hola TTS mundo! Esta es una prueba para el motor TTS AT & T utilizando la mujer de voz";
+
+                String hash = HashGenerator.hashMessage(gender, language, message);
+
+                final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, message);
+                tts.tell(synthesize, observer);
+                final SpeechSynthesizerResponse<URI> response = this.expectMsgClass(
+                        FiniteDuration.create(30, TimeUnit.SECONDS), SpeechSynthesizerResponse.class);
+                assertTrue(response.succeeded());
+
+                DiskCacheRequest diskCacheRequest = new DiskCacheRequest(response.get());
+                cache.tell(diskCacheRequest, observer);
+
+                final DiskCacheResponse diskCacheResponse = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
+                        DiskCacheResponse.class);
+                assertTrue(diskCacheResponse.succeeded());
+
+                assertEquals(tempSystemDirectory + hash + ".wav", response.get().toString());
+                assertEquals("http://127.0.0.1:8080/restcomm/cache/" + hash + ".wav", diskCacheResponse.get().toString());
+
+                FileUtils.deleteQuietly(new File(response.get()));
+            }
+        };
+    }
+    
 }
