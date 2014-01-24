@@ -437,11 +437,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     String e164(final String number) {
-        final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
-        try {
-            final PhoneNumber result = numbersUtil.parse(number, "US");
-            return numbersUtil.format(result, PhoneNumberFormat.E164);
-        } catch (final NumberParseException ignored) {
+        if (configuration.subset("runtime-settings").getBoolean("normalize-numbers-for-outbound-calls")) {
+            final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
+            try {
+                final PhoneNumber result = numbersUtil.parse(number, "US");
+                return numbersUtil.format(result, PhoneNumberFormat.E164);
+            } catch (final NumberParseException ignored) {
+                return number;
+            }
+        } else {
             return number;
         }
     }
