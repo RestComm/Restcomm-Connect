@@ -205,9 +205,6 @@ li.verb {
 	z-index: 1;
 }
 
-ul.verbs {
-	margin-bottom: 14px;
-}
 
 .leftmenu > li {
 	width: 100%;
@@ -258,6 +255,10 @@ ul.verbs {
 .service-url-wrap {
 	margin-bottom: 25px;
 	margin-top: 10px;
+}
+
+li.verb {
+	margin-bottom:10px;
 }
 
 

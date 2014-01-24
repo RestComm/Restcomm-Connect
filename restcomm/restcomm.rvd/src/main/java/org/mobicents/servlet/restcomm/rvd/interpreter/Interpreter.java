@@ -30,20 +30,27 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOp
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.UnsupportedRVDStep;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.PauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.RedirectStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.RejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRedirectStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
@@ -74,6 +81,7 @@ public class Interpreter {
         xstream = new XStream();
         xstream.registerConverter(new SayStepConverter());
         xstream.registerConverter(new PlayStepConverter());
+        xstream.registerConverter(new RedirectStepConverter());
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
         xstream.alias("Say", RcmlSayStep.class);
@@ -81,6 +89,9 @@ public class Interpreter {
         xstream.alias("Gather", RcmlGatherStep.class);
         xstream.alias("Dial", RcmlDialStep.class);
         xstream.alias("Hangup", RcmlHungupStep.class);
+        xstream.alias("Redirect", RcmlRedirectStep.class);
+        xstream.alias("Reject", RcmlRejectStep.class);
+        xstream.alias("Pause", RcmlPauseStep.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -91,6 +102,8 @@ public class Interpreter {
         xstream.useAttributeFor(RcmlSayStep.class, "language");
         xstream.useAttributeFor(RcmlSayStep.class, "loop");
         xstream.useAttributeFor(RcmlPlayStep.class, "loop");
+        xstream.useAttributeFor(RcmlRejectStep.class, "reason");
+        xstream.useAttributeFor(RcmlPauseStep.class, "length");
         xstream.aliasField("Number", RcmlDialStep.class, "number");
         xstream.aliasField("Client", RcmlDialStep.class, "client");
         xstream.aliasField("Conference", RcmlDialStep.class, "conference");
@@ -364,7 +377,7 @@ public class Interpreter {
         return buffer.toString();
     }
 
-    public RcmlDialStep renderDialStep(DialStep step) {
+    private RcmlDialStep renderDialStep(DialStep step) {
 
         RcmlDialStep rcmlStep = new RcmlDialStep();
         if ("number".equals(step.getDialType()) && step.getNumber() != null && !"".equals(step.getNumber()))
@@ -386,7 +399,7 @@ public class Interpreter {
      * @return a RcmlStep model object or null if there is no RCML for this step
      * @throws UnsupportedRVDStep
      */
-    public RcmlStep renderStep(Step step) throws UnsupportedRVDStep {
+    private RcmlStep renderStep(Step step) throws UnsupportedRVDStep {
         if ("say".equals(step.getKind()))
             return renderSayStep((SayStep) step);
         else if ("play".equals(step.getKind()))
@@ -399,11 +412,31 @@ public class Interpreter {
             return new RcmlHungupStep(); // trivial implementation. No need for seperate function
         else if ("externalService".equals(step.getKind()))
             return null;
+        else if ("redirect".equals(step.getKind()))
+            return renderRedirectStep((RedirectStep) step);
+        else if ("reject".equals(step.getKind()))
+            return renderRejectStep((RejectStep) step);
+        else if ("pause".equals(step.getKind()))
+            return renderPauseStep((PauseStep) step);
         else
             throw new UnsupportedRVDStep(); // raise an exception here
     }
 
-    public RcmlSayStep renderSayStep(SayStep step) {
+    private RcmlPauseStep renderPauseStep(PauseStep step) {
+        RcmlPauseStep rcmlStep = new RcmlPauseStep();
+        if ( step.getLength() != null )
+            rcmlStep.setLength(step.getLength());
+        return rcmlStep;
+    }
+
+    private RcmlRejectStep renderRejectStep(RejectStep step) {
+        RcmlRejectStep rcmlStep = new RcmlRejectStep();
+        if ( step.getReason() != null && !"".equals(step.getReason()))
+            rcmlStep.setReason(step.getReason());
+        return rcmlStep;
+    }
+
+    private RcmlSayStep renderSayStep(SayStep step) {
 
         RcmlSayStep sayStep = new RcmlSayStep();
         sayStep.setPhrase(populateVariables(step.getPhrase()));
@@ -414,7 +447,7 @@ public class Interpreter {
         return sayStep;
     }
 
-    public RcmlPlayStep renderPlayStep(PlayStep step) {
+    private RcmlPlayStep renderPlayStep(PlayStep step) {
         RcmlPlayStep playStep = new RcmlPlayStep();
         String url = "";
         if ("local".equals(step.getPlayType()))
@@ -428,7 +461,15 @@ public class Interpreter {
         return playStep;
     }
 
-    public RcmlGatherStep renderGatherStep(GatherStep step) throws UnsupportedRVDStep {
+    private RcmlRedirectStep renderRedirectStep( RedirectStep step ) {
+        RcmlRedirectStep rcmlStep = new RcmlRedirectStep();
+        rcmlStep.setUrl(step.getUrl());
+        if ( step.getMethod() != null && !"".equals(step.getMethod()) )
+            rcmlStep.setMethod(step.getMethod());
+        return rcmlStep;
+    }
+
+    private RcmlGatherStep renderGatherStep(GatherStep step) throws UnsupportedRVDStep {
 
         RcmlGatherStep rcmlStep = new RcmlGatherStep();
         String newtarget = target.nodename + "." + step.getName() + ".handle";

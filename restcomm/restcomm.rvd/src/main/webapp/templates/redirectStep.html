@@ -3,15 +3,19 @@
 
 	<div class="panel-body" ng-hide='step.isCollapsed'>
 		<div class="row">
-			<div class="col-md-4">				
+			<div class="col-md-12">				
 				<form name="form" novalidate>
-					<div class="input-group form-group">
+					<div class="input-group input-group-sm">
 						<span class="input-group-addon">Continue to</span>
-						<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control">
+						<input type='text' name='url' ng-model='step.url' class="form-control" required ></input>
+						<span class='input-group-addon'>method</span>
+						<select name="method" ng-model='step.method'  class="form-control">
 							<option value=""></option>
+							<option value="GET">GET</option>
+							<option value="POST">POST</option>
 						</select>
 					</div>
-					<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
+					<div class="validation-error" ng-show="form.url.$invalid">Url is missing</div>
 				</form>
 				
 			</div>
