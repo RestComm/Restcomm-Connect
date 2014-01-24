@@ -26,6 +26,9 @@ App.factory('stepService', function($rootScope) {
 					redirect: {kind:'redirect', label:'redirect', title:'redirect', url:'',method:''},
 					hungup: {kind:'hungup', label:'hang up', title:'hang up', next:''},
 					externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:''},
+					reject: {kind:'reject', label:'reject', title:'reject', reason:''},
+					pause: {kind:'pause', label:'pause', title:'pause', length:null},
+					
 		},
 		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
 		lastStepId: 0,
