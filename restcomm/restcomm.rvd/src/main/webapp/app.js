@@ -28,6 +28,7 @@ App.factory('stepService', function($rootScope) {
 					externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:''},
 					reject: {kind:'reject', label:'reject', title:'reject', reason:''},
 					pause: {kind:'pause', label:'pause', title:'pause', length:null},
+					sms: {kind:'sms', label:'sms', title:'sms', text:'', to:'', from:'', statusCallback:'',method:'GET', next:''},
 					
 		},
 		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
@@ -176,6 +177,18 @@ App.directive('myDraggable',function(){
   
 });
 
+
+App.directive('nullIfEmpty', [function() {
+    return {
+      require: 'ngModel',
+      link: function(scope, elm, attr, ctrl) {
+        ctrl.$parsers.unshift(function(value) {
+          return value === '' ? null : value;
+        });
+      }
+    };
+  }]
+);
 
 App.filter('excludeNode', function() {
     return function(items, exclude_named) {

@@ -22,16 +22,17 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.UnsupportedRVDStep;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.SmsStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
@@ -42,6 +43,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.RedirectStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.RejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.SmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
@@ -53,6 +55,7 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRedirectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
@@ -82,6 +85,7 @@ public class Interpreter {
         xstream.registerConverter(new SayStepConverter());
         xstream.registerConverter(new PlayStepConverter());
         xstream.registerConverter(new RedirectStepConverter());
+        xstream.registerConverter(new SmsStepConverter());
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
         xstream.alias("Say", RcmlSayStep.class);
@@ -92,6 +96,7 @@ public class Interpreter {
         xstream.alias("Redirect", RcmlRedirectStep.class);
         xstream.alias("Reject", RcmlRejectStep.class);
         xstream.alias("Pause", RcmlPauseStep.class);
+        xstream.alias("Sms", RcmlSmsStep.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -186,7 +191,7 @@ public class Interpreter {
         return rcmlResult; // this is in case of an error
     }
 
-    public Step loadStep(String stepname) throws IOException {
+    public Step loadStep(String stepname) throws IOException, InterpreterException {
         String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
                 + target.getNodename() + "." + stepname));
         Step step = gson.fromJson(stepfile_json, Step.class);
@@ -295,7 +300,7 @@ public class Interpreter {
 
     public void handleAction(String action) throws IOException, InterpreterException {
 
-        System.out.println("handling action ");
+        System.out.println("handling action " + action);
 
         Step step = loadStep(target.stepname);
         // <Gather/>
@@ -327,8 +332,15 @@ public class Interpreter {
                 variables.put(variableName, httpRequest.getParameter("Digits")); // put the string directly
                 interpret(gatherStep.getNext(),null);
             }
+        } else
+        if ( step.getClass().equals(SmsStep.class) ) {
+            System.out.println("handling sms action");
+            SmsStep smsStep = (SmsStep) step;
+            if ( RvdUtils.isEmpty(smsStep.getNext()) )
+                throw new InterpreterException( "'next' module is not defined for step " + step.getName() );
+            interpret( smsStep.getNext(), null );
         } else {
-            throw new RVDUnsupportedHandlerVerb();
+            //throw new RVDUnsupportedHandlerVerb();
         }
     }
 
@@ -418,6 +430,8 @@ public class Interpreter {
             return renderRejectStep((RejectStep) step);
         else if ("pause".equals(step.getKind()))
             return renderPauseStep((PauseStep) step);
+        else if ("sms".equals(step.getKind()))
+            return renderSmsStep((SmsStep) step);
         else
             throw new UnsupportedRVDStep(); // raise an exception here
     }
@@ -486,6 +500,26 @@ public class Interpreter {
 
         for (String nestedStepName : step.getStepnames())
             rcmlStep.getSteps().add(renderStep(step.getSteps().get(nestedStepName)));
+
+        return rcmlStep;
+    }
+
+    private RcmlSmsStep renderSmsStep(SmsStep step) {
+        RcmlSmsStep rcmlStep = new RcmlSmsStep();
+        String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
+
+        if ( step.getNext() != null && !"".equals(step.getNext()) ) {
+            Map<String, String> pairs = new HashMap<String, String>();
+            pairs.put("target", newtarget);
+            String action = buildAction(pairs);
+            rcmlStep.setAction(action);
+            rcmlStep.setMethod(step.getMethod());
+        }
+
+        rcmlStep.setFrom(step.getFrom());
+        rcmlStep.setTo(step.getTo());
+        rcmlStep.setStatusCallback(step.getStatusCallback());
+        rcmlStep.setText(step.getText());
 
         return rcmlStep;
     }

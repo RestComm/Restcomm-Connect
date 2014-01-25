@@ -1,0 +1,48 @@
+<div class="step sms-step panel panel-rvdstep">
+	<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <small>{{step.phrase}}</small><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+
+	<div class="panel-body" ng-hide='step.isCollapsed'>
+		<div class='row form-group'>
+			<div class='col-md-12'>
+				<span class="help-block">SMS text</span>
+				<textarea ng-model='step.text' class="form-control"></textarea>	
+			</div>
+		</div>
+		<div class="row">
+			<div class='col-md-4'>
+				<div class="input-group form-group input-group-sm">
+					<span class="input-group-addon">To</span>
+					<input type='text' name='to' ng-model='step.to' null-if-empty class="form-control"></input>
+				</div>
+				<div class="input-group form-group input-group-sm">
+					<span class="input-group-addon">From</span>
+					<input type='text' name='from' ng-model='step.from' null-if-empty class="form-control"></input>
+				</div>			
+			</div>
+			<div class='col-md-8'>
+					 
+					<div class="input-group form-group input-group-sm">
+						<span class="input-group-addon">Continue to</span>
+						<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+							<option value=""></option>
+						</select>
+						<!-- 
+						<span class='input-group-addon'>method</span>
+						<select name="method" ng-model='step.method'  class="form-control">
+							<option value=""></option>
+							<option value="GET">GET</option>
+							<option value="POST">POST</option>
+						</select>
+						 -->
+					</div>
+					<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+					
+
+					<div class="input-group form-group input-group-sm">
+						<span class="input-group-addon">Status callback</span>
+						<input type='text' name='statusCallback' ng-model='step.statusCallback' null-if-empty class="form-control" placeholder='http://...'></input>
+					</div>
+
+		</div>
+	</div>
+</div>
