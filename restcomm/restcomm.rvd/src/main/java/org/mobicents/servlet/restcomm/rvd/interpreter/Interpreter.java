@@ -41,6 +41,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.RecordStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.RedirectStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.RejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
@@ -52,6 +53,7 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRecordStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRedirectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
@@ -98,6 +100,7 @@ public class Interpreter {
         xstream.alias("Reject", RcmlRejectStep.class);
         xstream.alias("Pause", RcmlPauseStep.class);
         xstream.alias("Sms", RcmlSmsStep.class);
+        xstream.alias("Record", RcmlRecordStep.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -110,6 +113,14 @@ public class Interpreter {
         xstream.useAttributeFor(RcmlPlayStep.class, "loop");
         xstream.useAttributeFor(RcmlRejectStep.class, "reason");
         xstream.useAttributeFor(RcmlPauseStep.class, "length");
+        xstream.useAttributeFor(RcmlRecordStep.class, "action");
+        xstream.useAttributeFor(RcmlRecordStep.class, "method");
+        xstream.useAttributeFor(RcmlRecordStep.class, "timeout");
+        xstream.useAttributeFor(RcmlRecordStep.class, "finishOnKey");
+        xstream.useAttributeFor(RcmlRecordStep.class, "maxLength");
+        xstream.useAttributeFor(RcmlRecordStep.class, "transcribe");
+        xstream.useAttributeFor(RcmlRecordStep.class, "transcribeCallback");
+        xstream.useAttributeFor(RcmlRecordStep.class, "playBeep");
         xstream.aliasField("Number", RcmlDialStep.class, "number");
         xstream.aliasField("Client", RcmlDialStep.class, "client");
         xstream.aliasField("Conference", RcmlDialStep.class, "conference");
@@ -441,6 +452,8 @@ public class Interpreter {
             return renderPauseStep((PauseStep) step);
         else if ("sms".equals(step.getKind()))
             return renderSmsStep((SmsStep) step);
+        else if ("record".equals(step.getKind()))
+            return renderRecordStep((RecordStep) step);
         else
             throw new UnsupportedRVDStep(); // raise an exception here
     }
@@ -515,9 +528,9 @@ public class Interpreter {
 
     private RcmlSmsStep renderSmsStep(SmsStep step) {
         RcmlSmsStep rcmlStep = new RcmlSmsStep();
-        String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
 
         if ( ! RvdUtils.isEmpty(step.getNext()) ) {
+            String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
             Map<String, String> pairs = new HashMap<String, String>();
             pairs.put("target", newtarget);
             String action = buildAction(pairs);
@@ -529,6 +542,28 @@ public class Interpreter {
         rcmlStep.setTo(step.getTo());
         rcmlStep.setStatusCallback(step.getStatusCallback());
         rcmlStep.setText(populateVariables(step.getText()));
+
+        return rcmlStep;
+    }
+
+    private RcmlRecordStep renderRecordStep(RecordStep step) {
+        RcmlRecordStep rcmlStep = new RcmlRecordStep();
+
+        if ( ! RvdUtils.isEmpty(step.getNext()) ) {
+            String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
+            Map<String, String> pairs = new HashMap<String, String>();
+            pairs.put("target", newtarget);
+            String action = buildAction(pairs);
+            rcmlStep.setAction(action);
+            rcmlStep.setMethod(step.getMethod());
+        }
+
+        rcmlStep.setFinishOnKey(step.getFinishOnKey());
+        rcmlStep.setMaxLength(step.getMaxLength());
+        rcmlStep.setPlayBeep(step.getPlayBeep());
+        rcmlStep.setTimeout(step.getTimeout());
+        rcmlStep.setTranscribe(step.getTranscribe());
+        rcmlStep.setTranscribeCallback(step.getTranscribeCallback());
 
         return rcmlStep;
     }
