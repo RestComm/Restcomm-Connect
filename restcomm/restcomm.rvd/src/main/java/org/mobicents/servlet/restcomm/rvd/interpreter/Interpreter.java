@@ -30,6 +30,7 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExt
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.UnsupportedRVDStep;
+import org.mobicents.servlet.restcomm.rvd.model.FaxStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
@@ -38,6 +39,7 @@ import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
+import org.mobicents.servlet.restcomm.rvd.model.client.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
@@ -49,6 +51,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.SmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlFaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPauseStep;
@@ -89,6 +92,7 @@ public class Interpreter {
         xstream.registerConverter(new PlayStepConverter());
         xstream.registerConverter(new RedirectStepConverter());
         xstream.registerConverter(new SmsStepConverter());
+        xstream.registerConverter(new FaxStepConverter());
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
         xstream.alias("Say", RcmlSayStep.class);
@@ -101,6 +105,7 @@ public class Interpreter {
         xstream.alias("Pause", RcmlPauseStep.class);
         xstream.alias("Sms", RcmlSmsStep.class);
         xstream.alias("Record", RcmlRecordStep.class);
+        xstream.alias("Fax", RcmlFaxStep.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -203,7 +208,7 @@ public class Interpreter {
         return rcmlResult; // this is in case of an error
     }
 
-    public Step loadStep(String stepname) throws IOException, InterpreterException {
+    private Step loadStep(String stepname) throws IOException, InterpreterException {
         String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
                 + target.getNodename() + "." + stepname));
         Step step = gson.fromJson(stepfile_json, Step.class);
@@ -310,7 +315,7 @@ public class Interpreter {
     }
 
 
-    public void handleAction(String action) throws IOException, InterpreterException {
+    private void handleAction(String action) throws IOException, InterpreterException {
 
         System.out.println("handling action " + action);
 
@@ -368,7 +373,7 @@ public class Interpreter {
      * Processes a block of text typically used for <Say/>ing that may contain variable expressions. Replaces variable
      * expressions with their corresponding values from interpreter's variables map
      */
-    public String populateVariables(String sourceText) {
+    private String populateVariables(String sourceText) {
 
         // This class serves strictly the purposes of the following algorithm
         final class VariableInText {
@@ -454,6 +459,8 @@ public class Interpreter {
             return renderSmsStep((SmsStep) step);
         else if ("record".equals(step.getKind()))
             return renderRecordStep((RecordStep) step);
+        else if ("fax".equals(step.getKind()))
+            return renderFaxStep((FaxStep) step);
         else
             throw new UnsupportedRVDStep(); // raise an exception here
     }
@@ -528,6 +535,26 @@ public class Interpreter {
 
     private RcmlSmsStep renderSmsStep(SmsStep step) {
         RcmlSmsStep rcmlStep = new RcmlSmsStep();
+
+        if ( ! RvdUtils.isEmpty(step.getNext()) ) {
+            String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
+            Map<String, String> pairs = new HashMap<String, String>();
+            pairs.put("target", newtarget);
+            String action = buildAction(pairs);
+            rcmlStep.setAction(action);
+            rcmlStep.setMethod(step.getMethod());
+        }
+
+        rcmlStep.setFrom(step.getFrom());
+        rcmlStep.setTo(step.getTo());
+        rcmlStep.setStatusCallback(step.getStatusCallback());
+        rcmlStep.setText(populateVariables(step.getText()));
+
+        return rcmlStep;
+    }
+
+    private RcmlFaxStep renderFaxStep(FaxStep step) {
+        RcmlFaxStep rcmlStep = new RcmlFaxStep();
 
         if ( ! RvdUtils.isEmpty(step.getNext()) ) {
             String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
