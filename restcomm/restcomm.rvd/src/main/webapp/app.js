@@ -28,7 +28,7 @@ App.factory('stepService', function($rootScope) {
 					externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:''},
 					reject: {kind:'reject', label:'reject', title:'reject', reason:''},
 					pause: {kind:'pause', label:'pause', title:'pause', length:null},
-					sms: {kind:'sms', label:'sms', title:'sms', text:'', to:'', from:'', statusCallback:'',method:'GET', next:''},
+					sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:''},
 					
 		},
 		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
