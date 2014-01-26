@@ -28,6 +28,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.UnsupportedRVDStep;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
@@ -338,9 +339,17 @@ public class Interpreter {
             SmsStep smsStep = (SmsStep) step;
             if ( RvdUtils.isEmpty(smsStep.getNext()) )
                 throw new InterpreterException( "'next' module is not defined for step " + step.getName() );
+
+            String SmsSid = httpRequest.getParameter("SmsSid");
+            String SmsStatus = httpRequest.getParameter("SmsStatus");
+            if ( SmsSid != null )
+                variables.put("SmsSid", SmsSid);
+            if (SmsStatus != null )
+                variables.put("SmsStatus", SmsStatus);
+
             interpret( smsStep.getNext(), null );
         } else {
-            //throw new RVDUnsupportedHandlerVerb();
+            throw new RVDUnsupportedHandlerVerb();
         }
     }
 
@@ -508,7 +517,7 @@ public class Interpreter {
         RcmlSmsStep rcmlStep = new RcmlSmsStep();
         String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
 
-        if ( step.getNext() != null && !"".equals(step.getNext()) ) {
+        if ( ! RvdUtils.isEmpty(step.getNext()) ) {
             Map<String, String> pairs = new HashMap<String, String>();
             pairs.put("target", newtarget);
             String action = buildAction(pairs);
@@ -519,7 +528,7 @@ public class Interpreter {
         rcmlStep.setFrom(step.getFrom());
         rcmlStep.setTo(step.getTo());
         rcmlStep.setStatusCallback(step.getStatusCallback());
-        rcmlStep.setText(step.getText());
+        rcmlStep.setText(populateVariables(step.getText()));
 
         return rcmlStep;
     }
