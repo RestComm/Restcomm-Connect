@@ -267,6 +267,10 @@ li.verb {
     height: 32px;
 }
 
+.verb-info-link {
+    margin-right: 20px;
+}
+
 /* 
  * 
  * BOOTSTRAP CUSTOMIZATIONS 
