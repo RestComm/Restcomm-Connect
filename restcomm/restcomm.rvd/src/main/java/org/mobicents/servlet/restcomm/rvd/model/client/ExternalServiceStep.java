@@ -2,6 +2,10 @@ package org.mobicents.servlet.restcomm.rvd.model.client;
 
 import java.util.List;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
+
 
 public class ExternalServiceStep extends Step {
 
@@ -62,5 +66,11 @@ public class ExternalServiceStep extends Step {
     }
     public List<UrlParam> getUrlParams() {
         return this.urlParams;
+    }
+
+    @Override
+    public RcmlStep render(Interpreter interpreter) throws InterpreterException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

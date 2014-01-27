@@ -1,5 +1,12 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.mobicents.servlet.restcomm.rvd.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRecordStep;
+
 public class RecordStep extends Step {
     String next;
     String method;
@@ -56,5 +63,26 @@ public class RecordStep extends Step {
     }
     public void setPlayBeep(Boolean playBeep) {
         this.playBeep = playBeep;
+    }
+    public RcmlRecordStep render(Interpreter interpreter) {
+        RcmlRecordStep rcmlStep = new RcmlRecordStep();
+
+        if ( ! RvdUtils.isEmpty(getNext()) ) {
+            String newtarget = interpreter.getTarget().getNodename() + "." + getName() + ".actionhandler";
+            Map<String, String> pairs = new HashMap<String, String>();
+            pairs.put("target", newtarget);
+            String action = interpreter.buildAction(pairs);
+            rcmlStep.setAction(action);
+            rcmlStep.setMethod(getMethod());
+        }
+
+        rcmlStep.setFinishOnKey(getFinishOnKey());
+        rcmlStep.setMaxLength(getMaxLength());
+        rcmlStep.setPlayBeep(getPlayBeep());
+        rcmlStep.setTimeout(getTimeout());
+        rcmlStep.setTranscribe(getTranscribe());
+        rcmlStep.setTranscribeCallback(getTranscribeCallback());
+
+        return rcmlStep;
     }
 }

@@ -29,7 +29,6 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServ
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.UnsupportedRVDStep;
 import org.mobicents.servlet.restcomm.rvd.model.FaxStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
@@ -37,16 +36,8 @@ import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SmsStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
-import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.PauseStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.RecordStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.RedirectStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.RejectStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.SmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
@@ -135,6 +126,47 @@ public class Interpreter {
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
     }
 
+
+    public HttpServletRequest getHttpRequest() {
+        return httpRequest;
+    }
+
+
+    public void setHttpRequest(HttpServletRequest httpRequest) {
+        this.httpRequest = httpRequest;
+    }
+
+
+    public String getAppName() {
+        return appName;
+    }
+
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
+
+
+    public Map<String, String> getVariables() {
+        return variables;
+    }
+
+
+    public void setVariables(Map<String, String> variables) {
+        this.variables = variables;
+    }
+
+
+    public Target getTarget() {
+        return target;
+    }
+
+
+    public void setTarget(Target target) {
+        this.target = target;
+    }
+
+
     public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest)
             throws IOException, InterpreterException {
         this.projectBasePath = projectBasePath;
@@ -196,7 +228,7 @@ public class Interpreter {
                     if ( rerouteTo != null )
                         return interpret(rerouteTo, rcmlModel);
                     // otherwise continue rendering the current module
-                    RcmlStep rcmlStep = renderStep(step);
+                    RcmlStep rcmlStep = step.render(this);
                     if ( rcmlStep != null)
                         rcmlModel.steps.add(rcmlStep);
                 }
@@ -373,7 +405,7 @@ public class Interpreter {
      * Processes a block of text typically used for <Say/>ing that may contain variable expressions. Replaces variable
      * expressions with their corresponding values from interpreter's variables map
      */
-    private String populateVariables(String sourceText) {
+    public String populateVariables(String sourceText) {
 
         // This class serves strictly the purposes of the following algorithm
         final class VariableInText {
@@ -414,188 +446,7 @@ public class Interpreter {
         return buffer.toString();
     }
 
-    private RcmlDialStep renderDialStep(DialStep step) {
-
-        RcmlDialStep rcmlStep = new RcmlDialStep();
-        if ("number".equals(step.getDialType()) && step.getNumber() != null && !"".equals(step.getNumber()))
-            rcmlStep.setNumber(populateVariables(step.getNumber()));
-        else if ("client".equals(step.getDialType()) && step.getClient() != null && !"".equals(step.getClient()))
-            rcmlStep.setClient(step.getClient());
-        else if ("conference".equals(step.getDialType()) && step.getConference() != null && !"".equals(step.getConference()))
-            rcmlStep.setConference(step.getConference());
-        else if ("sipuri".equals(step.getDialType()) && step.getSipuri() != null && !"".equals(step.getSipuri()))
-            rcmlStep.setSipuri(step.getSipuri());
-        // TODO else ...
-
-        return rcmlStep;
-    }
-
-    /**
-     *
-     * @param step
-     * @return a RcmlStep model object or null if there is no RCML for this step
-     * @throws UnsupportedRVDStep
-     */
-    private RcmlStep renderStep(Step step) throws UnsupportedRVDStep {
-        if ("say".equals(step.getKind()))
-            return renderSayStep((SayStep) step);
-        else if ("play".equals(step.getKind()))
-            return renderPlayStep((PlayStep) step);
-        else if ("gather".equals(step.getKind()))
-            return renderGatherStep((GatherStep) step);
-        else if ("dial".equals(step.getKind()))
-            return renderDialStep((DialStep) step);
-        else if ("hungup".equals(step.getKind()))
-            return new RcmlHungupStep(); // trivial implementation. No need for seperate function
-        else if ("externalService".equals(step.getKind()))
-            return null;
-        else if ("redirect".equals(step.getKind()))
-            return renderRedirectStep((RedirectStep) step);
-        else if ("reject".equals(step.getKind()))
-            return renderRejectStep((RejectStep) step);
-        else if ("pause".equals(step.getKind()))
-            return renderPauseStep((PauseStep) step);
-        else if ("sms".equals(step.getKind()))
-            return renderSmsStep((SmsStep) step);
-        else if ("record".equals(step.getKind()))
-            return renderRecordStep((RecordStep) step);
-        else if ("fax".equals(step.getKind()))
-            return renderFaxStep((FaxStep) step);
-        else
-            throw new UnsupportedRVDStep(); // raise an exception here
-    }
-
-    private RcmlPauseStep renderPauseStep(PauseStep step) {
-        RcmlPauseStep rcmlStep = new RcmlPauseStep();
-        if ( step.getLength() != null )
-            rcmlStep.setLength(step.getLength());
-        return rcmlStep;
-    }
-
-    private RcmlRejectStep renderRejectStep(RejectStep step) {
-        RcmlRejectStep rcmlStep = new RcmlRejectStep();
-        if ( step.getReason() != null && !"".equals(step.getReason()))
-            rcmlStep.setReason(step.getReason());
-        return rcmlStep;
-    }
-
-    private RcmlSayStep renderSayStep(SayStep step) {
-
-        RcmlSayStep sayStep = new RcmlSayStep();
-        sayStep.setPhrase(populateVariables(step.getPhrase()));
-        sayStep.setVoice(step.getVoice());
-        sayStep.setLanguage(step.getLanguage());
-        sayStep.setLoop(step.getLoop());
-
-        return sayStep;
-    }
-
-    private RcmlPlayStep renderPlayStep(PlayStep step) {
-        RcmlPlayStep playStep = new RcmlPlayStep();
-        String url = "";
-        if ("local".equals(step.getPlayType()))
-            url = httpRequest.getContextPath() + "/workspace/" + appName + "/wavs/" + step.getWavLocalFilename();
-        else
-            url = step.getWavUrl();
-
-        System.out.println("play url: " + url);
-        playStep.setWavurl(url);
-
-        return playStep;
-    }
-
-    private RcmlRedirectStep renderRedirectStep( RedirectStep step ) {
-        RcmlRedirectStep rcmlStep = new RcmlRedirectStep();
-        rcmlStep.setUrl(step.getUrl());
-        if ( step.getMethod() != null && !"".equals(step.getMethod()) )
-            rcmlStep.setMethod(step.getMethod());
-        return rcmlStep;
-    }
-
-    private RcmlGatherStep renderGatherStep(GatherStep step) throws UnsupportedRVDStep {
-
-        RcmlGatherStep rcmlStep = new RcmlGatherStep();
-        String newtarget = target.nodename + "." + step.getName() + ".handle";
-        Map<String, String> pairs = new HashMap<String, String>();
-        pairs.put("target", newtarget);
-        String action = buildAction(pairs);
-
-        rcmlStep.setAction(action);
-        rcmlStep.setTimeout(step.getTimeout());
-        if (step.getFinishOnKey() != null && !"".equals(step.getFinishOnKey()))
-            rcmlStep.setFinishOnKey(step.getFinishOnKey());
-        rcmlStep.setMethod(step.getMethod());
-        rcmlStep.setNumDigits(step.getNumDigits());
-
-        for (String nestedStepName : step.getStepnames())
-            rcmlStep.getSteps().add(renderStep(step.getSteps().get(nestedStepName)));
-
-        return rcmlStep;
-    }
-
-    private RcmlSmsStep renderSmsStep(SmsStep step) {
-        RcmlSmsStep rcmlStep = new RcmlSmsStep();
-
-        if ( ! RvdUtils.isEmpty(step.getNext()) ) {
-            String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
-            Map<String, String> pairs = new HashMap<String, String>();
-            pairs.put("target", newtarget);
-            String action = buildAction(pairs);
-            rcmlStep.setAction(action);
-            rcmlStep.setMethod(step.getMethod());
-        }
-
-        rcmlStep.setFrom(step.getFrom());
-        rcmlStep.setTo(step.getTo());
-        rcmlStep.setStatusCallback(step.getStatusCallback());
-        rcmlStep.setText(populateVariables(step.getText()));
-
-        return rcmlStep;
-    }
-
-    private RcmlFaxStep renderFaxStep(FaxStep step) {
-        RcmlFaxStep rcmlStep = new RcmlFaxStep();
-
-        if ( ! RvdUtils.isEmpty(step.getNext()) ) {
-            String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
-            Map<String, String> pairs = new HashMap<String, String>();
-            pairs.put("target", newtarget);
-            String action = buildAction(pairs);
-            rcmlStep.setAction(action);
-            rcmlStep.setMethod(step.getMethod());
-        }
-
-        rcmlStep.setFrom(step.getFrom());
-        rcmlStep.setTo(step.getTo());
-        rcmlStep.setStatusCallback(step.getStatusCallback());
-        rcmlStep.setText(populateVariables(step.getText()));
-
-        return rcmlStep;
-    }
-
-    private RcmlRecordStep renderRecordStep(RecordStep step) {
-        RcmlRecordStep rcmlStep = new RcmlRecordStep();
-
-        if ( ! RvdUtils.isEmpty(step.getNext()) ) {
-            String newtarget = target.nodename + "." + step.getName() + ".actionhandler";
-            Map<String, String> pairs = new HashMap<String, String>();
-            pairs.put("target", newtarget);
-            String action = buildAction(pairs);
-            rcmlStep.setAction(action);
-            rcmlStep.setMethod(step.getMethod());
-        }
-
-        rcmlStep.setFinishOnKey(step.getFinishOnKey());
-        rcmlStep.setMaxLength(step.getMaxLength());
-        rcmlStep.setPlayBeep(step.getPlayBeep());
-        rcmlStep.setTimeout(step.getTimeout());
-        rcmlStep.setTranscribe(step.getTranscribe());
-        rcmlStep.setTranscribeCallback(step.getTranscribeCallback());
-
-        return rcmlStep;
-    }
-
-    private String buildAction(Map<String, String> pairs) {
+    public String buildAction(Map<String, String> pairs) {
         String query = "";
         for (String key : pairs.keySet()) {
             if ("".equals(query))

@@ -1,5 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRedirectStep;
+
 public class RedirectStep extends Step {
     String url;
     String method;
@@ -17,5 +20,14 @@ public class RedirectStep extends Step {
     public void setMethod(String method) {
         this.method = method;
     }
+
+    public RcmlRedirectStep render(Interpreter interpreter ) {
+        RcmlRedirectStep rcmlStep = new RcmlRedirectStep();
+        rcmlStep.setUrl(getUrl());
+        if ( getMethod() != null && !"".equals(getMethod()) )
+            rcmlStep.setMethod(getMethod());
+        return rcmlStep;
+    }
+
 
 }

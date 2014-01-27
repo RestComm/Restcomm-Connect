@@ -1,5 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPauseStep;
+
 public class PauseStep extends Step {
     Integer length;
 
@@ -9,5 +12,11 @@ public class PauseStep extends Step {
 
     public void setLength(Integer length) {
         this.length = length;
+    }
+    public RcmlPauseStep render(Interpreter interpreter) {
+        RcmlPauseStep rcmlStep = new RcmlPauseStep();
+        if ( getLength() != null )
+            rcmlStep.setLength(getLength());
+        return rcmlStep;
     }
 }
