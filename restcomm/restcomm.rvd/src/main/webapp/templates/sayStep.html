@@ -1,6 +1,6 @@
 
 	<div class="step say-step panel panel-rvdstep">
-		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <em><small ng-show='step.isCollapsed'>{{step.phrase}}</small></em><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <em><small ng-show='step.isCollapsed'>{{step.phrase}}</small></em><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i> <i class="fa fa-info rvd-clickable verb-info-link pull-right"></i> </h4></div>
 		<div class="panel-body" ng-hide='step.isCollapsed'>
 			<div class="row">
 				<div class="col-lg-12 col-md-12">
