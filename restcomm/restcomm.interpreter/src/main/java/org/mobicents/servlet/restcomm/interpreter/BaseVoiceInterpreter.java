@@ -1538,7 +1538,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
-            final Double duration = WavUtils.getAudioDuration(recordingUri);
+            Double duration = WavUtils.getAudioDuration(recordingUri);
+            if(duration.equals(0.0)) {
+                final DateTime end = DateTime.now();
+                duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+            }
             final Recording.Builder builder = Recording.builder();
             builder.setSid(recordingSid);
             builder.setAccountSid(accountId);

@@ -174,8 +174,6 @@ public abstract class AbstractConverter implements Converter {
         } else {
             object.add("price_unit", JsonNull.INSTANCE);
         }
-
-        object.addProperty("price_unit", priceUnit.toString());
     }
 
     protected void writeSid(final Sid sid, final HierarchicalStreamWriter writer) {
