@@ -1,7 +1,12 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 
 public class GatherStep extends Step {
     private String action;
@@ -155,6 +160,26 @@ public class GatherStep extends Step {
 
     public void setIface(Iface iface) {
         this.iface = iface;
+    }
+    public RcmlGatherStep render(Interpreter interpreter) throws InterpreterException {
+
+        RcmlGatherStep rcmlStep = new RcmlGatherStep();
+        String newtarget = interpreter.getTarget().getNodename() + "." + getName() + ".handle";
+        Map<String, String> pairs = new HashMap<String, String>();
+        pairs.put("target", newtarget);
+        String action = interpreter.buildAction(pairs);
+
+        rcmlStep.setAction(action);
+        rcmlStep.setTimeout(getTimeout());
+        if (getFinishOnKey() != null && !"".equals(getFinishOnKey()))
+            rcmlStep.setFinishOnKey(getFinishOnKey());
+        rcmlStep.setMethod(getMethod());
+        rcmlStep.setNumDigits(getNumDigits());
+
+        for (String nestedStepName : getStepnames())
+            rcmlStep.getSteps().add(getSteps().get(nestedStepName).render(interpreter));
+
+        return rcmlStep;
     }
 
 }

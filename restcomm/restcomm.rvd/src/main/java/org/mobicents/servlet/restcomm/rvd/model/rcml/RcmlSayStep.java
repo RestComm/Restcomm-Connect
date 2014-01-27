@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.model.rcml;
 
+
 public class RcmlSayStep extends RcmlStep {
     private String phrase;
     private String voice;
@@ -37,5 +38,4 @@ public class RcmlSayStep extends RcmlStep {
     public void setLoop(Integer loop) {
         this.loop = loop;
     }
-
 }

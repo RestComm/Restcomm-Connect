@@ -1,6 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
-public class Step {
+import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
+
+public abstract class Step {
 
     private String kind;
     private String label;
@@ -47,5 +51,6 @@ public class Step {
     public void setName(String name) {
         this.name = name;
     }
+    public abstract RcmlStep render(Interpreter interpreter) throws InterpreterException;
 
 }
