@@ -542,6 +542,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if ((bridged.equals(state) || forking.equals(state)) && (sender == outboundCall || outboundCall == null)) {
                     fsm.transition(message, finishDialing);
                 } else if (creatingRecording.equals(state)) {
+                    //Ask callMediaGroup to stop recording so we have the recording file available
+                    //Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
+                    callMediaGroup.tell(new Stop(), null);
                     fsm.transition(message, finishRecording);
                 } else if (!forking.equals(state) || call == sender()) {
                     fsm.transition(message, finished);
