@@ -1,4 +1,4 @@
-var App = angular.module('Rvd', ['ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse', 'ui.sortable','angularSpinner']);
+var App = angular.module('Rvd', ['ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','angularSpinner']);
 
 App.config([ '$routeProvider', function($routeProvider) {
 	

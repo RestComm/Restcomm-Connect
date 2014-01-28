@@ -267,8 +267,17 @@ li.verb {
     height: 32px;
 }
 
-.verb-info-link {
-    margin-right: 20px;
+.field-info-link {
+    padding-left:5px;
+    padding-right:5px;
+}
+
+.help-tooltip {
+    cursor:help;
+}
+
+.wellinfo-rollup {
+    text-align: right;
 }
 
 /* 
