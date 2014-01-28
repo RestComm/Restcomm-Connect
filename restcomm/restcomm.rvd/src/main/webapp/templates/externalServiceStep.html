@@ -6,7 +6,7 @@
 				
                     <div class="service-url-wrap">
                         <div class="input-group input-group-sm form-group">
-                            <span class="input-group-addon">Service Url</span>
+                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
                             <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
                         </div>
                         <!--<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div> -->
@@ -22,10 +22,26 @@
                                 </div>
                             </div>
                         </div>
-                        <button ng-click="addUrlParam(step)" type="button" class="btn btn-xs"><span>Add URL parameter</span></button>
+                        <button ng-click="addUrlParam(step)" type="button" class="btn btn-xs"><span>Add URL parameter</span></button>  &nbsp; <i class="fa fa-info-circle rvd-clickable" popover="Add a name-value query parameter. Use '$variable' values to pass RVD variables" popover-placement='top'></i>
                      </div>
                         
-					<h4>Assign response to variables</h4>
+					<h4>Assign response to variables <i ng-click='step.iface.helpCollapsed = !step.iface.helpCollapsed' class="fa fa-info-circle rvd-clickable"></i></h4>
+                    <div collapse="!step.iface.helpCollapsed">
+                        <div class="well">
+                            <p>Assign JSON response fields to RVD variables to access the data returned from RVD components. Create an assignment for each separate piece of information you need.</p>
+                            <p>For each assignment:</p>
+                            <ul>
+                                <li>Fill in the "Assign to" field with the name of the RVD variable you want to create.</li>
+                                <li>Click "Add operation" to add one or more access operations until you drill down to the JSON member variable you need. For objects use the 'propertyNamed' action to access a specific property. For arrays use the 'itemAtPosition' action to access the N'th array element.</li>
+                                <li>The last operation should be 'string'. Don't forget to press 'Done' when done.</li>
+                                <li>Undo your mistakes with the circular arrow button.</li>
+                            </ul>
+                            <p>
+                                All variables variables created this way will be available for use in this module (or the next if a routing decision is made).
+                            </p>
+                            <div class="wellinfo-rollup"><i ng-click='step.iface.helpCollapsed = !step.iface.helpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
+                         </div> 
+                    </div>
 
 					<div class="form-group">
 						<button ng-click="addAssignment(step)" type="button" class="btn btn-primary btn-xs"><span>Add assignment</span></button>
@@ -77,8 +93,19 @@
 					
 
 				
-					<h4>Make a routing decision</h4>
-					
+					<h4>Make a routing decision <i ng-click='step.iface.routingHelpCollapsed = !step.iface.routingHelpCollapsed' class="fa fa-info-circle rvd-clickable"></i></h4>
+                    <div collapse="!step.iface.routingHelpCollapsed">
+                        <div class="well">
+                            <p>Check "Continue to" checkbox below to change call flow after the external service has responded:</p>
+                            <ul>
+                                <li>Select 'variable' to use one of the variables created by the assignments above to determine which module comes next. The variable should contain the next module's label (the label of the module tab).</li>
+                                <li>Select 'fixed' to use a hardcoded module setting.</li>
+                                <li>Leave "Continue to" to unchecked to if you don't want to change the call flow at this point.</li>
+                            </ul>
+                            <div class="wellinfo-rollup"><i ng-click='step.iface.routingHelpCollapsed = !step.iface.routingHelpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
+                         </div> 
+                    </div>		
+                    			
 					<div class="row">
 						<div class="col-md-12">
                             <div class="input-group input-group-sm routing-decision-controls">
