@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -181,5 +182,32 @@ public class GatherStep extends Step {
 
         return rcmlStep;
     }
+    public void handleAction(Interpreter interpreter) throws InterpreterException, IOException {
+        System.out.println("handling gather action");
+        if ("menu".equals(getGatherType())) {
 
+            boolean handled = false;
+            for (GatherStep.Mapping mapping : getMappings()) {
+                Integer digits = Integer.parseInt(interpreter.getHttpRequest().getParameter("Digits"));
+
+                System.out.println("checking digits: " + mapping.getDigits() + " - " + digits);
+
+                if (mapping.getDigits() != null && mapping.getDigits().equals(digits)) {
+                    // seems we found out menu selection
+                    System.out.println("seems we found out menu selection");
+                    interpreter.interpret(mapping.getNext(),null);
+                    handled = true;
+                }
+            }
+            if (!handled) {
+                interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null);
+            }
+        }
+        if ("collectdigits".equals(getGatherType())) {
+
+            String variableName = getCollectVariable();
+            interpreter.getVariables().put(variableName, interpreter.getHttpRequest().getParameter("Digits")); // put the string directly
+            interpreter.interpret(getNext(),null);
+        }
+    }
 }

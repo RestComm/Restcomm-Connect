@@ -1,7 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.io.IOException;
+
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 
 public abstract class Step {
@@ -52,5 +55,7 @@ public abstract class Step {
         this.name = name;
     }
     public abstract RcmlStep render(Interpreter interpreter) throws InterpreterException;
-
+    public void handleAction(Interpreter interpreter) throws InterpreterException, IOException {
+        throw new RVDUnsupportedHandlerVerb();
+    }
 }
