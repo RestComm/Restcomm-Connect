@@ -52,6 +52,7 @@ public class PlayStep extends Step {
 
         System.out.println("play url: " + url);
         playStep.setWavurl(url);
+        playStep.setLoop(getLoop());
 
         return playStep;
     }

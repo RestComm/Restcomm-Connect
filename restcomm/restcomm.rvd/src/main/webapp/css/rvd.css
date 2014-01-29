@@ -145,7 +145,7 @@ label {
 	margin-right: 20px;
 }
 
-.say-step .loop {
+.say-step .loop, .play-step .loop {
 	width: 250px;
 }
 

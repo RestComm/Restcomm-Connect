@@ -18,7 +18,12 @@ public class PlayStepConverter implements Converter {
     @Override
     public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
         RcmlPlayStep step = (RcmlPlayStep) value;
-        writer.setValue(step.getWavurl());
+        if (step.getLoop() != null)
+            writer.addAttribute("loop", step.getLoop().toString());
+
+        System.out.println( "getloop: " + step.getLoop() );
+        if ( step.getWavurl() != null )
+            writer.setValue(step.getWavurl());
     }
 
     // will not need this for now
