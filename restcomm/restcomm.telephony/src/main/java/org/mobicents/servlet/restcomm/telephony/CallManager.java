@@ -17,6 +17,7 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import javax.servlet.ServletContext;
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipApplicationSessionEvent;
@@ -100,6 +102,7 @@ public final class CallManager extends UntypedActor {
 
     private final ActorSystem system;
     private final Configuration configuration;
+    private final ServletContext context;
     private final ActorRef conferences;
     private final ActorRef gateway;
     private final ActorRef sms;
@@ -127,11 +130,12 @@ public final class CallManager extends UntypedActor {
     private CreateCall createCallRequest;
     private SwitchProxy switchProxyRequest;
 
-    public CallManager(final Configuration configuration, final ActorSystem system, final ActorRef gateway,
+    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system, final ActorRef gateway,
             final ActorRef conferences, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
+        this.context = context;
         this.gateway = gateway;
         this.conferences = conferences;
         this.sms = sms;
@@ -508,10 +512,11 @@ public final class CallManager extends UntypedActor {
         final String uri = activeProxy;
         final String proxyUsername = (request.username() != null) ? request.username():activeProxyUsername;
         final String proxyPassword = (request.password() != null) ? request.password():activeProxyPassword;
-        final SipURI from = sipFactory.createSipURI(request.from(), uri);
+        SipURI from = null;
         SipURI to = null;
         switch (request.type()) {
             case CLIENT: {
+                from = outboundInterface("udp");
                 final RegistrationsDao registrations = storage.getRegistrationsDao();
                 final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
                 if (registration != null) {
@@ -523,11 +528,14 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case PSTN: {
+                from = sipFactory.createSipURI(request.from(), uri);
                 to = sipFactory.createSipURI(request.to(), uri);
                 break;
             }
             case SIP: {
                 to = (SipURI) sipFactory.createURI(request.to());
+                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp" ;
+                from = outboundInterface(transport);
                 break;
             }
         }
@@ -728,5 +736,18 @@ public final class CallManager extends UntypedActor {
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
         return builder.build();
+    }
+
+    private SipURI outboundInterface(String transport) {
+        SipURI result = null;
+        @SuppressWarnings("unchecked")
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
+        for (final SipURI uri : uris) {
+            final String interfaceTransport = uri.getTransportParam();
+            if (transport.equalsIgnoreCase(interfaceTransport)) {
+                result = uri;
+            }
+        }
+        return result;
     }
 }

@@ -38,6 +38,10 @@
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) when creating an outbound call -->
 		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
+		<!--If set to TRUE Restcomm will use the From address of initial call to proxied calls
+		    Caller A dials DID XYZ that is bind to RCML that Dials Number 4321. 
+			If from-address-to-proxied-calls is TRUE Restcomm will pass callerId A to the created call-->
+		<from-address-to-proxied-calls>true</from-address-to-proxied-calls>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -50,9 +54,11 @@
 			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
 			<fallback-outbound-proxy-uri>127.0.0.1:5090</fallback-outbound-proxy-uri>
 			
-			<!-- Number of maximum failed calls before switching from primary to the fallback outbound proxy -->
+			<!-- Allow fallback to backup proxy -->
 			<allow-fallback>true</allow-fallback>
+			<!-- Number of maximum failed calls before switching from primary to the fallback outbound proxy -->
 			<max-failed-calls>20</max-failed-calls>
+			<!-- Allow fallback to Primary proxy in case backup proxy fails also -->
 			<allow-fallback-to-primary>true</allow-fallback-to-primary>
 		</outbound-proxy>
 		
@@ -279,4 +285,47 @@
 		</languages>
 	</speech-synthesizer>
 
+<!-- AT&T Speech Synthesizer plugin -->
+<!-- 
+	<speech-synthesizer
+		class="org.mobicents.servlet.restcomm.tts.AttSpeechSynthesizer">
+		<host>127.0.0.1</host>
+		<port>7000</port>
+		<tts-client-directory></tts-client-directory>
+		<verbose-output>false</verbose-output>
+		<speakers>
+			<english>
+				<female>crystal8</female>
+				<male>mike8</male>
+			</english>
+			<english-uk>
+				<female>audrey8</female>
+				<male>charles8</male>
+			</english-uk>
+			<spanish>
+				<female>rosa8</female>
+				<male>alberto8</male>
+			</spanish>
+			<french>
+				<female>juliette8</female>
+				<male>alain8</male>
+			</french>
+			<canadian-french>
+				<male>arnaud8</male>
+			</canadian-french>
+			<german>
+				<female>klara8</female>
+				<male>reiner8</male>
+			</german>
+			<italian>
+				<female>francesca8</female>
+				<male>giovanni8</male>
+			</italian>
+			<brazilian-portuguese>
+				<female>marina8</female>
+				<male>tiago8</male>
+			</brazilian-portuguese>
+		</speakers>
+	</speech-synthesizer>
+ -->
 </restcomm>
