@@ -29,7 +29,7 @@ App.factory('stepService', function($rootScope) {
 					reject: {kind:'reject', label:'reject', title:'reject', reason:''},
 					pause: {kind:'pause', label:'pause', title:'pause', length:null},
 					sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:''},
-					record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:null, iface:{optionsVisible:false}},
+					record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
 					fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 					
 		},
