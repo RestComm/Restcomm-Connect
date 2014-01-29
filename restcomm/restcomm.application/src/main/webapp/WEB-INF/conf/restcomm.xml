@@ -38,6 +38,10 @@
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) when creating an outbound call -->
 		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
+		<!--If set to TRUE Restcomm will use the From address of initial call as caller-id for calls created with Dial Number. 
+		    Caller A (callerId A) dials DID XYZ that is bind to RCML that Dials Number 4321. 
+			If from-address-to-proxied-calls is TRUE Restcomm will pass callerId A to the created call-->
+		<from-address-to-proxied-calls>true</from-address-to-proxied-calls>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->

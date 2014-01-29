@@ -296,9 +296,9 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                             builder.setSid(callInfo.sid());
                             builder.setDateCreated(callInfo.dateCreated());
                             builder.setAccountSid(accountId);
-                            builder.setTo(callInfo.to());
+                            builder.setTo(to);
                             builder.setCallerName(callInfo.fromName());
-                            builder.setFrom(callInfo.from());
+                            builder.setFrom(from);
                             builder.setForwardedFrom(callInfo.forwardedFrom());
                             builder.setStatus(callInfo.state().toString());
                             final DateTime now = DateTime.now();

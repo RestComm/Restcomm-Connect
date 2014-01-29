@@ -98,6 +98,7 @@ import akka.event.LoggingAdapter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
  * @author amit.bhayani@telestax.com (Amit Bhayani)
+ * @author gvagenas@telestax.com (George Vagenas)
  */
 public final class Call extends UntypedActor {
     // Define possible directions.
