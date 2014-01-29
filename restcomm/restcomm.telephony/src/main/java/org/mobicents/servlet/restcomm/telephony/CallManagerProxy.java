@@ -80,18 +80,18 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
         final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
         final ActorRef conferences = conferences(gateway);
         final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
-        manager = manager(configuration, gateway, conferences, sms, factory, storage);
+        manager = manager(configuration, context, gateway, conferences, sms, factory, storage);
         context.setAttribute(CallManager.class.getName(), manager);
     }
 
-    private ActorRef manager(final Configuration configuration, final ActorRef gateway, final ActorRef conferences,
+    private ActorRef manager(final Configuration configuration, final ServletContext context, final ActorRef gateway, final ActorRef conferences,
             final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new CallManager(configuration, system, gateway, conferences, sms, factory, storage);
+                return new CallManager(configuration, context, system, gateway, conferences, sms, factory, storage);
             }
         }));
     }
