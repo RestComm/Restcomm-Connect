@@ -500,7 +500,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (acquiringCallInfo.equals(state)) {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-              //Check from whom is the message (initial call or outbound call) and update info accordingly
+                //Check from whom is the message (initial call or outbound call) and update info accordingly
                 if(sender == call) {
                     callInfo = response.get();
                 } else {
@@ -1123,21 +1123,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         protected String callerId(final Tag container) {
             // Parse "from".
             String callerId = null;
-            Attribute attribute = verb.attribute("callerId");
-            if (attribute != null) {
-                callerId = attribute.value();
-                if (callerId != null && !callerId.isEmpty()) {
-                    callerId = e164(callerId);
-                    if (callerId == null) {
-                        callerId = verb.attribute("callerId").value();
-                        final NotificationsDao notifications = storage.getNotificationsDao();
-                        final Notification notification = notification(ERROR_NOTIFICATION, 13214, callerId
-                                + " is an invalid callerId.");
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
-                        source.tell(stop, source);
-                        return null;
+
+            //Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
+            final boolean useInitialFromAsCallerId = configuration.subset("runtime-settings").getBoolean("from-address-to-proxied-calls");
+            if(useInitialFromAsCallerId)
+                callerId = callInfo.from();
+
+            if(callerId == null){
+                Attribute attribute = verb.attribute("callerId");
+                if (attribute != null) {
+                    callerId = attribute.value();
+                    if (callerId != null && !callerId.isEmpty()) {
+                        callerId = e164(callerId);
+                        if (callerId == null) {
+                            callerId = verb.attribute("callerId").value();
+                            final NotificationsDao notifications = storage.getNotificationsDao();
+                            final Notification notification = notification(ERROR_NOTIFICATION, 13214, callerId
+                                    + " is an invalid callerId.");
+                            notifications.addNotification(notification);
+                            sendMail(notification);
+                            final StopInterpreter stop = StopInterpreter.instance();
+                            source.tell(stop, source);
+                            return null;
+                        }
                     }
                 }
             }
@@ -1747,20 +1755,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
 
-                    final URI base = request.getUri();
-                    waitUrl = UriUtils.resolve(base, waitUrl);
-                    // Parse method.
-                    String method = "POST";
-                    attribute = child.attribute("waitMethod");
-                    if (attribute != null) {
-                        method = attribute.value();
-                        if (method != null && !method.isEmpty()) {
-                            if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                                final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
-                                        + " is not a valid waitMethod value for <Conference>");
-                                notifications.addNotification(notification);
-                                method = "POST";
-                            }
+                final URI base = request.getUri();
+                waitUrl = UriUtils.resolve(base, waitUrl);
+                // Parse method.
+                String method = "POST";
+                attribute = child.attribute("waitMethod");
+                if (attribute != null) {
+                    method = attribute.value();
+                    if (method != null && !method.isEmpty()) {
+                        if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                            final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
+                                    + " is not a valid waitMethod value for <Conference>");
+                            notifications.addNotification(notification);
+                            method = "POST";
+                        }
                     } else {
                         method = "POST";
                     }

@@ -50,6 +50,7 @@ import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com
  */
 public final class ProxyManager extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -72,7 +73,8 @@ public final class ProxyManager extends UntypedActor {
         this.address = address;
         final ActorContext context = context();
         context.setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
-        refresh();
+        registerFirstTime();
+        logger.info("Proxy Manager started.");
     }
 
     private void authenticate(final Object message) {
@@ -138,6 +140,15 @@ public final class ProxyManager extends UntypedActor {
         return result;
     }
 
+    private void registerFirstTime() {
+        logger.info("First time registration for the gateways");
+        final GatewaysDao gateways = storage.getGatewaysDao();
+        final List<Gateway> results = gateways.getGateways();
+        for (final Gateway result : results) {
+            register(result);
+        }
+    }
+
     private void refresh() {
         final GatewaysDao gateways = storage.getGatewaysDao();
         final List<Gateway> results = gateways.getGateways();
@@ -151,6 +162,7 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private void register(final Gateway gateway) {
+        logger.info("About to register gateway: "+gateway.toString());
         register(gateway, null, null);
     }
 
