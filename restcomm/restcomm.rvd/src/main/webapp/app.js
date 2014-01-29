@@ -1,4 +1,4 @@
-var App = angular.module('Rvd', ['ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse', 'ui.bootstrap.dialog','ui.sortable','angularSpinner']);
+var App = angular.module('Rvd', ['ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','angularSpinner']);
 
 App.config([ '$routeProvider', function($routeProvider) {
 	
@@ -18,8 +18,8 @@ App.factory('stepService', function($rootScope) {
 	var stepService = {
 		serviceName: 'stepService',
 		stepProto: {
-					say: {kind:'say', label:'say', title:'say', phrase:'', voice:'man', language:'bf', loop:1, isCollapsed:false, iface:{optionsVisible:false}},
-					play: {playType:'remote', kind:'play', label:'play', title:'play', wavUrl:'', wavLocalFilename:'', loop:null, isCollapsed:false},
+					say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{optionsVisible:false}},
+					play: {playType:'remote', kind:'play', label:'play', title:'play', wavUrl:null, wavLocalFilename:null, loop:null, isCollapsed:false},
 					gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
 					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
 					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
@@ -28,6 +28,9 @@ App.factory('stepService', function($rootScope) {
 					externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:''},
 					reject: {kind:'reject', label:'reject', title:'reject', reason:''},
 					pause: {kind:'pause', label:'pause', title:'pause', length:null},
+					sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:''},
+					record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
+					fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 					
 		},
 		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
@@ -176,6 +179,18 @@ App.directive('myDraggable',function(){
   
 });
 
+
+App.directive('nullIfEmpty', [function() {
+    return {
+      require: 'ngModel',
+      link: function(scope, elm, attr, ctrl) {
+        ctrl.$parsers.unshift(function(value) {
+          return value === '' ? null : value;
+        });
+      }
+    };
+  }]
+);
 
 App.filter('excludeNode', function() {
     return function(items, exclude_named) {
