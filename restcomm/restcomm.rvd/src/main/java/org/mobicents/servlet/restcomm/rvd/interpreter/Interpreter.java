@@ -22,13 +22,11 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.model.FaxStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
@@ -37,8 +35,6 @@ import org.mobicents.servlet.restcomm.rvd.model.SmsStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.SmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
@@ -189,7 +185,7 @@ public class Interpreter {
 
     }
 
-    private String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
+    public String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
 
         System.out.println("starting interpeter for " + targetParam);
 
@@ -199,7 +195,7 @@ public class Interpreter {
 
         if (target.action != null) {
             // Event handling
-            handleAction(target.action);
+            loadStep(target.stepname).handleAction(this);
         } else {
             // RCML Generation
 
@@ -344,61 +340,6 @@ public class Interpreter {
             }
         }
         return null;
-    }
-
-
-    private void handleAction(String action) throws IOException, InterpreterException {
-
-        System.out.println("handling action " + action);
-
-        Step step = loadStep(target.stepname);
-        // <Gather/>
-        if (step.getClass().equals(GatherStep.class)) {
-            GatherStep gatherStep = (GatherStep) step;
-
-            if ("menu".equals(gatherStep.getGatherType())) {
-
-                boolean handled = false;
-                for (GatherStep.Mapping mapping : gatherStep.getMappings()) {
-                    Integer digits = Integer.parseInt(httpRequest.getParameter("Digits"));
-
-                    System.out.println("checking digits: " + mapping.getDigits() + " - " + digits);
-
-                    if (mapping.getDigits() != null && mapping.getDigits().equals(digits)) {
-                        // seems we found out menu selection
-                        System.out.println("seems we found out menu selection");
-                        interpret(mapping.getNext(),null);
-                        handled = true;
-                    }
-                }
-                if (!handled) {
-                    interpret(target.nodename + "." + target.stepname,null);
-                }
-            }
-            if ("collectdigits".equals(gatherStep.getGatherType())) {
-
-                String variableName = gatherStep.getCollectVariable();
-                variables.put(variableName, httpRequest.getParameter("Digits")); // put the string directly
-                interpret(gatherStep.getNext(),null);
-            }
-        } else
-        if ( step.getClass().equals(SmsStep.class) ) {
-            System.out.println("handling sms action");
-            SmsStep smsStep = (SmsStep) step;
-            if ( RvdUtils.isEmpty(smsStep.getNext()) )
-                throw new InterpreterException( "'next' module is not defined for step " + step.getName() );
-
-            String SmsSid = httpRequest.getParameter("SmsSid");
-            String SmsStatus = httpRequest.getParameter("SmsStatus");
-            if ( SmsSid != null )
-                variables.put("SmsSid", SmsSid);
-            if (SmsStatus != null )
-                variables.put("SmsStatus", SmsStatus);
-
-            interpret( smsStep.getNext(), null );
-        } else {
-            throw new RVDUnsupportedHandlerVerb();
-        }
     }
 
     /**
