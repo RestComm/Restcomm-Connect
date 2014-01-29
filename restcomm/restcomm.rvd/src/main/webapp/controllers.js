@@ -66,7 +66,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 });
 
 
-App.controller('designerCtrl', function($scope, $routeParams, $location, stepService, $http, $dialog, $timeout) {
+App.controller('designerCtrl', function($scope, $routeParams, $location, stepService, $http, $timeout) {
 	
 	$scope.logger = function(s) {
 		console.log(s);

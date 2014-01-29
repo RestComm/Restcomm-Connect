@@ -133,8 +133,23 @@ label {
 
 
 .say-language-dropdown {
-	max-width: 200px;
+	max-width: 250px;
 }
+
+.say-step .language {
+	width: 250px;
+	margin-right: 20px;
+}
+
+.say-step .voice {
+	margin-right: 20px;
+}
+
+.say-step .loop, .play-step .loop {
+	width: 250px;
+}
+
+
 
 
 /* override jquery-ui colors since theme-roller never responded */
@@ -265,6 +280,19 @@ li.verb {
 /* a fix for displaying small <select>s inside input groups */
 .routing-decision-controls.input-group-sm .height-fix {
     height: 32px;
+}
+
+.field-info-link {
+    padding-left:5px;
+    padding-right:5px;
+}
+
+.help-tooltip {
+    cursor:help;
+}
+
+.wellinfo-rollup {
+    text-align: right;
 }
 
 /* 

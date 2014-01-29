@@ -1,5 +1,9 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
+
 public class PlayStep extends Step {
     private String wavUrl;
     private String wavLocalFilename;
@@ -36,6 +40,21 @@ public class PlayStep extends Step {
 
     public void setPlayType(String playType) {
         this.playType = playType;
+    }
+    @Override
+    public RcmlStep render(Interpreter interpreter) {
+        RcmlPlayStep playStep = new RcmlPlayStep();
+        String url = "";
+        if ("local".equals(getPlayType()))
+            url = interpreter.getHttpRequest().getContextPath() + "/workspace/" + interpreter.getAppName() + "/wavs/" + getWavLocalFilename();
+        else
+            url = getWavUrl();
+
+        System.out.println("play url: " + url);
+        playStep.setWavurl(url);
+        playStep.setLoop(getLoop());
+
+        return playStep;
     }
 
 }

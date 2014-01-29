@@ -1,5 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
+
 public class DialStep extends Step {
     private String dialType;
     private String number;
@@ -91,5 +94,20 @@ public class DialStep extends Step {
 
     public void setCallerId(String callerId) {
         this.callerId = callerId;
+    }
+    public RcmlDialStep render(Interpreter interpreter) {
+
+        RcmlDialStep rcmlStep = new RcmlDialStep();
+        if ("number".equals(getDialType()) && getNumber() != null && !"".equals(getNumber()))
+            rcmlStep.setNumber(interpreter.populateVariables(getNumber()));
+        else if ("client".equals(getDialType()) && getClient() != null && !"".equals(getClient()))
+            rcmlStep.setClient(getClient());
+        else if ("conference".equals(getDialType()) && getConference() != null && !"".equals(getConference()))
+            rcmlStep.setConference(getConference());
+        else if ("sipuri".equals(getDialType()) && getSipuri() != null && !"".equals(getSipuri()))
+            rcmlStep.setSipuri(getSipuri());
+        // TODO else ...
+
+        return rcmlStep;
     }
 }
