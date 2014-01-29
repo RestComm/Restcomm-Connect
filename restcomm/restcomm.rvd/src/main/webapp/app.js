@@ -18,7 +18,7 @@ App.factory('stepService', function($rootScope) {
 	var stepService = {
 		serviceName: 'stepService',
 		stepProto: {
-					say: {kind:'say', label:'say', title:'say', phrase:'', voice:'man', language:'bf', loop:1, isCollapsed:false, iface:{optionsVisible:false}},
+					say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{optionsVisible:false}},
 					play: {playType:'remote', kind:'play', label:'play', title:'play', wavUrl:'', wavLocalFilename:'', loop:null, isCollapsed:false},
 					gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
 					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
