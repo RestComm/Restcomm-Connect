@@ -133,8 +133,23 @@ label {
 
 
 .say-language-dropdown {
-	max-width: 200px;
+	max-width: 250px;
 }
+
+.say-step .language {
+	width: 250px;
+	margin-right: 20px;
+}
+
+.say-step .voice {
+	margin-right: 20px;
+}
+
+.say-step .loop {
+	width: 250px;
+}
+
+
 
 
 /* override jquery-ui colors since theme-roller never responded */

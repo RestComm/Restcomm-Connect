@@ -18,12 +18,14 @@ public class SayStepConverter implements Converter {
     @Override
     public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
         RcmlSayStep step = (RcmlSayStep) value;
-        // writer.startNode("Say");
-        writer.setValue(step.getPhrase());
-        // if ( step.getVoice() != null )
-        // writer.addAttribute("voice", step.getVoice());
-        // writer.endNode();
 
+        if (step.getLoop() != null)
+            writer.addAttribute("loop", step.getLoop().toString());
+        if (step.getLanguage() != null)
+            writer.addAttribute("language", step.getLanguage());
+        if (step.getVoice() != null)
+            writer.addAttribute("voice", step.getVoice());
+        writer.setValue(step.getPhrase());
     }
 
     // will not need this for now
