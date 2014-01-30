@@ -21,7 +21,7 @@
 	
 	<!--Telscale binaries versions-->
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
-        <property name="telscale-sipservlets-as7.version" value="7.0.0.GA" />
+        <property name="telscale-sipservlets-as7.version" value="7.0.1-SNAPSHOT" />
 	<property name="telscale-media.version" value="6.1.2.GA" />
 	<property name="telscale-lb.version" value="6.1.2.GA" />
 	<property name="telscale-diameter.version" value="6.1.2.GA" />
@@ -39,15 +39,21 @@
 	<property name="telscale-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.tomcat.download.distro.file}" />
 
 	<!--JBoss AS7-->
-        <property name="telscale-sipservlets.as7.distro.version" value="${telscale-sipservlets-as7.version}-jboss-as-7.1.3.Final-1308082200" />
+        <!--property name="telscale-sipservlets.as7.distro.version" value="${telscale-sipservlets-as7.version}-jboss-as-7.1.3.Final-1308082200" />
         <property name="telscale-sipservlets.as7.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.as7.distro.version}.zip" />
-        <property name="telscale-sipservlets.as7.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.0.GA/TelScale-SIP-Servlets-7.0.0.GA-jboss-as-7.1.3.Final-1308082200.zip" />
+        <property name="telscale-sipservlets.as7.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.0.GA/TelScale-SIP-Servlets-7.0.0.GA-jboss-as-7.1.3.Final-1308082200.zip" /-->
+        <property name="telscale-sipservlets.as7.distro.version" value="${telscale-sipservlets-as7.version}-jboss-as-7.2.0.Final" />
+        <property name="telscale-sipservlets.as7.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.as7.distro.version}.zip" />
+        <property name="telscale-sipservlets.as7.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/TelScale-SIP-Servlets-7.0.1-SNAPSHOT-jboss-as-7.2.0.Final.zip" />
         <property name="telscale-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.as7.download.distro.file}" />
 
 	<!--EAP6-->
-        <property name="telscale-sipservlets.eap6.distro.version" value="${telscale-sipservlets-as7.version}-jboss-eap-6.0-1308082151" />
+        <!--property name="telscale-sipservlets.eap6.distro.version" value="${telscale-sipservlets-as7.version}-jboss-eap-6.0-1308082151" />
         <property name="telscale-sipservlets.eap6.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.eap6.distro.version}.zip" />
-        <property name="telscale-sipservlets.eap6.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.0.GA/TelScale-SIP-Servlets-7.0.0.GA-jboss-eap-6.0-1308082151.zip" />
+        <property name="telscale-sipservlets.eap6.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.0.GA/TelScale-SIP-Servlets-7.0.0.GA-jboss-eap-6.0-1308082151.zip" /-->
+	<property name="telscale-sipservlets.eap6.distro.version" value="${telscale-sipservlets-as7.version}-jboss-eap-6.2" />
+        <property name="telscale-sipservlets.eap6.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.eap6.distro.version}.zip" />
+        <property name="telscale-sipservlets.eap6.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/TelScale-SIP-Servlets-7.0.1-SNAPSHOT-jboss-eap-6.2.zip" />
         <property name="telscale-sipservlets.eap6.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.eap6.download.distro.file}" />
 
 	<property name="hsqldb.download.url" value="http://downloads.sourceforge.net/project/hsqldb/hsqldb/hsqldb_1_8_0/hsqldb_1_8_0_10.zip" />
@@ -160,8 +166,10 @@
         <target name="get-telscale-sipservlets-as7" unless="got.telscale-sipservlets-as7">
                 <echo>Downloading Telscale SipServlets JBoss AS7 version: ${telscale-sipservlets-as7.version}</echo>
                 <exec failonerror="true" executable="wget">
-                    <arg value="--user=telscale-file-server@telestax.com" />
-                    <arg value="--password=t31sca13fi13s" />
+                     <!--arg value="--user=telscale-file-server@telestax.com" />
+		    <arg value="--password=t31sca13fi13s" /-->
+		    <arg value="--user=TeleStaxCore" />
+		    <arg value="--password=t31sc@1;3" />
                     <arg value="${telscale-sipservlets.as7.download.url}" />
                 </exec>
                 <move file="${base.dir}/${telscale-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
@@ -172,8 +180,10 @@
         <target name="get-telscale-sipservlets-eap6" unless="got.telscale-sipservlets-eap6">
                 <echo>Downloading Telscale SipServlets JBoss EAP6 version: ${telscale-sipservlets-as7.version}</echo>
                 <exec failonerror="true" executable="wget">
-                    <arg value="--user=telscale-file-server@telestax.com" />
-                    <arg value="--password=t31sca13fi13s" />
+                     <!--arg value="--user=telscale-file-server@telestax.com" />
+		    <arg value="--password=t31sca13fi13s" /-->
+		    <arg value="--user=TeleStaxCore" />
+		    <arg value="--password=t31sc@1;3" />
                     <arg value="${telscale-sipservlets.eap6.download.url}" />
                 </exec>
                 <move file="${base.dir}/${telscale-sipservlets.eap6.download.distro.file}" todir="${checkout.dir}"/>
@@ -209,14 +219,14 @@
         <target name="extract-telscale-sipservlets-as7" depends="get-telscale-sipservlets-as7,extract-hsqldb">
                 <delete dir="${checkout.telscale-sipservlets-as7.dir}" failonerror="false" />
                 <unzip src="${telscale-sipservlets.as7.distro.zip.path}" dest="${release.as7.dir}">
-                        <mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets-as7.version}-jboss-as-7.1.3.Final/*" to="*"/>
+                        <mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets-as7.version}-jboss-as-7.2.0.Final/*" to="*"/>
                 </unzip>
         </target>
 
         <target name="extract-telscale-sipservlets-eap6" depends="get-telscale-sipservlets-eap6,extract-hsqldb">
                 <delete dir="${checkout.telscale-sipservlets-eap6.dir}" failonerror="false" />
                 <unzip src="${telscale-sipservlets.eap6.distro.zip.path}" dest="${release.eap6.dir}">
-                        <mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets-as7.version}-jboss-eap-6.0/*" to="*"/>
+                        <mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets-as7.version}-jboss-eap-6.2/*" to="*"/>
                 </unzip>
         </target>
 
