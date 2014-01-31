@@ -330,13 +330,13 @@ public class Interpreter {
             }
 
             if ( esStep.getDoRouting() ) {
-                String nextLabel = "";
+                String next = "";
                 if ( "fixed".equals( esStep.getNextType() ) )
-                    nextLabel = esStep.getNext();
+                    next = esStep.getNext();
                 else
                 if ( "variable".equals( esStep.getNextType() ))
-                    nextLabel = variables.get( esStep.getNextVariable() );
-                return getNodeNameByLabel(nextLabel);
+                    next = getNodeNameByLabel( variables.get( esStep.getNextVariable() ) );
+                return next;
             }
         }
         return null;
