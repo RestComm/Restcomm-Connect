@@ -181,7 +181,7 @@ public final class UserAgentManager extends UntypedActor {
         final SipApplicationSession application = factory.createApplicationSession();
         String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
         if(toTransport == null) {
-            //RESTCOMM-301 NPE in RestComm Ping		
+            //RESTCOMM-301 NPE in RestComm Ping
             toTransport = "udp";
         }
         if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
