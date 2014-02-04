@@ -66,7 +66,7 @@
 }
 
 .container {
-	margin-top: 112px;
+	margin-top: 85px;
 }
 
 .panel-rvdstep > .panel-heading {
@@ -205,10 +205,24 @@ label {
 	float: right;
 }
 
+/*
 li.verb {
-	/*text-transform: uppercase;*/
 	margin-right: 10px;
 	z-index: 1;
+}
+*/
+
+.verb-button {
+	z-index: 1;
+}
+
+.label.verb-button {
+	font-size: 100%;
+	font-weight: normal;
+	display: block;
+	margin-bottom: 5px;
+	padding: 8px;
+	text-align: left;
 }
 
 
@@ -263,6 +277,7 @@ li.verb {
 	margin-top: 10px;
 }
 
+
 li.verb {
 	margin-bottom:10px;
 }
@@ -306,6 +321,11 @@ li.verb {
     overflow: hidden;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
+}
+
+.sortable-placeholder {
+	height: 20px;
+	width: 100px;
 }
 
 /* 
