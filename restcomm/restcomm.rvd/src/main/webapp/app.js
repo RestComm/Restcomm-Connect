@@ -111,6 +111,7 @@ App.directive('sortableSteps',function(stepService){
 			handle: '.panel-heading',
 			//scrollSensitivity: 20,
 			tolerance: 'pointer',
+			placeholder: 'sortable-placeholder'
 		});
 		//el.disableSelection();
       
@@ -171,7 +172,7 @@ App.directive('myDraggable',function(){
 					el.draggable({
 						connectToSortable: attrs.myDraggable,
 						helper: "clone",
-						//revert: "invalid"
+						revert: "invalid"
 					});
 					/*el.disableSelection(); */
 				}
