@@ -34,7 +34,6 @@
 		<!-- Left menu -->
 		<div class="col-md-2">
 			<!-- <button class="btn btn-default btn-block btn-lg" ng-click='saveProject()' >save &nbsp;<span class="glyphicon glyphicon-save"></span></button> -->
-
 			<!-- 
 				<div class="form-group">
 					<button class="btn btn-primary btn-block" ng-click='saveProject()' >Save draft &nbsp;&nbsp;<i class='fa fa-save'></i></button>
@@ -47,6 +46,27 @@
 			</div>
 			<div ng-show="startNodeSet()" class="form-group rvd-starturl">
 				<a target="_blank" href='{{getStartUrl()}}'>Startup URL</a>
+			</div>
+			
+			<div>
+				<h4>Audio resources</h4>
+				<ul>
+					<li ng-repeat='wavItem in wavList'>
+						<div ng-show='!wavItem.viewMode'>
+							<span class=''>{{wavItem.filename}}</span>
+							<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
+						</div>
+						
+						<div class="col-md-12 text-center confirm-delete " ng-show="wavItem.viewMode=='confirm-delete'">
+							<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
+							<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>
+						</div>
+					</li>
+				</ul>
+				<div class='dropfile-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
+					<div class="drop-prompt">Drop you audio resource here</div>
+				</div>
+				<div ng-file-drop-available="dropSupported=true" ng-show="!dropSupported">HTML5 Drop File is not supported!</div>				
 			</div>
 		</div>
 

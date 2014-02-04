@@ -33,6 +33,7 @@ public class ProjectService {
     // configuration parameters
     private static final String workspaceDirectoryName = "workspace";
     private static final String protoDirectoryName = "_proto"; // the prototype project directory name
+    private static final String wavsDirectoryName = "wavs";
 
     private String workspaceBasePath;
 
@@ -41,9 +42,25 @@ public class ProjectService {
 
         workspaceBasePath = this.servletContext.getRealPath(File.separator) + workspaceDirectoryName;
     }
-
+    public static String getWorkspacedirectoryname() {
+        return workspaceDirectoryName;
+    }
+    public static String getWavsdirectoryname() {
+        return wavsDirectoryName;
+    }
     public String getWorkspaceBasePath() {
         return workspaceBasePath;
+    }
+
+    public String getProjectWavsPath(String projectName) throws BadWorkspaceDirectoryStructure, ProjectDoesNotExist {
+        return getProjectBasePath(projectName) + File.separator + wavsDirectoryName;
+    }
+
+    public String getProjectBasePath(String projectName) throws BadWorkspaceDirectoryStructure, ProjectDoesNotExist {
+        if ( !projectExists(projectName))
+            throw new ProjectDoesNotExist();
+
+        return workspaceBasePath + File.separator + projectName;
     }
 
     /**
@@ -207,13 +224,14 @@ public class ProjectService {
         }
     }
 
-    public List<WavFileItem> getWavs(String appName) throws BadWorkspaceDirectoryStructure {
+    public List<WavFileItem> getWavs(String appName) throws BadWorkspaceDirectoryStructure, ProjectDoesNotExist {
         List<WavFileItem> items = new ArrayList<WavFileItem>();
 
-        File workspaceDir = new File(workspaceBasePath + File.separator + appName + File.separator + "wavs");
-        if (workspaceDir.exists()) {
+        //File workspaceDir = new File(workspaceBasePath + File.separator + appName + File.separator + "wavs");
+        File wavsDir = new File(getProjectWavsPath(appName));
+        if (wavsDir.exists()) {
 
-            File[] entries = workspaceDir.listFiles(new FileFilter() {
+            File[] entries = wavsDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
                     if (anyfile.isFile())

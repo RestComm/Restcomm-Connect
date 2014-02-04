@@ -1,4 +1,4 @@
-var App = angular.module('Rvd', ['ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','angularSpinner']);
+var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','angularSpinner']);
 
 App.config([ '$routeProvider', function($routeProvider) {
 	
@@ -19,7 +19,7 @@ App.factory('stepService', function($rootScope) {
 		serviceName: 'stepService',
 		stepProto: {
 					say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{optionsVisible:false}},
-					play: {playType:'remote', kind:'play', label:'play', title:'play', wavUrl:null, wavLocalFilename:null, loop:null, isCollapsed:false},
+					play: {playType:'local', kind:'play', label:'play', title:'play', wavUrl:null, wavLocalFilename:null, loop:null, isCollapsed:false},
 					gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
 					dial: {dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
 					number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
