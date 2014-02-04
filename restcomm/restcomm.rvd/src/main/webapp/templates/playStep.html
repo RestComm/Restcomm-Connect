@@ -7,23 +7,21 @@
 				<div class="col-md-12">
 					<span class="help-block">Type the URL resource of the .wav file</span>
 					<div class="input-group">
-						<span class='input-group-addon'>Audio resource URL</span>
+						<span class='input-group-addon'>Audio resource</span>
+						<span class="input-group-addon">
+							<span>local &nbsp;</span>
+							<input ng-model='step.playType' value='local' type="radio">
+						</span>
+						<span class="input-group-addon">
+							<span>remote &nbsp;</span>
+							<input ng-model='step.playType' value='remote' type="radio">
+						</span>		
 						<input name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.wavUrl' type='url' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
-						<!-- <select ng-show='step.playType=="local"' ng-model='step.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control"></select> -->
+						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control" required></select>
 					</div>
-					<div class="validation-error" ng-show="form.wavUrl.$invalid">Type a valid .wav resource URL</div>
-				</div>
-				
-				<!-- 
-				<div class="col-md-6 hidden">
-					<div class="btn-toolbar" role="toolbar">
-					  <div class="btn-group">
-						<button ng-click='step.playType="local"' ng-class="{active:step.playType=='local'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Stored locally</button>
-						<button ng-click='step.playType="remote"' ng-class="{active:step.playType=='remote'}"  type="button" class="btn btn-default"><i class='fa fa-phone'></i>&nbsp; Remote resource </button>
-					  </div>
-					</div>
-				</div>
-				-->		
+					<div class="validation-error" ng-show="step.playType=='remote' && form.wavUrl.$invalid">Type a valid .wav resource URL</div>
+					<div class="validation-error" ng-show="step.playType=='local' && form.wavLocalFilename.$invalid">Please select a file from the list</div>
+				</div>	
 			</div>	
 			
 			<div class="row">
