@@ -24,7 +24,7 @@
 }
 
 .editor {
-	min-height: 504px;
+	min-height: 580px;
 	background-color: rgb(240, 240, 240);
 }
 
@@ -326,6 +326,10 @@ li.verb {
 .sortable-placeholder {
 	height: 20px;
 	width: 100px;
+}
+
+.more-audio-resources {
+	margin-top: 10px;
 }
 
 /* 
