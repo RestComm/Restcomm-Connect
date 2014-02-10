@@ -66,14 +66,14 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 });
 
 
-App.controller('designerCtrl', function($scope, $routeParams, $location, stepService, protos, $http, $timeout, $upload) {
+App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
 	};
 		
-	console.log("routeParam:");
-	console.log( $routeParams );
+	//console.log("routeParam:");
+	//console.log( $routeParams );
 	
 	$scope.stepService = stepService;
 	
@@ -96,6 +96,13 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 	// Project management
 	$scope.projectList = [];
 	//$scope.newProjectName = $routeParams.projectName;
+	
+	$scope.spinnerSettings = {
+		radius: 4,
+		lines: 7,
+		length: 5,
+		width: 3,
+	};
 	
 
 	//console.log("projectController stepService: " + stepService.stepNames );
@@ -279,6 +286,7 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 	
 	
 	$scope.saveProject = function(onsuccess) {
+		var deferred = $q.defer();
 		
 		var state = {};
 		state.lastStepId = stepService.lastStepId;
@@ -297,12 +305,12 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 				headers: {'Content-Type': 'application/data'}
 		})
 		.success(function (data, status, headers, config) {
-			console.log( "project saved" );
-			if (typeof (onsuccess) === "function")
-				onsuccess();
+			deferred.resolve('Project saved');
 		 }).error(function (data, status, headers, config) {
-				console.log('ERROR');
+			 deferred.reject('Error saving project');
 		 });	
+		
+		return deferred.promise;
 	}
 	
 
@@ -335,7 +343,7 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		$http({url: 'services/manager/projects/wavlist?name=' + projectName, method: "GET"})
 		.success(function (data, status, headers, config) {
 			console.log('getting wav list')
-			console.log( data );
+			//console.log( data );
 			$scope.wavList = data;
 		});
 	}
@@ -343,19 +351,23 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 	
 	// First saves and then builds
 	$scope.buildProject = function() {
-		$scope.saveProject(function() {
-			$http({url: 'services/manager/projects/build?name=' + $scope.projectName, method: "POST"})
-			.success(function (data, status, headers, config) {
-				console.log("Build succesfull");
-			 }).error(function (data, status, headers, config) {
-				console.log("Error building");
-			 });
-		});
+		var deferred = $q.defer();
+		
+		$http({url: 'services/manager/projects/build?name=' + $scope.projectName, method: "POST"})
+		.success(function (data, status, headers, config) {
+			console.log("Build succesfull");
+			deferred.resolve('Build successfull');
+		 }).error(function (data, status, headers, config) {
+			//console.log("Error building");
+			 deferred.reject('Error building');
+		 });
+		
+		return deferred.promise;
 	}
 	
 	$scope.addAssignment = function(step) {
 		console.log("adding assignment");
-		step.assignments.push({moduleNameScope: step.chosenAssignmentsModule, destVariable:'', valueExtractor: {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object)} });
+		step.assignments.push({moduleNameScope: null, destVariable:'', valueExtractor: {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object)} });
 	}
 	$scope.removeAssignment = function(step,assignment) {
 		step.assignments.splice( step.assignments.indexOf(assignment), 1 );
@@ -414,14 +426,44 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		});
 	}
 	
+	$scope.onSavePressed = function() {
+		usSpinnerService.spin('spinner-save');
+		$scope.saveProject()
+		.then($scope.buildProject)
+		.then(function () { $scope.addAlert('Project saved', 'success'); })
+		.finally(function () {
+			usSpinnerService.stop('spinner-save');
+			console.log('save finished');
+		});
+		//.then( function () { console.log('project saved and built')});
+	}
+	
 	$scope.$on('wavfileDeleted', function (event,data) {
 		console.log("caught event wavfileDeleted");
 		$scope.refreshWavList($scope.projectName);
 	});
+	
+	  $scope.alerts = [];
+	  $scope.addAlert = function(msg, type) {
+		  var alert = null;
+		  if (typeof type !== 'undefined')
+			  alert = {type: type, msg: msg};
+		  else
+			  alert = {msg: msg};
+		  
+		  $scope.alerts.push(alert);
+		  $timeout( function () {
+			  $scope.closeAlert(alert);
+		  }, 3000);
+	  };
+	
+	  $scope.closeAlert = function(alert) {
+		  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
+	  };
 		
 	// Run the following after all initialization are complete
 	
-	console.log( "opening project: " + $scope.projectName);
+	console.log( "opening project " + $scope.projectName);
 	$scope.openProject( $scope.projectName );
 		
      

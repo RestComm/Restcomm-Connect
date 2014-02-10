@@ -1,4 +1,4 @@
-var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' /*,'angularSpinner' */]);
+var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' ,'angularSpinner' ]);
 
 App.config([ '$routeProvider', function($routeProvider) {
 	
@@ -11,13 +11,14 @@ App.config([ '$routeProvider', function($routeProvider) {
 	}).otherwise({
 		redirectTo : '/project-manager'
 	});
+
 } ]);
 
 
 
 App.factory('stepService', ['protos', function(protos) {
-	console.log("protos");
-	console.log( protos);
+	//console.log("protos");
+	//console.log( protos);
 	var stepService = {
 		serviceName: 'stepService',
 		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
