@@ -5,11 +5,13 @@
 				<div class="col-md-12">
 				
                     <div class="service-url-wrap">
-                        <div class="input-group form-group">
-                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
-                            <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
-                        </div>
-                        <!--<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div> -->
+                    	<form class='form-group' name='form'>
+	                        <div class="input-group">
+	                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
+	                            <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
+	                        </div>
+	                        <div class="validation-error"  ng-show="form.url.$invalid">Specify a valid URL that returns JSON</div>
+	                    </form>
                         
                         <div class='row'>
                             <div ng-repeat='urlParam in step.urlParams' class="col-md-5">
