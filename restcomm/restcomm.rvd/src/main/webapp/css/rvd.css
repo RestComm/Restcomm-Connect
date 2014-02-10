@@ -205,13 +205,6 @@ label {
 	float: right;
 }
 
-/*
-li.verb {
-	margin-right: 10px;
-	z-index: 1;
-}
-*/
-
 .verb-button {
 	z-index: 1;
 }
@@ -334,6 +327,22 @@ li.verb {
 
 .rvd-disabled {
 	opacity: 0.5;
+}
+
+/* all rvd-alerts will be drawn relatively to this element */
+.alert-container {
+	position: relative
+}
+
+.rvd-alerts {
+	position: absolute;
+	z-index: 2;
+	right: 0;
+	width: 200px;
+}
+
+.spinner-save {
+	margin-left: 18px;
 }
 
 /* 
