@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response.Status;
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 
 import com.google.gson.Gson;
 
@@ -63,6 +64,9 @@ public class RvdController {
         String rcmlResponse;
         try {
             rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
+        } catch (BadExternalServiceResponse e) {
+            System.out.println( "[ERROR] " + "BadExternalServiceResponse");
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (InterpreterException e) {
             e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();

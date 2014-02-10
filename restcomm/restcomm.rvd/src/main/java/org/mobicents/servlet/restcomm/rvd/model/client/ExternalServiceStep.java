@@ -16,6 +16,15 @@ public class ExternalServiceStep extends Step {
     private String nextVariable;
     private Boolean doRouting;
     private String nextType;
+    private ValueExtractor nextValueExtractor;
+
+    public ValueExtractor getNextValueExtractor() {
+        return nextValueExtractor;
+    }
+
+    public void setNextValueExtractor(ValueExtractor nextValueExtractor) {
+        this.nextValueExtractor = nextValueExtractor;
+    }
 
     public String getUrl() {
         return url;

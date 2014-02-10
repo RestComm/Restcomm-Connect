@@ -263,7 +263,7 @@ li.verb {
 	margin-bottom:15px;
 }
 
-.assignment .btn.pull-right {
+value-extractor .btn.pull-right {
 	margin-left: 5px;
 }
 
@@ -330,6 +330,10 @@ li.verb {
 
 .more-audio-resources {
 	margin-top: 10px;
+}
+
+.rvd-disabled {
+	opacity: 0.5;
 }
 
 /* 
