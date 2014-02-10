@@ -5,14 +5,14 @@
 				<div class="col-md-12">
 				
                     <div class="service-url-wrap">
-                        <div class="input-group input-group-sm form-group">
+                        <div class="input-group form-group">
                             <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
                             <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
                         </div>
                         <!--<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div> -->
                         
                         <div class='row'>
-                            <div ng-repeat='urlParam in step.urlParams' class="col-md-4">
+                            <div ng-repeat='urlParam in step.urlParams' class="col-md-5">
                                 <div  class="input-group input-group-sm form-group">
                                     <span class="input-group-addon">Name</span>
                                     <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
@@ -33,7 +33,7 @@
                             <ul>
                                 <li>Fill in the "Assign to" field with the name of the RVD variable you want to create.</li>
                                 <li>Click "Add operation" to add one or more access operations until you drill down to the JSON member variable you need. For objects use the 'propertyNamed' action to access a specific property. For arrays use the 'itemAtPosition' action to access the N'th array element.</li>
-                                <li>The last operation should be 'string'. Don't forget to press 'Done' when done.</li>
+                                <li>The last operation should be 'value'. Don't forget to press 'Done' when done.</li>
                                 <li>Undo your mistakes with the circular arrow button.</li>
                             </ul>
                             <p>
