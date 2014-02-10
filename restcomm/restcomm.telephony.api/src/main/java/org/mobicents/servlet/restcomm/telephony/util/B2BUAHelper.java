@@ -41,6 +41,7 @@ import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 
 /**
  * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode
+ *
  * @author ivelin.ivanov@telestax.com
  * @author jean.deruelle@telestax.com
  * @author gvagenas@telestax.com
@@ -82,8 +83,10 @@ public class B2BUAHelper {
         if (registration != null) {
             final String location = registration.getLocation();
             SipURI to;
+            SipURI from;
             try {
                 to = (SipURI) sipFactory.createURI(location);
+                from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin())).getLocation());
 
                 final SipSession incomingSession = request.getSession();
                 // create and send the outgoing invite and do the session linking
@@ -101,7 +104,10 @@ public class B2BUAHelper {
                 }
                 outgoingSession.setAttribute(B2BUA_LAST_REQUEST, outRequest);
                 request.createResponse(100).send();
+                // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+                request.getSession().setAttribute("toInetUri", to);
                 outRequest.send();
+                outRequest.getSession().setAttribute("fromInetUri", from);
 
                 final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                 builder.setSid(Sid.generate(Sid.Type.CALL));
@@ -163,7 +169,7 @@ public class B2BUAHelper {
 
     public static SipSession getLinkedSession(SipServletMessage message) {
         SipSession sipSession = null;
-        if (message.getSession().isValid()){
+        if (message.getSession().isValid()) {
             sipSession = (SipSession) message.getSession().getAttribute(B2BUA_LINKED_SESSION);
         }
         if (sipSession == null) {
@@ -243,6 +249,7 @@ public class B2BUAHelper {
 
     /**
      * Check whether a SIP request or response belongs to a peer to peer (B2BUA) session
+     *
      * @param sipMessage
      * @return
      */
