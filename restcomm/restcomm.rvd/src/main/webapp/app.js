@@ -55,7 +55,7 @@ App.factory('protos', function () {
 	var accessOperationProtos = {
 			object:{kind:'object',fixed:false, terminal:false},
 			array:{kind:'array',fixed:false, terminal:false},
-			string:{kind:'string',fixed:false, terminal:true},	
+			value:{kind:'value',fixed:false, terminal:true},	
 	}
 	return { 
 		accessOperationProtos: accessOperationProtos,
@@ -215,7 +215,7 @@ App.directive('valueExtractor', ['protos', function (protos) {
 		},
 		link: function(scope,el,attrs) {
 			//scope.extractorModel = {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object) }
-			scope.accessOperationKinds = ['object', 'array', 'string'];
+			scope.accessOperationKinds = ['object', 'array', 'value'];
 			scope.objectActions = ['propertyNamed'];
 			scope.arrayActions = ['itemAtPosition'];
 			
@@ -252,8 +252,8 @@ App.directive('valueExtractor', ['protos', function (protos) {
 						return "[" + operation.position + "]";
 					}
 				break;
-				case 'string':
-					return " string value";
+				case 'value':
+					return " value";
 				break;
 				/*case 'float':
 					return " get Float value";
