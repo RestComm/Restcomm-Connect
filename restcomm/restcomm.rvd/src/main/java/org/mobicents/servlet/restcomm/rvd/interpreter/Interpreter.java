@@ -266,7 +266,7 @@ public class Interpreter {
                 else
                     throw new InvalidAccessOperationAction();
             } else
-            if ( "string".equals(operation.getKind()) ) {
+            if ( "value".equals(operation.getKind()) ) {
                 value = element.getAsString();
             }
         }
