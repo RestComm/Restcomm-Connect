@@ -18,6 +18,7 @@
 
 			<ul class="nav navbar-nav navbar-right">
 				<li><a class='rvd-clickable-text' ng-click='buildProject()'><i class='fa fa-save'></i>&nbsp; Save</a></li>
+				<li class='rvd-appurl' ng-show="startNodeSet()"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
 				<li><a ng-click='closeProject()' href="#"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
 			</ul>
 
@@ -32,11 +33,7 @@
 		</div>
 		<div class='col-md-8'>
 		</div>
-		<div class='col-md-2'>
-			<div ng-show="startNodeSet()" class="form-group rvd-starturl">
-				<a target="_blank" href='{{getStartUrl()}}'>Startup URL</a>
-			</div>
-		</div>
+
 	</div>
 
 	<div class="row">

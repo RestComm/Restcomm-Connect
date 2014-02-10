@@ -127,9 +127,9 @@ label {
 	opacity: 1.0;
 }
 
-.rvd-starturl {
-	text-align: center;
-}
+.rvd-appurl:hover {
+	text-decoration: underline;
+} 
 
 
 .say-language-dropdown {
