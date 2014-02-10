@@ -37,6 +37,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
+import org.mobicents.servlet.restcomm.rvd.model.client.ValueExtractor;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlFaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
@@ -244,11 +245,12 @@ public class Interpreter {
         return step;
     }
 
-    private String evaluateAssignmentExpression( Assignment assignment, JsonElement response_element) throws InvalidAccessOperationAction, BadExternalServiceResponse {
+
+    private String evaluateExtractorExpression( ValueExtractor extractor, JsonElement response_element) throws InvalidAccessOperationAction, BadExternalServiceResponse {
         String value = "";
 
         JsonElement element = response_element;
-        for ( AccessOperation operation : assignment.getAccessOperations() ) {
+        for ( AccessOperation operation : extractor.getAccessOperations() ) {
             if ( element == null )
                 throw new BadExternalServiceResponse();
 
@@ -271,6 +273,8 @@ public class Interpreter {
 
         return value;
     }
+
+
 
     /**
      * If the step is capable of executing like ExternalService steps it executes them
@@ -313,30 +317,47 @@ public class Interpreter {
                     String entity_string = EntityUtils.toString(entity);
                     JsonElement response_element = parser.parse(entity_string);
 
-                    // Initialize the variables of the assignments one by one
-                    for ( Assignment assignment : esStep.getAssignments() ) {
-                        //try {
-                            String value = evaluateAssignmentExpression(assignment, response_element);
+                    String nextModuleName = null;
+                    //boolean dynamicRouting = false;
+                    if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
+                        //dynamicRouting = true;
+                        nextModuleName = getNodeNameByLabel( evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element) );
+                        System.out.println( "Dynamic routing enabled. Chosen target: " + nextModuleName);
+
+                        for ( Assignment assignment : esStep.getAssignments() ) {
+                            System.out.println("working on variable " + assignment.getDestVariable() );
+                            System.out.println( "moduleNameScope: " + assignment.getModuleNameScope());
+                            if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
+                                String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                                variables.put(assignment.getDestVariable(), value );
+                            } else
+                                System.out.println("skipped assignment to " + assignment.getDestVariable() );
+                        }
+                    }  else {
+                        for ( Assignment assignment : esStep.getAssignments() ) {
+                            System.out.println("working on variable " + assignment.getDestVariable() );
+                            String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
                             variables.put(assignment.getDestVariable(), value );
-                        //} catch ( BadExternalServiceResponse e ) {
-                        //    e.printStackTrace();
-                        //}
+                        }
+
                     }
                     System.out.println("variables after processing ExternalService step: " + variables.toString() );
+                    //try {
+                    //} catch ( BadExternalServiceResponse e ) {
+                    //    e.printStackTrace();
+                    //}
+                    if ( esStep.getDoRouting() ) {
+                        String next = "";
+                        if ( "fixed".equals( esStep.getNextType() ) )
+                            next = esStep.getNext();
+                        else
+                        if ( "responseBased".equals( esStep.getNextType() ))
+                            next = nextModuleName;
+                        return next;
+                    }
                 }
-
             } finally {
                 response.close();
-            }
-
-            if ( esStep.getDoRouting() ) {
-                String next = "";
-                if ( "fixed".equals( esStep.getNextType() ) )
-                    next = esStep.getNext();
-                else
-                if ( "variable".equals( esStep.getNextType() ))
-                    next = getNodeNameByLabel( variables.get( esStep.getNextVariable() ) );
-                return next;
             }
         }
         return null;
