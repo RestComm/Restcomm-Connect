@@ -1,29 +1,26 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
-import java.util.List;
-
 public class Assignment {
     private String destVariable;
-    //private List<JsonElement> accessOperations;
-    private List<AccessOperation> accessOperations;
-    //private AccessRawOperation JsonElement;
-    private AccessOperation lastOperation;
+    private String moduleNameScope;
+    private ValueExtractor valueExtractor;
+
     public String getDestVariable() {
         return destVariable;
     }
     public void setDestVariable(String destVariable) {
         this.destVariable = destVariable;
     }
-    public List<AccessOperation> getAccessOperations() {
-        return accessOperations;
+    public ValueExtractor getValueExtractor() {
+        return valueExtractor;
     }
-    public void setAccessOperations(List<AccessOperation> accessOperations) {
-        this.accessOperations = accessOperations;
+    public void setValueExtractor(ValueExtractor valueExtractor) {
+        this.valueExtractor = valueExtractor;
     }
-    public AccessOperation getLastOperation() {
-        return lastOperation;
+    public String getModuleNameScope() {
+        return moduleNameScope;
     }
-    public void setLastOperation(AccessOperation lastOperation) {
-        this.lastOperation = lastOperation;
+    public void setModuleNameScope(String moduleNameScope) {
+        this.moduleNameScope = moduleNameScope;
     }
 }
