@@ -130,8 +130,9 @@ public final class CallManager extends UntypedActor {
     private CreateCall createCallRequest;
     private SwitchProxy switchProxyRequest;
 
-    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system, final ActorRef gateway,
-            final ActorRef conferences, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
+            final ActorRef gateway, final ActorRef conferences, final ActorRef sms, final SipFactory factory,
+            final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
@@ -440,7 +441,15 @@ public final class CallManager extends UntypedActor {
         SipServletResponse response = B2BUAHelper.getLinkedResponse(request);
         // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
         if (response != null) {
-            response.createAck().send();
+            SipServletRequest ack = response.createAck();
+            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
+            if (toInetUri != null) {
+                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the ACK request");
+                ack.setRequestURI(toInetUri);
+            }
+            ack.send();
             SipApplicationSession sipApplicationSession = request.getApplicationSession();
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
@@ -510,8 +519,8 @@ public final class CallManager extends UntypedActor {
         final Configuration runtime = configuration.subset("runtime-settings");
         // final String uri = runtime.getString("outbound-proxy-uri");
         final String uri = activeProxy;
-        final String proxyUsername = (request.username() != null) ? request.username():activeProxyUsername;
-        final String proxyPassword = (request.password() != null) ? request.password():activeProxyPassword;
+        final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
+        final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
         SipURI from = null;
         SipURI to = null;
         switch (request.type()) {
@@ -534,7 +543,7 @@ public final class CallManager extends UntypedActor {
             }
             case SIP: {
                 to = (SipURI) sipFactory.createURI(request.to());
-                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp" ;
+                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
                 from = outboundInterface(transport);
                 break;
             }
@@ -545,9 +554,8 @@ public final class CallManager extends UntypedActor {
         if (request.isCreateCDR()) {
             storage.getCallDetailRecordsDao();
         }
-        final InitializeOutbound init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword,
-                request.timeout(), request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(),
-                recordsDao);
+        final InitializeOutbound init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(),
+                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), recordsDao);
         call.tell(init, self);
         return call;
     }
@@ -586,6 +594,20 @@ public final class CallManager extends UntypedActor {
             request.getSession().setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, request);
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
+
+            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
+            SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
+            if (toInetUri != null) {
+                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the CloneBye request");
+                clonedBye.setRequestURI(toInetUri);
+            } else if (fromInetUri != null) {
+                logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
+                        + " as a request uri of the CloneBye request");
+                clonedBye.setRequestURI(fromInetUri);
+            }
+
             clonedBye.send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
@@ -677,7 +699,8 @@ public final class CallManager extends UntypedActor {
             activeProxyPassword = primaryProxyPassword;
             useFallbackProxy.set(false);
         }
-        final Notification notification = notification(WARNING_NOTIFICATION, 14110, "Max number of failed calls has been reached! Outbound proxy switched");
+        final Notification notification = notification(WARNING_NOTIFICATION, 14110,
+                "Max number of failed calls has been reached! Outbound proxy switched");
         final NotificationsDao notifications = storage.getNotificationsDao();
         notifications.addNotification(notification);
         return getActiveProxy();
@@ -700,7 +723,7 @@ public final class CallManager extends UntypedActor {
         Sid accountId = null;
         if (createCallRequest != null) {
             accountId = createCallRequest.accountId();
-        } else if(switchProxyRequest != null) {
+        } else if (switchProxyRequest != null) {
             accountId = switchProxyRequest.getSid();
         }
         final Notification.Builder builder = Notification.builder();
