@@ -13,4 +13,14 @@ public class BadExternalServiceResponse extends InterpreterException {
 
     private static final long serialVersionUID = 8310785550104901820L;
 
+    public BadExternalServiceResponse() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+    public BadExternalServiceResponse(String message) {
+        super(message);
+        // TODO Auto-generated constructor stub
+    }
+
 }

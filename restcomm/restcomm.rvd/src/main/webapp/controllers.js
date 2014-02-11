@@ -66,7 +66,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 });
 
 
-App.controller('designerCtrl', function($scope, $routeParams, $location, stepService, $http, $timeout) {
+App.controller('designerCtrl', function($scope, $routeParams, $location, stepService, protos, $http, $timeout, $upload) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -326,14 +326,18 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 			$scope.visibleNodes = data.visibleNodes;
 			$scope.startNodeName = data.startNodeName;	
 			
-			$http({url: 'services/manager/projects/wavlist?name=' + name, method: "GET"})
-			.success(function (data, status, headers, config) {
-				console.log('getting wav list')
-				console.log( data );
-				$scope.wavList = data;
-			});
+			$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
 		 });
+	}
+	
+	$scope.refreshWavList = function(projectName) {
+		$http({url: 'services/manager/projects/wavlist?name=' + projectName, method: "GET"})
+		.success(function (data, status, headers, config) {
+			console.log('getting wav list')
+			console.log( data );
+			$scope.wavList = data;
+		});
 	}
 
 	
@@ -349,79 +353,12 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		});
 	}
 	
-	
-	$scope.accessOperationKinds = ['object', 'array', 'string']; //, 'float', 'boolean'];
-	$scope.accessOperationProtos = {
-			object:{kind:'object',fixed:false, terminal:false},
-			array:{kind:'array',fixed:false, terminal:false},
-			string:{kind:'string',fixed:false, terminal:true},
-			//float:{kind:'float',fixed:false, terminal:true},
-			//boolean:{kind:'boolean',fixed:false, terminal:true},	
-	};
-	$scope.objectActions = ['propertyNamed'];
-	$scope.arrayActions = ['itemAtPosition'];
-	
-	
 	$scope.addAssignment = function(step) {
 		console.log("adding assignment");
-		step.assignments.push({destVariable:'', accessOperations:[], lastOperation: angular.copy($scope.accessOperationProtos.object) });
+		step.assignments.push({moduleNameScope: step.chosenAssignmentsModule, destVariable:'', valueExtractor: {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object)} });
 	}
 	$scope.removeAssignment = function(step,assignment) {
 		step.assignments.splice( step.assignments.indexOf(assignment), 1 );
-	}
-	
-	$scope.addOperation = function (assignment) {
-		console.log("adding operation");
-		assignment.lastOperation.fixed = true;
-		assignment.lastOperation.expression = $scope.operationExpression( assignment.lastOperation );
-		assignment.accessOperations.push(assignment.lastOperation);
-		assignment.lastOperation = angular.copy($scope.accessOperationProtos.object)
-	}
-	$scope.doneAddingOperations = function (assignment) {
-		$scope.addOperation(assignment);
-		assignment.lastOperation = null;
-	}
-	
-	$scope.popOperation = function (assignment) { // removes last operation
-		if ( assignment.accessOperations.length > 0 ) {
-			assignment.lastOperation = assignment.accessOperations.pop();
-			assignment.lastOperation.fixed = false;
-		}
-	}
-	
-	$scope.operationExpression = function (operation) {
-		switch (operation.kind) {
-		case 'object':
-			switch (operation.action) {
-			case 'propertyNamed':
-				return "."+operation.property;
-			}
-		break;
-		case 'array':
-			switch (operation.action) {
-			case 'itemAtPosition':
-				return "[" + operation.position + "]";
-			}
-		break;
-		case 'string':
-			return " string value";
-		break;
-		/*case 'float':
-			return " get Float value";
-		break;	
-		case 'boolean':
-			return " get Boolean value";
-		break;*/		
-		}
-		return "UNKNOWN";
-	}
-	
-	$scope.assignmentExpression = function (assignment) {
-		var expr = '';
-		for ( var i=0; i < assignment.accessOperations.length; i++ ) {
-			expr += $scope.operationExpression(assignment.accessOperations[i]);
-		} 
-		return expr;
 	}
     
     $scope.addUrlParam = function (step) {
@@ -431,11 +368,58 @@ App.controller('designerCtrl', function($scope, $routeParams, $location, stepSer
 		step.urlParams.splice( step.urlParams.indexOf(urlParam), 1 );
 	}    
 
+	// File upload stuff for play verbs
+	$scope.onFileSelect = function($files) {
+		    //$files: an array of files selected, each file has name, size, and type.
+		    for (var i = 0; i < $files.length; i++) {
+		      var file = $files[i];
+		      $scope.upload = $upload.upload({
+
+		        url: 'services/manager/projects/uploadwav?name=' + $scope.projectName , //upload.php script, node.js route, or servlet url
+		        // method: POST or PUT,
+		        // headers: {'headerKey': 'headerValue'},
+		        // withCredential: true,
+		        //data: {myObj: $scope.myModelObj},
+		        file: file,
+		        // file: $files, //upload multiple files, this feature only works in HTML5 FromData browsers
+		        /* set file formData name for 'Content-Desposition' header. Default: 'file' */
+		        //fileFormDataName: myFile, //OR for HTML5 multiple upload only a list: ['name1', 'name2', ...]
+		        /* customize how data is added to formData. See #40#issuecomment-28612000 for example */
+		        //formDataAppender: function(formData, key, val){} 
+		      }).progress(function(evt) {
+		        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
+		      }).success(function(data, status, headers, config) {
+		        // file is uploaded successfully
+		    	  console.log('file uploaded successfully');
+		        //console.log(data);
+		    	  $scope.$emit("fileupload");
+		      });
+		      //.error(...)
+		      //.then(success, error, progress); 
+		    }
+	};
 	
+	$scope.$on('fileupload', function(event, data) {
+		console.log("caught event fileupload");
+		$scope.refreshWavList($scope.projectName);
+	});
 	
+	$scope.deleteWav = function (wavItem) {
+		$http({url: 'services/manager/projects/removewav?name=' + $scope.projectName + '&filename=' + wavItem.filename, method: "DELETE"})
+		.success(function (data, status, headers, config) {
+			console.log("Deleted " + wavItem.filename);
+			$scope.$emit('wavfileDeleted', wavItem);
+		}).error(function (data, status, headers, config) {
+			console.log("Error deleting " + wavItem.filename);
+		});
+	}
 	
+	$scope.$on('wavfileDeleted', function (event,data) {
+		console.log("caught event wavfileDeleted");
+		$scope.refreshWavList($scope.projectName);
+	});
+		
 	// Run the following after all initialization are complete
-	
 	
 	console.log( "opening project: " + $scope.projectName);
 	$scope.openProject( $scope.projectName );

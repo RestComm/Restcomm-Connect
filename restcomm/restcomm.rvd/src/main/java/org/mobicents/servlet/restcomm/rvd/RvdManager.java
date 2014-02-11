@@ -1,9 +1,12 @@
 package org.mobicents.servlet.restcomm.rvd;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -22,18 +25,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
-
-
-
 
 @Path("/manager/projects")
 public class RvdManager {
@@ -81,6 +86,9 @@ public class RvdManager {
             items = projectService.getWavs(name);
         } catch (BadWorkspaceDirectoryStructure e) {
             e.printStackTrace(); // TODO remove this and log the error
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (ProjectDoesNotExist e) {
+            e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -175,7 +183,7 @@ public class RvdManager {
         File stateFile = new File(workspaceBasePath + File.separator + name + File.separator + "state");
         try {
             FileInputStream stateFileStream = new FileInputStream(stateFile);
-            //request.getSession().setAttribute(projectSessionAttribute, name); // mark the open project in the session
+            // request.getSession().setAttribute(projectSessionAttribute, name); // mark the open project in the session
             return Response.ok().entity(stateFileStream).build();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
@@ -185,10 +193,116 @@ public class RvdManager {
         return Response.status(Status.BAD_REQUEST).build(); // TODO This is not the correct return code for all cases of error
     }
 
+    @POST
+    @Path("/uploadwav")
+    public Response uploadWavFile(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
+        System.out.println("running /uploadwav");
+
+        try {
+            if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
+                Gson gson = new Gson();
+                ServletFileUpload upload = new ServletFileUpload();
+                FileItemIterator iterator = upload.getItemIterator(request);
+                String projectBase = projectService.getProjectBasePath(projectName);
+
+                JsonArray fileinfos = new JsonArray();
+
+                while (iterator.hasNext()) {
+                    FileItemStream item = iterator.next();
+                    JsonObject fileinfo = new JsonObject();
+                    fileinfo.addProperty("fieldName", item.getFieldName());
+
+                    // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
+                    if (item.getName() != null) {
+                        // copy from temp storage to file in project/wavs directory
+                        String wavPathname = projectService.getProjectWavsPath(projectName) + File.separator + item.getName();
+                        System.out.println( "Writing wav file to " + wavPathname);
+                        FileUtils.copyInputStreamToFile(item.openStream(), new File(wavPathname) );
+                        fileinfo.addProperty("name", item.getName());
+                        //fileinfo.addProperty("size", size(item.openStream()));
+                    }
+                    if (item.getName() == null) {
+                        System.out.println( "non-file part found in upload");
+                        fileinfo.addProperty("value", read(item.openStream()));
+                    }
+                    fileinfos.add(fileinfo);
+                }
+
+                return Response.ok(gson.toJson(fileinfos), MediaType.APPLICATION_JSON).build();
+
+            } else {
+
+                String json_response = "{\"result\":[{\"size\":" + size(request.getInputStream()) + "}]}";
+                return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
+            }
+        } catch ( Exception e /* TODO - use a more specific  type !!! */) {
+            e.printStackTrace();
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+
+        //return Response.ok().build();
+    }
+
+    @DELETE
+    @Path("/removewav")
+    public Response removeWavFile(@QueryParam("name") String projectName, @QueryParam("filename") String filename, @Context HttpServletRequest request) {
+        // !!! Sanitize project name
+        String filepath;
+        try {
+            filepath = projectService.getProjectWavsPath(projectName) + File.separator + filename;
+            File wavfile = new File(filepath);
+            if ( wavfile.delete() )
+                System.out.println( "Deleted " + filename + " from " + projectName + " app" );
+            else
+                System.out.println( "Cannot delete " + filename + " from " + projectName + " app" );
+            return Response.ok().build();
+        } catch (BadWorkspaceDirectoryStructure e) {
+            e.printStackTrace();
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (ProjectDoesNotExist e) {
+            e.printStackTrace();
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    protected int size(InputStream stream) {
+        int length = 0;
+        try {
+            byte[] buffer = new byte[2048];
+            int size;
+            while ((size = stream.read(buffer)) != -1) {
+                length += size;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return length;
+
+    }
+
+    protected String read(InputStream stream) {
+        StringBuilder sb = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException e) {
+            }
+        }
+        return sb.toString();
+
+    }
 
     @POST
     @Path("/build")
-    public Response buildProject( @QueryParam("name") String name ) {
+    public Response buildProject(@QueryParam("name") String name) {
 
         // !!! SANITIZE project name
 

@@ -5,14 +5,16 @@
 				<div class="col-md-12">
 				
                     <div class="service-url-wrap">
-                        <div class="input-group input-group-sm form-group">
-                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
-                            <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
-                        </div>
-                        <!--<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div> -->
+                    	<form class='form-group' name='form'>
+	                        <div class="input-group">
+	                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
+	                            <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="url" placeholder="http://" ng-model='step.url' required></input>
+	                        </div>
+	                        <div class="validation-error"  ng-show="form.url.$invalid">Specify a valid URL that returns JSON</div>
+	                    </form>
                         
                         <div class='row'>
-                            <div ng-repeat='urlParam in step.urlParams' class="col-md-4">
+                            <div ng-repeat='urlParam in step.urlParams' class="col-md-5">
                                 <div  class="input-group input-group-sm form-group">
                                     <span class="input-group-addon">Name</span>
                                     <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
@@ -33,23 +35,61 @@
                             <ul>
                                 <li>Fill in the "Assign to" field with the name of the RVD variable you want to create.</li>
                                 <li>Click "Add operation" to add one or more access operations until you drill down to the JSON member variable you need. For objects use the 'propertyNamed' action to access a specific property. For arrays use the 'itemAtPosition' action to access the N'th array element.</li>
-                                <li>The last operation should be 'string'. Don't forget to press 'Done' when done.</li>
+                                <li>The last operation should be 'value'. Don't forget to press 'Done' when done.</li>
                                 <li>Undo your mistakes with the circular arrow button.</li>
                             </ul>
                             <p>
-                                All variables variables created this way will be available for use in this module (or the next if a routing decision is made).
+                                All variables variables created this way will be available for use in this module (or the next if a 'fixed' routing decision is made).
+                            </p>
+                            <h6><strong>Dynamic routing</strong></h6>
+                            <p>
+                            	If dynamic routing is enabled you can limit the scope of an RVD variable to a single module by choosing it from the 'Module scope' dropdown. Leave it blank to execute the assignment for all modules. 
                             </p>
                             <div class="wellinfo-rollup"><i ng-click='step.iface.helpCollapsed = !step.iface.helpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
                          </div> 
                     </div>
-
-					<div class="form-group">
-						<button ng-click="addAssignment(step)" type="button" class="btn btn-primary btn-xs"><span>Add assignment</span></button>
+					
+					<div class='row form-group'>
+						<div class='col-md-2'>
+							<button ng-click="addAssignment(step)" type="button" class="btn btn-primary btn-sm"><span>Add assignment</span></button>
+						</div>
+						<!-- 
+						<div class='col-md-4'>
+							<select sync-model ng-if='step.doRouting && step.nextType=="responseBased"'  ng-model='step.chosenAssignmentsModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
+		                        <option value=""></option>
+		                    </select>
+						</div>
+						 -->
 					</div>
+					
+					<!-- 
+					<div class='row'>
+						<div class='col-md-3'>
+							<div class="form-group">
+								<button ng-click="addAssignment(step)" type="button" class="btn btn-primary btn-sm"><span>Add assignment</span></button>
+							</div>
+						</div>
+						<div class='col-md-3'>
+							<select sync-model ng-if='step.doRouting && step.nextType=="responseBased"'  ng-model='step.chosenAssignmentsModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
+		                        <option value=""></option>
+		                    </select>
+						</div>
+					</div>
+					 -->
+
+
 
 					
 					<div ng-repeat="assignment in step.assignments" class="assignment form-group">
 						<div class="row">
+							<div class='col-md-3' ng-class='{"rvd-disabled":!(step.doRouting && step.nextType=="responseBased")}'>
+								<div class="input-group input-group-sm form-group">
+									<span class="input-group-addon">Module scope</span>
+									<select sync-model ng-disabled='!(step.doRouting && step.nextType=="responseBased")'  ng-model='assignment.moduleNameScope' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
+										<option value=""></option>
+									</select>  
+								</div>							
+							</div>
 							<div class="col-md-3">
 								<div class="input-group input-group-sm form-group">
 									<span class="input-group-addon">Assign to</span>
@@ -57,33 +97,8 @@
 								</div>
 							</div>
 							
-							<div class="col-md-8">
-								<form name="form{{$index}}" novalidate>
-									<div class="input-group input-group-sm form-group">
-										<span class="input-group-addon">{{assignmentExpression(assignment)}}</span>
-										
-										<select ng-show='assignment.lastOperation != null' ng-change='assignment.lastOperation.action=""' ng-model='assignment.lastOperation.kind' ng-options='operationKind as operationKind for operationKind in accessOperationKinds' class="form-control input-sm" required></select>
-
-										<span ng-if='assignment.lastOperation.kind=="object"' class="input-group-addon"></span>
-										<select ng-if='assignment.lastOperation.kind=="object"' ng-change='assignment.lastOperation.property=""' ng-model='assignment.lastOperation.action' ng-options='objectAction as objectAction for objectAction in objectActions' class="form-control input-sm" required></select>
-										<span ng-if='assignment.lastOperation.action=="propertyNamed"' class="input-group-addon"></span>
-										<input ng-if='assignment.lastOperation.action=="propertyNamed"' name='property'  ng-model='assignment.lastOperation.property' placeholder='type the object property to access' class="form-control" required></input>
-
-										<span ng-if='assignment.lastOperation.kind=="array"' class="input-group-addon"></span>
-										<select ng-if='assignment.lastOperation.kind=="array"' ng-change='assignment.lastOperation.position=""'  ng-model='assignment.lastOperation.action' ng-options='arrayAction as arrayAction for arrayAction in arrayActions' class="form-control input-sm" required></select>
-										<span ng-if='assignment.lastOperation.action=="itemAtPosition"' class="input-group-addon"></span>
-										<input ng-if='assignment.lastOperation.action=="itemAtPosition"' type='number' name='position' ng-model='assignment.lastOperation.position' placeholder='type array item index'  class="form-control" required></input>
-																				
-									</div>
-									<!-- <div class="validation-error" ng-show="form{{$index}}.property.$error.required">property required</div>
-									<div class="validation-error" ng-show="form{{$index}}.position.$error.required">item position required</div>
-									-->
-									<button ng-show='!accessOperationProtos[assignment.lastOperation.kind].terminal' ng-disabled='form{{$index}}.$invalid' ng-click="addOperation(assignment)" type="button" class="btn btn-primary btn-xs pull-right"><span>Add operation</span></button>
-									<button ng-show='accessOperationProtos[assignment.lastOperation.kind].terminal' ng-click="doneAddingOperations(assignment)" type="button" class="btn btn-primary btn-xs pull-right"><span>Done</span></button>
-									<button ng-show='assignment.accessOperations.length > 0' ng-click='popOperation(assignment)' type='button' class="btn btn-xs pull-right"><i  class="fa fa-undo" ></i></button>
-
-
-								</form>
+							<div class="col-md-5">
+							<value-extractor extractor-model='assignment.valueExtractor'></value-extractor>
 							</div>
 							<div class="col-md-1">
 								<span ng-click='removeAssignment(step,assignment)' class="fa fa-times text-muted remove-button rvd-clickable"></span>
@@ -98,8 +113,8 @@
                         <div class="well">
                             <p>Check "Continue to" checkbox below to change call flow after the external service has responded:</p>
                             <ul>
-                                <li>Select 'variable' to use one of the variables created by the assignments above to determine which module comes next. The variable should contain the next module's label (the label of the module tab).</li>
-                                <li>Select 'fixed' to use a hardcoded module setting.</li>
+                            	<li>Select 'fixed' to use a hardcoded module setting.</li>
+                                <li>Select 'dynamic' to route to a module specified in the service response. In your service implementation use the label of the module (the caption on module's the tab) to indicate your choice. Notice 'Module scope' option is enabled for each assignment. You can then select a module from the dropdown list to execute the assignment for this module only. Leave it blank to execute it for all module routes.</li>
                                 <li>Leave "Continue to" to unchecked to if you don't want to change the call flow at this point.</li>
                             </ul>
                             <div class="wellinfo-rollup"><i ng-click='step.iface.routingHelpCollapsed = !step.iface.routingHelpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
@@ -107,7 +122,7 @@
                     </div>		
                     			
 					<div class="row">
-						<div class="col-md-12">
+						<div class="col-md-6">
                             <div class="input-group input-group-sm routing-decision-controls">
                                 <span class="input-group-addon">
 									<input ng-model='step.doRouting' type="checkbox">
@@ -119,19 +134,23 @@
 									<input ng-model='step.nextType' value='fixed' type="radio">
 								</span>
 								<span ng-if='step.doRouting' class="input-group-addon">
-									<span>variable &nbsp;</span>
-									<input ng-model='step.nextType' value='variable' type="radio">
+									<span>dynamic &nbsp;</span>
+									<input ng-model='step.nextType' value='responseBased' type="radio">
 								</span>								
-								<select ng-if='step.doRouting && step.nextType=="variable"' ng-model='step.nextVariable' ng-options='assignment.destVariable as assignment.destVariable for assignment in step.assignments' class="form-control height-fix" required></select>
-								<select sync-model ng-if='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
-												<option value=""></option>
-								</select>
                                 
 								<!-- this is just a placeholder -->
 								<input ng-hide='step.doRouting' ng-disabled='true' class="form-control height-fix">
-							</div>
-														
+							</div>						
 						</div>
+                        <div class='col-md-6'>
+								<select sync-model ng-if='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
+									<option value=""></option>
+								</select>                            
+								<!-- <select ng-if='step.doRouting && step.nextType=="variable"' ng-model='step.nextVariable' ng-options='assignment.destVariable as assignment.destVariable for assignment in step.assignments' class="form-control height-fix" required></select> -->
+                                <value-extractor ng-if='step.doRouting && step.nextType=="responseBased"' extractor-model='step.nextValueExtractor'></value-extractor>
+                        </div>
+					</div>
+					<div class='row'>
 					</div>
 					
 				

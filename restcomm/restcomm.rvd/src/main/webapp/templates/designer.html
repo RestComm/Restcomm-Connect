@@ -1,4 +1,4 @@
-<div ng-controller="designerCtrl">
+<div>
 
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="collapse navbar-collapse navbar-ex1-collapse">
@@ -17,36 +17,85 @@
 			</ul>
 
 			<ul class="nav navbar-nav navbar-right">
+				<li><a class='rvd-clickable-text' ng-click='buildProject()'><i class='fa fa-save'></i>&nbsp; Save</a></li>
+				<li class='rvd-appurl' ng-show="startNodeSet()"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
 				<li><a ng-click='closeProject()' href="#"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
 			</ul>
 
 		</div>
 	</nav>
 	
-	<div ng-show="nodeNamed(startNodeName)==null" class="row">
-		<div class="col-md-12 rvd-subheader-message">
-			<span class="validation-error">No <em>Startup module</em> is set</span>
+	<div class='row'>
+		<div class='col-md-2'>
+			<div ng-show="nodeNamed(startNodeName)==null" class='rvd-subheader-message'>
+				<span class="validation-error">No <em>Startup module</em> is set</span>
+			</div>
 		</div>
+		<div class='col-md-8'>
+		</div>
+
 	</div>
 
 	<div class="row">
 
 		<!-- Left menu -->
 		<div class="col-md-2">
-			<!-- <button class="btn btn-default btn-block btn-lg" ng-click='saveProject()' >save &nbsp;<span class="glyphicon glyphicon-save"></span></button> -->
 
-			<!-- 
-				<div class="form-group">
-					<button class="btn btn-primary btn-block" ng-click='saveProject()' >Save draft &nbsp;&nbsp;<i class='fa fa-save'></i></button>
-				</div>
-			 -->
-
+		<div class='form-group'>
+			<div my-draggable='.sortable-steps' id='buttonsay' class="label label-primary verb-button kind-say rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
+			<div my-draggable='.sortable-steps' id='buttonplay' class="label label-primary verb-button kind-play rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
+			<div my-draggable='.sortable-steps.root' id='buttongather' class="label label-primary verb-button kind-gather rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>
+			<div my-draggable='.sortable-steps' id='buttondial' class="label label-primary verb-button kind-dial rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>
+			<div my-draggable='.sortable-steps' id='buttonhungup' class="label label-primary verb-button kind-hungup rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>
+			<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+			<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-reject rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</div>
+			<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-redirect rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
+			<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-pause rvd-pickable"><i class='fa fa-pause'></i> &nbsp;Pause</div>
+			<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-sms rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
+			<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-record rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;Record</div>
+			<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-fax rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
+		</div>
+<!--  
 			<div class="form-group">
 				<button class="btn btn-primary btn-block" ng-click='buildProject()'>save
 				</button>
 			</div>
+-->
+<!-- 
 			<div ng-show="startNodeSet()" class="form-group rvd-starturl">
 				<a target="_blank" href='{{getStartUrl()}}'>Startup URL</a>
+			</div>
+-->
+			
+			<div>
+				<h5 class='text-center'><strong>Audio resources</strong></h5>
+				
+				<div class='dropfile-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
+					<div class="drop-prompt">Drop new audio resources here</div>
+				</div>
+				<div ng-file-drop-available="dropSupported=true" ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+								
+				<div class='text-left more-audio-resources'>
+					<a class='rvd-clickable' ng-show='!showAudioResources' ng-click='showAudioResources = true'>More...</a>
+				</div>
+				<div ng-show='showAudioResources==true'>
+					<div class='row' ng-repeat='wavItem in wavList'>
+						<div ng-show='!wavItem.viewMode'>
+							<div class='col-md-10 ellipsis' tooltip='{{wavItem.filename}}' tooltip-popup-delay="1000" tooltip-trigger="mouseenter">{{wavItem.filename}}</div>
+							<div class='col-md-1'>
+								<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
+							</div>
+						</div>
+						
+						<div class="col-md-12 text-center confirm-delete " ng-show="wavItem.viewMode=='confirm-delete'">
+							<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
+							<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>
+						</div>						
+					</div>
+
+					<a class='rvd-clickable' ng-click="showAudioResources = false"><i class="fa fa-angle-double-up" ></i></a>
+				</div>
+				
 			</div>
 		</div>
 
@@ -54,6 +103,7 @@
 		<div class="col-md-10">
 			<div class="editor">
 				<div class="panel-body editor">
+				<!-- 
 					<ul class="verbs nav nav-pills">
 						<li my-draggable='.sortable-steps' id='buttonsay' class="active verb bs-callout-draggable verb-button kind-say rvd-pickable"><a><i class='fa fa-quote-left'></i> &nbsp;Say</a></li>
 						<li my-draggable='.sortable-steps' id='buttonplay' class="active verb bs-callout-draggable verb-button kind-play rvd-pickable"><a><i class='fa fa-play-circle'></i> &nbsp;Play</a></li>
@@ -61,13 +111,14 @@
 						<li my-draggable='.sortable-steps.root' id='buttondial' class="active verb bs-callout-draggable verb-button kind-dial rvd-pickable"><a><i class='fa fa-phone'></i> &nbsp;Dial</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttonhungup' class="active verb bs-callout-draggable verb-button kind-hungup rvd-pickable"><a><i class='fa fa-times'></i> &nbsp;Hang Up</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttonexternalService' class="active verb bs-callout-draggable verb-button kind-externalService rvd-pickable"><a><i class='fa fa-external-link'></i> &nbsp;External Service</a></li>
-						<li my-draggable='.sortable-steps.root' id='buttonredirect' class="active verb bs-callout-draggable verb-button kind-redirect rvd-pickable"><a><i class='fa fa-link'></i> &nbsp;Redirect</a></li> <!-- fa-random -->
+						<li my-draggable='.sortable-steps.root' id='buttonredirect' class="active verb bs-callout-draggable verb-button kind-redirect rvd-pickable"><a><i class='fa fa-link'></i> &nbsp;Redirect</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttonreject' class="active verb bs-callout-draggable verb-button kind-reject rvd-pickable"><a><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttonpause' class="active verb bs-callout-draggable verb-button kind-pause rvd-pickable"><a><i class='fa fa-pause'></i> &nbsp;Pause</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttonsms' class="active verb bs-callout-draggable verb-button kind-sms rvd-pickable"><a><i class='fa fa-envelope-o'></i> &nbsp;SMS</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttonrecord' class="active verb bs-callout-draggable verb-button kind-record rvd-pickable"><a><i class='fa fa-microphone'></i> &nbsp;Record</a></li>
 						<li my-draggable='.sortable-steps.root' id='buttonfax' class="active verb bs-callout-draggable verb-button kind-fax rvd-pickable"><a><i class='fa fa-print'></i> &nbsp;Fax</a></li>
 					</ul>
+				-->
 					<ul class="nav nav-tabs">
 						<!-- tabs -->
 						<li ng-repeat='node in nodes'
