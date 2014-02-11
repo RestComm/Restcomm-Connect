@@ -17,9 +17,18 @@
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.Currency;
+import java.util.Vector;
 
+import javax.sdp.Connection;
+import javax.sdp.MediaDescription;
+import javax.sdp.SdpException;
+import javax.sdp.SdpFactory;
+import javax.sdp.SessionDescription;
+import javax.sdp.SessionName;
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletMessage;
@@ -95,7 +104,16 @@ public class B2BUAHelper {
                         request.getFrom().getURI(), request.getTo().getURI());
                 outRequest.setRequestURI(to);
                 if (request.getContent() != null) {
-                    outRequest.setContent(request.getContent(), request.getContentType());
+                    //Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
+                    String externalIp = request.getInitialRemoteAddr();
+                    final byte[] sdp = request.getRawContent();
+                    String offer = null;
+                    try {
+                        offer = patch(sdp, externalIp);
+                    } catch (SdpException e) {
+                        e.printStackTrace();
+                    }
+                    outRequest.setContent(offer, request.getContentType());
                 }
                 final SipSession outgoingSession = outRequest.getSession();
                 if (request.isInitial()) {
@@ -146,6 +164,37 @@ public class B2BUAHelper {
             }
         }
         return false;
+    }
+
+    //Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
+    @SuppressWarnings("unchecked")
+    private static String patch(final byte[] data, final String externalIp) throws UnknownHostException, SdpException {
+        final String text = new String(data);
+        final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
+        SessionName sessionName = SdpFactory.getInstance().createSessionName("Restcomm B2BUA");
+        sdp.setSessionName(sessionName);
+        // Handle the connection at the session level.
+        fix(sdp.getConnection(), externalIp);
+        // Handle the connections at the media description level.
+        final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
+        for (final MediaDescription description : descriptions) {
+            fix(description.getConnection(), externalIp);
+        }
+        sdp.getOrigin().setAddress(externalIp);
+        return sdp.toString();
+    }
+    //Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
+    @SuppressWarnings("unused")
+    private static void fix(final Connection connection, final String externalIp) throws UnknownHostException, SdpException {
+        if (connection != null) {
+            if (Connection.IN.equals(connection.getNetworkType())) {
+                if (Connection.IP4.equals(connection.getAddressType())) {
+                    final InetAddress address = InetAddress.getByName(connection.getAddress());
+                    final String ip = address.getHostAddress();
+                    connection.setAddress(externalIp);
+                }
+            }
+        }
     }
 
     public static SipServletResponse getLinkedResponse(SipServletMessage message) {
@@ -213,7 +262,16 @@ public class B2BUAHelper {
         SipServletRequest request = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
         SipServletResponse resp = request.createResponse(response.getStatus());
         if (response.getContent() != null) {
-            resp.setContent(response.getContent(), response.getContentType());
+            //Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
+            String externalIp = response.getInitialRemoteAddr();
+            final byte[] sdp = response.getRawContent();
+            String offer = null;
+            try {
+                offer = patch(sdp, externalIp);
+            } catch (SdpException e) {
+                e.printStackTrace();
+            }
+            resp.setContent(offer, response.getContentType());
         }
         resp.send();
 
