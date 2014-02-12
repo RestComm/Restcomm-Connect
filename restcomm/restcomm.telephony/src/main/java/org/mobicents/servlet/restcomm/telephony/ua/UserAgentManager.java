@@ -247,8 +247,18 @@ public final class UserAgentManager extends UntypedActor {
         final String ip = request.getInitialRemoteAddr();
         final int port = request.getInitialRemotePort();
         final String transport = uri.getTransportParam();
-        logger.info("Patching URI: "+uri.toString()+" with IP: "+ip+" and PORT: "+port+" for USER: "+user);
-        patch(uri, ip, port);
+
+        //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
+        final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+        final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
+        if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null && !initialPortBeforeLB.isEmpty()) {
+            logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
+            patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
+        } else {
+            logger.info("Patching URI: "+uri.toString()+" with IP: "+ip+" and PORT: "+port+" for USER: "+user);
+            patch(uri, ip, port);
+        }
+
         final StringBuffer buffer = new StringBuffer();
         buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
         // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than

@@ -106,12 +106,18 @@ public class B2BUAHelper {
                 if (request.getContent() != null) {
                     //Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
                     String externalIp = request.getInitialRemoteAddr();
+                    //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
+                    final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
                     final byte[] sdp = request.getRawContent();
                     String offer = null;
                     try {
-                        offer = patch(sdp, externalIp);
+                        if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty()) {
+                            offer = patch(sdp, initialIpBeforeLB);
+                        } else {
+                            offer = patch(sdp, externalIp);
+                        }
                     } catch (SdpException e) {
-                        e.printStackTrace();
+                        logger.error("Unexpected exception while patching sdp ", e);
                     }
                     outRequest.setContent(offer, request.getContentType());
                 }
@@ -261,21 +267,24 @@ public class B2BUAHelper {
         response.getSession().setAttribute(B2BUA_LAST_RESPONSE, response);
         SipServletRequest request = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
         SipServletResponse resp = request.createResponse(response.getStatus());
+        CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
         if (response.getContent() != null) {
-            //Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
-            String externalIp = response.getInitialRemoteAddr();
+            //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
+            Registration registration = daoManager.getRegistrationsDao().getRegistration(callRecord.getTo());
+            final String externalIp = registration.getLocation().split(":")[1].split("@")[1];
             final byte[] sdp = response.getRawContent();
             String offer = null;
             try {
+                logger.debug("Got original address from Registration :"+externalIp);
                 offer = patch(sdp, externalIp);
             } catch (SdpException e) {
-                e.printStackTrace();
+                logger.error("Unexpected exception while patching sdp ", e);
             }
             resp.setContent(offer, response.getContentType());
         }
         resp.send();
 
-        CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
+//        CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
         if (callRecord != null) {
             logger.info("CDR found! Updating");
             if (!request.getMethod().equalsIgnoreCase("BYE")) {
