@@ -5,11 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 
 public class GatherStep extends Step {
+
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
+
     private String action;
     private String method;
     private Integer timeout;
@@ -183,18 +188,18 @@ public class GatherStep extends Step {
         return rcmlStep;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, IOException {
-        System.out.println("handling gather action");
+        logger.debug("handling gather action");
         if ("menu".equals(getGatherType())) {
 
             boolean handled = false;
             for (GatherStep.Mapping mapping : getMappings()) {
                 Integer digits = Integer.parseInt(interpreter.getHttpRequest().getParameter("Digits"));
 
-                System.out.println("checking digits: " + mapping.getDigits() + " - " + digits);
+                logger.debug("checking digits: " + mapping.getDigits() + " - " + digits);
 
                 if (mapping.getDigits() != null && mapping.getDigits().equals(digits)) {
                     // seems we found out menu selection
-                    System.out.println("seems we found out menu selection");
+                    logger.debug("seems we found out menu selection");
                     interpreter.interpret(mapping.getNext(),null);
                     handled = true;
                 }
