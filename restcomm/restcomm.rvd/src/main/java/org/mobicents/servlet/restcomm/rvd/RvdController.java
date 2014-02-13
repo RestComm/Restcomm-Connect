@@ -19,10 +19,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ReferencedModuleDoesNotExist;
 
 import com.google.gson.Gson;
 
@@ -66,15 +63,6 @@ public class RvdController {
         String rcmlResponse;
         try {
             rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (BadExternalServiceResponse e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch ( ReferencedModuleDoesNotExist e ) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (InterpreterException e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -103,15 +91,6 @@ public class RvdController {
         String rcmlResponse;
         try {
             rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (BadExternalServiceResponse e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch ( ReferencedModuleDoesNotExist e ) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (InterpreterException e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
