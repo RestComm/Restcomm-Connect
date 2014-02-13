@@ -171,7 +171,7 @@ public class Interpreter {
 
 
     public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest)
-            throws IOException, InterpreterException {
+            throws IOException {
         this.projectBasePath = projectBasePath;
         this.appName = appName;
         this.httpRequest = httpRequest;
@@ -181,15 +181,23 @@ public class Interpreter {
         }.getType());
         nodeNames = projectOptions.getNodeNames();
 
-        if (targetParam == null || "".equals(targetParam)) {
-            // No target has been specified. Load the default from project file
-            targetParam = projectOptions.getDefaultTarget();
-            if (targetParam == null)
-                throw new UndefinedTarget();
-            logger.debug("override default target to " + targetParam);
-        }
-        return interpret(targetParam, null);
+        String response = null;
+        try {
+            if (targetParam == null || "".equals(targetParam)) {
+                // No target has been specified. Load the default from project file
+                targetParam = projectOptions.getDefaultTarget();
+                if (targetParam == null)
+                    throw new UndefinedTarget();
+                logger.debug("override default target to " + targetParam);
+            }
 
+            response = interpret(targetParam, null);
+        } catch (InterpreterException e) {
+            logger.error(e.getMessage(), e);
+            response = "<Response><Hangup/></Response>";
+        }
+
+        return response;
     }
 
     public String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
