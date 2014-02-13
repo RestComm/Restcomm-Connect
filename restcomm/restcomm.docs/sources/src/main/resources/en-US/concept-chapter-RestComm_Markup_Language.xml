@@ -111,7 +111,7 @@
 		<title>Say</title>
 		<para>The &lt;Say&gt; verb is used to synthesize text to speech and play it to the remote party.
 		The voices supported depends on the TTS Service provider plug-in. Below are the voices for our default
-		TTS service provider plug-in which uses Acapela Voice as a Service.</para>
+		TTS service provider plug-in which uses Acapela Voice and VoiceRSS (default) as a Service.</para>
 		<table>
 		   <title>Say Attributes</title>
 		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -177,6 +177,40 @@
 			&lt;Say&gt;Hello World&lt;/Say&gt;
 		&lt;/Response&gt;
 		</programlisting>
+
+<para>The example below shows how you can set the language, voice and loop parameters of the Say Verb.</para>
+
+	<programlisting>
+	<![CDATA[
+		<Response>
+		<Say voice="woman" language="fr" loop="3">Bienvenue à RestComm un projet parrainé par TeleStax</Say>
+		</Response>
+
+	]]>
+	</programlisting>
+
+
+ <note>
+	<title> Usefull Information</title>
+	<itemizedlist mark='opencircle'>
+	<listitem>
+		<para>
+		When translating text to speech, the Say verb will make assumptions about how to pronounce numbers, dates, times, amounts of money and other abbreviations.
+
+		</para>
+	</listitem>
+
+	<listitem>
+		<para>
+		When saying numbers, '12345' will be spoken as "twelve thousand three hundred forty-five." Whereas '1 2 3 4 5' will be spoken as "one two three four five."
+		</para>
+	</listitem>
+	</itemizedlist>
+
+</note>
+
+
+
 	</section>
 	<section>
 		<title>Play</title>
@@ -249,7 +283,7 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 
 
 	    <formalpara>
-	    	<title>Examples</title>
+	    	<title>Basic example</title>
 	    	<para>For an example of how to use the &lt;Play&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
@@ -257,6 +291,8 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 			&lt;Play&gt;http://foobar.com/demo.wav&lt;/Play&gt;
 		&lt;/Response&gt;
 		</programlisting>
+
+
 	</section>
 	<section>
 		<title>Gather</title>
