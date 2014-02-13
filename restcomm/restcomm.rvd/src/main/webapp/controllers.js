@@ -367,7 +367,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.addAssignment = function(step) {
 		console.log("adding assignment");
-		step.assignments.push({moduleNameScope: null, destVariable:'', valueExtractor: {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object)} });
+		step.assignments.push({moduleNameScope: "", destVariable:'', valueExtractor: {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object)} });
 	}
 	$scope.removeAssignment = function(step,assignment) {
 		step.assignments.splice( step.assignments.indexOf(assignment), 1 );

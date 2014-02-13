@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRecordStep;
 
 public class RecordStep extends Step {
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
     String next;
     String method;
     Integer timeout;
@@ -88,7 +91,7 @@ public class RecordStep extends Step {
         return rcmlStep;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, IOException {
-        System.out.println("handling record action");
+        logger.debug("handling record action");
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 

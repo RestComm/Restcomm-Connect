@@ -1,11 +1,14 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
+import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 
 public class PlayStep extends Step {
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
     private String wavUrl;
     private String wavLocalFilename;
     private Integer loop;
@@ -51,7 +54,7 @@ public class PlayStep extends Step {
         else
             url = getWavUrl();
 
-        System.out.println("play url: " + url);
+        logger.debug("play url: " + url);
         playStep.setWavurl(url);
         playStep.setLoop(getLoop());
 
