@@ -92,8 +92,8 @@ App.directive("syncModel", function(){
             	scope.$on("refreshTargetDropdowns", function () {
             		//console.log( 'element ' + element + ' received refreshTargetDropdowns');
             		//console.log( 'selected value: ' + $(element).val() )
-            		if ( $(element).val() =="" )
-            			scope.$eval(attrs.ngModel + " = ''");
+            		if ( $(element).val() ==="" )
+            			scope.$eval(attrs.ngModel + " = null");
             	});            	
             }
         }
