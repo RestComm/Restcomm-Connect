@@ -29,6 +29,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -42,6 +43,8 @@ import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
 
 @Path("/manager/projects")
 public class RvdManager {
+
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
     @Context
     ServletContext servletContext;
@@ -122,7 +125,7 @@ public class RvdManager {
         // TODO IMPORTANT!!! sanitize the project name!!
 
         if (projectName != null && !projectName.equals("")) {
-            System.out.println("savingProject " + projectName);
+            logger.info("savingProject " + projectName);
             if (projectService.updateProject(request, projectName))
                 return Response.ok().build();
             else
@@ -196,7 +199,7 @@ public class RvdManager {
     @POST
     @Path("/uploadwav")
     public Response uploadWavFile(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
-        System.out.println("running /uploadwav");
+        logger.debug("running /uploadwav");
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
@@ -216,13 +219,13 @@ public class RvdManager {
                     if (item.getName() != null) {
                         // copy from temp storage to file in project/wavs directory
                         String wavPathname = projectService.getProjectWavsPath(projectName) + File.separator + item.getName();
-                        System.out.println( "Writing wav file to " + wavPathname);
+                        logger.debug( "Writing wav file to " + wavPathname);
                         FileUtils.copyInputStreamToFile(item.openStream(), new File(wavPathname) );
                         fileinfo.addProperty("name", item.getName());
                         //fileinfo.addProperty("size", size(item.openStream()));
                     }
                     if (item.getName() == null) {
-                        System.out.println( "non-file part found in upload");
+                        logger.warn( "non-file part found in upload");
                         fileinfo.addProperty("value", read(item.openStream()));
                     }
                     fileinfos.add(fileinfo);
@@ -252,9 +255,9 @@ public class RvdManager {
             filepath = projectService.getProjectWavsPath(projectName) + File.separator + filename;
             File wavfile = new File(filepath);
             if ( wavfile.delete() )
-                System.out.println( "Deleted " + filename + " from " + projectName + " app" );
+                logger.info( "Deleted " + filename + " from " + projectName + " app" );
             else
-                System.out.println( "Cannot delete " + filename + " from " + projectName + " app" );
+                logger.warn( "Cannot delete " + filename + " from " + projectName + " app" );
             return Response.ok().build();
         } catch (BadWorkspaceDirectoryStructure e) {
             e.printStackTrace();
@@ -325,7 +328,7 @@ public class RvdManager {
                 try {
 
                     String state_json = FileUtils.readFileToString(new File(projectPath + "state"), "UTF-8");
-                    System.out.println("state: " + state_json);
+                    logger.debug("state: " + state_json);
                     BuildService buildService = new BuildService();
                     buildService.buildProject(state_json, projectPath);
 

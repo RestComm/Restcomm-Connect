@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.model;
 
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 
 import com.thoughtworks.xstream.converters.Converter;
@@ -9,7 +11,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 public class PlayStepConverter implements Converter {
-
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
     @Override
     public boolean canConvert(Class elementClass) {
         return elementClass.equals(RcmlPlayStep.class);
@@ -21,7 +23,7 @@ public class PlayStepConverter implements Converter {
         if (step.getLoop() != null)
             writer.addAttribute("loop", step.getLoop().toString());
 
-        System.out.println( "getloop: " + step.getLoop() );
+        //System.out.println( "getloop: " + step.getLoop() );
         if ( step.getWavurl() != null )
             writer.setValue(step.getWavurl());
     }

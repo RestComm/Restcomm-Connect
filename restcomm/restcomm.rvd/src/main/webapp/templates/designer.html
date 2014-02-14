@@ -1,4 +1,4 @@
-<div>
+<div class='alert-container'>
 
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="collapse navbar-collapse navbar-ex1-collapse">
@@ -17,13 +17,17 @@
 			</ul>
 
 			<ul class="nav navbar-nav navbar-right">
-				<li><a class='rvd-clickable-text' ng-click='buildProject()'><i class='fa fa-save'></i>&nbsp; Save</a></li>
+				<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i class='fa fa-save'></i>&nbsp; Save <span class='spinner-save' us-spinner='spinnerSettings' spinner-key="spinner-save"></span></a></li>
 				<li class='rvd-appurl' ng-show="startNodeSet()"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
 				<li><a ng-click='closeProject()' href="#"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
 			</ul>
 
 		</div>
 	</nav>
+	
+	<div class='rvd-alerts'>
+		<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert(alert)">{{alert.msg}}</alert>
+	</div>
 	
 	<div class='row'>
 		<div class='col-md-2'>

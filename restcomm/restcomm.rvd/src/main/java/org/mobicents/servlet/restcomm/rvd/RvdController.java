@@ -17,16 +17,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 
 import com.google.gson.Gson;
 
 @Path("/apps/{appname}/controller")
 public class RvdController {
-
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
     // configuration parameters
     // private static final String workspaceDirectoryName = "workspace";
     // private static final String protoDirectoryName = "_proto"; // the prototype project directory name
@@ -54,7 +53,7 @@ public class RvdController {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
         } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace(); // TODO Auto-generated catch block
+            logger.error("", e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -64,18 +63,12 @@ public class RvdController {
         String rcmlResponse;
         try {
             rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (BadExternalServiceResponse e) {
-            System.out.println( "[ERROR] " + "BadExternalServiceResponse");
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (InterpreterException e) {
-            e.printStackTrace();
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        System.out.println(rcmlResponse);
+        logger.debug(rcmlResponse);
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
     }
 
@@ -88,7 +81,7 @@ public class RvdController {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
         } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace(); // TODO Auto-generated catch block
+            logger.error("", e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -98,17 +91,12 @@ public class RvdController {
         String rcmlResponse;
         try {
             rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (InterpreterException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        System.out.println(rcmlResponse);
+        logger.debug(rcmlResponse);
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
     }
 

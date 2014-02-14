@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd;
 
+import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 
@@ -20,6 +21,8 @@ import com.google.gson.GsonBuilder;
  *
  */
 public class BuildService {
+
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
     private Gson gson;
 
@@ -70,7 +73,7 @@ public class BuildService {
      * @throws IOException
      */
     private void buildNode(ProjectState.Node node, String projectPath) throws IOException {
-        System.out.println("building node " + node.getName());
+        logger.debug("Building module " + node.getName() );
 
         // TODO sanitize node name!
         File outFile = new File(projectPath + "data/" + node.getName() + ".node");
@@ -79,7 +82,7 @@ public class BuildService {
         // process the steps one-by-one
         for (String stepname : node.getSteps().keySet()) {
             Step step = node.getSteps().get(stepname);
-            System.out.println("building step " + step.getKind() + " - " + step.getName());
+            logger.debug("Building step " + step.getKind() + " - " + step.getName() );
             FileUtils.writeStringToFile(new File(projectPath + "data/" + node.getName() + "." + step.getName()),
                     gson.toJson(step), "UTF-8");
         }
