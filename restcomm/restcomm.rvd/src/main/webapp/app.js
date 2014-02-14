@@ -1,4 +1,4 @@
-var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' /*,'angularSpinner' */]);
+var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' ,'angularSpinner' ]);
 
 App.config([ '$routeProvider', function($routeProvider) {
 	
@@ -11,13 +11,14 @@ App.config([ '$routeProvider', function($routeProvider) {
 	}).otherwise({
 		redirectTo : '/project-manager'
 	});
+
 } ]);
 
 
 
 App.factory('stepService', ['protos', function(protos) {
-	console.log("protos");
-	console.log( protos);
+	//console.log("protos");
+	//console.log( protos);
 	var stepService = {
 		serviceName: 'stepService',
 		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
@@ -91,8 +92,8 @@ App.directive("syncModel", function(){
             	scope.$on("refreshTargetDropdowns", function () {
             		//console.log( 'element ' + element + ' received refreshTargetDropdowns');
             		//console.log( 'selected value: ' + $(element).val() )
-            		if ( $(element).val() =="" )
-            			scope.$eval(attrs.ngModel + " = ''");
+            		if ( $(element).val() ==="" )
+            			scope.$eval(attrs.ngModel + " = null");
             	});            	
             }
         }
