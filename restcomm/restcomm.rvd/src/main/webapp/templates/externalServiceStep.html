@@ -53,32 +53,7 @@
 						<div class='col-md-2'>
 							<button ng-click="addAssignment(step)" type="button" class="btn btn-primary btn-sm"><span>Add assignment</span></button>
 						</div>
-						<!-- 
-						<div class='col-md-4'>
-							<select sync-model ng-if='step.doRouting && step.nextType=="responseBased"'  ng-model='step.chosenAssignmentsModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
-		                        <option value=""></option>
-		                    </select>
-						</div>
-						 -->
 					</div>
-					
-					<!-- 
-					<div class='row'>
-						<div class='col-md-3'>
-							<div class="form-group">
-								<button ng-click="addAssignment(step)" type="button" class="btn btn-primary btn-sm"><span>Add assignment</span></button>
-							</div>
-						</div>
-						<div class='col-md-3'>
-							<select sync-model ng-if='step.doRouting && step.nextType=="responseBased"'  ng-model='step.chosenAssignmentsModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
-		                        <option value=""></option>
-		                    </select>
-						</div>
-					</div>
-					 -->
-
-
-
 					
 					<div ng-repeat="assignment in step.assignments" class="assignment form-group">
 						<div class="row">
@@ -86,7 +61,7 @@
 								<div class="input-group input-group-sm form-group">
 									<span class="input-group-addon">Module scope</span>
 									<select sync-model ng-disabled='!(step.doRouting && step.nextType=="responseBased")'  ng-model='assignment.moduleNameScope' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
-										<option value=""></option>
+										<option value="">-- All --</option>
 									</select>  
 								</div>							
 							</div>
@@ -143,11 +118,16 @@
 							</div>						
 						</div>
                         <div class='col-md-6'>
-								<select sync-model ng-if='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
-									<option value=""></option>
-								</select>                            
+                        	<form name='form'>
+                        		<div  ng-if='step.doRouting && step.nextType=="fixed"'>
+									<select sync-model name='next' ng-if='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
+										<option value=""></option>
+									</select>   
+									<div class="validation-error"  ng-if="form.next.$invalid">Choose target module</div>
+								</div>                         
 								<!-- <select ng-if='step.doRouting && step.nextType=="variable"' ng-model='step.nextVariable' ng-options='assignment.destVariable as assignment.destVariable for assignment in step.assignments' class="form-control height-fix" required></select> -->
                                 <value-extractor ng-if='step.doRouting && step.nextType=="responseBased"' extractor-model='step.nextValueExtractor'></value-extractor>
+                            </form>
                         </div>
 					</div>
 					<div class='row'>
