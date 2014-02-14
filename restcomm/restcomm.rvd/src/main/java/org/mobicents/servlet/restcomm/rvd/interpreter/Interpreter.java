@@ -22,11 +22,14 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ReferencedModuleDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.FaxStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
@@ -59,10 +62,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.XStream;
 
 public class Interpreter {
+
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
     private XStream xstream;
     private Gson gson;
@@ -165,7 +171,7 @@ public class Interpreter {
 
 
     public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest)
-            throws IOException, InterpreterException {
+            throws IOException {
         this.projectBasePath = projectBasePath;
         this.appName = appName;
         this.httpRequest = httpRequest;
@@ -175,20 +181,28 @@ public class Interpreter {
         }.getType());
         nodeNames = projectOptions.getNodeNames();
 
-        if (targetParam == null || "".equals(targetParam)) {
-            // No target has been specified. Load the default from project file
-            targetParam = projectOptions.getDefaultTarget();
-            if (targetParam == null)
-                throw new UndefinedTarget();
-            System.out.println("override default target to " + targetParam);
-        }
-        return interpret(targetParam, null);
+        String response = null;
+        try {
+            if (targetParam == null || "".equals(targetParam)) {
+                // No target has been specified. Load the default from project file
+                targetParam = projectOptions.getDefaultTarget();
+                if (targetParam == null)
+                    throw new UndefinedTarget();
+                logger.debug("override default target to " + targetParam);
+            }
 
+            response = interpret(targetParam, null);
+        } catch (InterpreterException e) {
+            logger.error(e.getMessage(), e);
+            response = "<Response><Hangup/></Response>";
+        }
+
+        return response;
     }
 
     public String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
 
-        System.out.println("starting interpeter for " + targetParam);
+        logger.debug("starting interpeter for " + targetParam);
 
         target = Interpreter.parseTarget(targetParam);
 
@@ -255,18 +269,24 @@ public class Interpreter {
                 throw new BadExternalServiceResponse();
 
             if ( "object".equals(operation.getKind()) ) {
+                if ( !element.isJsonObject() )
+                    throw new BadExternalServiceResponse("No JSON object found");
                 if ("propertyNamed".equals(operation.getAction()) )
                     element = element.getAsJsonObject().get( operation.getProperty() );
                 else
                     throw new InvalidAccessOperationAction();
             } else
             if ( "array".equals(operation.getKind()) ) {
+                if ( !element.isJsonArray() )
+                    throw new BadExternalServiceResponse("No JSON array found");
                 if ("itemAtPosition".equals(operation.getAction()) )
                     element = element.getAsJsonArray().get( operation.getPosition() );
                 else
                     throw new InvalidAccessOperationAction();
             } else
             if ( "value".equals(operation.getKind()) ) {
+                if ( !element.isJsonPrimitive() )
+                    throw new BadExternalServiceResponse("No primitive value found (maybe null returned?)");
                 value = element.getAsString();
             }
         }
@@ -281,7 +301,7 @@ public class Interpreter {
      * @param step
      * @throws IOException
      * @throws ClientProtocolException
-     * @return String Break the module being currently rendered and continue with rendering the named target.
+     * @return String The module name to continue rendering with
      * @throws ErrorParsingExternalServiceUrl
      */
     private String processStep(Step step) throws IOException, InterpreterException {
@@ -303,15 +323,13 @@ public class Interpreter {
                 throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
             }
 
-            System.out.println( "External Service url: " + url);
+            logger.info( "External Service: Requesting from url: " + url);
             HttpGet get = new HttpGet( url );
             CloseableHttpResponse response = client.execute( get );
 
             JsonParser parser = new JsonParser();
 
             try {
-                //System.out.println(response);
-
                 HttpEntity entity = response.getEntity();
                 if ( entity != null ) {
                     String entity_string = EntityUtils.toString(entity);
@@ -321,31 +339,30 @@ public class Interpreter {
                     //boolean dynamicRouting = false;
                     if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
                         //dynamicRouting = true;
-                        nextModuleName = getNodeNameByLabel( evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element) );
-                        System.out.println( "Dynamic routing enabled. Chosen target: " + nextModuleName);
+                        String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+                        nextModuleName = getNodeNameByLabel( moduleLabel );
+                        if ( nextModuleName == null )
+                            throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
 
+                        logger.debug( "Dynamic routing enabled. Chosen target: " + nextModuleName);
                         for ( Assignment assignment : esStep.getAssignments() ) {
-                            System.out.println("working on variable " + assignment.getDestVariable() );
-                            System.out.println( "moduleNameScope: " + assignment.getModuleNameScope());
+                            logger.debug("working on variable " + assignment.getDestVariable() );
+                            logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
                             if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
                                 String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
                                 variables.put(assignment.getDestVariable(), value );
                             } else
-                                System.out.println("skipped assignment to " + assignment.getDestVariable() );
+                                logger.debug("skipped assignment to " + assignment.getDestVariable() );
                         }
                     }  else {
                         for ( Assignment assignment : esStep.getAssignments() ) {
-                            System.out.println("working on variable " + assignment.getDestVariable() );
+                            logger.debug("working on variable " + assignment.getDestVariable() );
                             String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
                             variables.put(assignment.getDestVariable(), value );
                         }
 
                     }
-                    System.out.println("variables after processing ExternalService step: " + variables.toString() );
-                    //try {
-                    //} catch ( BadExternalServiceResponse e ) {
-                    //    e.printStackTrace();
-                    //}
+                    logger.debug("variables after processing ExternalService step: " + variables.toString() );
                     if ( esStep.getDoRouting() ) {
                         String next = "";
                         if ( "fixed".equals( esStep.getNextType() ) )
@@ -353,9 +370,13 @@ public class Interpreter {
                         else
                         if ( "responseBased".equals( esStep.getNextType() ))
                             next = nextModuleName;
+                        if ( "".equals(next) )
+                            throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
                         return next;
                     }
                 }
+            } catch (JsonSyntaxException e) {
+                throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
             } finally {
                 response.close();
             }

@@ -2,6 +2,8 @@ package org.mobicents.servlet.restcomm.rvd.model;
 
 import java.lang.reflect.Type;
 
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
@@ -25,6 +27,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class StepJsonDeserializer implements JsonDeserializer<Step> {
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
     @Override
     public Step deserialize(JsonElement rootElement, Type arg1, JsonDeserializationContext arg2) throws JsonParseException {
@@ -64,7 +67,7 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
             step = gson.fromJson(step_object, FaxStep.class);
         else {
             step = null;
-            System.out.println("Error deserializing step. Unknown step found!"); // TODO remove me and return a nice value!!!
+            logger.error("Error deserializing step. Unknown step found!"); // TODO remove me and return a nice value!!!
         }
 
         return step;
