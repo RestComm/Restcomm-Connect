@@ -5,457 +5,572 @@
 ]>
 <!-- chapter id nickname: ittsss -->
 <chapter>
-<title>Getting Started and General Configuration</title>
+	<title>Getting Started and General Configuration</title>
 
-<section>
-<title>Quick Start Guide</title>
-<para>
-RestComm is a robust, powerful platform that will facilitate building comprehensive real-time communication solutions. The steps below will help you get started with ease.
-</para>
+	<section>
+		<title>Quick Start Guide</title>
+		<para>
+			RestComm is a robust, powerful platform that will facilitate building
+			comprehensive real-time communication solutions. The steps below will
+			help you get started with ease.
+		</para>
 
-<warning>
-<para>
-On a production system, please take into consideration the following:
-</para>
-<para>
-MMS can get into a bad state and report "Too many open files" error because of Linux default value on the total number of file descriptors.
-</para>
-<para>
-You can go to the following sites to see how to increase the maximum number of open files in your server:
-</para>
-<para>
-<ulink url="http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/"/>
-</para>
-<para>
-<ulink url="http://amitbhayani.blogspot.fr/2010/01/javanetsocketexception-too-many-open.html"/>
-</para>
-<para>
+		<warning>
+			<para>
+				On a production system, please take into consideration the following:
+			</para>
+			<para>
+				MMS can get into a bad state and report "Too many open files" error
+				because of Linux default value on the total number of file
+				descriptors.
+			</para>
+			<para>
+				You can go to the following sites to see how to increase the maximum
+				number of open files in your server:
+			</para>
+			<para>
+				<ulink
+					url="http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/" />
+			</para>
+			<para>
+				<ulink
+					url="http://amitbhayani.blogspot.fr/2010/01/javanetsocketexception-too-many-open.html" />
+			</para>
+			<para>
 
-</para>
-</warning>
+			</para>
+		</warning>
 
-<itemizedlist mark='opencircle'>
-<title>Running RestComm on JBoss</title>
-<note>
-<title>JBoss Security</title>
-<para>
-Running a secure application is dependent on multiple factors. Restcomm runs on JBoss which implies that system security implemention can be handled at JBoss level. Please see the link below on how you can make your server environment more secure. <ulink url="https://community.jboss.org/wiki/SecureJboss?_sscc=t"/>
-</para>
-</note>
+		<itemizedlist mark='opencircle'>
+			<title>Running RestComm on JBoss</title>
+			<note>
+				<title>JBoss Security</title>
+				<para>
+					Running a secure application is dependent on multiple factors.
+					Restcomm runs on JBoss which implies that system security
+					implemention can be handled at JBoss level. Please see the link
+					below on how you can make your server environment more secure.
+					<ulink url="https://community.jboss.org/wiki/SecureJboss?_sscc=t" />
+				</para>
+			</note>
 
-<listitem>
-<para>
-Download <filename> TelScale-Restcomm-JBoss-AS7-XX.XX.GA.zip </filename>
-</para>
-</listitem>
-<listitem>
-<para>
-Using a terminal of your choice, extract the content of <filename> TelScale-Restcomm-XX.XX.GA.zip </filename> to a local directory on your computer. The root directoy into which you extract the content of the .zip file will be referred to as $RESTCOMM_HOME.
-</para>
-</listitem>
-<listitem>
-<para>
-Go to <filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
-</para>
-</listitem>
-<listitem>
-<para>
-change the permission of the <filename>run.sh</filename> as follows
-</para>
-</listitem>
-<listitem>
-<para>
-sudo chmod +x ./run.sh
-</para>
-</listitem>
-<listitem>
-<para>
-then start the TelScale Media Server as follows
-</para>
-</listitem>
-<listitem>
-<para>
-sudo ./run.sh
-</para>
-</listitem>
-<listitem>
-<para>
-If all is correctly started you will see the following at the end of the bash terminal window
-<screen>
-[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL Started ]]]]]]]]]
-</screen>
-</para>
-</listitem>
+			<listitem>
+				<para>
+					Download
+					<filename> TelScale-Restcomm-JBoss-AS7-XX.XX.GA.zip </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Using a terminal of your choice, extract the content of
+					<filename> TelScale-Restcomm-XX.XX.GA.zip </filename>
+					to a local directory on your computer. The root directoy into which
+					you extract the content of the .zip file will be referred to as
+					$RESTCOMM_HOME.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Go to
+					<filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					change the permission of the
+					<filename>run.sh</filename>
+					as follows
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					sudo chmod +x ./run.sh
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					then start the TelScale Media Server as follows
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					sudo ./run.sh
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					If all is correctly started you will see the following at the end
+					of the bash terminal window
+					<screen>
+						[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL
+						Started ]]]]]]]]]
+					</screen>
+				</para>
+			</listitem>
 
-<listitem>
-<para>
-Open another terminal and proceed as follows:
-</para>
-</listitem>
+			<listitem>
+				<para>
+					Open another terminal and proceed as follows:
+				</para>
+			</listitem>
 
-<listitem>
-<para>
-Go to <filename>$RESTCOMM_HOME/bin </filename>
-</para>
-</listitem>
-<listitem>
-<para>
-change the permissions of all the <filename>.sh</filename> files in the bin directory as follows
-</para>
-</listitem>
-<listitem>
-<para>
-<filename>sudo chmod +x ./*.sh </filename>
-</para>
-</listitem>
-<listitem>
-<para>
-Start RestComm by running the following command
-</para>
-</listitem>
-<listitem>
-<para>
-<filename>sudo ./standalone.sh -c standalone-sip.xml</filename>
-</para>
-</listitem>
+			<listitem>
+				<para>
+					Go to
+					<filename>$RESTCOMM_HOME/bin </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					change the permissions of all the
+					<filename>.sh</filename>
+					files in the bin directory as follows
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<filename>sudo chmod +x ./*.sh </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Start RestComm by running the following command
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<filename>sudo ./standalone.sh -c standalone-sip.xml</filename>
+				</para>
+			</listitem>
 
-<listitem>
-<para>
-If RestComm is correctly started you will see the following at the end of the terminal
-</para>
+			<listitem>
+				<para>
+					If RestComm is correctly started you will see the following at the
+					end of the terminal
+				</para>
 
-<screen>
-INFO  [Version] TelScale Sip Servlets 6.1.3.GA-TelScale (build: Git Hash=r8947f2732ee64c76566ed6c0b236204c048538e1 date=201306131639) Started.
-17:30:05,854 INFO  [Version] 
-==============================================================================
-==                                                                          ==
-==                      Thank you for running TelScale                      ==
-==    Carrier Grade Communications Platform by the creators of Mobicents    ==
-==                    Copyright 2011-2013 Telestax, Inc.                    ==
-==                         http://www.telestax.com/                         ==
-==                                                                          ==
-==============================================================================
+				<screen>
+					INFO [Version] TelScale Sip Servlets 6.1.3.GA-TelScale (build: Git
+					Hash=r8947f2732ee64c76566ed6c0b236204c048538e1 date=201306131639)
+					Started.
+					17:30:05,854 INFO [Version]
+					==============================================================================
+					== ==
+					== Thank you for running TelScale ==
+					== Carrier Grade Communications Platform by the creators of Mobicents
+					==
+					== Copyright 2011-2013 Telestax, Inc. ==
+					== http://www.telestax.com/ ==
+					== ==
+					==============================================================================
 
-</screen>
-</listitem>
+				</screen>
+			</listitem>
 
-</itemizedlist>
-
-
-
-<itemizedlist mark='opencircle'>
-<title>Running RestComm on Tomcat</title>
-
-<listitem>
-<para>
-Download <filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename>
-</para>
-</listitem>
-<listitem>
-<para>
-Using a terminal of your choice, extract the content of <filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename> to a local directory on your computer. The root directoy into which you extract the content of the .zip file will be referred to as $RESTCOMM_HOME.
-</para>
-</listitem>
-<listitem>
-<para>
-Go to <filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
-</para>
-</listitem>
-<listitem>
-<para>
-change the permission of the <filename>run.sh</filename> as follows
-</para>
-</listitem>
-<listitem>
-<para>
-sudo chmod +x ./run.sh
-</para>
-</listitem>
-<listitem>
-<para>
-then start the TelScale Media Server as follows
-</para>
-</listitem>
-<listitem>
-<para>
-sudo ./run.sh
-</para>
-</listitem>
-<listitem>
-<para>
-If all is correctly started you will see the following at the end of the bash terminal window
-<screen>
-[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL Started ]]]]]]]]]
-</screen>
-</para>
-</listitem>
-
-<listitem>
-<para>
-Open another terminal and proceed as follows:
-</para>
-</listitem>
-
-<listitem>
-<para>
-Go to <filename>$RESTCOMM_HOME/bin </filename>
-</para>
-</listitem>
-<listitem>
-<para>
-change the permissions of all the <filename>.sh</filename> files in the bin directory as follows
-</para>
-</listitem>
-<listitem>
-<para>
-<filename>sudo chmod +x ./*.sh </filename>
-</para>
-</listitem>
-<listitem>
-<para>The content of the bin directory should be similar to the list below</para>
-<screen>
-bootstrap.jar                 digest.sh             tomcat-juli.jar
-catalina.bat                  setclasspath.bat      tomcat-native.tar.gz
-catalina.sh                   setclasspath.sh       tool-wrapper.bat
-catalina-tasks.xml            shutdown.bat          tool-wrapper.sh
-commons-daemon.jar            shutdown.sh           version.bat
-commons-daemon-native.tar.gz  startup.bat           version.sh
-cpappend.bat                  startup.sh
-digest.bat                    telestax-license.xml
-
-</screen>
-<para>
-Start RestComm by running the following command
-</para>
-</listitem>
-<listitem>
-<para>
-<filename> sudo ./catalina.sh run</filename>
-</para>
-</listitem>
-<listitem>
-<para>If RestComm is correctly started on Tomcat, you will see an output similar to the one below </para>
-<screen>
-Started.
-2013-08-15 19:02:46,903 INFO  [Version] (main) 
-==============================================================================
-==                                                                          ==
-==                      Thank you for running TelScale                      ==
-==    Carrier Grade Communications Platform by the creators of Mobicents    ==
-==                    Copyright 2011-2013 Telestax, Inc.                    ==
-==                         http://www.telestax.com/                         ==
-==                                                                          ==
-==============================================================================
-Aug 15, 2013 7:02:50 PM org.apache.catalina.startup.Catalina start
-INFO: Server startup in 14090 ms
-
-
-</screen>
-</listitem>
+		</itemizedlist>
 
 
 
+		<itemizedlist mark='opencircle'>
+			<title>Running RestComm on Tomcat</title>
 
-</itemizedlist>
+			<listitem>
+				<para>
+					Download
+					<filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Using a terminal of your choice, extract the content of
+					<filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename>
+					to a local directory on your computer. The root directoy into which
+					you extract the content of the .zip file will be referred to as
+					$RESTCOMM_HOME.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Go to
+					<filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					change the permission of the
+					<filename>run.sh</filename>
+					as follows
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					sudo chmod +x ./run.sh
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					then start the TelScale Media Server as follows
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					sudo ./run.sh
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					If all is correctly started you will see the following at the end
+					of the bash terminal window
+					<screen>
+						[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL
+						Started ]]]]]]]]]
+					</screen>
+				</para>
+			</listitem>
+
+			<listitem>
+				<para>
+					Open another terminal and proceed as follows:
+				</para>
+			</listitem>
+
+			<listitem>
+				<para>
+					Go to
+					<filename>$RESTCOMM_HOME/bin </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					change the permissions of all the
+					<filename>.sh</filename>
+					files in the bin directory as follows
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<filename>sudo chmod +x ./*.sh </filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>The content of the bin directory should be similar to the list
+					below</para>
+				<screen>
+					bootstrap.jar digest.sh tomcat-juli.jar
+					catalina.bat setclasspath.bat tomcat-native.tar.gz
+					catalina.sh setclasspath.sh tool-wrapper.bat
+					catalina-tasks.xml shutdown.bat tool-wrapper.sh
+					commons-daemon.jar shutdown.sh version.bat
+					commons-daemon-native.tar.gz startup.bat version.sh
+					cpappend.bat startup.sh
+					digest.bat telestax-license.xml
+
+				</screen>
+				<para>
+					Start RestComm by running the following command
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<filename> sudo ./catalina.sh run</filename>
+				</para>
+			</listitem>
+			<listitem>
+				<para>If RestComm is correctly started on Tomcat, you will see an
+					output similar to the one below </para>
+				<screen>
+					Started.
+					2013-08-15 19:02:46,903 INFO [Version] (main)
+					==============================================================================
+					== ==
+					== Thank you for running TelScale ==
+					== Carrier Grade Communications Platform by the creators of Mobicents
+					==
+					== Copyright 2011-2013 Telestax, Inc. ==
+					== http://www.telestax.com/ ==
+					== ==
+					==============================================================================
+					Aug 15, 2013 7:02:50 PM org.apache.catalina.startup.Catalina start
+					INFO: Server startup in 14090 ms
+
+
+				</screen>
+			</listitem>
+
+
+
+
+		</itemizedlist>
 
 
 
 
 
-</section>
-<section>
-<title>Testing the Demo Applications</title>
+	</section>
+	<section>
+		<title>Testing the Demo Applications</title>
 
 
-<para>
-Restcomm comes prepackaged with multiple example applications designed to help you quickly get started.
-</para>
+		<para>
+			Restcomm comes prepackaged with multiple example applications designed to
+			help you quickly get started.
+		</para>
 
-<section>
-<title>Demo 1 - Testing the Play Verb</title>
+		<section>
+			<title>Demo 1 - Testing the Play Verb</title>
 
-<para>
-Start a SIP phone (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear a welcome message.
-</para>
+			<para>
+				Start a SIP phone (see below) and dial
+				<filename>1234@127.0.0.1:5080</filename>
+				. You will hear a welcome message.
+			</para>
 
-<mediaobject>
-	<imageobject>
-	<imagedata align="center" fileref="images/RestComm-ekiga-sip-phone-demo.png"/>
-	</imageobject>
-</mediaobject>
-<warning>
-Some SIP phones have codec incompatibility issues, in the above example, we used Ekiga. You may also try Jitsi or Sflphone. 
-</warning>
+			<mediaobject>
+				<imageobject>
+					<imagedata align="center"
+						fileref="images/RestComm-ekiga-sip-phone-demo.png" />
+				</imageobject>
+			</mediaobject>
+			<warning>
+				Some SIP phones have codec incompatibility issues, in the above example,
+				we used Ekiga. You may also try Jitsi or Sflphone.
+			</warning>
 
-<programlisting>
+			<programlisting>
 <![CDATA[
 The application bound to the number 1234 can be found at
  <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-play.xml</filename>.
 ]]>
-</programlisting>
+			</programlisting>
 
 
 
-</section>
-<section>
-<title>Demo 2 - Testing Say Verb</title>
+		</section>
+		<section>
+			<title>Demo 2 - Testing Say Verb</title>
 
-<para>
-You must first activate Text-to-Speech before you can proceed.
-</para>
-<para>
-You must get an API key from <ulink url="http://www.voicerss.org/">http://www.voicerss.org</ulink> in order to proceed with this section. You can register for a free account and an API key will be emailed to you. Once you have the API key, open the <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml</filename> file and find the speech-synthesizer VoiceRSS section. Add your API key as shown below and restart RestComm
-</para>
+			<para>
+				You must first activate Text-to-Speech before you can proceed.
+			</para>
+			<para>
+				You must get an API key from
+				<ulink url="http://www.voicerss.org/">http://www.voicerss.org</ulink>
+				in order to proceed with this section. You can register for a free
+				account and an API key will be emailed to you. Once you have the API
+				key, open the
+				<filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml</filename>
+				file and find the speech-synthesizer VoiceRSS section. Add your API
+				key as shown below and restart RestComm
+			</para>
 
-<programlisting>
+			<programlisting>
 <![CDATA[
 <speech-synthesizer
 		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
 		<apikey>2901c0aXXXXXXXXXXXXXX</apikey>
 ]]>
-</programlisting>
+			</programlisting>
 
-<para>
-Start a SIP phone dial <filename>1235@127.0.0.1:5080</filename>. You will hear a welcome message in multiple languages.
-</para>
+			<para>
+				Start a SIP phone dial
+				<filename>1235@127.0.0.1:5080</filename>
+				. You will hear a welcome message in multiple languages.
+			</para>
 
 
-<programlisting>
+			<programlisting>
 <![CDATA[
 The application bound to the number 1235 can be found at
  $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-world.xml.
 ]]>
-</programlisting>
-
- 
-
-</section>
-
-<section>
-<title>Demo 3 - Testing Gather Verb</title>
-<para>This demo creates a simple IVR system</para>
+			</programlisting>
 
 
-<note>
-<title>Activate DTMF using Ekiga </title>
-<para>Make sure your DTMF setting in Ekiga is set to RFC2833. In order to set it correctly, go to the menu Edit->Preference->Protocols->SIP Settings->DTMF Mode </para>
-<para>You may also use SFLPHONE instead of Ekiga</para>
-</note>
+
+		</section>
+
+		<section>
+			<title>Demo 3 - Testing Gather Verb</title>
+			<para>This demo creates a simple IVR system</para>
 
 
-<para>
-Start a SIP phone dial <filename>1236@127.0.0.1:5080</filename>. You will hear a message asking you to enter a digit and press star. If the digit is correctly received, Restcomm will replay the number you entered.
-</para>
+			<note>
+				<title>Activate DTMF using Ekiga </title>
+				<para>Make sure your DTMF setting in Ekiga is set to RFC2833. In
+					order to set it correctly, go to the menu
+					Edit->Preference->Protocols->SIP Settings->DTMF Mode </para>
+				<para>You may also use SFLPHONE instead of Ekiga</para>
+			</note>
 
 
-<programlisting>
+			<para>
+				Start a SIP phone dial
+				<filename>1236@127.0.0.1:5080</filename>
+				. You will hear a message asking you to enter a digit and press
+				star. If the digit is correctly received, Restcomm will replay the
+				number you entered.
+			</para>
+
+
+			<programlisting>
 <![CDATA[
 The application bound to the number 1236 can be found at 
 <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/hello-gather.xml</filename>.
 and 
 <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/gather.jsp</filename>.
 ]]>
-</programlisting>
+			</programlisting>
 
-</section>
+		</section>
 
-<section>
-<title>Demo 4 - Testing the Dial Sip Noun</title>
-<para>This demo makes a call from one SIP phone to another. The Demo uses the SIP noun. You can calll any SIP account. All you have to do is change the content of the <filename>dial-sip.xml</filename> </para>
-<para>
-In order to use this demo, you may use the default accounts, Alice and Bob, and register them on two separate SIP phones. Start both SIP phones and make sure Alice and Bob are registerd with the password (1234). These users come pre-configured with Restcomm for test purposes. 
-</para>
+		<section>
+			<title>Demo 4 - Testing the Dial Sip Noun</title>
+			<para>
+				This demo makes a call from one SIP phone to another. The Demo uses
+				the SIP noun. You can calll any SIP account. All you have to do is
+				change the content of the
+				<filename>dial-sip.xml</filename>
+			</para>
+			<para>
+				In order to use this demo, you may use the default accounts, Alice and
+				Bob, and register them on two separate SIP phones. Start both SIP
+				phones and make sure Alice and Bob are registerd with the password
+				(1234). These users come pre-configured with Restcomm for test
+				purposes.
+			</para>
 
-<note>
-<title>Start Two SIP Phone Sessions </title>
-<para>If you are using the SIP sflphone here is what to do:  </para>
-<para>Start first instance ex. - sflphone </para>
-<para>Start second instance ex. - sudo sflphone </para>
-</note>
+			<note>
+				<title>Start Two SIP Phone Sessions </title>
+				<para>If you are using the SIP sflphone here is what to do:  </para>
+				<para>Start first instance ex. - sflphone </para>
+				<para>Start second instance ex. - sudo sflphone </para>
+			</note>
 
-<para>In the application <filename>dial-sip.xml</filename> you can change the default to <filename>sip:alice@127.0.0.1:5061?</filename></para>
-<para>
-This will allow you to make a call to Alice. Note that Alice must be registered on port 5061 for the call to succeed.
-</para>
+			<para>
+				In the application
+				<filename>dial-sip.xml</filename>
+				you can change the default to
+				<filename>sip:alice@127.0.0.1:5061?</filename>
+			</para>
+			<para>
+				This will allow you to make a call to Alice. Note that Alice must be
+				registered on port 5061 for the call to succeed.
+			</para>
 
-<para>
-From the the phone on which Bob is registerd,  dial the number <filename>1237</filename>. The phone on which Alice is registered will ring and the connection will be made when you answer the call.
-</para>
+			<para>
+				From the the phone on which Bob is registerd, dial the number
+				<filename>1237</filename>
+				. The phone on which Alice is registered will ring and the
+				connection will be made when you answer the call.
+			</para>
 
 
-<programlisting>
+			<programlisting>
 <![CDATA[
 The application bound to the number 1237 can be found at 
 $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/dial/sip/dial-sip.xml.
 
 ]]>
-</programlisting>
+			</programlisting>
 
 
 
-</section>
+		</section>
 
-<section>
-<title>Demo 5 - Testing the Client Noun</title>
-<para>This demo makes a call from one SIP Client to Another. The demo uses the Client noun</para>
+		<section>
+			<title>Demo 5 - Testing the Client Noun</title>
+			<para>This demo makes a call from one SIP Client to Another. The demo
+				uses the Client noun</para>
 
-<para>
-In order to use this demo, you must have user Alice and Bob registered on two separate SIP phones. Start both SIP phones and make sure Alice and Bob are registerd with the password (1234). These users come pre-configured with Restcomm for test purposes. 
-</para>
+			<para>
+				In order to use this demo, you must have user Alice and Bob registered
+				on two separate SIP phones. Start both SIP phones and make sure
+				Alice and Bob are registerd with the password (1234). These users
+				come pre-configured with Restcomm for test purposes.
+			</para>
 
-<note>
-<title>Start Two SIP Phone Sessions </title>
-<para>You can start the second instance of your SIP phones by prepending the executable with <filename>sudo</filename>. If you are using the SIP sflphone here is what to do:  </para>
-<para>Start first instance ex. - sflphone </para>
-<para>Start second instance ex. - sudo sflphone </para>
-</note>
+			<note>
+				<title>Start Two SIP Phone Sessions </title>
+				<para>
+					You can start the second instance of your SIP phones by prepending
+					the executable with
+					<filename>sudo</filename>
+					. If you are using the SIP sflphone here is what to do:
+				</para>
+				<para>Start first instance ex. - sflphone </para>
+				<para>Start second instance ex. - sudo sflphone </para>
+			</note>
 
 
-<para>
-From the phone on which Bob is registerd,  dial the number <filename>1238</filename>. The phone on which Alice is registered will ring and the connection will be made when you answer the call.
-</para>
+			<para>
+				From the phone on which Bob is registerd, dial the number
+				<filename>1238</filename>
+				. The phone on which Alice is registered will ring and the
+				connection will be made when you answer the call.
+			</para>
 
 
-<programlisting>
+			<programlisting>
 <![CDATA[
 The application bound to the number 1238 can be found at 
 <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/dial/client/dial-client.xml</filename>.
 
 ]]>
-</programlisting>
+			</programlisting>
 
 
-<note>
-<title>Advanced Examples</title>
-<para>Please go to this chapter for more examples <xref linkend="advanced-examples"/>.</para>
-</note>
+			<note>
+				<title>Advanced Examples</title>
+				<para>
+					Please go to this chapter for more examples
+					<xref linkend="advanced-examples" />
+					.
+				</para>
+			</note>
 
-</section>
-
-
-<section>
-<title>Demo 6 - Testing Conference Noun </title>
-<para>This demo Lets a user join a conference as a moderator and the other user as a participant. The participant will dial <filename>1310</filename> and will hear a hold music. The moderator will dial <filename>1311</filename> and the hold music will stop and the conference will be started.</para>
-
-<para>
-Most SIP phones will require you to register before you can make a call. You can use the default accounts, Alice and Bob with password (1234)to register.
-</para>
-
-<note>
-<title>Start Two SIP Phone Sessions </title>
-<para>You can start the second instance of your SIP phones by prepending the executable with <filename>sudo</filename>. If you are using the SIP sflphone here is what to do:  </para>
-<para>Start first instance ex. - sflphone </para>
-<para>Start second instance ex. - sudo sflphone </para>
-</note>
+		</section>
 
 
-<para>
-From the phone on which Bob is registerd,  dial the number <filename>1310</filename>. From the phone on which Alice is registered, dial <filename>1311</filename>
-</para>
+		<section>
+			<title>Demo 6 - Testing Conference Noun </title>
+			<para>
+				This demo Lets a user join a conference as a moderator and the other
+				user as a participant. The participant will dial
+				<filename>1310</filename>
+				and will hear a hold music. The moderator will dial
+				<filename>1311</filename>
+				and the hold music will stop and the conference will be started.
+			</para>
+
+			<para>
+				Most SIP phones will require you to register before you can make a call.
+				You can use the default accounts, Alice and Bob with password
+				(1234)to register.
+			</para>
+
+			<note>
+				<title>Start Two SIP Phone Sessions </title>
+				<para>
+					You can start the second instance of your SIP phones by prepending
+					the executable with
+					<filename>sudo</filename>
+					. If you are using the SIP sflphone here is what to do:
+				</para>
+				<para>Start first instance ex. - sflphone </para>
+				<para>Start second instance ex. - sudo sflphone </para>
+			</note>
 
 
-<programlisting>
+			<para>
+				From the phone on which Bob is registerd, dial the number
+				<filename>1310</filename>
+				. From the phone on which Alice is registered, dial
+				<filename>1311</filename>
+			</para>
+
+
+			<programlisting>
 <![CDATA[
 The application bound to the number 1310 and 1311 can be found at 
 
@@ -466,504 +581,587 @@ and at
 http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference-moderator.xml
 
 ]]>
-</programlisting>
+			</programlisting>
 
 
-<note>
-<title>Advanced Examples</title>
-<para>Please go to this chapter for more examples <xref linkend="advanced-examples"/>.</para>
-</note>
+			<note>
+				<title>Advanced Examples</title>
+				<para>
+					Please go to this chapter for more examples
+					<xref linkend="advanced-examples" />
+					.
+				</para>
+			</note>
 
-</section>
+		</section>
 
-</section>
-
-
+	</section>
 
 
-<section>
 
-<title>Detailed Configuration</title>
 
-	<para>In order for TelScale RestComm to function properly it must first be configured. In this chapter we will cover
-	the settings for TelScale RestComm and it's respective plug-ins. In order to make TelScale RestComm easy to manage
-	all of the configuration is done in only one file. The file is located at
-	<filename>RESTCOMM_HOME/WEB-INF/webapps/restcomm/conf/restcomm.xml</filename> and is composed of the sections that follow.</para>
-	<note>
-		<para>TelScale RestComm provides a default set of plug-ins for the storage engine, fax service, SMS aggregator,
-		automatic speech recognition, and speech synthesis. All these services are pluggable and TelScale RestComm is not
-		limited to any service provider or software platformz.</para>
-	</note>	
 	<section>
-		<title>Runtime Settings</title>
+
+		<title>Detailed Configuration</title>
+
 		<para>
-		  The runtime-settings are used by TelScale RestComm at runtime to customize it's behavior. A list of the runtime settings
-		  and a description is provided below.
+			In order for TelScale RestComm to function properly it must first be
+			configured. In this chapter we will cover
+			the settings for TelScale RestComm and it's respective plug-ins. In
+			order to make TelScale RestComm easy to manage
+			all of the configuration is done in only one file. The file is located
+			at
+			<filename>RESTCOMM_HOME/WEB-INF/webapps/restcomm/conf/restcomm.xml</filename>
+			and is composed of the sections that follow.
 		</para>
-			
-		<table frame='all'>
-			<title>Runtime Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>api-version</entry>
-						<entry>The version of the TelScale RestComm API that we will be executing by default.</entry>
-					</row>
-					<row>
-						<entry>prompts-uri</entry>
-						<entry>The location where the audio prompts are located.</entry>
-					</row>
-					<row>
-						<entry>cache-path</entry>
-						<entry>The local path the cache folder.</entry>
-					</row>
-					<row>
-						<entry>cache-uri</entry>
-						<entry>The HTTP URI to the cache folder.</entry>
-					</row>
-					<row>
-						<entry>recordings-path</entry>
-						<entry>The local path to the folder containing the recordings.</entry>
-					</row>
-					<row>
-						<entry>recordings-uri</entry>
-						<entry>The HTTP URI to the folder containing the recordings.</entry>
-					</row>
-					<row>
-						<entry>error-dictionary-uri</entry>
-						<entry>The HTTP URI to the TelScale RestComm error dictionary.</entry>
-					</row>
-					<row>
-						<entry>external-ip</entry>
-						<entry>
-							The IP to use for out-bound SIP REGISTER requests. This is useful when you
-		  					want to report a different IP than the one TelScale RestComm picked by default.
-		  				</entry>
-					</row>
-					<row>
-						<entry>use-to</entry>
-						<entry>
-							If set to true TelScale RestComm will use the To header to determine the destination.
-		  					If set to false TelScale RestComm will use the Request URI  to determine the destination.
-						</entry>
-					</row>
-					<row>
-						<entry>outbound-proxy-user</entry>
-						<entry>
-						  The user name used to authenticate with the outbound proxy. (Optional)
-						</entry>
-					</row>
-					<row>
-						<entry>outbound-proxy-password</entry>
-						<entry>
-						  The password used to authenticated with the outbound proxy. (Optional)
-						</entry>
-					</row>
-					<row>
-						<entry>outbound-proxy-uri</entry>
-						<entry>
-						  The SIP URI to the outbound proxy. Note: Do not prepend 'sip:' to the proxy uri.
-						  If necessary the port can be included, for example alice@localhost:5080
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-		<formalpara>
-			<title>TelScale Restcomm Resource Security</title>
-			<para>The security model is based on role based access control. TelScale RestComm defines a set of permissions
-			that can be defined for each role. There are two predefined roles Administrator and Developer. The Developer role
-			can be configured or removed all together depending on your needs but the Administrator role can not be changed.
-			The Administrator role can not be modified or removed and it has access to every resource.</para>
-		</formalpara>
-		<para>First we will define the list of permissions and what they mean.</para>
-		<table frame='all'>
-			<title>TelScale RestComm Permissions</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Permission</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>Create</entry>
-						<entry>The role has access to create a type resource.</entry>
-					</row>
-					<row>
-						<entry>Read</entry>
-						<entry>The role has access to read a type of resource.</entry>
-					</row>
-					<row>
-						<entry>Modify</entry>
-						<entry>The role has access to modify a type of resource.</entry>
-					</row>
-					<row>
-						<entry>Delete</entry>
-						<entry>The role has access to delete a type of resource.</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-		<para>These permissions apply to every resource exposed by the Restful APIs. Once a role is defined it can
-		be specified for new Account resources that are created.</para>
 		<note>
-			<para>If no role is specified when creating a new Account resource then the new Account will inherit
-			the security role of the account that created it. If this role is the Administrator role the system
-			may become compromised.</para>
+			<para>TelScale RestComm provides a default set of plug-ins for the
+				storage engine, fax service, SMS aggregator,
+				automatic speech recognition, and speech synthesis. All these services are
+				pluggable and TelScale RestComm is not
+				limited to any service provider or software platformz.</para>
 		</note>
-		<formalpara>
-			<title>Wildcard Permission</title>
-			<para>The asterisk '*' is a wildcard that means grant all permissions and can be used in place of
-			typing out all the permissions.</para>
-		</formalpara>
-		<para>To see how this all comes together please check out the <filename>restcomm.xml</filename> configuration
-		file.</para>
-	</section>
-	<section>
-		<title>VoIP Innovations Restful API Access</title>
-		<para>The default auto provisioning API used by TelScale RestComm.</para>
-		
-		<table frame='all'>
-			<title>VoIP Innovations Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>login</entry>
-						<entry>The user name configured in the VoIP Innovations Portal under API users.</entry>
-					</row>
-					<row>
-						<entry>password</entry>
-						<entry>The password configured in the VoIP Innovations Portal under API users.</entry>
-					</row>
-					<row>
-						<entry>endpoint</entry>
-						<entry>The end point ID of the end point that will be used by TelScale RestComm</entry>
-					</row>
-					<row>
-						<entry>uri</entry>
-						<entry>The path to the VoIP Innovations service end point.</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-	</section>
-	<section>
-		<title>Dao Manager</title>
-		<para>The data access object manager is used to gain access to the data store that TelScale RestComm will use.</para>
-			
-		<para>The default data access object manager is based on MyBatis and provides access to RDBM systems.</para>
-		
-		<table frame='all'>
-			<title>MyBatis Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>configuration-file</entry>
-						<entry>The path to the mybatis.xml configuration file.</entry>
-					</row>
-					<row>
-						<entry>data-files</entry>
-						<entry>The path to the data files used to store the database tables.</entry>
-					</row>
-					<row>
-						<entry>sql-files</entry>
-						<entry>The path to the XML files containing the SQL statements that will be executed by the database.</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-	</section>
-	<section>
-		<title>Media Server Manager</title>
-		
-		<para>
-		  The media server manager is responsible for all the media servers managed by TelScale RestComm.
-		</para>
-		<table frame='all'>
-			<title>Media Server Manager Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Property</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>local-address</entry>
-						<entry>The local IP address for the MGCP stack.</entry>
-					</row>
-					<row>
-						<entry>local-port</entry>
-						<entry>The local port for the MGCP stack.</entry>
-					</row>
-					<row>
-						<entry>remote-address</entry>
-						<entry>The IP address for the media server.</entry>
-					</row>
-					<row>
-						<entry>remote-port</entry>
-						<entry>The port for the media server.</entry>
-					</row>
-					<row>
-						<entry>response-timeout</entry>
-						<entry>
-							In milliseconds the maximum amount of time to wait for a response from
-							the media server before abandoning the request. This does NOT apply to
-							RQNT/NOTIFY request/response.
-						</entry>
-					</row>
-					<row>
-						<entry>external-address</entry>
-						<entry>
-							Sometimes there is interest to use a different address in the SDP than
-							the IP address the media server is reporting. This parameter if set tells TelScale RestComm to
-							patch the Connection attribute in the SDP on behalf of the media server to the specified IP address.
-							Note: TelScale RestComm will only do NAT resolution when necessary so if your server already has a
-							routable IP address setting this parameter will have no effect.
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-	</section>
-	<section>
-		<title>SMS Aggregator</title>
-		<para>The SMS aggregator is responsible for the handling of SMS messages on behalf of TelScale RestComm.</para>
-		
-		<formalpara>
-			<title>Requirements</title>
-			<para>The default SMS aggregator is SMS over IP as used by VoIP Innovations. Therefore, an account must be
-			created @ <ulink url="http://www.voipinnovations.com/">http://www.voipinnovations.com</ulink> before any text
-			messages can be sent.</para>
-		</formalpara>
-		
-		<para>Below is a list of settings that must be configured to send text messages.</para>
-		
-		<table frame='all'>
-			<title>SMS Aggregator Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>outbound-prepend-string</entry>
-						<entry>
-							A string that you would like to prepend to the destination address. For example,
-							to use service from VoIP Innovations a '#' must be prepended to every destination
-							address.
-						</entry>
-					</row>
-					<row>
-						<entry>outbound-endpoint</entry>
-						<entry>
-							The SIP endpoint to which outbound SMS messages should be sent.
-							Note: Do not prepend sip: to the endpoint. 
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-	</section>
-	<section>
-		<title>Fax Service</title>
-		<para>The fax service sends faxes out on behalf of TelScale RestComm.</para>
-		
-		<formalpara>
-			<title>Requirements</title>
-			<para>The default fax service is provided by Interfax. Therefore, an account must be created @
-			<ulink url="http://www.interfax.net/">http://www.interfax.net</ulink> before any faxes can be
-			sent.</para>
-		</formalpara>
-		
-		<table frame='all'>
-			<title>Fax Service Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>user</entry>
-						<entry>The user name used to authenticate with Interfax.</entry>
-					</row>
-					<row>
-						<entry>password</entry>
-						<entry>The password used to authenticate with Interfax.</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-	</section>
-	<section>
-		<title>Speech Recognizer</title>
-		<para>This speech recognizer turns speech into text on behalf of TelScale Restcomm.</para>
-		
-		<formalpara>
-			<title>Requirements</title>
-			<para>The default speech recognizer uses the ASR service provided by iSpeech. Therefore, an account must be created @
-			<ulink url="http://www.ispeech.org/">http://www.ispeech.org</ulink> before any speech can be converted to text.</para>
-		</formalpara>
-		
-		<table frame='all'>
-			<title>Speech Recognizer Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>api-key</entry>
-						<entry>The Web API key provided by iSpeech. This is used as an authentication token for the service.</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-	</section>
+		<section>
+			<title>Runtime Settings</title>
+			<para>
+				The runtime-settings are used by TelScale RestComm at runtime to
+				customize it's behavior. A list of the runtime settings
+				and a description is provided below.
+			</para>
+
+			<table frame='all'>
+				<title>Runtime Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Element</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>api-version</entry>
+							<entry>The version of the TelScale RestComm API that we will be
+								executing by default.</entry>
+						</row>
+						<row>
+							<entry>prompts-uri</entry>
+							<entry>The location where the audio prompts are located.</entry>
+						</row>
+						<row>
+							<entry>cache-path</entry>
+							<entry>The local path the cache folder.</entry>
+						</row>
+						<row>
+							<entry>cache-uri</entry>
+							<entry>The HTTP URI to the cache folder.</entry>
+						</row>
+						<row>
+							<entry>recordings-path</entry>
+							<entry>The local path to the folder containing the recordings.</entry>
+						</row>
+						<row>
+							<entry>recordings-uri</entry>
+							<entry>The HTTP URI to the folder containing the recordings.</entry>
+						</row>
+						<row>
+							<entry>error-dictionary-uri</entry>
+							<entry>The HTTP URI to the TelScale RestComm error dictionary.</entry>
+						</row>
+						<row>
+							<entry>external-ip</entry>
+							<entry>
+								The IP to use for out-bound SIP REGISTER requests. This is useful
+								when you
+								want to report a different IP than the one TelScale RestComm picked
+								by default.
+							</entry>
+						</row>
+						<row>
+							<entry>use-to</entry>
+							<entry>
+								If set to true TelScale RestComm will use the To header to
+								determine the destination.
+								If set to false TelScale RestComm will use the Request URI to
+								determine the destination.
+							</entry>
+						</row>
+						<row>
+							<entry>outbound-proxy-user</entry>
+							<entry>
+								The user name used to authenticate with the outbound proxy.
+								(Optional)
+							</entry>
+						</row>
+						<row>
+							<entry>outbound-proxy-password</entry>
+							<entry>
+								The password used to authenticated with the outbound proxy.
+								(Optional)
+							</entry>
+						</row>
+						<row>
+							<entry>outbound-proxy-uri</entry>
+							<entry>
+								The SIP URI to the outbound proxy. Note: Do not prepend 'sip:' to
+								the proxy uri.
+								If necessary the port can be included, for example
+								alice@localhost:5080
+							</entry>
+						</row>
+						<row>
+							<entry>fallback-outbound-proxy-user</entry>
+							<entry>
+								The user name used to authenticate with the fallback outbound proxy.
+								(Optional)
+							</entry>
+						</row>
+						<row>
+							<entry>fallback-outbound-proxy-password</entry>
+							<entry>
+								The password used to authenticated with the fallback outbound proxy.
+								(Optional)
+							</entry>
+						</row>
+						<row>
+							<entry>fallback-outbound-proxy-uri</entry>
+							<entry>
+								The SIP URI to the fallback outbound proxy. Note: Do not prepend 'sip:' to
+								the proxy uri.
+								If necessary the port can be included, for example
+								alice@localhost:5080
+							</entry>
+						</row>
+						<row>
+							<entry>allow-fallback</entry>
+							<entry>
+								Set this to true so Restcomm will fallback to the backup proxy in
+								case of failed calls
+							</entry>
+						</row>
+						<row>
+							<entry>max-failed-calls</entry>
+							<entry>
+								Maximum number of failed call before switching from primary to fallback
+								outbound proxy
+							</entry>
+						</row>
+						<row>
+							<entry>allow-fallback-to-primary</entry>
+							<entry>
+								Allow fallback from Backup to Primary proxy in case fail called at
+								backup proxy.
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			<formalpara>
+				<title>TelScale Restcomm Resource Security</title>
+				<para>The security model is based on role based access control.
+					TelScale RestComm defines a set of permissions
+					that can be defined for each role. There are two predefined roles
+					Administrator and Developer. The Developer role
+					can be configured or removed all together depending on your needs but
+					the Administrator role can not be changed.
+					The Administrator role can not be modified or removed and it has
+					access to every resource.</para>
+			</formalpara>
+			<para>First we will define the list of permissions and what they
+				mean.</para>
+			<table frame='all'>
+				<title>TelScale RestComm Permissions</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Permission</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>Create</entry>
+							<entry>The role has access to create a type resource.</entry>
+						</row>
+						<row>
+							<entry>Read</entry>
+							<entry>The role has access to read a type of resource.</entry>
+						</row>
+						<row>
+							<entry>Modify</entry>
+							<entry>The role has access to modify a type of resource.</entry>
+						</row>
+						<row>
+							<entry>Delete</entry>
+							<entry>The role has access to delete a type of resource.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			<para>These permissions apply to every resource exposed by the
+				Restful APIs. Once a role is defined it can
+				be specified for new Account resources that are created.</para>
+			<note>
+				<para>If no role is specified when creating a new Account resource
+					then the new Account will inherit
+					the security role of the account that created it. If this role is the
+					Administrator role the system
+					may become compromised.</para>
+			</note>
+			<formalpara>
+				<title>Wildcard Permission</title>
+				<para>The asterisk '*' is a wildcard that means grant all
+					permissions and can be used in place of
+					typing out all the permissions.</para>
+			</formalpara>
+			<para>
+				To see how this all comes together please check out the
+				<filename>restcomm.xml</filename>
+				configuration
+				file.
+			</para>
+		</section>
+		<section>
+			<title>VoIP Innovations Restful API Access</title>
+			<para>The default auto provisioning API used by TelScale RestComm.</para>
+
+			<table frame='all'>
+				<title>VoIP Innovations Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Element</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>login</entry>
+							<entry>The user name configured in the VoIP Innovations Portal
+								under API users.</entry>
+						</row>
+						<row>
+							<entry>password</entry>
+							<entry>The password configured in the VoIP Innovations Portal
+								under API users.</entry>
+						</row>
+						<row>
+							<entry>endpoint</entry>
+							<entry>The end point ID of the end point that will be used by
+								TelScale RestComm</entry>
+						</row>
+						<row>
+							<entry>uri</entry>
+							<entry>The path to the VoIP Innovations service end point.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
+		<section>
+			<title>Dao Manager</title>
+			<para>The data access object manager is used to gain access to the
+				data store that TelScale RestComm will use.</para>
+
+			<para>The default data access object manager is based on MyBatis and
+				provides access to RDBM systems.</para>
+
+			<table frame='all'>
+				<title>MyBatis Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Element</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>configuration-file</entry>
+							<entry>The path to the mybatis.xml configuration file.</entry>
+						</row>
+						<row>
+							<entry>data-files</entry>
+							<entry>The path to the data files used to store the database
+								tables.</entry>
+						</row>
+						<row>
+							<entry>sql-files</entry>
+							<entry>The path to the XML files containing the SQL statements
+								that will be executed by the database.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
+		<section>
+			<title>Media Server Manager</title>
+
+			<para>
+				The media server manager is responsible for all the media servers
+				managed by TelScale RestComm.
+			</para>
+			<table frame='all'>
+				<title>Media Server Manager Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Property</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>local-address</entry>
+							<entry>The local IP address for the MGCP stack.</entry>
+						</row>
+						<row>
+							<entry>local-port</entry>
+							<entry>The local port for the MGCP stack.</entry>
+						</row>
+						<row>
+							<entry>remote-address</entry>
+							<entry>The IP address for the media server.</entry>
+						</row>
+						<row>
+							<entry>remote-port</entry>
+							<entry>The port for the media server.</entry>
+						</row>
+						<row>
+							<entry>response-timeout</entry>
+							<entry>
+								In milliseconds the maximum amount of time to wait for a response
+								from
+								the media server before abandoning the request. This does NOT apply
+								to
+								RQNT/NOTIFY request/response.
+							</entry>
+						</row>
+						<row>
+							<entry>external-address</entry>
+							<entry>
+								Sometimes there is interest to use a different address in the SDP than
+								the IP address the media server is reporting. This parameter if
+								set tells TelScale RestComm to
+								patch the Connection attribute in the SDP on behalf of the media
+								server to the specified IP address.
+								Note: TelScale RestComm will only do NAT resolution when necessary so
+								if your server already has a
+								routable IP address setting this parameter will have no effect.
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
+		<section>
+			<title>SMS Aggregator</title>
+			<para>The SMS aggregator is responsible for the handling of SMS
+				messages on behalf of TelScale RestComm.</para>
+
+			<formalpara>
+				<title>Requirements</title>
+				<para>
+					The default SMS aggregator is SMS over IP as used by VoIP
+					Innovations. Therefore, an account must be
+					created @
+					<ulink url="http://www.voipinnovations.com/">http://www.voipinnovations.com</ulink>
+					before any text
+					messages can be sent.
+				</para>
+			</formalpara>
+
+			<para>Below is a list of settings that must be configured to send
+				text messages.</para>
+
+			<table frame='all'>
+				<title>SMS Aggregator Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Element</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>outbound-prepend-string</entry>
+							<entry>
+								A string that you would like to prepend to the destination
+								address. For example,
+								to use service from VoIP Innovations a '#' must be prepended to
+								every destination
+								address.
+							</entry>
+						</row>
+						<row>
+							<entry>outbound-endpoint</entry>
+							<entry>
+								The SIP endpoint to which outbound SMS messages should be sent.
+								Note: Do not prepend sip: to the endpoint.
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
+		<section>
+			<title>Fax Service</title>
+			<para>The fax service sends faxes out on behalf of TelScale RestComm.</para>
+
+			<formalpara>
+				<title>Requirements</title>
+				<para>
+					The default fax service is provided by Interfax. Therefore, an
+					account must be created @
+					<ulink url="http://www.interfax.net/">http://www.interfax.net</ulink>
+					before any faxes can be
+					sent.
+				</para>
+			</formalpara>
+
+			<table frame='all'>
+				<title>Fax Service Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Element</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>user</entry>
+							<entry>The user name used to authenticate with Interfax.</entry>
+						</row>
+						<row>
+							<entry>password</entry>
+							<entry>The password used to authenticate with Interfax.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
+		<section>
+			<title>Speech Recognizer</title>
+			<para>This speech recognizer turns speech into text on behalf of
+				TelScale Restcomm.</para>
+
+			<formalpara>
+				<title>Requirements</title>
+				<para>
+					The default speech recognizer uses the ASR service provided by
+					iSpeech. Therefore, an account must be created @
+					<ulink url="http://www.ispeech.org/">http://www.ispeech.org</ulink>
+					before any speech can be converted to text.
+				</para>
+			</formalpara>
+
+			<table frame='all'>
+				<title>Speech Recognizer Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Element</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>api-key</entry>
+							<entry>The Web API key provided by iSpeech. This is used as an
+								authentication token for the service.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
 
 
-	<section>
-		<title>Speech Synthesizer</title>
-		<para>The speech synthesizer turns text to speech on behalf of TelScale RestComm.</para>
-		
-		<formalpara>
-			<title>Requirements</title>
-			<para>The default speech synthesizer uses the TTS service provided by VoiceRSS. Therefore, an account must be created @
-			<ulink url="http://http://www.voicerss.org/">http://www.voicerss.org</ulink> before any text can be converted to
-			speech.</para>
-		</formalpara>
-		
-		<table frame='all'>
-			<title>VoiceRSS Speech Synthesizer Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>service-root</entry>
-						<entry>The VoiceRSS service root URI.</entry>
-					</row>
-					 
-					<row>
-						<entry>apikey</entry>
-						<entry>The API key used to authenticate with the VoiceRSS.</entry>
-					</row>
-					<row>
-						<entry>languages</entry>
-						<entry>
-						  A list of male and female speakers for different languages. These can be replaced
-						  with other alternatives provided by VoiceRSS.
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
-	</section>
+		<section>
+			<title>Speech Synthesizer</title>
+			<para>The speech synthesizer turns text to speech on behalf of
+				TelScale RestComm.</para>
+
+			<formalpara>
+				<title>Requirements</title>
+				<para>
+					The default speech synthesizer uses the TTS service provided by
+					VoiceRSS. Therefore, an account must be created @
+					<ulink url="http://http://www.voicerss.org/">http://www.voicerss.org</ulink>
+					before any text can be converted to
+					speech.
+				</para>
+			</formalpara>
+
+			<table frame='all'>
+				<title>VoiceRSS Speech Synthesizer Settings</title>
+				<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' />
+					<colspec colname='c2' />
+					<thead>
+						<row>
+							<entry align="center">Element</entry>
+							<entry align="center">Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>service-root</entry>
+							<entry>The VoiceRSS service root URI.</entry>
+						</row>
+
+						<row>
+							<entry>apikey</entry>
+							<entry>The API key used to authenticate with the VoiceRSS.</entry>
+						</row>
+						<row>
+							<entry>languages</entry>
+							<entry>
+								A list of male and female speakers for different languages. These
+								can be replaced
+								with other alternatives provided by VoiceRSS.
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
 
 
-<!--
-	<section>
-		<title>Speech Synthesizer</title>
-		<para>The speech synthesizer turns text to speech on behalf of TelScale RestComm.</para>
-		
-		<formalpara>
-			<title>Requirements</title>
-			<para>The default speech synthesizer uses the TTS service provided by Acapela. Therefore, an account must be created @
-			<ulink url="http://www.acapela-vaas.com/">http://www.acapela-vaas.com</ulink> before any text can be converted to
-			speech.</para>
-		</formalpara>
-		
-		<table frame='all'>
-			<title>Acapela Group Speech Synthesizer Settings</title>
-			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-				<colspec colname='c1' />
-				<colspec colname='c2' />
-				<thead>
-					<row>
-						<entry align="center">Element</entry>
-						<entry align="center">Description</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>service-root</entry>
-						<entry>The acapela group service root URI.</entry>
-					</row>
-					<row>
-						<entry>application</entry>
-						<entry>The application used to authenticate with the acapela group.</entry>
-					</row>
-					<row>
-						<entry>login</entry>
-						<entry>The login used to authenticate with the acapela group.</entry>
-					</row>
-					<row>
-						<entry>password</entry>
-						<entry>The password used to authenticate with the acapela group.</entry>
-					</row>
-					<row>
-						<entry>speakers</entry>
-						<entry>
-						  A list of male and female speakers for different languages. These can be replaced
-						  with other alternatives provided by the acapela group.
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</table>
+		<!-- <section> <title>Speech Synthesizer</title> <para>The speech synthesizer 
+			turns text to speech on behalf of TelScale RestComm.</para> <formalpara> 
+			<title>Requirements</title> <para>The default speech synthesizer uses the 
+			TTS service provided by Acapela. Therefore, an account must be created @ 
+			<ulink url="http://www.acapela-vaas.com/">http://www.acapela-vaas.com</ulink> 
+			before any text can be converted to speech.</para> </formalpara> <table frame='all'> 
+			<title>Acapela Group Speech Synthesizer Settings</title> <tgroup cols='2' 
+			align='left' colsep='1' rowsep='1'> <colspec colname='c1' /> <colspec colname='c2' 
+			/> <thead> <row> <entry align="center">Element</entry> <entry align="center">Description</entry> 
+			</row> </thead> <tbody> <row> <entry>service-root</entry> <entry>The acapela 
+			group service root URI.</entry> </row> <row> <entry>application</entry> <entry>The 
+			application used to authenticate with the acapela group.</entry> </row> <row> 
+			<entry>login</entry> <entry>The login used to authenticate with the acapela 
+			group.</entry> </row> <row> <entry>password</entry> <entry>The password used 
+			to authenticate with the acapela group.</entry> </row> <row> <entry>speakers</entry> 
+			<entry> A list of male and female speakers for different languages. These 
+			can be replaced with other alternatives provided by the acapela group. </entry> 
+			</row> </tbody> </tgroup> </table> </section> -->
 	</section>
--->
-</section>
 </chapter>
