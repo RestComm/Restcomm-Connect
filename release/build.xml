@@ -349,7 +349,12 @@
                         <include name="**/*" />
                 </fileset> 
         </copy>
-	
+
+	<!--Copy Rvd ES Demo-->	
+	<copy tofile="${release.dir}/server/default/deploy/RvdExternalServicesDemo.war" failonerror="true"
+		file="${basedir}/RvdExternalServicesDemo.war"/>
+
+
 	<!-- Copy Config scripts -->
 	<copy toDir="${release.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
@@ -383,6 +388,10 @@
                 </fileset> 
         </copy>
 
+	<!--Copy Rvd ES Demo-->	
+	<copy tofile="${release.dir}/server/all/deploy/RvdExternalServicesDemo.war" failonerror="true"
+		file="${basedir}/RvdExternalServicesDemo.war"/>
+
 	<chmod dir="${release.dir}/bin" perm="ugo+rx" 
        		includes="**/*.sh"/>
 
@@ -409,6 +418,10 @@
                         <include name="**/*" />
                 </fileset> 
         </copy>
+
+	<!--Copy Rvd ES Demo-->	
+	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo" failonerror="true"
+		file="${basedir}/RvdExternalServicesDemo.war"/>
 
 	<!-- Copy Config scripts -->
 	<copy toDir="${release.tomcat.dir}/tools/config-scripts" failonerror="true">
@@ -450,6 +463,11 @@
                 </fileset> 
         </copy>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
+
+	<!--Copy Rvd ES Demo-->	
+	<copy tofile="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war" failonerror="true"
+		file="${basedir}/RvdExternalServicesDemo.war"/>
+	<touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy" />
 
 	<!-- Copy Config scripts -->
 	<copy toDir="${release.as7.dir}/tools/config-scripts" failonerror="true">
@@ -496,6 +514,11 @@
                 </fileset> 
         </copy>
 	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
+
+	<!--Copy Rvd ES Demo-->	
+	<copy tofile="${release.eap6.dir}/standalone/deployments/RvdExternalServicesDemo.war" failonerror="true"
+		file="${basedir}/RvdExternalServicesDemo.war"/>
+	<touch file="${release.eap6.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy" />
 
 	<!-- Copy Config scripts -->
 	<copy toDir="${release.eap6.dir}/tools/config-scripts" failonerror="true">
