@@ -66,10 +66,10 @@ public class RvdManager {
             ProjectService.fillStartUrlsForProjects(items, request);
 
         } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace(); // TODO remove this and log the error
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (URISyntaxException e) {
-            e.printStackTrace(); // probably caused by a bad project name
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -88,10 +88,10 @@ public class RvdManager {
                 return Response.status(Status.NOT_FOUND).build();
             items = projectService.getWavs(name);
         } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace(); // TODO remove this and log the error
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (ProjectDoesNotExist e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -108,10 +108,10 @@ public class RvdManager {
         try {
             projectService.createProject(name);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (ProjectDirectoryAlreadyExists e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.CONFLICT).build();
         }
 
@@ -146,10 +146,10 @@ public class RvdManager {
                 else
                     return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (ProjectDoesNotExist e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
                 return Response.status(Status.NOT_FOUND).build();
             } catch (ProjectDirectoryAlreadyExists e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
                 return Response.status(Status.CONFLICT).build();
             }
         } else
@@ -168,7 +168,7 @@ public class RvdManager {
                 else
                     return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (ProjectDoesNotExist e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
                 return Response.status(Status.NOT_FOUND).build();
             }
         } else
@@ -189,8 +189,7 @@ public class RvdManager {
             // request.getSession().setAttribute(projectSessionAttribute, name); // mark the open project in the session
             return Response.ok().entity(stateFileStream).build();
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
 
         return Response.status(Status.BAD_REQUEST).build(); // TODO This is not the correct return code for all cases of error
@@ -239,7 +238,7 @@ public class RvdManager {
                 return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
             }
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -260,10 +259,10 @@ public class RvdManager {
                 logger.warn( "Cannot delete " + filename + " from " + projectName + " app" );
             return Response.ok().build();
         } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (ProjectDoesNotExist e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -335,8 +334,7 @@ public class RvdManager {
                     return Response.ok().build();
 
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    logger.error(e.getMessage(), e);
                 }
 
             }
