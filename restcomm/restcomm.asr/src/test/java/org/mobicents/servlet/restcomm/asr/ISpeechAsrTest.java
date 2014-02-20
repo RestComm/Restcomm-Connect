@@ -30,11 +30,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.XMLConfiguration;
-
 import org.junit.After;
+
 import static org.junit.Assert.*;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import scala.concurrent.duration.FiniteDuration;
@@ -97,7 +98,7 @@ public final class ISpeechAsrTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
+    @Test @Ignore //To pass the test the ISpeech account have to be active
     public void testRecognition() {
         new JavaTestKit(system) {
             {
