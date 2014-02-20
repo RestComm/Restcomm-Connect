@@ -100,7 +100,6 @@ public class RvdManager {
     }
 
     @PUT
-    @Produces(MediaType.APPLICATION_JSON)
     public Response createProject(@QueryParam("name") String name) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
@@ -119,7 +118,6 @@ public class RvdManager {
     }
 
     @POST
-    @Produces(MediaType.APPLICATION_JSON)
     public Response updateProject(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
@@ -255,8 +253,10 @@ public class RvdManager {
             File wavfile = new File(filepath);
             if ( wavfile.delete() )
                 logger.info( "Deleted " + filename + " from " + projectName + " app" );
-            else
+            else {
                 logger.warn( "Cannot delete " + filename + " from " + projectName + " app" );
+                return Response.status(Status.NOT_FOUND).build();
+            }
             return Response.ok().build();
         } catch (BadWorkspaceDirectoryStructure e) {
             logger.error(e.getMessage(), e);
