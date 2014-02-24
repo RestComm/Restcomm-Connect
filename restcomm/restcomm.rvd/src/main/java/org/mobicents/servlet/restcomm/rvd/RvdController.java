@@ -53,7 +53,7 @@ public class RvdController {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
         } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error("", e);
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -81,7 +81,7 @@ public class RvdController {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
         } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error("", e);
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
