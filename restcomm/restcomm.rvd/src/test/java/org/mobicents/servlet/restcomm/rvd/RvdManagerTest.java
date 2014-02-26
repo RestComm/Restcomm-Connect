@@ -1,61 +1,117 @@
 package org.mobicents.servlet.restcomm.rvd;
 
+import java.io.File;
+import java.net.URL;
+
 import javax.ws.rs.core.MediaType;
 
-import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
-import com.sun.jersey.test.framework.JerseyTest;
-//import com.sun.jersey.test.framework.util.ApplicationDescriptor;
-import com.sun.jersey.test.framework.WebAppDescriptor;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.Filters;
+import org.jboss.shrinkwrap.api.GenericArchive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.exporter.ZipExporter;
+import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication;
 
-public class RvdManagerTest extends JerseyTest {
+@RunWith(Arquillian.class)
+public class RvdManagerTest {
     
-    String wavFilename = "testmock.wav";
-    String projectName = "TestProject";
+    @ArquillianResource
+    URL deploymentUrl;
+    
+    @Deployment (testable = false)
+    public static WebArchive createDeployment() {
+       WebArchive archive = ShrinkWrap.create(WebArchive.class,"restcomm-rvd.war");       
+       
+       archive.addAsLibraries( Maven.resolver().resolve("com.google.code.gson:gson:2.1").withTransitivity().asFile() );
+       archive.addAsLibraries( Maven.resolver().resolve("com.sun.jersey:jersey-server:1.13").withTransitivity().asFile() );
+       archive.addAsLibraries( Maven.resolver().resolve("com.sun.jersey:jersey-client:1.13").withTransitivity().asFile() );
+       archive.addAsLibraries( Maven.resolver().resolve("com.sun.jersey:jersey-servlet:1.13").withTransitivity().asFile() );
+//       archive.addAsLibraries( Maven.resolver().resolve("com.sun.jersey:jersey-json:1.13").withTransitivity().asFile() );
+//       archive.addAsLibraries( Maven.resolver().resolve("com.sun.jersey:jersey-multipart:1.13").withTransitivity().asFile() );
+       archive.addAsLibraries( Maven.resolver().resolve("commons-io:commons-io:2.4").withTransitivity().asFile() );
+       
+       archive.addAsLibraries( Maven.resolver().resolve("com.thoughtworks.xstream:xstream:1.4.5").withTransitivity().asFile() );
+       archive.addAsLibraries( Maven.resolver().resolve("org.apache.httpcomponents:httpclient:4.3.1").withTransitivity().asFile() );
+       archive.addAsLibraries( Maven.resolver().resolve("commons-fileupload:commons-fileupload:1.3").withTransitivity().asFile() );
+       archive.addAsLibraries( Maven.resolver().resolve("log4j:log4j:1.2.16").withTransitivity().asFile() );
 
-    public RvdManagerTest() throws Exception {
-        super(new WebAppDescriptor.Builder("org.mobicents.servlet.restcomm.rvd").contextPath("restcomm-rvd").build());
+       archive.setWebXML(new File("src/main/webapp/WEB-INF/web.xml"));
+       archive.addClass(RvdRestApplication.class);
+       archive.addClass(RvdManager.class);
+       archive.addPackage("org.mobicents.servlet.restcomm.rvd");
+       archive.addPackage("org.mobicents.servlet.restcomm.rvd.exceptions");
+       archive.addPackage("org.mobicents.servlet.restcomm.rvd.model.client");
+              
+       //archive.addAsWebResource(new File("src/main/webapp/workspace/_proto/state"), ArchivePaths.create("/workspace/_proto/state" ));
+       //archive.addAsWebResource(new File("src/main/webapp/workspace/_proto/data/project"), ArchivePaths.create("/workspace/_proto/data/project" ));
+       //archive.addAsWebResource(new File("src/main/webapp/workspace/_proto/data/start.node"), ArchivePaths.create("/workspace/_proto/data/start.node" ));
+       //archive.addAsWebResource(new File("src/main/webapp/workspace/_proto/data/start.step1"), ArchivePaths.create("/workspace/_proto/data/start.step1" ));
+       //archive.addAsWebResource(new File("src/main/webapp/workspace/_proto/wavs/alert.wav"), ArchivePaths.create("/workspace/_proto/wavs/alert.wav" ));
+       
+       //archive.addAsWebResources(new File("src/main/webapp/workspace"),"asdf");
+       //WebArchive war = ShrinkWrap.create(WebArchive.class, "test.war");  
+       archive.merge(ShrinkWrap
+           .create(GenericArchive.class)
+           .as(ExplodedImporter.class)  
+           .importDirectory("src/test/resources/workspace").as(GenericArchive.class),  
+           "/workspace", Filters.includeAll());      
+       
+       // We want to have a look inside...
+       archive.as(ZipExporter.class).exportTo(new File("/tmp/exportedRvdTest.war"), true);
 
-        //WebAppDescriptor appDescriptor = new WebAppDescriptor.Builder("org.mobicents.servlet.restcomm.rvd").build();
-
-        /*
-        ApplicationDescriptor appDescriptor = new ApplicationDescriptor();
-                appDescriptor.setContextPath("/restcomm-rvd");
-                appDescriptor.setRootResourcePackageName("org.mobicents.servlet.restcomm.rvd");
-                System.out.println( "Context path: " + appDescriptor.getContextPath() );
-        super.setupTestEnvironment(appDescriptor);
-        */
-        
+       return archive;
+    }    
+    
+    public RvdManagerTest()  {
     }
 
     @Test
     public void testCreateValidProject() throws Exception {
-        WebResource webResource = resource();
-        ClientResponse res = webResource.path("services/manager/projects").queryParam("name", projectName).put(ClientResponse.class);
-        Assert.assertEquals(200, res.getStatus());  
+        String projectName = "newProject";
+        
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        
+        ClientResponse res = webResource.path("services/manager/projects/").queryParam("name", projectName).put(ClientResponse.class);
+        Assert.assertEquals(200, res.getStatus());
+        
     }
     
     @Test
     public void testOpenProject() throws Exception {
-        WebResource webResource = resource();
-        ClientResponse res = webResource.path("services/manager/projects").queryParam("name", projectName).get(ClientResponse.class);
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        
+        ClientResponse res = webResource.path("services/manager/projects").queryParam("name", "ExistingProject").get(ClientResponse.class);
         Assert.assertEquals(200, res.getStatus());
         JSONObject project_object = res.getEntity(JSONObject.class);
         Assert.assertEquals("Project JSON state seems invalid", "start", project_object.getString("startNodeName"));
     }
     
+    
     @Test 
     public void testUpdateProject() throws Exception {
-        WebResource webResource = resource();
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        
+        String projectName = "UpdatedProject";
         // get the project
         ClientResponse res = webResource.path("services/manager/projects").queryParam("name", projectName).get(ClientResponse.class);
         Assert.assertEquals(200, res.getStatus());
@@ -75,28 +131,41 @@ public class RvdManagerTest extends JerseyTest {
         Assert.assertEquals("Value has not updated", "renamed_module", project_object.getString("startNodeName"));
     }
     
+    
+    // generates a warning when the test finishes: "SEVERE: The web application [/restcomm-rvd] created a ThreadLocal with key of type [com.google.gson.Gson$1] (value [com.google.gson.Gson$1@7b5e8a9e]) and a value of type [java.util.HashMap] (value [{}]) but failed to remove it when the web application was stopped. This is very likely to create a memory leak."
     @Test
     public void listProjects() throws Exception {
-        WebResource webResource = resource();
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource("http://localhost:8080/restcomm-rvd/");
+
         ClientResponse res = webResource.path("services/manager/projects/list").get(ClientResponse.class);
         Assert.assertEquals(200, res.getStatus()); 
         JSONArray project_list = res.getEntity(JSONArray.class);
         Assert.assertTrue(project_list.length() > 0);
-    }  
+    } 
     
+    
+    // generates a warning too
     @Test
     public void listProjectWavs() throws Exception {
-        WebResource webResource = resource();
-        ClientResponse res = webResource.path("services/manager/projects/list")
-                //.queryParam("name", projectName)
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        String projectName = "ExistingProject";
+        
+        ClientResponse res = webResource.path("services/manager/projects/wavlist")
+                .queryParam("name", projectName)
                 .get(ClientResponse.class);
         Assert.assertEquals(200, res.getStatus()); 
         JSONArray project_wavlist = res.getEntity(JSONArray.class);
         Assert.assertTrue("An array with some wav items in it expected", project_wavlist.length() > 0);
     }      
     
+    
     @Test
-    public void testUploadWav() throws Exception {
+    public void testUploadWav() throws Exception {  
+        String projectName = "ExistingProject";
+        String wavFilename = "new.wav";
+        
         // create a mock file to upload
         FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
         String value = "This is a test wav file";
@@ -109,7 +178,8 @@ public class RvdManagerTest extends JerseyTest {
         formDataMultiPart.bodyPart(bodyPart);
         
         // upload the file and test 
-        WebResource webResource = resource();
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
         ClientResponse res = webResource.path("services/manager/projects/uploadwav")
                 .queryParam("name", projectName)
                 .type(MediaType.MULTIPART_FORM_DATA)
@@ -118,9 +188,14 @@ public class RvdManagerTest extends JerseyTest {
         Assert.assertEquals("Malformed response for uploading or file not uploaded", wavFilename, res.getEntity(JSONArray.class).getJSONObject(0).getString("name"));
     }
     
+    
     @Test
     public void testRemoveWav() throws Exception {
-        WebResource webResource = resource();
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        String projectName = "ExistingProject";
+        String wavFilename = "alert.wav";
+        
         ClientResponse res = webResource.path("services/manager/projects/removewav")
                 .queryParam("name", projectName)
                 .queryParam("filename", wavFilename)
@@ -128,49 +203,65 @@ public class RvdManagerTest extends JerseyTest {
         Assert.assertEquals(200, res.getStatus());  
     }
     
+    
+    
     @Test
     public void testRemoveNonExistingWav() throws Exception {
-        WebResource webResource = resource();
+        String projectName = "ExistingProject";
+        String wavFilename = "nonexisting-filename.wav";
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        
         ClientResponse res = webResource.path("services/manager/projects/removewav")
                 .queryParam("name", projectName)
-                .queryParam("filename", "nonexisting-filename.wav")
+                .queryParam("filename", wavFilename)
                 .delete(ClientResponse.class);
         Assert.assertEquals(404, res.getStatus());  
     }    
     
+    
     @Test
     public void testCreateExistingProject() throws Exception {
-        WebResource webResource = resource();
+        String projectName = "ExistingProject";
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+                
         ClientResponse res = webResource.path("services/manager/projects").queryParam("name", projectName).put(ClientResponse.class);
         Assert.assertEquals(409, res.getStatus());  
     }
     
+    
     @Test
     public void testRenameProject() throws Exception {
-        WebResource webResource = resource();
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        
         ClientResponse res = webResource.path("services/manager/projects/rename")
-                .queryParam("name", projectName)
+                .queryParam("name", "ToRenameProject")
                 .queryParam("newName", "RenamedProject")
                 .put(ClientResponse.class);
-        Assert.assertEquals(200, res.getStatus());
-        res = webResource.path("services/manager/projects/rename")
-                .queryParam("name", "RenamedProject")
-                .queryParam("newName", projectName)
-                .put(ClientResponse.class);
-        Assert.assertEquals(200, res.getStatus());         
+        Assert.assertEquals(200, res.getStatus());       
     }    
+    
     
     @Test
     public void testDeleteProject() throws Exception {
-        WebResource webResource = resource();
+        String projectName = "ToDeleteProject";
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        
         ClientResponse res = webResource.path("services/manager/projects/delete").queryParam("name", projectName).delete(ClientResponse.class);
         Assert.assertEquals(200, res.getStatus());  
     }  
     
     @Test
     public void testDeleteNonExistingProject() throws Exception {
-        WebResource webResource = resource();
+        String projectName = "NonExistingProject";
+        Client client = RestTesterClient.getInstance().getClient();
+        WebResource webResource = client.resource(deploymentUrl.toString());
+        
         ClientResponse res = webResource.path("services/manager/projects/delete").queryParam("name", projectName).delete(ClientResponse.class);
         Assert.assertEquals(404, res.getStatus());  
     }  
+
 }
