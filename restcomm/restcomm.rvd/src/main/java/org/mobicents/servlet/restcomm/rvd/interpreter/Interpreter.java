@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -72,15 +70,41 @@ public class Interpreter {
 
     private XStream xstream;
     private Gson gson;
+    private String targetParam;
     private Target target;
     private String projectBasePath;
     private String appName;
-    private HttpServletRequest httpRequest;
+    //private HttpServletRequest httpRequest;
+    private Map<String,String> requestParameters; // parameters like digits, callSid etc.
+    private String contextPath;
+
     private String rcmlResult;
     private Map<String, String> variables = new HashMap<String, String>();
     private List<NodeName> nodeNames;
 
+    /*
     public Interpreter() {
+        // TODO set default values for these members
+        //this.targetParam = targetParam;
+        //this.projectBasePath = projectBasePath;
+        //this.appName = appName;
+        //this.requestParameters = requestParameters;
+        //this.contextPath = contextPath;
+        init();
+    }
+    */
+
+    public Interpreter(String targetParam, String projectBasePath, String appName, Map<String,String> requestParameters, String contextPath) {
+        this.targetParam = targetParam;
+        this.projectBasePath = projectBasePath;
+        this.appName = appName;
+        this.requestParameters = requestParameters;
+        this.contextPath = contextPath;
+        init();
+    }
+
+    // common intializations for all constructors
+    private void init() {
         xstream = new XStream();
         xstream.registerConverter(new SayStepConverter());
         xstream.registerConverter(new PlayStepConverter());
@@ -130,14 +154,14 @@ public class Interpreter {
     }
 
 
-    public HttpServletRequest getHttpRequest() {
-        return httpRequest;
-    }
+    //public HttpServletRequest getHttpRequest() {
+    //    return httpRequest;
+    //}
 
 
-    public void setHttpRequest(HttpServletRequest httpRequest) {
-        this.httpRequest = httpRequest;
-    }
+    //public void setHttpRequest(HttpServletRequest httpRequest) {
+    //    this.httpRequest = httpRequest;
+    //}
 
 
     public String getAppName() {
@@ -170,11 +194,11 @@ public class Interpreter {
     }
 
 
-    public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest)
+    public String interpret()
             throws IOException {
-        this.projectBasePath = projectBasePath;
-        this.appName = appName;
-        this.httpRequest = httpRequest;
+        //this.projectBasePath = projectBasePath;
+        //this.appName = appName;
+        //this.httpRequest = httpRequest;
 
         String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
         ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
@@ -199,6 +223,26 @@ public class Interpreter {
 
         return response;
     }
+
+    public Map<String, String> getRequestParameters() {
+        return requestParameters;
+    }
+
+
+    public void setRequestParameters(Map<String, String> requestParameters) {
+        this.requestParameters = requestParameters;
+    }
+
+
+    public String getContextPath() {
+        return contextPath;
+    }
+
+
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
+    }
+
 
     public String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
 
