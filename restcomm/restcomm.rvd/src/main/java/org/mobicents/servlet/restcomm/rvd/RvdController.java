@@ -57,12 +57,11 @@ public class RvdController {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;
-        Interpreter interpreter = new Interpreter();
-
         String rcmlResponse;
         try {
-            rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
+            String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;
+            Interpreter interpreter = new Interpreter(targetParam, projectBasePath, appname, RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap()),httpRequest.getContextPath());
+            rcmlResponse = interpreter.interpret();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -85,12 +84,11 @@ public class RvdController {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;
-        Interpreter interpreter = new Interpreter();
-
         String rcmlResponse;
         try {
-            rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
+            String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;
+            Interpreter interpreter = new Interpreter(targetParam, projectBasePath, appname, RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap()),httpRequest.getContextPath());
+            rcmlResponse = interpreter.interpret();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();

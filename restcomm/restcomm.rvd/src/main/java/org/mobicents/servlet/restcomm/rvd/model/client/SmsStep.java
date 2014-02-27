@@ -79,8 +79,10 @@ public class SmsStep extends Step {
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
-        String SmsSid = interpreter.getHttpRequest().getParameter("SmsSid");
-        String SmsStatus = interpreter.getHttpRequest().getParameter("SmsStatus");
+        //String SmsSid = interpreter.getHttpRequest().getParameter("SmsSid");
+        //String SmsStatus = interpreter.getHttpRequest().getParameter("SmsStatus");
+        String SmsSid = interpreter.getRequestParameters().get("SmsSid");
+        String SmsStatus = interpreter.getRequestParameters().get("SmsStatus");
 
         if ( SmsSid != null )
             interpreter.getVariables().put("SmsSid", SmsSid);

@@ -50,7 +50,8 @@ public class PlayStep extends Step {
         RcmlPlayStep playStep = new RcmlPlayStep();
         String url = "";
         if ("local".equals(getPlayType()))
-            url = interpreter.getHttpRequest().getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + getWavLocalFilename();
+            //url = interpreter.getHttpRequest().getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + getWavLocalFilename();
+            url = interpreter.getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + getWavLocalFilename();
         else
             url = getWavUrl();
 

@@ -82,8 +82,8 @@ public class FaxStep extends Step {
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
-        String FaxSid = interpreter.getHttpRequest().getParameter("FaxSid");
-        String FaxStatus = interpreter.getHttpRequest().getParameter("FaxStatus");
+        String FaxSid = interpreter.getRequestParameters().get("FaxSid"); //getHttpRequest().getParameter("FaxSid");
+        String FaxStatus = interpreter.getRequestParameters().get("FaxStatus");  //.getHttpRequest().getParameter("FaxStatus");
 
         if ( FaxSid != null )
             interpreter.getVariables().put("SmsSid", FaxSid);

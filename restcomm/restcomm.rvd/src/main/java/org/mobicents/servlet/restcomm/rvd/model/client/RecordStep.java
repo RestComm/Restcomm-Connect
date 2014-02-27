@@ -95,9 +95,12 @@ public class RecordStep extends Step {
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
-        String RecordingUrl = interpreter.getHttpRequest().getParameter("RecordingUrl");
-        String RecordingDuration = interpreter.getHttpRequest().getParameter("RecordingDuration");
-        String Digits = interpreter.getHttpRequest().getParameter("Digits");
+        //String RecordingUrl = interpreter.getHttpRequest().getParameter("RecordingUrl");
+        //String RecordingDuration = interpreter.getHttpRequest().getParameter("RecordingDuration");
+        //String Digits = interpreter.getHttpRequest().getParameter("Digits");
+        String RecordingUrl = interpreter.getRequestParameters().get("RecordingUrl");
+        String RecordingDuration = interpreter.getRequestParameters().get("RecordingDuration");
+        String Digits = interpreter.getRequestParameters().get("Digits");
 
         if ( RecordingUrl != null )
             interpreter.getVariables().put("RecordingUrl", RecordingUrl);
