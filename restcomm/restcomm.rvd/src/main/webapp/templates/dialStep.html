@@ -3,6 +3,20 @@
 		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <small>{{step.phrase}}</small><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
 		<div class="panel-body" ng-hide='step.isCollapsed'>
 			<div class='row'>
+				<div basic-draggable drop-target='.dial-nouns' class='dial-noun number-dial-noun' class="label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Number</div>
+				<div basic-draggable drop-target='.dial-nouns' class='dial-noun client-dial-noun' class="label label-primary rvd-pickable"><i class='fa fa-user'></i> &nbsp;Client</div>
+				<div basic-draggable drop-target='.dial-nouns' class='dial-noun conference-dial-noun' class="label label-primary rvd-pickable"><i class='fa fa-group'></i> &nbsp;Conference</div>
+				<div basic-draggable drop-target='.dial-nouns' class='dial-noun sipuri-dial-noun' class="label label-primary rvd-pickable">Sip URI</div>
+			</div>
+			<div class='row'>
+				<div basic-sortable list-model='step.dialNouns' class='dial-nouns' item-added='addDialNoun(item,pos,listmodel)'>	
+					<div ng-repeat='noun in step.dialNouns'>{{noun.dialType}}</div>				
+				</div>
+			
+
+			</div>
+			
+			<div class='row'>
 				<div class="col-lg-4">
 					
 					<input ng-show='step.dialType=="number"' ng-model='step.number' id='numberToCall' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
