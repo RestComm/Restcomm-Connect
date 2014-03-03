@@ -425,6 +425,17 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		});
 	}
 	
+	$scope.addDialNoun = function (item, pos, listmodel) {
+		// ...
+		console.log("Adding dial noun...");
+        if ( item.hasClass('number-dial-noun') ) {
+        	console.log("Adding a number noun");
+            $scope.$apply( function ()  {
+                listmodel.splice(pos,0, {dialType:'number'});
+            });
+        }		
+	}
+	
 	$scope.onSavePressed = function() {
 		usSpinnerService.spin('spinner-save');
 		$scope.saveProject()
