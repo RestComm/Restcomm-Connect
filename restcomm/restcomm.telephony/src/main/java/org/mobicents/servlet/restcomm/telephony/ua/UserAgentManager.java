@@ -146,11 +146,7 @@ public final class UserAgentManager extends UntypedActor {
     private void patch(final SipURI uri, final String address, final int port) throws UnknownHostException {
         final InetAddress host = InetAddress.getByName(uri.getHost());
         final String ip = host.getHostAddress();
-        if (!isRoutableAddress(ip)) {
-            uri.setHost(address);
-        } else {
-            uri.setHost(ip);
-        }
+        uri.setHost(address);
         uri.setPort(port);
     }
 
@@ -180,6 +176,10 @@ public final class UserAgentManager extends UntypedActor {
     private void ping(final String to) throws Exception {
         final SipApplicationSession application = factory.createApplicationSession();
         String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
+        if(toTransport == null) {
+            //RESTCOMM-301 NPE in RestComm Ping
+            toTransport = "udp";
+        }
         if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
             return;
         }
@@ -247,6 +247,7 @@ public final class UserAgentManager extends UntypedActor {
         final String ip = request.getInitialRemoteAddr();
         final int port = request.getInitialRemotePort();
         final String transport = uri.getTransportParam();
+        logger.info("Patching URI: "+uri.toString()+" with IP: "+ip+" and PORT: "+port+" for USER: "+user);
         patch(uri, ip, port);
         final StringBuffer buffer = new StringBuffer();
         buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
@@ -276,17 +277,17 @@ public final class UserAgentManager extends UntypedActor {
             // Remove Registration if ttl=0
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
-            logger.info("The user agent manager unregistered " + user);
+            logger.info("The user agent manager unregistered " + user + " at address "+address);
         } else {
 
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
-                logger.info("The user agent manager updated " + user);
+                logger.info("The user agent manager updated " + user + " at address "+address);
             } else {
                 // Add registration since it doesn't exists on the DB
                 registrations.addRegistration(registration);
-                logger.info("The user agent manager registered " + user);
+                logger.info("The user agent manager registered " + user + " at address "+address);
             }
             response.setHeader("Contact", contact(uri, ttl));
         }

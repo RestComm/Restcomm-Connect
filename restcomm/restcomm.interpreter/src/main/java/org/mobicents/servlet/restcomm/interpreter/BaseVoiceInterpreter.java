@@ -99,6 +99,7 @@ import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
@@ -436,11 +437,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     String e164(final String number) {
-        final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
-        try {
-            final PhoneNumber result = numbersUtil.parse(number, "US");
-            return numbersUtil.format(result, PhoneNumberFormat.E164);
-        } catch (final NumberParseException ignored) {
+        if (configuration.subset("runtime-settings").getBoolean("normalize-numbers-for-outbound-calls")) {
+            final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
+            try {
+                final PhoneNumber result = numbersUtil.parse(number, "US");
+                return numbersUtil.format(result, PhoneNumberFormat.E164);
+            } catch (final NumberParseException ignored) {
+                return number;
+            }
+        } else {
             return number;
         }
     }
@@ -529,18 +534,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
             context.stop(self);
-        }
-    }
-
-    URI resolve(final URI base, final URI uri) {
-        if (base.equals(uri)) {
-            return uri;
-        } else {
-            if (!uri.isAbsolute()) {
-                return base.resolve(uri);
-            } else {
-                return uri;
-            }
         }
     }
 
@@ -902,7 +895,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     final DiskCacheRequest request = new DiskCacheRequest(uri);
                     cache.tell(request, source);
                 } else {
@@ -1106,7 +1099,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
                 final URI base = request.getUri();
-                final URI uri = resolve(base, target);
+                final URI uri = UriUtils.resolve(base, target);
                 final List<NameValuePair> parameters = parameters();
                 request = new HttpRequestDescriptor(uri, method, parameters);
                 downloader.tell(request, source);
@@ -1210,7 +1203,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 return;
                             }
                             final URI base = request.getUri();
-                            final URI uri = resolve(base, target);
+                            final URI uri = UriUtils.resolve(base, target);
                             // Cache the prompt.
                             final DiskCacheRequest request = new DiskCacheRequest(uri);
                             cache.tell(request, source);
@@ -1387,7 +1380,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
@@ -1545,7 +1538,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
-            final Double duration = WavUtils.getAudioDuration(recordingUri);
+            Double duration = WavUtils.getAudioDuration(recordingUri);
+            if(duration.equals(0.0)) {
+                final DateTime end = DateTime.now();
+                duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+            }
             final Recording.Builder builder = Recording.builder();
             builder.setSid(recordingSid);
             builder.setAccountSid(accountId);
@@ -1635,7 +1632,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
@@ -1786,7 +1783,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             return;
                         }
                         final URI base = request.getUri();
-                        final URI uri = resolve(base, target);
+                        final URI uri = UriUtils.resolve(base, target);
                         session.tell(new SmsSessionAttribute("callback", uri), source);
                     }
                 }
@@ -1836,7 +1833,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");

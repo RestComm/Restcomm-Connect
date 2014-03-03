@@ -1,9 +1,28 @@
 package org.mobicents.servlet.restcomm.telephony;
 
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import gov.nist.javax.sip.message.MessageExt;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+
+import javax.sip.address.SipURI;
+import javax.sip.header.FromHeader;
+import javax.sip.header.Header;
+import javax.sip.header.ProxyAuthenticateHeader;
+import javax.sip.header.ProxyAuthorizationHeader;
+import javax.sip.message.Request;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
-import org.cafesip.sipunit.*;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
+import org.cafesip.sipunit.SipResponse;
+import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -12,23 +31,14 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 //import org.mobicents.servlet.restcomm.telephony.Version;
 import org.mobicents.servlet.restcomm.telephony.security.DigestServerAuthenticationMethod;
-
-import javax.sip.address.SipURI;
-import javax.sip.header.Header;
-import javax.sip.header.ProxyAuthenticateHeader;
-import javax.sip.header.ProxyAuthorizationHeader;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-
-import java.text.ParseException;
-import java.util.ArrayList;
-
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.*;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -454,6 +464,58 @@ public class DialTest {
         }
     }
 
+    //Test for Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
+    //Bob callerId should pass to the call created by Dial Number
+    @Test
+    public synchronized void testDialNumberGeorgePassInitialCallerId() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        // Prepare George phone to receive call
+        georgePhone.setLoopback(true);
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialNumber, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        SipRequest georgeInvite = georgeCall.getLastReceivedRequest();
+        assertTrue(((FromHeader)georgeInvite.getMessage().getHeader("From")).getAddress().getURI().toString().contains("bob"));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(georgeCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+        georgeCall.listenForDisconnect();
+        // hangup.
+        bobCall.disconnect();
+
+        assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+    
     @Test
     public synchronized void testDialFork() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
@@ -976,5 +1038,4 @@ public class DialTest {
         logger.info("Packaged Test App");
         return archive;
     }
-
 }
