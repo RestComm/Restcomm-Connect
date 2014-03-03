@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Register Alice Restcomm client (username: alice / password: 1234) before dialing this application -->
 <Response>
-	<Play>http://127.0.0.1:8080/restcomm/audio/demo-prompt.wav</Play>
+	<Play>/restcomm/audio/demo-prompt.wav</Play>
 	<Dial>
 		<Client>alice</Client>
 	</Dial>

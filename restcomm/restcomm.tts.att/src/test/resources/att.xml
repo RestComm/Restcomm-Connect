@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is free software; you can redistribute it and/or modify it under 
+	the terms of the GNU Lesser General Public License as published by the Free 
+	Software Foundation; either version 2.1 of the License, or (at your option) 
+	any later version. This software is distributed in the hope that it will 
+	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
+	Public License for more details. You should have received a copy of the GNU 
+	Lesser General Public License along with this software; if not, write to 
+	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
+	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
+
+<!-- The Speech Synthesizer is responsible for turning text in to speech 
+	for play back by the media gateway. -->
+<speech-synthesizer
+	class="org.mobicents.servlet.restcomm.tts.AttSpeechSynthesizer">
+	<host>127.0.0.1</host>
+	<port>7000</port>
+	<tts-client-directory>/home/gvagenas/Desktop/temp/HS/ATT_TTS_Server_Sent_Jan21_2014/att_naturalvoices_v5.1_server_live</tts-client-directory>
+	<verbose-output>true</verbose-output>
+	<speakers>
+		<english>
+			<female>crystal8</female>
+			<male>mike8</male>
+		</english>
+		<english-uk>
+			<female>audrey8</female>
+			<male>charles8</male>
+		</english-uk>
+		<spanish>
+			<female>rosa8</female>
+			<male>alberto8</male>
+		</spanish>
+		<french>
+			<female>juliette8</female>
+			<male>alain8</male>
+		</french>
+		<canadian-french>
+			<female>arnaud8</female>
+			<male>arnaud8</male>
+		</canadian-french>
+		<german>
+			<female>klara8</female>
+			<male>reiner8</male>
+		</german>
+		<italian>
+			<female>francesca8</female>
+			<male>giovanni8</male>
+		</italian>
+		<brazilian-portuguese>
+			<female>marina8</female>
+			<male>tiago8</male>
+		</brazilian-portuguese>
+	</speakers>
+</speech-synthesizer>

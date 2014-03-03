@@ -109,6 +109,7 @@ import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.Unmute;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -491,16 +492,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest
                 // response received
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == call) {
+                //Check from whom is the message (initial call or outbound call) and update info accordingly
+                if(sender == call) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
                 }
             } else if (acquiringCallInfo.equals(state)) {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == call) {
+                //Check from whom is the message (initial call or outbound call) and update info accordingly
+                if(sender == call) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
@@ -541,6 +542,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if ((bridged.equals(state) || forking.equals(state)) && (sender == outboundCall || outboundCall == null)) {
                     fsm.transition(message, finishDialing);
                 } else if (creatingRecording.equals(state)) {
+                    //Ask callMediaGroup to stop recording so we have the recording file available
+                    //Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
+                    callMediaGroup.tell(new Stop(), null);
                     fsm.transition(message, finishRecording);
                 } else if (!forking.equals(state) || call == sender()) {
                     fsm.transition(message, finished);
@@ -1119,21 +1123,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         protected String callerId(final Tag container) {
             // Parse "from".
             String callerId = null;
-            Attribute attribute = verb.attribute("callerId");
-            if (attribute != null) {
-                callerId = attribute.value();
-                if (callerId != null && !callerId.isEmpty()) {
-                    callerId = e164(callerId);
-                    if (callerId == null) {
-                        callerId = verb.attribute("callerId").value();
-                        final NotificationsDao notifications = storage.getNotificationsDao();
-                        final Notification notification = notification(ERROR_NOTIFICATION, 13214, callerId
-                                + " is an invalid callerId.");
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
-                        source.tell(stop, source);
-                        return null;
+
+            //Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
+            final boolean useInitialFromAsCallerId = configuration.subset("runtime-settings").getBoolean("from-address-to-proxied-calls");
+            if(useInitialFromAsCallerId)
+                callerId = callInfo.from();
+
+            if(callerId == null){
+                Attribute attribute = verb.attribute("callerId");
+                if (attribute != null) {
+                    callerId = attribute.value();
+                    if (callerId != null && !callerId.isEmpty()) {
+                        callerId = e164(callerId);
+                        if (callerId == null) {
+                            callerId = verb.attribute("callerId").value();
+                            final NotificationsDao notifications = storage.getNotificationsDao();
+                            final Notification notification = notification(ERROR_NOTIFICATION, 13214, callerId
+                                    + " is an invalid callerId.");
+                            notifications.addNotification(notification);
+                            sendMail(notification);
+                            final StopInterpreter stop = StopInterpreter.instance();
+                            source.tell(stop, source);
+                            return null;
+                        }
                     }
                 }
             }
@@ -1505,7 +1517,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
                 final URI base = request.getUri();
-                final URI uri = resolve(base, target);
+                final URI uri = UriUtils.resolve(base, target);
                 // Parse "method".
                 String method = "POST";
                 attribute = verb.attribute("method");
@@ -1744,7 +1756,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
 
                 final URI base = request.getUri();
-                waitUrl = resolve(base, waitUrl);
+                waitUrl = UriUtils.resolve(base, waitUrl);
                 // Parse method.
                 String method = "POST";
                 attribute = child.attribute("waitMethod");
@@ -1845,7 +1857,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = resolve(base, target);
+                    final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");

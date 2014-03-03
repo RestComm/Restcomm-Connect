@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Play>http://localhost:8080/restcomm.application-7.1.3-TelScale-SNAPSHOT/audio/demo-prompt.wav</Play>
+	<Play>http://localhost:8080/restcomm.application-7.1.4-TelScale-SNAPSHOT/audio/demo-prompt.wav</Play>
 </Response>

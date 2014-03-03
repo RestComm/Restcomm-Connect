@@ -22,7 +22,6 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -117,7 +116,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.3-TelScale-SNAPSHOT/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.4-TelScale-SNAPSHOT/dial-number-entry.xml";
 
         JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -169,7 +168,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.3-TelScale-SNAPSHOT/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.4-TelScale-SNAPSHOT/dial-number-entry.xml";
 
         JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -215,7 +214,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.3-TelScale-SNAPSHOT/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.4-TelScale-SNAPSHOT/dial-number-entry.xml";
 
         JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -242,7 +241,7 @@ public class LiveCallModificationTest {
         
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.3-TelScale-SNAPSHOT/dial-client-entry.xml";
+        rcmlUrl = "http://127.0.0.1:8080/restcomm.application-7.1.4-TelScale-SNAPSHOT/dial-client-entry.xml";
 
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);

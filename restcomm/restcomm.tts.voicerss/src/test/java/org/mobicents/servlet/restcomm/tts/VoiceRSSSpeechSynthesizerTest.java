@@ -52,7 +52,7 @@ import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com (George Vagenas)
  */
 public final class VoiceRSSSpeechSynthesizerTest {
     private ActorSystem system;
@@ -71,7 +71,9 @@ public final class VoiceRSSSpeechSynthesizerTest {
         final XMLConfiguration configuration = new XMLConfiguration(input);
         tts = tts(configuration);
         cache = cache("/tmp/cache", "http://127.0.0.1:8080/restcomm/cache");
-        tempSystemDirectory = "file:" + System.getProperty("java.io.tmpdir") + "/";
+        // Fix for MacOS systems: only append "/" to temporary path if it doesnt end with it - hrosa
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        tempSystemDirectory = "file:" + tmpDir + (tmpDir.endsWith("/") ? "" : "/");
     }
 
     @After

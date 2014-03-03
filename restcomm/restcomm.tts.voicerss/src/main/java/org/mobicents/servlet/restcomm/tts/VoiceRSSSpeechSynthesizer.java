@@ -52,7 +52,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com (George Vagenas)
  */
 public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
 
@@ -157,7 +157,6 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
         }
 
         final String hash = HashGenerator.hashMessage(gender, language, text);
-        System.out.println(hash);
 
         final List<NameValuePair> query = new ArrayList<NameValuePair>();
         query.addAll(parameters);

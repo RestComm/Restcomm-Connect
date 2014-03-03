@@ -29,6 +29,7 @@ import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -40,6 +41,7 @@ import javax.sdp.MediaDescription;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
+import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
@@ -96,6 +98,7 @@ import akka.event.LoggingAdapter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
  * @author amit.bhayani@telestax.com (Amit Bhayani)
+ * @author gvagenas@telestax.com (George Vagenas)
  */
 public final class Call extends UntypedActor {
     // Define possible directions.
@@ -449,7 +452,8 @@ public final class Call extends UntypedActor {
                 }
                 case SipServletResponse.SC_RINGING:
                 case SipServletResponse.SC_SESSION_PROGRESS: {
-                    fsm.transition(message, ringing);
+                    if(!state.equals(ringing))
+                        fsm.transition(message, ringing);
                     break;
                 }
                 case SipServletResponse.SC_BUSY_HERE:
@@ -815,6 +819,7 @@ public final class Call extends UntypedActor {
             } else {
                 offer = response.descriptor().toString();
             }
+            offer = patchSdpDescription(offer);
             invite.setContent(offer, "application/sdp");
             // Send the invite.
             invite.send();
@@ -840,6 +845,31 @@ public final class Call extends UntypedActor {
                 // Send a ringing response.
                 final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
                 ringing.send();
+
+                // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
+                // First get the Initial Remote Address (real address that the request came from)
+                // Then check the following:
+                //    1. If contact header address is private network address
+                //    2. If there are no "Record-Route" headers (there is no proxy in the call)
+                //    3. If contact header address != real ip address
+                // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
+                // and store it to the sip session to be used as request uri later
+                String realIP = invite.getInitialRemoteAddr();
+                final ListIterator<String> recordRouteHeaders = invite.getHeaders("Record-Route");
+                final Address contactAddr = factory.createAddress(invite.getHeader("Contact"));
+
+                InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
+                InetAddress inetAddress = InetAddress.getByName(realIP);
+
+                if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                        && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
+                    logger.info("Contact header address " + contactAddr.toString()
+                            + " is a private network ip address, storing Initial Remote Address " + realIP
+                            + " to the session for later use");
+                    realIP = realIP + ":" + ((SipURI) contactAddr.getURI()).getPort();
+                    final SipURI uri = factory.createSipURI(null, realIP);
+                    invite.getSession().setAttribute("realInetUri", uri);
+                }
             } else if (message instanceof SipServletResponse) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -1000,8 +1030,10 @@ public final class Call extends UntypedActor {
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
+            if(invite.getSession().isValid())
+                invite.getSession().invalidate();
+            if(invite.getApplicationSession().isValid())
+                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1027,8 +1059,10 @@ public final class Call extends UntypedActor {
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
+            if(invite.getSession().isValid())
+                invite.getSession().invalidate();
+            if(invite.getApplicationSession().isValid())
+                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1120,20 +1154,20 @@ public final class Call extends UntypedActor {
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
+    }
 
-        /**
-         * Patches an SDP description by trimming and making sure it ends with a new line.
-         *
-         * @param sdpDescription The SDP description to be patched.
-         * @return The patched SDP description
-         * @author hrosa
-         */
-        private String patchSdpDescription(String sdpDescription) {
-            if (sdpDescription == null || sdpDescription.isEmpty()) {
-                throw new IllegalArgumentException("The SDP description cannot be null or empty");
-            }
-            return sdpDescription.trim().concat("\n");
+    /**
+     * Patches an SDP description by trimming and making sure it ends with a new line.
+     *
+     * @param sdpDescription The SDP description to be patched.
+     * @return The patched SDP description
+     * @author hrosa
+     */
+    private String patchSdpDescription(String sdpDescription) {
+        if (sdpDescription == null || sdpDescription.isEmpty()) {
+            throw new IllegalArgumentException("The SDP description cannot be null or empty");
         }
+        return sdpDescription.trim().concat("\n");
     }
 
     private final class AcquiringInternalLink extends AbstractAction {
@@ -1252,6 +1286,14 @@ public final class Call extends UntypedActor {
             if (Hangup.class.equals(klass)) {
                 final SipSession session = invite.getSession();
                 final SipServletRequest bye = session.createRequest("BYE");
+
+                SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
+                if (realInetUri != null) {
+                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                            + " as a request uri of the BYE request");
+                    bye.setRequestURI(realInetUri);
+                }
+
                 bye.send();
             } else if (message instanceof SipServletRequest) {
                 final SipServletRequest bye = (SipServletRequest) message;

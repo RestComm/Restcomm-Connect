@@ -94,6 +94,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private CallDetailRecordListConverter listConverter;
 
+    private boolean normalizePhoneNumbers;
+
     public CallsEndpoint() {
         super();
     }
@@ -117,6 +119,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
+
+        normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
@@ -238,24 +242,27 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         }
         try {
             validate(data);
-            normalize(data);
+            if (normalizePhoneNumbers)
+                normalize(data);
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         final String from = data.getFirst("From");
         final String to = data.getFirst("To");
+        final String username = data.getFirst("Username");
+        final String password = data.getFirst("Password");
         final Integer timeout = getTimeout(data);
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, null, null, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
                         accountId);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, null, null, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
                         accountId);
             } else {
-                create = new CreateCall(from, to, null, null, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
                         accountId);
             }
             create.setCreateCDR(false);
@@ -289,9 +296,9 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                             builder.setSid(callInfo.sid());
                             builder.setDateCreated(callInfo.dateCreated());
                             builder.setAccountSid(accountId);
-                            builder.setTo(callInfo.to());
+                            builder.setTo(to);
                             builder.setCallerName(callInfo.fromName());
-                            builder.setFrom(callInfo.from());
+                            builder.setFrom(from);
                             builder.setForwardedFrom(callInfo.forwardedFrom());
                             builder.setStatus(callInfo.state().toString());
                             final DateTime now = DateTime.now();
