@@ -75,6 +75,12 @@ App.factory('protos', function () {
 			record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 		},
+		dialNounProto: {
+			number: {dialType: 'number', destination:'', sendDigits:'', beforeConnectModule:''},
+			client: {dialType: 'client', destination:''},
+			conference: {dialType: 'conference', destination:'', muted:'', beep:'', startConferenceOnEnter:'', endConferenceOnExit:''},
+			sipuri: {dialType: 'sipuri', destination:''},
+		}
 	};
 });
 
