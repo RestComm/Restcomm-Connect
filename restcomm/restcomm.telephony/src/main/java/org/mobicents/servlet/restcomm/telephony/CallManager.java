@@ -198,7 +198,8 @@ public final class CallManager extends UntypedActor {
 
     private void check(final Object message) throws IOException {
         final SipServletRequest request = (SipServletRequest) message;
-        if (request.getContentLength() == 0 || !"application/sdp".equals(request.getContentType())) {
+        String content = new String(request.getRawContent());
+        if (request.getContentLength() == 0 || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
             final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
             response.send();
         }
