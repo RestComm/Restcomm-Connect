@@ -103,6 +103,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		width: 3,
 	};
 	
+	// Some constants to be moved elsewhere = TODO
+	$scope.yesNoBooleanOptions = [{caption:"", value:""}, {caption:"Yes", value:true}, {caption:"No", value:false}];
+	
 
 	//console.log("projectController stepService: " + stepService.stepNames );
 
@@ -426,14 +429,19 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.addDialNoun = function (item, pos, listmodel) {
-		// ...
-		console.log("Adding dial noun...");
-        if ( item.hasClass('number-dial-noun') ) {
-        	console.log("Adding a number noun");
-            $scope.$apply( function ()  {
-                listmodel.splice(pos,0, {dialType:'number'});
-            });
-        }		
+		console.log("adding dial noun");
+		r = RegExp("dial-noun-([^ ]+)");
+		m = r.exec( item.attr("class") );
+		if ( m != null ) {
+			console.log("adding dial noun - " + m[1]);
+			$scope.$apply( function ()  {
+				listmodel.splice(pos,0, angular.copy(protos.dialNounProto[ m[1] ]));
+			});
+		}
+	}
+	
+	$scope.removeDialNoun = function (dialstep,noun) {
+		dialstep.dialNouns.splice( dialstep.dialNouns.indexOf(noun), 1 );
 	}
 	
 	$scope.onSavePressed = function() {
