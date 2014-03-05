@@ -882,7 +882,19 @@ public final class Call extends UntypedActor {
                 InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
                 InetAddress inetAddress = InetAddress.getByName(realIP);
 
-                if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+                final String initialIpBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                String initialPortBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemotePort");
+
+                if (initialIpBeforeLB != null) {
+                    if(initialPortBeforeLB == null)
+                        initialPortBeforeLB = "5060";
+                    logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB+":"+initialPortBeforeLB
+                            + " to the session for later use");
+                    realIP = initialIpBeforeLB+":"+initialPortBeforeLB;
+                    final SipURI uri = factory.createSipURI(null, realIP);
+                    invite.getSession().setAttribute("realInetUri", uri);
+                } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
                         && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
                     logger.info("Contact header address " + contactAddr.toString()
                             + " is a private network ip address, storing Initial Remote Address " + realIP
