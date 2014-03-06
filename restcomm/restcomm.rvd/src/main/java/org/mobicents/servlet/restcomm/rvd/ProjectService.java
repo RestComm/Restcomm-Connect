@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
@@ -25,9 +24,10 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 
 public class ProjectService {
-
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
 
     // configuration parameters
@@ -166,6 +166,9 @@ public class ProjectService {
         try {
             stateFile_os = new FileOutputStream(workspaceBasePath + File.separator + projectName + File.separator + "state");
             IOUtils.copy(request.getInputStream(), stateFile_os);
+
+            logger.debug("Updating project: " +  IOUtils.toString(request.getInputStream() ) );
+
             stateFile_os.close();
             return true;
         } catch (FileNotFoundException e) {

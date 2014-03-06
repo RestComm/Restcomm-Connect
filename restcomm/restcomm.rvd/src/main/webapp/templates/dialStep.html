@@ -28,7 +28,7 @@
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
 																			
 										<span ng-show='dialnoun.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Send these DTMF tones after dialing the number">Send digits</span>
-										<input ng-show='dialnoun.advancedShown' ng-model='dialnoun.sendDigits' type='text' class='form-control' placeholder='wwww1234' >
+										<input ng-model='dialnoun.sendDigits' null-if-empty ng-show='dialnoun.advancedShown'  type='text' class='form-control' placeholder='wwww1234' >
 										
 										<span ng-show='dialnoun.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Play or say information to the called party, or provide a chance to decline the phone call using 'Collect' and 'Hangup'">Before connect</span>
 										<select ng-show='dialnoun.advancedShown' sync-model name='beforeConnectModule' ng-model='dialnoun.beforeConnectModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
@@ -48,31 +48,56 @@
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 								</div>	
-								<div ng-switch-when="conference">
-									<div  class="input-group input-group-sm form-group">
+								<div ng-switch-when="conference" class='form-group conference-noun'>
+									<div  class="input-group input-group-sm">
 										<span class="input-group-addon"><i class='fa fa-group'></i></span>
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1234' tooltip="Dial to conference">
+
+										<!-- 
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="'">After hangup</span>
+										<select sync-model name='nextModule' ng-model='dialnoun.nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+											<option value=""></option>
+										</select>
+										-->
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A module to run while waiting to be added to the conference. Fill it with 'Play' or 'Say' steps">While waiting</span>
+										<select sync-model name='waitModule' ng-model='dialnoun.waitModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+											<option value=""></option>
+										</select>
 										
-										<span ng-show='dialnoun.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Specify whether a participant can speak in the conference">Muted</span>
-										<select ng-show='dialnoun.advancedShown' ng-model='dialnoun.muted' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control"></select>	
-
-										<span ng-show='dialnoun.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A notification beep is played to the conference when a participant joins or leaves the conference">Beep</span>
-										<select ng-show='dialnoun.advancedShown' ng-model='dialnoun.beep' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control"></select>	
-
-										<span ng-show='dialnoun.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Start conference on enter">Start on enter</span>
-										<select ng-show='dialnoun.advancedShown' ng-model='dialnoun.startConferenceOnEnter' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control"></select>	
-
-										<span ng-show='dialnoun.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="End conference on exit">End on exit</span>
-										<select ng-show='dialnoun.advancedShown' ng-model='dialnoun.endConferenceOnExit' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control"></select>	
-										
+																				
 										<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.advancedShown = !dialnoun.advancedShown"></span>
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
+									</div>
+									<div ng-show='dialnoun.advancedShown' class="input-group input-group-sm form-group noun-advanced">										
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Specify whether a participant can speak in the conference">Muted</span>
+										<select ng-model='dialnoun.muted' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+											<option value=''></option>
+										</select>	
+
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A notification beep is played to the conference when a participant joins or leaves the conference">Beep</span>
+										<select ng-model='dialnoun.beep' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+											<option value=''></option>
+										</select>	
+
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Start conference on enter">Start on enter</span>
+										<select ng-model='dialnoun.startConferenceOnEnter' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+											<option value=''></option>
+										</select>	
+
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="End conference on exit">End on exit</span>
+										<select ng-model='dialnoun.endConferenceOnExit' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+											<option value=''></option>
+										</select>	
+
+										
+										<span class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum number of participants allowed in the conference">Max participants</span>
+										<input ng-model='dialnoun.maxParticipants' null-if-empty style="width:50px;" type='number' class='form-control' placeholder='3'>
 									</div>
 								</div>		
 								<div ng-switch-when="sipuri">
 									<div  class="input-group input-group-sm form-group">
 										<span class="input-group-addon">sip:</span>
-										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1234' tooltip="Dial to SIP URI">
+										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='sip:thomas@127.0.0.1:5080' tooltip="Dial to SIP URI">
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 								</div>																								

@@ -64,7 +64,7 @@ App.factory('protos', function () {
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{optionsVisible:false}},
 			play: {playType:'local', kind:'play', label:'play', title:'play', wavUrl:null, wavLocalFilename:null, loop:null, isCollapsed:false},
 			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
-			dial: {dialNouns:[],dialType:'number',number:'',client:'',conference:'',sipuri:'',kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
+			dial: {dialNouns:[], nextModule:'', kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'POST', timeout:30, timeLimit:14400, callerId:'', steps:[], isCollapsed:false},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:'',method:''},
 			hungup: {kind:'hungup', label:'hang up', title:'hang up', next:''},
@@ -76,9 +76,9 @@ App.factory('protos', function () {
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 		},
 		dialNounProto: {
-			number: {dialType: 'number', destination:'', sendDigits:'', beforeConnectModule:''},
+			number: {dialType: 'number', destination:'', sendDigits:null, beforeConnectUrl:'', beforeConnectModule:null},
 			client: {dialType: 'client', destination:''},
-			conference: {dialType: 'conference', destination:'', muted:'', beep:'', startConferenceOnEnter:'', endConferenceOnExit:''},
+			conference: {dialType: 'conference', destination:'', nextModule:null, muted:null, beep:null, startConferenceOnEnter:null, endConferenceOnExit:null, waitUrl:null, waitModule:null, waitMethod:'GET', maxParticipants:null},
 			sipuri: {dialType: 'sipuri', destination:''},
 		}
 	};

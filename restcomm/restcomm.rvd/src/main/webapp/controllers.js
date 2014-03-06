@@ -104,8 +104,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	};
 	
 	// Some constants to be moved elsewhere = TODO
-	$scope.yesNoBooleanOptions = [{caption:"", value:""}, {caption:"Yes", value:true}, {caption:"No", value:false}];
-	
+	$scope.yesNoBooleanOptions = [{caption:"Yes", value:true}, {caption:"No", value:false}];
+	$scope.nullValue = null;
 
 	//console.log("projectController stepService: " + stepService.stepNames );
 

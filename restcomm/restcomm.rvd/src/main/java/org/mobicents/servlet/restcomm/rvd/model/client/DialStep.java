@@ -1,59 +1,33 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.util.List;
+import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 
 public class DialStep extends Step {
-    private String dialType;
-    private String number;
-    private String client;
-    private String conference;
-    private String sipuri;
-
+    private List<DialNoun> dialNouns;
     private String action;
     private String method;
     private Integer timeout;
     private Integer timeLimit;
     private String callerId;
+    private String nextModule;
 
-    public String getDialType() {
-        return dialType;
+    public String getNextModule() {
+        return nextModule;
     }
 
-    public void setDialType(String dialType) {
-        this.dialType = dialType;
+    public void setNextModule(String nextModule) {
+        this.nextModule = nextModule;
     }
 
-    public String getNumber() {
-        return number;
+    public List<DialNoun> getDialNouns() {
+        return dialNouns;
     }
 
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
-    public String getClient() {
-        return client;
-    }
-
-    public void setClient(String client) {
-        this.client = client;
-    }
-
-    public String getConference() {
-        return conference;
-    }
-
-    public void setConference(String conference) {
-        this.conference = conference;
-    }
-
-    public String getSipuri() {
-        return sipuri;
-    }
-
-    public void setSipuri(String sipuri) {
-        this.sipuri = sipuri;
+    public void setDialNouns(List<DialNoun> dialNouns) {
+        this.dialNouns = dialNouns;
     }
 
     public String getAction() {
@@ -95,10 +69,16 @@ public class DialStep extends Step {
     public void setCallerId(String callerId) {
         this.callerId = callerId;
     }
-    public RcmlDialStep render(Interpreter interpreter) {
-
+    public RcmlDialStep render(Interpreter interpreter) throws InterpreterException {
         RcmlDialStep rcmlStep = new RcmlDialStep();
-        if ("number".equals(getDialType()) && getNumber() != null && !"".equals(getNumber()))
+
+        for ( DialNoun noun: getDialNouns() ) {
+            rcmlStep.getNouns().add( noun.render(interpreter) );
+        }
+
+
+
+        /*if ("number".equals(getDialType()) && getNumber() != null && !"".equals(getNumber()))
             rcmlStep.setNumber(interpreter.populateVariables(getNumber()));
         else if ("client".equals(getDialType()) && getClient() != null && !"".equals(getClient()))
             rcmlStep.setClient(getClient());
@@ -107,7 +87,8 @@ public class DialStep extends Step {
         else if ("sipuri".equals(getDialType()) && getSipuri() != null && !"".equals(getSipuri()))
             rcmlStep.setSipuri(getSipuri());
         // TODO else ...
-
+*/
         return rcmlStep;
     }
+
 }
