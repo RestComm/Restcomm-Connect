@@ -1,11 +1,24 @@
 package org.mobicents.servlet.restcomm.rvd.model.rcml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RcmlDialStep extends RcmlStep {
+    private List<RcmlNoun> nouns = new ArrayList<RcmlNoun>();
+
+    public List<RcmlNoun> getNouns() {
+        return nouns;
+    }
+
+    public void setNouns(List<RcmlNoun> nouns) {
+        this.nouns = nouns;
+    }
+
+    /*
     private String number;
     private String client;
     private String conference;
     private String sipuri;
-
     public String getNumber() {
         return number;
     }
@@ -37,4 +50,5 @@ public class RcmlDialStep extends RcmlStep {
     public void setSipuri(String sipuri) {
         this.sipuri = sipuri;
     }
+    */
 }

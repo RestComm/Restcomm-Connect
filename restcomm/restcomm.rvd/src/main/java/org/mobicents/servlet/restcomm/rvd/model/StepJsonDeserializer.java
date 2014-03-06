@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.model.client.DialNoun;
 import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
@@ -37,7 +38,7 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
 
         Gson gson = new GsonBuilder()
             .registerTypeAdapter(Step.class, new StepJsonDeserializer())
-            //.registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
+            .registerTypeAdapter(DialNoun.class, new DialNounJsonDeserializer())
             .create();
 
         Step step;

@@ -28,10 +28,14 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServ
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ReferencedModuleDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.model.ClientNounConverter;
+import org.mobicents.servlet.restcomm.rvd.model.ConferenceNounConverter;
 import org.mobicents.servlet.restcomm.rvd.model.FaxStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.NumberNounConverter;
 import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.SipuriNounConverter;
 import org.mobicents.servlet.restcomm.rvd.model.SmsStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
@@ -39,10 +43,13 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
 import org.mobicents.servlet.restcomm.rvd.model.client.ValueExtractor;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlClientNoun;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlConferenceNoun;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlFaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlNumberNoun;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRecordStep;
@@ -50,6 +57,7 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRedirectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
+import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSipuriNoun;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
@@ -111,6 +119,11 @@ public class Interpreter {
         xstream.registerConverter(new RedirectStepConverter());
         xstream.registerConverter(new SmsStepConverter());
         xstream.registerConverter(new FaxStepConverter());
+        xstream.registerConverter(new NumberNounConverter());
+        xstream.registerConverter(new ClientNounConverter());
+        xstream.registerConverter(new ConferenceNounConverter());
+        xstream.registerConverter(new SipuriNounConverter());
+        xstream.addImplicitCollection(RcmlDialStep.class, "nouns");
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
         xstream.alias("Say", RcmlSayStep.class);
@@ -124,6 +137,10 @@ public class Interpreter {
         xstream.alias("Sms", RcmlSmsStep.class);
         xstream.alias("Record", RcmlRecordStep.class);
         xstream.alias("Fax", RcmlFaxStep.class);
+        xstream.alias("Number", RcmlNumberNoun.class);
+        xstream.alias("Client", RcmlClientNoun.class);
+        xstream.alias("Conference", RcmlConferenceNoun.class);
+        xstream.alias("Sip", RcmlSipuriNoun.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
@@ -525,5 +542,13 @@ public class Interpreter {
                 return nodename.getName();
         }
         return null;
+    }
+
+    public String moduleUrl(String moduleName) {
+        String url = null;
+        if (nodeNames.contains(moduleName)) {
+            url = "controller?target=" + moduleName;
+        }
+        return url;
     }
 }

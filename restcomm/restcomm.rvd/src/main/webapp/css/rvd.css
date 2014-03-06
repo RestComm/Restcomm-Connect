@@ -366,6 +366,16 @@ li.verb {
 	margin-left: 18px;
 }
 
+/* --- Dial step customizations */
+.conference-noun .noun-advanced {
+	margin-top: 5px;
+	margin-left: 10px;
+}
+
+
+/* --- /Dial step customizations */
+
+
 /* 
  * 
  * BOOTSTRAP CUSTOMIZATIONS 

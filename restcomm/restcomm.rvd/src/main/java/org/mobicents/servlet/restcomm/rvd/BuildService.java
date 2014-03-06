@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -31,7 +32,8 @@ public class BuildService {
         gson = new GsonBuilder()
                 .registerTypeAdapter(Step.class, new StepJsonDeserializer())
                 .registerTypeAdapter(Step.class, new StepJsonSerializer())
-                //.registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
+                //.registerTypeAdapter(DialNoun.class, new DialNounJsonDeserializer())  // put these inside StepJsonDeserializer. Since DialNoun deserialization is part of StepDeserialization process
+                //.registerTypeAdapter(DialNoun.class, new DialNounJsonSerializer())    // ...
                 .create();
     }
 
@@ -45,6 +47,8 @@ public class BuildService {
      */
     public void buildProject(String projectStateJson, String projectPath) throws IOException {
         ProjectState projectState = gson.fromJson(projectStateJson, ProjectState.class);
+
+        logger.debug( "TO-JSON: " + gson.toJson(projectState, ProjectState.class) );
 
         ProjectOptions projectOptions = new ProjectOptions();
 
