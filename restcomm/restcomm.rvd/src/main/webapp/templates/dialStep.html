@@ -14,7 +14,7 @@
 				<div class='col-md-12'>
 					<div basic-sortable list-model='step.dialNouns' class='dial-nouns' item-added='addDialNoun(item,pos,listmodel)'>
 						
-						<div class="drop-area drop-area-nouns" ng-show="step.dialNouns.length == 0">
+						<div class="drop-area drop-area-nouns" ng-if="step.dialNouns.length == 0">
 						    <div class="drop-prompt">
 						        <em>Drag one or more Number/Client/Conference/SipURI nouns to add destinations</em>
 						    </div>
