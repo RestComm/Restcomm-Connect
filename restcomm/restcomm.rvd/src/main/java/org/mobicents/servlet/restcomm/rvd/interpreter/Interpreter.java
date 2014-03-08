@@ -161,6 +161,11 @@ public class Interpreter {
         xstream.useAttributeFor(RcmlRecordStep.class, "transcribe");
         xstream.useAttributeFor(RcmlRecordStep.class, "transcribeCallback");
         xstream.useAttributeFor(RcmlRecordStep.class, "playBeep");
+        xstream.useAttributeFor(RcmlDialStep.class, "action");
+        xstream.useAttributeFor(RcmlDialStep.class, "method");
+        xstream.useAttributeFor(RcmlDialStep.class, "timeout");
+        xstream.useAttributeFor(RcmlDialStep.class, "timeLimit");
+        xstream.useAttributeFor(RcmlDialStep.class, "callerId");
         xstream.aliasField("Number", RcmlDialStep.class, "number");
         xstream.aliasField("Client", RcmlDialStep.class, "client");
         xstream.aliasField("Conference", RcmlDialStep.class, "conference");
@@ -544,10 +549,20 @@ public class Interpreter {
         return null;
     }
 
+    /**
+     * Build a relative url to the named module
+     * @param moduleName
+     * @return the url or null if the module does not exist
+     */
     public String moduleUrl(String moduleName) {
         String url = null;
-        if (nodeNames.contains(moduleName)) {
-            url = "controller?target=" + moduleName;
+        for ( NodeName nodeName : nodeNames )  {
+            if ( nodeName.getName().equals(moduleName)) {
+                Map<String, String> pairs = new HashMap<String, String>();
+                pairs.put("target", moduleName);
+                url = buildAction(pairs);
+                break; // found it
+            }
         }
         return url;
     }

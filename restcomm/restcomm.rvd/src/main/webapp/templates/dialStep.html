@@ -10,10 +10,30 @@
 					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-sipuri label label-primary rvd-pickable">Sip URI</div>
 				</div>
 			</div>
+			
+			<div  class="input-group form-group">
+				<span class="input-group-addon">Continue to</span>
+				<select ng-model='step.nextModule' sync-model name='nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control"  style="min-width:140px;">
+					<option value=""></option>
+				</select>
+				<!-- <div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>  -->
+				
+				<span ng-show='step.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The limit in seconds that Dial waits for the called party to answer the call">Timeout</span>
+				<input ng-show='step.advancedShown' ng-model='step.timeout' null-if-empty type='number' class='form-control small-input' placeholder='30'>
+				
+				<span ng-show='step.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum duration of the Dial in seconds">Time limit</span>
+				<input ng-show='step.advancedShown' ng-model='step.timeLimit' null-if-empty type='number' class='form-control small-input' placeholder='14400'>
+
+				<span ng-show='step.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The caller ID that will appear to the called party when RestComm calls">Caller ID</span>
+				<input ng-show='step.advancedShown' ng-model='step.callerId' null-if-empty type='text' class='form-control'>
+				
+				<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.advancedShown = !step.advancedShown"></span>
+			</div>
+			
 			<div class='row'>
 				<div class='col-md-12'>
 					<div basic-sortable list-model='step.dialNouns' class='dial-nouns' item-added='addDialNoun(item,pos,listmodel)'>
-						
+									
 						<div class="drop-area drop-area-nouns" ng-if="step.dialNouns.length == 0">
 						    <div class="drop-prompt">
 						        <em>Drag one or more Number/Client/Conference/SipURI nouns to add destinations</em>

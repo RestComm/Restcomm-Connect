@@ -166,9 +166,6 @@ public class ProjectService {
         try {
             stateFile_os = new FileOutputStream(workspaceBasePath + File.separator + projectName + File.separator + "state");
             IOUtils.copy(request.getInputStream(), stateFile_os);
-
-            logger.debug("Updating project: " +  IOUtils.toString(request.getInputStream() ) );
-
             stateFile_os.close();
             return true;
         } catch (FileNotFoundException e) {
