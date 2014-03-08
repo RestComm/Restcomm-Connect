@@ -5,6 +5,11 @@ import java.util.List;
 
 public class RcmlDialStep extends RcmlStep {
     private List<RcmlNoun> nouns = new ArrayList<RcmlNoun>();
+    private String action;
+    private String method;
+    private String timeout;
+    private String timeLimit;
+    private String callerId;
 
     public List<RcmlNoun> getNouns() {
         return nouns;
@@ -14,41 +19,45 @@ public class RcmlDialStep extends RcmlStep {
         this.nouns = nouns;
     }
 
-    /*
-    private String number;
-    private String client;
-    private String conference;
-    private String sipuri;
-    public String getNumber() {
-        return number;
+    public String getAction() {
+        return action;
     }
 
-    public void setNumber(String number) {
-        this.number = number;
+    public void setAction(String action) {
+        this.action = action;
     }
 
-    public String getClient() {
-        return client;
+    public String getMethod() {
+        return method;
     }
 
-    public void setClient(String client) {
-        this.client = client;
+    public void setMethod(String method) {
+        this.method = method;
     }
 
-    public String getConference() {
-        return conference;
+    public String getTimeout() {
+        return timeout;
     }
 
-    public void setConference(String conference) {
-        this.conference = conference;
+    public void setTimeout(String timeout) {
+        this.timeout = timeout;
     }
 
-    public String getSipuri() {
-        return sipuri;
+    public String getTimeLimit() {
+        return timeLimit;
     }
 
-    public void setSipuri(String sipuri) {
-        this.sipuri = sipuri;
+    public void setTimeLimit(String timeLimit) {
+        this.timeLimit = timeLimit;
     }
-    */
+
+    public String getCallerId() {
+        return callerId;
+    }
+
+    public void setCallerId(String callerId) {
+        this.callerId = callerId;
+    }
+
+
 }

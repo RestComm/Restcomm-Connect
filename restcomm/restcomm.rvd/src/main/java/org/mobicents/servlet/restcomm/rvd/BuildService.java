@@ -25,7 +25,7 @@ public class BuildService {
 
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
-    private Gson gson;
+    protected Gson gson;
 
     public BuildService() {
         // Parse the big project state object into a nice dto model
@@ -47,9 +47,6 @@ public class BuildService {
      */
     public void buildProject(String projectStateJson, String projectPath) throws IOException {
         ProjectState projectState = gson.fromJson(projectStateJson, ProjectState.class);
-
-        logger.debug( "TO-JSON: " + gson.toJson(projectState, ProjectState.class) );
-
         ProjectOptions projectOptions = new ProjectOptions();
 
         // Save general purpose project information

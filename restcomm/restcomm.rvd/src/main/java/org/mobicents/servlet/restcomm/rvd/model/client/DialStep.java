@@ -1,11 +1,14 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
 import java.util.List;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
 
 public class DialStep extends Step {
+    static final Logger logger = Logger.getLogger(DialStep.class.getName());
+
     private List<DialNoun> dialNouns;
     private String action;
     private String method;
@@ -76,18 +79,19 @@ public class DialStep extends Step {
             rcmlStep.getNouns().add( noun.render(interpreter) );
         }
 
+        // set action (from nextModule)
+        String moduleUrl = interpreter.moduleUrl(getNextModule());
+        if ( moduleUrl != null )
+            rcmlStep.setAction(moduleUrl);
+        else {
+            logger.warn("Tried to reference a non-existing module while building 'action' property: " + getNextModule() + ". It will be ignored.");
+        }
 
+        rcmlStep.setMethod(getMethod());
+        rcmlStep.setTimeout(getTimeout() == null ? null : getTimeout().toString());
+        rcmlStep.setTimeLimit(getTimeLimit() == null ? null : getTimeLimit().toString());
+        rcmlStep.setCallerId(getCallerId());
 
-        /*if ("number".equals(getDialType()) && getNumber() != null && !"".equals(getNumber()))
-            rcmlStep.setNumber(interpreter.populateVariables(getNumber()));
-        else if ("client".equals(getDialType()) && getClient() != null && !"".equals(getClient()))
-            rcmlStep.setClient(getClient());
-        else if ("conference".equals(getDialType()) && getConference() != null && !"".equals(getConference()))
-            rcmlStep.setConference(getConference());
-        else if ("sipuri".equals(getDialType()) && getSipuri() != null && !"".equals(getSipuri()))
-            rcmlStep.setSipuri(getSipuri());
-        // TODO else ...
-*/
         return rcmlStep;
     }
 
