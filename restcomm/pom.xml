@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>7.1.4-TelScale-SNAPSHOT</version>
+	<version>7.2.0-TelScale-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -87,7 +86,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version>
+		<sipservletapi.version>7.0.1.GA-TelScale</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.27</servlet-api.version>
@@ -105,7 +104,7 @@
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>1.8.0.10</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
-		<sip-ri.version>7.0.0.GA-TelScale</sip-ri.version>
+		<sip-ri.version>7.0.1-TelScale</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>7.0.0.CR1-TelScale</mss.arquillian.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
