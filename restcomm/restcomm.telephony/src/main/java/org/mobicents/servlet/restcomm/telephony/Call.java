@@ -507,7 +507,7 @@ public final class Call extends UntypedActor {
                 sender.tell(new CallResponse<ActorRef>(group), self);
             } else if (DestroyMediaGroup.class.equals(klass)) {
                 final DestroyMediaGroup request = (DestroyMediaGroup) message;
-//                context.stop(request.group());
+                //                context.stop(request.group());
                 if(group != null && !group.isTerminated()) {
                     context.stop(group);
                     group = null;
@@ -546,17 +546,38 @@ public final class Call extends UntypedActor {
     }
 
     @SuppressWarnings("unchecked")
-    private String patch(final byte[] data, final String externalIp) throws UnknownHostException, SdpException {
+    private String patch(final String contentType, final byte[] data, final String externalIp) throws UnknownHostException, SdpException {
         final String text = new String(data);
-        final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
-        // Handle the connection at the session level.
-        fix(sdp.getConnection(), externalIp);
-        // Handle the connections at the media description level.
-        final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
-        for (final MediaDescription description : descriptions) {
-            fix(description.getConnection(), externalIp);
+        String patchedSdp = null;
+        if(contentType.equalsIgnoreCase("application/sdp")) {
+            final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
+            // Handle the connection at the session level.
+            fix(sdp.getConnection(), externalIp);
+            // Handle the connections at the media description level.
+            final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
+            for (final MediaDescription description : descriptions) {
+                fix(description.getConnection(), externalIp);
+            }
+            patchedSdp = sdp.toString();
+        } else {
+            String boundary = contentType.split(";")[1].split("=")[1];
+            String[] parts = text.split(boundary);
+            String sdpText = null;
+            for (String part: parts) {
+                if (part.contains("application/sdp")) {
+                    sdpText = part.replaceAll("Content.*", "").replaceAll("--", "").trim();
+                }
+            }
+            final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(sdpText);
+            fix(sdp.getConnection(), externalIp);
+            // Handle the connections at the media description level.
+            final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
+            for (final MediaDescription description : descriptions) {
+                fix(description.getConnection(), externalIp);
+            }
+            patchedSdp = sdp.toString();
         }
-        return sdp.toString();
+        return patchedSdp;
     }
 
     private void fix(final Connection connection, final String externalIp) throws UnknownHostException, SdpException {
@@ -769,7 +790,7 @@ public final class Call extends UntypedActor {
             } else {
                 final String externalIp = invite.getInitialRemoteAddr();
                 final byte[] sdp = invite.getRawContent();
-                final String offer = patch(sdp, externalIp);
+                final String offer = patch(invite.getContentType(), sdp, externalIp);
                 final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
                 open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
             }
@@ -815,7 +836,7 @@ public final class Call extends UntypedActor {
             if (gatewayInfo.useNat()) {
                 final String externalIp = gatewayInfo.externalIP().getHostAddress();
                 final byte[] sdp = response.descriptor().toString().getBytes();
-                offer = patch(sdp, externalIp);
+                offer = patch("application/sdp",sdp, externalIp);
             } else {
                 offer = response.descriptor().toString();
             }
@@ -861,7 +882,19 @@ public final class Call extends UntypedActor {
                 InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
                 InetAddress inetAddress = InetAddress.getByName(realIP);
 
-                if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+                final String initialIpBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                String initialPortBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemotePort");
+
+                if (initialIpBeforeLB != null) {
+                    if(initialPortBeforeLB == null)
+                        initialPortBeforeLB = "5060";
+                    logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB+":"+initialPortBeforeLB
+                            + " to the session for later use");
+                    realIP = initialIpBeforeLB+":"+initialPortBeforeLB;
+                    final SipURI uri = factory.createSipURI(null, realIP);
+                    invite.getSession().setAttribute("realInetUri", uri);
+                } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
                         && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
                     logger.info("Contact header address " + contactAddr.toString()
                             + " is a private network ip address, storing Initial Remote Address " + realIP
@@ -1100,7 +1133,7 @@ public final class Call extends UntypedActor {
 
             final String externalIp = invite.getInitialRemoteAddr();
             final byte[] sdp = response.getRawContent();
-            final String answer = patch(sdp, externalIp);
+            final String answer = patch(response.getContentType(), sdp, externalIp);
             final ConnectionDescriptor descriptor = new ConnectionDescriptor(answer);
             final UpdateConnection update = new UpdateConnection(descriptor);
             remoteConn.tell(update, source);
@@ -1125,7 +1158,7 @@ public final class Call extends UntypedActor {
                 String answer = null;
                 if (gatewayInfo.useNat()) {
                     final String externalIp = gatewayInfo.externalIP().getHostAddress();
-                    answer = patch(sdp, externalIp);
+                    answer = patch("application/sdp",sdp, externalIp);
                 } else {
                     answer = response.descriptor().toString();
                 }
