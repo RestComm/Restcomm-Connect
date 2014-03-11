@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.rvd.interpreter;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,7 +11,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -22,6 +20,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
@@ -63,6 +62,8 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
 import org.mobicents.servlet.restcomm.rvd.model.client.Assignment;
+import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -76,13 +77,13 @@ public class Interpreter {
 
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
+    private ProjectStorage projectStorage;
+
     private XStream xstream;
     private Gson gson;
     private String targetParam;
     private Target target;
-    private String projectBasePath;
     private String appName;
-    //private HttpServletRequest httpRequest;
     private Map<String,String> requestParameters; // parameters like digits, callSid etc.
     private String contextPath;
 
@@ -90,21 +91,10 @@ public class Interpreter {
     private Map<String, String> variables = new HashMap<String, String>();
     private List<NodeName> nodeNames;
 
-    /*
-    public Interpreter() {
-        // TODO set default values for these members
-        //this.targetParam = targetParam;
-        //this.projectBasePath = projectBasePath;
-        //this.appName = appName;
-        //this.requestParameters = requestParameters;
-        //this.contextPath = contextPath;
-        init();
-    }
-    */
 
-    public Interpreter(String targetParam, String projectBasePath, String appName, Map<String,String> requestParameters, String contextPath) {
+    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, Map<String,String> requestParameters, String contextPath) {
+        this.projectStorage = projectStorage;
         this.targetParam = targetParam;
-        this.projectBasePath = projectBasePath;
         this.appName = appName;
         this.requestParameters = requestParameters;
         this.contextPath = contextPath;
@@ -175,17 +165,6 @@ public class Interpreter {
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
     }
 
-
-    //public HttpServletRequest getHttpRequest() {
-    //    return httpRequest;
-    //}
-
-
-    //public void setHttpRequest(HttpServletRequest httpRequest) {
-    //    this.httpRequest = httpRequest;
-    //}
-
-
     public String getAppName() {
         return appName;
     }
@@ -216,13 +195,9 @@ public class Interpreter {
     }
 
 
-    public String interpret()
-            throws IOException {
-        //this.projectBasePath = projectBasePath;
-        //this.appName = appName;
-        //this.httpRequest = httpRequest;
-
-        String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
+    public String interpret() throws StorageException {
+        //String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
+        String projectfile_json = projectStorage.loadProjectOptions(appName);
         ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
         }.getType());
         nodeNames = projectOptions.getNodeNames();
@@ -266,7 +241,7 @@ public class Interpreter {
     }
 
 
-    public String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
+    public String interpret(String targetParam, RcmlResponse rcmlModel ) throws InterpreterException, StorageException {
 
         logger.debug("starting interpeter for " + targetParam);
 
@@ -282,8 +257,8 @@ public class Interpreter {
 
             if (rcmlModel == null )
                 rcmlModel = new RcmlResponse();
-            String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
-                    + target.getNodename() + ".node"));
+            //String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
+            String nodefile_json = projectStorage.loadNodeStepnames(appName, target.getNodename());//FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
             List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>() {
             }.getType());
 
@@ -317,9 +292,10 @@ public class Interpreter {
         return rcmlResult; // this is in case of an error
     }
 
-    private Step loadStep(String stepname) throws IOException, InterpreterException {
-        String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
-                + target.getNodename() + "." + stepname));
+    private Step loadStep(String stepname) throws StorageException  {
+        //String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
+        //        + target.getNodename() + "." + stepname));
+        String stepfile_json = projectStorage.loadStep(appName, target.getNodename(), stepname);
         Step step = gson.fromJson(stepfile_json, Step.class);
 
         return step;
@@ -363,89 +339,95 @@ public class Interpreter {
 
 
     /**
-     * If the step is capable of executing like ExternalService steps it executes them
+     * If the step is executable (like ExternalService) it is executed
      * @param step
-     * @throws IOException
-     * @throws ClientProtocolException
      * @return String The module name to continue rendering with
-     * @throws ErrorParsingExternalServiceUrl
      */
-    private String processStep(Step step) throws IOException, InterpreterException {
+    private String processStep(Step step) throws InterpreterException {
         if (step.getClass().equals(ExternalServiceStep.class)) {
 
-            ExternalServiceStep esStep = (ExternalServiceStep) step;
-
-            CloseableHttpClient client = HttpClients.createDefault();
-            //String url = populateVariables(esStep.getUrl());
-
-            URI url;
             try {
-                URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
-                for ( UrlParam urlParam : esStep.getUrlParams() ) {
-                    uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
+
+                ExternalServiceStep esStep = (ExternalServiceStep) step;
+
+                CloseableHttpClient client = HttpClients.createDefault();
+                //String url = populateVariables(esStep.getUrl());
+
+                URI url;
+                try {
+                    URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
+                    for ( UrlParam urlParam : esStep.getUrlParams() ) {
+                        uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
+                    }
+                    url = uri_builder.build();
+                } catch (URISyntaxException e) {
+                    throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
                 }
-                url = uri_builder.build();
-            } catch (URISyntaxException e) {
-                throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
-            }
 
-            logger.info( "External Service: Requesting from url: " + url);
-            HttpGet get = new HttpGet( url );
-            CloseableHttpResponse response = client.execute( get );
+                logger.info( "External Service: Requesting from url: " + url);
+                HttpGet get = new HttpGet( url );
+                CloseableHttpResponse response = client.execute( get );
 
-            JsonParser parser = new JsonParser();
+                JsonParser parser = new JsonParser();
 
-            try {
-                HttpEntity entity = response.getEntity();
-                if ( entity != null ) {
-                    String entity_string = EntityUtils.toString(entity);
-                    JsonElement response_element = parser.parse(entity_string);
+                try {
+                    HttpEntity entity = response.getEntity();
+                    if ( entity != null ) {
+                        String entity_string = EntityUtils.toString(entity);
+                        JsonElement response_element = parser.parse(entity_string);
 
-                    String nextModuleName = null;
-                    //boolean dynamicRouting = false;
-                    if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
-                        //dynamicRouting = true;
-                        String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
-                        nextModuleName = getNodeNameByLabel( moduleLabel );
-                        if ( nextModuleName == null )
-                            throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
+                        String nextModuleName = null;
+                        //boolean dynamicRouting = false;
+                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
+                            //dynamicRouting = true;
+                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+                            nextModuleName = getNodeNameByLabel( moduleLabel );
+                            if ( nextModuleName == null )
+                                throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
 
-                        logger.debug( "Dynamic routing enabled. Chosen target: " + nextModuleName);
-                        for ( Assignment assignment : esStep.getAssignments() ) {
-                            logger.debug("working on variable " + assignment.getDestVariable() );
-                            logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
-                            if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
+                            logger.debug( "Dynamic routing enabled. Chosen target: " + nextModuleName);
+                            for ( Assignment assignment : esStep.getAssignments() ) {
+                                logger.debug("working on variable " + assignment.getDestVariable() );
+                                logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
+                                if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
+                                    String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                                    variables.put(assignment.getDestVariable(), value );
+                                } else
+                                    logger.debug("skipped assignment to " + assignment.getDestVariable() );
+                            }
+                        }  else {
+                            for ( Assignment assignment : esStep.getAssignments() ) {
+                                logger.debug("working on variable " + assignment.getDestVariable() );
                                 String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
                                 variables.put(assignment.getDestVariable(), value );
-                            } else
-                                logger.debug("skipped assignment to " + assignment.getDestVariable() );
-                        }
-                    }  else {
-                        for ( Assignment assignment : esStep.getAssignments() ) {
-                            logger.debug("working on variable " + assignment.getDestVariable() );
-                            String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
-                            variables.put(assignment.getDestVariable(), value );
-                        }
+                            }
 
+                        }
+                        logger.debug("variables after processing ExternalService step: " + variables.toString() );
+                        if ( esStep.getDoRouting() ) {
+                            String next = "";
+                            if ( "fixed".equals( esStep.getNextType() ) )
+                                next = esStep.getNext();
+                            else
+                            if ( "responseBased".equals( esStep.getNextType() ))
+                                next = nextModuleName;
+                            if ( "".equals(next) )
+                                throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
+                            return next;
+                        }
                     }
-                    logger.debug("variables after processing ExternalService step: " + variables.toString() );
-                    if ( esStep.getDoRouting() ) {
-                        String next = "";
-                        if ( "fixed".equals( esStep.getNextType() ) )
-                            next = esStep.getNext();
-                        else
-                        if ( "responseBased".equals( esStep.getNextType() ))
-                            next = nextModuleName;
-                        if ( "".equals(next) )
-                            throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
-                        return next;
-                    }
+                } catch (JsonSyntaxException e) {
+                    throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
+                } finally {
+                    response.close();
                 }
-            } catch (JsonSyntaxException e) {
-                throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
-            } finally {
-                response.close();
+
             }
+            catch (IOException e) {
+                throw new ESRequestException("Error processing ExternalService step " + step.getName(), e);
+            }
+
+
         }
         return null;
     }

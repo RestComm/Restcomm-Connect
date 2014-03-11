@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +9,7 @@ import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 public class GatherStep extends Step {
 
@@ -187,7 +187,7 @@ public class GatherStep extends Step {
 
         return rcmlStep;
     }
-    public void handleAction(Interpreter interpreter) throws InterpreterException, IOException {
+    public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
         logger.debug("handling gather action");
         if ("menu".equals(getGatherType())) {
 

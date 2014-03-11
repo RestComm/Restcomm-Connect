@@ -1,6 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
-public class WavFileItem {
+public class WavItem {
     private String filename;
 
     public String getFilename() {
@@ -10,4 +10,5 @@ public class WavFileItem {
     public void setFilename(String filename) {
         this.filename = filename;
     }
+
 }
