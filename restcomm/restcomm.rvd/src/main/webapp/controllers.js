@@ -83,6 +83,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 		
 	// State variables
+	$scope.projectNotFound = false;
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
 	
@@ -338,6 +339,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 			
 			$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
+		 }).error(function (data, status, headers, config) {
+			//console.log("error opening project");
+			$scope.projectNotFound = true;
 		 });
 	}
 	
