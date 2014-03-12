@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -146,7 +147,13 @@ public class FsProjectStorage implements ProjectStorage {
             });
             Arrays.sort(entries, new Comparator<File>() {
                 public int compare(File f1, File f2) {
-                    return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+                    File statefile1 = new File(f1.getAbsolutePath() + File.separator + "state");
+                    File statefile2 = new File(f2.getAbsolutePath() + File.separator + "state");
+                    // multiply by -1 to inverse the order of the results
+                    if ( statefile1.exists() && statefile2.exists() )
+                        return -1 * Long.valueOf(statefile1.lastModified()).compareTo(statefile2.lastModified());
+                    else
+                        return -1 * Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
                 }
             });
 
@@ -166,6 +173,10 @@ public class FsProjectStorage implements ProjectStorage {
         try {
             if (!destDir.exists()) {
                     FileUtils.copyDirectory(sourceDir, destDir);
+                    // set the modified date of the "state" file to reflect the fact that we are dealing with a new project
+                    File statefile = new File(destDir.getAbsolutePath() + File.separator + "state");
+                    if ( statefile.exists() )
+                        statefile.setLastModified(new Date().getTime());
             } else {
                 throw new ProjectDirectoryAlreadyExists();
             }
@@ -239,7 +250,7 @@ public class FsProjectStorage implements ProjectStorage {
             });
             Arrays.sort(entries, new Comparator<File>() {
                 public int compare(File f1, File f2) {
-                    return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+                    return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified()) ;
                 }
             });
 
