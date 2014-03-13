@@ -76,7 +76,8 @@ App.factory('protos', function () {
 			record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 			// USSD
-			menu: {kind:'ussd-menu', label:'Menu', title:'Menu'},
+			"ussd-menu": {kind:'ussd-menu', label:'Menu', title:'Menu', text:''},
+			"ussd-gather": {kind:'ussd-gather', label:'Collect', title:'Collect', gatherType:"menu" },
 			
 			
 		},
