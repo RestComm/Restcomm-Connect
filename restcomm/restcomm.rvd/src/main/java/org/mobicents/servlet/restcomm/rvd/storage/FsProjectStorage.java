@@ -140,7 +140,7 @@ public class FsProjectStorage implements ProjectStorage {
             File[] entries = workspaceDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
-                    if (anyfile.isDirectory() && !anyfile.getName().equals(protoDirectoryName))
+                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(protoDirectoryName))
                         return true;
                     return false;
                 }

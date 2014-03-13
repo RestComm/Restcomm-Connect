@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
@@ -112,8 +114,17 @@ public class ProjectService {
         return projectStorage.projectExists(projectName);
     }
 
-    public void createProject(String projectName) throws StorageException {
-        projectStorage.cloneProject(settings.getOption("protoProjectName"), projectName);
+    public void createProject(String projectName, String kind) throws StorageException, InvalidServiceParameters {
+        String protoSuffix = null;
+        if ( "voice".equals(kind) )
+            protoSuffix = "_voice";
+        else
+        if ( "ussd".equals(kind) )
+            protoSuffix = "_ussd";
+        else
+            throw new InvalidServiceParameters("Invalid project kind specified - '" + kind + "'");
+
+        projectStorage.cloneProject(settings.getOption("protoProjectName") + protoSuffix, projectName);
     }
 
     public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException {

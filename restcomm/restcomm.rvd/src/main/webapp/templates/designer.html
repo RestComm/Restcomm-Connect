@@ -10,10 +10,11 @@
 			</ul>
 		</div>
 	</nav>
+	project kind: {{projectKind}}
 	
 	<div ng-hide='projectNotFound'>	
 	
-		<nav ng-hide='projectNotFound' class="navbar navbar-default" role="navigation">
+		<nav  class="navbar navbar-default" role="navigation">
 			<div class="collapse navbar-collapse navbar-ex1-collapse">
 	
 				<ul class="nav navbar-nav">
@@ -56,49 +57,54 @@
 			<!-- Left menu -->
 			<div class="col-md-2">
 	
-			<div class='form-group'>
-				<div my-draggable='.sortable-steps' id='buttonsay' class="label label-primary verb-button kind-say rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
-				<div my-draggable='.sortable-steps' id='buttonplay' class="label label-primary verb-button kind-play rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
-				<div my-draggable='.sortable-steps.root' id='buttongather' class="label label-primary verb-button kind-gather rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>
-				<div my-draggable='.sortable-steps' id='buttondial' class="label label-primary verb-button kind-dial rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>
-				<div my-draggable='.sortable-steps' id='buttonhungup' class="label label-primary verb-button kind-hungup rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>
-				<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
-				<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-reject rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</div>
-				<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-redirect rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
-				<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-pause rvd-pickable"><i class='fa fa-pause'></i> &nbsp;Pause</div>
-				<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-sms rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
-				<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-record rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;Record</div>
-				<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-fax rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
-			</div>			
-				<div>
+				<div ng-show='projectKind=="voice"' class='form-group'>
+					<div my-draggable='.sortable-steps' id='buttonsay' class="label label-primary verb-button kind-say rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
+					<div my-draggable='.sortable-steps' id='buttonplay' class="label label-primary verb-button kind-play rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
+					<div my-draggable='.sortable-steps.root' id='buttongather' class="label label-primary verb-button kind-gather rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>
+					<div my-draggable='.sortable-steps' id='buttondial' class="label label-primary verb-button kind-dial rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>
+					<div my-draggable='.sortable-steps' id='buttonhungup' class="label label-primary verb-button kind-hungup rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>
+					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-reject rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</div>
+					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-redirect rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
+					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-pause rvd-pickable"><i class='fa fa-pause'></i> &nbsp;Pause</div>
+					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-sms rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
+					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-record rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;Record</div>
+					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-fax rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
+				</div>			
+				<div ng-show='projectKind=="ussd"' class='form-group'>
+					<div my-draggable='.sortable-steps' class="label label-primary verb-button kind-ussd-menu rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Menu</div>
+				</div>
+			
+				<div ng-show='projectKind=="voice"'>
 					<h5 class='text-center'><strong>Audio resources</strong></h5>
 					
 					<div class='drop-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
 						<div class="drop-prompt">Drop new audio resources here</div>
 					</div>
 					<div ng-file-drop-available="dropSupported=true" ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
-									
+					
 					<div class='text-left more-audio-resources'>
 						<a class='rvd-clickable' ng-show='!showAudioResources' ng-click='showAudioResources = true'>More...</a>
 					</div>
-					<div ng-show='showAudioResources==true'>
+					
+					<div ng-show='showAudioResources'>									
 						<div class='row' ng-repeat='wavItem in wavList'>
 							<div ng-show='!wavItem.viewMode'>
 								<div class='col-md-10 ellipsis' tooltip='{{wavItem.filename}}' tooltip-popup-delay="1000" tooltip-trigger="mouseenter">{{wavItem.filename}}</div>
 								<div class='col-md-1'>
 									<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
 								</div>
+								
+								<div class="col-md-12 text-center confirm-delete " ng-show="wavItem.viewMode=='confirm-delete'">
+									<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
+									<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>
+								</div>						
 							</div>
-							
-							<div class="col-md-12 text-center confirm-delete " ng-show="wavItem.viewMode=='confirm-delete'">
-								<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
-								<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>
-							</div>						
 						</div>
-	
 						<a class='rvd-clickable' ng-click="showAudioResources = false"><i class="fa fa-angle-double-up" ></i></a>
-					</div>
-					
+					</div>	
+
+						
 				</div>
 			</div>
 	
@@ -169,5 +175,5 @@
 		</div>
 	
 	</div>
-
 </div>
+
