@@ -149,11 +149,10 @@ public class FsProjectStorage implements ProjectStorage {
                 public int compare(File f1, File f2) {
                     File statefile1 = new File(f1.getAbsolutePath() + File.separator + "state");
                     File statefile2 = new File(f2.getAbsolutePath() + File.separator + "state");
-                    // multiply by -1 to inverse the order of the results
                     if ( statefile1.exists() && statefile2.exists() )
-                        return -1 * Long.valueOf(statefile1.lastModified()).compareTo(statefile2.lastModified());
+                        return Long.valueOf(statefile2.lastModified()).compareTo(statefile1.lastModified());
                     else
-                        return -1 * Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+                        return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
                 }
             });
 
