@@ -450,4 +450,6 @@ li.verb {
 
 /* /Bootstrap extension for having a lot of stuff on nav-tabs */
 
-
+textarea.ussd-menu {
+	height: 150px;
+}

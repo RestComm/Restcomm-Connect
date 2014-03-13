@@ -1,0 +1,29 @@
+<div class="step ussd-gather-step panel panel-rvdstep">
+	<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+
+	<div class="panel-body" ng-hide='step.isCollapsed'>
+		<div class="row">
+			<div class="col-md-12">	
+				<div class="btn-group">
+				  <button ng-click="step.gatherType='menu'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='menu'}">Menu</button>
+				  <button ng-click="step.gatherType='collectdigits'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='collectdigits'}">Collect digits</button>
+				</div>
+				<div ng-show="step.gatherType=='menu'">
+					Create mappings ...
+				</div>	
+				<div ng-show="step.gatherType=='collectdigits'">
+					Assign to variable and redirect to module
+				</div>	
+				<!-- 		
+				<form name="form" novalidate>
+					<div class="form-group">
+						<span class="help-block">Text &nbsp;<i class="fa fa-info-circle rvd-clickable" popover='Display some help message [...]' popover-placement='top'></i></span>
+						<textarea ng-model='step.text' class="form-control ussd-menu"></textarea>	
+					</div>									
+				</form>
+				-->
+				
+			</div>
+		</div>
+	</div>
+</div>
