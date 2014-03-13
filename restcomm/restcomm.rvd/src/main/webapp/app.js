@@ -61,6 +61,7 @@ App.factory('protos', function () {
 	return { 
 		accessOperationProtos: accessOperationProtos,
 		stepProto: {
+			// Voice
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{optionsVisible:false}},
 			play: {playType:'local', kind:'play', label:'play', title:'play', wavUrl:null, wavLocalFilename:null, loop:null, isCollapsed:false},
 			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
@@ -74,6 +75,10 @@ App.factory('protos', function () {
 			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:''},
 			record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
+			// USSD
+			menu: {kind:'ussd-menu', label:'Menu', title:'Menu'},
+			
+			
 		},
 		dialNounProto: {
 			number: {dialType: 'number', destination:'', sendDigits:null, beforeConnectUrl:'', beforeConnectModule:null},

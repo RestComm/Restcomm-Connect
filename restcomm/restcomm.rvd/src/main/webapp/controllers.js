@@ -1,6 +1,7 @@
 App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
+	$scope.projectKind = 'voice';
 	
 	$scope.refreshProjectList = function() {
 		$http({url: 'services/manager/projects/list',
@@ -13,8 +14,8 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 		});
 	}
 	
-	$scope.createNewProject = function(name) {
-		$http({url: 'services/manager/projects?name=' + name,
+	$scope.createNewProject = function(name, kind) {
+		$http({url: 'services/manager/projects?name=' + name + "&kind=" + kind,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
@@ -298,10 +299,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		state.lastNodeId = $scope.lastNodesId;
 		state.visibleNodes = $scope.visibleNodes;
 		state.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
+		state.projectKind = $scope.projectKind;
 		
 		
 		// transmit state to the server
-		console.log( "saving project: " + $scope.projectName );
+		console.log( "saving " + $scope.projectKind + " project: " + $scope.projectName );
 		$http({url: 'services/manager/projects?name=' + $scope.projectName,
 				method: "POST",
 				data: state,
@@ -336,8 +338,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 			$scope.lastNodesId = data.lastNodeId;
 			$scope.visibleNodes = data.visibleNodes;
 			$scope.startNodeName = data.startNodeName;	
+			$scope.projectKind = data.projectKind;
 			
-			$scope.refreshWavList(name);
+			if ( $scope.projectKind == 'voice' )
+				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
 		 }).error(function (data, status, headers, config) {
 			//console.log("error opening project");

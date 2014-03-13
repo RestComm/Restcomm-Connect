@@ -55,12 +55,20 @@
 					</div>
 				</div>
 				<br />
-				<div class="row">
+				<div class="row form-group">
 					<div class="col-md-12">
-						<button type="button" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid"  ng-click="createNewProject(newProjectName)"
+						<button type="button" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid"  ng-click="createNewProject(newProjectName, projectKind)"
 							class="btn btn-primary form-control">Create</button>
 					</div>
 				</div>
+				<div class="row text-center">
+					<div class="col-md-12">
+						<div class="btn-group">
+						  <button ng-click="projectKind='voice'" type="button" class="btn btn-default" ng-class="{active:projectKind=='voice'}">Voice</button>
+						  <button ng-click="projectKind='ussd'" type="button" class="btn btn-default" ng-class="{active:projectKind=='ussd'}">USSD</button>
+						</div>
+					</div>
+				</div>				
 			</form>
 		</div>
 	</div>

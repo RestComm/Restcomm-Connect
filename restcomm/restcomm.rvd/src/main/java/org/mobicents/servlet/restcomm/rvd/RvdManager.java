@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
@@ -88,18 +89,21 @@ public class RvdManager {
 
 
     @PUT
-    public Response createProject(@QueryParam("name") String name) {
+    public Response createProject(@QueryParam("name") String name, @QueryParam("kind") String kind) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
 
         try {
-            projectService.createProject(name);
+            projectService.createProject(name, kind);
         } catch (ProjectDirectoryAlreadyExists e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.CONFLICT).build();
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (InvalidServiceParameters e) {
+            logger.error(e);
+            return Response.status(Status.BAD_REQUEST).build();
         }
 
         return Response.ok().build();
