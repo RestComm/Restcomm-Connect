@@ -62,6 +62,7 @@ import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.UssdInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
@@ -198,10 +199,13 @@ public final class CallManager extends UntypedActor {
 
     private void check(final Object message) throws IOException {
         final SipServletRequest request = (SipServletRequest) message;
-        String content = new String(request.getRawContent());
-        if (request.getContentLength() == 0 || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
-            final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
-            response.send();
+        String rawContent = new String(request.getRawContent());
+        if (request.getContentLength() == 0) {
+            String contentType = request.getContentType();
+            if (!("application/sdp".equals(contentType) || rawContent.contains("application/sdp") || "application/vnd.3gpp.ussd+xml".equals(contentType))) {
+                final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
+                response.send();
+            }
         }
     }
 
@@ -282,51 +286,92 @@ public final class CallManager extends UntypedActor {
             final ApplicationsDao applications, String id) {
         boolean isFoundHostedApp = false;
 
-        try {
-            // Format the destination to an E.164 phone number.
-            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-            final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(id, "US"), PhoneNumberFormat.E164);
-            // Try to find an application defined for the phone number.
-            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            final IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-            if (number != null) {
-                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setCallManager(self);
-                builder.setConferenceManager(conferences);
-                builder.setSmsService(sms);
-                builder.setAccount(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
-                final Account account = accounts.getAccount(number.getAccountSid());
-                builder.setEmailAddress(account.getEmailAddress());
-                final Sid sid = number.getVoiceApplicationSid();
-                if (sid != null) {
-                    final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
-                    builder.setMethod(application.getVoiceMethod());
-                    builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(application.getVoiceFallbackMethod());
-                    builder.setStatusCallback(application.getStatusCallback());
-                    builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
-                } else {
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
-                    builder.setMethod(number.getVoiceMethod());
-                    builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                    builder.setStatusCallback(number.getStatusCallback());
-                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                }
-                final ActorRef interpreter = builder.build();
-                final ActorRef call = call();
-                final SipApplicationSession application = request.getApplicationSession();
-                application.setAttribute(Call.class.getName(), call);
-                call.tell(request, self);
-                interpreter.tell(new StartInterpreter(call), self);
-                isFoundHostedApp = true;
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+        IncomingPhoneNumber number = null;
+
+        if(request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
+          number = numbersDao.getIncomingPhoneNumber(id);
+          if(number != null) {
+            final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(system);  
+            builder.setConfiguration(configuration);
+            builder.setStorage(storage);
+            builder.setCallManager(self);
+            builder.setAccount(number.getAccountSid());
+            builder.setVersion(number.getApiVersion());
+            final Account account = accounts.getAccount(number.getAccountSid());
+            builder.setEmailAddress(account.getEmailAddress());
+            final Sid sid = number.getVoiceApplicationSid();
+            if (sid != null) {
+                final Application application = applications.getApplication(sid);
+                builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
+                builder.setMethod(application.getVoiceMethod());
+                builder.setFallbackUrl(application.getVoiceFallbackUrl());
+                builder.setFallbackMethod(application.getVoiceFallbackMethod());
+                builder.setStatusCallback(application.getStatusCallback());
+                builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+            } else {
+                builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
+                builder.setMethod(number.getVoiceMethod());
+                builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                builder.setStatusCallback(number.getStatusCallback());
+                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
             }
-        } catch (final NumberParseException notANumber) {
-            isFoundHostedApp = false;
+            final ActorRef interpreter = builder.build();
+            final ActorRef call = call();
+            final SipApplicationSession application = request.getApplicationSession();
+            application.setAttribute(Call.class.getName(), call);
+            call.tell(request, self);
+            interpreter.tell(new StartInterpreter(call), self);
+            isFoundHostedApp = true;
+          } 
+        } else {
+            try {
+                // Format the destination to an E.164 phone number.
+                final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+                final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(id, "US"), PhoneNumberFormat.E164);
+                // Try to find an application defined for the phone number.
+                
+                number = numbersDao.getIncomingPhoneNumber(phone);
+                if (number != null) {
+                    final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setCallManager(self);
+                    builder.setConferenceManager(conferences);
+                    builder.setSmsService(sms);
+                    builder.setAccount(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    final Account account = accounts.getAccount(number.getAccountSid());
+                    builder.setEmailAddress(account.getEmailAddress());
+                    final Sid sid = number.getVoiceApplicationSid();
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
+                        builder.setMethod(application.getVoiceMethod());
+                        builder.setFallbackUrl(application.getVoiceFallbackUrl());
+                        builder.setFallbackMethod(application.getVoiceFallbackMethod());
+                        builder.setStatusCallback(application.getStatusCallback());
+                        builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+                    } else {
+                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
+                        builder.setMethod(number.getVoiceMethod());
+                        builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                        builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                        builder.setStatusCallback(number.getStatusCallback());
+                        builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                    }
+                    final ActorRef interpreter = builder.build();
+                    final ActorRef call = call();
+                    final SipApplicationSession application = request.getApplicationSession();
+                    application.setAttribute(Call.class.getName(), call);
+                    call.tell(request, self);
+                    interpreter.tell(new StartInterpreter(call), self);
+                    isFoundHostedApp = true;
+                }
+            } catch (final NumberParseException notANumber) {
+                isFoundHostedApp = false;
+            }
         }
         return isFoundHostedApp;
     }

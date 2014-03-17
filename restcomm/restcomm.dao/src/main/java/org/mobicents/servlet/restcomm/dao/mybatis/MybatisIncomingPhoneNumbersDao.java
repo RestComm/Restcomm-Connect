@@ -152,6 +152,11 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final String smsFallbackMethod = readString(map.get("sms_fallback_method"));
         final Sid smsApplicationSid = readSid(map.get("sms_application_sid"));
         final URI uri = readUri(map.get("uri"));
+        final URI ussdUrl = readUri(map.get("ussd_url"));
+        final String ussdMethod = readString(map.get("ussd_method"));
+        final URI ussdFallbackUrl = readUri(map.get("ussd_fallback_url"));
+        final String ussdFallbackMethod = readString(map.get("ussd_fallback_method"));
+        final Sid ussdApplicationSid = readSid(map.get("ussd_application_sid"));
         final Boolean voiceCapable = readBoolean(map.get("voice_capable"));
         final Boolean smsCapable = readBoolean(map.get("sms_capable"));
         final Boolean mmsCapable = readBoolean(map.get("mms_capable"));
@@ -159,7 +164,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     private Map<String, Object> toMap(final IncomingPhoneNumber incomingPhoneNumber) {
@@ -185,6 +190,11 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("sms_fallback_method", incomingPhoneNumber.getSmsFallbackMethod());
         map.put("sms_application_sid", writeSid(incomingPhoneNumber.getSmsApplicationSid()));
         map.put("uri", writeUri(incomingPhoneNumber.getUri()));
+        map.put("ussd_url", writeUri(incomingPhoneNumber.getUssdUrl()));
+        map.put("ussd_method", incomingPhoneNumber.getUssdMethod());
+        map.put("ussd_fallback_url", writeUri(incomingPhoneNumber.getUssdFallbackUrl()));
+        map.put("ussd_fallback_method", incomingPhoneNumber.getUssdFallbackMethod());
+        map.put("ussd_application_sid", writeSid(incomingPhoneNumber.getUssdApplicationSid()));
         map.put("voice_capable", incomingPhoneNumber.isVoiceCapable());
         map.put("sms_capable", incomingPhoneNumber.isSmsCapable());
         map.put("mms_capable", incomingPhoneNumber.isMmsCapable());
