@@ -46,6 +46,7 @@ import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -324,7 +325,7 @@ public final class Call extends UntypedActor {
         call.tell(join, self);
     }
 
-    private SipURI getInitialIpAddressPort(SipServletRequest invite) throws ServletParseException, UnknownHostException {
+    private SipURI getInitialIpAddressPort(SipServletMessage message) throws ServletParseException, UnknownHostException {
         // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
         // First get the Initial Remote Address (real address that the request came from)
         // Then check the following:
@@ -333,16 +334,16 @@ public final class Call extends UntypedActor {
         //    3. If contact header address != real ip address
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
-        String realIP = invite.getInitialRemoteAddr();
-        final ListIterator<String> recordRouteHeaders = invite.getHeaders("Record-Route");
-        final Address contactAddr = factory.createAddress(invite.getHeader("Contact"));
+        String realIP = message.getInitialRemoteAddr();
+        final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
+        final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
         InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
         InetAddress inetAddress = InetAddress.getByName(realIP);
 
         //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
-        final String initialIpBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-        String initialPortBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemotePort");
+        final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+        String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
 
         SipURI uri = null;
 
@@ -1139,7 +1140,9 @@ public final class Call extends UntypedActor {
                 SipServletRequest ack = response.createAck();
                 SipSession session = response.getSession();
 
-                SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
+                SipServletRequest originalInvite = response.getRequest();
+                SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+
                 if (realInetUri != null) {
                     logger.info("Using the real ip address of the sip client " + realInetUri.toString()
                             + " as a request uri of the ACK");
