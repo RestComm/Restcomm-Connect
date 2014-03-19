@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -78,6 +80,7 @@ public class Interpreter {
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
     private ProjectStorage projectStorage;
+    private HttpServletRequest httpRequest;
 
     private XStream xstream;
     private Gson gson;
@@ -92,8 +95,9 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, Map<String,String> requestParameters, String contextPath) {
+    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, Map<String,String> requestParameters, String contextPath, HttpServletRequest httpRequest) {
         this.projectStorage = projectStorage;
+        this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
         this.requestParameters = requestParameters;
@@ -356,6 +360,16 @@ public class Interpreter {
                 URI url;
                 try {
                     URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
+                    if (uri_builder.getHost() == null ) {
+                        logger.info("External Service: Relative url is used. Will override from http request to RVD controller");
+                        // if this is a relative url fill in missing fields from the request
+                        uri_builder.setScheme(httpRequest.getScheme());
+                        uri_builder.setHost(httpRequest.getServerName());
+                        uri_builder.setPort(httpRequest.getServerPort());
+                        if (  ! uri_builder.getPath().startsWith("/") )
+                            uri_builder.setPath("/" + uri_builder.getPath());
+                    }
+
                     for ( UrlParam urlParam : esStep.getUrlParams() ) {
                         uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
                     }
