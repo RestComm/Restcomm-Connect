@@ -32,12 +32,11 @@ angular.module('basicDragdrop', [])
                 scope.draggedControl = null;
             });
             
-            /*
-            element.bind( "sortbeforestop", function( event, ui ) { 
-                console.log("sortbeforestop executed");
-
+            
+            element.bind( "sortbeforestop", function( event, ui ) {                 
+                event.stopImmediatePropagation();
             });
-            */
+            
             
             element.bind("sortstop", function (event,ui) {
                 //console.log("on sortstop");
