@@ -300,6 +300,15 @@ li.verb {
 	text-align: center;
 }
 
+.drop-area-image {
+	min-height: 36px;
+	background-image:url('../images/plus-small.png');
+	opacity: 0.6;
+	background-repeat:no-repeat;
+	background-position:center; 
+	border: 1px dashed rgb(221, 221, 221);
+}
+
 .drop-area.drop-area-nouns {
 	border: 1px dashed rgb(221, 221, 221);
 }
@@ -371,10 +380,12 @@ li.verb {
 	margin-top: 5px;
 	margin-left: 10px;
 }
-
-
 /* --- /Dial step customizations */
 
+
+.target-mapping .close {
+	margin-right: 12px;
+}
 
 /* 
  * 

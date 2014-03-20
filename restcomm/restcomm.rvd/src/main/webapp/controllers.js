@@ -437,11 +437,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.addDialNoun = function (item, pos, listmodel) {
-		console.log("adding dial noun");
+		//console.log("adding dial noun");
 		r = RegExp("dial-noun-([^ ]+)");
 		m = r.exec( item.attr("class") );
 		if ( m != null ) {
-			console.log("adding dial noun - " + m[1]);
+			//console.log("adding dial noun - " + m[1]);
 			$scope.$apply( function ()  {
 				listmodel.splice(pos,0, angular.copy(protos.dialNounProto[ m[1] ]));
 			});
@@ -490,7 +490,23 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	// cound how many characters are left for a ussd message. Make sure to disable trim on the bound input control
 	$scope.countUssdCharsLeft = function(text) {
-		return 160 - text.length;
+		return 182 - text.length;
+	}
+	
+	$scope.nestUssdMessage = function (item, pos, listmodel) {
+		console.log("nesting ussd message");
+		//r = RegExp("dial-noun-([^ ]+)");
+		//m = r.exec( item.attr("class") );
+		//if ( m != null ) {
+			//console.log("adding dial noun - " + m[1]);
+			$scope.$apply( function ()  {
+				listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSay' ]));
+			});
+		//}
+	}
+	
+	$scope.removeNestedMessage = function (step,nested) {
+		step.messages.splice( step.messages.indexOf(nested), 1 );
 	}
 		
 	// Run the following after all initialization are complete
