@@ -12,6 +12,9 @@
 	<url>http://maven.apache.org</url>
 
 	<properties>
+		<mobicents.name>TelScale</mobicents.name>
+		<maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+		<release.timestamp>${maven.build.timestamp}</release.timestamp>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -89,4 +92,34 @@
 			<artifactId>akka-testkit_2.10</artifactId>
 		</dependency>
 	</dependencies>
+	
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<buildNumberPropertiesFileLocation>${basedir}/src/main/resources/org/mobicents/servlet/sip/core</buildNumberPropertiesFileLocation>
+					<revisionOnScmFailure>no-revision</revisionOnScmFailure>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	
 </project>

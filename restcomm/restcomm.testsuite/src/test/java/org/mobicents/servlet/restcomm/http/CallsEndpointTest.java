@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -14,6 +15,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -29,7 +31,7 @@ import com.google.gson.JsonObject;
 public class CallsEndpointTest {
     private final static Logger logger = Logger.getLogger(CallsEndpointTest.class.getName());
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;
@@ -38,7 +40,7 @@ public class CallsEndpointTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-
+    
     @Test
     public void getCallsList() {
         JsonObject firstPage = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
