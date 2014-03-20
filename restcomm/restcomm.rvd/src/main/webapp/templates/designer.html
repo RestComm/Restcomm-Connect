@@ -57,7 +57,7 @@
 			<!-- Left menu -->
 			<div class="col-md-2">
 	
-				<div ng-show='projectKind=="voice"' class='form-group'>
+				<div ng-show='!projectKind || projectKind=="voice"' class='form-group'>
 					<div my-draggable='.sortable-steps' id='buttonsay' class="label label-primary verb-button kind-say rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
 					<div my-draggable='.sortable-steps' id='buttonplay' class="label label-primary verb-button kind-play rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
 					<div my-draggable='.sortable-steps.root' id='buttongather' class="label label-primary verb-button kind-gather rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>
@@ -72,8 +72,8 @@
 					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-fax rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
 				</div>			
 				<div ng-show='projectKind=="ussd"' class='form-group'>
-					<div my-draggable='.sortable-steps' class="label label-primary verb-button kind-ussd-menu rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Menu</div>
-					<div my-draggable='.sortable-steps' class="label label-primary verb-button kind-ussd-gather rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Collect</div>
+					<div my-draggable='.sortable-steps' class="label label-primary verb-button kind-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Say</div>
+					<div my-draggable='.sortable-steps' class="label label-primary verb-button kind-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
 				</div>
 			
 				<div ng-show='projectKind=="voice"'>

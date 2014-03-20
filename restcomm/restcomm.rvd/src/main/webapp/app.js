@@ -76,8 +76,8 @@ App.factory('protos', function () {
 			record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 			// USSD
-			"ussd-menu": {kind:'ussd-menu', label:'Menu', title:'Menu', text:''},
-			"ussd-gather": {kind:'ussd-gather', label:'Collect', title:'Collect', gatherType:"menu" },
+			ussdSay: {kind:'ussdSay', label:'USSD Say', title:'USSD Say', text:'', language:null},
+			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", text:'',mappings:[], collectVariable: null, language:null},
 			
 			
 		},
@@ -294,6 +294,18 @@ App.directive('valueExtractor', ['protos', function (protos) {
 
 		}
 	}
+}]);
+
+App.directive('modulePicker', [function () {
+	return {
+		restrict: 'E',
+		templateUrl: 'templates/directive/modulePicker.html',
+		scope: {
+			options: '=',
+		},
+		link: function (scope,el,attrs) {
+		},
+	};
 }]);
 
 App.filter('excludeNode', function() {
