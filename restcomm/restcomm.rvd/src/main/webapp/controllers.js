@@ -469,23 +469,29 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.refreshWavList($scope.projectName);
 	});
 	
-	  $scope.alerts = [];
-	  $scope.addAlert = function(msg, type) {
-		  var alert = null;
-		  if (typeof type !== 'undefined')
-			  alert = {type: type, msg: msg};
-		  else
-			  alert = {msg: msg};
-		  
-		  $scope.alerts.push(alert);
-		  $timeout( function () {
-			  $scope.closeAlert(alert);
-		  }, 3000);
-	  };
+	$scope.alerts = [];
+	$scope.addAlert = function(msg, type) {
+	  var alert = null;
+	  if (typeof type !== 'undefined')
+		  alert = {type: type, msg: msg};
+	  else
+		  alert = {msg: msg};
+	  
+	  $scope.alerts.push(alert);
+	  $timeout( function () {
+		  $scope.closeAlert(alert);
+	  }, 3000);
+	};
+
+	$scope.closeAlert = function(alert) {
+	  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
+	};
 	
-	  $scope.closeAlert = function(alert) {
-		  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
-	  };
+	
+	// cound how many characters are left for a ussd message. Make sure to disable trim on the bound input control
+	$scope.countUssdCharsLeft = function(text) {
+		return 160 - text.length;
+	}
 		
 	// Run the following after all initialization are complete
 	
