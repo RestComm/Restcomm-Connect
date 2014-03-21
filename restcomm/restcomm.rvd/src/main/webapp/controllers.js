@@ -488,9 +488,20 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	};
 	
 	
+	/*    USSDSay / USSDCollect functions    */
+	
 	// cound how many characters are left for a ussd message. Make sure to disable trim on the bound input control
-	$scope.countUssdCharsLeft = function(text) {
-		return 182 - text.length;
+	$scope.countUssdChars = function(text) {
+		return text.length;
+	}
+	
+	// count total characters for the UssdCollect
+	$scope.countUssdCollectChars = function(step) {
+		var counter = 0;
+		for (var i = 0; i <  step.messages.length; i ++) {
+			counter += step.messages[i].text.length + 1; // +1 for the newline at the end of this message
+		}
+		return counter;
 	}
 	
 	$scope.nestUssdMessage = function (item, pos, listmodel) {

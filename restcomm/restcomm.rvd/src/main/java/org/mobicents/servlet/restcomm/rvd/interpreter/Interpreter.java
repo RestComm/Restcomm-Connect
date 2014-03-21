@@ -63,6 +63,7 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdcollect.UssdCollectRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Assignment;
@@ -139,7 +140,10 @@ public class Interpreter {
         xstream.alias("Conference", RcmlConferenceNoun.class);
         xstream.alias("Sip", RcmlSipuriNoun.class);
         xstream.alias("UssdMessage", UssdSayRcml.class);
+        xstream.alias("UssdCollect", UssdCollectRcml.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
+        xstream.addImplicitCollection(UssdCollectRcml.class, "messages");
+        xstream.useAttributeFor(UssdCollectRcml.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
         xstream.useAttributeFor(RcmlGatherStep.class, "finishOnKey");

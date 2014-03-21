@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
@@ -13,7 +12,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 public class GatherStep extends Step {
 
-    static final Logger logger = Logger.getLogger(BuildService.class.getName());
+    static final Logger logger = Logger.getLogger(GatherStep.class.getName());
 
     private String action;
     private String method;
