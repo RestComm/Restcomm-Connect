@@ -77,7 +77,7 @@ App.factory('protos', function () {
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Say', title:'USSD Say', text:'', language:null},
-			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", text:'',mappings:[], collectVariable: null, language:null, messages:[]},
+			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", text:'',mappings:[], collectVariable: null, next:null, language:null, messages:[]},
 			
 			
 		},

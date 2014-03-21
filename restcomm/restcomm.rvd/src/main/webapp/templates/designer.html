@@ -10,8 +10,7 @@
 			</ul>
 		</div>
 	</nav>
-	project kind: {{projectKind}}
-	
+
 	<div ng-hide='projectNotFound'>	
 	
 		<nav  class="navbar navbar-default" role="navigation">
@@ -72,11 +71,10 @@
 					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-fax rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
 				</div>			
 				<div ng-show='projectKind=="ussd"' class='form-group'>
-					<!-- <div my-draggable='.sortable-steps' class="label label-primary verb-button kind-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Say</div>  -->
-<!--					<div my-draggable='.sortable-steps' class="label label-primary verb-button kind-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Say</div> -->
 					<div basic-draggable drop-target='.ussd-collect-messages,.sortable-steps' class="label label-primary verb-button kind-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
 					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
-					<!-- <div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-number label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Number</div>-->
+					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+
 				</div>
 			
 				<div ng-show='projectKind=="voice"'>

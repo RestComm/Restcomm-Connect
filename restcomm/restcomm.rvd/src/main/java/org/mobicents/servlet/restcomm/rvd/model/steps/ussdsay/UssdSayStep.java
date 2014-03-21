@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 
 public class UssdSayStep extends Step {
     static final Logger logger = Logger.getLogger(UssdSayStep.class.getName());
@@ -39,7 +38,7 @@ public class UssdSayStep extends Step {
 
 
     @Override
-    public RcmlStep render(Interpreter interpreter) throws InterpreterException {
+    public UssdSayRcml render(Interpreter interpreter) throws InterpreterException {
         UssdSayRcml rcmlModel = new UssdSayRcml();
         rcmlModel.text = getText();
         rcmlModel.language = getLanguage();
