@@ -2,10 +2,10 @@ package org.mobicents.servlet.restcomm.rvd.model;
 
 import java.lang.reflect.Type;
 
-import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.model.steps.gather.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.play.PlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStep;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
