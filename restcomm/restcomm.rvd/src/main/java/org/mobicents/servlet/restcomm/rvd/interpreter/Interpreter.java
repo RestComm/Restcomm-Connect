@@ -63,6 +63,8 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Assignment;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -117,6 +119,7 @@ public class Interpreter {
         xstream.registerConverter(new ClientNounConverter());
         xstream.registerConverter(new ConferenceNounConverter());
         xstream.registerConverter(new SipuriNounConverter());
+        xstream.registerConverter(new UssdSayStepConverter());
         xstream.addImplicitCollection(RcmlDialStep.class, "nouns");
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
@@ -135,6 +138,7 @@ public class Interpreter {
         xstream.alias("Client", RcmlClientNoun.class);
         xstream.alias("Conference", RcmlConferenceNoun.class);
         xstream.alias("Sip", RcmlSipuriNoun.class);
+        xstream.alias("UssdMessage", UssdSayRcml.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
