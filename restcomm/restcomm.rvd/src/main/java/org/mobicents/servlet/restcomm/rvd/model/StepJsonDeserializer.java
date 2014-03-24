@@ -20,6 +20,7 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.reject.RejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.sms.SmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdcollect.UssdCollectStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStep;
 
 import com.google.gson.Gson;
@@ -73,6 +74,8 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
             step = gson.fromJson(step_object, UssdSayStep.class);
         else if ("ussdCollect".equals(kind))
             step = gson.fromJson(step_object, UssdCollectStep.class);
+        else if ("ussdLanguage".equals(kind))
+            step = gson.fromJson(step_object, UssdLanguageStep.class);
         else {
             step = null;
             logger.error("Error deserializing step. Unknown step found!"); // TODO remove me and return a nice value!!!

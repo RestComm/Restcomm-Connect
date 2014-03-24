@@ -65,6 +65,8 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.steps.sms.RcmlSmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.sms.SmsStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdcollect.UssdCollectRcml;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
@@ -121,6 +123,7 @@ public class Interpreter {
         xstream.registerConverter(new ConferenceNounConverter());
         xstream.registerConverter(new SipuriNounConverter());
         xstream.registerConverter(new UssdSayStepConverter());
+        xstream.registerConverter(new UssdLanguageConverter());
         xstream.addImplicitCollection(RcmlDialStep.class, "nouns");
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
@@ -141,6 +144,7 @@ public class Interpreter {
         xstream.alias("Sip", RcmlSipuriNoun.class);
         xstream.alias("UssdMessage", UssdSayRcml.class);
         xstream.alias("UssdCollect", UssdCollectRcml.class);
+        xstream.alias("Language", UssdLanguageRcml.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.addImplicitCollection(UssdCollectRcml.class, "messages");
         xstream.useAttributeFor(UssdCollectRcml.class, "action");
