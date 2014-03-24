@@ -67,6 +67,7 @@
 
 .container {
 	margin-top: 85px;
+	/*min-height: 500px;*/
 }
 
 .panel-rvdstep > .panel-heading {
@@ -382,6 +383,10 @@ li.verb {
 }
 /* --- /Dial step customizations */
 
+.project-kind-thumb {
+	font-size: 84px;
+	opacity: 0.6
+}
 
 .target-mapping .close {
 	margin-right: 12px;

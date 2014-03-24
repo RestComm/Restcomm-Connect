@@ -24,6 +24,10 @@ import java.net.URISyntaxException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 public class ProjectService {
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
@@ -91,12 +95,27 @@ public class ProjectService {
         }
     }
 
+    /**
+     * Populates a list of ProjectItems each representing a project. The project kind property defaults to
+     * 'voice' if it does not exist.
+     * @throws StorageException
+     */
     public List<ProjectItem> getAvailableProjects() throws StorageException {
 
         List<ProjectItem> items = new ArrayList<ProjectItem>();
         for (String entry : projectStorage.listProjectNames() ) {
+            JsonParser parser = new JsonParser();
+            JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+            JsonElement projectKind_element = root_element.get("projectKind");
+            String projectKind = "voice"; // default value for old projects
+            if ( projectKind_element != null ) {
+                projectKind = projectKind_element.getAsString();
+            }
+            //logger.debug("project " + entry + " is a " + projectKind );
+
             ProjectItem item = new ProjectItem();
             item.setName(entry);
+            item.setKind(projectKind);
             //item.setStartUrl(entry.getName());
             items.add(item);
         }
