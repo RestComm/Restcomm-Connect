@@ -1,1 +1,1 @@
-{"text":"Welcome to Restcomm Visual Service Designer","kind":"ussdSay","label":"USSD Say","title":"USSD Say","name":"step1"}
+{"text":"Welcome to Restcomm Visual Service Designer","kind":"ussdSay","label":"USSD Message","title":"USSD Message","name":"step1"}

@@ -2,10 +2,13 @@ App.controller('homeCtrl', function ($scope) {
 	
 });
 
-App.controller('projectManagerCtrl', function ($scope, $http, $location) {
+App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
-	$scope.projectKind = 'voice';
+	$scope.projectKind = $routeParams.projectKind;
+	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd')
+		$scope.projectKind = 'voice';
+
 	
 	$scope.refreshProjectList = function() {
 		$http({url: 'services/manager/projects/list',
@@ -115,6 +118,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.projectNotFound = false;
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
+	
 	
 	$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
@@ -348,9 +352,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 
 	
-	$scope.closeProject = function() {
-		$location.path("/project-manager");		
-	}
+	//$scope.closeProject = function() {
+	//	$location.path("#/project-manager/" + ($scope.projectKind ? $scope.projectKind : 'voice'));		
+	//}
 	
 	$scope.openProject = function(name) {
 		$http({url: 'services/manager/projects?name=' + name,

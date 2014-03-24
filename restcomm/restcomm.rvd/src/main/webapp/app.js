@@ -3,7 +3,7 @@ var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.
 App.config([ '$routeProvider', function($routeProvider) {
 	
 	$routeProvider.when('/project-manager/:projectKind', {
-		templateUrl : 'templates/projectManagerByKind.html',
+		templateUrl : 'templates/projectManager.html',
 		controller : 'projectManagerCtrl'
 	})
 	.when('/home', {

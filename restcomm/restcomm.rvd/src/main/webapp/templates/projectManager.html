@@ -3,7 +3,7 @@
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="collapse navbar-collapse navbar-ex1-collapse">
 			<div class='navbar-text navbar-rvd-centered'>
-				<em>Please chose a project from the list below or create a new
+				<em>Please chose a <strong>{{projectKind}}</strong> project from the list below or create a new
 					one</em>
 			</div>
 			<ul class="nav navbar-nav">
@@ -13,11 +13,11 @@
 
 	<div class="row">
 		<div class="col-md-3 col-centered">
-			<h3 class="text-center">Existing projects</h3>
+			<h3 class="text-center">Existing {{projectKind}} projects</h3>
 			<br />
-			<div class="text-center" ng-show="projectList.length==0"><em class="text-muted"><small>No projects found</small></em></div>
+			<div class="text-center" ng-show="(projectList | filter:{kind:projectKind}).length==0"><em class="text-muted"><small>No projects found</small></em></div>
 
-			<div ng-repeat="projectItem in projectList" class='row rvd-project-item' >
+			<div ng-repeat="projectItem in filteredProjectList = (projectList | filter:{kind:projectKind})" class='row rvd-project-item' >
 				<div class="row">
 					<div class="col-md-12 text-center" ng-show="projectItem.viewMode=='view'" >
 							<a href="#/designer/{{projectItem.name}}" ng-click="openProject(projectItem.name)" style="margin-right:10px">{{projectItem.name}}</a>
@@ -61,14 +61,13 @@
 							class="btn btn-primary form-control">Create</button>
 					</div>
 				</div>
+				<br/>
 				<div class="row text-center">
 					<div class="col-md-12">
-						<div class="btn-group">
-						  <button ng-click="projectKind='voice'" type="button" class="btn btn-default" ng-class="{active:projectKind=='voice'}">Voice</button>
-						  <button ng-click="projectKind='ussd'" type="button" class="btn btn-default" ng-class="{active:projectKind=='ussd'}">USSD</button>
-						</div>
+						or <a href="#/home">Choose a different kind of project</a>
 					</div>
-				</div>				
+				</div>		
+				<br/>		
 			</form>
 		</div>
 	</div>
