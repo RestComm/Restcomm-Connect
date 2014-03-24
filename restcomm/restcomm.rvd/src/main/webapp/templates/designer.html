@@ -71,11 +71,10 @@
 					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-fax rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
 				</div>			
 				<div ng-show='projectKind=="ussd"' class='form-group'>
+					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;Language</div>
 					<div basic-draggable drop-target='.ussd-collect-messages,.sortable-steps' class="label label-primary verb-button kind-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
 					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
 					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
-					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;Language</div>
-
 				</div>
 			
 				<div ng-show='projectKind=="voice"'>
