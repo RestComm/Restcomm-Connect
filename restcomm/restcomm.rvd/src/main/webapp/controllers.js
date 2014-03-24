@@ -79,7 +79,31 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	// Prototype and constant data structures
 	$scope.nodesProto =	{name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}};
-	$scope.languages = [{name:'en',text:'English'},{name:'fr',text:'French'},{name:'it',text:'Italian'},{name:'sp',text:'Spanish'},{name:'el',text:'Greek'}];
+	$scope.languages = [
+	                    {name:'bf',text:'Belgium-French'},
+	                    {name:'bp',text: 'Brazilian-Portugues'},
+	                    {name:'en-gb',text: 'British-English'},
+	                    {name:'cf',text: 'Canadian-French'},
+	                    {name:'cs',text: 'Czech'},
+	                    {name:'dan',text: 'Dannish'},
+	                    {name:'en',text:'English'},
+	                    {name:'fi',text: 'Finnish'},
+	                    {name:'es',text: 'Spanish'},
+	                    {name:'fr',text: 'French'},
+	                    {name:'de',text: 'German'},
+	                    {name:'el',text: 'Greek'},
+	                    {name:'it',text: 'Italian'},
+	                    {name:'nl',text: 'Netherlands-Dutch'},
+	                    {name:'no',text: 'Norwegian'},
+	                    {name:'pl',text: 'Polish'},
+	                    {name:'pt',text: 'Portuguese'},
+	                    {name:'ru',text: 'Russian'},
+	                    {name:'ar',text: 'Saudi-Arabia Arabic'},
+	                    {name:'ca',text: 'Spain Catalan'}, 
+	                    {name:'sv',text: 'Swedish'},
+	                    {name:'tr',text: 'Turkish'}
+	                    
+	                   ];
 	$scope.methods = ['POST', 'GET'];
 	
 		
