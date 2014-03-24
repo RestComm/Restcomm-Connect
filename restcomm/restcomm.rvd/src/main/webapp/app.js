@@ -2,14 +2,19 @@ var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.
 
 App.config([ '$routeProvider', function($routeProvider) {
 	
-	$routeProvider.when('/project-manager', {
-		templateUrl : 'templates/project-manager.html',
+	$routeProvider.when('/project-manager/:projectKind', {
+		templateUrl : 'templates/projectManagerByKind.html',
 		controller : 'projectManagerCtrl'
-	}).when('/designer/:projectName', {
+	})
+	.when('/home', {
+		templateUrl : 'templates/home.html',
+		controller : 'homeCtrl'
+	})
+	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
 		controller : 'designerCtrl'
 	}).otherwise({
-		redirectTo : '/project-manager'
+		redirectTo : '/home'
 	});
 
 } ]);
@@ -76,7 +81,7 @@ App.factory('protos', function () {
 			record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
 			// USSD
-			ussdSay: {kind:'ussdSay', label:'USSD Say', title:'USSD Say', text:'', language:null},
+			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null},
 			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", text:'',mappings:[], collectVariable: null, next:null, language:null, messages:[]},
 			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null},
 			

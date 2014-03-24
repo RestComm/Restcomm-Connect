@@ -1,3 +1,7 @@
+App.controller('homeCtrl', function ($scope) {
+	
+});
+
 App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
