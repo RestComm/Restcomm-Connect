@@ -16,7 +16,7 @@ public class UssdCollectStep extends Step {
     static final Logger logger = Logger.getLogger(UssdCollectStep.class.getName());
 
     public static class Mapping {
-        Integer digits;
+        String digits;
         String next;
     }
 
@@ -53,7 +53,8 @@ public class UssdCollectStep extends Step {
 
             boolean handled = false;
             for (Mapping mapping : mappings) {
-                Integer digits = Integer.parseInt(interpreter.getRequestParameters().get("Digits") );
+                // use a string for USSD collect. Alpha is supported too
+                String digits = interpreter.getRequestParameters().get("Digits");
 
                 logger.debug("checking digits: " + mapping.digits + " - " + digits);
 
