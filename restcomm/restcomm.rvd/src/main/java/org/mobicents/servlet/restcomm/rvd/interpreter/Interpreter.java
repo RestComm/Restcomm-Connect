@@ -22,6 +22,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
@@ -100,13 +101,13 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, Map<String,String> requestParameters, String contextPath, HttpServletRequest httpRequest) {
+    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest) {
         this.projectStorage = projectStorage;
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
-        this.requestParameters = requestParameters;
-        this.contextPath = contextPath;
+        this.requestParameters = RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap());
+        this.contextPath = httpRequest.getContextPath();
         init();
     }
 
