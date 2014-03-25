@@ -43,8 +43,10 @@ import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -321,6 +323,46 @@ public final class Call extends UntypedActor {
         final ActorRef call = request.call();
         final ActorRef self = self();
         call.tell(join, self);
+    }
+
+    private SipURI getInitialIpAddressPort(SipServletMessage message) throws ServletParseException, UnknownHostException {
+        // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
+        // First get the Initial Remote Address (real address that the request came from)
+        // Then check the following:
+        //    1. If contact header address is private network address
+        //    2. If there are no "Record-Route" headers (there is no proxy in the call)
+        //    3. If contact header address != real ip address
+        // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
+        // and store it to the sip session to be used as request uri later
+        String realIP = message.getInitialRemoteAddr();
+        final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
+        final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
+
+        InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
+        InetAddress inetAddress = InetAddress.getByName(realIP);
+
+        //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+        final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+        String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+
+        SipURI uri = null;
+
+        if (initialIpBeforeLB != null) {
+            if(initialPortBeforeLB == null)
+                initialPortBeforeLB = "5060";
+            logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB+":"+initialPortBeforeLB
+                    + " to the session for later use");
+            realIP = initialIpBeforeLB+":"+initialPortBeforeLB;
+            uri = factory.createSipURI(null, realIP);
+        } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
+            logger.info("Contact header address " + contactAddr.toString()
+                    + " is a private network ip address, storing Initial Remote Address " + realIP
+                    + " to the session for later use");
+            realIP = realIP + ":" + ((SipURI) contactAddr.getURI()).getPort();
+            uri = factory.createSipURI(null, realIP);
+        }
+        return uri;
     }
 
     private void observe(final Object message) {
@@ -867,42 +909,11 @@ public final class Call extends UntypedActor {
                 final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
                 ringing.send();
 
-                // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
-                // First get the Initial Remote Address (real address that the request came from)
-                // Then check the following:
-                //    1. If contact header address is private network address
-                //    2. If there are no "Record-Route" headers (there is no proxy in the call)
-                //    3. If contact header address != real ip address
-                // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
-                // and store it to the sip session to be used as request uri later
-                String realIP = invite.getInitialRemoteAddr();
-                final ListIterator<String> recordRouteHeaders = invite.getHeaders("Record-Route");
-                final Address contactAddr = factory.createAddress(invite.getHeader("Contact"));
+                SipURI initialInetUri = getInitialIpAddressPort(invite);
 
-                InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-                InetAddress inetAddress = InetAddress.getByName(realIP);
+                if(initialInetUri != null)
+                    invite.getSession().setAttribute("realInetUri", initialInetUri);
 
-                //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
-                final String initialIpBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-                String initialPortBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemotePort");
-
-                if (initialIpBeforeLB != null) {
-                    if(initialPortBeforeLB == null)
-                        initialPortBeforeLB = "5060";
-                    logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB+":"+initialPortBeforeLB
-                            + " to the session for later use");
-                    realIP = initialIpBeforeLB+":"+initialPortBeforeLB;
-                    final SipURI uri = factory.createSipURI(null, realIP);
-                    invite.getSession().setAttribute("realInetUri", uri);
-                } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
-                        && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
-                    logger.info("Contact header address " + contactAddr.toString()
-                            + " is a private network ip address, storing Initial Remote Address " + realIP
-                            + " to the session for later use");
-                    realIP = realIP + ":" + ((SipURI) contactAddr.getURI()).getPort();
-                    final SipURI uri = factory.createSipURI(null, realIP);
-                    invite.getSession().setAttribute("realInetUri", uri);
-                }
             } else if (message instanceof SipServletResponse) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -1127,6 +1138,17 @@ public final class Call extends UntypedActor {
             if (response.getStatus() == SipServletResponse.SC_OK
                     && (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction))) {
                 SipServletRequest ack = response.createAck();
+                SipSession session = response.getSession();
+
+                SipServletRequest originalInvite = response.getRequest();
+                SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+
+                if (realInetUri != null) {
+                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                            + " as a request uri of the ACK");
+                    ack.setRequestURI(realInetUri);
+                }
+
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
             }

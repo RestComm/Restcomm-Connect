@@ -1,7 +1,7 @@
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag. 
+ * by the @authors tag.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -18,8 +18,8 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-	
-package org.mobicents.servlet.restcomm.interpreter;
+
+package org.mobicents.servlet.restcomm.ussd.interpreter;
 
 import java.net.URI;
 
@@ -35,7 +35,6 @@ import akka.actor.UntypedActorFactory;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- *
  */
 public class UssdInterpreterBuilder {
 
@@ -59,7 +58,7 @@ public class UssdInterpreterBuilder {
     public UssdInterpreterBuilder(ActorSystem system) {
         this.system = system;
     }
-    
+
     public ActorRef build() {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
@@ -71,7 +70,7 @@ public class UssdInterpreterBuilder {
             }
         }));
     }
-    
+
     public void setConfiguration(final Configuration configuration) {
         this.configuration = configuration;
     }
