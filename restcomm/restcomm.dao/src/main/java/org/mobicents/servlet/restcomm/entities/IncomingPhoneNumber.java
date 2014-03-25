@@ -54,7 +54,7 @@ public final class IncomingPhoneNumber {
     private final URI ussdFallbackUrl;
     private final String ussdFallbackMethod;
     private final Sid ussdApplicationSid;
-    
+
     // Capabilities
     private final Boolean voiceCapable;
     private final Boolean smsCapable;
@@ -398,7 +398,7 @@ public final class IncomingPhoneNumber {
         private URI ussdFallbackUrl;
         private String ussdFallbackMethod;
         private Sid ussdApplicationSid;
-        
+
         // Capabilities
         private Boolean voiceCapable;
         private Boolean smsCapable;
@@ -492,27 +492,27 @@ public final class IncomingPhoneNumber {
         public void setUri(final URI uri) {
             this.uri = uri;
         }
-        
+
         public void setUssdUrl(final URI ussdUrl) {
             this.ussdUrl = ussdUrl;
         }
-        
+
         public void setUssdMethod(final String ussdMethod) {
             this.ussdMethod = ussdMethod;
         }
-        
+
         public void setUssdFallbackUrl(final URI ussdFallbackUrl) {
             this.ussdFallbackUrl = ussdFallbackUrl;
         }
-        
+
         public void setUssdFallbackMethod(final String ussdFallbackMethod) {
             this.ussdFallbackMethod = ussdFallbackMethod;
         }
-        
+
         public void setUssdApplicationSid(final Sid ussdApplicationSid) {
             this.ussdApplicationSid = ussdApplicationSid;
         }
-        
+
         public void setVoiceCapable(Boolean voiceCapable) {
             this.voiceCapable = voiceCapable;
         }
