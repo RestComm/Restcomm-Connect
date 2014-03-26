@@ -30,12 +30,13 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Currency;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
 import javax.servlet.sip.SipServletRequest;
@@ -71,6 +72,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
@@ -154,7 +156,8 @@ public class UssdInterpreter extends UntypedActor {
     int maxMessageLength;
     private final int englishLength = 180;
     private final int nonEnglishLength = 80;
-    List<Tag> ussdSayTags = Collections.synchronizedList(new ArrayList<Tag>());
+    Queue<Tag> ussdMessageTags  = new LinkedBlockingQueue<Tag>();
+//    List<Tag> ussdSayTags = Collections.synchronizedList(new ArrayList<Tag>());
     Tag ussdCollectTag = null;
     String ussdCollectAction = "";
 
@@ -185,8 +188,9 @@ public class UssdInterpreter extends UntypedActor {
 
         finished = new State("finished", new Finished(source), null);
 
-        transitions.add(new Transition(uninitialized, observeCall));
-        transitions.add(new Transition(observeCall, acquiringCallInfo));
+//        transitions.add(new Transition(uninitialized, observeCall));
+        transitions.add(new Transition(uninitialized, acquiringCallInfo));
+//        transitions.add(new Transition(observeCall, acquiringCallInfo));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(downloadingRcml, ready));
         transitions.add(new Transition(downloadingRcml, notFound));
@@ -425,9 +429,10 @@ public class UssdInterpreter extends UntypedActor {
 
         if (StartInterpreter.class.equals(klass)) {
             ussdCall = ((StartInterpreter) message).resource();
-            fsm.transition(message, observeCall);
-        } else if (CallStateChanged.class.equals(klass)) {
+//            fsm.transition(message, observeCall);
             fsm.transition(message, acquiringCallInfo);
+        } else if (CallStateChanged.class.equals(klass)) {
+//            fsm.transition(message, acquiringCallInfo);
         } else if (CallResponse.class.equals(klass)) {
             if (acquiringCallInfo.equals(state)) {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
@@ -477,7 +482,7 @@ public class UssdInterpreter extends UntypedActor {
                     invalidVerb(verb);
                 }
             } else if (ussdMessage.equals(verb.name())) {
-                ussdSayTags.add(verb);
+                ussdMessageTags.add(verb);
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, source);
             } else if (ussdCollect.equals(verb.name())) {
@@ -532,6 +537,7 @@ public class UssdInterpreter extends UntypedActor {
         @SuppressWarnings({ "unchecked" })
         @Override
         public void execute(final Object message) throws Exception {
+            ussdCall.tell(new Observe(source), source);
             ussdCall.tell(new GetCallInfo(), source);
         }
     }
@@ -631,6 +637,7 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+            ussdCall.tell(new Answer(), source);
             // Execute the received RCML here
             final UntypedActorContext context = getContext();
             final State state = fsm.state();
@@ -707,15 +714,15 @@ public class UssdInterpreter extends UntypedActor {
 
                 }
 
-                StringBuffer ussdText = processUssdMessageTags(ussdSayTags);
+                StringBuffer ussdText = processUssdMessageTags(ussdMessageTags);
                 StringBuffer ussdCollectMessageBuffer = new StringBuffer();
 
                 if (ussdCollectTag != null) {
                     hasCollect = true;
                     ussdCollectAction = ussdCollectTag.attribute("action").value();
-                    List<Tag> childs = ussdCollectTag.children();
-                    if (childs != null) {
-                        ussdText.append(processUssdMessageTags(childs));
+                    Queue<Tag> children = new java.util.concurrent.ConcurrentLinkedQueue<Tag>(ussdCollectTag.children());
+                    if (children != null && children.size() >0) {
+                        ussdText.append(processUssdMessageTags(children));
                     } else if (ussdCollectTag.text() != null) {
                         ussdText.append(ussdCollectTag.text());
                     }
@@ -748,14 +755,16 @@ public class UssdInterpreter extends UntypedActor {
         }
     }
 
-    private StringBuffer processUssdMessageTags(List<Tag> sayTags) {
+    private StringBuffer processUssdMessageTags(Queue<Tag> sayTags) {
         StringBuffer message = new StringBuffer();
         while (!sayTags.isEmpty()) {
-            for (Iterator<Tag> iterator = sayTags.iterator(); iterator.hasNext();) {
-                Tag tag = iterator.next();
+            Tag tag = sayTags.poll();
+            if (tag != null) {
                 message.append(tag.text());
                 if (!sayTags.isEmpty())
                     message.append("<CR>");
+            } else {
+                return message;
             }
         }
         return message;

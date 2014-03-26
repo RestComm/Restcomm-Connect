@@ -48,6 +48,7 @@ import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
@@ -78,6 +79,7 @@ public class UssdCall extends UntypedActor  {
     private final FiniteStateMachine fsm;
     // States for the FSM.
     private final State uninitialized;
+    private final State ringing;
     private final State inProgress;
     private final State ready;
     private final State processingUssdMessage;
@@ -111,6 +113,7 @@ public class UssdCall extends UntypedActor  {
         final ActorRef source = self();
         // Initialize the states for the FSM.
         uninitialized = new State("uninitialized", null, null);
+        ringing = new State("ringing", new Ringing(source), null);
         inProgress = new State("in progress", new InProgress(source), null);
         ready = new State("answering", new Ready(source), null);
         processingUssdMessage = new State("processing UssdMessage", new ProcessingUssdMessage(source), null);
@@ -118,7 +121,8 @@ public class UssdCall extends UntypedActor  {
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, inProgress));
+        transitions.add(new Transition(uninitialized, ringing));
+        transitions.add(new Transition(ringing, inProgress));
         transitions.add(new Transition(inProgress, processingUssdMessage));
         transitions.add(new Transition(processingUssdMessage, ready));
         transitions.add(new Transition(processingUssdMessage, inProgress));
@@ -221,10 +225,8 @@ public class UssdCall extends UntypedActor  {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
             if ("INVITE".equalsIgnoreCase(method)) {
-                this.invite = request;
-                direction = "inbound";
                 if (uninitialized.equals(state)) {
-                    fsm.transition(message, inProgress);
+                    fsm.transition(message, ringing);
                 }
             }
         } else if (message instanceof SipServletResponse) {
@@ -232,6 +234,8 @@ public class UssdCall extends UntypedActor  {
             lastResponse = response;
         } else if (UssdRequest.class.equals(klass)) {
             fsm.transition(message, processingUssdMessage);
+        } else if (Answer.class.equals(klass)) {
+            fsm.transition(message, inProgress);
         }
     }
 
@@ -241,6 +245,42 @@ public class UssdCall extends UntypedActor  {
         public AbstractAction(final ActorRef source) {
             super();
             this.source = source;
+        }
+    }
+
+    private final class Ringing extends AbstractAction {
+        public Ringing(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            if (message instanceof SipServletRequest) {
+                invite = (SipServletRequest) message;
+                from = (SipURI) invite.getFrom().getURI();
+                to = (SipURI) invite.getTo().getURI();
+                timeout = -1;
+                direction = "inbound";
+                // Send a ringing response.
+                final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
+                ringing.send();
+
+                SipURI initialInetUri = getInitialIpAddressPort(invite);
+
+                if(initialInetUri != null)
+                    invite.getSession().setAttribute("realInetUri", initialInetUri);
+
+            } else if (message instanceof SipServletResponse) {
+                final UntypedActorContext context = getContext();
+                context.setReceiveTimeout(Duration.Undefined());
+            }
+            // Notify the observers.
+            external = CallStateChanged.State.RINGING;
+            final CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                logger.info("Telling observers that state changed to RINGING");
+                observer.tell(event, source);
+            }
         }
     }
 
@@ -255,14 +295,7 @@ public class UssdCall extends UntypedActor  {
             final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
             okay.send();
 
-            SipURI initialInetUri = getInitialIpAddressPort(invite);
-
-            if(initialInetUri != null)
-                invite.getSession().setAttribute("realInetUri", initialInetUri);
-
             invite.getApplicationSession().setExpires(0);
-            final UntypedActorContext context = getContext();
-            context.setReceiveTimeout(Duration.Undefined());
 
             // Notify the observers.
             external = CallStateChanged.State.IN_PROGRESS;
