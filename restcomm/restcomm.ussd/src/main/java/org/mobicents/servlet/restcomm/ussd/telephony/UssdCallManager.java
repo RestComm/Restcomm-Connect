@@ -32,6 +32,7 @@ import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -43,6 +44,7 @@ import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreter;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreterBuilder;
@@ -55,8 +57,6 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
-import com.google.i18n.phonenumbers.NumberParseException;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -147,12 +147,33 @@ public class UssdCallManager extends UntypedActor {
                 invite(request);
             } else if ("INFO".equalsIgnoreCase(method)) {
                 processInfo(request);
+            } else if ("ACK".equals(method)) {
+                ack(request);
             }
         }
 
     }
 
-    private void invite(final Object message) throws IOException, NumberParseException {
+    private void ack(SipServletRequest request) throws IOException {
+        SipServletResponse response = B2BUAHelper.getLinkedResponse(request);
+        // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
+        if (response != null) {
+            SipServletRequest ack = response.createAck();
+            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
+            if (toInetUri != null) {
+                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the ACK request");
+                ack.setRequestURI(toInetUri);
+            }
+            ack.send();
+            SipApplicationSession sipApplicationSession = request.getApplicationSession();
+            // Defaulting the sip application session to 1h
+            sipApplicationSession.setExpires(60);
+        }
+    }
+
+    private void invite(final Object message) throws Exception {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
         // Make sure we handle re-invites properly.
@@ -183,9 +204,10 @@ public class UssdCallManager extends UntypedActor {
      * @param accounts
      * @param applications
      * @param id
+     * @throws Exception
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id) {
+            final ApplicationsDao applications, String id) throws Exception {
         boolean isFoundHostedApp = false;
 
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
@@ -222,14 +244,18 @@ public class UssdCallManager extends UntypedActor {
                 }
                 final ActorRef ussdInterpreter = builder.build();
                 final ActorRef ussdCall = ussdCall();
-                final SipApplicationSession application = request.getApplicationSession();
-                application.setAttribute(UssdCall.class.getName(), ussdCall);
-                ussdCall.tell(request, self);
+
                 ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
+                ussdCall.tell(request, self);
+
+
                 SipApplicationSession applicationSession = request.getApplicationSession();
+                applicationSession.setAttribute("UssdCall","true");
                 applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
                 applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
                 isFoundHostedApp = true;
+            } else {
+                throw new Exception("Number not found");
             }
         }
         return isFoundHostedApp;

@@ -153,7 +153,19 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
     }
 
     private boolean isUssdMessage(SipServletMessage message) {
-        String contentType = message.getContentType();
-        return contentType.equalsIgnoreCase("application/vnd.3gpp.ussd+xml");
+        Boolean isUssd = false;
+        String contentType = null;
+        try {
+            contentType = message.getContentType();
+        } catch (Exception e) {
+        }
+        if (contentType != null) {
+            isUssd = contentType.equalsIgnoreCase("application/vnd.3gpp.ussd+xml");
+        } else {
+            if (message.getApplicationSession().getAttribute("UssdCall") != null) {
+                isUssd = true;
+            }
+        }
+        return isUssd;
     }
 }
