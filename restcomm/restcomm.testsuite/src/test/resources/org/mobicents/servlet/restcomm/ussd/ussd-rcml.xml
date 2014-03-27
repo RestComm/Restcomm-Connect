@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
 	<UssdMessage>The information you requested is 1234567890</UssdMessage>
-	<anyExt>
-		<messageType>processUnstructuredSSRequest_Response</messageType>
-	</anyExt>
 </Response>

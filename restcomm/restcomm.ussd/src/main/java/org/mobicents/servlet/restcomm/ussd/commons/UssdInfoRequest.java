@@ -30,27 +30,28 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 
 /**
+ * This class represents the INFO request received by Restcomm from Client.
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class UssdResponse {
+public class UssdInfoRequest {
 
     private final String ussdPayload;
     private String message;
     private String language;
     private UssdMessageType ussdMessageType;
 
-    public UssdResponse(SipServletRequest request) throws IOException{
-        this.ussdPayload = (String) request.getContent();
+    public UssdInfoRequest(SipServletRequest request) throws IOException{
+        this.ussdPayload = new String(request.getRawContent());
     }
 
-    public UssdResponse(String payload) {
+    public UssdInfoRequest(String payload) {
         this.ussdPayload = payload;
     }
 
     public void readUssdPayload(){
 
-        StringReader reader = new StringReader(ussdPayload.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1"));
+        StringReader reader = new StringReader(ussdPayload.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1").replaceAll("\\n", ""));
 
         final XMLInputFactory inputs = XMLInputFactory.newInstance();
         inputs.setProperty("javax.xml.stream.isCoalescing", true);
@@ -65,7 +66,7 @@ public class UssdResponse {
                         this.language = stream.getAttributeValue("", "value");
                     } else if (name.equalsIgnoreCase("ussd-string") && stream.isStartElement()) {
                         this.message = stream.getAttributeValue("", "value");
-                    } else if (name.equalsIgnoreCase("anyExt")) {
+                    } else if (name.equalsIgnoreCase("anyExt") && stream.isStartElement()) {
                         stream.next();
                         name = stream.getLocalName();
                         if (name.equalsIgnoreCase("message-type") && stream.isStartElement()){

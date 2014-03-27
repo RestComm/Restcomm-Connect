@@ -27,17 +27,18 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
+ * This class represent the USSD response message that Restcomm creates after parsing the RCML application
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class UssdRequest {
+public class UssdRestcommResponse {
 
     private String message;
     private String language;
     private int messageLength;
     private UssdMessageType messageType;
-    private String ussdRepresentation;
     private Boolean isFinalMessage = true;
+    private String ussdCollectAction;
 
     public String getMessage() {
         return message;
@@ -87,30 +88,49 @@ public class UssdRequest {
         XMLStreamWriter streamWriter = outputFactory.createXMLStreamWriter(writer);
 
         streamWriter.writeStartDocument("UTF-8", "1.0");
+        streamWriter.writeCharacters("\n");
         streamWriter.writeStartElement("ussd-data");
+        streamWriter.writeCharacters("\n");
 
         // Write Language element
         streamWriter.writeStartElement("language");
         streamWriter.writeAttribute("value", getLanguage());
         streamWriter.writeEndElement();
+        streamWriter.writeCharacters("\n");
 
         // Write ussd-string
         streamWriter.writeStartElement("ussd-string");
         streamWriter.writeAttribute("value", getMessage());
         streamWriter.writeEndElement();
+        streamWriter.writeCharacters("\n");
 
         streamWriter.writeStartElement("anyExt");
+        streamWriter.writeCharacters("\n");
         streamWriter.writeStartElement("message-type");
         streamWriter.writeCharacters(getUssdMessageType().name());
         streamWriter.writeEndElement();
+        streamWriter.writeCharacters("\n");
         streamWriter.writeEndElement();
+        streamWriter.writeCharacters("\n");
 
         streamWriter.writeEndElement();
+        streamWriter.writeCharacters("\n");
         streamWriter.writeEndDocument();
 
         streamWriter.flush();
         streamWriter.close();
 
         return writer.toString();
+    }
+
+    /**
+     * @param ussdCollectAction
+     */
+    public void setUssdCollectAction(String ussdCollectAction) {
+        this.ussdCollectAction = ussdCollectAction;
+    }
+
+    public String getUssdCollectAction() {
+        return ussdCollectAction;
     }
 }

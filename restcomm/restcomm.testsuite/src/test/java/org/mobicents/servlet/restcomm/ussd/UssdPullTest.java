@@ -21,20 +21,28 @@
 package org.mobicents.servlet.restcomm.ussd;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.text.ParseException;
+
+import javax.sip.DialogState;
+import javax.sip.RequestEvent;
+import javax.sip.SipException;
+import javax.sip.address.Address;
+import javax.sip.header.ContentTypeHeader;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
@@ -42,7 +50,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.telephony.DialTest;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -54,25 +61,57 @@ public class UssdPullTest {
     private final static Logger logger = Logger.getLogger(UssdPullTest.class.getName());
     private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
     
-    String ussdRequestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+    String ussdClientRequestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<ussd-data>\n"
             + "<language value=\"en\"/>\n"
             + "<ussd-string value=\"5544\"/>\n"
             + "</ussd-data>";
-    
 
+    String ussdClientRequestBodyForCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"/>\n"
+            + "<ussd-string value=\"5555\"/>\n"
+            + "</ussd-data>";
+    
+    String ussdRestcommResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"></language>\n"
+            + "<ussd-string value=\"The information you requested is 1234567890\"></ussd-string>\n"
+            + "<anyExt>\n"
+            + "<message-type>processUnstructuredSSRequest_Response</message-type>\n"
+            + "</anyExt>\n"
+            + "</ussd-data>\n";
+
+    String ussdRestcommResponseWithCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"></language>\n"
+            + "<ussd-string value=\"Please press&lt;CR&gt;1 For option1&lt;CR&gt;2 For option2\"></ussd-string>\n"
+            + "<anyExt>\n"
+            + "<message-type>unstructuredSSRequest_Request</message-type>\n"
+            + "</anyExt>\n"
+            + "</ussd-data>\n";
+    
+    String ussdClientResponseBodyToCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"/>\n"
+            + "<ussd-string value=\"1\"/>\n"
+            + "<anyExt>\n"
+            + "<message-type>unstructuredSSRequest_Response</message-type>\n"
+            + "</anyExt>\n"
+            + "</ussd-data>";
+    
     private static SipStackTool tool1;
 
-    // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
     private String bobContact = "sip:bob@127.0.0.1:5090";
     
     private String ussdPullDid = "sip:5544@127.0.0.1:5080";
+    private String ussdPullWithCollectDID = "sip:5555@127.0.0.1:5080";
     
     @BeforeClass
     public static void beforeClass() throws Exception {
-        tool1 = new SipStackTool("CallTestDial1");
+        tool1 = new SipStackTool("UssdPullTest");
     }
 
     @Before
@@ -85,16 +124,18 @@ public class UssdPullTest {
     public void after() throws Exception {
         if (bobPhone != null) {
             bobPhone.dispose();
+            bobPhone = null;
         }
         if (bobSipStack != null) {
             bobSipStack.dispose();
+            bobSipStack = null;
         }
     }
 
     @Test
     public void testUssdPull() {
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullDid, null, ussdRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        bobCall.initiateOutgoingCall(bobContact, ussdPullDid, null, ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -106,10 +147,69 @@ public class UssdPullTest {
         
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        assertTrue(bobCall.sendInviteOkAck());
+        
+        assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
+        
+        assertTrue(bobCall.listenForDisconnect());
+        
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        bobCall.respondToDisconnect();
+        SipRequest bye = bobCall.getLastReceivedRequest();
+        String receivedUssdPayload = new String(bye.getRawContent());
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponse));
+        bobCall.dispose();
     }
 
+    @Test
+    public void testUssdPullWithCollect() throws InterruptedException, SipException, ParseException {
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, ussdPullWithCollectDID, null, ussdClientRequestBodyForCollect, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+        
+        assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
+        String toTag = bobCall.getDialog().getLocalTag();
+        Address bobAddress = bobPhone.getAddress();
+        
+        assertTrue(bobPhone.listenRequestMessage());
+        RequestEvent requestEvent = bobPhone.waitRequest(30*1000);
+        
+        assertNotNull(requestEvent);  
+        assertTrue(requestEvent.getRequest().getMethod().equalsIgnoreCase("INFO"));
+        bobPhone.sendReply(requestEvent, 200, "OK", toTag, bobAddress, 0);
+        
+
+        String receivedUssdPayload = new String(requestEvent.getRequest().getRawContent());
+        assertTrue(receivedUssdPayload.equals(ussdRestcommResponseWithCollect));
+        
+        Request infoResponse = requestEvent.getDialog().createRequest(Request.INFO);
+        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
+        infoResponse.setContent(ussdClientResponseBodyToCollect.getBytes(), contentTypeHeader);
+
+        bobPhone.sendRequestWithTransaction(infoResponse, false, requestEvent.getDialog());     
+
+        assertTrue(bobCall.listenForDisconnect());        
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        bobCall.respondToDisconnect();
+        SipRequest bye = bobCall.getLastReceivedRequest();
+        receivedUssdPayload = new String(bye.getRawContent());
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponse));
+        bobCall.dispose();
+    }
+    
     @Deployment(name = "UssdPullTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
@@ -123,6 +223,7 @@ public class UssdPullTest {
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("org/mobicents/servlet/restcomm/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml.xml");
+        archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-collect.xml");
         logger.info("Packaged Test App");
         return archive;
     }
