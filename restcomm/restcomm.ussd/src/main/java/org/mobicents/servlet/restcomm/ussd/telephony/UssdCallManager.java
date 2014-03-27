@@ -104,7 +104,6 @@ public class UssdCallManager extends UntypedActor {
         this.sipFactory = factory;
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
-        final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         this.useTo = runtime.getBoolean("use-to");
     }
 
@@ -121,7 +120,6 @@ public class UssdCallManager extends UntypedActor {
 
     private void check(final Object message) throws IOException {
         final SipServletRequest request = (SipServletRequest) message;
-        String rawContent = new String(request.getRawContent());
         if (request.getContentLength() == 0) {
             String contentType = request.getContentType();
             if (!("application/vnd.3gpp.ussd+xml".equals(contentType))) {
@@ -134,9 +132,9 @@ public class UssdCallManager extends UntypedActor {
     @Override
     public void onReceive(final Object message) throws Exception {
 
-        final Class<?> klass = message.getClass();
-        final ActorRef self = self();
-        final ActorRef sender = sender();
+//        final Class<?> klass = message.getClass();
+//        final ActorRef self = self();
+//        final ActorRef sender = sender();
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
@@ -227,7 +225,6 @@ public class UssdCallManager extends UntypedActor {
                 ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
                 ussdCall.tell(request, self);
 
-
                 SipApplicationSession applicationSession = request.getApplicationSession();
                 applicationSession.setAttribute("UssdCall","true");
                 applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
@@ -243,7 +240,7 @@ public class UssdCallManager extends UntypedActor {
     private void processRequest(SipServletRequest request) throws IOException {
         final ActorRef ussdInterpreter = (ActorRef) request.getApplicationSession().getAttribute(UssdInterpreter.class.getName());
         if(ussdInterpreter != null) {
-            logger.info("Dispatching Request: "+request+" to UssdInterpreter: "+ussdInterpreter);
+            logger.info("Dispatching Request: "+request.getMethod()+" to UssdInterpreter: "+ussdInterpreter);
             ussdInterpreter.tell(request, self());
         } else {
             final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);

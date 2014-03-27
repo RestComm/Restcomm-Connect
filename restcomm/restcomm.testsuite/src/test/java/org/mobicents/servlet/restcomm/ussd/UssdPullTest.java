@@ -48,6 +48,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -85,7 +86,7 @@ public class UssdPullTest {
     String ussdRestcommResponseWithCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<ussd-data>\n"
             + "<language value=\"en\"></language>\n"
-            + "<ussd-string value=\"Please press&lt;CR&gt;1 For option1&lt;CR&gt;2 For option2\"></ussd-string>\n"
+            + "<ussd-string value=\"Please press\n1 For option1\n2 For option2\"></ussd-string>\n"
             + "<anyExt>\n"
             + "<message-type>unstructuredSSRequest_Request</message-type>\n"
             + "</anyExt>\n"
@@ -100,6 +101,21 @@ public class UssdPullTest {
             + "</anyExt>\n"
             + "</ussd-data>";
     
+    String ussdClientRequestBodyForMessageLenghtExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"/>\n"
+            + "<ussd-string value=\"5544\"/>\n"
+            + "</ussd-data>";
+    
+    String ussdRestcommResponseForMessageLengthExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"></language>\n"
+            + "<ussd-string value=\"Error while preparing the response.\nMessage length exceeds the maximum.\"></ussd-string>\n"
+            + "<anyExt>\n"
+            + "<message-type>processUnstructuredSSRequest_Response</message-type>\n"
+            + "</anyExt>\n"
+            + "</ussd-data>\n";
+    
     private static SipStackTool tool1;
 
     private SipStack bobSipStack;
@@ -108,6 +124,7 @@ public class UssdPullTest {
     
     private String ussdPullDid = "sip:5544@127.0.0.1:5080";
     private String ussdPullWithCollectDID = "sip:5555@127.0.0.1:5080";
+    private String ussdPullMessageLengthExceeds = "sip:5566@127.0.0.1:5080";
     
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -209,6 +226,37 @@ public class UssdPullTest {
         assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponse));
         bobCall.dispose();
     }
+
+    @Test
+    public void testUssdMessageLengthExceeds() {
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, ussdClientRequestBodyForMessageLenghtExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+        
+        assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
+        
+        assertTrue(bobCall.listenForDisconnect());
+        
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        bobCall.respondToDisconnect();
+        SipRequest bye = bobCall.getLastReceivedRequest();
+        String receivedUssdPayload = new String(bye.getRawContent());
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponseForMessageLengthExceeds));
+        bobCall.dispose();
+    }
     
     @Deployment(name = "UssdPullTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
@@ -224,6 +272,7 @@ public class UssdPullTest {
         archive.addAsWebInfResource("org/mobicents/servlet/restcomm/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml.xml");
         archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-collect.xml");
+        archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-character-limit-exceed.xml");
         logger.info("Packaged Test App");
         return archive;
     }
