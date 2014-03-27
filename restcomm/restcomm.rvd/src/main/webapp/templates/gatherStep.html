@@ -1,6 +1,15 @@
 
 <div class="step step-gather panel panel-rvdstep step-{{step.name}}">
-		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <small>{{step.phrase}}</small><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+		<div class="panel-heading">
+			<h4 class="panel-title">
+				<i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>
+				&nbsp; &nbsp;
+				<span  tooltip='{{step.name}}'>{{step.title}}</span> 
+				<small>{{step.phrase}}</small>
+				<i ng-show='step.iface.showWarning' class="fa fa-warning step-warning-icon"></i>
+				<i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i>
+			</h4>
+		</div>
 		<div class="panel-body" ng-hide='step.isCollapsed'>
 			<div class="row">
 				<div class="col-md-6">

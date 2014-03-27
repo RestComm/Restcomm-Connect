@@ -17,6 +17,10 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.validation.ProjectValidator;
+import org.mobicents.servlet.restcomm.rvd.validation.ValidationResult;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -24,6 +28,7 @@ import java.net.URISyntaxException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -146,9 +151,19 @@ public class ProjectService {
         projectStorage.cloneProject(settings.getOption("protoProjectName") + protoSuffix, projectName);
     }
 
-    public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException {
+    public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException, ValidationFrameworkException, ValidationException {
         String state = IOUtils.toString(request.getInputStream());
-        projectStorage.updateProjectState(projectName, state);
+        try {
+            ProjectValidator validator = new ProjectValidator();
+            ValidationResult result = validator.validate(state);
+
+            // always update behaviour. Maybe it should prevent update if validation fails. It's a matter of UX
+            projectStorage.updateProjectState(projectName, state);
+            if (!result.isSuccess())
+                throw new ValidationException(result);
+        } catch (ProcessingException e) {
+            throw new ValidationFrameworkException("Internal validation error", e);
+        }
 
     }
 

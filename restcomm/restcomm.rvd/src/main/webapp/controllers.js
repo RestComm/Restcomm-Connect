@@ -321,7 +321,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	};
 	
 	
-	$scope.saveProject = function(onsuccess) {
+	$scope.saveProject = function() {
 		var deferred = $q.defer();
 		
 		var state = {};
@@ -335,16 +335,20 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		
 		
 		// transmit state to the server
-		console.log( "saving " + $scope.projectKind + " project: " + $scope.projectName );
+		//console.log( "saving " + $scope.projectKind + " project: " + $scope.projectName );
 		$http({url: 'services/manager/projects?name=' + $scope.projectName,
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}
 		})
 		.success(function (data, status, headers, config) {
-			deferred.resolve('Project saved');
+			if ( data == "" || data.success ) {
+				deferred.resolve('Project saved');
+			} else {
+				deferred.reject({type:'validationError', data:data});			
+			}
 		 }).error(function (data, status, headers, config) {
-			 deferred.reject('Error saving project');
+			 deferred.reject({type:'saveError'});
 		 });	
 		
 		return deferred.promise;
@@ -397,11 +401,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		
 		$http({url: 'services/manager/projects/build?name=' + $scope.projectName, method: "POST"})
 		.success(function (data, status, headers, config) {
-			console.log("Build succesfull");
 			deferred.resolve('Build successfull');
 		 }).error(function (data, status, headers, config) {
-			//console.log("Error building");
-			 deferred.reject('Error building');
+			 deferred.reject('buildError');
 		 });
 		
 		return deferred.promise;
@@ -486,12 +488,36 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.onSavePressed = function() {
 		usSpinnerService.spin('spinner-save');
+		$scope.clearStepWarnings();
 		$scope.saveProject()
-		.then($scope.buildProject)
-		.then(function () { $scope.addAlert('Project saved', 'success'); })
+		.then( function () { return $scope.buildProject() } )
+		.then(
+			function () { 
+				$scope.addAlert("Project saved", 'success');
+				console.log("Project saved and built");
+			}, 
+			function (reason) { 
+				if ( reason.type == 'saveError' ) {
+					console.log("Error saving project");
+					$scope.addAlert("Error saving project", 'danger');
+				} else if ( reason.type == 'validationError') {
+					console.log("Validation error");
+					$scope.addAlert("Project saved with validation errors", 'warning');
+					var r = /^\/nodes\/([0-9]+)\/steps\/([a-z]+[0-9]+)$/;
+					for (var i=0; i < reason.data.errorItems.length; i++) {
+						var failurePath = reason.data.errorItems[i].failurePath;
+						m = r.exec( reason.data.errorItems[i].failurePath );
+						if ( m != null ) {
+							console.log("warning in module " + m[1] + " step " + m[2]);
+							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
+						}
+					}
+				} else { console.log("Unknown error");}
+			} 
+		)
 		.finally(function () {
 			usSpinnerService.stop('spinner-save');
-			console.log('save finished');
+			//console.log('save finished');
 		});
 		//.then( function () { console.log('project saved and built')});
 	}
@@ -510,14 +536,19 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		  alert = {msg: msg};
 	  
 	  $scope.alerts.push(alert);
-	  $timeout( function () {
-		  $scope.closeAlert(alert);
-	  }, 3000);
+	  $timeout( function () { $scope.closeAlert(alert); }, 3000);
 	};
 
 	$scope.closeAlert = function(alert) {
 	  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
 	};
+	
+	$scope.clearStepWarnings = function () {
+		for ( var i=0; i<$scope.nodes.length; i++ ) {
+			for (var stepname in $scope.nodes[i].steps)
+				$scope.nodes[i].steps[stepname].iface.showWarning = false;
+		}
+	}
 	
 	
 	/*    USSDSay / USSDCollect functions    */
