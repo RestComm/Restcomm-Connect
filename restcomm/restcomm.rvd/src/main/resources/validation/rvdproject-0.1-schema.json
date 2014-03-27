@@ -1,0 +1,51 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "RVD project 0.1",
+	"description": "Specification for RVD 7.1.4",
+	"type": "object",
+	"properties": {
+		"nodes": {
+			"type": "array",
+			"items": {
+				"title": "RVD module",
+				"type": "object",
+				"uniqueItems": true,
+				"properties": {
+					"name": {"type": "string"},
+					"label": {"type": "string"},
+					"steps": {
+						"title": "Generic RVD step",
+						"type": "object",
+						"patternProperties": {
+							"^step[0-9]+$": {
+								"type": "object",
+								"oneOf": [
+									{ "$ref": "saystep.json" },
+									{ "$ref": "playstep.json" },
+									{ "$ref": "gatherstep.json" }
+								]
+							}
+						},
+						"additionalProperties": false
+					},
+					"stepnames": {"type": "array"},
+					"iface": {"type": "object"}
+				},
+				"required": ["name","label","steps","stepnames"]
+			}
+		},
+		"lastStepId": {
+			"type": "integer"
+		},
+		"activeNode": {
+			"type": "integer"
+		},		
+		"lastNodeId": {
+			"type": "integer"
+		},		
+		"startNodeName": {
+			"type": "string"
+		}
+	}	
+}
+

@@ -41,6 +41,8 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
 
 @Path("/manager/projects")
 public class RvdManager {
@@ -125,6 +127,12 @@ public class RvdManager {
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            } catch (ValidationFrameworkException e) {
+                logger.error(e.getMessage(), e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            } catch (ValidationException e) {
+                Gson gson = new Gson();
+                return Response.ok(gson.toJson(e.getValidationResult()), MediaType.APPLICATION_JSON).build();
             }
         } else {
             logger.warn("Empty project name specified for updating");
