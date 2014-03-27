@@ -25,7 +25,6 @@ public class GatherStep extends Step {
     private List<Mapping> mappings;
     private String collectVariable;
     private String gatherType;
-    private Iface iface;
 
     public static class Mapping {
         private Integer digits;
@@ -45,28 +44,6 @@ public class GatherStep extends Step {
 
         public void setNext(String next) {
             this.next = next;
-        }
-
-    }
-
-    public static class Iface {
-        private Boolean advancedView;
-        private Boolean optionsVisible;
-
-        public Boolean getAdvancedView() {
-            return advancedView;
-        }
-
-        public void setAdvancedView(Boolean advancedView) {
-            this.advancedView = advancedView;
-        }
-
-        public Boolean getOptionsVisible() {
-            return optionsVisible;
-        }
-
-        public void setOptionsVisible(Boolean optionsVisible) {
-            this.optionsVisible = optionsVisible;
         }
 
     }
@@ -159,13 +136,6 @@ public class GatherStep extends Step {
         this.gatherType = gatherType;
     }
 
-    public Iface getIface() {
-        return iface;
-    }
-
-    public void setIface(Iface iface) {
-        this.iface = iface;
-    }
     public RcmlGatherStep render(Interpreter interpreter) throws InterpreterException {
 
         RcmlGatherStep rcmlStep = new RcmlGatherStep();

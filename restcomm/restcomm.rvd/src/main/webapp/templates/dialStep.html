@@ -1,7 +1,7 @@
 
 <div class="step panel panel-rvdstep">
-		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <small>{{step.phrase}}</small><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
-		<div class="panel-body" ng-hide='step.isCollapsed'>
+		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.iface.isCollapsed = !step.iface.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <small>{{step.phrase}}</small><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 			<div class='row'>
 				<div class='col-md-12 form-group'>
 					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-number label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Number</div>
@@ -18,16 +18,16 @@
 				</select>
 				<!-- <div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>  -->
 				
-				<span ng-show='step.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The limit in seconds that Dial waits for the called party to answer the call">Timeout</span>
-				<input ng-show='step.advancedShown' ng-model='step.timeout' null-if-empty type='number' class='form-control small-input' placeholder='30'>
+				<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The limit in seconds that Dial waits for the called party to answer the call">Timeout</span>
+				<input ng-show='step.iface.advancedShown' ng-model='step.timeout' null-if-empty type='number' class='form-control small-input' placeholder='30'>
 				
-				<span ng-show='step.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum duration of the Dial in seconds">Time limit</span>
-				<input ng-show='step.advancedShown' ng-model='step.timeLimit' null-if-empty type='number' class='form-control small-input' placeholder='14400'>
+				<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum duration of the Dial in seconds">Time limit</span>
+				<input ng-show='step.iface.advancedShown' ng-model='step.timeLimit' null-if-empty type='number' class='form-control small-input' placeholder='14400'>
 
-				<span ng-show='step.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The caller ID that will appear to the called party when RestComm calls">Caller ID</span>
-				<input ng-show='step.advancedShown' ng-model='step.callerId' null-if-empty type='text' class='form-control'>
+				<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The caller ID that will appear to the called party when RestComm calls">Caller ID</span>
+				<input ng-show='step.iface.dvancedShown' ng-model='step.callerId' null-if-empty type='text' class='form-control'>
 				
-				<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.advancedShown = !step.advancedShown"></span>
+				<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>
 			</div>
 			
 			<div class='row'>
@@ -47,17 +47,17 @@
 										<span class="input-group-addon"><i class='fa fa-phone'></i></span>
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
 																			
-										<span ng-show='dialnoun.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Send these DTMF tones after dialing the number">Send digits</span>
-										<input ng-model='dialnoun.sendDigits' null-if-empty ng-show='dialnoun.advancedShown'  type='text' class='form-control' placeholder='wwww1234' >
+										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Send these DTMF tones after dialing the number">Send digits</span>
+										<input ng-model='dialnoun.sendDigits' null-if-empty ng-show='dialnoun.iface.advancedShown'  type='text' class='form-control' placeholder='wwww1234' >
 										
-										<span ng-show='dialnoun.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Play or say information to the called party, or provide a chance to decline the phone call using 'Collect' and 'Hangup'">Before connect</span>
-										<select ng-show='dialnoun.advancedShown' sync-model name='beforeConnectModule' ng-model='dialnoun.beforeConnectModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Play or say information to the called party, or provide a chance to decline the phone call using 'Collect' and 'Hangup'">Before connect</span>
+										<select ng-show='dialnoun.iface.advancedShown' sync-model name='beforeConnectModule' ng-model='dialnoun.beforeConnectModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
 											<option value=""></option>
 										</select>
 										
 										<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
 										
-										<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.advancedShown = !dialnoun.advancedShown"></span>
+										<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.iface.advancedShown = !dialnoun.iface.advancedShown"></span>
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 								</div>
@@ -85,10 +85,10 @@
 										</select>
 										
 																				
-										<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.advancedShown = !dialnoun.advancedShown"></span>
+										<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.iface.advancedShown = !dialnoun.iface.advancedShown"></span>
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
-									<div ng-show='dialnoun.advancedShown' class="input-group input-group-sm form-group noun-advanced">										
+									<div ng-show='dialnoun.iface.advancedShown' class="input-group input-group-sm form-group noun-advanced">										
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Specify whether a participant can speak in the conference">Muted</span>
 										<select ng-model='dialnoun.muted' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
