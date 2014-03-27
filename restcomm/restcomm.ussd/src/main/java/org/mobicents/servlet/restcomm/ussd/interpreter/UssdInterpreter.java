@@ -154,7 +154,7 @@ public class UssdInterpreter extends UntypedActor {
 
     Tag ussdLanguageTag = null;
     int maxMessageLength;
-    private final int englishLength = 180;
+    private final int englishLength = 182;
     private final int nonEnglishLength = 80;
     Queue<Tag> ussdMessageTags = new LinkedBlockingQueue<Tag>();
     Tag ussdCollectTag = null;
@@ -453,6 +453,7 @@ public class UssdInterpreter extends UntypedActor {
             }
         } else if (CallResponse.class.equals(klass)) {
             if (acquiringCallInfo.equals(state)) {
+                @SuppressWarnings("unchecked")
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
                 // Check from whom is the message (initial call or outbound call) and update info accordingly
                 if (sender == ussdCall) {
@@ -538,7 +539,6 @@ public class UssdInterpreter extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings({ "unchecked" })
         @Override
         public void execute(final Object message) throws Exception {
             ussdCall.tell(new Observe(source), source);
@@ -550,7 +550,6 @@ public class UssdInterpreter extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings({ "unchecked" })
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("Acquiring Call Info");
@@ -691,7 +690,6 @@ public class UssdInterpreter extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("In Not Found State");
-            final Class<?> klass = message.getClass();
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
@@ -751,7 +749,17 @@ public class UssdInterpreter extends UntypedActor {
                 }
 
                 if (ussdText.length() > maxMessageLength) {
-                    throw new Exception("Ussd text length more than the permitted for the selected language: "+maxMessageLength);
+                    final String errorString = "Error while preparing the USSD response. Ussd text length more "
+                            + "than the permitted for the selected language: "+maxMessageLength;
+                    Notification notification = notification(ERROR_NOTIFICATION, 11100, errorString);
+                    if (notification != null) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        notifications.addNotification(notification);
+                        sendMail(notification);
+                    }
+                    logger.info(errorString);
+                    ussdText = new StringBuffer();
+                    ussdText.append("Error while preparing the response.\nMessage length exceeds the maximum.");
                 }
 
                 ussdRequest.setMessage(ussdText.toString());
@@ -784,7 +792,7 @@ public class UssdInterpreter extends UntypedActor {
             if (tag != null) {
                 message.append(tag.text());
                 if (!sayTags.isEmpty())
-                    message.append("<CR>");
+                    message.append("\n");
             } else {
                 return message;
             }

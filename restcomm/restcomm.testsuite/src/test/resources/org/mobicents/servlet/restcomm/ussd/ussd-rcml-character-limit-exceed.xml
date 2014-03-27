@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<!--  This should fail because language="en" and message length is 183 characters -->
+	<UssdMessage>The information you requested is 1234567890 and bla bla bla bla bla bla bla bla bla bla bla 
+	bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla</UssdMessage>
+</Response>
