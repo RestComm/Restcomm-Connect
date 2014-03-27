@@ -32,7 +32,6 @@ import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -44,7 +43,6 @@ import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
-import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreter;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreterBuilder;
@@ -146,31 +144,12 @@ public class UssdCallManager extends UntypedActor {
                 check(request);
                 invite(request);
             } else if ("INFO".equalsIgnoreCase(method)) {
-                processInfo(request);
+                processRequest(request);
             } else if ("ACK".equals(method)) {
-                ack(request);
+                processRequest(request);
             }
         }
 
-    }
-
-    private void ack(SipServletRequest request) throws IOException {
-        SipServletResponse response = B2BUAHelper.getLinkedResponse(request);
-        // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
-        if (response != null) {
-            SipServletRequest ack = response.createAck();
-            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
-            if (toInetUri != null) {
-                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the ACK request");
-                ack.setRequestURI(toInetUri);
-            }
-            ack.send();
-            SipApplicationSession sipApplicationSession = request.getApplicationSession();
-            // Defaulting the sip application session to 1h
-            sipApplicationSession.setExpires(60);
-        }
     }
 
     private void invite(final Object message) throws Exception {
@@ -261,9 +240,10 @@ public class UssdCallManager extends UntypedActor {
         return isFoundHostedApp;
     }
 
-    private void processInfo(SipServletRequest request) throws IOException {
+    private void processRequest(SipServletRequest request) throws IOException {
         final ActorRef ussdInterpreter = (ActorRef) request.getApplicationSession().getAttribute(UssdInterpreter.class.getName());
         if(ussdInterpreter != null) {
+            logger.info("Dispatching Request: "+request+" to UssdInterpreter: "+ussdInterpreter);
             ussdInterpreter.tell(request, self());
         } else {
             final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);

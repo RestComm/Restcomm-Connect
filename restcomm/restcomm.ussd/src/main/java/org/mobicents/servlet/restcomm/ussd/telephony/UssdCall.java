@@ -55,7 +55,7 @@ import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetCallObservers;
-import org.mobicents.servlet.restcomm.ussd.commons.UssdRequest;
+import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
@@ -127,6 +127,7 @@ public class UssdCall extends UntypedActor  {
         transitions.add(new Transition(processingUssdMessage, ready));
         transitions.add(new Transition(processingUssdMessage, inProgress));
         transitions.add(new Transition(processingUssdMessage, completed));
+        transitions.add(new Transition(processingUssdMessage, processingUssdMessage));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -232,7 +233,7 @@ public class UssdCall extends UntypedActor  {
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
             lastResponse = response;
-        } else if (UssdRequest.class.equals(klass)) {
+        } else if (UssdRestcommResponse.class.equals(klass)) {
             fsm.transition(message, processingUssdMessage);
         } else if (Answer.class.equals(klass)) {
             fsm.transition(message, inProgress);
@@ -324,7 +325,7 @@ public class UssdCall extends UntypedActor  {
 
         @Override
         public void execute(final Object message) throws Exception {
-            UssdRequest ussdRequest = (UssdRequest) message;
+            UssdRestcommResponse ussdRequest = (UssdRestcommResponse) message;
             SipSession session = invite.getSession();
             SipServletRequest request = null;
 
@@ -335,6 +336,14 @@ public class UssdCall extends UntypedActor  {
                 request = session.createRequest("INFO");
             }
             request.setContent(ussdRequest.createUssdPayload().toString(), ussdContentType);
+
+            SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
+            if (realInetUri != null) {
+                logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                        + " as a request uri of the BYE request");
+                request.setRequestURI(realInetUri);
+            }
+
             request.send();
         }
     }
