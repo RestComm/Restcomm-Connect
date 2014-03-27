@@ -83,7 +83,7 @@ public class RvdController {
 
         String rcmlResponse;
         try {
-            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest);;
+            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest);
             rcmlResponse = interpreter.interpret();
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);
