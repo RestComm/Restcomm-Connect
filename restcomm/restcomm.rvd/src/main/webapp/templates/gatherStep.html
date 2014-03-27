@@ -2,7 +2,7 @@
 <div class="step step-gather panel panel-rvdstep step-{{step.name}}">
 		<div class="panel-heading">
 			<h4 class="panel-title">
-				<i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>
+				<i ng-click='step.iface.isCollapsed = !step.iface.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.iface.isCollapsed, 'fa-caret-down': !step.iface.isCollapsed}"></i>
 				&nbsp; &nbsp;
 				<span  tooltip='{{step.name}}'>{{step.title}}</span> 
 				<small>{{step.phrase}}</small>
@@ -10,7 +10,7 @@
 				<i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i>
 			</h4>
 		</div>
-		<div class="panel-body" ng-hide='step.isCollapsed'>
+		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 			<div class="row">
 				<div class="col-md-6">
 					<h4>Prompt</h4>
