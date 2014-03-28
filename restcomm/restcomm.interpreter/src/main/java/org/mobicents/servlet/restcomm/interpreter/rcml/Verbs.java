@@ -20,6 +20,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com (George Vagenas)
  */
 @Immutable
 public final class Verbs {
@@ -36,6 +37,10 @@ public final class Verbs {
     public static final String reject = "Reject";
     public static final String say = "Say";
     public static final String sms = "Sms";
+    //USSD verbs
+    public static final String ussdLanguage = "Language";
+    public static final String ussdMessage = "UssdMessage";
+    public static final String ussdCollect = "UssdCollect";
 
     public Verbs() {
         super();
@@ -68,6 +73,12 @@ public final class Verbs {
         if (say.equals(name))
             return true;
         if (sms.equals(name))
+            return true;
+        if (ussdLanguage.equals(name))
+            return true;
+        if (ussdMessage.equals(name))
+            return true;
+        if (ussdCollect.equals(name))
             return true;
         return false;
     }

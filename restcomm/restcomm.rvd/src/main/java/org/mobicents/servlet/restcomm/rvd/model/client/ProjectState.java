@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class ProjectState {
 
+    private String projectKind;
     private String startNodeName;
     private Integer lastStepId;
     private List<Node> nodes;
@@ -80,6 +81,14 @@ public class ProjectState {
             this.editLabel = editLabel;
         }
 
+    }
+
+    public String getProjectKind() {
+        return projectKind;
+    }
+
+    public void setProjectKind(String projectKind) {
+        this.projectKind = projectKind;
     }
 
     public String getStartNodeName() {

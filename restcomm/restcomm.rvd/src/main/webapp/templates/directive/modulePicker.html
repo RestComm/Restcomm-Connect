@@ -1,0 +1,15 @@
+<div>
+	This is the module picker
+	attributes:
+	{{options}}
+	
+	<div class="input-group input-group-sm">
+		<span class="input-group-addon">Target</span>
+		<select sync-model name="next" ng-model='pickedModule' ng-options='target.name as target.label for target in options' class="form-control input-sm" required>
+			<option value=""></option>
+		</select>
+	</div>
+	<!--<div class="validation-error" ng-show="form.next.$invalid">No target specified</div> -->
+	<div>{{pickedModule}}</div>
+</div>
+html>

@@ -25,12 +25,14 @@ import javax.servlet.sip.SipApplicationSessionEvent;
 import javax.servlet.sip.SipApplicationSessionListener;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
+import org.mobicents.servlet.restcomm.ussd.telephony.UssdCallManager;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -46,6 +48,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     private ActorSystem system;
     private ActorRef manager;
+    private ActorRef ussdManager;
 
     private Configuration configuration;
 
@@ -61,13 +64,21 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
-        manager.tell(request, null);
+        if(isUssdMessage(request)) {
+            ussdManager.tell(request, null);
+        } else {
+            manager.tell(request, null);
+        }
     }
 
     @Override
     protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
+        if(isUssdMessage(response)){
+            ussdManager.tell(ussdManager, null);
+        } else {
             manager.tell(response, null);
         }
+    }
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
@@ -81,7 +92,9 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
         final ActorRef conferences = conferences(gateway);
         final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
         manager = manager(configuration, context, gateway, conferences, sms, factory, storage);
+        ussdManager = ussdManager(configuration, context, gateway, conferences, sms, factory, storage);
         context.setAttribute(CallManager.class.getName(), manager);
+        context.setAttribute(UssdCallManager.class.getName(), ussdManager);
     }
 
     private ActorRef manager(final Configuration configuration, final ServletContext context, final ActorRef gateway, final ActorRef conferences,
@@ -92,6 +105,18 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
             @Override
             public UntypedActor create() throws Exception {
                 return new CallManager(configuration, context, system, gateway, conferences, sms, factory, storage);
+            }
+        }));
+    }
+
+    private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef gateway, final ActorRef conferences,
+            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new UssdCallManager(configuration, context, system, gateway, conferences, sms, factory, storage);
             }
         }));
     }
@@ -125,5 +150,22 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
     @Override
     public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
         // Nothing to do.
+    }
+
+    private boolean isUssdMessage(SipServletMessage message) {
+        Boolean isUssd = false;
+        String contentType = null;
+        try {
+            contentType = message.getContentType();
+        } catch (Exception e) {
+        }
+        if (contentType != null) {
+            isUssd = contentType.equalsIgnoreCase("application/vnd.3gpp.ussd+xml");
+        } else {
+            if (message.getApplicationSession().getAttribute("UssdCall") != null) {
+                isUssd = true;
+            }
+        }
+        return isUssd;
     }
 }

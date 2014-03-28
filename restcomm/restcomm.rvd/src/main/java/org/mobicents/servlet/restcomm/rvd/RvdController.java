@@ -1,8 +1,5 @@
 package org.mobicents.servlet.restcomm.rvd;
 
-import java.io.File;
-import java.io.IOException;
-
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -18,30 +15,31 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.Gson;
 
 @Path("/apps/{appname}/controller")
 public class RvdController {
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
-    // configuration parameters
-    // private static final String workspaceDirectoryName = "workspace";
-    // private static final String protoDirectoryName = "_proto"; // the prototype project directory name
-
-    //private String workspaceBasePath;
 
     @Context
     ServletContext servletContext;
-    private ProjectService projectService; // use a proper way to initialize this in init()
+    private RvdSettings rvdSettings;
+    private ProjectStorage projectStorage;
+    private ProjectService projectService;
     private Gson gson;
 
     @PostConstruct
     void init() {
-        // workspaceBasePath = servletContext.getRealPath(File.separator) + workspaceDirectoryName;
         gson = new Gson();
-        projectService = new ProjectService(servletContext);
+        rvdSettings = new RvdSettings(servletContext);
+        projectStorage = new FsProjectStorage(rvdSettings);
+        projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
 
     @GET
@@ -53,17 +51,15 @@ public class RvdController {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
         } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error("", e);
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;
-        Interpreter interpreter = new Interpreter();
-
         String rcmlResponse;
         try {
-            rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (IOException e) {
+            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest);
+            rcmlResponse = interpreter.interpret();
+        } catch (StorageException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
@@ -81,17 +77,15 @@ public class RvdController {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
         } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error("", e);
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        String projectBasePath = projectService.getWorkspaceBasePath() + File.separator + appname;
-        Interpreter interpreter = new Interpreter();
-
         String rcmlResponse;
         try {
-            rcmlResponse = interpreter.interpret(targetParam, projectBasePath, appname, httpRequest);
-        } catch (IOException e) {
+            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest);
+            rcmlResponse = interpreter.interpret();
+        } catch (StorageException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }

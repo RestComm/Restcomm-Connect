@@ -171,6 +171,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.ussd</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>7.0.0.GA-TelScale</version>

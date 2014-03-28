@@ -18,7 +18,8 @@
 	<!-- <div class="validation-error" ng-show="form.property.$error.required">property required</div>
 	<div class="validation-error" ng-show="form.position.$error.required">item position required</div>
 	-->
-	<button ng-show='!isTerminal(extractorModel.lastOperation.kind)' ng-disabled='form.$invalid' ng-click="addOperation(extractorModel)" type="button" class="btn btn-primary btn-xs pull-right"><span>Add operation</span></button>
+
+	<button ng-show='extractorModel.lastOperation != null && !isTerminal(extractorModel.lastOperation.kind)' ng-disabled='form.$invalid' ng-click="addOperation(extractorModel)" type="button" class="btn btn-primary btn-xs pull-right"><span>Add operation</span></button>
 	<button ng-show='isTerminal(extractorModel.lastOperation.kind)' ng-click="doneAddingOperations(extractorModel)" type="button" class="btn btn-primary btn-xs pull-right"><span>Done</span></button>
 	<button ng-show='extractorModel.accessOperations.length > 0' ng-click='popOperation(extractorModel)' type='button' class="btn btn-xs pull-right"><i  class="fa fa-undo" ></i></button>
 </form>

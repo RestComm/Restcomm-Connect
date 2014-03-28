@@ -1,6 +1,14 @@
-App.controller('projectManagerCtrl', function ($scope, $http, $location) {
+App.controller('homeCtrl', function ($scope) {
+	
+});
+
+App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
+	$scope.projectKind = $routeParams.projectKind;
+	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd')
+		$scope.projectKind = 'voice';
+
 	
 	$scope.refreshProjectList = function() {
 		$http({url: 'services/manager/projects/list',
@@ -13,8 +21,8 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location) {
 		});
 	}
 	
-	$scope.createNewProject = function(name) {
-		$http({url: 'services/manager/projects?name=' + name,
+	$scope.createNewProject = function(name, kind) {
+		$http({url: 'services/manager/projects?name=' + name + "&kind=" + kind,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
@@ -78,13 +86,39 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	// Prototype and constant data structures
 	$scope.nodesProto =	{name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}};
-	$scope.languages = [{name:'en',text:'English'},{name:'fr',text:'French'},{name:'it',text:'Italian'},{name:'sp',text:'Spanish'},{name:'el',text:'Greek'}];
+	$scope.languages = [
+	                    {name:'bf',text:'Belgium-French'},
+	                    {name:'bp',text: 'Brazilian-Portugues'},
+	                    {name:'en-gb',text: 'British-English'},
+	                    {name:'cf',text: 'Canadian-French'},
+	                    {name:'cs',text: 'Czech'},
+	                    {name:'dan',text: 'Dannish'},
+	                    {name:'en',text:'English'},
+	                    {name:'fi',text: 'Finnish'},
+	                    {name:'es',text: 'Spanish'},
+	                    {name:'fr',text: 'French'},
+	                    {name:'de',text: 'German'},
+	                    {name:'el',text: 'Greek'},
+	                    {name:'it',text: 'Italian'},
+	                    {name:'nl',text: 'Netherlands-Dutch'},
+	                    {name:'no',text: 'Norwegian'},
+	                    {name:'pl',text: 'Polish'},
+	                    {name:'pt',text: 'Portuguese'},
+	                    {name:'ru',text: 'Russian'},
+	                    {name:'ar',text: 'Saudi-Arabia Arabic'},
+	                    {name:'ca',text: 'Spain Catalan'}, 
+	                    {name:'sv',text: 'Swedish'},
+	                    {name:'tr',text: 'Turkish'}
+	                    
+	                   ];
 	$scope.methods = ['POST', 'GET'];
 	
 		
 	// State variables
+	$scope.projectNotFound = false;
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
+	
 	
 	$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
@@ -103,6 +137,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		width: 3,
 	};
 	
+	// Some constants to be moved elsewhere = TODO
+	$scope.yesNoBooleanOptions = [{caption:"Yes", value:true}, {caption:"No", value:false}];
+	$scope.nullValue = null;
 
 	//console.log("projectController stepService: " + stepService.stepNames );
 
@@ -294,10 +331,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		state.lastNodeId = $scope.lastNodesId;
 		state.visibleNodes = $scope.visibleNodes;
 		state.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
+		state.projectKind = $scope.projectKind;
 		
 		
 		// transmit state to the server
-		console.log( "saving project: " + $scope.projectName );
+		console.log( "saving " + $scope.projectKind + " project: " + $scope.projectName );
 		$http({url: 'services/manager/projects?name=' + $scope.projectName,
 				method: "POST",
 				data: state,
@@ -314,9 +352,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 
 	
-	$scope.closeProject = function() {
-		$location.path("/project-manager");		
-	}
+	//$scope.closeProject = function() {
+	//	$location.path("#/project-manager/" + ($scope.projectKind ? $scope.projectKind : 'voice'));		
+	//}
 	
 	$scope.openProject = function(name) {
 		$http({url: 'services/manager/projects?name=' + name,
@@ -332,9 +370,14 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 			$scope.lastNodesId = data.lastNodeId;
 			$scope.visibleNodes = data.visibleNodes;
 			$scope.startNodeName = data.startNodeName;	
+			$scope.projectKind = data.projectKind;
 			
-			$scope.refreshWavList(name);
+			if ( $scope.projectKind == 'voice' )
+				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
+		 }).error(function (data, status, headers, config) {
+			//console.log("error opening project");
+			$scope.projectNotFound = true;
 		 });
 	}
 	
@@ -425,6 +468,22 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		});
 	}
 	
+	$scope.addDialNoun = function (item, pos, listmodel) {
+		//console.log("adding dial noun");
+		r = RegExp("dial-noun-([^ ]+)");
+		m = r.exec( item.attr("class") );
+		if ( m != null ) {
+			//console.log("adding dial noun - " + m[1]);
+			$scope.$apply( function ()  {
+				listmodel.splice(pos,0, angular.copy(protos.dialNounProto[ m[1] ]));
+			});
+		}
+	}
+	
+	$scope.removeDialNoun = function (dialstep,noun) {
+		dialstep.dialNouns.splice( dialstep.dialNouns.indexOf(noun), 1 );
+	}
+	
 	$scope.onSavePressed = function() {
 		usSpinnerService.spin('spinner-save');
 		$scope.saveProject()
@@ -442,23 +501,56 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.refreshWavList($scope.projectName);
 	});
 	
-	  $scope.alerts = [];
-	  $scope.addAlert = function(msg, type) {
-		  var alert = null;
-		  if (typeof type !== 'undefined')
-			  alert = {type: type, msg: msg};
-		  else
-			  alert = {msg: msg};
-		  
-		  $scope.alerts.push(alert);
-		  $timeout( function () {
-			  $scope.closeAlert(alert);
-		  }, 3000);
-	  };
+	$scope.alerts = [];
+	$scope.addAlert = function(msg, type) {
+	  var alert = null;
+	  if (typeof type !== 'undefined')
+		  alert = {type: type, msg: msg};
+	  else
+		  alert = {msg: msg};
+	  
+	  $scope.alerts.push(alert);
+	  $timeout( function () {
+		  $scope.closeAlert(alert);
+	  }, 3000);
+	};
+
+	$scope.closeAlert = function(alert) {
+	  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
+	};
 	
-	  $scope.closeAlert = function(alert) {
-		  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
-	  };
+	
+	/*    USSDSay / USSDCollect functions    */
+	
+	// cound how many characters are left for a ussd message. Make sure to disable trim on the bound input control
+	$scope.countUssdChars = function(text) {
+		return text.length;
+	}
+	
+	// count total characters for the UssdCollect
+	$scope.countUssdCollectChars = function(step) {
+		var counter = 0;
+		for (var i = 0; i <  step.messages.length; i ++) {
+			counter += step.messages[i].text.length + 1; // +1 for the newline at the end of this message
+		}
+		return counter;
+	}
+	
+	$scope.nestUssdMessage = function (item, pos, listmodel) {
+		console.log("nesting ussd message");
+		//r = RegExp("dial-noun-([^ ]+)");
+		//m = r.exec( item.attr("class") );
+		//if ( m != null ) {
+			//console.log("adding dial noun - " + m[1]);
+			$scope.$apply( function ()  {
+				listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSay' ]));
+			});
+		//}
+	}
+	
+	$scope.removeNestedMessage = function (step,nested) {
+		step.messages.splice( step.messages.indexOf(nested), 1 );
+	}
 		
 	// Run the following after all initialization are complete
 	
