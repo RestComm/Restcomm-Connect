@@ -4,19 +4,24 @@ import java.lang.reflect.Type;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.model.client.DialStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.FaxStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.GatherStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.HungupStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.PauseStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.PlayStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.RecordStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.RedirectStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.RejectStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.SayStep;
-import org.mobicents.servlet.restcomm.rvd.model.client.SmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
-import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialNoun;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialNounJsonDeserializer;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.gather.GatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.hangup.HungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.pause.PauseStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.play.PlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.record.RecordStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.redirect.RedirectStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.reject.RejectStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.sms.SmsStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdcollect.UssdCollectStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStep;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -37,7 +42,7 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
 
         Gson gson = new GsonBuilder()
             .registerTypeAdapter(Step.class, new StepJsonDeserializer())
-            //.registerTypeAdapter(AccessRawOperation.class, new AccessRawOperationJsonDeserializer())
+            .registerTypeAdapter(DialNoun.class, new DialNounJsonDeserializer())
             .create();
 
         Step step;
@@ -65,6 +70,12 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
             step = gson.fromJson(step_object, RecordStep.class);
         else if ("fax".equals(kind))
             step = gson.fromJson(step_object, FaxStep.class);
+        else if ("ussdSay".equals(kind))
+            step = gson.fromJson(step_object, UssdSayStep.class);
+        else if ("ussdCollect".equals(kind))
+            step = gson.fromJson(step_object, UssdCollectStep.class);
+        else if ("ussdLanguage".equals(kind))
+            step = gson.fromJson(step_object, UssdLanguageStep.class);
         else {
             step = null;
             logger.error("Error deserializing step. Unknown step found!"); // TODO remove me and return a nice value!!!

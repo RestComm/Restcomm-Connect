@@ -4,6 +4,15 @@ public class ProjectItem {
 
     private String name;
     private String startUrl;
+    private String kind;
+
+    public String getKind() {
+        return kind;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
 
     public String getName() {
         return name;
