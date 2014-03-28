@@ -1,66 +1,57 @@
 package org.mobicents.servlet.restcomm.rvd;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
-import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
-import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class ProjectService {
-
+    static final Logger logger = Logger.getLogger(BuildService.class.getName());
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
+
+    ProjectStorage projectStorage;
+    RvdSettings settings;
 
     // configuration parameters
     private static final String workspaceDirectoryName = "workspace";
-    private static final String protoDirectoryName = "_proto"; // the prototype project directory name
     private static final String wavsDirectoryName = "wavs";
 
-    private String workspaceBasePath;
+    //private String workspaceBasePath;
 
-    public ProjectService(ServletContext servletContext) {
+    public ProjectService(ProjectStorage projectStorage, ServletContext servletContext, RvdSettings settings) {
         this.servletContext = servletContext;
-
-        workspaceBasePath = this.servletContext.getRealPath(File.separator) + workspaceDirectoryName;
+        this.projectStorage = projectStorage;
+        this.settings = settings;
+        //workspaceBasePath = this.servletContext.getRealPath(File.separator) + workspaceDirectoryName;
     }
     public static String getWorkspacedirectoryname() {
         return workspaceDirectoryName;
     }
     public static String getWavsdirectoryname() {
         return wavsDirectoryName;
-    }
-    public String getWorkspaceBasePath() {
-        return workspaceBasePath;
-    }
-
-    public String getProjectWavsPath(String projectName) throws BadWorkspaceDirectoryStructure, ProjectDoesNotExist {
-        return getProjectBasePath(projectName) + File.separator + wavsDirectoryName;
-    }
-
-    public String getProjectBasePath(String projectName) throws BadWorkspaceDirectoryStructure, ProjectDoesNotExist {
-        if ( !projectExists(projectName))
-            throw new ProjectDoesNotExist();
-
-        return workspaceBasePath + File.separator + projectName;
     }
 
     /**
@@ -104,155 +95,87 @@ public class ProjectService {
         }
     }
 
-    public List<ProjectItem> getAvailableProjects() throws BadWorkspaceDirectoryStructure {
+    /**
+     * Populates a list of ProjectItems each representing a project. The project kind property defaults to
+     * 'voice' if it does not exist.
+     * @throws StorageException
+     */
+    public List<ProjectItem> getAvailableProjects() throws StorageException {
 
         List<ProjectItem> items = new ArrayList<ProjectItem>();
-
-        File workspaceDir = new File(workspaceBasePath);
-        if (workspaceDir.exists()) {
-
-            File[] entries = workspaceDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File anyfile) {
-                    if (anyfile.isDirectory() && !anyfile.getName().equals(protoDirectoryName))
-                        return true;
-                    return false;
-                }
-            });
-            Arrays.sort(entries, new Comparator<File>() {
-                public int compare(File f1, File f2) {
-                    return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
-                }
-            });
-
-            for (File entry : entries) {
-                ProjectItem item = new ProjectItem();
-                item.setName(entry.getName());
-                item.setStartUrl(entry.getName());
-                items.add(item);
+        for (String entry : projectStorage.listProjectNames() ) {
+            JsonParser parser = new JsonParser();
+            JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+            JsonElement projectKind_element = root_element.get("projectKind");
+            String projectKind = "voice"; // default value for old projects
+            if ( projectKind_element != null ) {
+                projectKind = projectKind_element.getAsString();
             }
-        } else
-            throw new BadWorkspaceDirectoryStructure();
+            //logger.debug("project " + entry + " is a " + projectKind );
 
+            ProjectItem item = new ProjectItem();
+            item.setName(entry);
+            item.setKind(projectKind);
+            //item.setStartUrl(entry.getName());
+            items.add(item);
+        }
         return items;
+    }
+
+    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException {
+        if ( !projectExists(projectName) )
+            throw new ProjectDoesNotExist();
+
+        return projectStorage.loadProjectState(projectName);
     }
 
     public boolean projectExists(String projectName) throws BadWorkspaceDirectoryStructure {
-        List<ProjectItem> projects = getAvailableProjects();
-        for (ProjectItem project : projects) {
-            if (project.getName().equals(projectName))
-                return true;
-        }
-        return false;
+        return projectStorage.projectExists(projectName);
     }
 
-    public void createProject(String projectName) throws ProjectDirectoryAlreadyExists, IOException {
+    public void createProject(String projectName, String kind) throws StorageException, InvalidServiceParameters {
+        String protoSuffix = null;
+        if ( "voice".equals(kind) )
+            protoSuffix = "_voice";
+        else
+        if ( "ussd".equals(kind) )
+            protoSuffix = "_ussd";
+        else
+            throw new InvalidServiceParameters("Invalid project kind specified - '" + kind + "'");
 
-        String workspaceBasePath = getWorkspaceBasePath();
-        File sourceDir = new File(workspaceBasePath + File.separator + "_proto");
-        File destDir = new File(workspaceBasePath + File.separator + projectName);
-        if (!destDir.exists()) {
-            FileUtils.copyDirectory(sourceDir, destDir);
-        } else {
+        projectStorage.cloneProject(settings.getOption("protoProjectName") + protoSuffix, projectName);
+    }
+
+    public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException {
+        String state = IOUtils.toString(request.getInputStream());
+        projectStorage.updateProjectState(projectName, state);
+
+    }
+
+    public void renameProject(String projectName, String newProjectName) throws ProjectDoesNotExist, StorageException {
+        if (  ! projectStorage.projectExists(projectName) ) {
+            throw new ProjectDoesNotExist();
+        } else if ( projectStorage.projectExists(newProjectName) ) {
             throw new ProjectDirectoryAlreadyExists();
         }
+        projectStorage.renameProject(projectName, newProjectName);
     }
 
-    public boolean updateProject(HttpServletRequest request, String projectName) {
-
-        String workspaceBasePath = getWorkspaceBasePath();
-
-        FileOutputStream stateFile_os;
-        try {
-            stateFile_os = new FileOutputStream(workspaceBasePath + File.separator + projectName + File.separator + "state");
-            IOUtils.copy(request.getInputStream(), stateFile_os);
-            stateFile_os.close();
-            return true;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+    public void deleteProject(String projectName) throws ProjectDoesNotExist, StorageException {
+        if (! projectStorage.projectExists(projectName))
+            throw new ProjectDoesNotExist();
+        projectStorage.deleteProject(projectName);
     }
 
-    /**
-     * Rename a project named "$projectName" to "$newProjectName".
-     */
-    public boolean renameProject(String projectName, String newProjectName) throws ProjectDoesNotExist,
-            ProjectDirectoryAlreadyExists {
-
-        try {
-            if (!projectExists(projectName)) {
-                throw new ProjectDoesNotExist();
-            } else if (projectExists(newProjectName)) {
-                throw new ProjectDirectoryAlreadyExists();
-            }
-            try {
-                String workspaceBasePath = getWorkspaceBasePath();
-                File sourceDir = new File(workspaceBasePath + File.separator + projectName);
-                File destDir = new File(workspaceBasePath + File.separator + newProjectName);
-                FileUtils.moveDirectory(sourceDir, destDir);
-                return true;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-        } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace();
-            return false;
-        }
+    public void addWavToProject(String projectName, String wavName, InputStream wavStream) throws StorageException {
+        projectStorage.storeWav(projectName, wavName, wavStream);
     }
 
-    public boolean deleteProject(String projectName) throws ProjectDoesNotExist {
-        try {
-            if (!projectExists(projectName))
-                throw new ProjectDoesNotExist();
-            try {
-                String workspaceBasePath = getWorkspaceBasePath();
-                File projectDir = new File(workspaceBasePath + File.separator + projectName);
-                FileUtils.deleteDirectory(projectDir);
-                return true;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-        } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace();
-            return false;
-        }
+    public List<WavItem> getWavs(String appName) throws StorageException {
+        return projectStorage.listWavs(appName);
     }
 
-    public List<WavFileItem> getWavs(String appName) throws BadWorkspaceDirectoryStructure, ProjectDoesNotExist {
-        List<WavFileItem> items = new ArrayList<WavFileItem>();
-
-        //File workspaceDir = new File(workspaceBasePath + File.separator + appName + File.separator + "wavs");
-        File wavsDir = new File(getProjectWavsPath(appName));
-        if (wavsDir.exists()) {
-
-            File[] entries = wavsDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File anyfile) {
-                    if (anyfile.isFile())
-                        return true;
-                    return false;
-                }
-            });
-            Arrays.sort(entries, new Comparator<File>() {
-                public int compare(File f1, File f2) {
-                    return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
-                }
-            });
-
-            for (File entry : entries) {
-                WavFileItem item = new WavFileItem();
-                item.setFilename(entry.getName());
-                items.add(item);
-            }
-        } else
-            throw new BadWorkspaceDirectoryStructure();
-
-        return items;
+    public void removeWavFromProject(String projectName, String wavName) throws WavItemDoesNotExist {
+        projectStorage.deleteWav(projectName, wavName);
     }
 }
