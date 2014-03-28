@@ -48,7 +48,6 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -60,7 +59,7 @@ import org.junit.runner.RunWith;
 public class UssdPullTest {
 
     private final static Logger logger = Logger.getLogger(UssdPullTest.class.getName());
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     
     String ussdClientRequestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<ussd-data>\n"
