@@ -86,7 +86,7 @@ public class Version {
         }
     }
 
-    public static String getVersion() {
+    public static String getFullVersion() {
         Properties releaseProperties = new Properties();
         try {
             InputStream in = Version.class
@@ -110,6 +110,27 @@ public class Version {
                 return "Release ID: (" + releaseName + ") Restcomm "
                         + releaseVersion + " (build: Git Hash="
                         + releaseRevision + " date=" + releaseDate + ")";
+            }
+        } catch (Exception e) {
+            logger.warn(
+                    "Unable to extract the version of Mobicents Sip Servlets currently running",
+                    e);
+        }
+        return null;
+    }
+
+    public static String getVersion() {
+        Properties releaseProperties = new Properties();
+        try {
+            InputStream in = Version.class
+                    .getResourceAsStream("release.properties");
+            if (in != null) {
+                releaseProperties.load(in);
+                in.close();
+                String releaseVersion = releaseProperties
+                        .getProperty("release.version");
+
+                return releaseVersion;
             }
         } catch (Exception e) {
             logger.warn(
