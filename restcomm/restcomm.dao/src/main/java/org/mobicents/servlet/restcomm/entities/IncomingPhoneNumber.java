@@ -49,6 +49,12 @@ public final class IncomingPhoneNumber {
     private final Sid smsApplicationSid;
     private final URI uri;
 
+    private final URI ussdUrl;
+    private final String ussdMethod;
+    private final URI ussdFallbackUrl;
+    private final String ussdFallbackMethod;
+    private final Sid ussdApplicationSid;
+
     // Capabilities
     private final Boolean voiceCapable;
     private final Boolean smsCapable;
@@ -60,11 +66,11 @@ public final class IncomingPhoneNumber {
             final Boolean hasVoiceCallerIdLookup, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
             final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
-            final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri) {
+            final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
+            final String ussdFallbackMethod, final Sid ussdApplicationSid) {
         this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, apiVersion, hasVoiceCallerIdLookup,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
-                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, null,
-                null, null, null);
+                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, null, null, null, null);
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
@@ -72,7 +78,8 @@ public final class IncomingPhoneNumber {
             final Boolean hasVoiceCallerIdLookup, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
             final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
-            final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final Boolean voiceCapable,
+            final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
+            final String ussdFallbackMethod, final Sid ussdApplicationSid, final Boolean voiceCapable,
             final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable) {
         super();
         this.sid = sid;
@@ -96,6 +103,11 @@ public final class IncomingPhoneNumber {
         this.smsFallbackMethod = smsFallbackMethod;
         this.smsApplicationSid = smsApplicationSid;
         this.uri = uri;
+        this.ussdUrl = ussdUrl;
+        this.ussdMethod = ussdMethod;
+        this.ussdFallbackUrl = ussdFallbackUrl;
+        this.ussdFallbackMethod = ussdFallbackMethod;
+        this.ussdApplicationSid = ussdApplicationSid;
         this.voiceCapable = voiceCapable;
         this.smsCapable = smsCapable;
         this.mmsCapable = mmsCapable;
@@ -190,6 +202,26 @@ public final class IncomingPhoneNumber {
         return uri;
     }
 
+    public URI getUssdUrl() {
+        return ussdUrl;
+    }
+
+    public String getUssdMethod() {
+        return ussdMethod;
+    }
+
+    public URI getUssdFallbackUrl() {
+        return ussdFallbackUrl;
+    }
+
+    public String getUssdFallbackMethod() {
+        return ussdFallbackMethod;
+    }
+
+    public Sid getUssdApplicationSid() {
+        return ussdApplicationSid;
+    }
+
     public Boolean isVoiceCapable() {
         return this.voiceCapable;
     }
@@ -210,133 +242,133 @@ public final class IncomingPhoneNumber {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setFriendlyName(final String friendlyName) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setVoiceCallerIdLookup(final boolean hasVoiceCallerIdLookup) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setVoiceUrl(final URI voiceUrl) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setVoiceMethod(final String voiceMethod) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setVoiceFallbackUrl(final URI voiceFallbackUrl) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setVoiceFallbackMethod(final String voiceFallbackMethod) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setStatusCallback(final URI statusCallback) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setStatusCallbackMethod(final String statusCallbackMethod) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setVoiceApplicationSid(final Sid voiceApplicationSid) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setSmsUrl(final URI smsUrl) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setSmsMethod(final String smsMethod) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setSmsFallbackUrl(final URI smsFallbackUrl) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setSmsFallbackMethod(final String smsFallbackMethod) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setSmsApplicationSid(final Sid smsApplicationSid) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setVoiceCapable(final Boolean voiceCapable) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setSmsCapable(final Boolean smsCapable) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setMmsCapable(final Boolean mmsCapable) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     public IncomingPhoneNumber setFaxCapable(final Boolean faxCapable) {
         return new IncomingPhoneNumber(sid, dateCreated, DateTime.now(), friendlyName, accountSid, phoneNumber, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     @NotThreadSafe
@@ -361,6 +393,12 @@ public final class IncomingPhoneNumber {
         private Sid smsApplicationSid;
         private URI uri;
 
+        private URI ussdUrl;
+        private String ussdMethod;
+        private URI ussdFallbackUrl;
+        private String ussdFallbackMethod;
+        private Sid ussdApplicationSid;
+
         // Capabilities
         private Boolean voiceCapable;
         private Boolean smsCapable;
@@ -376,7 +414,7 @@ public final class IncomingPhoneNumber {
             return new IncomingPhoneNumber(sid, now, now, friendlyName, accountSid, phoneNumber, apiVersion,
                     hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                     statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                    smsApplicationSid, uri, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                    smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
         }
 
         public void setSid(final Sid sid) {
@@ -453,6 +491,26 @@ public final class IncomingPhoneNumber {
 
         public void setUri(final URI uri) {
             this.uri = uri;
+        }
+
+        public void setUssdUrl(final URI ussdUrl) {
+            this.ussdUrl = ussdUrl;
+        }
+
+        public void setUssdMethod(final String ussdMethod) {
+            this.ussdMethod = ussdMethod;
+        }
+
+        public void setUssdFallbackUrl(final URI ussdFallbackUrl) {
+            this.ussdFallbackUrl = ussdFallbackUrl;
+        }
+
+        public void setUssdFallbackMethod(final String ussdFallbackMethod) {
+            this.ussdFallbackMethod = ussdFallbackMethod;
+        }
+
+        public void setUssdApplicationSid(final Sid ussdApplicationSid) {
+            this.ussdApplicationSid = ussdApplicationSid;
         }
 
         public void setVoiceCapable(Boolean voiceCapable) {

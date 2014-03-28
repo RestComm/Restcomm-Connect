@@ -1,9 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,18 +25,22 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import org.mobicents.servlet.restcomm.rvd.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
-import org.mobicents.servlet.restcomm.rvd.model.client.WavFileItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
 @Path("/manager/projects")
 public class RvdManager {
@@ -50,9 +51,14 @@ public class RvdManager {
     ServletContext servletContext;
     private ProjectService projectService;
 
+    private RvdSettings rvdSettings;
+    private ProjectStorage projectStorage;
+
     @PostConstruct
     void init() {
-        projectService = new ProjectService(servletContext);
+        rvdSettings = new RvdSettings(servletContext);
+        projectStorage = new FsProjectStorage(rvdSettings);
+        projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
 
     @GET
@@ -66,10 +72,13 @@ public class RvdManager {
             ProjectService.fillStartUrlsForProjects(items, request);
 
         } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace(); // TODO remove this and log the error
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (URISyntaxException e) {
-            e.printStackTrace(); // probably caused by a bad project name
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (StorageException e) {
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -77,61 +86,50 @@ public class RvdManager {
         return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
     }
 
-    @GET
-    @Path("/wavlist")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response listWavs(@QueryParam("name") String name) {
 
-        List<WavFileItem> items;
-        try {
-            if (!projectService.projectExists(name))
-                return Response.status(Status.NOT_FOUND).build();
-            items = projectService.getWavs(name);
-        } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace(); // TODO remove this and log the error
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (ProjectDoesNotExist e) {
-            e.printStackTrace();
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-
-        Gson gson = new Gson();
-        return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
-    }
 
     @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response createProject(@QueryParam("name") String name) {
+    public Response createProject(@QueryParam("name") String name, @QueryParam("kind") String kind) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
 
         try {
-            projectService.createProject(name);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            projectService.createProject(name, kind);
         } catch (ProjectDirectoryAlreadyExists e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.CONFLICT).build();
+        } catch (StorageException e) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (InvalidServiceParameters e) {
+            logger.error(e);
+            return Response.status(Status.BAD_REQUEST).build();
         }
 
         return Response.ok().build();
     }
 
     @POST
-    @Produces(MediaType.APPLICATION_JSON)
     public Response updateProject(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
 
         if (projectName != null && !projectName.equals("")) {
             logger.info("savingProject " + projectName);
-            if (projectService.updateProject(request, projectName))
+            try {
+                projectService.updateProject(request, projectName);
                 return Response.ok().build();
-            else
+            } catch (StorageException e) {
+                logger.error(e.getMessage(), e);
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } else
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            }
+        } else {
+            logger.warn("Empty project name specified for updating");
             return Response.status(Status.BAD_REQUEST).build();
+        }
     }
 
     @PUT
@@ -139,18 +137,18 @@ public class RvdManager {
     public Response renameProject(@QueryParam("name") String projectName, @QueryParam("newName") String projectNewName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
-        if ((projectName != null && !projectName.equals("")) && (projectNewName != null && !projectNewName.equals(""))) {
+        if ( !RvdUtils.isEmpty(projectName) && ! RvdUtils.isEmpty(projectNewName) ) {
             try {
-                if (projectService.renameProject(projectName, projectNewName))
-                    return Response.ok().build();
-                else
-                    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+                projectService.renameProject(projectName, projectNewName);
+                return Response.ok().build();
             } catch (ProjectDoesNotExist e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
                 return Response.status(Status.NOT_FOUND).build();
             } catch (ProjectDirectoryAlreadyExists e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
                 return Response.status(Status.CONFLICT).build();
+            } catch (StorageException e) {
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             }
         } else
             return Response.status(Status.BAD_REQUEST).build();
@@ -161,15 +159,16 @@ public class RvdManager {
     public Response deleteProject(@QueryParam("name") String projectName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
-        if (projectName != null && !projectName.equals("")) {
+        if ( ! RvdUtils.isEmpty(projectName) ) {
             try {
-                if (projectService.deleteProject(projectName))
-                    return Response.ok().build();
-                else
-                    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+                projectService.deleteProject(projectName);
+                return Response.ok().build();
             } catch (ProjectDoesNotExist e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
                 return Response.status(Status.NOT_FOUND).build();
+            } catch (StorageException e) {
+                logger.error("Error deleting project '" + projectName + "'", e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             }
         } else
             return Response.status(Status.BAD_REQUEST).build();
@@ -182,18 +181,15 @@ public class RvdManager {
         // TODO CAUTION!!! sanitize name
         // ...
 
-        String workspaceBasePath = projectService.getWorkspaceBasePath();
-        File stateFile = new File(workspaceBasePath + File.separator + name + File.separator + "state");
         try {
-            FileInputStream stateFileStream = new FileInputStream(stateFile);
-            // request.getSession().setAttribute(projectSessionAttribute, name); // mark the open project in the session
-            return Response.ok().entity(stateFileStream).build();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            String projectState = projectService.openProject(name);
+            return Response.ok().entity(projectState).build();
+        } catch (StorageException e) {
+            logger.error("Error loading project '" + name + "'", e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (ProjectDoesNotExist e) {
+            return Response.status(Status.BAD_REQUEST).build();
         }
-
-        return Response.status(Status.BAD_REQUEST).build(); // TODO This is not the correct return code for all cases of error
     }
 
     @POST
@@ -206,7 +202,6 @@ public class RvdManager {
                 Gson gson = new Gson();
                 ServletFileUpload upload = new ServletFileUpload();
                 FileItemIterator iterator = upload.getItemIterator(request);
-                String projectBase = projectService.getProjectBasePath(projectName);
 
                 JsonArray fileinfos = new JsonArray();
 
@@ -217,10 +212,7 @@ public class RvdManager {
 
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
-                        // copy from temp storage to file in project/wavs directory
-                        String wavPathname = projectService.getProjectWavsPath(projectName) + File.separator + item.getName();
-                        logger.debug( "Writing wav file to " + wavPathname);
-                        FileUtils.copyInputStreamToFile(item.openStream(), new File(wavPathname) );
+                        projectService.addWavToProject(projectName, item.getName(), item.openStream());
                         fileinfo.addProperty("name", item.getName());
                         //fileinfo.addProperty("size", size(item.openStream()));
                     }
@@ -239,32 +231,22 @@ public class RvdManager {
                 return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
             }
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
-
-        //return Response.ok().build();
     }
 
     @DELETE
     @Path("/removewav")
-    public Response removeWavFile(@QueryParam("name") String projectName, @QueryParam("filename") String filename, @Context HttpServletRequest request) {
+    public Response removeWavFile(@QueryParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) {
         // !!! Sanitize project name
-        String filepath;
+
         try {
-            filepath = projectService.getProjectWavsPath(projectName) + File.separator + filename;
-            File wavfile = new File(filepath);
-            if ( wavfile.delete() )
-                logger.info( "Deleted " + filename + " from " + projectName + " app" );
-            else
-                logger.warn( "Cannot delete " + filename + " from " + projectName + " app" );
+            projectService.removeWavFromProject(projectName, wavname);
             return Response.ok().build();
-        } catch (BadWorkspaceDirectoryStructure e) {
-            e.printStackTrace();
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (ProjectDoesNotExist e) {
-            e.printStackTrace();
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (WavItemDoesNotExist e) {
+            logger.warn( "Cannot delete " + wavname + " from " + projectName + " app" );
+            return Response.status(Status.NOT_FOUND).build();
         }
     }
 
@@ -303,47 +285,43 @@ public class RvdManager {
 
     }
 
+    @GET
+    @Path("/wavlist")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listWavs(@QueryParam("name") String name) {
+        List<WavItem> items;
+        try {
+            if (!projectService.projectExists(name))
+                return Response.status(Status.NOT_FOUND).build();
+            items = projectService.getWavs(name);
+            Gson gson = new Gson();
+            return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
+        } catch (BadWorkspaceDirectoryStructure e) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (StorageException e) {
+            logger.error("Error getting wav list for project '" + name + "'", e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @POST
     @Path("/build")
     public Response buildProject(@QueryParam("name") String name) {
 
         // !!! SANITIZE project name
 
-        if (name != null && !name.equals("")) {
+        ProjectStorage projectStorage = new FsProjectStorage(rvdSettings);
+        BuildService buildService = new BuildService(projectStorage);
 
-            String workspaceBasePath = projectService.getWorkspaceBasePath();
-            File projectDir = new File(workspaceBasePath + File.separator + name);
-
-            if (projectDir.exists()) {
-
-                String projectPath = workspaceBasePath + File.separator + name + File.separator;
-                File dataDir = new File(projectPath + "data");
-
-                // delete all files in directory
-                for (File anyfile : dataDir.listFiles()) {
-                    anyfile.delete();
-                }
-
-                // and now process state
-                try {
-
-                    String state_json = FileUtils.readFileToString(new File(projectPath + "state"), "UTF-8");
-                    logger.debug("state: " + state_json);
-                    BuildService buildService = new BuildService();
-                    buildService.buildProject(state_json, projectPath);
-
-                    return Response.ok().build();
-
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-
-            }
+        try {
+            buildService.buildProject(name);
+            return Response.ok().build();
+        } catch (StorageException e) {
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        return Response.status(Status.BAD_REQUEST).build();
     }
 
 }

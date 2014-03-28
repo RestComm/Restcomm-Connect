@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.rvd.interpreter;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,7 +13,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -24,39 +22,56 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ReferencedModuleDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.model.FaxStepConverter;
-import org.mobicents.servlet.restcomm.rvd.model.PlayStepConverter;
-import org.mobicents.servlet.restcomm.rvd.model.RedirectStepConverter;
-import org.mobicents.servlet.restcomm.rvd.model.SayStepConverter;
-import org.mobicents.servlet.restcomm.rvd.model.SmsStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
-import org.mobicents.servlet.restcomm.rvd.model.client.AccessOperation;
-import org.mobicents.servlet.restcomm.rvd.model.client.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
-import org.mobicents.servlet.restcomm.rvd.model.client.ValueExtractor;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlDialStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlFaxStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlGatherStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlHungupStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPauseStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlPlayStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRecordStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRedirectStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlRejectStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlResponse;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSayStep;
-import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlSmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
-import org.mobicents.servlet.restcomm.rvd.model.client.Assignment;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.ClientNounConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.ConferenceNounConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.NumberNounConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlClientNoun;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlConferenceNoun;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlDialStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlNumberNoun;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlSipuriNoun;
+import org.mobicents.servlet.restcomm.rvd.model.steps.dial.SipuriNounConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.es.AccessOperation;
+import org.mobicents.servlet.restcomm.rvd.model.steps.es.Assignment;
+import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.es.ValueExtractor;
+import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.fax.RcmlFaxStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.gather.RcmlGatherStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.hangup.RcmlHungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.pause.RcmlPauseStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.play.PlayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.play.RcmlPlayStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.record.RcmlRecordStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.redirect.RcmlRedirectStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.redirect.RedirectStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.reject.RcmlRejectStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.say.RcmlSayStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.sms.RcmlSmsStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.sms.SmsStepConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdcollect.UssdCollectRcml;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageRcml;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -70,23 +85,47 @@ public class Interpreter {
 
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
+    private ProjectStorage projectStorage;
+    private HttpServletRequest httpRequest;
+
     private XStream xstream;
     private Gson gson;
+    private String targetParam;
     private Target target;
-    private String projectBasePath;
     private String appName;
-    private HttpServletRequest httpRequest;
+    private Map<String,String> requestParameters; // parameters like digits, callSid etc.
+    private String contextPath;
+
     private String rcmlResult;
     private Map<String, String> variables = new HashMap<String, String>();
     private List<NodeName> nodeNames;
 
-    public Interpreter() {
+
+    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest) {
+        this.projectStorage = projectStorage;
+        this.httpRequest = httpRequest;
+        this.targetParam = targetParam;
+        this.appName = appName;
+        this.requestParameters = RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap());
+        this.contextPath = httpRequest.getContextPath();
+        init();
+    }
+
+    // common intializations for all constructors
+    private void init() {
         xstream = new XStream();
         xstream.registerConverter(new SayStepConverter());
         xstream.registerConverter(new PlayStepConverter());
         xstream.registerConverter(new RedirectStepConverter());
         xstream.registerConverter(new SmsStepConverter());
         xstream.registerConverter(new FaxStepConverter());
+        xstream.registerConverter(new NumberNounConverter());
+        xstream.registerConverter(new ClientNounConverter());
+        xstream.registerConverter(new ConferenceNounConverter());
+        xstream.registerConverter(new SipuriNounConverter());
+        xstream.registerConverter(new UssdSayStepConverter());
+        xstream.registerConverter(new UssdLanguageConverter());
+        xstream.addImplicitCollection(RcmlDialStep.class, "nouns");
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
         xstream.alias("Say", RcmlSayStep.class);
@@ -100,7 +139,16 @@ public class Interpreter {
         xstream.alias("Sms", RcmlSmsStep.class);
         xstream.alias("Record", RcmlRecordStep.class);
         xstream.alias("Fax", RcmlFaxStep.class);
+        xstream.alias("Number", RcmlNumberNoun.class);
+        xstream.alias("Client", RcmlClientNoun.class);
+        xstream.alias("Conference", RcmlConferenceNoun.class);
+        xstream.alias("Sip", RcmlSipuriNoun.class);
+        xstream.alias("UssdMessage", UssdSayRcml.class);
+        xstream.alias("UssdCollect", UssdCollectRcml.class);
+        xstream.alias("Language", UssdLanguageRcml.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
+        xstream.addImplicitCollection(UssdCollectRcml.class, "messages");
+        xstream.useAttributeFor(UssdCollectRcml.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "action");
         xstream.useAttributeFor(RcmlGatherStep.class, "timeout");
         xstream.useAttributeFor(RcmlGatherStep.class, "finishOnKey");
@@ -120,6 +168,11 @@ public class Interpreter {
         xstream.useAttributeFor(RcmlRecordStep.class, "transcribe");
         xstream.useAttributeFor(RcmlRecordStep.class, "transcribeCallback");
         xstream.useAttributeFor(RcmlRecordStep.class, "playBeep");
+        xstream.useAttributeFor(RcmlDialStep.class, "action");
+        xstream.useAttributeFor(RcmlDialStep.class, "method");
+        xstream.useAttributeFor(RcmlDialStep.class, "timeout");
+        xstream.useAttributeFor(RcmlDialStep.class, "timeLimit");
+        xstream.useAttributeFor(RcmlDialStep.class, "callerId");
         xstream.aliasField("Number", RcmlDialStep.class, "number");
         xstream.aliasField("Client", RcmlDialStep.class, "client");
         xstream.aliasField("Conference", RcmlDialStep.class, "conference");
@@ -128,17 +181,6 @@ public class Interpreter {
         // xstream.aliasField(alias, definedIn, fieldName);
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
     }
-
-
-    public HttpServletRequest getHttpRequest() {
-        return httpRequest;
-    }
-
-
-    public void setHttpRequest(HttpServletRequest httpRequest) {
-        this.httpRequest = httpRequest;
-    }
-
 
     public String getAppName() {
         return appName;
@@ -170,13 +212,9 @@ public class Interpreter {
     }
 
 
-    public String interpret(String targetParam, String projectBasePath, String appName, HttpServletRequest httpRequest)
-            throws IOException {
-        this.projectBasePath = projectBasePath;
-        this.appName = appName;
-        this.httpRequest = httpRequest;
-
-        String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
+    public String interpret() throws StorageException {
+        //String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
+        String projectfile_json = projectStorage.loadProjectOptions(appName);
         ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
         }.getType());
         nodeNames = projectOptions.getNodeNames();
@@ -200,7 +238,27 @@ public class Interpreter {
         return response;
     }
 
-    public String interpret(String targetParam, RcmlResponse rcmlModel ) throws IOException, InterpreterException {
+    public Map<String, String> getRequestParameters() {
+        return requestParameters;
+    }
+
+
+    public void setRequestParameters(Map<String, String> requestParameters) {
+        this.requestParameters = requestParameters;
+    }
+
+
+    public String getContextPath() {
+        return contextPath;
+    }
+
+
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
+    }
+
+
+    public String interpret(String targetParam, RcmlResponse rcmlModel ) throws InterpreterException, StorageException {
 
         logger.debug("starting interpeter for " + targetParam);
 
@@ -216,8 +274,8 @@ public class Interpreter {
 
             if (rcmlModel == null )
                 rcmlModel = new RcmlResponse();
-            String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
-                    + target.getNodename() + ".node"));
+            //String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
+            String nodefile_json = projectStorage.loadNodeStepnames(appName, target.getNodename());//FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
             List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>() {
             }.getType());
 
@@ -251,9 +309,10 @@ public class Interpreter {
         return rcmlResult; // this is in case of an error
     }
 
-    private Step loadStep(String stepname) throws IOException, InterpreterException {
-        String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
-                + target.getNodename() + "." + stepname));
+    private Step loadStep(String stepname) throws StorageException  {
+        //String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
+        //        + target.getNodename() + "." + stepname));
+        String stepfile_json = projectStorage.loadStep(appName, target.getNodename(), stepname);
         Step step = gson.fromJson(stepfile_json, Step.class);
 
         return step;
@@ -297,89 +356,105 @@ public class Interpreter {
 
 
     /**
-     * If the step is capable of executing like ExternalService steps it executes them
+     * If the step is executable (like ExternalService) it is executed
      * @param step
-     * @throws IOException
-     * @throws ClientProtocolException
      * @return String The module name to continue rendering with
-     * @throws ErrorParsingExternalServiceUrl
      */
-    private String processStep(Step step) throws IOException, InterpreterException {
+    private String processStep(Step step) throws InterpreterException {
         if (step.getClass().equals(ExternalServiceStep.class)) {
 
-            ExternalServiceStep esStep = (ExternalServiceStep) step;
-
-            CloseableHttpClient client = HttpClients.createDefault();
-            //String url = populateVariables(esStep.getUrl());
-
-            URI url;
             try {
-                URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
-                for ( UrlParam urlParam : esStep.getUrlParams() ) {
-                    uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
+
+                ExternalServiceStep esStep = (ExternalServiceStep) step;
+
+                CloseableHttpClient client = HttpClients.createDefault();
+                //String url = populateVariables(esStep.getUrl());
+
+                URI url;
+                try {
+                    URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
+                    if (uri_builder.getHost() == null ) {
+                        logger.info("External Service: Relative url is used. Will override from http request to RVD controller");
+                        // if this is a relative url fill in missing fields from the request
+                        uri_builder.setScheme(httpRequest.getScheme());
+                        uri_builder.setHost(httpRequest.getServerName());
+                        uri_builder.setPort(httpRequest.getServerPort());
+                        if (  ! uri_builder.getPath().startsWith("/") )
+                            uri_builder.setPath("/" + uri_builder.getPath());
+                    }
+
+                    for ( UrlParam urlParam : esStep.getUrlParams() ) {
+                        uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
+                    }
+                    url = uri_builder.build();
+                } catch (URISyntaxException e) {
+                    throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
                 }
-                url = uri_builder.build();
-            } catch (URISyntaxException e) {
-                throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
-            }
 
-            logger.info( "External Service: Requesting from url: " + url);
-            HttpGet get = new HttpGet( url );
-            CloseableHttpResponse response = client.execute( get );
+                logger.info( "External Service: Requesting from url: " + url);
+                HttpGet get = new HttpGet( url );
+                CloseableHttpResponse response = client.execute( get );
 
-            JsonParser parser = new JsonParser();
+                JsonParser parser = new JsonParser();
 
-            try {
-                HttpEntity entity = response.getEntity();
-                if ( entity != null ) {
-                    String entity_string = EntityUtils.toString(entity);
-                    JsonElement response_element = parser.parse(entity_string);
+                try {
+                    HttpEntity entity = response.getEntity();
+                    if ( entity != null ) {
+                        String entity_string = EntityUtils.toString(entity);
+                        JsonElement response_element = parser.parse(entity_string);
 
-                    String nextModuleName = null;
-                    //boolean dynamicRouting = false;
-                    if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
-                        //dynamicRouting = true;
-                        String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
-                        nextModuleName = getNodeNameByLabel( moduleLabel );
-                        if ( nextModuleName == null )
-                            throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
+                        String nextModuleName = null;
+                        //boolean dynamicRouting = false;
+                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
+                            //dynamicRouting = true;
+                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+                            nextModuleName = getNodeNameByLabel( moduleLabel );
+                            if ( nextModuleName == null )
+                                throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
 
-                        logger.debug( "Dynamic routing enabled. Chosen target: " + nextModuleName);
-                        for ( Assignment assignment : esStep.getAssignments() ) {
-                            logger.debug("working on variable " + assignment.getDestVariable() );
-                            logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
-                            if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
+                            logger.debug( "Dynamic routing enabled. Chosen target: " + nextModuleName);
+                            for ( Assignment assignment : esStep.getAssignments() ) {
+                                logger.debug("working on variable " + assignment.getDestVariable() );
+                                logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
+                                if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
+                                    String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                                    variables.put(assignment.getDestVariable(), value );
+                                } else
+                                    logger.debug("skipped assignment to " + assignment.getDestVariable() );
+                            }
+                        }  else {
+                            for ( Assignment assignment : esStep.getAssignments() ) {
+                                logger.debug("working on variable " + assignment.getDestVariable() );
                                 String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
                                 variables.put(assignment.getDestVariable(), value );
-                            } else
-                                logger.debug("skipped assignment to " + assignment.getDestVariable() );
-                        }
-                    }  else {
-                        for ( Assignment assignment : esStep.getAssignments() ) {
-                            logger.debug("working on variable " + assignment.getDestVariable() );
-                            String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
-                            variables.put(assignment.getDestVariable(), value );
-                        }
+                            }
 
+                        }
+                        logger.debug("variables after processing ExternalService step: " + variables.toString() );
+                        if ( esStep.getDoRouting() ) {
+                            String next = "";
+                            if ( "fixed".equals( esStep.getNextType() ) )
+                                next = esStep.getNext();
+                            else
+                            if ( "responseBased".equals( esStep.getNextType() ))
+                                next = nextModuleName;
+                            if ( "".equals(next) )
+                                throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
+                            return next;
+                        }
                     }
-                    logger.debug("variables after processing ExternalService step: " + variables.toString() );
-                    if ( esStep.getDoRouting() ) {
-                        String next = "";
-                        if ( "fixed".equals( esStep.getNextType() ) )
-                            next = esStep.getNext();
-                        else
-                        if ( "responseBased".equals( esStep.getNextType() ))
-                            next = nextModuleName;
-                        if ( "".equals(next) )
-                            throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
-                        return next;
-                    }
+                } catch (JsonSyntaxException e) {
+                    throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
+                } finally {
+                    response.close();
                 }
-            } catch (JsonSyntaxException e) {
-                throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
-            } finally {
-                response.close();
+
             }
+            catch (IOException e) {
+                throw new ESRequestException("Error processing ExternalService step " + step.getName(), e);
+            }
+
+
         }
         return null;
     }
@@ -481,5 +556,23 @@ public class Interpreter {
                 return nodename.getName();
         }
         return null;
+    }
+
+    /**
+     * Build a relative url to the named module
+     * @param moduleName
+     * @return the url or null if the module does not exist
+     */
+    public String moduleUrl(String moduleName) {
+        String url = null;
+        for ( NodeName nodeName : nodeNames )  {
+            if ( nodeName.getName().equals(moduleName)) {
+                Map<String, String> pairs = new HashMap<String, String>();
+                pairs.put("target", moduleName);
+                url = buildAction(pairs);
+                break; // found it
+            }
+        }
+        return url;
     }
 }
