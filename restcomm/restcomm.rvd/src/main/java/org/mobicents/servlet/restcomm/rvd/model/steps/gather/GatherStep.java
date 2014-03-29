@@ -21,119 +21,21 @@ public class GatherStep extends Step {
     private Integer numDigits;
     private Map<String, Step> steps;
     private List<String> stepnames;
-    private String next;
-    private List<Mapping> mappings;
-    private String collectVariable;
+    private Menu menu;
+    private Collectdigits collectdigits;
     private String gatherType;
+
+    public final class Menu {
+        private List<Mapping> mappings;
+    }
+    public final class Collectdigits {
+        private String next;
+        private String collectVariable;
+    }
 
     public static class Mapping {
         private Integer digits;
         private String next;
-
-        public Integer getDigits() {
-            return digits;
-        }
-
-        public void setDigits(Integer digits) {
-            this.digits = digits;
-        }
-
-        public String getNext() {
-            return next;
-        }
-
-        public void setNext(String next) {
-            this.next = next;
-        }
-
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    public String getMethod() {
-        return method;
-    }
-
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
-    public Integer getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(Integer timeout) {
-        this.timeout = timeout;
-    }
-
-    public String getFinishOnKey() {
-        return finishOnKey;
-    }
-
-    public void setFinishOnKey(String finishOnKey) {
-        this.finishOnKey = finishOnKey;
-    }
-
-    public Integer getNumDigits() {
-        return numDigits;
-    }
-
-    public void setNumDigits(Integer numDigits) {
-        this.numDigits = numDigits;
-    }
-
-    public Map<String, Step> getSteps() {
-        return steps;
-    }
-
-    public void setSteps(Map<String, Step> steps) {
-        this.steps = steps;
-    }
-
-    public List<String> getStepnames() {
-        return stepnames;
-    }
-
-    public void setStepnames(List<String> stepnames) {
-        this.stepnames = stepnames;
-    }
-
-    public String getNext() {
-        return next;
-    }
-
-    public void setNext(String next) {
-        this.next = next;
-    }
-
-    public List<Mapping> getMappings() {
-        return mappings;
-    }
-
-    public void setMappings(List<Mapping> mappings) {
-        this.mappings = mappings;
-    }
-
-    public String getCollectVariable() {
-        return collectVariable;
-    }
-
-    public void setCollectVariable(String collectVariable) {
-        this.collectVariable = collectVariable;
-    }
-
-    public String getGatherType() {
-        return gatherType;
-    }
-
-    public void setGatherType(String gatherType) {
-        this.gatherType = gatherType;
     }
 
     public RcmlGatherStep render(Interpreter interpreter) throws InterpreterException {
@@ -145,31 +47,31 @@ public class GatherStep extends Step {
         String action = interpreter.buildAction(pairs);
 
         rcmlStep.setAction(action);
-        rcmlStep.setTimeout(getTimeout());
-        if (getFinishOnKey() != null && !"".equals(getFinishOnKey()))
-            rcmlStep.setFinishOnKey(getFinishOnKey());
-        rcmlStep.setMethod(getMethod());
-        rcmlStep.setNumDigits(getNumDigits());
+        rcmlStep.setTimeout(timeout);
+        if (finishOnKey != null && !"".equals(finishOnKey))
+            rcmlStep.setFinishOnKey(finishOnKey);
+        rcmlStep.setMethod(method);
+        rcmlStep.setNumDigits(numDigits);
 
-        for (String nestedStepName : getStepnames())
-            rcmlStep.getSteps().add(getSteps().get(nestedStepName).render(interpreter));
+        for (String nestedStepName : stepnames)
+            rcmlStep.getSteps().add(steps.get(nestedStepName).render(interpreter));
 
         return rcmlStep;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
         logger.debug("handling gather action");
-        if ("menu".equals(getGatherType())) {
+        if ("menu".equals(gatherType)) {
 
             boolean handled = false;
-            for (GatherStep.Mapping mapping : getMappings()) {
+            for (Mapping mapping : menu.mappings) {
                 Integer digits = Integer.parseInt(interpreter.getRequestParameters().get("Digits") );  //getHttpRequest().getParameter("Digits"));
 
-                logger.debug("checking digits: " + mapping.getDigits() + " - " + digits);
+                logger.debug("checking digits: " + mapping.digits + " - " + digits);
 
-                if (mapping.getDigits() != null && mapping.getDigits().equals(digits)) {
+                if (mapping.digits != null && mapping.digits.equals(digits)) {
                     // seems we found out menu selection
                     logger.debug("seems we found out menu selection");
-                    interpreter.interpret(mapping.getNext(),null);
+                    interpreter.interpret(mapping.next,null);
                     handled = true;
                 }
             }
@@ -177,11 +79,11 @@ public class GatherStep extends Step {
                 interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null);
             }
         }
-        if ("collectdigits".equals(getGatherType())) {
+        if ("collectdigits".equals(gatherType)) {
 
-            String variableName = getCollectVariable();
+            String variableName = collectdigits.collectVariable;
             interpreter.getVariables().put(variableName, interpreter.getRequestParameters().get("Digits"));  //getHttpRequest().getParameter("Digits")); // put the string directly
-            interpreter.interpret(getNext(),null);
+            interpreter.interpret(collectdigits.next,null);
         }
     }
 }
