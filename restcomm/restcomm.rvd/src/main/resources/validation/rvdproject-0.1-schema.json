@@ -2,50 +2,161 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"title": "RVD project 0.1",
 	"description": "Specification for RVD 7.1.4",
-	"type": "object",
-	"properties": {
-		"nodes": {
-			"type": "array",
-			"items": {
-				"title": "RVD module",
-				"type": "object",
-				"uniqueItems": true,
-				"properties": {
-					"name": {"type": "string"},
-					"label": {"type": "string"},
-					"steps": {
-						"title": "Generic RVD step",
-						"type": "object",
-						"patternProperties": {
-							"^step[0-9]+$": {
-								"type": "object",
-								"oneOf": [
-									{ "$ref": "saystep.json" },
-									{ "$ref": "playstep.json" },
-									{ "$ref": "gatherstep.json" }
-								]
-							}
+	"rvdproject": {
+		"type": "object",
+		"properties": {
+			"nodes": {
+				"type": "array",
+				"items": {
+					"title": "RVD module",
+					"type": "object",
+					"uniqueItems": true,
+					"properties": {
+						"name": {"type": "string"},
+						"label": {"type": "string"},
+						"steps": {
+							"title": "Generic RVD step",
+							"type": "object",
+							"patternProperties": {
+								"^step[0-9]+$": {
+									"type": "object",
+									"oneOf": [
+										{ "$ref": "#/saystep" },
+										{ "$ref": "#/playstep" },
+										{ "$ref": "#/gatherstep" }
+									]
+								}
+							},
+							"additionalProperties": false
 						},
-						"additionalProperties": false
+						"stepnames": {"type": "array"},
+						"iface": {"type": "object"}
 					},
-					"stepnames": {"type": "array"},
-					"iface": {"type": "object"}
-				},
-				"required": ["name","label","steps","stepnames"]
+					"required": ["name","label","steps","stepnames"]
+				}
+			},
+			"lastStepId": {
+				"type": "integer"
+			},
+			"activeNode": {
+				"type": "integer"
+			},		
+			"lastNodeId": {
+				"type": "integer"
+			},		
+			"startNodeName": {
+				"type": "string"
 			}
-		},
-		"lastStepId": {
-			"type": "integer"
-		},
-		"activeNode": {
-			"type": "integer"
-		},		
-		"lastNodeId": {
-			"type": "integer"
-		},		
-		"startNodeName": {
-			"type": "string"
 		}
-	}	
+	},
+	"saystep": {
+		"type": "object",
+		"properties": {
+			"name":{"type": "string"},
+			"kind": {"enum": ["say"]},
+			"label": {"type": "string"},
+			"title": {"type": "string"},
+			"phrase": {"type": "string"},
+			"voice": {"type": ["string","null"]},
+			"language": {"type": ["string","null"]},
+			"loop": {"type": ["integer","null"]},
+		
+			"iface": {"type": "object"}
+		},
+		"required": ["name","kind","label","title","phrase","voice","language","loop"]
+	},
+	"playstep": {
+		"type": "object",
+		"properties": {
+		
+			"name":{"type": "string"},
+			"kind": {"enum": ["play"]},
+			"label": {"type": "string"},
+			"title": {"type": "string"},
+			"playType": {"enum": ["local","remote"]},
+			"local": {
+				"type": "object",
+				"properties": {
+					"wavLocalFilename": {"type": "string", "minLength":1}
+				},
+				"required": ["wavLocalFilename"]
+			},
+			"remote": {
+				"type": "object",
+				"properties": {
+					"wavUrl": {"type": "string", "minLength":1}
+				},
+				"required": ["wavUrl"]			
+			},
+			"loop": {"type": ["integer","null"]},
+				
+			"iface": {"type": "object"}
+		},
+		"required": ["name","kind","label","title","playType","loop"]	
+	},
+	"gatherstep": {
+		"type": "object",
+		"properties": {
+			"name":{
+				"type": "string",
+				"pattern":"^step[0-9]+$"
+			},
+			"kind": {"enum": ["gather"] },
+			"label": {"type": "string"},
+			"title": {"type": "string"},
+			"method":{"enum": ["GET","POST"]},
+			"timeout":{"type": ["integer","null"]},
+			"finishOnKey":{	"type": "string", "pattern": "($^)|(^[0-9*#]$)" },
+			"numDigits": {"type": ["integer","null"]},
+			"steps": {
+				"type": "object",
+				"patternProperties": {
+					"^step[0-9]+$": {
+						"type": "object",
+						"oneOf": [
+							{ "$ref": "#/saystep" },
+							{ "$ref": "#/playstep" }
+						]
+					}
+				},
+				"additionalProperties": false
+			},
+			"stepnames": {
+				"type": "array",
+				"items": {	"type":"string", "pattern":"^step[0-9]+$" }
+			},
+			"gatherType": {"enum": ["menu","collectdigits"]},
+			"menu": {
+				"type": "object",
+				"properties": {
+					"mappings": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"digits": {"type": "integer"},
+								"next": {"type": "string","minLength":1}
+							},
+							"required":["digits","next"]
+						},
+						"minItems": 1
+					}
+				},
+				"required":["mappings"]
+			},
+			"collectdigits": {
+				"type": "object",
+				"properties": {
+					"collectVariable": { "type":"string", "pattern":"^[A-Za-z]+[A-Za-z0-9_]*$" },
+					"next": {"type": "string", "minLength": 1 }
+				},
+				"required": ["collectVariable","next"]
+			},
+			
+			
+			"iface": {"type": "object"}
+		},
+		"required": ["name","kind","label","title","method","timeout","finishOnKey","numDigits","steps","stepnames","gatherType"]
+	}
 }
 

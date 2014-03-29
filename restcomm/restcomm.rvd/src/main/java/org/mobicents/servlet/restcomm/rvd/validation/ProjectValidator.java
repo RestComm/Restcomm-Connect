@@ -18,7 +18,7 @@ public class ProjectValidator {
     public ProjectValidator(  /*, String uri, String schemaVersion*/ ) throws ProcessingException, IOException {
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        projectSchema = factory.getJsonSchema("resource:/validation/rvdproject-0.1-schema.json");
+        projectSchema = factory.getJsonSchema("resource:/validation/rvdproject-0.1-schema.json#/rvdproject");
 
 
         //final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();

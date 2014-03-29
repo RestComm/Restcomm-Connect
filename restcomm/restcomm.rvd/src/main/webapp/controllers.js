@@ -288,14 +288,14 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.addGatherMapping = function( gatherStep ) {
 		// first find max inserted digit
 		var max = 0;
-		for (var i = 0; i < gatherStep.mappings.length; i ++ )
-			if ( gatherStep.mappings[i].digits > max )
-				max = gatherStep.mappings[i].digits;
+		for (var i = 0; i < gatherStep.menu.mappings.length; i ++ )
+			if ( gatherStep.menu.mappings[i].digits > max )
+				max = gatherStep.menu.mappings[i].digits;
 				
-		gatherStep.mappings.push({digits:max+1, node:"start"});
+		gatherStep.menu.mappings.push({digits:max+1, next:""});
 	};
 	$scope.removeGatherMapping = function (gatherStep, mapping) {
-		gatherStep.mappings.splice( gatherStep.mappings.indexOf(mapping), 1 );
+		gatherStep.menu.mappings.splice( gatherStep.menu.mappings.indexOf(mapping), 1 );
 	}
 	
 	
@@ -324,16 +324,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.saveProject = function() {
 		var deferred = $q.defer();
 		
-		var state = {};
-		state.lastStepId = stepService.lastStepId;
-		state.nodes = $scope.nodes;
-		state.activeNode = $scope.activeNode;
-		state.lastNodeId = $scope.lastNodesId;
-		state.visibleNodes = $scope.visibleNodes;
-		state.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
-		state.projectKind = $scope.projectKind;
-		
-		
+		var state = $scope.packState();
 		// transmit state to the server
 		//console.log( "saving " + $scope.projectKind + " project: " + $scope.projectName );
 		$http({url: 'services/manager/projects?name=' + $scope.projectName,
@@ -365,17 +356,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
-			//console.log( data );
-			$scope.projectName = name;
-			
-			stepService.lastStepId = data.lastStepId;
-			$scope.nodes = data.nodes;
-			$scope.activeNode = data.activeNode;
-			$scope.lastNodesId = data.lastNodeId;
-			$scope.visibleNodes = data.visibleNodes;
-			$scope.startNodeName = data.startNodeName;	
-			$scope.projectKind = data.projectKind;
-			
+			$scope.projectName = name;			
+			$scope.unpackState(data);
 			if ( $scope.projectKind == 'voice' )
 				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
@@ -582,6 +564,70 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.removeNestedMessage = function (step,nested) {
 		step.messages.splice( step.messages.indexOf(nested), 1 );
 	}
+	
+	
+	
+	$scope.packState = function() {
+		var state = {};
+		state.lastStepId = stepService.lastStepId;
+		state.nodes = angular.copy($scope.nodes);
+		for ( var i=0; i < state.nodes.length; i++) {
+			var node = state.nodes[i];
+			for (var stepname in node.steps) {
+				var step = node.steps[stepname];
+				if (step.kind == "gather") {
+					if (step.gatherType == "menu")
+						delete step.collectdigits;
+					else
+					if (step.gatherType == "collectdigits")
+						delete step.menu;
+				} else
+				if (step.kind == "play") {
+					if (step.playType == "local")
+						delete step.remote;
+					else if (step.playType == "remote")
+						delete step.local;
+				}
+			}
+		}
+		state.activeNode = $scope.activeNode;
+		state.lastNodeId = $scope.lastNodesId;
+		state.visibleNodes = $scope.visibleNodes;
+		state.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
+		state.projectKind = $scope.projectKind;	
+		
+		return state;
+	}
+	
+	$scope.unpackState = function (packedState) {
+		stepService.lastStepId = packedState.lastStepId;
+		$scope.nodes = packedState.nodes;
+		for ( var i=0; i < $scope.nodes.length; i++) {
+			var node = $scope.nodes[i];
+			for (var stepname in node.steps) {
+				var step = node.steps[stepname];
+				if (step.kind == "gather") {
+					if (step.gatherType == "menu")
+						step.collectdigits = angular.copy(protos.stepProto.gather.collectdigits);
+					else
+					if (step.gatherType == "collectdigits")
+						step.menu = angular.copy(protos.stepProto.gather.menu);
+				} else
+				if (step.kind == "play") {
+					if (step.playType == "local")
+						step.remote = angular.copy(protos.stepProto.play.remote);
+					else if (step.playType == "remote")
+						step.local = angular.copy(protos.stepProto.play.local);
+				}
+			}
+		}
+		$scope.activeNode = packedState.activeNode;
+		$scope.lastNodesId = packedState.lastNodeId;
+		$scope.visibleNodes = packedState.visibleNodes;
+		$scope.startNodeName = packedState.startNodeName;	
+		$scope.projectKind = packedState.projectKind;
+	}
+	
 		
 	// Run the following after all initialization are complete
 	

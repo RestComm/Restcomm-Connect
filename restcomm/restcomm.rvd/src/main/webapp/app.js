@@ -68,8 +68,8 @@ App.factory('protos', function () {
 		stepProto: {
 			// Voice
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{}},
-			play: {playType:'local', kind:'play', label:'play', title:'play', wavUrl:null, wavLocalFilename:null, loop:null, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{}},
+			play: {kind:'play', label:'play', title:'play',loop:null,playType:'local',local:{wavLocalFilename:null}, remote:{wavUrl:null}, iface:{}},
+			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:null,next:''}, iface:{}},
 			dial: {dialNouns:[], nextModule:'', kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'GET', timeout:null, timeLimit:null, callerId:null, steps:[], iface:{}},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:'',method:'',iface:{}},
