@@ -1,0 +1,69 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "RVD project 0.1",
+	"description": "Specification for RVD 7.1.4",
+	"type": "object",
+	"properties": {
+		"name":{
+			"type": "string",
+			"pattern":"^step[0-9]+$"
+		},
+		"kind": {"enum": ["gather"] },
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"method":{"enum": ["GET","POST"]},
+		"timeout":{"type": ["integer","null"]},
+		"finishOnKey":{	"type": "string", "pattern": "($^)|(^[0-9*#]$)" },
+		"numDigits": {"type": ["integer","null"]},
+		"steps": {
+			"type": "object",
+			"patternProperties": {
+				"^step[0-9]+$": {
+					"type": "object",
+					"oneOf": [
+						{ "$ref": "#/saystep" },
+						{ "$ref": "#/playstep" }
+					]
+				}
+			},
+			"additionalProperties": false
+		},
+		"stepnames": {
+			"type": "array",
+			"items": {	"type":"string", "pattern":"^step[0-9]+$" }
+		},
+		"gatherType": {"enum": ["menu","collectdigits"]},
+		"menu": {
+			"type": "object",
+			"properties": {
+				"mappings": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"digits": {"type": "integer"},
+							"next": {"type": "string","minLength":1}
+						},
+						"required":["digits","next"]
+					},
+					"minItems": 1
+				}
+			},
+			"required":["mappings"]
+		},
+		"collectdigits": {
+			"type": "object",
+			"properties": {
+				"collectVariable": { "type":"string", "pattern":"^[A-Za-z]+[A-Za-z0-9_]*$" },
+				"next": {"type": "string", "minLength": 1 }
+			},
+			"required": ["collectVariable","next"]
+		},
+		
+		
+		"iface": {"type": "object"}
+	},
+	"required": ["name","kind","label","title","method","timeout","finishOnKey","numDigits","steps","stepnames","gatherType"]
+
+}
+

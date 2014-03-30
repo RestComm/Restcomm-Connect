@@ -70,7 +70,7 @@ App.factory('protos', function () {
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{}},
 			play: {kind:'play', label:'play', title:'play',loop:null,playType:'local',local:{wavLocalFilename:null}, remote:{wavUrl:null}, iface:{}},
 			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:null,next:''}, iface:{}},
-			dial: {dialNouns:[], nextModule:'', kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'GET', timeout:null, timeLimit:null, callerId:null, steps:[], iface:{}},
+			dial: {dialNouns:[], nextModule:'', kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'GET', timeout:null, timeLimit:null, callerId:null, iface:{}},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:'',method:'',iface:{}},
 			hungup: {kind:'hungup', label:'hang up', title:'hang up', next:'',iface:{}},
@@ -88,7 +88,7 @@ App.factory('protos', function () {
 			
 		},
 		dialNounProto: {
-			number: {dialType: 'number', destination:'', sendDigits:null, beforeConnectUrl:'', beforeConnectModule:null},
+			number: {dialType: 'number', destination:'', sendDigits:null, beforeConnectModule:null},
 			client: {dialType: 'client', destination:''},
 			conference: {dialType: 'conference', destination:'', nextModule:null, muted:null, beep:null, startConferenceOnEnter:null, endConferenceOnExit:null, waitUrl:null, waitModule:null, waitMethod:'GET', maxParticipants:null},
 			sipuri: {dialType: 'sipuri', destination:''},
