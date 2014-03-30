@@ -1,5 +1,7 @@
 <div class="step ussdCollect-step panel panel-rvdstep">
-	<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.iface.isCollapsed = !step.iface.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.iface.isCollapsed, 'fa-caret-down': !step.iface.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+	<div class="panel-heading">
+		<ng-include src="'templates/stepHeading.html'"></ng-include>
+	</div>
 
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div class="row">

@@ -24,7 +24,12 @@
 										{ "$ref": "saystep.json" },
 										{ "$ref": "playstep.json" },
 										{ "$ref": "gatherstep.json" },
-										{ "$ref": "dialstep.json" }
+										{ "$ref": "dialstep.json" },
+										{ "$ref": "hangupstep.json" },
+										{ "$ref": "externalServiceStep.json" },
+										{ "$ref": "rejectStep.json" },
+										{ "$ref": "pauseStep.json" },
+										{ "$ref": "redirectStep.json" }
 									]
 								}
 							},
