@@ -29,7 +29,9 @@
 										{ "$ref": "externalServiceStep.json" },
 										{ "$ref": "rejectStep.json" },
 										{ "$ref": "pauseStep.json" },
-										{ "$ref": "redirectStep.json" }
+										{ "$ref": "redirectStep.json" },
+										{ "$ref": "smsStep.json" },
+										{ "$ref": "recordStep.json" }
 									]
 								}
 							},
@@ -59,6 +61,12 @@
 		"oneOf":[
 				{"type":"null"},
 				{"type":"string", "minLength":1}
+		]
+	},
+	"nullOrBoolean": {
+		"oneOf":[
+				{"type":"null"},
+				{"type":"boolean"}
 		]
 	}
 }
