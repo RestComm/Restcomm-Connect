@@ -139,7 +139,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
 
         try {
-            secure(sid, "RestComm:Read:Accounts");
+            secure(account, "RestComm:Read:Accounts");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -164,7 +164,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         final Sid sidToBeRemoved = new Sid(sid);
 
         try {
-            secure(accountSid, "RestComm:Delete:Accounts");
+            Account account = dao.getAccount(sidToBeRemoved);
+            secure(account, "RestComm:Delete:Accounts");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -183,7 +184,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         final Subject subject = SecurityUtils.getSubject();
         final Sid sid = new Sid((String) subject.getPrincipal());
         try {
-            secure(sid, "RestComm:Read:Accounts");
+            Account account = dao.getAccount(sid);
+            secure(account, "RestComm:Read:Accounts");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

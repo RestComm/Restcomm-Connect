@@ -16,10 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
 import java.net.URI;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -28,10 +24,14 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -105,9 +105,10 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
-    protected void secure(final Sid accountSid, final String permission) throws AuthorizationException {
+    protected void secure(final Account account, final String permission) throws AuthorizationException {
         final Subject subject = SecurityUtils.getSubject();
-        if (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission))) {
+        final Sid accountSid = account.getSid();
+        if (account.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission)))) {
             return;
         } else {
             throw new AuthorizationException();

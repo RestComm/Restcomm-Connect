@@ -29,13 +29,14 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.Notification;
@@ -57,6 +58,7 @@ public abstract class NotificationsEndpoint extends AbstractEndpoint {
     protected NotificationsDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected AccountsDao accountsDao;
 
     public NotificationsEndpoint() {
         super();
@@ -69,6 +71,7 @@ public abstract class NotificationsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getNotificationsDao();
+        accountsDao = storage.getAccountsDao();
         final NotificationConverter converter = new NotificationConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Notification.class, converter);
@@ -83,7 +86,7 @@ public abstract class NotificationsEndpoint extends AbstractEndpoint {
 
     protected Response getNotification(final String accountSid, final String sid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:Notifications");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -104,7 +107,7 @@ public abstract class NotificationsEndpoint extends AbstractEndpoint {
 
     protected Response getNotifications(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:Notifications");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
