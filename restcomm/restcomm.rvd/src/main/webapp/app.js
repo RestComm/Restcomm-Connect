@@ -77,8 +77,8 @@ App.factory('protos', function () {
 			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:'', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, chosenAssignmentsModule:null, iface:{}},
 			reject: {kind:'reject', label:'reject', title:'reject', reason:null,iface:{}},
 			pause: {kind:'pause', label:'pause', title:'pause', length:null, iface:{}},
-			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:'',iface:{}},
-			record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{}},
+			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
+			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null,iface:{}},
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
