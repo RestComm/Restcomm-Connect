@@ -174,11 +174,16 @@ public class UssdCall extends UntypedActor  {
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
         String realIP = message.getInitialRemoteAddr();
+        int realPort = message.getInitialRemotePort();
         final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
         final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
         InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
         InetAddress inetAddress = InetAddress.getByName(realIP);
+
+        int remotePort = message.getRemotePort();
+        int contactPort = ((SipURI)contactAddr.getURI()).getPort();
+        String remoteAddress = message.getRemoteAddr();
 
         //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
         final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
@@ -196,11 +201,20 @@ public class UssdCall extends UntypedActor  {
         } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
                 && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
             logger.info("Contact header address " + contactAddr.toString()
-                    + " is a private network ip address, storing Initial Remote Address " + realIP
+                    + " is a private network ip address, storing Initial Remote Address " + realIP+":"+realPort
                     + " to the session for later use");
-            realIP = realIP + ":" + ((SipURI) contactAddr.getURI()).getPort();
+            realIP = realIP + ":" + realPort;
             uri = factory.createSipURI(null, realIP);
         }
+//        //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
+//        //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
+//        //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
+//        else if(remotePort != contactPort) {
+//            logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
+//                    + remoteAddress+":"+remotePort);
+//            realIP = remoteAddress+":"+remotePort;
+//            uri = factory.createSipURI(null, realIP);
+//        }
         return uri;
     }
 

@@ -65,7 +65,7 @@ public class TestUssdMessages {
     }
     
     @Test
-    public void testInforRequestFromClient() {
+    public void testInforRequestFromClient() throws Exception {
         UssdInfoRequest ussdInfoRequest = new UssdInfoRequest(ussdInfoRequestFromClient);
         assertTrue("1".equals(ussdInfoRequest.getMessage()));
         assertTrue("en".equals(ussdInfoRequest.getLanguage()));
