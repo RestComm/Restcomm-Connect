@@ -20,7 +20,7 @@
  */
 package org.mobicents.servlet.restcomm.ussd.commons;
 
-import static javax.xml.stream.XMLStreamConstants.END_DOCUMENT;
+import static javax.xml.stream.XMLStreamConstants.*;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -49,7 +49,7 @@ public class UssdInfoRequest {
         this.ussdPayload = payload;
     }
 
-    public void readUssdPayload(){
+    public void readUssdPayload() throws Exception{
 
         StringReader reader = new StringReader(ussdPayload.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1").replaceAll("\\n", ""));
 
@@ -60,7 +60,8 @@ public class UssdInfoRequest {
             stream = inputs.createXMLStreamReader(reader);
             while (stream.hasNext()){
                 stream.next();
-                if( stream.getEventType() != END_DOCUMENT) {
+                int streamEvent = stream.getEventType();
+                if( streamEvent != END_DOCUMENT && streamEvent == START_ELEMENT) {
                     String name = stream.getLocalName();
                     if(name.equalsIgnoreCase("language") && stream.isStartElement()) {
                         this.language = stream.getAttributeValue("", "value");
@@ -77,29 +78,30 @@ public class UssdInfoRequest {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            this.message = e.getMessage();
+            throw e;
         }
     }
 
-    public String getMessage() {
+    public String getMessage() throws Exception {
         if (message == null)
             readUssdPayload();
         return message;
     }
 
-    public String getLanguage() {
+    public String getLanguage() throws Exception {
         if (language == null)
             readUssdPayload();
         return (language == null) ? "en" : language;
     }
 
-    public UssdMessageType getUssdMessageType() {
+    public UssdMessageType getUssdMessageType() throws Exception {
         if(ussdMessageType == null)
             readUssdPayload();
         return (ussdMessageType == null) ? UssdMessageType.unstructuredSSRequest_Response : ussdMessageType;
     }
 
-    public int getMessageLength() {
+    public int getMessageLength() throws Exception {
         if(message == null)
             readUssdPayload();
         return message.length();
