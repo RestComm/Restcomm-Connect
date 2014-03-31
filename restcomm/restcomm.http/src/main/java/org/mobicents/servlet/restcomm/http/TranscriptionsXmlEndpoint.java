@@ -42,7 +42,7 @@ public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
     @DELETE
     public Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
         try {
-            secure(new Sid(accountSid), "RestComm:Delete:Transcriptions");
+            secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Transcriptions");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

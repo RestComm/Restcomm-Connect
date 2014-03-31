@@ -125,7 +125,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:Calls");
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -150,7 +150,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType) {
 
         try {
-            secure(new Sid(accountSid), "RestComm:Read:Calls");
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -236,7 +236,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountId = new Sid(accountSid);
         try {
-            secure(accountId, "RestComm:Create:Calls");
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -339,7 +339,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         try {
-            secure(accountSid, "RestComm:Modify:Calls");
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Modify:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
