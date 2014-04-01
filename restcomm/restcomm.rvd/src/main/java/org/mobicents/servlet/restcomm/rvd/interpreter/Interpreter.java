@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -22,7 +23,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
@@ -93,7 +93,9 @@ public class Interpreter {
     private String targetParam;
     private Target target;
     private String appName;
-    private Map<String,String> requestParameters; // parameters like digits, callSid etc.
+   // private Map<String,String> requestParameters; // parameters like digits, callSid etc.
+    MultivaluedMap<String, String> requestParams;
+
     private String contextPath;
 
     private String rcmlResult;
@@ -101,12 +103,14 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest) {
+    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
         this.projectStorage = projectStorage;
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
-        this.requestParameters = RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap());
+        //this.requestParameters = RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap());
+        this.requestParams = requestParams;
+
         this.contextPath = httpRequest.getContextPath();
         init();
     }
@@ -238,15 +242,12 @@ public class Interpreter {
         return response;
     }
 
-    public Map<String, String> getRequestParameters() {
-        return requestParameters;
+
+
+
+    public MultivaluedMap<String, String> getRequestParams() {
+        return requestParams;
     }
-
-
-    public void setRequestParameters(Map<String, String> requestParameters) {
-        this.requestParameters = requestParameters;
-    }
-
 
     public String getContextPath() {
         return contextPath;

@@ -67,7 +67,7 @@ import com.google.gson.JsonObject;
 public class TestMultipartContent {
 
     private static Logger logger = Logger.getLogger(TestMultipartContent.class);
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     
     private static final String multipartBody = "--uniqueBoundary \n"
             + "Content-Type: application/sdp \n" 

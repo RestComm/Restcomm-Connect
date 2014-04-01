@@ -51,7 +51,7 @@ public class UssdInfoRequest {
 
     public void readUssdPayload() throws Exception{
 
-        StringReader reader = new StringReader(ussdPayload.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1").replaceAll("\\n", ""));
+        StringReader reader = new StringReader(ussdPayload.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1").replaceAll("\\n", "").replaceAll("\\t", ""));
 
         final XMLInputFactory inputs = XMLInputFactory.newInstance();
         inputs.setProperty("javax.xml.stream.isCoalescing", true);

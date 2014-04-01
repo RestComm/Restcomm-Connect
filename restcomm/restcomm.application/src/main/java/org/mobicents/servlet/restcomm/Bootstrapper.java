@@ -137,6 +137,7 @@ public final class Bootstrapper extends SipServlet {
             throw new ServletException(exception);
         }
         context.setAttribute(MediaGateway.class.getName(), gateway);
+        Version.printVersion();
     }
 
     private DaoManager storage(final Configuration configuration, final ClassLoader loader) throws ObjectInstantiationException {

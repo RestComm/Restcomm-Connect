@@ -27,7 +27,7 @@ import com.google.gson.JsonObject;
 public class AccountsEndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointTest.class.getName());
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;
@@ -74,6 +74,7 @@ public class AccountsEndpointTest {
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        logger.info("version");
         final WebArchive archive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
