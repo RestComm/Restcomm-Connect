@@ -81,8 +81,8 @@ public class SmsStep extends Step {
 
         //String SmsSid = interpreter.getHttpRequest().getParameter("SmsSid");
         //String SmsStatus = interpreter.getHttpRequest().getParameter("SmsStatus");
-        String SmsSid = interpreter.getRequestParameters().get("SmsSid");
-        String SmsStatus = interpreter.getRequestParameters().get("SmsStatus");
+        String SmsSid = interpreter.getRequestParams().getFirst("SmsSid");
+        String SmsStatus = interpreter.getRequestParams().getFirst("SmsStatus");
 
         if ( SmsSid != null )
             interpreter.getVariables().put("SmsSid", SmsSid);
