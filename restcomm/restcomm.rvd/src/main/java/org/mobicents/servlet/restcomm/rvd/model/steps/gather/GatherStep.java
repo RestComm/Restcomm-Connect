@@ -64,7 +64,7 @@ public class GatherStep extends Step {
 
             boolean handled = false;
             for (Mapping mapping : menu.mappings) {
-                Integer digits = Integer.parseInt(interpreter.getRequestParams().getFirst("Digits") ); 
+                Integer digits = Integer.parseInt(interpreter.getRequestParams().getFirst("Digits") );
                 logger.debug("checking digits: " + mapping.digits + " - " + digits);
 
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
