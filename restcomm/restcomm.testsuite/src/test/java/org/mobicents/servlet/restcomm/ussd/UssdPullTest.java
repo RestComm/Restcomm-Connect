@@ -63,14 +63,14 @@ public class UssdPullTest {
     
     String ussdClientRequestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<ussd-data>\n"
-            + "<language value=\"en\"/>\n"
-            + "<ussd-string value=\"5544\"/>\n"
+            + "\t<language value=\"en\"/>\n"
+            + "\t<ussd-string value=\"5544\"/>\n"
             + "</ussd-data>";
 
     String ussdClientRequestBodyForCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<ussd-data>\n"
-            + "<language value=\"en\"/>\n"
-            + "<ussd-string value=\"5555\"/>\n"
+            + "\t<language value=\"en\"/>\n"
+            + "\t<ussd-string value=\"5555\"/>\n"
             + "</ussd-data>";
     
     String ussdRestcommResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -93,17 +93,17 @@ public class UssdPullTest {
     
     String ussdClientResponseBodyToCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<ussd-data>\n"
-            + "<language value=\"en\"/>\n"
-            + "<ussd-string value=\"1\"/>\n"
-            + "<anyExt>\n"
-            + "<message-type>unstructuredSSRequest_Response</message-type>\n"
-            + "</anyExt>\n"
+            + "\t<language value=\"en\"/>\n"
+            + "\t<ussd-string value=\"1\"/>\n"
+            + "\t<anyExt>\n"
+            + "\t\t<message-type>unstructuredSSRequest_Response</message-type>\n"
+            + "\t</anyExt>\n"
             + "</ussd-data>";
     
     String ussdClientRequestBodyForMessageLenghtExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<ussd-data>\n"
-            + "<language value=\"en\"/>\n"
-            + "<ussd-string value=\"5544\"/>\n"
+            + "\t<language value=\"en\"/>\n"
+            + "\t<ussd-string value=\"5566\"/>\n"
             + "</ussd-data>";
     
     String ussdRestcommResponseForMessageLengthExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
