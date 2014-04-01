@@ -54,7 +54,7 @@ public class UssdCollectStep extends Step {
             boolean handled = false;
             for (Mapping mapping : mappings) {
                 // use a string for USSD collect. Alpha is supported too
-                String digits = interpreter.getRequestParameters().get("Digits");
+                String digits = interpreter.getRequestParams().getFirst("Digits");
 
                 logger.debug("checking digits: " + mapping.digits + " - " + digits);
 
@@ -72,7 +72,7 @@ public class UssdCollectStep extends Step {
         if ("collectdigits".equals(gatherType)) {
 
             String variableName = collectVariable;
-            interpreter.getVariables().put(variableName, interpreter.getRequestParameters().get("Digits"));  //getHttpRequest().getParameter("Digits")); // put the string directly
+            interpreter.getVariables().put(variableName, interpreter.getRequestParams().getFirst("Digits"));  //getHttpRequest().getParameter("Digits")); // put the string directly
             interpreter.interpret(next,null);
         }
     }
