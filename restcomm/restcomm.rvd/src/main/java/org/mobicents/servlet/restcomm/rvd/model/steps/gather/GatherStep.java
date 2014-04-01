@@ -64,8 +64,7 @@ public class GatherStep extends Step {
 
             boolean handled = false;
             for (Mapping mapping : menu.mappings) {
-                Integer digits = Integer.parseInt(interpreter.getRequestParameters().get("Digits") );  //getHttpRequest().getParameter("Digits"));
-
+                Integer digits = Integer.parseInt(interpreter.getRequestParams().getFirst("Digits") ); 
                 logger.debug("checking digits: " + mapping.digits + " - " + digits);
 
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
@@ -80,9 +79,8 @@ public class GatherStep extends Step {
             }
         }
         if ("collectdigits".equals(gatherType)) {
-
             String variableName = collectdigits.collectVariable;
-            interpreter.getVariables().put(variableName, interpreter.getRequestParameters().get("Digits"));  //getHttpRequest().getParameter("Digits")); // put the string directly
+            interpreter.getVariables().put(variableName, interpreter.getRequestParams().getFirst("Digits"));  //getHttpRequest().getParameter("Digits")); // put the string directly
             interpreter.interpret(collectdigits.next,null);
         }
     }

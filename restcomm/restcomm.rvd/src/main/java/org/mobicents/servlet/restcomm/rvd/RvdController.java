@@ -7,12 +7,14 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.Consumes;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
@@ -44,8 +46,7 @@ public class RvdController {
 
     @GET
     @Produces(MediaType.APPLICATION_XML)
-    public Response controllerGet(@PathParam("appname") String appname, @QueryParam("target") String targetParam,
-            @Context HttpServletRequest httpRequest) {
+    public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
 
         try {
             if (!projectService.projectExists(appname))
@@ -57,7 +58,9 @@ public class RvdController {
 
         String rcmlResponse;
         try {
-            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest);
+            MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
+            String targetParam = requestParams.getFirst("target");
+            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest, requestParams);
             rcmlResponse = interpreter.interpret();
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);
@@ -69,9 +72,9 @@ public class RvdController {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_XML)
-    public Response controllerPost(@PathParam("appname") String appname, @QueryParam("target") String targetParam,
-            @Context HttpServletRequest httpRequest) {
+    public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
 
         try {
             if (!projectService.projectExists(appname))
@@ -83,7 +86,8 @@ public class RvdController {
 
         String rcmlResponse;
         try {
-            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest);
+            String targetParam = requestParams.getFirst("target");
+            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest, requestParams);
             rcmlResponse = interpreter.interpret();
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);
