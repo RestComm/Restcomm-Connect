@@ -778,9 +778,6 @@ public class UssdInterpreter extends UntypedActor {
                     }
                 }
                 ussdCall.tell(ussdRequest, source);
-                ussdCollectTag = null;
-                ussdText = null;
-                ussdLanguageTag = null;
             }
         }
     }
@@ -855,6 +852,9 @@ public class UssdInterpreter extends UntypedActor {
                 parameters.add(new BasicNameValuePair("Digits", ussdText));
                 request = new HttpRequestDescriptor(uri, method, parameters);
                 downloader.tell(request, source);
+                ussdCollectTag = null;
+                ussdLanguageTag = null;
+                ussdMessageTags = new LinkedBlockingQueue<Tag>();
                 return;
             }
             // Ask the parser for the next action to take.

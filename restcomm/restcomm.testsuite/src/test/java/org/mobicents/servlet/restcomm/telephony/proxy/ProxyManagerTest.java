@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Arquillian.class)
 @Ignore
 public final class ProxyManagerTest {
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;

@@ -36,7 +36,7 @@ public class CreateCallsTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;

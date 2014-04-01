@@ -98,9 +98,9 @@ public class RecordStep extends Step {
         //String RecordingUrl = interpreter.getHttpRequest().getParameter("RecordingUrl");
         //String RecordingDuration = interpreter.getHttpRequest().getParameter("RecordingDuration");
         //String Digits = interpreter.getHttpRequest().getParameter("Digits");
-        String RecordingUrl = interpreter.getRequestParameters().get("RecordingUrl");
-        String RecordingDuration = interpreter.getRequestParameters().get("RecordingDuration");
-        String Digits = interpreter.getRequestParameters().get("Digits");
+        String RecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
+        String RecordingDuration = interpreter.getRequestParams().getFirst("RecordingDuration");
+        String Digits = interpreter.getRequestParams().getFirst("Digits");
 
         if ( RecordingUrl != null )
             interpreter.getVariables().put("RecordingUrl", RecordingUrl);
