@@ -10,7 +10,7 @@
 		"url": {"type": "string", "minLength": 1},
 		"urlParams": {
 			"type": "array",
-			"items": {}
+			"items": { "$ref": "#/definitions/urlParam"}
 		},
 		"assignments": {
 			"type": "array",
@@ -19,7 +19,7 @@
 				"properties": {
 					"moduleNameScope": { "$ref": "rvdproject-schema.json#/nullOrString" },
 					"destVariable": {"type":"string", "minLength":1},
-					"valueExtractor": {}
+					"valueExtractor":  {"$ref": "#/definitions/valueExtractor"}
 				},
 				"required": ["moduleNameScope","destVariable","valueExtractor"],
 				"additionalProperties": false
@@ -31,64 +31,66 @@
 	},
 	"required": ["name","kind","label","title","url","urlParams","assignments","doRouting"],
 	
-	"urlParam": {
-		"type": "object",
-		"properties": {
-			"name": {"type":"string", "minLength": 1},
-			"value": {"type":"string", "minLength": 1}
-		},
-		"required": ["name","value"],
-		"additionalProperties": false
-	},
-	"valueExtractor": {
-		"type": "object",
-		"properties": {
-			"accessOperations": {
-				"type": "array",
-				"items": {
-					"oneOf":[
-						{
-							"type": "object",
-							"properties": {
-								"kind": {"enum": ["object"]},
-								"fixed": {"enum": [true]},
-								"terminal": {"enum":[false]},
-								"action": {"enum":["propertyNamed"]},
-								"property": {"type": "string", "minLength":1},
-								"expression": {"type": "string"}
-							},
-							"required": ["kind","fixed","terminal","action","property","expression"],
-							"additionalProperties": false
-						},
-						{
-							"type": "object",
-							"properties": {
-								"kind": {"enum": ["array"]},
-								"fixed": {"enum": [true]},
-								"terminal": {"enum":[false]},
-								"action": {"enum":["itemAtPosition"]},
-								"position": {"type": "integer", "minimum":0},
-								"expression": {"type": "string"}
-							},
-							"required": ["kind","fixed","terminal","action","position","expression"],
-							"additionalProperties": false
-						},
-						{
-							"type": "object",
-							"properties": {
-								"kind": {"enum": ["value"]},
-								"fixed": {"enum": [true]},
-								"terminal": {"enum":[false]},
-								"action": {"type":"string"},
-								"expression": {"type": "string"}
-							},
-							"required": ["kind","fixed","terminal","action","position","expression"],
-							"additionalProperties": false
-						}												
-					]
-				}
+	"definitions":{
+		"urlParam": {
+			"type": "object",
+			"properties": {
+				"name": {"type":"string", "minLength": 1},
+				"value": {"type":"string", "minLength": 1}
 			},
-			"lastOperation": {"type":"null"}
+			"required": ["name","value"],
+			"additionalProperties": false
+		},
+		"valueExtractor": {
+			"type": "object",
+			"properties": {
+				"accessOperations": {
+					"type": "array",
+					"items": {
+						"oneOf":[
+							{
+								"type": "object",
+								"properties": {
+									"kind": {"enum": ["object"]},
+									"fixed": {"enum": [true]},
+									"terminal": {"enum":[false]},
+									"action": {"enum":["propertyNamed"]},
+									"property": {"type": "string", "minLength":1},
+									"expression": {"type": "string"}
+								},
+								"required": ["kind","fixed","terminal","action","property","expression"],
+								"additionalProperties": false
+							},
+							{
+								"type": "object",
+								"properties": {
+									"kind": {"enum": ["array"]},
+									"fixed": {"enum": [true]},
+									"terminal": {"enum":[false]},
+									"action": {"enum":["itemAtPosition"]},
+									"position": {"type": "integer", "minimum":0},
+									"expression": {"type": "string"}
+								},
+								"required": ["kind","fixed","terminal","action","position","expression"],
+								"additionalProperties": false
+							},
+							{
+								"type": "object",
+								"properties": {
+									"kind": {"enum": ["value"]},
+									"fixed": {"enum": [true]},
+									"terminal": {"enum":[false]},
+									"action": {"type":"string"},
+									"expression": {"type": "string"}
+								},
+								"required": ["kind","fixed","terminal","action","expression"],
+								"additionalProperties": false
+							}												
+						]
+					}
+				},
+				"lastOperation": {"type":"null"}
+			}
 		}
 	}
 }
