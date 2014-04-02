@@ -64,6 +64,10 @@ App.factory('protos', function () {
 			value:{kind:'value',fixed:false, terminal:true},	
 	}
 	return { 
+		nodes: {
+				voice: {kind:'voice', name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}},
+				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}},		
+		},
 		accessOperationProtos: accessOperationProtos,
 		stepProto: {
 			// Voice
@@ -82,7 +86,7 @@ App.factory('protos', function () {
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
-			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", text:'',mappings:[], collectVariable: null, next:null, language:null, messages:[], iface:{}},
+			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:''}, text:'', language:null, messages:[], iface:{}},
 			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
 			
 			
@@ -310,6 +314,20 @@ App.directive('modulePicker', [function () {
 			options: '=',
 		},
 		link: function (scope,el,attrs) {
+		},
+	};
+}]);
+
+App.directive('ussdModule', [function () {
+	return {
+		restrict: 'A',
+		link: function (scope,el,attrs) {
+			scope.node.iface.remainingChars = scope.remainingUssdChars(scope.node);
+			//console.log("(start) remaining chars: " + scope.node.iface.remainingChars);			
+			/*var counterWatch = */scope.$watch('remainingUssdChars(node)', function (newCount) {
+				scope.node.iface.remainingChars = newCount;
+			});
+			
 		},
 	};
 }]);

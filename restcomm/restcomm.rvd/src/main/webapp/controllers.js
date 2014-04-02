@@ -84,8 +84,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.stepService = stepService;
 	
-	// Prototype and constant data structures
-	$scope.nodesProto =	{name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}};
+	// Prototype and constant data structures	
 	$scope.languages = [
 	                    {name:'bf',text:'Belgium-French'},
 	                    {name:'bp',text: 'Brazilian-Portugues'},
@@ -113,6 +112,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	                   ];
 	$scope.methods = ['POST', 'GET'];
 	
+	$scope.ussdMaxEnglishChars = 182;
+	$scope.ussdMaxForeignChars = 91;
 		
 	// State variables
 	$scope.projectNotFound = false;
@@ -201,8 +202,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				break;
 			}
 	};
-	$scope.addNode = function( name ) {
-		$newnode = angular.copy($scope.nodesProto);
+	$scope.addNode = function( name, kind ) { // kind is based on project kind
+		$newnode = angular.copy(protos.nodes[kind]);
 		if ( typeof(name) === 'undefined' )
 			$newnode.name += ++$scope.lastNodesId;
 		else
@@ -210,14 +211,14 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.nodes.push( $newnode );
 		return $newnode;
 	};
-	$scope.addNodeAndFocus = function (editLabel) {
+	/*$scope.addNodeAndFocus = function (editLabel, kind) {
 		//$scope.setVisibleNodes(kind);
-		var node = $scope.addNode();
+		var node = $scope.addNode(undefined, kind);
 		if (typeof editLabel !== undefined  && editLabel)
 			node.iface.editLabel = true;
 		$scope.setActiveNode(node);
 		return node;
-	};
+	};*/
 	$scope.removeNode = function( index) {
 		if ( index < $scope.nodes.length ) {
 			$scope.nodes.splice(index,1);
@@ -326,8 +327,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		var deferred = $q.defer();
 		
 		var state = $scope.packState();
-		// transmit state to the server
-		//console.log( "saving " + $scope.projectKind + " project: " + $scope.projectName );
 		$http({url: 'services/manager/projects?name=' + $scope.projectName,
 				method: "POST",
 				data: state,
@@ -345,12 +344,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		
 		return deferred.promise;
 	}
-	
-
-	
-	//$scope.closeProject = function() {
-	//	$location.path("#/project-manager/" + ($scope.projectKind ? $scope.projectKind : 'voice'));		
-	//}
 	
 	$scope.openProject = function(name) {
 		$http({url: 'services/manager/projects?name=' + name,
@@ -550,6 +543,40 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		return counter;
 	}
 	
+	$scope.getUssdNodeLang = function (node) {
+		var lang = "en";
+		for ( var stepname in node.steps ) {
+			var step = node.steps[stepname];
+			if ( step.kind == "ussdLanguage") 
+				if (step.language != null  &&  step.language != 'en') {
+					lang = step.language;
+					break;
+				}
+		}
+		return lang;
+	}
+	
+	$scope.countNodeUssdChars = function (node) {
+		var sum = 0;
+		for ( var stepname in node.steps ) {
+			var step = node.steps[stepname];
+			if ( step.kind == "ussdSay" ) 
+				sum += $scope.countUssdChars(step.text);
+			else
+			if ( step.kind == "ussdCollect" )
+				sum += $scope.countUssdCollectChars(step)			
+		}
+		return sum;
+	}
+	
+	$scope.remainingUssdChars = function (node) {
+		var total = $scope.countNodeUssdChars(node);
+		var remaining = $scope.ussdMaxEnglishChars - total;
+		if ( $scope.getUssdNodeLang(node) != 'en' )
+			remaining = $scope.ussdMaxForeignChars - total;
+		return remaining;
+	}
+	
 	$scope.nestUssdMessage = function (item, pos, listmodel) {
 		console.log("nesting ussd message");
 		//r = RegExp("dial-noun-([^ ]+)");
@@ -565,6 +592,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.removeNestedMessage = function (step,nested) {
 		step.messages.splice( step.messages.indexOf(nested), 1 );
 	}
+
 	
 	
 	
