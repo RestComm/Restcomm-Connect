@@ -196,13 +196,6 @@ label {
 	margin-bottom: 5px;
 }
 
-.separator-hint {
-	text-align: center;
-	color: #aaa;
-	margin-bottom: 2px;
-	font-style: italic;
-}
-
 .say-step .step-options {
 	width: 304px;
 }
@@ -260,6 +253,10 @@ label {
 .rvd-project-item .confirm-delete {
 	margin-top:5px; 
 	margin-bottom:15px;
+}
+
+.rvd-node {
+	padding-top: 10px;
 }
 
 value-extractor .btn.pull-right {
@@ -410,6 +407,11 @@ li.verb {
 
 .navbar-header {
 	float: none;
+}
+
+.ussd-letter-counter {
+	margin-bottom: 13px;
+	margin-left: 8px;
 }
 
 
