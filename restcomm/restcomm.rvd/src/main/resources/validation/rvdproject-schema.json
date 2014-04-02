@@ -32,7 +32,9 @@
 										{ "$ref": "redirectStep.json" },
 										{ "$ref": "smsStep.json" },
 										{ "$ref": "recordStep.json" },
-										{ "$ref": "faxStep.json" }
+										{ "$ref": "faxStep.json" },
+										{ "$ref": "ussdSayStep.json" },
+										{ "$ref": "ussdCollectStep.json" }
 									]
 								}
 							},
@@ -69,6 +71,10 @@
 				{"type":"null"},
 				{"type":"boolean"}
 		]
+	},
+	"variableName": { 
+		"type":"string", 
+		"pattern":"^[A-Za-z]+[A-Za-z0-9_]*$" 
 	}
 }
 

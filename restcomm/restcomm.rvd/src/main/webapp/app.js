@@ -65,8 +65,8 @@ App.factory('protos', function () {
 	}
 	return { 
 		nodes: {
-				voice: {kind:'voice', name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}},
-				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}},		
+				voice: {kind:'voice', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},
+				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},		
 		},
 		accessOperationProtos: accessOperationProtos,
 		stepProto: {
@@ -87,6 +87,7 @@ App.factory('protos', function () {
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
 			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:''}, text:'', language:null, messages:[], iface:{}},
+			ussdSayNested: {text:''},
 			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
 			
 			

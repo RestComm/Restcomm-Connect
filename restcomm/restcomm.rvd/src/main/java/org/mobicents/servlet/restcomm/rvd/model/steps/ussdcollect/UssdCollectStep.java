@@ -19,14 +19,20 @@ public class UssdCollectStep extends Step {
         String digits;
         String next;
     }
+    public final class Menu {
+        private List<Mapping> mappings;
+    }
+    public final class Collectdigits {
+        private String next;
+        private String collectVariable;
+    }
 
     String gatherType;
     String text;
+    private Menu menu;
+    private Collectdigits collectdigits;
+
     List<UssdSayStep> messages;
-    List<Mapping> mappings;
-    String collectVariable;
-    String language;
-    String next;
 
     public UssdCollectStep() {
         // TODO Auto-generated constructor stub
@@ -52,7 +58,7 @@ public class UssdCollectStep extends Step {
         if ("menu".equals(gatherType)) {
 
             boolean handled = false;
-            for (Mapping mapping : mappings) {
+            for (Mapping mapping : menu.mappings) {
                 // use a string for USSD collect. Alpha is supported too
                 String digits = interpreter.getRequestParams().getFirst("Digits");
 
@@ -71,9 +77,9 @@ public class UssdCollectStep extends Step {
         }
         if ("collectdigits".equals(gatherType)) {
 
-            String variableName = collectVariable;
+            String variableName = collectdigits.collectVariable;
             interpreter.getVariables().put(variableName, interpreter.getRequestParams().getFirst("Digits"));  //getHttpRequest().getParameter("Digits")); // put the string directly
-            interpreter.interpret(next,null);
+            interpreter.interpret(collectdigits.next,null);
         }
     }
 }
