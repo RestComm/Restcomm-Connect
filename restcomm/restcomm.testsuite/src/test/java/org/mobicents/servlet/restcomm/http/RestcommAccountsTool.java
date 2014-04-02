@@ -31,16 +31,45 @@ public class RestcommAccountsTool {
     }
 
     private String getAccountsUrl(String deploymentUrl) {
+        return getAccountsUrl(deploymentUrl, false);
+    }
+
+    private String getAccountsUrl(String deploymentUrl, Boolean xml) {
         if (accountsUrl == null) {
             if (deploymentUrl.endsWith("/")) {
                 deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
             }
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
+            if(xml){
+                accountsUrl = deploymentUrl + "/2012-04-24/Accounts";
+            } else {
+                accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
+            }
         }
 
         return accountsUrl;
     }
+    
+    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password, String accountSid, String status) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
+        String url = getAccountsUrl(deploymentUrl,true) + "/"+accountSid+".json";
+
+        WebResource webResource = jerseyClient.resource(url);
+
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("EmailAddress", emailAddress);
+        params.add("Password", password);
+        params.add("Role", "Administartor");
+        params.add("Status", status);
+
+        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+
+        return jsonResponse;
+    }
+    
     public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
             String password) {
 
