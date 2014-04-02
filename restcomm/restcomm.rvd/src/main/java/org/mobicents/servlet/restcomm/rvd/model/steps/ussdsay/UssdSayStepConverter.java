@@ -20,8 +20,6 @@ public class UssdSayStepConverter implements Converter {
     @Override
     public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext arg2) {
         UssdSayRcml step = (UssdSayRcml) value;
-        if (step.language != null)
-            writer.addAttribute("language", step.language);
         writer.setValue(step.text);
     }
 

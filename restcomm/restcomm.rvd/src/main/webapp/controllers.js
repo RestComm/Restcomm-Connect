@@ -578,15 +578,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.nestUssdMessage = function (item, pos, listmodel) {
-		console.log("nesting ussd message");
-		//r = RegExp("dial-noun-([^ ]+)");
-		//m = r.exec( item.attr("class") );
-		//if ( m != null ) {
-			//console.log("adding dial noun - " + m[1]);
-			$scope.$apply( function ()  {
-				listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSay' ]));
-			});
-		//}
+		$scope.$apply( function ()  {
+			listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSayNested' ]));
+		});
 	}
 	
 	$scope.removeNestedMessage = function (step,nested) {
@@ -616,6 +610,13 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 						delete step.remote;
 					else if (step.playType == "remote")
 						delete step.local;
+				} else
+				if (step.kind == "ussdCollect") {
+					if (step.gatherType == "menu")
+						delete step.collectdigits;
+					else
+					if (step.gatherType == "collectdigits")
+						delete step.menu;
 				}
 			}
 		}
@@ -647,7 +648,14 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 						step.remote = angular.copy(protos.stepProto.play.remote);
 					else if (step.playType == "remote")
 						step.local = angular.copy(protos.stepProto.play.local);
-				}
+				} else
+				if (step.kind == "ussdCollect") {
+					if (step.gatherType == "menu")
+						step.collectdigits = angular.copy(protos.stepProto.ussdCollect.collectdigits);
+					else
+					if (step.gatherType == "collectdigits")
+						step.menu = angular.copy(protos.stepProto.ussdCollect.menu);
+				}					
 			}
 		}
 		$scope.activeNode = packedState.activeNode;

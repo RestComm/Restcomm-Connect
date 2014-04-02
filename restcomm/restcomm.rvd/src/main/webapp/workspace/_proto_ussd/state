@@ -6,7 +6,7 @@
       "name": "start",
       "label": "Welcome",
       "steps": {
-        "step2": {
+        "step1": {
           "kind": "ussdSay",
           "label": "USSD Message",
           "title": "USSD Message",
@@ -21,17 +21,14 @@
       "stepnames": [
         "step1"
       ],
-      "bootstrapSrc": "",
       "iface": {
         "edited": false,
-        "editLabel": false,
-        "bootstrapVisible": false,
-        "remainingChars": 139
+        "editLabel": false
       }
     }
   ],
   "activeNode": 0,
   "lastNodeId": 1,
-  "startNodeName": "module1",
+  "startNodeName": "start",
   "projectKind": "ussd"
 }
