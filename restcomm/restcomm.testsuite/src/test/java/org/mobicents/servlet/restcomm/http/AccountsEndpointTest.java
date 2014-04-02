@@ -137,7 +137,7 @@ public class AccountsEndpointTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_accounts_tests", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }

@@ -137,7 +137,7 @@ public final class Account {
     }
 
     public enum Status {
-        ACTIVE("active"), CLOSED("closed"), SUSPENDED("suspended"), INACTIVE("inactive");
+        ACTIVE("active"), CLOSED("closed"), SUSPENDED("suspended"), INACTIVE("inactive"), UNINITIALIZED("uninitialized");
 
         private final String text;
 
