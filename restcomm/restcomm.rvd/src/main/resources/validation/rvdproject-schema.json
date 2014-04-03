@@ -34,7 +34,8 @@
 										{ "$ref": "recordStep.json" },
 										{ "$ref": "faxStep.json" },
 										{ "$ref": "ussdSayStep.json" },
-										{ "$ref": "ussdCollectStep.json" }
+										{ "$ref": "ussdCollectStep.json" },
+										{ "$ref": "ussdLanguageStep.json" }
 									]
 								}
 							},
