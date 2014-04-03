@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.telephony;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
@@ -51,10 +52,15 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -85,6 +91,7 @@ import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.IPUtils;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
@@ -155,6 +162,10 @@ public final class Call extends UntypedActor {
     private String username;
     private String password;
     private CreateCall.Type type;
+    private CreateCall.RecordingType recordingType;
+    private URI recordingUri;
+    private Sid recordingSid;
+    private DateTime recordStarted;
     private long timeout;
     private SipServletRequest invite;
     private SipServletResponse lastResponse;
@@ -175,10 +186,16 @@ public final class Call extends UntypedActor {
     private DateTime created;
     private final List<ActorRef> observers;
 
+    //CallMediaGroup
     private ActorRef group;
     private ActorRef conference;
     private CallDetailRecord outgoingCallRecord;
     private CallDetailRecordsDao recordsDao;
+    private DaoManager daoManager;
+    private ActorRef initialCall;
+
+    //Runtime Setting
+    private Configuration runtimeSettings;
 
     public Call(final SipFactory factory, final ActorRef gateway) {
         super();
@@ -313,7 +330,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, recordingType, direction, created, forwardedFrom, name, from, to, lastResponse);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -368,15 +385,15 @@ public final class Call extends UntypedActor {
             realIP = realIP + ":" + realPort;
             uri = factory.createSipURI(null, realIP);
         }
-//        //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
-//        //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
-//        //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
-//        else if(remotePort != contactPort) {
-//            logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
-//                    + remoteAddress+":"+remotePort);
-//            realIP = remoteAddress+":"+remotePort;
-//            uri = factory.createSipURI(null, realIP);
-//        }
+        //        //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
+        //        //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
+        //        //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
+        //        else if(remotePort != contactPort) {
+        //            logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
+        //                    + remoteAddress+":"+remotePort);
+        //            realIP = remoteAddress+":"+remotePort;
+        //            uri = factory.createSipURI(null, realIP);
+        //        }
         return uri;
     }
 
@@ -388,6 +405,68 @@ public final class Call extends UntypedActor {
             observers.add(observer);
             observer.tell(new Observing(self), self);
         }
+    }
+
+    private void startRecordingCall() {
+        boolean playBeep = true;
+        String finishOnKey = "1234567890*#";
+        int maxLength = 3600;
+        int timeout = 5;
+        recordingSid = Sid.generate(Sid.Type.RECORDING);
+        recordStarted = DateTime.now();
+
+        String path = runtimeSettings.getString("recordings-path");
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        path += recordingSid.toString() + ".wav";
+        recordingUri = URI.create(path);
+        Record record = null;
+        if (playBeep) {
+            final List<URI> prompts = new ArrayList<URI>(1);
+            path = runtimeSettings.getString("prompts-uri");
+            if (!path.endsWith("/")) {
+                path += "/";
+            }
+            path += "beep.wav";
+            try {
+                prompts.add(URI.create(path));
+            } catch (final Exception exception) {
+                //                final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
+                //                notifications.addNotification(notification);
+                //                sendMail(notification);
+                //                final StopInterpreter stop = StopInterpreter.instance();
+                //                source.tell(stop, source);
+                exception.printStackTrace();
+                return;
+            }
+            record = new Record(recordingUri, prompts, timeout, maxLength, finishOnKey);
+        } else {
+            record = new Record(recordingUri, timeout, maxLength, finishOnKey);
+        }
+        group.tell(record, null);
+    }
+
+    private void stopRecordingCall() throws UnsupportedAudioFileException, IOException {
+        group.tell(new Stop(), null);
+        Double duration = WavUtils.getAudioDuration(recordingUri);
+        if(duration.equals(0.0)) {
+            final DateTime end = DateTime.now();
+            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+        }
+        final Recording.Builder builder = Recording.builder();
+        builder.setSid(recordingSid);
+        builder.setAccountSid(accountId);
+        builder.setCallSid(id);
+        builder.setDuration(duration);
+        builder.setApiVersion(runtimeSettings.getString("api-version"));
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
+        buffer.append("/Recordings/").append(recordingSid.toString());
+        builder.setUri(URI.create(buffer.toString()));
+        final Recording recording = builder.build();
+        RecordingsDao recordsDao = daoManager.getRecordingsDao();
+        recordsDao.addRecording(recording);
     }
 
     @Override
@@ -414,6 +493,19 @@ public final class Call extends UntypedActor {
             fsm.transition(message, acquiringMediaGatewayInfo);
         } else if (Reject.class.equals(klass)) {
             fsm.transition(message, busy);
+        } else if (RecordCall.class.equals(klass)) {
+            RecordCall recordCall = (RecordCall)message;
+            if (recordCall.getUseItAsFlag()) {
+                startRecordingCall();
+            } else {
+                this.recordingType = recordCall.getRecordingType();
+                this.runtimeSettings = recordCall.getRuntimeSetting();
+                if (daoManager == null)
+                    daoManager = recordCall.getDaoManager();
+                if (accountId == null)
+                    accountId = recordCall.getAccountId();
+                startRecordingCall();
+            }
         } else if (MediaGatewayResponse.class.equals(klass)) {
             if (acquiringMediaGatewayInfo.equals(state)) {
                 fsm.transition(message, acquiringMediaSession);
@@ -704,7 +796,11 @@ public final class Call extends UntypedActor {
             username = request.username();
             password = request.password();
             type = request.type();
-            recordsDao = request.recordsDao();
+            recordingType = request.getRecordType();
+            daoManager = request.getDaoManager();
+            recordsDao = request.getDaoManager().getCallDetailRecordsDao();
+            runtimeSettings = request.getRuntimeSettings();
+            initialCall = request.getInitialCall();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
@@ -932,6 +1028,16 @@ public final class Call extends UntypedActor {
             } else if (message instanceof SipServletResponse) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
+                //Check if we have to record the call
+            }
+            //Start recording if RecordingType.RECORD_FROM_RINGING
+            if(recordingType != null && recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING)){
+                if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
+                    logger.info("Starting recording call with recording type: "+recordingType.toString());
+                    initialCall.tell(new RecordCall(true), null);
+                } else {
+                    startRecordingCall();
+                }
             }
             // Notify the observers.
             external = CallStateChanged.State.RINGING;
@@ -1166,6 +1272,11 @@ public final class Call extends UntypedActor {
 
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
+
+                //Check if we have to record the call
+                if(recordingType.equals(CreateCall.RecordingType.RECORD_FROM_ANSWER)){
+                    startRecordingCall();
+                }
             }
 
             final String externalIp = invite.getInitialRemoteAddr();
@@ -1383,6 +1494,10 @@ public final class Call extends UntypedActor {
             }
             if (remoteConn != null) {
                 remoteConn.tell(new CloseConnection(), source);
+            }
+            //Check if we were recording and stop the recording
+            if(recordingType != null && (recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING) || recordingType.equals(CreateCall.RecordingType.RECORD_FROM_ANSWER))){
+                stopRecordingCall();
             }
         }
     }

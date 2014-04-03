@@ -88,6 +88,7 @@ import org.mobicents.servlet.restcomm.telephony.ConferenceModeratorPresent;
 import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
 import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
+import org.mobicents.servlet.restcomm.telephony.CreateCall.RecordingType;
 import org.mobicents.servlet.restcomm.telephony.CreateConference;
 import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.CreateWaitUrlConfMediaGroup;
@@ -101,6 +102,7 @@ import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.telephony.Mute;
 import org.mobicents.servlet.restcomm.telephony.Play;
+import org.mobicents.servlet.restcomm.telephony.RecordCall;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
@@ -1212,12 +1214,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
+            final Attribute record = verb.attribute("record");
             final String text = verb.text();
             if (text != null && !text.isEmpty()) {
                 // Handle bridging.
                 isForking = false;
                 final CreateCall create = new CreateCall(e164(callerId(verb)), e164(text), null, null, false, timeout(verb),
                         CreateCall.Type.PSTN, accountId);
+                if (record != null) {
+                    create.setRecordingType(RecordingType.getValueOf(record.value()));
+                    create.setRuntimeSettings(configuration.subset("runtime-settings"));
+                }
                 callManager.tell(create, source);
             } else if (verb.hasChildren()) {
                 // Handle conferencing.
@@ -1228,6 +1235,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     buffer.append(accountId.toString()).append(":").append(name);
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
+                    if(record != null) {
+                        logger.info("Dialing to a conference and record attribute is: "+record.value()+" Will start recording.");
+                        RecordingType recordingType = RecordingType.getValueOf(record.value());
+                        Configuration runtimeSettings = configuration.subset("runtime-settings");
+                        call.tell(new RecordCall(accountId, recordingType, runtimeSettings, storage), null);
+                    }
                 } else {
                     // Handle forking.
                     dialBranches = new ArrayList<ActorRef>();
@@ -1288,6 +1301,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
                             CreateCall.Type.SIP, accountId);
+                }
+                Attribute record = verb.attribute("record");
+                if (record != null) {
+                    create.setRecordingType(RecordingType.getValueOf(record.value()));
+                    create.setRuntimeSettings(configuration.subset("runtime-settings"));
+                    create.setInitialCall(call);
                 }
                 callManager.tell(create, source);
             } else {

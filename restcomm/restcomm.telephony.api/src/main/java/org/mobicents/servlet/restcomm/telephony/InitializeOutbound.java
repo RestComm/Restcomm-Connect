@@ -18,9 +18,12 @@ package org.mobicents.servlet.restcomm.telephony;
 
 import javax.servlet.sip.SipURI;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Sid;
+
+import akka.actor.ActorRef;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -38,11 +41,15 @@ public final class InitializeOutbound {
     private final String apiVersion;
     private final Sid accountId;
     private final CreateCall.Type type;
-    private final CallDetailRecordsDao recordsDao;
+    private final CreateCall.RecordingType recordingType;
+    private final Configuration runtimeSettings;
+    private final ActorRef initialCall;
+    private final DaoManager daoManager;
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
-            final CreateCall.Type type, final CallDetailRecordsDao recordsDao) {
+            final CreateCall.Type type, final CreateCall.RecordingType recordingType, final Configuration runtimeSettings,
+            final ActorRef initialCall, final DaoManager daoManager) {
         super();
         this.name = name;
         this.from = from;
@@ -54,7 +61,10 @@ public final class InitializeOutbound {
         this.apiVersion = apiVersion;
         this.accountId = accountId;
         this.type = type;
-        this.recordsDao = recordsDao;
+        this.recordingType = recordingType;
+        this.runtimeSettings = runtimeSettings;
+        this.initialCall = initialCall;
+        this.daoManager = daoManager;
     }
 
     public String name() {
@@ -97,7 +107,19 @@ public final class InitializeOutbound {
         return type;
     }
 
-    public CallDetailRecordsDao recordsDao(){
-        return recordsDao;
+    public CreateCall.RecordingType getRecordType() {
+        return recordingType;
+    }
+
+    public Configuration getRuntimeSettings() {
+        return runtimeSettings;
+    }
+
+    public ActorRef getInitialCall() {
+        return initialCall;
+    }
+
+    public DaoManager getDaoManager() {
+        return daoManager;
     }
 }
