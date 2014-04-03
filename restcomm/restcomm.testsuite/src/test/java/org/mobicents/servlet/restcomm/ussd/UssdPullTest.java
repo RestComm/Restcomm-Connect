@@ -61,60 +61,6 @@ public class UssdPullTest {
     private final static Logger logger = Logger.getLogger(UssdPullTest.class.getName());
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     
-    String ussdClientRequestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-            + "<ussd-data>\n"
-            + "\t<language value=\"en\"/>\n"
-            + "\t<ussd-string value=\"5544\"/>\n"
-            + "</ussd-data>";
-
-    String ussdClientRequestBodyForCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-            + "<ussd-data>\n"
-            + "\t<language value=\"en\"/>\n"
-            + "\t<ussd-string value=\"5555\"/>\n"
-            + "</ussd-data>";
-    
-    String ussdRestcommResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            + "<ussd-data>\n"
-            + "<language value=\"en\"></language>\n"
-            + "<ussd-string value=\"The information you requested is 1234567890\"></ussd-string>\n"
-            + "<anyExt>\n"
-            + "<message-type>processUnstructuredSSRequest_Response</message-type>\n"
-            + "</anyExt>\n"
-            + "</ussd-data>\n";
-
-    String ussdRestcommResponseWithCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            + "<ussd-data>\n"
-            + "<language value=\"en\"></language>\n"
-            + "<ussd-string value=\"Please press\n1 For option1\n2 For option2\"></ussd-string>\n"
-            + "<anyExt>\n"
-            + "<message-type>unstructuredSSRequest_Request</message-type>\n"
-            + "</anyExt>\n"
-            + "</ussd-data>\n";
-    
-    String ussdClientResponseBodyToCollect = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-            + "<ussd-data>\n"
-            + "\t<language value=\"en\"/>\n"
-            + "\t<ussd-string value=\"1\"/>\n"
-            + "\t<anyExt>\n"
-            + "\t\t<message-type>unstructuredSSRequest_Response</message-type>\n"
-            + "\t</anyExt>\n"
-            + "</ussd-data>";
-    
-    String ussdClientRequestBodyForMessageLenghtExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-            + "<ussd-data>\n"
-            + "\t<language value=\"en\"/>\n"
-            + "\t<ussd-string value=\"5566\"/>\n"
-            + "</ussd-data>";
-    
-    String ussdRestcommResponseForMessageLengthExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            + "<ussd-data>\n"
-            + "<language value=\"en\"></language>\n"
-            + "<ussd-string value=\"Error while preparing the response.\nMessage length exceeds the maximum.\"></ussd-string>\n"
-            + "<anyExt>\n"
-            + "<message-type>processUnstructuredSSRequest_Response</message-type>\n"
-            + "</anyExt>\n"
-            + "</ussd-data>\n";
-    
     private static SipStackTool tool1;
 
     private SipStack bobSipStack;
@@ -151,7 +97,7 @@ public class UssdPullTest {
     @Test
     public void testUssdPull() {
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullDid, null, ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        bobCall.initiateOutgoingCall(bobContact, ussdPullDid, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -173,14 +119,14 @@ public class UssdPullTest {
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
         String receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponse));
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse));
         bobCall.dispose();
     }
 
     @Test
     public void testUssdPullWithCollect() throws InterruptedException, SipException, ParseException {
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullWithCollectDID, null, ussdClientRequestBodyForCollect, "application", "vnd.3gpp.ussd+xml", null, null);
+        bobCall.initiateOutgoingCall(bobContact, ussdPullWithCollectDID, null, UssdPullTestMessages.ussdClientRequestBodyForCollect, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -209,11 +155,13 @@ public class UssdPullTest {
         
 
         String receivedUssdPayload = new String(requestEvent.getRequest().getRawContent());
-        assertTrue(receivedUssdPayload.equals(ussdRestcommResponseWithCollect));
+        System.out.println("receivedUssdPayload: \n"+receivedUssdPayload);
+        System.out.println("UssdPullTestMessages.ussdRestcommResponseWithCollect: \n"+UssdPullTestMessages.ussdRestcommResponseWithCollect);
+        assertTrue(receivedUssdPayload.equals(UssdPullTestMessages.ussdRestcommResponseWithCollect));
         
         Request infoResponse = requestEvent.getDialog().createRequest(Request.INFO);
         ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
-        infoResponse.setContent(ussdClientResponseBodyToCollect.getBytes(), contentTypeHeader);
+        infoResponse.setContent(UssdPullTestMessages.ussdClientResponseBodyToCollect.getBytes(), contentTypeHeader);
 
         bobPhone.sendRequestWithTransaction(infoResponse, false, requestEvent.getDialog());     
 
@@ -222,14 +170,14 @@ public class UssdPullTest {
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
         receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponse));
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse));
         bobCall.dispose();
     }
 
     @Test
     public void testUssdMessageLengthExceeds() {
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, ussdClientRequestBodyForMessageLenghtExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
+        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, UssdPullTestMessages.ussdClientRequestBodyForMessageLenghtExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -253,7 +201,7 @@ public class UssdPullTest {
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
         String receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponseForMessageLengthExceeds));
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponseForMessageLengthExceeds));
         bobCall.dispose();
     }
     
