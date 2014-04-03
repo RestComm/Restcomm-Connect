@@ -9,9 +9,10 @@
 		"label": {"type": "string"},
 		"title": {"type": "string"},
 		"method":{"enum": ["GET","POST"]},
-		"timeout":{"type":["null","integer"]},
-		"timeLimit":{"type":["null","integer"]},
-		"callerId":{"type":["null","string"]},
+		"timeout":{"type":"integer"},
+		"timeLimit":{"type":"integer"},
+		"callerId":{"type":"string"},
+		"record": {"enum": ["record-from-answer","record-from-ringing"]},
 		"dialNouns": {
 			"type": "array",
 			"items": {
@@ -29,7 +30,7 @@
 	
 		"iface": {"type": "object"}
 	},
-	"required": ["name","kind","label","title","dialNouns","nextModule"],
+	"required": ["name","kind","label","title","dialNouns"],
 	
 	"definitions": {
 		"numberNoun": {
@@ -37,8 +38,8 @@
 			"properties": {
 				"dialType": {"enum":["number"]},
 				"destination":{"type":"string"},
-				"sendDigits": { "$ref": "rvdproject-schema.json#/nullOrString" },
-				"beforeConnectModule":{ "$ref": "rvdproject-schema.json#/nullOrString" },
+				"sendDigits": { "type": "string", "minLength":1 },
+				"beforeConnectModule":{ "type": "string", "minLength":1 },
 				"iface": {"type": "object"}
 			},
 			"required":["dialType","destination"],
@@ -60,24 +61,18 @@
 				"dialType": {"enum":["conference"]},
 				"destination": {"type":"string"},
 				"nextModule": {"$ref": "rvdproject-schema.json#/nullOrString" },
-				"muted": {"type": ["null","boolean"]},
-				"beep": {"type": ["null","boolean"]},
-				"startConferenceOnEnter": {"type": ["null","boolean"]},
-				"endConferenceOnExit": {"type": ["null","boolean"]},
-				"waitUrl": { "$ref": "rvdproject-schema.json#/nullOrString" },
-				"waitModule": {"$ref": "rvdproject-schema.json#/nullOrString"},
+				"muted": {"type": "boolean"},
+				"beep": {"type": "boolean"},
+				"startConferenceOnEnter": {"type": "boolean"},
+				"endConferenceOnExit": {"type": "boolean"},
+				"waitUrl": { "type":"string", "minLength":1 },
+				"waitModule": {"type": "string", "minLength":1},
 				"waitMethod": {"enum":["GET","POST"]},
-				"maxParticipants": {
-					"oneOf":[
-						{"type":"null"},
-						{"type":"integer"}
-					]
-				},
-				
+				"maxParticipants": {"type":"integer"},
 				
 				"iface": {"type": "object"}
 			},
-			"required": ["dialType","destination","nextModule","muted","beep","startConferenceOnEnter","endConferenceOnExit","waitUrl","waitModule","waitMethod","maxParticipants"],
+			"required": ["dialType","destination"],
 			"additionalProperties": false
 		},	
 		"sipuriNoun": {

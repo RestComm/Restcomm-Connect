@@ -74,7 +74,7 @@ App.factory('protos', function () {
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{}},
 			play: {kind:'play', label:'play', title:'play',loop:null,playType:'local',local:{wavLocalFilename:null}, remote:{wavUrl:null}, iface:{}},
 			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:null,next:''}, iface:{}},
-			dial: {dialNouns:[], nextModule:'', kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'GET', timeout:null, timeLimit:null, callerId:null, iface:{}},
+			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
 			hungup: {kind:'hungup', label:'hang up', title:'hang up', next:'',iface:{}},
@@ -93,9 +93,9 @@ App.factory('protos', function () {
 			
 		},
 		dialNounProto: {
-			number: {dialType: 'number', destination:'', sendDigits:null, beforeConnectModule:null},
+			number: {dialType: 'number', destination:'', sendDigits:undefined, beforeConnectModule:undefined},
 			client: {dialType: 'client', destination:''},
-			conference: {dialType: 'conference', destination:'', nextModule:null, muted:null, beep:null, startConferenceOnEnter:null, endConferenceOnExit:null, waitUrl:null, waitModule:null, waitMethod:'GET', maxParticipants:null},
+			conference: {dialType: 'conference', destination:'', nextModule:undefined, muted:undefined, beep:undefined, startConferenceOnEnter:undefined, endConferenceOnExit:undefined, waitUrl:undefined, waitModule:undefined, waitMethod:undefined, maxParticipants:undefined},
 			sipuri: {dialType: 'sipuri', destination:''},
 		}
 	};
@@ -117,6 +117,24 @@ App.directive("syncModel", function(){
             		//console.log( 'selected value: ' + $(element).val() )
             		if ( $(element).val() ==="" )
             			scope.$eval(attrs.ngModel + " = null");
+            	});            	
+            }
+        }
+});
+
+/*
+ * Newer version of syncModel that reset model to undefined instead of null.
+ */
+App.directive("syncModules", function(){
+
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs, controller) {
+            	scope.$on("refreshTargetDropdowns", function () {
+            		//console.log( 'element ' + element + ' received refreshTargetDropdowns');
+            		//console.log( 'selected value: ' + $(element).val() )
+            		if ( $(element).val() ==="" )
+            			scope.$eval(attrs.ngModel + " = undefined");
             	});            	
             }
         }
@@ -229,6 +247,20 @@ App.directive('nullIfEmpty', [function() {
     };
   }]
 );
+
+// Make field undefined if it is empty string or null
+App.directive('autoClear', [function() {
+    return {
+      require: 'ngModel',
+      link: function(scope, elm, attr, ctrl) {
+        ctrl.$parsers.unshift(function(value) {
+          return (value === '' || value === null) ? undefined : value;
+        });
+      }
+    };
+  }]
+);
+
 
 App.directive('valueExtractor', ['protos', function (protos) {
 	return {

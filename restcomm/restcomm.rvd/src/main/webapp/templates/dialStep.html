@@ -33,10 +33,10 @@
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
 																			
 										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Send these DTMF tones after dialing the number">Send digits</span>
-										<input ng-model='dialnoun.sendDigits' null-if-empty ng-show='dialnoun.iface.advancedShown'  type='text' class='form-control' placeholder='wwww1234' >
+										<input ng-model='dialnoun.sendDigits' auto-clear ng-show='dialnoun.iface.advancedShown'  type='text' class='form-control' placeholder='wwww1234' >
 										
 										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Play or say information to the called party, or provide a chance to decline the phone call using 'Collect' and 'Hangup'">Before connect</span>
-										<select ng-show='dialnoun.iface.advancedShown' sync-model name='beforeConnectModule' ng-model='dialnoun.beforeConnectModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+										<select ng-show='dialnoun.iface.advancedShown' auto-clear sync-modules name='beforeConnectModule' ng-model='dialnoun.beforeConnectModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
 											<option value=""></option>
 										</select>
 										
@@ -65,7 +65,7 @@
 										</select>
 										-->
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A module to run while waiting to be added to the conference. Fill it with 'Play' or 'Say' steps">While waiting</span>
-										<select sync-model name='waitModule' ng-model='dialnoun.waitModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+										<select sync-modules auto-clear name='waitModule' ng-model='dialnoun.waitModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
 											<option value=""></option>
 										</select>
 										
@@ -75,28 +75,28 @@
 									</div>
 									<div ng-show='dialnoun.iface.advancedShown' class="input-group input-group-sm form-group noun-advanced">										
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Specify whether a participant can speak in the conference">Muted</span>
-										<select ng-model='dialnoun.muted' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+										<select ng-model='dialnoun.muted' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A notification beep is played to the conference when a participant joins or leaves the conference">Beep</span>
-										<select ng-model='dialnoun.beep' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+										<select ng-model='dialnoun.beep' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Start conference on enter">Start on enter</span>
-										<select ng-model='dialnoun.startConferenceOnEnter' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+										<select ng-model='dialnoun.startConferenceOnEnter' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="End conference on exit">End on exit</span>
-										<select ng-model='dialnoun.endConferenceOnExit' ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+										<select ng-model='dialnoun.endConferenceOnExit' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
 										
 										<span class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum number of participants allowed in the conference">Max participants</span>
-										<input ng-model='dialnoun.maxParticipants' null-if-empty style="width:50px;" type='number' class='form-control' placeholder='3'>
+										<input ng-model='dialnoun.maxParticipants' auto-clear style="width:50px;" type='number' class='form-control' placeholder='3'>
 									</div>
 								</div>		
 								<div ng-switch-when="sipuri">
@@ -115,21 +115,32 @@
 			<div class='row'>	
 				<div  class="col-md-12 input-group form-group">
 					<span class="input-group-addon">Continue to</span>
-					<select ng-model='step.nextModule' sync-model name='nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control"  style="min-width:140px;">
+					<select auto-clear ng-model='step.nextModule' sync-modules name='nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control"  style="min-width:140px;">
 						<option value=""></option>
 					</select>
 					<!-- <div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>  -->
 					
-					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The limit in seconds that Dial waits for the called party to answer the call">Timeout</span>
-					<input ng-show='step.iface.advancedShown' ng-model='step.timeout' null-if-empty type='number' class='form-control small-input' placeholder='30'>
+					<span  ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The limit in seconds that Dial waits for the called party to answer the call">Timeout</span>
+					<input ng-show='step.iface.advancedShown' ng-model='step.timeout' auto-clear type='number' class='form-control small-input' placeholder='30'>
 					
 					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum duration of the Dial in seconds">Time limit</span>
-					<input ng-show='step.iface.advancedShown' ng-model='step.timeLimit' null-if-empty type='number' class='form-control small-input' placeholder='14400'>
+					<input ng-show='step.iface.advancedShown' ng-model='step.timeLimit' auto-clear type='number' class='form-control small-input' placeholder='14400'>
 	
 					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The caller ID that will appear to the called party when RestComm calls">Caller ID</span>
-					<input ng-show='step.iface.dvancedShown' ng-model='step.callerId' null-if-empty type='text' class='form-control'>
+					<input ng-show='step.iface.dvancedShown' ng-model='step.callerId' auto-clear type='text' class='form-control'>
 					
 					<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>
 				</div>
 			</div>	
+			
+			<div class='row'>
+				<div  class="col-md-12 input-group form-group">
+					<span class="input-group-addon">Recording</span>
+					<select auto-clear ng-model='step.record'  class="form-control">
+						<option value="">Do not record</option>
+						<option value="record-from-answer">Record from answer</option>
+						<option value="record-from-ringing">Record from rigning</option>
+					</select>
+				</div>
+			</div>
 </div>

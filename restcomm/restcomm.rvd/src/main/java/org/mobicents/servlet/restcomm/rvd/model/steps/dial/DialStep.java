@@ -17,81 +17,28 @@ public class DialStep extends Step {
     private Integer timeLimit;
     private String callerId;
     private String nextModule;
+    private String record;
 
-    public String getNextModule() {
-        return nextModule;
-    }
-
-    public void setNextModule(String nextModule) {
-        this.nextModule = nextModule;
-    }
-
-    public List<DialNoun> getDialNouns() {
-        return dialNouns;
-    }
-
-    public void setDialNouns(List<DialNoun> dialNouns) {
-        this.dialNouns = dialNouns;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    public String getMethod() {
-        return method;
-    }
-
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
-    public Integer getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(Integer timeout) {
-        this.timeout = timeout;
-    }
-
-    public Integer getTimeLimit() {
-        return timeLimit;
-    }
-
-    public void setTimeLimit(Integer timeLimit) {
-        this.timeLimit = timeLimit;
-    }
-
-    public String getCallerId() {
-        return callerId;
-    }
-
-    public void setCallerId(String callerId) {
-        this.callerId = callerId;
-    }
     public RcmlDialStep render(Interpreter interpreter) throws InterpreterException {
         RcmlDialStep rcmlStep = new RcmlDialStep();
 
-        for ( DialNoun noun: getDialNouns() ) {
-            rcmlStep.getNouns().add( noun.render(interpreter) );
+        for ( DialNoun noun: dialNouns ) {
+            rcmlStep.nouns.add( noun.render(interpreter) );
         }
 
         // set action (from nextModule)
-        String moduleUrl = interpreter.moduleUrl(getNextModule());
+        String moduleUrl = interpreter.moduleUrl(nextModule);
         if ( moduleUrl != null )
-            rcmlStep.setAction(moduleUrl);
+            rcmlStep.action = moduleUrl;
         else {
-            logger.warn("Tried to reference a non-existing module while building 'action' property: " + getNextModule() + ". It will be ignored.");
+            logger.warn("Tried to reference a non-existing module while building 'action' property: " + nextModule + ". It will be ignored.");
         }
 
-        rcmlStep.setMethod(getMethod());
-        rcmlStep.setTimeout(getTimeout() == null ? null : getTimeout().toString());
-        rcmlStep.setTimeLimit(getTimeLimit() == null ? null : getTimeLimit().toString());
-        rcmlStep.setCallerId(getCallerId());
+        rcmlStep.method = method;
+        rcmlStep.timeout = timeout == null ? null : timeout.toString();
+        rcmlStep.timeLimit = (timeLimit == null ? null : timeLimit.toString());
+        rcmlStep.callerId = callerId;
+        rcmlStep.record = record;
 
         return rcmlStep;
     }
