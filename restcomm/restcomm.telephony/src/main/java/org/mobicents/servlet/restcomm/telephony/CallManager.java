@@ -48,7 +48,6 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
@@ -199,7 +198,8 @@ public final class CallManager extends UntypedActor {
     private void check(final Object message) throws IOException {
         final SipServletRequest request = (SipServletRequest) message;
         String content = new String(request.getRawContent());
-        if (request.getContentLength() == 0 || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
+        if (request.getContentLength() == 0
+                || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
             final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
             response.send();
         }
@@ -551,12 +551,9 @@ public final class CallManager extends UntypedActor {
         }
         final ActorRef call = call();
         final ActorRef self = self();
-        final CallDetailRecordsDao recordsDao = null;
-        if (request.isCreateCDR()) {
-            storage.getCallDetailRecordsDao();
-        }
         final InitializeOutbound init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(),
-                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), recordsDao);
+                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(),
+                request.getRecordingType(), request.getRuntimeSettings(), request.getInitialCall(), storage);
         call.tell(init, self);
         return call;
     }
