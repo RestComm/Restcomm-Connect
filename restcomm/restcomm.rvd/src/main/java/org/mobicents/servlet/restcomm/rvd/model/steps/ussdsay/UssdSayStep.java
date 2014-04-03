@@ -27,7 +27,7 @@ public class UssdSayStep extends Step {
     @Override
     public UssdSayRcml render(Interpreter interpreter) throws InterpreterException {
         UssdSayRcml rcmlModel = new UssdSayRcml();
-        rcmlModel.text = getText();
+        rcmlModel.text = interpreter.populateVariables(getText());
 
         return rcmlModel;
     }
