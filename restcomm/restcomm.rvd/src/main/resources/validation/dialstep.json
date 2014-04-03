@@ -60,7 +60,7 @@
 			"properties": {
 				"dialType": {"enum":["conference"]},
 				"destination": {"type":"string"},
-				"nextModule": {"$ref": "rvdproject-schema.json#/nullOrString" },
+				"nextModule": {"type": "string", "minLength":1},
 				"muted": {"type": "boolean"},
 				"beep": {"type": "boolean"},
 				"startConferenceOnEnter": {"type": "boolean"},

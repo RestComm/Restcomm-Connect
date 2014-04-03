@@ -9,12 +9,12 @@
 		"label": {"type": "string"},
 		"title": {"type": "string"},
 		"phrase": {"type": "string"},
-		"voice": {"type": ["string","null"]},
-		"language": {"type": ["string","null"]},
-		"loop": {"type": ["integer","null"]},
+		"voice": {"type": "string"},
+		"language": {"type": "string"},
+		"loop": {"type": "integer"},
 	
 		"iface": {"type": "object"}
 	},
-	"required": ["name","kind","label","title","phrase","voice","language","loop"]
+	"required": ["name","kind","label","title","phrase"]
 }
 
