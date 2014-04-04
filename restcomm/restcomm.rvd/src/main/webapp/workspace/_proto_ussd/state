@@ -30,5 +30,6 @@
   "activeNode": 0,
   "lastNodeId": 1,
   "startNodeName": "start",
+  "version": "1.0",
   "projectKind": "ussd"
 }

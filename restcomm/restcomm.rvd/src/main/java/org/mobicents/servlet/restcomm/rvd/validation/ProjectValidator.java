@@ -9,31 +9,24 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 
 public class ProjectValidator {
 
     String schemaVersion;
     JsonSchema projectSchema;
 
-    public ProjectValidator(  /*, String uri, String schemaVersion*/ ) throws ProcessingException, IOException {
+    public ProjectValidator() throws ProcessingException, IOException {
+        init( RvdSettings.getRvdProjectVersion() );
+    }
 
+    public ProjectValidator(  /*, String uri,*/ String schemaVersion ) throws ProcessingException, IOException {
+        init(schemaVersion);
+    }
+
+    private void init(String schemaVersion) throws ProcessingException {
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        projectSchema = factory.getJsonSchema("resource:/validation/rvdproject-schema.json#/rvdproject");
-
-
-        //final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        //JsonNode schemaNode = JsonLoader.fromFile(new File("rvdproject-0.1-schema.json"));
-        //final JsonSchema schema = factory.getJsonSchema(schemaNode);
-
-        //JsonNode state = JsonLoader.fromFile(new File("state1"));
-        //ProcessingReport report;
-        //report = schema.validate(state);
-        //System.out.println(report);
-
-        //state = JsonLoader.fromFile(new File("/home/nando/bin/apache-tomcat-6.0.37/webapps/restcomm-rvd/workspace/test/state"));
-        //report = schema.validate(state);
-        //System.out.println(report);
-
+        projectSchema = factory.getJsonSchema("resource:/validation/rvdproject/" + schemaVersion + "/rvdproject-schema.json#/rvdproject");
     }
 
     public ValidationResult validate(String json) throws ValidationFrameworkException {

@@ -1,6 +1,7 @@
 {
   "projectKind": "voice",
   "startNodeName": "start",
+  "version": "1.0",
   "lastStepId": 3,
   "nodes": [
     {
