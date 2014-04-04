@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class ProjectState {
 
+    private String version;
     private String projectKind;
     private String startNodeName;
     private Integer lastStepId;
@@ -129,6 +130,14 @@ public class ProjectState {
 
     public void setLastNodeId(Integer lastNodeId) {
         this.lastNodeId = lastNodeId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
 }
