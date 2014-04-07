@@ -112,19 +112,24 @@ public class ProjectService {
 
         List<ProjectItem> items = new ArrayList<ProjectItem>();
         for (String entry : projectStorage.listProjectNames() ) {
-            JsonParser parser = new JsonParser();
-            JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
-            JsonElement projectKind_element = root_element.get("projectKind");
-            String projectKind = "voice"; // default value for old projects
-            if ( projectKind_element != null ) {
-                projectKind = projectKind_element.getAsString();
+
+            String kind = "voice";
+            try {
+                StateHeader header = projectStorage.loadStateHeader(entry);
+                kind = header.getProjectKind();
+            } catch ( BadProjectHeader e ) {
+                // for old projects
+                JsonParser parser = new JsonParser();
+                JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                JsonElement projectKind_element = root_element.get("projectKind");
+                if ( projectKind_element != null ) {
+                    kind = projectKind_element.getAsString();
+                }
             }
-            //logger.debug("project " + entry + " is a " + projectKind );
 
             ProjectItem item = new ProjectItem();
             item.setName(entry);
-            item.setKind(projectKind);
-            //item.setStartUrl(entry.getName());
+            item.setKind(kind);
             items.add(item);
         }
         return items;
