@@ -12,13 +12,14 @@ public class ProjectState {
     private List<Node> nodes;
     private Integer activeNode;
     private Integer lastNodeId;
+    private StateHeader header;
+
 
     public static class Node {
         private String name;
         private String label;
         private Map<String, Step> steps;
         private List<String> stepnames;
-        private Iface iface;
 
         public String getName() {
             return name;
@@ -51,38 +52,8 @@ public class ProjectState {
         public void setStepnames(List<String> stepnames) {
             this.stepnames = stepnames;
         }
-
-        public Iface getIface() {
-            return iface;
-        }
-
-        public void setIface(Iface iface) {
-            this.iface = iface;
-        }
-
     }
 
-    public static class Iface {
-        private Boolean edited;
-        private Boolean editLabel;
-
-        public Boolean getEdited() {
-            return edited;
-        }
-
-        public void setEdited(Boolean edited) {
-            this.edited = edited;
-        }
-
-        public Boolean getEditLabel() {
-            return editLabel;
-        }
-
-        public void setEditLabel(Boolean editLabel) {
-            this.editLabel = editLabel;
-        }
-
-    }
 
     public String getProjectKind() {
         return projectKind;
@@ -138,6 +109,10 @@ public class ProjectState {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public StateHeader getHeader() {
+        return header;
     }
 
 }

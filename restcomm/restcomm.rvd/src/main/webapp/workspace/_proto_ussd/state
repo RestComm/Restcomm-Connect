@@ -1,4 +1,10 @@
 {
+  "header": {
+  	"projectKind": "ussd",
+  	"startNodeName": "start",
+  	"version": "1.0"
+  },
+  "lastNodeId": 1,
   "lastStepId": 1,
   "nodes": [
     {
@@ -27,9 +33,7 @@
       }
     }
   ],
-  "activeNode": 0,
-  "lastNodeId": 1,
-  "startNodeName": "start",
-  "version": "1.0",
-  "projectKind": "ussd"
+  "iface": {
+	  "activeNode": 0
+  }
 }

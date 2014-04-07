@@ -116,7 +116,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.ussdMaxForeignChars = 91;
 		
 	// State variables
-	$scope.projectNotFound = false;
+	$scope.projectError = null; // SET when opening a project fails
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
 	
@@ -124,7 +124,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
-	//$scope.visibleNodes = "voice"; // or "control"	// view Voice Nodes or Control Nodes panel ?
 	$scope.wavList = [];
 	
 	// Project management
@@ -339,7 +338,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				deferred.reject({type:'validationError', data:data});			
 			}
 		 }).error(function (data, status, headers, config) {
-			 deferred.reject({type:'saveError'});
+			 deferred.reject({type:'saveError', data:data});
 		 });	
 		
 		return deferred.promise;
@@ -356,8 +355,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
 		 }).error(function (data, status, headers, config) {
-			//console.log("error opening project");
-			$scope.projectNotFound = true;
+			$scope.projectError = data.serverError;
 		 });
 	}
 	
@@ -475,7 +473,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 			function (reason) { 
 				if ( reason.type == 'saveError' ) {
 					console.log("Error saving project");
-					$scope.addAlert("Error saving project", 'danger');
+					if (reason.data.serverError.className == 'IncompatibleProjectVersion')
+						$scope.addAlert("Error saving project. Project version is incompatible with current RVD version", 'danger');
+					else
+						$scope.addAlert("Error saving project", 'danger');
 				} else if ( reason.type == 'validationError') {
 					console.log("Validation error");
 					$scope.addAlert("Project saved with validation errors", 'warning');
@@ -591,7 +592,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	
 	$scope.packState = function() {
-		var state = {};
+		var state = {header:{}, iface:{}};
 		state.lastStepId = stepService.lastStepId;
 		state.nodes = angular.copy($scope.nodes);
 		for ( var i=0; i < state.nodes.length; i++) {
@@ -620,11 +621,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				}
 			}
 		}
-		state.activeNode = $scope.activeNode;
+		state.iface.activeNode = $scope.activeNode;
 		state.lastNodeId = $scope.lastNodesId;
-		state.visibleNodes = $scope.visibleNodes;
-		state.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
-		state.projectKind = $scope.projectKind;	
+		state.header.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
+		state.header.projectKind = $scope.projectKind;	
+		state.header.version = $scope.version;
 		
 		return state;
 	}
@@ -658,11 +659,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				}					
 			}
 		}
-		$scope.activeNode = packedState.activeNode;
+		$scope.activeNode = packedState.iface.activeNode;
 		$scope.lastNodesId = packedState.lastNodeId;
-		$scope.visibleNodes = packedState.visibleNodes;
-		$scope.startNodeName = packedState.startNodeName;	
-		$scope.projectKind = packedState.projectKind;
+		$scope.startNodeName = packedState.header.startNodeName;	
+		$scope.projectKind = packedState.header.projectKind;
+		$scope.version = packedState.header.version;
 	}
 	
 		

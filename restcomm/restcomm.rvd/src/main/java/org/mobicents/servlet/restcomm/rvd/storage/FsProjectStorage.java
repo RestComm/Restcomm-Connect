@@ -16,11 +16,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 public class FsProjectStorage implements ProjectStorage {
     static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
@@ -287,5 +293,16 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
+    @Override
+    public StateHeader loadStateHeader(String projectName) throws StorageException {
+        JsonParser parser = new JsonParser();
+        JsonElement header_element = parser.parse(loadProjectState(projectName)).getAsJsonObject().get("header");
+        if ( header_element == null )
+            throw new BadProjectHeader("No header found. This is probably an old project");
 
+        Gson gson = new Gson();
+        StateHeader header = gson.fromJson(header_element, StateHeader.class);
+
+        return header;
+    }
 }
