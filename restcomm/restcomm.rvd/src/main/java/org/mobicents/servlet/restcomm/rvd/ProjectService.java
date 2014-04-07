@@ -8,11 +8,14 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -127,9 +130,17 @@ public class ProjectService {
         return items;
     }
 
-    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException {
+    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException, IncompatibleProjectVersion {
         if ( !projectExists(projectName) )
             throw new ProjectDoesNotExist();
+
+        try {
+            StateHeader header = projectStorage.loadStateHeader(projectName);
+            if ( ! header.getVersion().equals(RvdSettings.getRvdProjectVersion()) )
+                throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdSettings.getRvdProjectVersion() );
+        } catch ( BadProjectHeader e ) {
+            throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
+        }
 
         return projectStorage.loadProjectState(projectName);
     }
@@ -151,9 +162,13 @@ public class ProjectService {
         projectStorage.cloneProject(settings.getOption("protoProjectName") + protoSuffix, projectName);
     }
 
-    public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException, ValidationFrameworkException, ValidationException {
+    public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException, ValidationFrameworkException, ValidationException, IncompatibleProjectVersion {
         String state = IOUtils.toString(request.getInputStream());
         try {
+            StateHeader header = projectStorage.loadStateHeader(projectName);
+            if ( !header.getVersion().equals(RvdSettings.getRvdProjectVersion()) )
+                throw new IncompatibleProjectVersion("Won't save project '" + projectName + "'. Project version: " + header.getVersion() + " - " + "RVD supported version: " + RvdSettings.getRvdProjectVersion());
+
             ProjectValidator validator = new ProjectValidator();
             ValidationResult result = validator.validate(state);
 

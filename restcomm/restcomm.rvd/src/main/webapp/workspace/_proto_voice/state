@@ -1,8 +1,11 @@
 {
-  "projectKind": "voice",
-  "startNodeName": "start",
-  "version": "1.0",
+  "header": {
+  	"projectKind": "voice",
+  	"startNodeName": "start",
+  	"version": "1.0"
+  },
   "lastStepId": 3,
+  "lastNodeId": 0,
   "nodes": [
     {
       "name": "start",
@@ -29,6 +32,7 @@
       }
     }
   ],
-  "activeNode": 0,
-  "lastNodeId": 0
+  "iface": {
+	  "activeNode": 0
+  }
 }
