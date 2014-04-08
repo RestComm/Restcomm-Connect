@@ -5,9 +5,6 @@ import java.util.Map;
 
 public class ProjectState {
 
-    private String version;
-    private String projectKind;
-    private String startNodeName;
     private Integer lastStepId;
     private List<Node> nodes;
     private Integer activeNode;
@@ -54,23 +51,6 @@ public class ProjectState {
         }
     }
 
-
-    public String getProjectKind() {
-        return projectKind;
-    }
-
-    public void setProjectKind(String projectKind) {
-        this.projectKind = projectKind;
-    }
-
-    public String getStartNodeName() {
-        return startNodeName;
-    }
-
-    public void setStartNodeName(String startNodeName) {
-        this.startNodeName = startNodeName;
-    }
-
     public Integer getLastStepId() {
         return lastStepId;
     }
@@ -101,14 +81,6 @@ public class ProjectState {
 
     public void setLastNodeId(Integer lastNodeId) {
         this.lastNodeId = lastNodeId;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public StateHeader getHeader() {
