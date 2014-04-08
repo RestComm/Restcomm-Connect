@@ -23,10 +23,10 @@
 			},
 			"required": ["wavUrl"]			
 		},
-		"loop": {"type": ["integer","null"]},
+		"loop": {"type": "integer"},
 			
 		"iface": {"type": "object"}
 	},
-	"required": ["name","kind","label","title","playType","loop"]	
+	"required": ["name","kind","label","title","playType"]	
 }
 
