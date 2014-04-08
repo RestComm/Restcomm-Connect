@@ -1,7 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-	"title": "RVD project 0.1",
-	"description": "Specification for RVD 7.1.4",
+	"title": "Dial step",
 	"type": "object",
 	"properties": {
 		"name":{"type": "string"},
