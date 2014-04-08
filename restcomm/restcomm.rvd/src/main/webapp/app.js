@@ -73,7 +73,7 @@ App.factory('protos', function () {
 			// Voice
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
 			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:null,next:''}, iface:{}},
+			gather: {kind:'gather', label:'gather', title:'collect', action:'', method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:null,next:''}, iface:{}},
 			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},

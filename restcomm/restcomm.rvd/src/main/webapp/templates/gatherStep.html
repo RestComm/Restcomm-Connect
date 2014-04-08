@@ -129,7 +129,7 @@
 					-->
 					<div class="col-lg-3 input-group input-group-sm">
 					  <span class="input-group-addon">Finish on key</span>
-					  <input ng-model='step.finishOnKey' ng-pattern='/^[0-9\#\*]$/' type="text" class="form-control" placeholder="#*123...">
+					  <input ng-model='step.finishOnKey' auto-clear ng-pattern='/^[0-9\#\*]$/' type="text" class="form-control" placeholder="#*123...">
 					</div>
 					
 					<!--
@@ -141,7 +141,7 @@
 
 					<div class="col-lg-3 input-group input-group-sm">
 					  <span class="input-group-addon">Number of digits</span>
-					  <input ng-model='step.numDigits' ng-pattern='/^[0-9\#\*]{1,2}$/' type="number" class="form-control" placeholder="123">
+					  <input ng-model='step.numDigits' auto-clear ng-pattern='/^[0-9\#\*]{1,2}$/' type="number" class="form-control" placeholder="123">
 					</div>
 					<!--					
 					<div class="form-group col-lg-3">
