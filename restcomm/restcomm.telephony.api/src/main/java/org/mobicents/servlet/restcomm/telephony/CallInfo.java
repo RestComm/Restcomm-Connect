@@ -17,9 +17,9 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.CallStateChanged.State;
 
 import javax.servlet.sip.SipServletResponse;
 
@@ -34,7 +34,6 @@ public final class CallInfo {
     private final Sid sid;
     private final State state;
     private final CreateCall.Type type;
-    private final CreateCall.RecordingType recordingType;
     private final String direction;
     private final DateTime dateCreated;
     private final String forwardedFrom;
@@ -43,7 +42,7 @@ public final class CallInfo {
     private final String to;
     private final SipServletResponse lastResponse;
 
-    public CallInfo(final Sid sid, final State state, final CreateCall.Type type, final CreateCall.RecordingType recordingType, final String direction,
+    public CallInfo(final Sid sid, final State state, final CreateCall.Type type, final String direction,
             final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
             final SipServletResponse lastResponse) {
         super();
@@ -57,7 +56,6 @@ public final class CallInfo {
         this.to = to;
         this.lastResponse = lastResponse;
         this.type = type;
-        this.recordingType = recordingType;
     }
 
     public DateTime dateCreated() {
@@ -70,10 +68,6 @@ public final class CallInfo {
 
     public CreateCall.Type type() {
         return type;
-    }
-
-    public CreateCall.RecordingType recordingType() {
-        return recordingType;
     }
 
     public String forwardedFrom() {

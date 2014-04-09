@@ -23,37 +23,25 @@ package org.mobicents.servlet.restcomm.telephony;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.telephony.CreateCall.RecordingType;
 
 /**
  * Use this to notify a Call object that needs to Record
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class RecordCall {
+public class StopRecordingCall {
 
     private Sid accountId;
-    private RecordingType recordingType;
     private Configuration runtimeSetting;
     private DaoManager daoManager;
-    private Boolean useItAsFlag;
 
-    public RecordCall(final Sid accountId, final RecordingType recordingType, final Configuration runtimeSettings, final DaoManager daoManager) {
+    public StopRecordingCall(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager) {
         this.accountId = accountId;
-        this.recordingType = recordingType;
         this.runtimeSetting = runtimeSettings;
         this.daoManager = daoManager;
     }
 
-    public RecordCall(final Boolean flag) {
-        this.setUseItAsFlag(flag);
-    }
-
     public Sid getAccountId() {
         return accountId;
-    }
-
-    public RecordingType getRecordingType() {
-        return recordingType;
     }
 
     public Configuration getRuntimeSetting() {
@@ -62,13 +50,5 @@ public class RecordCall {
 
     public DaoManager getDaoManager() {
         return daoManager;
-    }
-
-    public Boolean getUseItAsFlag() {
-        return useItAsFlag;
-    }
-
-    public void setUseItAsFlag(Boolean useItAsFlag) {
-        this.useItAsFlag = useItAsFlag;
     }
 }

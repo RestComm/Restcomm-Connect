@@ -20,8 +20,6 @@ import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
-import akka.actor.ActorRef;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
@@ -33,31 +31,6 @@ public final class CreateCall {
         CLIENT, PSTN, SIP
     };
 
-    public enum RecordingType {
-        DO_NOT_RECORD("do-not-record"), RECORD_FROM_ANSWER("record-from-answer"), RECORD_FROM_RINGING("record-from-ringing");
-
-        private final String text;
-
-        private RecordingType(final String text) {
-            this.text = text;
-        }
-
-        public static RecordingType getValueOf(final String text) {
-            RecordingType[] values = values();
-            for (final RecordingType value : values) {
-                if (value.toString().equals(text)) {
-                    return value;
-                }
-            }
-            throw new IllegalArgumentException(text + " is not a valid account status.");
-        }
-
-        @Override
-        public String toString() {
-            return text;
-        }
-    };
-
     private final String from;
     private final String to;
     private final String username;
@@ -67,9 +40,7 @@ public final class CreateCall {
     private final Type type;
     private final Sid accountId;
     private boolean createCDR = true;
-    private RecordingType recordingType = RecordingType.DO_NOT_RECORD;
     private Configuration runtimeSettings = null;
-    private ActorRef initialCall;
 
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final Type type, final Sid accountId) {
@@ -122,29 +93,5 @@ public final class CreateCall {
 
     public void setCreateCDR(boolean createCDR) {
         this.createCDR = createCDR;
-    }
-
-    public RecordingType getRecordingType() {
-        return recordingType;
-    }
-
-    public void setRecordingType(RecordingType recordingType) {
-        this.recordingType = recordingType;
-    }
-
-    public Configuration getRuntimeSettings() {
-        return runtimeSettings;
-    }
-
-    public void setRuntimeSettings(Configuration runtimeSettings) {
-        this.runtimeSettings = runtimeSettings;
-    }
-
-    public ActorRef getInitialCall() {
-        return initialCall;
-    }
-
-    public void setInitialCall(ActorRef initialCall) {
-        this.initialCall = initialCall;
     }
 }
