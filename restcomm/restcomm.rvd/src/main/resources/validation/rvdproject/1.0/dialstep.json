@@ -11,7 +11,7 @@
 		"timeout":{"type":"integer"},
 		"timeLimit":{"type":"integer"},
 		"callerId":{"type":"string"},
-		"record": {"enum": ["record-from-answer","record-from-ringing"]},
+		"record": {"type":"boolean"},
 		"dialNouns": {
 			"type": "array",
 			"items": {
