@@ -88,7 +88,6 @@ import org.mobicents.servlet.restcomm.telephony.ConferenceModeratorPresent;
 import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
 import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
-import org.mobicents.servlet.restcomm.telephony.CreateCall.RecordingType;
 import org.mobicents.servlet.restcomm.telephony.CreateConference;
 import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.CreateWaitUrlConfMediaGroup;
@@ -102,13 +101,14 @@ import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.telephony.Mute;
 import org.mobicents.servlet.restcomm.telephony.Play;
-import org.mobicents.servlet.restcomm.telephony.RecordCall;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
+import org.mobicents.servlet.restcomm.telephony.StartRecordingCall;
 import org.mobicents.servlet.restcomm.telephony.Stop;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
+import org.mobicents.servlet.restcomm.telephony.StopRecordingCall;
 import org.mobicents.servlet.restcomm.telephony.Unmute;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
@@ -176,6 +176,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean startConferenceOnEnter = true;
     private ActorRef confSubVoiceInterpreter;
     private ActorRef conferenceMediaGroup;
+    private Attribute dialRecordAttribute;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -648,6 +649,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, initializingCall);
                 }
             } else if (dial.equals(verb.name())) {
+                dialRecordAttribute = verb.attribute("record");
                 fsm.transition(message, startDialing);
             } else if (fax.equals(verb.name())) {
                 fsm.transition(message, caching);
@@ -684,6 +686,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         if (reject.equals(verb.name())) {
                             fsm.transition(message, playingRejectionPrompt);
                         } else if (dial.equals(verb.name())) {
+                            dialRecordAttribute = verb.attribute("record");
                             fsm.transition(message, startDialing);
                         } else if (fax.equals(verb.name())) {
                             fsm.transition(message, caching);
@@ -712,6 +715,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (initializingConferenceMediaGroup.equals(state)) {
                     fsm.transition(message, joiningConference);
+                } else if (bridged.equals(state)) {
+                    if (dialRecordAttribute != null)
+                        recordCall();
                 }
             } else if (MediaGroupStateChanged.State.INACTIVE == event.state()) {
                 if (!hangingUp.equals(state)) {
@@ -1214,17 +1220,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
-            final Attribute record = verb.attribute("record");
             final String text = verb.text();
             if (text != null && !text.isEmpty()) {
                 // Handle bridging.
                 isForking = false;
                 final CreateCall create = new CreateCall(e164(callerId(verb)), e164(text), null, null, false, timeout(verb),
                         CreateCall.Type.PSTN, accountId);
-                if (record != null) {
-                    create.setRecordingType(RecordingType.getValueOf(record.value()));
-                    create.setRuntimeSettings(configuration.subset("runtime-settings"));
-                }
+//                if (dialRecordAttribute != null) {
+//                    create.setRecordingType(RecordingType.getValueOf(dialRecordAttribute.value()));
+//                    create.setRuntimeSettings(configuration.subset("runtime-settings"));
+//                }
                 callManager.tell(create, source);
             } else if (verb.hasChildren()) {
                 // Handle conferencing.
@@ -1235,12 +1240,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     buffer.append(accountId.toString()).append(":").append(name);
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
-                    if(record != null) {
-                        logger.info("Dialing to a conference and record attribute is: "+record.value()+" Will start recording.");
-                        RecordingType recordingType = RecordingType.getValueOf(record.value());
-                        Configuration runtimeSettings = configuration.subset("runtime-settings");
-                        call.tell(new RecordCall(accountId, recordingType, runtimeSettings, storage), null);
-                    }
+//                    if(dialRecordAttribute != null) {
+//                        logger.info("Dialing to a conference and record attribute is: "+dialRecordAttribute.value()+" Will start recording.");
+//                        RecordingType recordingType = RecordingType.getValueOf(dialRecordAttribute.value());
+//                        Configuration runtimeSettings = configuration.subset("runtime-settings");
+//                        call.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, storage), null);
+//                    }
                 } else {
                     // Handle forking.
                     dialBranches = new ArrayList<ActorRef>();
@@ -1301,12 +1306,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
                             CreateCall.Type.SIP, accountId);
-                }
-                Attribute record = verb.attribute("record");
-                if (record != null) {
-                    create.setRecordingType(RecordingType.getValueOf(record.value()));
-                    create.setRuntimeSettings(configuration.subset("runtime-settings"));
-                    create.setInitialCall(call);
                 }
                 callManager.tell(create, source);
             } else {
@@ -1395,7 +1394,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             outboundCallInfo = response.get();
 
             // Check for any Dial verbs with url attributes (call screening url)
-            logger.info("Checking for tag with attributes for this outboundcall");
+            logger.info("Checking for Dial verbs with url attributes for this outboundcall");
             Tag child = dialChildrenWithAttributes.get(outboundCall);
             if (child != null && child.attribute("url") != null) {
 
@@ -1445,11 +1444,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            callMediaGroup.tell(new Stop(), source);
+            if(dialRecordAttribute == null) {
+                //If we are not suppose to record the call we stop the IVR endpoint
+                callMediaGroup.tell(new Stop(), source);
+            }
             final int timeLimit = timeLimit(verb);
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
         }
+    }
+
+    private void recordCall() {
+        logger.info("Start recording of the call");
+        Configuration runtimeSettings = configuration.subset("runtime-settings");
+        call.tell(new StartRecordingCall(accountId, runtimeSettings, storage), null);
     }
 
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
@@ -1591,7 +1599,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     outboundCall.tell(new Hangup(), source);
                 }
             }
-
+            //Stop recording
+            if(dialRecordAttribute != null) {
+                logger.info("Will stop recording.");
+                Configuration runtimeSettings = configuration.subset("runtime-settings");
+                call.tell(new StopRecordingCall(accountId, runtimeSettings, storage), null);
+            }
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);

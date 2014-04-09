@@ -160,7 +160,7 @@ public class UssdCall extends UntypedActor  {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, null, direction, created, null, name, from, to, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, lastResponse);
         return new CallResponse<CallInfo>(info);
     }
 
