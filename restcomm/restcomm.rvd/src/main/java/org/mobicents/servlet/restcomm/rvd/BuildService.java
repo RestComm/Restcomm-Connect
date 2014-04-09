@@ -62,7 +62,7 @@ public class BuildService {
             projectOptions.getNodeNames().add( nodeName );
         }
 
-        projectOptions.setDefaultTarget(projectState.getStartNodeName());
+        projectOptions.setDefaultTarget(projectState.getHeader().getStartNodeName());
         // Save the nodename-node-label mapping
         //File outFile = new File(projectPath + "data/" + "project");
         //FileUtils.writeStringToFile(outFile, gson.toJson(projectOptions), "UTF-8");

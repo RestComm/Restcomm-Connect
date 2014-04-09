@@ -1,6 +1,8 @@
 	<div class="step externalService-step panel panel-rvdstep">
-		<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <em><small ng-show='step.isCollapsed'>{{step.phrase}}</small></em><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
-		<div class="panel-body" ng-hide='step.isCollapsed'>
+		<div class="panel-heading">
+			<ng-include src="'templates/stepHeading.html'"></ng-include>
+		</div>
+		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 			<div class="row">
 				<div class="col-md-12">
 				
@@ -125,7 +127,6 @@
 									</select>   
 									<div class="validation-error"  ng-if="form.next.$invalid">Choose target module</div>
 								</div>                         
-								<!-- <select ng-if='step.doRouting && step.nextType=="variable"' ng-model='step.nextVariable' ng-options='assignment.destVariable as assignment.destVariable for assignment in step.assignments' class="form-control height-fix" required></select> -->
                                 <value-extractor ng-if='step.doRouting && step.nextType=="responseBased"' extractor-model='step.nextValueExtractor'></value-extractor>
                             </form>
                         </div>

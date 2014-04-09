@@ -5,19 +5,18 @@ import java.util.Map;
 
 public class ProjectState {
 
-    private String projectKind;
-    private String startNodeName;
     private Integer lastStepId;
     private List<Node> nodes;
     private Integer activeNode;
     private Integer lastNodeId;
+    private StateHeader header;
+
 
     public static class Node {
         private String name;
         private String label;
         private Map<String, Step> steps;
         private List<String> stepnames;
-        private Iface iface;
 
         public String getName() {
             return name;
@@ -50,53 +49,6 @@ public class ProjectState {
         public void setStepnames(List<String> stepnames) {
             this.stepnames = stepnames;
         }
-
-        public Iface getIface() {
-            return iface;
-        }
-
-        public void setIface(Iface iface) {
-            this.iface = iface;
-        }
-
-    }
-
-    public static class Iface {
-        private Boolean edited;
-        private Boolean editLabel;
-
-        public Boolean getEdited() {
-            return edited;
-        }
-
-        public void setEdited(Boolean edited) {
-            this.edited = edited;
-        }
-
-        public Boolean getEditLabel() {
-            return editLabel;
-        }
-
-        public void setEditLabel(Boolean editLabel) {
-            this.editLabel = editLabel;
-        }
-
-    }
-
-    public String getProjectKind() {
-        return projectKind;
-    }
-
-    public void setProjectKind(String projectKind) {
-        this.projectKind = projectKind;
-    }
-
-    public String getStartNodeName() {
-        return startNodeName;
-    }
-
-    public void setStartNodeName(String startNodeName) {
-        this.startNodeName = startNodeName;
     }
 
     public Integer getLastStepId() {
@@ -129,6 +81,10 @@ public class ProjectState {
 
     public void setLastNodeId(Integer lastNodeId) {
         this.lastNodeId = lastNodeId;
+    }
+
+    public StateHeader getHeader() {
+        return header;
     }
 
 }

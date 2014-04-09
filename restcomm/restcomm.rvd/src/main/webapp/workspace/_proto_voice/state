@@ -1,1 +1,38 @@
-{"projectKind":"voice","startNodeName":"start","lastStepId":3,"nodes":[{"name":"start","label":"Welcome","steps":{"step1":{"kind":"say","label":"say","title":"say","phrase":"welcome to restcom Visual Service Designer","voice":null,"language":null,"loop":null,"isCollapsed":false,"iface":{"optionsVisible":false},"name":"step1"}},"stepnames":["step1"],"iface":{"edited":false,"editLabel":false}}],"activeNode":0,"lastNodeId":0}
+{
+  "header": {
+  	"projectKind": "voice",
+  	"startNodeName": "start",
+  	"version": "1.0"
+  },
+  "lastStepId": 3,
+  "lastNodeId": 0,
+  "nodes": [
+    {
+      "name": "start",
+      "kind": "voice",
+      "label": "Welcome",
+      "steps": {
+        "step1": {
+          "kind": "say",
+          "label": "say",
+          "title": "say",
+          "phrase": "welcome to restcom Visual Service Designer",
+          "iface": {
+            "optionsVisible": false
+          },
+          "name": "step1"
+        }
+      },
+      "stepnames": [
+        "step1"
+      ],
+      "iface": {
+        "edited": false,
+        "editLabel": false
+      }
+    }
+  ],
+  "iface": {
+	  "activeNode": 0
+  }
+}
