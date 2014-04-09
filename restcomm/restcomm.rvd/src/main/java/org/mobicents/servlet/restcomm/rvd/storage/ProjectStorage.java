@@ -3,9 +3,11 @@ package org.mobicents.servlet.restcomm.rvd.storage;
 import java.io.InputStream;
 import java.util.List;
 
+import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+
 
 public interface ProjectStorage {
     String loadProjectOptions(String projectName) throws StorageException;
@@ -13,6 +15,7 @@ public interface ProjectStorage {
     void clearBuiltProject(String projectName) throws StorageException;
     String loadProjectState(String projectName) throws StorageException;
     String loadNodeStepnames(String projectName, String nodeName) throws StorageException;
+    StateHeader loadStateHeader(String projectName) throws StorageException;
     void storeNodeStepnames(String projectName, String nodeName, String stepNames) throws StorageException;
     void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException;
     boolean projectExists(String projectName);

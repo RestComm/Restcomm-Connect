@@ -1,17 +1,20 @@
 <div class='alert-container'>
-
 	<!-- navigation bar for errors -->
-	<nav ng-show='projectNotFound' class="navbar navbar-default" role="navigation">
-		<div class="collapse navbar-collapse navbar-ex1-collapse">
-			<div class='navbar-text navbar-rvd-centered'>
+	<nav ng-show='projectError' class="navbar navbar-default" role="navigation">
+		<div ng-switch on="projectError.className" class="collapse navbar-collapse navbar-ex1-collapse">
+			<div ng-switch-when='ProjectDoesNotExist' class='navbar-text navbar-rvd-centered'>
 				Project <em>{{projectName}}</em> not  found. <a href="#">View available projects</a>
 			</div>
-			<ul class="nav navbar-nav">
-			</ul>
+			<div ng-switch-when='IncompatibleProjectVersion' class='navbar-text navbar-rvd-centered'>
+				Project <em>{{projectName}}</em> was created using a different version of RVD. <a href="#">View available projects</a>
+			</div>
+			<div ng-switch-default class='navbar-text navbar-rvd-centered'>
+				Unknown error. <a href="#">View available projects</a>
+			</div>			
 		</div>
 	</nav>
 
-	<div ng-hide='projectNotFound'>	
+	<div ng-hide='projectError'>	
 	
 		<nav  class="navbar navbar-default" role="navigation">
 			<div class="collapse navbar-collapse navbar-ex1-collapse">
@@ -25,7 +28,7 @@
 							<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
 						</ul>
 					</li>
-					<li><a ng-click="addNode()" class="rvd-clickable-text"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
+					<li><a ng-click="addNode(undefined, projectKind)" class="rvd-clickable-text"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
 				</ul>
 	
 				<ul class="nav navbar-nav navbar-right">
@@ -137,34 +140,10 @@
 	
 						<div class="rvd-node" ng-repeat="node in nodes"
 							ng-show="isActiveNode(node)">
-							<div>
-								<br />
-								<!--
-											<div class="node-bootstrap">
-												<a ng-click='node.iface.bootstrapVisible = !node.iface.bootstrapVisible' href=''><span class="glyphicon glyphicon-wrench"></span>Bootstrap <span ng-show='node.iface.bootstrapVisible' class="collapse-button">&times;</span></a>
-												<div ng-show='node.iface.bootstrapVisible'>
-													<textarea ng-model='node.bootstrapSrc' class="texteditor-field form-control">{{bootstrapSrc}}</textarea>
-												</div>
-											</div>
-											-->
-								<!-- <div>{{node.stepnames}}</div> -->
-								<div class='sortable-steps root' sortable-steps>
-									<div class='step' ng-repeat='step in orderedSteps'>
-										<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
-										<div class="separator-hint">
-											<div ng-show="areSuccessiveSteps(node, $index,'say','play')">Say
-												followed by play</div>
-											<div ng-show="areSuccessiveSteps(node, $index,'play','say')">Play
-												followed by Say</div>
-											<div ng-show="areSuccessiveSteps(node, $index,'say','gather')">Say
-												followed by Gather</div>
-											<div ng-show="areSuccessiveSteps(node, $index,'gather',null)">Gather
-												is the last element</div>
-										</div>
-									</div>
-								</div>
-	
-							</div>
+							
+							<ng-include src="'templates/modules/' + node.kind + 'Module.html'"></ng-include>
+							
+
 	
 	
 						</div>

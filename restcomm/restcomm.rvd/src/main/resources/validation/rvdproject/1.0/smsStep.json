@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Sms step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["sms"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"text": {"type": "string"},
+		"to" : { "$ref": "rvdproject-schema.json#/nullOrString" },
+		"from" : { "$ref": "rvdproject-schema.json#/nullOrString" },
+		"next": { "$ref": "rvdproject-schema.json#/nullOrString" },
+		"method": {
+			"oneOf":[
+				{"type": "null"},
+				{"enum":["GET","POST"]}
+			]
+		},
+		"statusCallback": {"$ref": "rvdproject-schema.json#/nullOrString" },
+			
+		"iface": {"type": "object"}
+	},
+	"required": ["name","kind","label","title","text","to","from","next","method"]	
+}
+

@@ -64,33 +64,38 @@ App.factory('protos', function () {
 			value:{kind:'value',fixed:false, terminal:true},	
 	}
 	return { 
+		nodes: {
+				voice: {kind:'voice', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},
+				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},		
+		},
 		accessOperationProtos: accessOperationProtos,
 		stepProto: {
 			// Voice
-			say: {kind:'say', label:'say', title:'say', phrase:'', voice:null, language:null, loop:null, isCollapsed:false, iface:{optionsVisible:false}},
-			play: {playType:'local', kind:'play', label:'play', title:'play', wavUrl:null, wavLocalFilename:null, loop:null, isCollapsed:false},
-			gather: {kind:'gather', label:'gather', title:'collect', name:'', action:'', method:'GET', timeout:null, finishOnKey:'', numDigits:null, steps:{}, stepnames:[], isCollapsed:false, customHandlerSrc:'', next:'', mappings:[] /*{digits:1, next:"welcome.step1"}*/, collectVariable:'', gatherType:"menu", iface:{advancedView:false,optionsVisible:false}},
-			dial: {dialNouns:[], nextModule:'', kind:'dial',kind:'dial', label:'dial', title:'dial',action:'', method:'GET', timeout:null, timeLimit:null, callerId:null, steps:[], isCollapsed:false},
-			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:''},
-			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:'',method:''},
-			hungup: {kind:'hungup', label:'hang up', title:'hang up', next:''},
-			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextVariable:'', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, chosenAssignmentsModule:null},
-			reject: {kind:'reject', label:'reject', title:'reject', reason:''},
-			pause: {kind:'pause', label:'pause', title:'pause', length:null},
-			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:''},
-			record: {kind:'record', label:'record', title:'record', next:'', method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{optionsVisible:false}},
-			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:'', method:'GET', statusCallback:null},
+			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
+			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
+			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:''}, iface:{}},
+			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
+			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
+			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
+			hungup: {kind:'hungup', label:'hang up', title:'hang up',iface:{}},
+			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, iface:{}},
+			reject: {kind:'reject', label:'reject', title:'reject', reason:null,iface:{}},
+			pause: {kind:'pause', label:'pause', title:'pause', length:null, iface:{}},
+			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
+			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{}},
+			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
 			// USSD
-			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null},
-			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", text:'',mappings:[], collectVariable: null, next:null, language:null, messages:[]},
-			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null},
+			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
+			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:''}, text:'', language:null, messages:[], iface:{}},
+			ussdSayNested: {text:''},
+			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
 			
 			
 		},
 		dialNounProto: {
-			number: {dialType: 'number', destination:'', sendDigits:null, beforeConnectUrl:'', beforeConnectModule:null},
+			number: {dialType: 'number', destination:'', sendDigits:undefined, beforeConnectModule:undefined},
 			client: {dialType: 'client', destination:''},
-			conference: {dialType: 'conference', destination:'', nextModule:null, muted:null, beep:null, startConferenceOnEnter:null, endConferenceOnExit:null, waitUrl:null, waitModule:null, waitMethod:'GET', maxParticipants:null},
+			conference: {dialType: 'conference', destination:'', nextModule:undefined, muted:undefined, beep:undefined, startConferenceOnEnter:undefined, endConferenceOnExit:undefined, waitUrl:undefined, waitModule:undefined, waitMethod:undefined, maxParticipants:undefined},
 			sipuri: {dialType: 'sipuri', destination:''},
 		}
 	};
@@ -112,6 +117,24 @@ App.directive("syncModel", function(){
             		//console.log( 'selected value: ' + $(element).val() )
             		if ( $(element).val() ==="" )
             			scope.$eval(attrs.ngModel + " = null");
+            	});            	
+            }
+        }
+});
+
+/*
+ * Newer version of syncModel that reset model to undefined instead of null.
+ */
+App.directive("syncModules", function(){
+
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs, controller) {
+            	scope.$on("refreshTargetDropdowns", function () {
+            		//console.log( 'element ' + element + ' received refreshTargetDropdowns');
+            		//console.log( 'selected value: ' + $(element).val() )
+            		if ( $(element).val() ==="" )
+            			scope.$eval(attrs.ngModel + " = undefined");
             	});            	
             }
         }
@@ -225,6 +248,20 @@ App.directive('nullIfEmpty', [function() {
   }]
 );
 
+// Make field undefined if it is empty string or null
+App.directive('autoClear', [function() {
+    return {
+      require: 'ngModel',
+      link: function(scope, elm, attr, ctrl) {
+        ctrl.$parsers.unshift(function(value) {
+          return (value === '' || value === null) ? undefined : value;
+        });
+      }
+    };
+  }]
+);
+
+
 App.directive('valueExtractor', ['protos', function (protos) {
 	return {
 		restrict: 'E',
@@ -310,6 +347,20 @@ App.directive('modulePicker', [function () {
 			options: '=',
 		},
 		link: function (scope,el,attrs) {
+		},
+	};
+}]);
+
+App.directive('ussdModule', [function () {
+	return {
+		restrict: 'A',
+		link: function (scope,el,attrs) {
+			scope.node.iface.remainingChars = scope.remainingUssdChars(scope.node);
+			//console.log("(start) remaining chars: " + scope.node.iface.remainingChars);			
+			/*var counterWatch = */scope.$watch('remainingUssdChars(node)', function (newCount) {
+				scope.node.iface.remainingChars = newCount;
+			});
+			
 		},
 	};
 }]);

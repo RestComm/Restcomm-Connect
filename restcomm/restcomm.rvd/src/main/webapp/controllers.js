@@ -84,8 +84,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.stepService = stepService;
 	
-	// Prototype and constant data structures
-	$scope.nodesProto =	{name:'module', label:'Untitled module', steps:{}, stepnames:[], bootstrapSrc:'', iface:{edited:false,editLabel:false,bootstrapVisible:false}};
+	// Prototype and constant data structures	
 	$scope.languages = [
 	                    {name:'bf',text:'Belgium-French'},
 	                    {name:'bp',text: 'Brazilian-Portugues'},
@@ -113,9 +112,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	                   ];
 	$scope.methods = ['POST', 'GET'];
 	
+	$scope.ussdMaxEnglishChars = 182;
+	$scope.ussdMaxForeignChars = 91;
 		
 	// State variables
-	$scope.projectNotFound = false;
+	$scope.projectError = null; // SET when opening a project fails
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
 	
@@ -123,7 +124,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
-	//$scope.visibleNodes = "voice"; // or "control"	// view Voice Nodes or Control Nodes panel ?
 	$scope.wavList = [];
 	
 	// Project management
@@ -140,6 +140,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	// Some constants to be moved elsewhere = TODO
 	$scope.yesNoBooleanOptions = [{caption:"Yes", value:true}, {caption:"No", value:false}];
 	$scope.nullValue = null;
+	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
 	//console.log("projectController stepService: " + stepService.stepNames );
 
@@ -200,8 +201,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				break;
 			}
 	};
-	$scope.addNode = function( name ) {
-		$newnode = angular.copy($scope.nodesProto);
+	$scope.addNode = function( name, kind ) { // kind is based on project kind
+		$newnode = angular.copy(protos.nodes[kind]);
 		if ( typeof(name) === 'undefined' )
 			$newnode.name += ++$scope.lastNodesId;
 		else
@@ -209,14 +210,14 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.nodes.push( $newnode );
 		return $newnode;
 	};
-	$scope.addNodeAndFocus = function (editLabel) {
+	/*$scope.addNodeAndFocus = function (editLabel, kind) {
 		//$scope.setVisibleNodes(kind);
-		var node = $scope.addNode();
+		var node = $scope.addNode(undefined, kind);
 		if (typeof editLabel !== undefined  && editLabel)
 			node.iface.editLabel = true;
 		$scope.setActiveNode(node);
 		return node;
-	};
+	};*/
 	$scope.removeNode = function( index) {
 		if ( index < $scope.nodes.length ) {
 			$scope.nodes.splice(index,1);
@@ -288,14 +289,14 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.addGatherMapping = function( gatherStep ) {
 		// first find max inserted digit
 		var max = 0;
-		for (var i = 0; i < gatherStep.mappings.length; i ++ )
-			if ( gatherStep.mappings[i].digits > max )
-				max = gatherStep.mappings[i].digits;
+		for (var i = 0; i < gatherStep.menu.mappings.length; i ++ )
+			if ( gatherStep.menu.mappings[i].digits > max )
+				max = gatherStep.menu.mappings[i].digits;
 				
-		gatherStep.mappings.push({digits:max+1, node:"start"});
+		gatherStep.menu.mappings.push({digits:max+1, next:""});
 	};
 	$scope.removeGatherMapping = function (gatherStep, mapping) {
-		gatherStep.mappings.splice( gatherStep.mappings.indexOf(mapping), 1 );
+		gatherStep.menu.mappings.splice( gatherStep.menu.mappings.indexOf(mapping), 1 );
 	}
 	
 	
@@ -321,63 +322,40 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	};
 	
 	
-	$scope.saveProject = function(onsuccess) {
+	$scope.saveProject = function() {
 		var deferred = $q.defer();
 		
-		var state = {};
-		state.lastStepId = stepService.lastStepId;
-		state.nodes = $scope.nodes;
-		state.activeNode = $scope.activeNode;
-		state.lastNodeId = $scope.lastNodesId;
-		state.visibleNodes = $scope.visibleNodes;
-		state.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
-		state.projectKind = $scope.projectKind;
-		
-		
-		// transmit state to the server
-		console.log( "saving " + $scope.projectKind + " project: " + $scope.projectName );
+		var state = $scope.packState();
 		$http({url: 'services/manager/projects?name=' + $scope.projectName,
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}
 		})
 		.success(function (data, status, headers, config) {
-			deferred.resolve('Project saved');
+			if ( data == "" || data.success ) {
+				deferred.resolve('Project saved');
+			} else {
+				deferred.reject({type:'validationError', data:data});			
+			}
 		 }).error(function (data, status, headers, config) {
-			 deferred.reject('Error saving project');
+			 deferred.reject({type:'saveError', data:data});
 		 });	
 		
 		return deferred.promise;
 	}
-	
-
-	
-	//$scope.closeProject = function() {
-	//	$location.path("#/project-manager/" + ($scope.projectKind ? $scope.projectKind : 'voice'));		
-	//}
 	
 	$scope.openProject = function(name) {
 		$http({url: 'services/manager/projects?name=' + name,
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
-			//console.log( data );
-			$scope.projectName = name;
-			
-			stepService.lastStepId = data.lastStepId;
-			$scope.nodes = data.nodes;
-			$scope.activeNode = data.activeNode;
-			$scope.lastNodesId = data.lastNodeId;
-			$scope.visibleNodes = data.visibleNodes;
-			$scope.startNodeName = data.startNodeName;	
-			$scope.projectKind = data.projectKind;
-			
+			$scope.projectName = name;			
+			$scope.unpackState(data);
 			if ( $scope.projectKind == 'voice' )
 				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
 		 }).error(function (data, status, headers, config) {
-			//console.log("error opening project");
-			$scope.projectNotFound = true;
+			$scope.projectError = data.serverError;
 		 });
 	}
 	
@@ -397,11 +375,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		
 		$http({url: 'services/manager/projects/build?name=' + $scope.projectName, method: "POST"})
 		.success(function (data, status, headers, config) {
-			console.log("Build succesfull");
 			deferred.resolve('Build successfull');
 		 }).error(function (data, status, headers, config) {
-			//console.log("Error building");
-			 deferred.reject('Error building');
+			 deferred.reject('buildError');
 		 });
 		
 		return deferred.promise;
@@ -486,12 +462,39 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.onSavePressed = function() {
 		usSpinnerService.spin('spinner-save');
+		$scope.clearStepWarnings();
 		$scope.saveProject()
-		.then($scope.buildProject)
-		.then(function () { $scope.addAlert('Project saved', 'success'); })
+		.then( function () { return $scope.buildProject() } )
+		.then(
+			function () { 
+				$scope.addAlert("Project saved", 'success');
+				console.log("Project saved and built");
+			}, 
+			function (reason) { 
+				if ( reason.type == 'saveError' ) {
+					console.log("Error saving project");
+					if (reason.data.serverError.className == 'IncompatibleProjectVersion')
+						$scope.addAlert("Error saving project. Project version is incompatible with current RVD version", 'danger');
+					else
+						$scope.addAlert("Error saving project", 'danger');
+				} else if ( reason.type == 'validationError') {
+					console.log("Validation error");
+					$scope.addAlert("Project saved with validation errors", 'warning');
+					var r = /^\/nodes\/([0-9]+)\/steps\/([a-z]+[0-9]+)$/;
+					for (var i=0; i < reason.data.errorItems.length; i++) {
+						var failurePath = reason.data.errorItems[i].failurePath;
+						m = r.exec( reason.data.errorItems[i].failurePath );
+						if ( m != null ) {
+							console.log("warning in module " + m[1] + " step " + m[2]);
+							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
+						}
+					}
+				} else { console.log("Unknown error");}
+			} 
+		)
 		.finally(function () {
 			usSpinnerService.stop('spinner-save');
-			console.log('save finished');
+			//console.log('save finished');
 		});
 		//.then( function () { console.log('project saved and built')});
 	}
@@ -510,14 +513,19 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		  alert = {msg: msg};
 	  
 	  $scope.alerts.push(alert);
-	  $timeout( function () {
-		  $scope.closeAlert(alert);
-	  }, 3000);
+	  $timeout( function () { $scope.closeAlert(alert); }, 3000);
 	};
 
 	$scope.closeAlert = function(alert) {
 	  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
 	};
+	
+	$scope.clearStepWarnings = function () {
+		for ( var i=0; i<$scope.nodes.length; i++ ) {
+			for (var stepname in $scope.nodes[i].steps)
+				$scope.nodes[i].steps[stepname].iface.showWarning = false;
+		}
+	}
 	
 	
 	/*    USSDSay / USSDCollect functions    */
@@ -536,21 +544,128 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		return counter;
 	}
 	
+	$scope.getUssdNodeLang = function (node) {
+		var lang = "en";
+		for ( var stepname in node.steps ) {
+			var step = node.steps[stepname];
+			if ( step.kind == "ussdLanguage") 
+				if (step.language != null  &&  step.language != 'en') {
+					lang = step.language;
+					break;
+				}
+		}
+		return lang;
+	}
+	
+	$scope.countNodeUssdChars = function (node) {
+		var sum = 0;
+		for ( var stepname in node.steps ) {
+			var step = node.steps[stepname];
+			if ( step.kind == "ussdSay" ) 
+				sum += $scope.countUssdChars(step.text);
+			else
+			if ( step.kind == "ussdCollect" )
+				sum += $scope.countUssdCollectChars(step)			
+		}
+		return sum;
+	}
+	
+	$scope.remainingUssdChars = function (node) {
+		var total = $scope.countNodeUssdChars(node);
+		var remaining = $scope.ussdMaxEnglishChars - total;
+		if ( $scope.getUssdNodeLang(node) != 'en' )
+			remaining = $scope.ussdMaxForeignChars - total;
+		return remaining;
+	}
+	
 	$scope.nestUssdMessage = function (item, pos, listmodel) {
-		console.log("nesting ussd message");
-		//r = RegExp("dial-noun-([^ ]+)");
-		//m = r.exec( item.attr("class") );
-		//if ( m != null ) {
-			//console.log("adding dial noun - " + m[1]);
-			$scope.$apply( function ()  {
-				listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSay' ]));
-			});
-		//}
+		$scope.$apply( function ()  {
+			listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSayNested' ]));
+		});
 	}
 	
 	$scope.removeNestedMessage = function (step,nested) {
 		step.messages.splice( step.messages.indexOf(nested), 1 );
 	}
+
+	
+	
+	
+	$scope.packState = function() {
+		var state = {header:{}, iface:{}};
+		state.lastStepId = stepService.lastStepId;
+		state.nodes = angular.copy($scope.nodes);
+		for ( var i=0; i < state.nodes.length; i++) {
+			var node = state.nodes[i];
+			for (var stepname in node.steps) {
+				var step = node.steps[stepname];
+				if (step.kind == "gather") {
+					if (step.gatherType == "menu")
+						delete step.collectdigits;
+					else
+					if (step.gatherType == "collectdigits")
+						delete step.menu;
+				} else
+				if (step.kind == "play") {
+					if (step.playType == "local")
+						delete step.remote;
+					else if (step.playType == "remote")
+						delete step.local;
+				} else
+				if (step.kind == "ussdCollect") {
+					if (step.gatherType == "menu")
+						delete step.collectdigits;
+					else
+					if (step.gatherType == "collectdigits")
+						delete step.menu;
+				}
+			}
+		}
+		state.iface.activeNode = $scope.activeNode;
+		state.lastNodeId = $scope.lastNodesId;
+		state.header.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
+		state.header.projectKind = $scope.projectKind;	
+		state.header.version = $scope.version;
+		
+		return state;
+	}
+	
+	$scope.unpackState = function (packedState) {
+		stepService.lastStepId = packedState.lastStepId;
+		$scope.nodes = packedState.nodes;
+		for ( var i=0; i < $scope.nodes.length; i++) {
+			var node = $scope.nodes[i];
+			for (var stepname in node.steps) {
+				var step = node.steps[stepname];
+				if (step.kind == "gather") {
+					if (step.gatherType == "menu")
+						step.collectdigits = angular.copy(protos.stepProto.gather.collectdigits);
+					else
+					if (step.gatherType == "collectdigits")
+						step.menu = angular.copy(protos.stepProto.gather.menu);
+				} else
+				if (step.kind == "play") {
+					if (step.playType == "local")
+						step.remote = angular.copy(protos.stepProto.play.remote);
+					else if (step.playType == "remote")
+						step.local = angular.copy(protos.stepProto.play.local);
+				} else
+				if (step.kind == "ussdCollect") {
+					if (step.gatherType == "menu")
+						step.collectdigits = angular.copy(protos.stepProto.ussdCollect.collectdigits);
+					else
+					if (step.gatherType == "collectdigits")
+						step.menu = angular.copy(protos.stepProto.ussdCollect.menu);
+				}					
+			}
+		}
+		$scope.activeNode = packedState.iface.activeNode;
+		$scope.lastNodesId = packedState.lastNodeId;
+		$scope.startNodeName = packedState.header.startNodeName;	
+		$scope.projectKind = packedState.header.projectKind;
+		$scope.version = packedState.header.version;
+	}
+	
 		
 	// Run the following after all initialization are complete
 	

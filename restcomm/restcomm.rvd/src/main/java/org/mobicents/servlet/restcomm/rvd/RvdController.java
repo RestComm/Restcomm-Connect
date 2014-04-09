@@ -86,7 +86,6 @@ public class RvdController {
 
         String rcmlResponse;
         try {
-            //String targetParam = httpRequest.getParameter("target");
             String targetParam = requestParams.getFirst("target");
             Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest, requestParams);
             rcmlResponse = interpreter.interpret();

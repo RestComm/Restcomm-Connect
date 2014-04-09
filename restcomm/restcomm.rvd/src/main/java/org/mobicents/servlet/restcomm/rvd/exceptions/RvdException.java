@@ -1,5 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd.exceptions;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 public class RvdException extends Exception {
 
     public RvdException() {
@@ -15,6 +18,14 @@ public class RvdException extends Exception {
     public RvdException(String message) {
         super(message);
         // TODO Auto-generated constructor stub
+    }
+
+    public String asJson() {
+        Gson gson = new Gson();
+        JsonObject errorResponse = new JsonObject();
+        ExceptionResult result = new ExceptionResult(getClass().getSimpleName(), getMessage());
+        errorResponse.add("serverError", gson.toJsonTree(result));
+        return gson.toJson(errorResponse);
     }
 
 }

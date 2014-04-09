@@ -10,6 +10,7 @@ public class RvdSettings {
     private static final String workspaceDirectoryName = "workspace";
     private static final String protoProjectName = "_proto";
     private static final String wavsDirectoryName = "wavs";
+    private static final String RVD_PROJECT_VERSION = "1.0"; // version for rvd project syntax
 
     private Map<String,String> options;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
@@ -20,6 +21,10 @@ public class RvdSettings {
         options.put("protoProjectName", protoProjectName );
         options.put("wavsDirectoryName", wavsDirectoryName );
 
+    }
+
+    public static String getRvdProjectVersion() {
+        return RVD_PROJECT_VERSION;
     }
 
     public String getOption(String optionName) {

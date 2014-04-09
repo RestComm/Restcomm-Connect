@@ -10,19 +10,6 @@ public class SayStep extends Step {
     private String voice;
     private String language;
     private Integer loop;
-    private Iface iface;
-
-    public static class Iface {
-        private Boolean optionsVisible;
-
-        public Boolean getOptionsVisible() {
-            return optionsVisible;
-        }
-
-        public void setOptionsVisible(Boolean optionsVisible) {
-            this.optionsVisible = optionsVisible;
-        }
-    }
 
     public String getPhrase() {
         return phrase;
@@ -56,13 +43,6 @@ public class SayStep extends Step {
         this.loop = loop;
     }
 
-    public Iface getIface() {
-        return iface;
-    }
-
-    public void setIface(Iface iface) {
-        this.iface = iface;
-    }
     public RcmlStep render(Interpreter interpreter) {
 
         RcmlSayStep sayStep = new RcmlSayStep();
