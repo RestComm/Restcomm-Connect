@@ -136,11 +136,9 @@
 			<div class='row'>
 				<div  class="col-md-12 input-group form-group">
 					<span class="input-group-addon">Recording</span>
-					<select auto-clear ng-model='step.record'  class="form-control">
-						<option value="">Do not record</option>
-						<option value="record-from-answer">Record from answer</option>
-						<option value="record-from-ringing">Record from rigning</option>
-					</select>
+					<select ng-model='step.record' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+						<option value=''></option>
+					</select>					
 				</div>
 			</div>
 </div>
