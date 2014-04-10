@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.storage;
 import java.io.InputStream;
 import java.util.List;
 
+import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -14,9 +15,9 @@ public interface ProjectStorage {
     void storeProjectOptions(String projectName, String projectOptions) throws StorageException;
     void clearBuiltProject(String projectName) throws StorageException;
     String loadProjectState(String projectName) throws StorageException;
-    String loadNodeStepnames(String projectName, String nodeName) throws StorageException;
+    //String loadNodeStepnames(String projectName, String nodeName) throws StorageException;
     StateHeader loadStateHeader(String projectName) throws StorageException;
-    void storeNodeStepnames(String projectName, String nodeName, String stepNames) throws StorageException;
+   // void storeNodeStepnames(String projectName, String nodeName, String stepNames) throws StorageException;
     void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException;
     boolean projectExists(String projectName);
     List<String> listProjectNames() throws StorageException;
@@ -28,4 +29,7 @@ public interface ProjectStorage {
     List<WavItem> listWavs(String projectName) throws StorageException;
     void deleteWav(String projectName, String wavname) throws WavItemDoesNotExist;
     String loadStep(String projectName, String nodeName, String stepName) throws StorageException;
+    void storeNodeStepnames(String projectName, Node node) throws StorageException;
+    List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException;
+
 }

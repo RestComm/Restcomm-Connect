@@ -276,10 +276,7 @@ public class Interpreter {
 
             if (rcmlModel == null )
                 rcmlModel = new RcmlResponse();
-            //String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
-            String nodefile_json = projectStorage.loadNodeStepnames(appName, target.getNodename());//FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
-            List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>() {
-            }.getType());
+            List<String> nodeStepnames = projectStorage.loadNodeStepnames(appName, target.getNodename());
 
             // if no starting step has been specified in the target, use the first step of the node as default
             if (target.getStepname() == null && !nodeStepnames.isEmpty())
