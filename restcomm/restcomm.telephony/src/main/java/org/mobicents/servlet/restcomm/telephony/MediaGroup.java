@@ -480,8 +480,10 @@ public final class MediaGroup extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            link.tell(new CloseLink(), source);
-            internalLink.tell(new CloseLink(), source);
+            if (link != null)
+                link.tell(new CloseLink(), source);
+            if(internalLink != null)
+                internalLink.tell(new CloseLink(), source);
         }
     }
 
@@ -490,6 +492,14 @@ public final class MediaGroup extends UntypedActor {
         if (link != null) {
             gateway.tell(new DestroyLink(link), null);
             link = null;
+        }
+        if (internalLink != null) {
+            gateway.tell(new DestroyLink(internalLink), null);
+            internalLink = null;
+        }
+        if (internalLinkEndpoint != null) {
+            gateway.tell(new DestroyEndpoint(internalLinkEndpoint), null);
+            internalLinkEndpoint = null;
         }
         if (ivr != null) {
             gateway.tell(new DestroyEndpoint(ivr), null);
