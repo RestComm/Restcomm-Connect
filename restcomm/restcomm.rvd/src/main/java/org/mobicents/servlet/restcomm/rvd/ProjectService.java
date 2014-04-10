@@ -8,15 +8,22 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.validation.ProjectValidator;
+import org.mobicents.servlet.restcomm.rvd.validation.ValidationResult;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -24,6 +31,7 @@ import java.net.URISyntaxException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -104,27 +112,40 @@ public class ProjectService {
 
         List<ProjectItem> items = new ArrayList<ProjectItem>();
         for (String entry : projectStorage.listProjectNames() ) {
-            JsonParser parser = new JsonParser();
-            JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
-            JsonElement projectKind_element = root_element.get("projectKind");
-            String projectKind = "voice"; // default value for old projects
-            if ( projectKind_element != null ) {
-                projectKind = projectKind_element.getAsString();
+
+            String kind = "voice";
+            try {
+                StateHeader header = projectStorage.loadStateHeader(entry);
+                kind = header.getProjectKind();
+            } catch ( BadProjectHeader e ) {
+                // for old projects
+                JsonParser parser = new JsonParser();
+                JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                JsonElement projectKind_element = root_element.get("projectKind");
+                if ( projectKind_element != null ) {
+                    kind = projectKind_element.getAsString();
+                }
             }
-            //logger.debug("project " + entry + " is a " + projectKind );
 
             ProjectItem item = new ProjectItem();
             item.setName(entry);
-            item.setKind(projectKind);
-            //item.setStartUrl(entry.getName());
+            item.setKind(kind);
             items.add(item);
         }
         return items;
     }
 
-    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException {
+    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException, IncompatibleProjectVersion {
         if ( !projectExists(projectName) )
             throw new ProjectDoesNotExist();
+
+        try {
+            StateHeader header = projectStorage.loadStateHeader(projectName);
+            if ( ! header.getVersion().equals(RvdSettings.getRvdProjectVersion()) )
+                throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdSettings.getRvdProjectVersion() );
+        } catch ( BadProjectHeader e ) {
+            throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
+        }
 
         return projectStorage.loadProjectState(projectName);
     }
@@ -146,9 +167,23 @@ public class ProjectService {
         projectStorage.cloneProject(settings.getOption("protoProjectName") + protoSuffix, projectName);
     }
 
-    public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException {
+    public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException, ValidationFrameworkException, ValidationException, IncompatibleProjectVersion {
         String state = IOUtils.toString(request.getInputStream());
-        projectStorage.updateProjectState(projectName, state);
+        try {
+            StateHeader header = projectStorage.loadStateHeader(projectName);
+            if ( !header.getVersion().equals(RvdSettings.getRvdProjectVersion()) )
+                throw new IncompatibleProjectVersion("Won't save project '" + projectName + "'. Project version: " + header.getVersion() + " - " + "RVD supported version: " + RvdSettings.getRvdProjectVersion());
+
+            ProjectValidator validator = new ProjectValidator();
+            ValidationResult result = validator.validate(state);
+
+            // always update behaviour. Maybe it should prevent update if validation fails. It's a matter of UX
+            projectStorage.updateProjectState(projectName, state);
+            if (!result.isSuccess())
+                throw new ValidationException(result);
+        } catch (ProcessingException e) {
+            throw new ValidationFrameworkException("Internal validation error", e);
+        }
 
     }
 

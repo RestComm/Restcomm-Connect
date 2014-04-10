@@ -893,6 +893,11 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 					<entry>a valid phone number, or client identifier if you are dialing a &lt;Client&gt;.</entry>
 					<entry>Caller's callerId</entry>
 				</row>
+				<row>
+					<entry>record</entry>
+					<entry>true, false</entry>
+					<entry>false</entry>
+				</row>
 			</tbody>
 		</tgroup>
 	    </table>
@@ -996,16 +1001,37 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 	    	it, you could set the callerId attribute to client:thomas.</para>
 	    </formalpara>
 	    <formalpara>
+	    	<title>record</title>
+	    	<para>The 'record' attribute lets you specify whether the call will be recorded or not.
+	    	By default, the call is not recorded. If you set the attribute to 'true' Restcomm will start recording when the two calls are bridged</para>
+	    </formalpara>
+	    <note>
+<title>Record attribute for Dial Conference</title>
+<para>
+The current release of Restcomm doesn't support recording for Dial Conference. This feature will be available in the next release
+</para>
+</note>
+	    <formalpara>
 	    	<title>Nesting</title>
 	    	<para>You can nest the following nouns within &lt;Dial&gt;: &lt;Number&gt;, &lt;Client&gt;, &lt;Conference&gt;</para>
 	    </formalpara>
 	    <formalpara>
 	    	<title>Examples</title>
-	    	<para>For an example of how to use the &lt;Dial&gt; verb see below.</para>
+	    	<para>For examples of how to use the &lt;Dial&gt; verb see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
 		&lt;Response&gt;
 			&lt;Dial&gt;1-444-555-666&lt;/Dial&gt;
+		&lt;/Response&gt;
+		</programlisting>
+	    <programlisting role="XML">
+		&lt;Response&gt;
+			&lt;Dial record="true"&gt;1-444-555-666&lt;/Dial&gt;
+		&lt;/Response&gt;
+		</programlisting>
+	    <programlisting role="XML">
+		&lt;Response&gt;
+			&lt;Dial callerId="1555666777" record="true"&gt;1-444-555-666&lt;/Dial&gt;
 		&lt;/Response&gt;
 		</programlisting>
 		<section>

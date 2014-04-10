@@ -715,23 +715,23 @@ public class UssdInterpreter extends UntypedActor {
             if (End.class.equals(message.getClass())) {
 
                 Boolean hasCollect = false;
-                UssdRestcommResponse ussdRequest = new UssdRestcommResponse();
+                UssdRestcommResponse ussdRestcommResponse = new UssdRestcommResponse();
 
                 String language = "";
                 if (ussdLanguageTag == null) {
                     language = "en";
-                    ussdRequest.setLanguage(language);
+                    ussdRestcommResponse.setLanguage(language);
                 } else {
                     language = ussdLanguageTag.text();
-                    ussdRequest.setLanguage(language);
+                    ussdRestcommResponse.setLanguage(language);
                 }
 
                 if (language.equalsIgnoreCase("en")) {
                     maxMessageLength = englishLength;
-                    ussdRequest.setMessageLength(englishLength);
+                    ussdRestcommResponse.setMessageLength(englishLength);
                 } else {
                     maxMessageLength = nonEnglishLength;
-                    ussdRequest.setMessageLength(nonEnglishLength);
+                    ussdRestcommResponse.setMessageLength(nonEnglishLength);
                 }
 
                 StringBuffer ussdText = processUssdMessageTags(ussdMessageTags);
@@ -739,7 +739,7 @@ public class UssdInterpreter extends UntypedActor {
                 if (ussdCollectTag != null) {
                     hasCollect = true;
                     ussdCollectAction = ussdCollectTag.attribute("action").value();
-                    ussdRequest.setUssdCollectAction(ussdCollectAction);
+                    ussdRestcommResponse.setUssdCollectAction(ussdCollectAction);
                     Queue<Tag> children = new java.util.concurrent.ConcurrentLinkedQueue<Tag>(ussdCollectTag.children());
                     if (children != null && children.size() > 0) {
                         ussdText.append(processUssdMessageTags(children));
@@ -762,7 +762,7 @@ public class UssdInterpreter extends UntypedActor {
                     ussdText.append("Error while preparing the response.\nMessage length exceeds the maximum.");
                 }
 
-                ussdRequest.setMessage(ussdText.toString());
+                ussdRestcommResponse.setMessage(ussdText.toString());
 
                 logger.info("UssdMessage prepared, hasCollect: " + hasCollect);
                 logger.debug("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
@@ -770,25 +770,25 @@ public class UssdInterpreter extends UntypedActor {
                 if (callInfo.direction().equalsIgnoreCase("inbound")) {
                     // USSD PULL
                     if (hasCollect) {
-                        ussdRequest.setMessageType(UssdMessageType.unstructuredSSRequest_Request);
-                        ussdRequest.setIsFinalMessage(false);
+                        ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSRequest_Request);
+                        ussdRestcommResponse.setIsFinalMessage(false);
                     } else {
-                        ussdRequest.setMessageType(UssdMessageType.processUnstructuredSSRequest_Response);
-                        ussdRequest.setIsFinalMessage(true);
+                        ussdRestcommResponse.setMessageType(UssdMessageType.processUnstructuredSSRequest_Response);
+                        ussdRestcommResponse.setIsFinalMessage(true);
                     }
                 }
-                ussdCall.tell(ussdRequest, source);
+                ussdCall.tell(ussdRestcommResponse, source);
             }
         }
     }
 
-    private StringBuffer processUssdMessageTags(Queue<Tag> sayTags) {
+    private StringBuffer processUssdMessageTags(Queue<Tag> messageTags) {
         StringBuffer message = new StringBuffer();
-        while (!sayTags.isEmpty()) {
-            Tag tag = sayTags.poll();
+        while (!messageTags.isEmpty()) {
+            Tag tag = messageTags.poll();
             if (tag != null) {
                 message.append(tag.text());
-                if (!sayTags.isEmpty())
+                if (!messageTags.isEmpty())
                     message.append("\n");
             } else {
                 return message;

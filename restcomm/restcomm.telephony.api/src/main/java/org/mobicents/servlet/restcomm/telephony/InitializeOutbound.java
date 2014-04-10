@@ -19,7 +19,7 @@ package org.mobicents.servlet.restcomm.telephony;
 import javax.servlet.sip.SipURI;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
@@ -38,11 +38,10 @@ public final class InitializeOutbound {
     private final String apiVersion;
     private final Sid accountId;
     private final CreateCall.Type type;
-    private final CallDetailRecordsDao recordsDao;
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
-            final CreateCall.Type type, final CallDetailRecordsDao recordsDao) {
+            final CreateCall.Type type, final DaoManager daoManager) {
         super();
         this.name = name;
         this.from = from;
@@ -54,7 +53,6 @@ public final class InitializeOutbound {
         this.apiVersion = apiVersion;
         this.accountId = accountId;
         this.type = type;
-        this.recordsDao = recordsDao;
     }
 
     public String name() {
@@ -95,9 +93,5 @@ public final class InitializeOutbound {
 
     public CreateCall.Type type() {
         return type;
-    }
-
-    public CallDetailRecordsDao recordsDao(){
-        return recordsDao;
     }
 }
