@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import gov.nist.javax.sip.message.MessageExt;
 
+import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 
@@ -37,8 +38,11 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 //import org.mobicents.servlet.restcomm.telephony.Version;
 import org.mobicents.servlet.restcomm.telephony.security.DigestServerAuthenticationMethod;
+
+import com.google.gson.JsonObject;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -60,6 +64,10 @@ public class DialTest {
 
     @ArquillianResource
     private Deployer deployer;
+    @ArquillianResource
+    URL deploymentUrl;
+    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -91,6 +99,7 @@ public class DialTest {
     private String dialFork = "sip:+12223334452@127.0.0.1:5080";
     private String dialURI = "sip:+12223334454@127.0.0.1:5080";
     private String dialClient = "sip:+12223334455@127.0.0.1:5080";
+    private String dialClientWithRecord = "sip:+12223334499@127.0.0.1:5080";
     private String dialNumber = "sip:+12223334456@127.0.0.1:5080";
     private String notFoundDialNumber = "sip:+12223334457@127.0.0.1:5080";
     private String dialSip = "sip:+12223334458@127.0.0.1:5080";
@@ -150,7 +159,7 @@ public class DialTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-        deployer.undeploy("DialTest");
+//        deployer.undeploy("DialTest");
     }
 
     @Test
@@ -416,6 +425,62 @@ public class DialTest {
         }
     }
 
+    @Test
+    public synchronized void testDialClientAliceWithRecord() throws InterruptedException, ParseException {
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithRecord, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(7000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+        
+        JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(recordings);
+        assertTrue("7.0".equalsIgnoreCase(recordings.get("duration").getAsString()));
+        assertNotNull(recordings.get("uri").getAsString());
+    }
+    
     @Test
     public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
@@ -825,7 +890,6 @@ public class DialTest {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // with Dial Action screening
     public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
-        deployer.deploy("DialTest");
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -891,7 +955,6 @@ public class DialTest {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // with Dial Action screening
     public synchronized void testDialSipDialTagScreening180Decline() throws InterruptedException, ParseException {
-        deployer.deploy("DialTest");
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -957,7 +1020,7 @@ public class DialTest {
         }
     }
 
-    @Deployment(name = "DialTest", managed = false, testable = false)
+    @Deployment(name = "DialTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         final WebArchive archive = ShrinkWrapMaven.resolver()
@@ -1027,6 +1090,7 @@ public class DialTest {
         archive.addAsWebResource("dial-fork-entry.xml");
         archive.addAsWebResource("dial-uri-entry.xml");
         archive.addAsWebResource("dial-client-entry.xml");
+        archive.addAsWebResource("dial-client-entry-with-recording.xml");
         archive.addAsWebResource("dial-sip.xml");
         archive.addAsWebResource("dial-sip-auth.xml");
         archive.addAsWebResource("dial-sip-screening.xml");

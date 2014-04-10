@@ -177,6 +177,7 @@ public class Interpreter {
         xstream.useAttributeFor(RcmlDialStep.class, "timeout");
         xstream.useAttributeFor(RcmlDialStep.class, "timeLimit");
         xstream.useAttributeFor(RcmlDialStep.class, "callerId");
+        xstream.useAttributeFor(RcmlDialStep.class, "record");
         xstream.aliasField("Number", RcmlDialStep.class, "number");
         xstream.aliasField("Client", RcmlDialStep.class, "client");
         xstream.aliasField("Conference", RcmlDialStep.class, "conference");

@@ -1,7 +1,9 @@
 <div class="step ussdCollect-step panel panel-rvdstep">
-	<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span> <i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
+	<div class="panel-heading">
+		<ng-include src="'templates/stepHeading.html'"></ng-include>
+	</div>
 
-	<div class="panel-body" ng-hide='step.isCollapsed'>
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div class="row">
 			<div class="col-md-12 form-group">	
 				<div basic-draggable drop-target='.ussd-collect-messages' class="label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
@@ -39,10 +41,9 @@
 				</div>
 					
 				<div ng-show="step.gatherType=='menu'">
-					<div ng-repeat="mapping in step.mappings" class='row target-mapping'>
+					<div ng-repeat="mapping in step.menu.mappings" class='row target-mapping'>
 						<form name="form" novalidate>
 							<div class='col-md-5 form-group'>
-								
 									<div class="input-group input-group-sm">
 										<span class="input-group-addon">Reply</span>
 										<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="123" ng-model='mapping.digits' required></input>
@@ -67,6 +68,7 @@
 						<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>Add option</span></button>
 					</div>	
 					
+					<!-- 
 					<i ng-click='step.iface.optionsVisible = !step.iface.optionsVisible' class='fa fa-cog rvd-clickable' ng-class="{'rvd-active': step.iface.optionsVisible }"></i>
 					<div collapse='!step.iface.optionsVisible' class='form-group'>
 						<br/>
@@ -77,6 +79,7 @@
 							</select>
 						</div>
 					</div>
+					 -->
 					
 					<!-- <module-picker options="getAllTargets()"></module-picker>-->
 					
@@ -87,14 +90,14 @@
 							<div class='col-md-6 form-group'>
 								<div class="input-group input-group-sm">
 									<span class="input-group-addon">Assign reply to</span>
-									<input null-if-empty name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectVariable" required></input>
+									<input null-if-empty name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
 								</div>
 								<div class="validation-error" ng-show="form.collectVariable.$invalid">Type a valid variable name</div>
 							</div>
 							<div class='col-md-6 form-group'>
 								<div class="input-group input-group-sm">
 									<span class="input-group-addon">Continue to</span>
-									<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
+									<select sync-model name='next' ng-model='step.collectdigits.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
 										<option value=""></option>
 									</select>
 								</div>

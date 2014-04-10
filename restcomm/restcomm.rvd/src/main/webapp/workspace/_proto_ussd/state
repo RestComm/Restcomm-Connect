@@ -1,1 +1,39 @@
-{"projectKind":"ussd","startNodeName":"start","lastStepId":1,"nodes":[{"name":"start","label":"Welcome","steps":{"step1":{"text":"Welcome to Restcomm Visual Service Designer","language":null,"kind":"ussdSay","label":"USSD Message","title":"USSD Message","name":"step1"}},"stepnames":["step1"],"iface":{"edited":false,"editLabel":false}}],"activeNode":0,"lastNodeId":0}
+{
+  "header": {
+  	"projectKind": "ussd",
+  	"startNodeName": "start",
+  	"version": "1.0"
+  },
+  "lastNodeId": 1,
+  "lastStepId": 1,
+  "nodes": [
+    {
+      "kind": "ussd",
+      "name": "start",
+      "label": "Welcome",
+      "steps": {
+        "step1": {
+          "kind": "ussdSay",
+          "label": "USSD Message",
+          "title": "USSD Message",
+          "text": "Welcome to Restcomm Visual Service Designer",
+          "language": null,
+          "iface": {
+            "showWarning": false
+          },
+          "name": "step1"
+        }
+      },
+      "stepnames": [
+        "step1"
+      ],
+      "iface": {
+        "edited": false,
+        "editLabel": false
+      }
+    }
+  ],
+  "iface": {
+	  "activeNode": 0
+  }
+}

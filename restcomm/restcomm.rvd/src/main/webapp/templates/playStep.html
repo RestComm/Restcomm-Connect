@@ -1,7 +1,9 @@
 
 <div class="step play-step panel panel-rvdstep">
-	<div class="panel-heading"><h4 class="panel-title"><i ng-click='step.isCollapsed = !step.isCollapsed' class="fa rvd-clickable" ng-class="{'fa-caret-right': step.isCollapsed, 'fa-caret-down': !step.isCollapsed}"></i>&nbsp; &nbsp;<span  tooltip='{{step.name}}'>{{step.title}}</span><i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i></h4></div>
-	<div class="panel-body" ng-hide='step.isCollapsed'>
+	<div class="panel-heading">
+		<ng-include src="'templates/stepHeading.html'"></ng-include>
+	</div>
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<form name="form" novalidate>
 			<div class='form-group row'>
 				<div class="col-md-12">
@@ -16,8 +18,8 @@
 							<span>remote &nbsp;</span>
 							<input ng-model='step.playType' value='remote' type="radio">
 						</span>		
-						<input name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.wavUrl' type='url' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
-						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control" required></select>
+						<input name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' type='url' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
+						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.local.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control" required></select>
 					</div>
 					<div class="validation-error" ng-show="step.playType=='remote' && form.wavUrl.$invalid">Type a valid .wav resource URL</div>
 					<div class="validation-error" ng-show="step.playType=='local' && form.wavLocalFilename.$invalid">Please select a file from the list</div>

@@ -11,7 +11,6 @@ public abstract class Step {
     private String kind;
     private String label;
     private String title;
-    private Boolean isCollapsed;
     private String name;
 
     public String getKind() {
@@ -36,14 +35,6 @@ public abstract class Step {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public Boolean getIsCollapsed() {
-        return isCollapsed;
-    }
-
-    public void setIsCollapsed(Boolean isCollapsed) {
-        this.isCollapsed = isCollapsed;
     }
 
     public String getName() {

@@ -9,55 +9,32 @@ import org.mobicents.servlet.restcomm.rvd.ProjectService;
 
 public class PlayStep extends Step {
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
-    private String wavUrl;
-    private String wavLocalFilename;
     private Integer loop;
     private String playType;
+    private Local local;
+    private Remote remote;
 
-    public String getWavUrl() {
-        return wavUrl;
+    public final class Local {
+        private String wavLocalFilename;
+    }
+    public final class Remote {
+        private String wavUrl;
     }
 
-    public void setWavUrl(String wavUrl) {
-        this.wavUrl = wavUrl;
-    }
 
-    public String getWavLocalFilename() {
-        return wavLocalFilename;
-    }
-
-    public void setWavLocalFilename(String wavLocalFilename) {
-        this.wavLocalFilename = wavLocalFilename;
-    }
-
-    public Integer getLoop() {
-        return loop;
-    }
-
-    public void setLoop(Integer loop) {
-        this.loop = loop;
-    }
-
-    public String getPlayType() {
-        return playType;
-    }
-
-    public void setPlayType(String playType) {
-        this.playType = playType;
-    }
     @Override
     public RcmlStep render(Interpreter interpreter) {
         RcmlPlayStep playStep = new RcmlPlayStep();
         String url = "";
-        if ("local".equals(getPlayType()))
+        if ("local".equals(playType))
             //url = interpreter.getHttpRequest().getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + getWavLocalFilename();
-            url = interpreter.getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + getWavLocalFilename();
+            url = interpreter.getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + local.wavLocalFilename;
         else
-            url = getWavUrl();
+            url = remote.wavUrl;
 
         logger.debug("play url: " + url);
         playStep.setWavurl(url);
-        playStep.setLoop(getLoop());
+        playStep.setLoop(loop);
 
         return playStep;
     }

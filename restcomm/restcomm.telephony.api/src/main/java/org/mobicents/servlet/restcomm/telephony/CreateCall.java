@@ -16,12 +16,14 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author gvagenas@telestax.com
  */
 @Immutable
 public final class CreateCall {
@@ -38,6 +40,7 @@ public final class CreateCall {
     private final Type type;
     private final Sid accountId;
     private boolean createCDR = true;
+    private Configuration runtimeSettings = null;
 
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final Type type, final Sid accountId) {

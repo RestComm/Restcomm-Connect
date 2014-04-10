@@ -18,12 +18,20 @@ package org.mobicents.servlet.restcomm.telephony;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
+import akka.actor.ActorRef;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class JoinComplete {
-    public JoinComplete() {
-        super();
+    private final ActorRef endpoint;
+
+    public JoinComplete(final ActorRef endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public ActorRef endpoint(){
+        return endpoint;
     }
 }
