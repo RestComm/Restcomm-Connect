@@ -11,8 +11,8 @@
       "name": "start",
       "kind": "voice",
       "label": "Welcome",
-      "steps": {
-        "step1": {
+      "steps": [
+        {
           "kind": "say",
           "label": "say",
           "title": "say",
@@ -22,9 +22,6 @@
           },
           "name": "step1"
         }
-      },
-      "stepnames": [
-        "step1"
       ],
       "iface": {
         "edited": false,

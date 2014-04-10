@@ -19,8 +19,7 @@ public class GatherStep extends Step {
     private Integer timeout;
     private String finishOnKey;
     private Integer numDigits;
-    private Map<String, Step> steps;
-    private List<String> stepnames;
+    private List<Step> steps;
     private Menu menu;
     private Collectdigits collectdigits;
     private String gatherType;
@@ -53,8 +52,8 @@ public class GatherStep extends Step {
         rcmlStep.setMethod(method);
         rcmlStep.setNumDigits(numDigits);
 
-        for (String nestedStepName : stepnames)
-            rcmlStep.getSteps().add(steps.get(nestedStepName).render(interpreter));
+        for (Step nestedStep : steps)
+            rcmlStep.getSteps().add(nestedStep.render(interpreter));
 
         return rcmlStep;
     }

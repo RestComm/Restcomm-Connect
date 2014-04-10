@@ -15,36 +15,31 @@
 						"name": {"type": "string"},
 						"label": {"type": "string"},
 						"steps": {
-							"title": "Generic RVD step",
-							"type": "object",
-							"patternProperties": {
-								"^step[0-9]+$": {
-									"type": "object",
-									"oneOf": [
-										{ "$ref": "saystep.json" },
-										{ "$ref": "playstep.json" },
-										{ "$ref": "gatherstep.json" },
-										{ "$ref": "dialstep.json" },
-										{ "$ref": "hangupstep.json" },
-										{ "$ref": "externalServiceStep.json" },
-										{ "$ref": "rejectStep.json" },
-										{ "$ref": "pauseStep.json" },
-										{ "$ref": "redirectStep.json" },
-										{ "$ref": "smsStep.json" },
-										{ "$ref": "recordStep.json" },
-										{ "$ref": "faxStep.json" },
-										{ "$ref": "ussdSayStep.json" },
-										{ "$ref": "ussdCollectStep.json" },
-										{ "$ref": "ussdLanguageStep.json" }
-									]
-								}
-							},
-							"additionalProperties": false
+							"type": "array",
+							"items": {
+								"type": "object",
+								"oneOf": [
+									{ "$ref": "saystep.json" },
+									{ "$ref": "playstep.json" },
+									{ "$ref": "gatherstep.json" },
+									{ "$ref": "dialstep.json" },
+									{ "$ref": "hangupstep.json" },
+									{ "$ref": "externalServiceStep.json" },
+									{ "$ref": "rejectStep.json" },
+									{ "$ref": "pauseStep.json" },
+									{ "$ref": "redirectStep.json" },
+									{ "$ref": "smsStep.json" },
+									{ "$ref": "recordStep.json" },
+									{ "$ref": "faxStep.json" },
+									{ "$ref": "ussdSayStep.json" },
+									{ "$ref": "ussdCollectStep.json" },
+									{ "$ref": "ussdLanguageStep.json" }
+								]
+							}
 						},
-						"stepnames": {"type": "array"},
 						"iface": {"type": "object"}
 					},
-					"required": ["name","label","steps","stepnames"]
+					"required": ["name","label","steps"]
 				}
 			},
 			"lastStepId": {

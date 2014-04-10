@@ -128,7 +128,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	// Project management
 	$scope.projectList = [];
-	//$scope.newProjectName = $routeParams.projectName;
 	
 	$scope.spinnerSettings = {
 		radius: 4,
@@ -210,14 +209,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.nodes.push( $newnode );
 		return $newnode;
 	};
-	/*$scope.addNodeAndFocus = function (editLabel, kind) {
-		//$scope.setVisibleNodes(kind);
-		var node = $scope.addNode(undefined, kind);
-		if (typeof editLabel !== undefined  && editLabel)
-			node.iface.editLabel = true;
-		$scope.setActiveNode(node);
-		return node;
-	};*/
 	$scope.removeNode = function( index) {
 		if ( index < $scope.nodes.length ) {
 			$scope.nodes.splice(index,1);
@@ -232,31 +223,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		for ( var i = 0; i < $scope.nodes.length; i++ ) {
 			var anynode = $scope.nodes[i];
 			alltargets.push( {label: anynode.label, name:anynode.name} );
-			/*
-			for ( var j=0; j < anynode.stepnames.length; j++ ) {
-				var stepname = anynode.stepnames[j];
-				if ( anynode.steps.hasOwnProperty(stepname) )
-					var step = anynode.steps[stepname];
-					var label = '';
-					switch ( step.kind ) {
-						case 'say': 
-							var max_phrase_length = 10;
-							label = " - Say " + step.phrase.substring(0, Math.min(step.phrase.length,10));
-							if ( step.phrase.length > max_phrase_length )
-								label += "...";
-						break;
-						default: label = " - " + step.label + " "; break;
-							
-						//case 'gather': label = " - Gather "; break;
-						//case 'dial': label = " - Dial "; break;
-						//case 'hungup': label = " - Hungup "; break;
-						//case 'dial': label = " - Dial "; break;
-					}
-					var name = anynode.name + "." + step.name;
-					label = anynode.label + "." + step.name + label;
-					alltargets.push( {label: label, name: name} );
-			}
-			*/
 		}
 		return alltargets;	
 	}
@@ -460,6 +426,24 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		dialstep.dialNouns.splice( dialstep.dialNouns.indexOf(noun), 1 );
 	}
 	
+	$scope.addStep = function (item,pos,listmodel) {
+		console.log("Adding step ");
+		console.log(item);
+		r = RegExp("button-([^ ]+)");
+		m = r.exec( item.attr("class") );
+		if ( m != null ) {
+			var step = angular.copy(protos.stepProto[ m[1] ]);
+			step.name = stepService.newStepName();
+			
+			console.log("adding step - " + m[1]);
+			$scope.$apply( function ()  {
+				listmodel.splice(pos,0, step);
+			});
+		}				
+	}
+	
+
+	
 	$scope.onSavePressed = function() {
 		usSpinnerService.spin('spinner-save');
 		$scope.clearStepWarnings();
@@ -522,8 +506,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.clearStepWarnings = function () {
 		for ( var i=0; i<$scope.nodes.length; i++ ) {
-			for (var stepname in $scope.nodes[i].steps)
-				$scope.nodes[i].steps[stepname].iface.showWarning = false;
+			for (var j=0; j< $scope.nodes[i].steps.length; j++)
+				$scope.nodes[i].steps[j].iface.showWarning = false;
 		}
 	}
 	
@@ -546,8 +530,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.getUssdNodeLang = function (node) {
 		var lang = "en";
-		for ( var stepname in node.steps ) {
-			var step = node.steps[stepname];
+		for ( var i=0; i>node.steps.length; i++ ) {
+			var step = node.steps[i];
 			if ( step.kind == "ussdLanguage") 
 				if (step.language != null  &&  step.language != 'en') {
 					lang = step.language;
@@ -559,8 +543,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.countNodeUssdChars = function (node) {
 		var sum = 0;
-		for ( var stepname in node.steps ) {
-			var step = node.steps[stepname];
+		for ( var i=0; i<node.steps.length; i++ ) {
+			var step = node.steps[i];
 			if ( step.kind == "ussdSay" ) 
 				sum += $scope.countUssdChars(step.text);
 			else
@@ -597,8 +581,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		state.nodes = angular.copy($scope.nodes);
 		for ( var i=0; i < state.nodes.length; i++) {
 			var node = state.nodes[i];
-			for (var stepname in node.steps) {
-				var step = node.steps[stepname];
+			for (var i=0; i<node.steps.length; i++) {
+				var step = node.steps[i];
 				if (step.kind == "gather") {
 					if (step.gatherType == "menu")
 						delete step.collectdigits;
@@ -635,8 +619,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.nodes = packedState.nodes;
 		for ( var i=0; i < $scope.nodes.length; i++) {
 			var node = $scope.nodes[i];
-			for (var stepname in node.steps) {
-				var step = node.steps[stepname];
+			for (var j=0; j<node.steps.length; j++) {
+				var step = node.steps[j];
 				if (step.kind == "gather") {
 					if (step.gatherType == "menu")
 						step.collectdigits = angular.copy(protos.stepProto.gather.collectdigits);

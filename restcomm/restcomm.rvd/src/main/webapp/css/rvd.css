@@ -336,6 +336,13 @@ li.verb {
 	min-height:50px;
 }
 
+.steps {
+	min-height: 50px;
+}
+
+.button-say {
+}
+
 /* make draggable .label's occupy some space when dragged onto to sortables */
 .label.ui-sortable-placeholder:empty {
 	display: inline;
