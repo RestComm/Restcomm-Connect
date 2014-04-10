@@ -1226,10 +1226,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 isForking = false;
                 final CreateCall create = new CreateCall(e164(callerId(verb)), e164(text), null, null, false, timeout(verb),
                         CreateCall.Type.PSTN, accountId);
-//                if (dialRecordAttribute != null) {
-//                    create.setRecordingType(RecordingType.getValueOf(dialRecordAttribute.value()));
-//                    create.setRuntimeSettings(configuration.subset("runtime-settings"));
-//                }
                 callManager.tell(create, source);
             } else if (verb.hasChildren()) {
                 // Handle conferencing.
@@ -1240,12 +1236,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     buffer.append(accountId.toString()).append(":").append(name);
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
-//                    if(dialRecordAttribute != null) {
-//                        logger.info("Dialing to a conference and record attribute is: "+dialRecordAttribute.value()+" Will start recording.");
-//                        RecordingType recordingType = RecordingType.getValueOf(dialRecordAttribute.value());
-//                        Configuration runtimeSettings = configuration.subset("runtime-settings");
-//                        call.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, storage), null);
-//                    }
                 } else {
                     // Handle forking.
                     dialBranches = new ArrayList<ActorRef>();
