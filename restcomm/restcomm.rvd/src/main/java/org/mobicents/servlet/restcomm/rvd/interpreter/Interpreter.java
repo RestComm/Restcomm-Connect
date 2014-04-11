@@ -197,6 +197,10 @@ public class Interpreter {
     }
 
 
+    public HttpServletRequest getHttpRequest() {
+        return httpRequest;
+    }
+
     public Map<String, String> getVariables() {
         return variables;
     }
