@@ -9,8 +9,9 @@
 					<h4>Prompt</h4>
 					<p class="text-muted">Drag <em>say</em> commands  below to prompt the user to type some digits</p>
 					<small>
-						<div class='sortable-steps nested' sortable-steps>
-							<div class='step' ng-repeat='step in orderedSteps'>
+						<!-- <div class='sortable-steps nested' sortable-steps> -->
+						<div basic-sortable  list-model="step.steps" class='steps' item-added='addStep(item,pos,listmodel)'>
+							<div class='step' step ng-repeat='step in step.steps'>
 								<div ng-switch on="step.kind">
 									<div ng-switch-when="say">
 										<ng-include src="'templates/sayStep.html'"></ng-include>
@@ -21,6 +22,12 @@
 								</div>
 							</div>
 						</div>
+						<!-- 
+						<div class='step' step list-model='node.steps'  ng-repeat='step in node.steps'>
+							<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
+						</div>
+						 -->
+						
 					</small>					
 				</div>
 				<div class="col-md-6">

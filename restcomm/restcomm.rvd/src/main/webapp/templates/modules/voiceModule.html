@@ -1,7 +1,7 @@
 <div>	
 	{{node.steps}}
 	<div basic-sortable list-model="node.steps" class='steps' item-added='addStep(item,pos,listmodel)'>
-		<div class='step' ng-repeat='step in node.steps'>
+		<div class='step' list-model='node.steps'  ng-repeat='step in node.steps'>
 			<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
 		</div>
 	</div>

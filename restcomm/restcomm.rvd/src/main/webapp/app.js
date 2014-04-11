@@ -99,6 +99,16 @@ App.directive("syncModel", function(){
         }
 });
 
+App.directive("step", function () {
+	return {
+		restrict: 'A',
+		link: function(scope, element, attrs, controller) {
+			console.log("step created");
+			scope.aaa = "aaa value";
+		}
+	}
+});
+
 /*
  * Newer version of syncModel that reset model to undefined instead of null.
  */
