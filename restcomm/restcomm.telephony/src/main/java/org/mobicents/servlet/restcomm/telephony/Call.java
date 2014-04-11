@@ -416,38 +416,9 @@ public final class Call extends UntypedActor {
         String finishOnKey = "1234567890*#";
         int maxLength = 3600;
         int timeout = 5;
-        recordingSid = Sid.generate(Sid.Type.RECORDING);
         recordStarted = DateTime.now();
-
-        String path = runtimeSettings.getString("recordings-path");
-        if (!path.endsWith("/")) {
-            path += "/";
-        }
-        path += recordingSid.toString() + ".wav";
-        recordingUri = URI.create(path);
         Record record = null;
-        if (playBeep) {
-            final List<URI> prompts = new ArrayList<URI>(1);
-            path = runtimeSettings.getString("prompts-uri");
-            if (!path.endsWith("/")) {
-                path += "/";
-            }
-            path += "beep.wav";
-            try {
-                prompts.add(URI.create(path));
-            } catch (final Exception exception) {
-                // final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
-                // notifications.addNotification(notification);
-                // sendMail(notification);
-                // final StopInterpreter stop = StopInterpreter.instance();
-                // source.tell(stop, source);
-                exception.printStackTrace();
-                return;
-            }
-            record = new Record(recordingUri, prompts, timeout, maxLength, finishOnKey);
-        } else {
-            record = new Record(recordingUri, timeout, maxLength, finishOnKey);
-        }
+        record = new Record(recordingUri, timeout, maxLength, finishOnKey);
         group.tell(record, null);
         recording = true;
     }
@@ -518,6 +489,8 @@ public final class Call extends UntypedActor {
                 daoManager = startRecordingCall.getDaoManager();
             if (accountId == null)
                 accountId = startRecordingCall.getAccountId();
+            recordingSid = startRecordingCall.getRecordingSid();
+            recordingUri = startRecordingCall.getRecordingUri();
             recording = true;
             startRecordingCall();
         } else if (StopRecordingCall.class.equals(klass)) {

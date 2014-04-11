@@ -20,6 +20,8 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import java.net.URI;
+
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -58,11 +60,15 @@ public class StartRecordingCall {
     private Sid accountId;
     private Configuration runtimeSetting;
     private DaoManager daoManager;
+    private Sid recordingSid;
+    private URI recordingUri;
 
-    public StartRecordingCall(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager) {
+    public StartRecordingCall(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager, final Sid recordingSid, final URI recordingUri) {
         this.accountId = accountId;
         this.runtimeSetting = runtimeSettings;
         this.daoManager = daoManager;
+        this.recordingSid = recordingSid;
+        this.recordingUri = recordingUri;
     }
 
     public Sid getAccountId() {
@@ -75,5 +81,13 @@ public class StartRecordingCall {
 
     public DaoManager getDaoManager() {
         return daoManager;
+    }
+
+    public Sid getRecordingSid() {
+        return recordingSid;
+    }
+
+    public URI getRecordingUri() {
+        return recordingUri;
     }
 }
