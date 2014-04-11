@@ -64,8 +64,7 @@ public class DialTest {
 
     @ArquillianResource
     private Deployer deployer;
-    @ArquillianResource
-    URL deploymentUrl;
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -159,7 +158,7 @@ public class DialTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-//        deployer.undeploy("DialTest");
+        deployer.undeploy("DialTest");
     }
 
     @Test
@@ -427,7 +426,8 @@ public class DialTest {
 
     @Test
     public synchronized void testDialClientAliceWithRecord() throws InterruptedException, ParseException {
-
+        deployer.deploy("DialTest");
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -475,7 +475,8 @@ public class DialTest {
             exception.printStackTrace();
         }
         
-        JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        final String deploymentUrl = "http://127.0.0.1:8080/restcomm.application-"+this.version+"/";
+        JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue("7.0".equalsIgnoreCase(recordings.get("duration").getAsString()));
         assertNotNull(recordings.get("uri").getAsString());
@@ -890,7 +891,8 @@ public class DialTest {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // with Dial Action screening
     public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
-
+        deployer.deploy("DialTest");
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -955,7 +957,8 @@ public class DialTest {
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     // with Dial Action screening
     public synchronized void testDialSipDialTagScreening180Decline() throws InterruptedException, ParseException {
-
+        deployer.deploy("DialTest");
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -1020,7 +1023,7 @@ public class DialTest {
         }
     }
 
-    @Deployment(name = "DialTest", managed = true, testable = false)
+    @Deployment(name = "DialTest", managed = false, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         final WebArchive archive = ShrinkWrapMaven.resolver()
