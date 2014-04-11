@@ -4,5 +4,5 @@
 	<span  tooltip='{{step.name}}'>{{step.title}}</span> 
 	<!-- <small>{{step.phrase}}</small>  -->
 	<i ng-show='step.iface.showWarning' class="fa fa-warning step-warning-icon"></i>
-	<i ng-click='stepService.removeStep(steps,stepnames,step,orderedSteps)' class='fa fa-trash-o pull-right rvd-clickable'></i>
+	<i ng-click='removeStep(step,node.steps,step.steps)' class='fa fa-trash-o pull-right rvd-clickable'></i>
 </h4>

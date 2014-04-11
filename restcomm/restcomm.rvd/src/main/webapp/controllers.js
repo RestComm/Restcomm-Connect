@@ -442,6 +442,17 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		}				
 	}
 	
+	$scope.removeStep = function (step,node_steps,steps) {
+		console.log("Removing step");
+		var container;
+		if ( typeof steps != 'undefined')
+			container = steps;
+		else
+			container = node_steps;
+		
+		container.splice( container.indexOf(step), 1);
+	}
+	
 
 	
 	$scope.onSavePressed = function() {
