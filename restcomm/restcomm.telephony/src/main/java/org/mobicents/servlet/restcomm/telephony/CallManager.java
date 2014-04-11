@@ -276,19 +276,24 @@ public final class CallManager extends UntypedActor {
      * @param request
      * @param accounts
      * @param applications
-     * @param id
+     * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id) {
+            final ApplicationsDao applications, String phone) {
         boolean isFoundHostedApp = false;
-
+        // Format the destination to an E.164 phone number.
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String formatedPhone = null;
         try {
-            // Format the destination to an E.164 phone number.
-            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-            final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(id, "US"), PhoneNumberFormat.E164);
+        formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+        } catch (Exception e) {}
+        try {
             // Try to find an application defined for the phone number.
             final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            final IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+            IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(formatedPhone);
+            if (number == null) {
+                number = numbers.getIncomingPhoneNumber(phone);
+            }
             if (number != null) {
                 final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
@@ -325,7 +330,7 @@ public final class CallManager extends UntypedActor {
                 interpreter.tell(new StartInterpreter(call), self);
                 isFoundHostedApp = true;
             }
-        } catch (final NumberParseException notANumber) {
+        } catch (Exception notANumber) {
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
