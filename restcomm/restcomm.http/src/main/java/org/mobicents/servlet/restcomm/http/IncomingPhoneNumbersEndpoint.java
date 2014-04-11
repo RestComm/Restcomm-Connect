@@ -63,6 +63,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com
  */
 @NotThreadSafe
 public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
@@ -183,9 +184,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
         builder.setSid(sid);
         builder.setAccountSid(accountSid);
-        final PhoneNumber phoneNumber = getPhoneNumber(data);
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        builder.setPhoneNumber(phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164));
+        String phoneNumber = data.getFirst("PhoneNumber");
+        builder.setPhoneNumber(phoneNumber);
         builder.setFriendlyName(getFriendlyName(phoneNumber, data));
         final String apiVersion = getApiVersion(data);
         builder.setApiVersion(apiVersion);
@@ -222,9 +222,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    private String getFriendlyName(final PhoneNumber phoneNumber, final MultivaluedMap<String, String> data) {
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.NATIONAL);
+    private String getFriendlyName(final String phoneNumber, final MultivaluedMap<String, String> data) {
+        String friendlyName = phoneNumber;
         if (data.containsKey("FriendlyName")) {
             friendlyName = data.getFirst("FriendlyName");
         }
@@ -323,11 +322,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
         if (!data.containsKey("PhoneNumber")) {
             throw new NullPointerException("Phone number can not be null.");
-        }
-        try {
-            PhoneNumberUtil.getInstance().parse(data.getFirst("PhoneNumber"), "US");
-        } catch (final NumberParseException exception) {
-            throw new IllegalArgumentException("Invalid phone number.");
         }
     }
 
