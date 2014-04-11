@@ -1447,7 +1447,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void recordCall() {
         logger.info("Start recording of the call");
         Configuration runtimeSettings = configuration.subset("runtime-settings");
-        call.tell(new StartRecordingCall(accountId, runtimeSettings, storage), null);
+        recordingSid = Sid.generate(Sid.Type.RECORDING);
+        String path = runtimeSettings.getString("recordings-path");
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        path += recordingSid.toString() + ".wav";
+        this.recordingUri = URI.create(path);
+        call.tell(new StartRecordingCall(accountId, runtimeSettings, storage, recordingSid, recordingUri), null);
     }
 
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
