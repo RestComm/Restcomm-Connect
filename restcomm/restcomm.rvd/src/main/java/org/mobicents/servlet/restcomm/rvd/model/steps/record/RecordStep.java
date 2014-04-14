@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.model.steps.record;
 
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,24 +91,29 @@ public class RecordStep extends Step {
 
         return rcmlStep;
     }
+
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
         logger.debug("handling record action");
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
-        //String RecordingUrl = interpreter.getHttpRequest().getParameter("RecordingUrl");
-        //String RecordingDuration = interpreter.getHttpRequest().getParameter("RecordingDuration");
-        //String Digits = interpreter.getHttpRequest().getParameter("Digits");
-        String RecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
-        String RecordingDuration = interpreter.getRequestParams().getFirst("RecordingDuration");
-        String Digits = interpreter.getRequestParams().getFirst("Digits");
+        String restcommRecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
+        if ( restcommRecordingUrl != null ) {
+            try {
+                String recordingUrl = interpreter.convertRecordingFileResourceHttp(restcommRecordingUrl, interpreter.getHttpRequest());
+                interpreter.getVariables().put("core_RecordingUrl", recordingUrl);
+            } catch (URISyntaxException e) {
+                logger.warn("Cannot convert file URL to http URL - " + restcommRecordingUrl, e);
+            }
+        }
 
-        if ( RecordingUrl != null )
-            interpreter.getVariables().put("RecordingUrl", RecordingUrl);
+        String RecordingDuration = interpreter.getRequestParams().getFirst("RecordingDuration");
         if (RecordingDuration != null )
-            interpreter.getVariables().put("RecordingDuration", RecordingDuration);
+            interpreter.getVariables().put("core_RecordingDuration", RecordingDuration);
+
+        String Digits = interpreter.getRequestParams().getFirst("Digits");
         if (Digits != null )
-            interpreter.getVariables().put("Digits", Digits);
+            interpreter.getVariables().put("core_Digits", Digits);
 
         interpreter.interpret( getNext(), null );
     }
