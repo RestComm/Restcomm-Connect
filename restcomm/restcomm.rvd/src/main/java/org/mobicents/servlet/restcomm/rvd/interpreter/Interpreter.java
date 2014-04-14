@@ -581,4 +581,36 @@ public class Interpreter {
         }
         return url;
     }
+
+    /**
+     * Converts a file resource to a recorded wav file into an http resource accessible over HTTP. The path generated path for the wav files is hardcoded to /restcomm/recordings
+     * @param fileResource
+     * @param interpreter
+     * @return
+     */
+    public String convertRecordingFileResourceHttp(String fileResource, HttpServletRequest request) throws URISyntaxException {
+        String httpResource = fileResource; // assume this is already an http resource
+
+        URIBuilder fileUriBuilder = new URIBuilder(fileResource);
+
+        if ( ! fileUriBuilder.isAbsolute() ) {
+            logger.warn("Cannot convert file URL to http URL - " + fileResource);
+            return "";
+        }
+
+        if ( fileUriBuilder.getScheme().startsWith("http") ) // http or https - nothing to worry about
+            return fileResource;
+
+        if ( fileUriBuilder.getScheme().startsWith("file") ) {
+            String wavFilename = "";
+            int filenameBeforeStartPos = fileResource.lastIndexOf('/');
+            if ( filenameBeforeStartPos != -1 ) {
+                wavFilename = fileResource.substring(filenameBeforeStartPos+1);
+                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                httpResource = httpUriBuilder.build().toString();
+            }
+        }
+
+        return httpResource;
+    }
 }
