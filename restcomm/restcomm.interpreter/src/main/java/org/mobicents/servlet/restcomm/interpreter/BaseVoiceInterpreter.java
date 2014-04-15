@@ -533,7 +533,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         final ActorRef self = self();
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
-            context.stop(self);
+            context.stop(self());
         }
     }
 
