@@ -3,8 +3,6 @@ package org.mobicents.servlet.restcomm.rvd.model.steps.dial;
 import java.lang.reflect.Type;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.BuildService;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -14,14 +12,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class DialNounJsonDeserializer implements JsonDeserializer<DialNoun> {
-    static final Logger logger = Logger.getLogger(BuildService.class.getName());
+    static final Logger logger = Logger.getLogger(DialNounJsonDeserializer.class.getName());
 
     @Override
     public DialNoun deserialize(JsonElement element, Type arg1, JsonDeserializationContext arg2) throws JsonParseException {
         JsonObject noun_object = element.getAsJsonObject();
         String dialType = noun_object.get("dialType").getAsString();
-
-        logger.info("INSIDE DialNoun json deserializer - " + dialType);
 
         Gson gson = new GsonBuilder().create();
 
