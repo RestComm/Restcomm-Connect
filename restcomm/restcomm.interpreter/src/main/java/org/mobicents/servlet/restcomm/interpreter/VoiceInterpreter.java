@@ -550,12 +550,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
                     callMediaGroup.tell(new Stop(), null);
                     fsm.transition(message, finishRecording);
-                } else if (!forking.equals(state) || call == sender()) {
+                } else if (bridged.equals(state) || call == sender()) {
                     if(!dialActionExecuted) {
                         fsm.transition(message, finishDialing);
-                    } else {
-                        fsm.transition(message, finished);
                     }
+                } else if (!forking.equals(state) || call == sender()) {
+                    fsm.transition(message, finished);
                 }
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 fsm.transition(message, finishDialing);
