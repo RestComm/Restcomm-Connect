@@ -114,7 +114,7 @@
 		
 			<div class='row'>	
 				<div  class="col-md-12 input-group form-group">
-					<span class="input-group-addon">Continue to</span>
+					<span class="input-group-addon help-tooltip"  tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Choose the module to continue to after the end of the call. "core_DialCallStatus", "core_DialCallSid", "core_DialCallDuration" and "core_RecordingUrl" (if Recording is enabled) variables will be available.'>Continue to</span>
 					<select auto-clear ng-model='step.nextModule' sync-modules name='nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control"  style="min-width:140px;">
 						<option value=""></option>
 					</select>
