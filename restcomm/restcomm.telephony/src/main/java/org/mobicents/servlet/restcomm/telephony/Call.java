@@ -258,6 +258,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(openingRemoteConnection, failed));
         transitions.add(new Transition(openingRemoteConnection, inProgress));
         transitions.add(new Transition(dialing, busy));
+//        transitions.add(new Transition(dialing, failingBusy));
         transitions.add(new Transition(dialing, canceling));
         transitions.add(new Transition(dialing, failingNoAnswer));
         transitions.add(new Transition(dialing, ringing));
@@ -606,7 +607,11 @@ public final class Call extends UntypedActor {
                 case SipServletResponse.SC_BUSY_HERE:
                 case SipServletResponse.SC_BUSY_EVERYWHERE: {
                     sendCallInfoToObservers();
-                    fsm.transition(message, failingBusy);
+                    if(dialing.equals(state)){
+                        break;
+                    } else {
+                        fsm.transition(message, failingBusy);
+                    }
                     break;
                 }
                 case SipServletResponse.SC_UNAUTHORIZED:
