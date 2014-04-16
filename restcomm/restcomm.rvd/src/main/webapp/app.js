@@ -82,7 +82,7 @@ App.factory('protos', function () {
 			reject: {kind:'reject', label:'reject', title:'reject', reason:null,iface:{}},
 			pause: {kind:'pause', label:'pause', title:'pause', length:null, iface:{}},
 			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
-			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:null, finishOnKey:null, maxLength:null, transcribe:null, transcribeCallback:null, playBeep:true, iface:{}},
+			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:undefined, finishOnKey:undefined, maxLength:undefined, transcribe:undefined, transcribeCallback:undefined, playBeep:undefined, iface:{}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
