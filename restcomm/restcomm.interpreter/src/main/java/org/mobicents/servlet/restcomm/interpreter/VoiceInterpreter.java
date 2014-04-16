@@ -550,13 +550,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
                     callMediaGroup.tell(new Stop(), null);
                     fsm.transition(message, finishRecording);
-                } else if (bridged.equals(state) || call == sender()) {
+                } else if (bridged.equals(state) && call == sender()) {
                     if(!dialActionExecuted) {
                         fsm.transition(message, finishDialing);
                     }
-                } else if (forking.equals(state) || call == sender()) {
-                    fsm.transition(message, finished);
+                } else {
+                    if (!finishDialing.equals(state))
+                        fsm.transition(message, finished);
                 }
+//                else if (!forking.equals(state) || call == sender()) {
+//                    fsm.transition(message, finished);
+//                }
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 fsm.transition(message, finishDialing);
             }
@@ -1626,7 +1630,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if(sender == call){
-                outboundCall.tell(new Hangup(), self());
+                if(outboundCall != null)
+                    outboundCall.tell(new Hangup(), self());
             } else {
                 call.tell(new Hangup(), self());
             }
