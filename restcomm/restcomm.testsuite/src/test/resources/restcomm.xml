@@ -138,7 +138,7 @@
 		interface for more information. -->
 	<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
 		<outbound-prefix></outbound-prefix>
-		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
+		<outbound-endpoint>127.0.0.1:5090</outbound-endpoint>
 	</sms-aggregator>
 
 	<!-- The Fax Service is used to send and receive faxes on behalf of RestComm. -->
