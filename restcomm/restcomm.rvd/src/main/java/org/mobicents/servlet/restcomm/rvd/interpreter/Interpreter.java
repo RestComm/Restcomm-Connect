@@ -23,6 +23,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
@@ -504,7 +505,7 @@ public class Interpreter {
             if (variables.containsKey(v.variableName))
                 replaceValue = variables.get(v.variableName);
 
-            buffer.replace(v.position, v.position + v.variableName.length() + 1, replaceValue); // +1 is for the $ character
+            buffer.replace(v.position, v.position + v.variableName.length() + 1, replaceValue == null ? "" : replaceValue); // +1 is for the $ character
         }
 
         return buffer.toString();
@@ -518,6 +519,17 @@ public class Interpreter {
             else
                 query += "&";
             query += key + "=" + pairs.get(key);
+        }
+
+        // append sticky parameters
+        for ( String variableName : variables.keySet() ) {
+            if( variableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+                if ("".equals(query))
+                    query += "?";
+                else
+                    query += "&";
+                query += variableName + "=" + variables.get(variableName);
+            }
         }
 
         return "controller" + query;

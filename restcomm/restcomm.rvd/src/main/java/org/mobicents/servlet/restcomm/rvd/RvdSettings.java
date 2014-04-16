@@ -11,6 +11,7 @@ public class RvdSettings {
     private static final String protoProjectName = "_proto";
     private static final String wavsDirectoryName = "wavs";
     private static final String RVD_PROJECT_VERSION = "1.0"; // version for rvd project syntax
+    public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
 
     private Map<String,String> options;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
