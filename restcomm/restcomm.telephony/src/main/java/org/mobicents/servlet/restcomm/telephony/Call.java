@@ -258,6 +258,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(openingRemoteConnection, failed));
         transitions.add(new Transition(openingRemoteConnection, inProgress));
         transitions.add(new Transition(dialing, busy));
+        transitions.add(new Transition(dialing, failingBusy));
         transitions.add(new Transition(dialing, canceling));
         transitions.add(new Transition(dialing, failingNoAnswer));
         transitions.add(new Transition(dialing, ringing));

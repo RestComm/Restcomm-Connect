@@ -554,7 +554,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if(!dialActionExecuted) {
                         fsm.transition(message, finishDialing);
                     }
-                } else if (!forking.equals(state) || call == sender()) {
+                } else if (forking.equals(state) || call == sender()) {
                     fsm.transition(message, finished);
                 }
             } else if (CallStateChanged.State.BUSY == event.state()) {
