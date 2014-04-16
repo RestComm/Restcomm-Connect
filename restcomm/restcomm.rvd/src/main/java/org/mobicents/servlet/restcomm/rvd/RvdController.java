@@ -44,10 +44,7 @@ public class RvdController {
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_XML)
-    public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
-
+    private Response runInterpreter( String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
         try {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
@@ -58,7 +55,6 @@ public class RvdController {
 
         String rcmlResponse;
         try {
-            MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
             String targetParam = requestParams.getFirst("target");
             Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest, requestParams);
             rcmlResponse = interpreter.interpret();
@@ -71,31 +67,23 @@ public class RvdController {
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
+        logger.debug("[RvdController] " + httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
+
+        return runInterpreter(appname, httpRequest, requestParams);
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+        logger.debug("[RvdController] " + httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        logger.debug("[RvdController] POST Params: " + requestParams.toString());
 
-        try {
-            if (!projectService.projectExists(appname))
-                return Response.status(Status.NOT_FOUND).build();
-        } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-
-        String rcmlResponse;
-        try {
-            String targetParam = requestParams.getFirst("target");
-            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest, requestParams);
-            rcmlResponse = interpreter.interpret();
-        } catch (StorageException e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-
-        logger.debug(rcmlResponse);
-        return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
+        return runInterpreter(appname, httpRequest, requestParams);
     }
 
 }
