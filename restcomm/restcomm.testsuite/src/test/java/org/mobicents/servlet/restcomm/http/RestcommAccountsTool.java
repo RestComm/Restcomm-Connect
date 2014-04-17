@@ -35,7 +35,7 @@ public class RestcommAccountsTool {
     }
 
     private String getAccountsUrl(String deploymentUrl, Boolean xml) {
-        if (accountsUrl == null) {
+//        if (accountsUrl == null) {
             if (deploymentUrl.endsWith("/")) {
                 deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
             }
@@ -44,7 +44,7 @@ public class RestcommAccountsTool {
             } else {
                 accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
             }
-        }
+//        }
 
         return accountsUrl;
     }
@@ -61,7 +61,8 @@ public class RestcommAccountsTool {
         params.add("EmailAddress", emailAddress);
         params.add("Password", password);
         params.add("Role", "Administartor");
-        params.add("Status", status);
+        if (status != null)
+            params.add("Status", status);
 
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
         JsonParser parser = new JsonParser();
