@@ -63,23 +63,6 @@ public class GatherStep extends Step {
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
         logger.debug("handling gather action");
 
-        // --- Handle sticky parameters ---
-
-        // 1. propagate existing sticky variables by putting them in the variables array. Whoever creates an action link from now on should take them into account
-        // 2. also make a local copy of them without the sticky_ prefix so that they can be accessed as ordinary module variables
-        for ( String anyVariableName : interpreter.getRequestParams().keySet() ) {
-            if ( anyVariableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
-                // set up sticky variables
-                String variableValue = interpreter.getRequestParams().getFirst(anyVariableName);
-                interpreter.getVariables().put(anyVariableName, variableValue );
-
-                // make local copies
-                // First, rip off the sticky_prefix
-                String localVariableName = anyVariableName.substring(RvdSettings.STICKY_PREFIX.length());
-                interpreter.getVariables().put(localVariableName, variableValue);
-            }
-        }
-
         if ("menu".equals(gatherType)) {
 
             boolean handled = false;
@@ -105,7 +88,6 @@ public class GatherStep extends Step {
                 logger.warn("'Digits' parameter was null. Is this a valid restcomm request?");
                 variableValue = "";
             }
-
 
             // is this an application-scoped variable ?
             if ( "application".equals(collectdigits.scope) ) {
