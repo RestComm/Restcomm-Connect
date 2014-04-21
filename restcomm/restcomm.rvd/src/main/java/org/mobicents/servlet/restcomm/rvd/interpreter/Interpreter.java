@@ -239,6 +239,8 @@ public class Interpreter {
                 logger.debug("override default target to " + targetParam);
             }
 
+            handleStickyParameters();
+
             response = interpret(targetParam, null);
         } catch (InterpreterException e) {
             logger.error(e.getMessage(), e);
@@ -624,5 +626,23 @@ public class Interpreter {
         }
 
         return httpResource;
+    }
+    /**
+     * Propagate existing sticky variables by putting them in the variables array. Whoever creates an action link from now on should take them into account
+     * also make a local copy of them without the sticky_ prefix so that they can be accessed as ordinary module variables
+     */
+    public void handleStickyParameters() {
+        for ( String anyVariableName : getRequestParams().keySet() ) {
+            if ( anyVariableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+                // set up sticky variables
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(anyVariableName, variableValue );
+
+                // make local copies
+                // First, rip off the sticky_prefix
+                String localVariableName = anyVariableName.substring(RvdSettings.STICKY_PREFIX.length());
+                getVariables().put(localVariableName, variableValue);
+            }
+        }
     }
 }

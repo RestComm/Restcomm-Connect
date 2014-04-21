@@ -86,7 +86,7 @@ App.factory('protos', function () {
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
-			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:''}, text:'', language:null, messages:[], iface:{}},
+			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:'',scope:"module"}, text:'', language:null, messages:[], iface:{}},
 			ussdSayNested: {text:''},
 			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
 			
