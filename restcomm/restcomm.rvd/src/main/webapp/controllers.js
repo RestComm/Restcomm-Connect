@@ -410,10 +410,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		});
 	}
 	
-	$scope.addDialNoun = function (item, pos, listmodel) {
+	$scope.addDialNoun = function (classAttribute, pos, listmodel) {
 		//console.log("adding dial noun");
 		r = RegExp("dial-noun-([^ ]+)");
-		m = r.exec( item.attr("class") );
+		m = r.exec( classAttribute );
 		if ( m != null ) {
 			//console.log("adding dial noun - " + m[1]);
 			$scope.$apply( function ()  {
@@ -426,11 +426,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		dialstep.dialNouns.splice( dialstep.dialNouns.indexOf(noun), 1 );
 	}
 	
-	$scope.addStep = function (item,pos,listmodel) {
+	$scope.addStep = function (classAttribute,pos,listmodel) {
 		console.log("Adding step ");
-		console.log(item);
+		//console.log(item);
 		r = RegExp("button-([^ ]+)");
-		m = r.exec( item.attr("class") );
+		m = r.exec( classAttribute );
 		if ( m != null ) {
 			var step = angular.copy(protos.stepProto[ m[1] ]);
 			step.name = stepService.newStepName();
