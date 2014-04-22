@@ -20,18 +20,22 @@
  */
 package org.mobicents.servlet.restcomm.ussd.telephony;
 
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
+import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -43,6 +47,9 @@ import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
+import org.mobicents.servlet.restcomm.telephony.CreateCall;
+import org.mobicents.servlet.restcomm.telephony.InitializeOutbound;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreter;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreterBuilder;
@@ -70,11 +77,14 @@ public class UssdCallManager extends UntypedActor {
     private final ActorSystem system;
     private final Configuration configuration;
     private final ServletContext context;
-    private final ActorRef conferences;
     private final ActorRef gateway;
-    private final ActorRef sms;
     private final SipFactory sipFactory;
     private final DaoManager storage;
+    private CreateCall createCallRequest;
+    private final String ussdGatewayUri;
+    private final String ussdGatewayUsername;
+    private final String ussdGatewayPassword;
+    
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -99,12 +109,13 @@ public class UssdCallManager extends UntypedActor {
         this.configuration = configuration;
         this.context = context;
         this.gateway = gateway;
-        this.conferences = conferences;
-        this.sms = sms;
         this.sipFactory = factory;
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
-        this.useTo = runtime.getBoolean("use-to");
+        final Configuration ussdGatewayConfig = runtime.subset("ussd-gateway");
+        this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
+        this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
+        this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
     }
 
     private ActorRef ussdCall() {
@@ -132,9 +143,9 @@ public class UssdCallManager extends UntypedActor {
     @Override
     public void onReceive(final Object message) throws Exception {
 
-//        final Class<?> klass = message.getClass();
-//        final ActorRef self = self();
-//        final ActorRef sender = sender();
+        final Class<?> klass = message.getClass();
+        final ActorRef self = self();
+        final ActorRef sender = sender();
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
@@ -145,6 +156,13 @@ public class UssdCallManager extends UntypedActor {
                 processRequest(request);
             } else if ("ACK".equals(method)) {
                 processRequest(request);
+            }
+        }  else if (CreateCall.class.equals(klass)) {
+            try {
+                this.createCallRequest = (CreateCall) message;
+                sender.tell(new CallManagerResponse<ActorRef>(outbound(message)), self);
+            } catch (final Exception exception) {
+                sender.tell(new CallManagerResponse<ActorRef>(exception), self);
             }
         }
 
@@ -248,4 +266,38 @@ public class UssdCallManager extends UntypedActor {
         }
     }
 
+    private ActorRef outbound(final Object message) throws ServletParseException {
+        final CreateCall request = (CreateCall) message;
+        final Configuration runtime = configuration.subset("runtime-settings");
+        final String uri = ussdGatewayUri;
+        final String ussdUsername = (request.username() != null) ? request.username() : ussdGatewayUsername;
+        final String ussdPassword = (request.password() != null) ? request.password() : ussdGatewayPassword;
+        
+        SipURI from = (SipURI)sipFactory.createSipURI(request.from(), uri);
+        SipURI to = (SipURI)sipFactory.createSipURI(request.to(), uri);
+
+        String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+        from = outboundInterface(transport);
+
+        final ActorRef ussdCall = ussdCall();
+        final ActorRef self = self();
+        final InitializeOutbound init = new InitializeOutbound(null, from, to, ussdUsername, ussdPassword, request.timeout(),
+                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        ussdCall.tell(init, self);
+        return ussdCall;
+    }
+
+    private SipURI outboundInterface(String transport) {
+        SipURI result = null;
+        @SuppressWarnings("unchecked")
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
+        for (final SipURI uri : uris) {
+            final String interfaceTransport = uri.getTransportParam();
+            if (transport.equalsIgnoreCase(interfaceTransport)) {
+                result = uri;
+            }
+        }
+        return result;
+    }
+    
 }
