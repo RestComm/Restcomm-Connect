@@ -20,14 +20,20 @@
  */
 package org.mobicents.servlet.restcomm.ussd.telephony;
 
+import java.math.BigDecimal;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Currency;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.servlet.sip.Address;
 import javax.servlet.sip.ServletParseException;
@@ -40,6 +46,7 @@ import javax.servlet.sip.SipURI;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -55,6 +62,7 @@ import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetCallObservers;
+import org.mobicents.servlet.restcomm.telephony.InitializeOutbound;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
 
 import scala.concurrent.duration.Duration;
@@ -73,7 +81,8 @@ public class UssdCall extends UntypedActor  {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final String ussdContentType = "application/vnd.3gpp.ussd+xml";
-
+    private static final String OUTBOUND_API = "outbound-api";
+    private static final String OUTBOUND_DIAL = "outbound-dial";
     private UssdCallType ussdCallType;
 
     private final FiniteStateMachine fsm;
@@ -84,6 +93,7 @@ public class UssdCall extends UntypedActor  {
     private final State ready;
     private final State processingUssdMessage;
     private final State completed;
+    private final State queued;
 
     // SIP runtime stuff.
     private final SipFactory factory;
@@ -98,6 +108,7 @@ public class UssdCall extends UntypedActor  {
     private long timeout;
     private SipServletRequest invite;
     private SipServletResponse lastResponse;
+    private Map<String, String> headers;
 
     // Runtime stuff.
     private final Sid id;
@@ -106,8 +117,9 @@ public class UssdCall extends UntypedActor  {
     private DateTime created;
     private final List<ActorRef> observers;
 
-    private CallDetailRecordsDao recordsDao;
-
+    private CallDetailRecordsDao callDetailrecordsDao;
+    private CallDetailRecord outgoingCallRecord;
+    
     public UssdCall(final SipFactory factory, final ActorRef gateway) {
         super();
         final ActorRef source = self();
@@ -118,6 +130,7 @@ public class UssdCall extends UntypedActor  {
         ready = new State("answering", new Ready(source), null);
         processingUssdMessage = new State("processing UssdMessage", new ProcessingUssdMessage(source), null);
         completed = new State("Completed", new Completed(source), null);
+        queued = new State("queued", new Queued(source), null);
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -251,6 +264,8 @@ public class UssdCall extends UntypedActor  {
             fsm.transition(message, processingUssdMessage);
         } else if (Answer.class.equals(klass)) {
             fsm.transition(message, inProgress);
+        } else if (InitializeOutbound.class.equals(klass)) {
+            fsm.transition(message, queued);
         }
     }
 
@@ -369,6 +384,82 @@ public class UssdCall extends UntypedActor  {
 
         @Override
         public void execute(final Object message) throws Exception {
+
+        }
+    }
+    
+    private final class Queued extends AbstractAction {
+        public Queued(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            final InitializeOutbound request = (InitializeOutbound) message;
+            name = request.name();
+            from = request.from();
+            to = request.to();
+            apiVersion = request.apiVersion();
+            accountId = request.accountId();
+            username = request.username();
+            password = request.password();
+            type = request.type();
+            String toHeaderString = to.toString();
+            if (toHeaderString.indexOf('?') != -1) {
+                // custom headers parsing for SIP Out
+                // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                headers = new HashMap<String, String>();
+                // we keep only the to URI without the headers
+                to = (SipURI) factory.createURI(toHeaderString.substring(0, toHeaderString.lastIndexOf('?')));
+                String headersString = toHeaderString.substring(toHeaderString.lastIndexOf('?') + 1);
+                StringTokenizer tokenizer = new StringTokenizer(headersString, "&");
+                while (tokenizer.hasMoreTokens()) {
+                    String headerNameValue = tokenizer.nextToken();
+                    String headerName = headerNameValue.substring(0, headerNameValue.lastIndexOf('='));
+                    String headerValue = headerNameValue.substring(headerNameValue.lastIndexOf('=') + 1);
+                    headers.put(headerName, headerValue);
+                }
+            }
+            timeout = request.timeout();
+            if (request.isFromApi()) {
+                direction = OUTBOUND_API;
+            } else {
+                direction = OUTBOUND_DIAL;
+            }
+            // Notify the observers.
+            external = CallStateChanged.State.QUEUED;
+            final CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
+
+            if (callDetailrecordsDao != null) {
+                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                builder.setSid(id);
+                builder.setDateCreated(created);
+                builder.setAccountSid(accountId);
+                builder.setTo(to.getUser());
+                builder.setCallerName(name);
+                String fromString = from.getUser() != null ? from.getUser() : "rcml app";
+                builder.setFrom(fromString);
+                // builder.setForwardedFrom(callInfo.forwardedFrom());
+                // builder.setPhoneNumberSid(phoneId);
+                builder.setStatus(external.name());
+                builder.setDirection("outbound-api");
+                builder.setApiVersion(apiVersion);
+                builder.setPrice(new BigDecimal("0.00"));
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(apiVersion).append("/Accounts/");
+                buffer.append(accountId.toString()).append("/Calls/");
+                buffer.append(id.toString());
+                final URI uri = URI.create(buffer.toString());
+                builder.setUri(uri);
+
+                outgoingCallRecord = builder.build();
+                callDetailrecordsDao.addCallDetailRecord(outgoingCallRecord);
+            }
 
         }
     }
