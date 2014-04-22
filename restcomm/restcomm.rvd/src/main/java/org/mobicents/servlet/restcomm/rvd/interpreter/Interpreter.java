@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -240,6 +243,8 @@ public class Interpreter {
             }
 
             handleStickyParameters();
+            processRequestParameters();
+
 
             response = interpret(targetParam, null);
         } catch (InterpreterException e) {
@@ -642,6 +647,20 @@ public class Interpreter {
                 // First, rip off the sticky_prefix
                 String localVariableName = anyVariableName.substring(RvdSettings.STICKY_PREFIX.length());
                 getVariables().put(localVariableName, variableValue);
+            }
+        }
+    }
+
+    /**
+     * Create rvd variables out of Restcomm request parameters such as 'CallSid', 'AccountSid' etc. Use the 'core_'
+     * prefix in their names.
+     */
+    private void processRequestParameters() {
+        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","CallStatus","ApiVersion","Direction","CallerName"}));
+        for ( String anyVariableName : getRequestParams().keySet() ) {
+            if ( validNames.contains(anyVariableName) ) {
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
             }
         }
     }
