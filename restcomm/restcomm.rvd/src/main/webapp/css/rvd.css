@@ -223,7 +223,7 @@ label {
 	margin-bottom: 5px;
 }
 
-
+/*
 .sortable-steps {
 	min-height: 300px;
 	padding-bottom: 50px;
@@ -232,6 +232,10 @@ label {
 .sortable-steps.nested {
 	min-height: 50px;
 	padding-bottom: 5px;
+}*/
+
+.step-list {
+	min-height: 500px;
 }
 
 .rvd-spinner {
@@ -336,7 +340,7 @@ li.verb {
 	min-height:50px;
 }
 
-.steps {
+.nested-steps {
 	min-height: 50px;
 }
 

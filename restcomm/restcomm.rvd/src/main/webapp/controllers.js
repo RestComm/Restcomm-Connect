@@ -475,12 +475,12 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				} else if ( reason.type == 'validationError') {
 					console.log("Validation error");
 					$scope.addAlert("Project saved with validation errors", 'warning');
-					var r = /^\/nodes\/([0-9]+)\/steps\/([a-z]+[0-9]+)$/;
+					var r = /^\/nodes\/([0-9]+)\/steps\/([0-9]+)$/;
 					for (var i=0; i < reason.data.errorItems.length; i++) {
 						var failurePath = reason.data.errorItems[i].failurePath;
 						m = r.exec( reason.data.errorItems[i].failurePath );
 						if ( m != null ) {
-							console.log("warning in module " + m[1] + " step " + m[2]);
+							console.log("warning in module " + $scope.nodes[ m[1] ].name + " step " + $scope.nodes[ m[1] ].steps[m[2]].name);
 							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
 					}
@@ -573,7 +573,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		return remaining;
 	}
 	
-	$scope.nestUssdMessage = function (item, pos, listmodel) {
+	$scope.nestUssdMessage = function (classAttribute, pos, listmodel) {
 		$scope.$apply( function ()  {
 			listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSayNested' ]));
 		});

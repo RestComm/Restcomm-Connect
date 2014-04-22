@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +26,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
@@ -197,6 +201,10 @@ public class Interpreter {
     }
 
 
+    public HttpServletRequest getHttpRequest() {
+        return httpRequest;
+    }
+
     public Map<String, String> getVariables() {
         return variables;
     }
@@ -233,6 +241,10 @@ public class Interpreter {
                     throw new UndefinedTarget();
                 logger.debug("override default target to " + targetParam);
             }
+
+            handleStickyParameters();
+            processRequestParameters();
+
 
             response = interpret(targetParam, null);
         } catch (InterpreterException e) {
@@ -497,7 +509,7 @@ public class Interpreter {
             if (variables.containsKey(v.variableName))
                 replaceValue = variables.get(v.variableName);
 
-            buffer.replace(v.position, v.position + v.variableName.length() + 1, replaceValue); // +1 is for the $ character
+            buffer.replace(v.position, v.position + v.variableName.length() + 1, replaceValue == null ? "" : replaceValue); // +1 is for the $ character
         }
 
         return buffer.toString();
@@ -511,6 +523,17 @@ public class Interpreter {
             else
                 query += "&";
             query += key + "=" + pairs.get(key);
+        }
+
+        // append sticky parameters
+        for ( String variableName : variables.keySet() ) {
+            if( variableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+                if ("".equals(query))
+                    query += "?";
+                else
+                    query += "&";
+                query += variableName + "=" + variables.get(variableName);
+            }
         }
 
         return "controller" + query;
@@ -573,5 +596,69 @@ public class Interpreter {
             }
         }
         return url;
+    }
+
+    /**
+     * Converts a file resource to a recorded wav file into an http resource accessible over HTTP. The path generated path for the wav files is hardcoded to /restcomm/recordings
+     * @param fileResource
+     * @param interpreter
+     * @return
+     */
+    public String convertRecordingFileResourceHttp(String fileResource, HttpServletRequest request) throws URISyntaxException {
+        String httpResource = fileResource; // assume this is already an http resource
+
+        URIBuilder fileUriBuilder = new URIBuilder(fileResource);
+
+        if ( ! fileUriBuilder.isAbsolute() ) {
+            logger.warn("Cannot convert file URL to http URL - " + fileResource);
+            return "";
+        }
+
+        if ( fileUriBuilder.getScheme().startsWith("http") ) // http or https - nothing to worry about
+            return fileResource;
+
+        if ( fileUriBuilder.getScheme().startsWith("file") ) {
+            String wavFilename = "";
+            int filenameBeforeStartPos = fileResource.lastIndexOf('/');
+            if ( filenameBeforeStartPos != -1 ) {
+                wavFilename = fileResource.substring(filenameBeforeStartPos+1);
+                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                httpResource = httpUriBuilder.build().toString();
+            }
+        }
+
+        return httpResource;
+    }
+    /**
+     * Propagate existing sticky variables by putting them in the variables array. Whoever creates an action link from now on should take them into account
+     * also make a local copy of them without the sticky_ prefix so that they can be accessed as ordinary module variables
+     */
+    public void handleStickyParameters() {
+        for ( String anyVariableName : getRequestParams().keySet() ) {
+            if ( anyVariableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+                // set up sticky variables
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(anyVariableName, variableValue );
+
+                // make local copies
+                // First, rip off the sticky_prefix
+                String localVariableName = anyVariableName.substring(RvdSettings.STICKY_PREFIX.length());
+                getVariables().put(localVariableName, variableValue);
+            }
+        }
+    }
+
+    /**
+     * Create rvd variables out of Restcomm request parameters such as 'CallSid', 'AccountSid' etc. Use the 'core_'
+     * prefix in their names.
+     */
+    private void processRequestParameters() {
+        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","CallStatus","ApiVersion","Direction","CallerName"}));
+        for ( String anyVariableName : getRequestParams().keySet() ) {
+            if ( validNames.contains(anyVariableName) ) {
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
+            }
+        }
     }
 }

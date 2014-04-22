@@ -114,7 +114,7 @@
 		
 			<div class='row'>	
 				<div  class="col-md-12 input-group form-group">
-					<span class="input-group-addon">Continue to</span>
+					<span class="input-group-addon help-tooltip"  tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Choose the module to continue to after the end of the call. "core_DialCallStatus", "core_DialCallSid", "core_DialCallDuration" and "core_RecordingUrl" (if Recording is enabled) variables will be available.'>Continue to</span>
 					<select auto-clear ng-model='step.nextModule' sync-modules name='nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control"  style="min-width:140px;">
 						<option value=""></option>
 					</select>
@@ -127,7 +127,7 @@
 					<input ng-show='step.iface.advancedShown' ng-model='step.timeLimit' auto-clear type='number' class='form-control small-input' placeholder='14400'>
 	
 					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The caller ID that will appear to the called party when RestComm calls">Caller ID</span>
-					<input ng-show='step.iface.dvancedShown' ng-model='step.callerId' auto-clear type='text' class='form-control'>
+					<input ng-show='step.iface.advancedShown' ng-model='step.callerId' auto-clear type='text' class='form-control'>
 					
 					<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>
 				</div>
