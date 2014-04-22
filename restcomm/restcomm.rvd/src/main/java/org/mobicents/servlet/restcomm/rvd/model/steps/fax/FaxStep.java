@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
@@ -86,9 +87,9 @@ public class FaxStep extends Step {
         String FaxStatus = interpreter.getRequestParams().getFirst("FaxStatus");  //.getHttpRequest().getParameter("FaxStatus");
 
         if ( FaxSid != null )
-            interpreter.getVariables().put("SmsSid", FaxSid);
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsSid", FaxSid);
         if (FaxStatus != null )
-            interpreter.getVariables().put("SmsStatus", FaxStatus);
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsStatus", FaxStatus);
 
         interpreter.interpret( getNext(), null );
     }
