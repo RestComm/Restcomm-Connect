@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
@@ -25,6 +26,7 @@ public class UssdCollectStep extends Step {
     public final class Collectdigits {
         private String next;
         private String collectVariable;
+        private String scope;
     }
 
     String gatherType;
@@ -76,9 +78,22 @@ public class UssdCollectStep extends Step {
             }
         }
         if ("collectdigits".equals(gatherType)) {
-
             String variableName = collectdigits.collectVariable;
-            interpreter.getVariables().put(variableName, interpreter.getRequestParams().getFirst("Digits"));  //getHttpRequest().getParameter("Digits")); // put the string directly
+            String variableValue = interpreter.getRequestParams().getFirst("Digits");
+            if ( variableValue == null ) {
+                logger.warn("'Digits' parameter was null. Is this a valid restcomm request?");
+                variableValue = "";
+            }
+
+            // is this an application-scoped variable ?
+            if ( "application".equals(collectdigits.scope) ) {
+                logger.debug("'" + variableName + "' is application scoped");
+                // if it is, create a sticky_* variable named after it
+                interpreter.getVariables().put(RvdSettings.STICKY_PREFIX + variableName, variableValue);
+            }
+            // in any case initialize the module-scoped variable
+            interpreter.getVariables().put(variableName, variableValue);
+
             interpreter.interpret(collectdigits.next,null);
         }
     }

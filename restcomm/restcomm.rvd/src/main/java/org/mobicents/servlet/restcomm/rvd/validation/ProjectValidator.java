@@ -35,7 +35,7 @@ public class ProjectValidator {
             state = JsonLoader.fromString(json);
             ProcessingReport report;
             report = projectSchema.validate(state);
-            System.out.println(report);
+            //System.out.println(report);
             return new ValidationResult(report);
         } catch (IOException e) {
             throw new ValidationFrameworkException("Internal validation error", e);
