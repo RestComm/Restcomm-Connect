@@ -37,7 +37,7 @@ angular.module('basicDragdrop', [])
             
             
             element.bind( "sortbeforestop", function( event, ui ) {                 
-                event.stopPropagation();
+                //event.stopPropagation();
             });
             
             
@@ -60,6 +60,7 @@ angular.module('basicDragdrop', [])
             element.bind("sortreceive", function (event,ui) {
                //console.log("on sortreceive"); 
                scope.internalDragging = false;
+               event.stopImmediatePropagation();
             });
             
             /*element.bind("sortactivate", function (event,ui) {
