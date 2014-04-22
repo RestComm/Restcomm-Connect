@@ -63,11 +63,15 @@ public class GatherStep extends Step {
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
         logger.debug("handling gather action");
 
+        String digitsString = interpreter.getRequestParams().getFirst("Digits");
+        if ( digitsString != null )
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "Digits", digitsString);
+
         if ("menu".equals(gatherType)) {
 
             boolean handled = false;
             for (Mapping mapping : menu.mappings) {
-                Integer digits = Integer.parseInt(interpreter.getRequestParams().getFirst("Digits") );
+                Integer digits = Integer.parseInt( digitsString );
                 logger.debug("checking digits: " + mapping.digits + " - " + digits);
 
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
