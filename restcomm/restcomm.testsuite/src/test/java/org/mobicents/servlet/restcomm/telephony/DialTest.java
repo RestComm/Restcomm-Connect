@@ -475,12 +475,21 @@ public class DialTest {
             exception.printStackTrace();
         }
         
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(30 * 1000));
+        assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
+        Request messageReceived = bobCall.getLastReceivedMessageRequest();
+        assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
+        
+        Thread.sleep(3000);
+        
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm.application-"+this.version+"/";
         JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue("7.0".equalsIgnoreCase(recordings.get("duration").getAsString()));
         assertNotNull(recordings.get("uri").getAsString());
     }
+
     
     @Test
     public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
@@ -654,7 +663,7 @@ public class DialTest {
 
         henriqueCall.listenForDisconnect();
 
-        Thread.sleep(5000);
+        Thread.sleep(8000);
 
         // hangup.
 
@@ -1102,6 +1111,7 @@ public class DialTest {
         archive.addAsWebResource("sip-url-screening-test.jsp");
         archive.addAsWebResource("sip-dial-url-screening-test.jsp");
         archive.addAsWebResource("hello-play.xml");
+        archive.addAsWebResource("send-sms.xml");
         logger.info("Packaged Test App");
         return archive;
     }

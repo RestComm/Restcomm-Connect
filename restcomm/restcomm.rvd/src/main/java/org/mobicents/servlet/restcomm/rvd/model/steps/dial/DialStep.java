@@ -1,11 +1,17 @@
 package org.mobicents.servlet.restcomm.rvd.model.steps.dial;
 
+import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 public class DialStep extends Step {
     static final Logger logger = Logger.getLogger(DialStep.class.getName());
@@ -26,21 +32,51 @@ public class DialStep extends Step {
             rcmlStep.nouns.add( noun.render(interpreter) );
         }
 
-        // set action (from nextModule)
-        String moduleUrl = interpreter.moduleUrl(nextModule);
-        if ( moduleUrl != null )
-            rcmlStep.action = moduleUrl;
-        else {
-            logger.warn("Tried to reference a non-existing module while building 'action' property: " + nextModule + ". It will be ignored.");
+        if ( ! RvdUtils.isEmpty(nextModule) ) {
+            String newtarget = interpreter.getTarget().getNodename() + "." + getName() + ".actionhandler";
+            Map<String, String> pairs = new HashMap<String, String>();
+            pairs.put("target", newtarget);
+            String action = interpreter.buildAction(pairs);
+            rcmlStep.action = action;
+            rcmlStep.method = method;
         }
 
-        rcmlStep.method = method;
         rcmlStep.timeout = timeout == null ? null : timeout.toString();
         rcmlStep.timeLimit = (timeLimit == null ? null : timeLimit.toString());
         rcmlStep.callerId = callerId;
         rcmlStep.record = record;
 
         return rcmlStep;
+    }
+
+    public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
+        logger.debug("handling dial action");
+        if ( RvdUtils.isEmpty(nextModule) )
+            throw new InterpreterException( "'next' module is not defined for step " + getName() );
+
+        String restcommRecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
+        if ( restcommRecordingUrl != null ) {
+            try {
+                String recordingUrl = interpreter.convertRecordingFileResourceHttp(restcommRecordingUrl, interpreter.getHttpRequest());
+                interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "RecordingUrl", recordingUrl);
+            } catch (URISyntaxException e) {
+                logger.warn("Cannot convert file URL to http URL - " + restcommRecordingUrl, e);
+            }
+        }
+
+        String DialCallStatus = interpreter.getRequestParams().getFirst("DialCallStatus");
+        if ( DialCallStatus != null )
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallStatus", DialCallStatus);
+
+        String DialCallSid = interpreter.getRequestParams().getFirst("DialCallSid");
+        if ( DialCallSid != null )
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallSid", DialCallSid);
+
+        String DialCallDuration = interpreter.getRequestParams().getFirst("DialCallDuration");
+        if ( DialCallDuration != null )
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallDuration", DialCallDuration);
+
+        interpreter.interpret( nextModule, null );
     }
 
 }

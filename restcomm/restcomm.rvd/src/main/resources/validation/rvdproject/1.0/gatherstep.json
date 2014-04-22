@@ -39,7 +39,8 @@
 						"type": "object",
 						"properties": {
 							"digits": {"type": "integer"},
-							"next": {"type": "string","minLength":1}
+							"next": {"type": "string","minLength":1},
+							"scope": {"type": "string"}
 						},
 						"required":["digits","next"]
 					},
