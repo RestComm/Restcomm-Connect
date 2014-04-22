@@ -8,36 +8,16 @@
 		"label": {"type": "string"},
 		"title": {"type": "string"},
 		"next": { "$ref": "rvdproject-schema.json#/nullOrString" },
-		"method": {
-			"oneOf":[
-				{"type": "null"},
-				{"enum":["GET","POST"]}
-			]
-		},
-		"timeout": {
-			"oneOf":[
-				{"type": "null"},
-				{"type": "integer", "minimum": 1}
-			]
-		},
-		"finishOnKey":{	
-			"oneOf": [
-				{"type": "null"},
-				{"type": "string", "pattern": "($^)|(^[0-9*#]$)" }
-			]
-		},		
-		"maxLength": {
-			"oneOf": [
-				{"type":"null"},
-				{"type": "integer", "minimum":1} 
-			]
-		},
-		"transcribe": { "$ref": "rvdproject-schema.json#/nullOrBoolean" },
-		"transcribeCallback": { "$ref": "rvdproject-schema.json#/nullOrString" },
-		"playBeep": { "$ref": "rvdproject-schema.json#/nullOrBoolean" },
+		"method":{"enum": ["GET","POST"]},
+		"timeout":{"type":"integer"},
+		"finishOnKey":{	"type": "string", "pattern": "($^)|(^[0-9*#]$)" },
+		"maxLength": {"type": "integer", "minimum":1},
+		"transcribe": { "type": "boolean" },
+		"transcribeCallback": {"type": "string"},
+		"playBeep": { "type": "boolean" },
 			
 		"iface": {"type": "object"}
 	},
-	"required": ["name","kind","label","title","next","method","timeout","finishOnKey","maxLength","transcribe","transcribeCallback","playBeep"]	
+	"required": ["name","kind","label","title","next"]	
 }
 

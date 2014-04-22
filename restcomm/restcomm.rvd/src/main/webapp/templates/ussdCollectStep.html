@@ -12,7 +12,7 @@
 
 		<div class="row">
 			<div class="col-md-12">					
-				<div basic-sortable list-model='step.messages' class='ussd-collect-messages form-group' ng-class='{"drop-area-image":step.messages.length==0}' item-added='nestUssdMessage(item,pos,listmodel)'>	
+				<div basic-sortable list-model='step.messages' class='ussd-collect-messages form-group' ng-class='{"drop-area-image":step.messages.length==0}' item-added='nestUssdMessage'>	
 					<div ng-repeat='message in step.messages'>
 						<div class="input-group input-group form-group">
 							<span class="input-group-addon"><i class='fa fa-phone'></i></span>
@@ -91,6 +91,11 @@
 								<div class="input-group input-group-sm">
 									<span class="input-group-addon">Assign reply to</span>
 									<input null-if-empty name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
+									<span class="input-group-addon">Scope</span>
+									<select ng-model='step.collectdigits.scope' class="form-control">
+										<option value='module'>module</option>
+										<option value='application'>application</option>
+									</select>
 								</div>
 								<div class="validation-error" ng-show="form.collectVariable.$invalid">Type a valid variable name</div>
 							</div>

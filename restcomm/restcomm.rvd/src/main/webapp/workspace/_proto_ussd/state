@@ -16,7 +16,7 @@
           "kind": "ussdSay",
           "label": "USSD Message",
           "title": "USSD Message",
-          "text": "Welcome to Restcomm Visual Service Designer",
+          "text": "Welcome to Restcomm Visual Designer",
           "language": null,
           "iface": {
             "showWarning": false

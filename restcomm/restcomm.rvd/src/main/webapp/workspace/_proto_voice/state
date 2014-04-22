@@ -16,7 +16,7 @@
           "kind": "say",
           "label": "say",
           "title": "say",
-          "phrase": "welcome to restcom Visual Service Designer",
+          "phrase": "Welcome to Restcomm Visual Designer",
           "iface": {
             "optionsVisible": false
           },
