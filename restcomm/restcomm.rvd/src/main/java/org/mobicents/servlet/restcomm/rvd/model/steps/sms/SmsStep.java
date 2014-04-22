@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
@@ -79,15 +80,13 @@ public class SmsStep extends Step {
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
-        //String SmsSid = interpreter.getHttpRequest().getParameter("SmsSid");
-        //String SmsStatus = interpreter.getHttpRequest().getParameter("SmsStatus");
         String SmsSid = interpreter.getRequestParams().getFirst("SmsSid");
         String SmsStatus = interpreter.getRequestParams().getFirst("SmsStatus");
 
         if ( SmsSid != null )
-            interpreter.getVariables().put("SmsSid", SmsSid);
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsSid", SmsSid);
         if (SmsStatus != null )
-            interpreter.getVariables().put("SmsStatus", SmsStatus);
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsStatus", SmsStatus);
 
         interpreter.interpret( getNext(), null );
     }

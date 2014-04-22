@@ -73,7 +73,7 @@ App.factory('protos', function () {
 			// Voice
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
 			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:''}, iface:{}},
+			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
 			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
@@ -86,7 +86,7 @@ App.factory('protos', function () {
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
-			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:''}, text:'', language:null, messages:[], iface:{}},
+			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:'',scope:"module"}, text:'', language:null, messages:[], iface:{}},
 			ussdSayNested: {text:''},
 			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
 			
