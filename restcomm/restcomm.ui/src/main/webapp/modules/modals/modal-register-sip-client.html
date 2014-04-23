@@ -1,0 +1,70 @@
+<div class="modal-header">
+    <h3 class="no-margins"><i class="fa fa-phone"></i> Register Client</h3>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal">
+        <dl class="dl-horizontal form-dl">
+            <dt>Account SID</dt>
+            <dd>
+                <input type="text" class="form-control input-xlarge" id="new-client-account-sid" ng-model="sid" placeholder="Account SID" disabled />
+            </dd>
+            <!--<hr class="small" />-->
+            <dt>Login</dt>
+            <dd>
+                <input id="new-client-login" class="form-control" ng-model="newClient.login" type="text" placeholder="eg: alice" required popover-placement="bottom" popover-trigger="focus" popover="The name that is used by the user agent as the user name for registration and outbound dialing." />
+            </dd>
+            <dt>Password</dt>
+            <dd>
+                <input id="new-client-password" class="form-control" ng-model="newClient.password" type="password" placeholder="Password" required />
+            </dd>
+            <!-- TODO: Implement password verification
+            <dt>Confirm Password</dt>
+            <dd>
+                <input id="new-client-password-confirm" class="form-control" ng-model="newClient.password_confirm" type="password" placeholder="Password Confirmation" />
+            </dd>
+            -->
+        </dl>
+        <div class="text-right">
+            <button type="button" ng-click="isCollapsed = !isCollapsed" class="btn btn-default btn-sm"><i class="fa fa-ellipsis-h"></i> Optional Parameters</legend></button>
+        </div>
+        <div collapse="isCollapsed">
+            <hr />
+            <dl class="dl-horizontal form-dl">
+                <dt>Friendly Name</dt>
+                <dd>
+                    <input type="text" class="form-control input-large" id="new-client-friendly-name" placeholder="Hot Line Client" ng-model="newClient.friendlyName" />
+                </dd>
+            </dl>
+            <h4>Voice</h4>
+            <dl class="dl-horizontal form-dl">
+                <dt>Voice Request URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newClient.voice_method" url-var="newClient.voice_url" apps="availableApps"></rc-endpoint-url>
+                </dd>
+                <dt>Voice Fallback URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newClient.voice_fallback_method" url-var="newClient.voice_fallback_url" apps="availableApps"></rc-endpoint-url>
+                </dd>
+                <dt>Status Callback URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newClient.status_callback_method" url-var="newClient.status_callback_url"></rc-endpoint-url>
+                </dd>
+            </dl>
+            <h4>SMS Messaging</h4>
+            <dl class="dl-horizontal form-dl">
+                <dt>SMS Request URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newClient.sms_method" url-var="newClient.sms_url"></rc-endpoint-url>
+                </dd>
+                <dt>SMS Fallback URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newClient.sms_fallback_method" url-var="newClient.sms_fallback_url"></rc-endpoint-url>
+                </dd>
+            </dl>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default cancel" ng-click="closeRegisterSIPClient()">Cancel</button>
+    <button class="btn btn-primary" ng-click="registerSIPClient(newClient)">Register</button>
+</div>
