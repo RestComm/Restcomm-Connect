@@ -1,75 +1,79 @@
-<ul class="nav nav-pills">
-    <li class="active"><a ng-href="#/logs/calls">CALLS</a></li>
-    <li><a href="#/logs/messages">MESSAGES</a></li>
-    <li><a href="#/logs/recordings">RECORDINGS</a></li>
-    <li><a href="#/logs/transcriptions">TRANSCRIPTIONS</a></li>
-    <li><a href="#/logs/notifications">NOTIFICATIONS</a></li>
-</ul>
+<rc-logs-pills></rc-logs-pills>
 
-<div class="row-fluid">
-    <div class="span12 well well-small"><h1 class="page-header"><i class="icon-file-text-alt"></i> LOGS</h1>  <h2 class="page-subheader"> _ CALLS</h2></div>
-</div>
+<rc-page-title icon="file-text-o" title="LOGS" sub-title="CALLS"></rc-page-title>
 
-<div class="row-fluid">
-    <div class="span12">
+<div class="row">
+    <div class="col-md-12">
+        <!-- CLIENT-SIDE FILTER ONLY -->
         <div ng-show="callsLogsList.length > 0" class="pull-right hidden">
             <div class="form-inline">
-                <span class="input-prepend">
-                    <span class="add-on">From</span>
-                    <input type="text" class="input-medium" placeholder="From" ng-model="query.from" ng-change="filter()" />
+                <span class="input-group">
+                    <span class="input-group-addon">From</span>
+                    <input type="text" class="form-control" placeholder="From" ng-model="query.from" ng-change="filter()" />
                 </span>
-                <span class="input-prepend">
-                    <span class="add-on">To</span>
-                    <input type="text" class="input-medium" placeholder="To" ng-model="query.to" ng-change="filter()" />
+                <span class="input-group">
+                    <span class="input-group-addon">To</span>
+                    <input type="text" class="form-control" placeholder="To" ng-model="query.to" ng-change="filter()" />
                 </span>
-                <span class="input-prepend">
-                    <span class="add-on">Start Date</span>
-                    <input type="date" class="input-med-small" placeholder="Start Date" ng-model="query.start_time" ng-change="filter()" />
+                <span class="input-group">
+                    <span class="input-group-addon">Start Date</span>
+                    <input type="date" class="form-control input-med-small" placeholder="Start Date" ng-model="query.start_time" ng-change="filter()" />
                 </span>
-                <span class="input-prepend">
-                    <span class="add-on">End Date</span>
-                    <input type="date" class="input-med-small" placeholder="End Date" ng-model="query.end_time" ng-change="filter()" />
+                <span class="input-group">
+                    <span class="input-group-addon">End Date</span>
+                    <input type="date" class="form-control input-med-small" placeholder="End Date" ng-model="query.end_time" ng-change="filter()" />
                 </span>
-                <button class="btn btn-inverse" disabled><i class="icon-filter"></i> Filter</button>
+                <button class="btn btn-inverse" disabled><i class="fa fa-filter"></i> Filter</button>
             </div>
         </div>
-        <div ng-show="callsLogsList.length > 0 || search" class="record-filter-div pull-right">
-            <div class="form-inline">
-                <span class="input-prepend span2 filter-field">
-                    <span class="add-on">From</span>
-                    <input type="text" class="input-medium span10" placeholder="From" ng-model="search.from"/>
-                </span>
-                <span class="input-prepend span2 filter-field">
-                    <span class="add-on">To</span>
-                    <input type="text" class="input-medium span10" placeholder="To" ng-model="search.to" />
-                </span>
-                <span class="input-prepend filter-field">
-                    <span class="add-on">Date</span>
-                    <input type="date" class="input-med-small" placeholder="Start Date" ng-model="search.start_time" />
-                </span>
-                <span class="input-prepend filter-field">
-                    <span class="add-on"> to </span>
-                    <input type="date" class="input-med-small" placeholder="End Date" ng-model="search.end_time" />
-                </span>
-                <span class="input-prepend filter-field">
-                    <select class="input-medium span12" ng-model="search.status">
-                        <option value="">Call Status</option>
-                        <option value="queued">Queued</option>
-                        <option value="ringing">Ringing</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="busy">Busy</option>
-                        <option value="failed">Failed</option>
-                        <option value="no-answer">No Answer</option>
-                        <option value="queued">Completed</option>
-                    </select>
-                </span>
-                <button class="btn btn-small btn-inverse" ng-click="getCallsList()"><i class="icon-search"></i> Search</button>
-            </div>
+        <!-- SERVER-SIDE SEARCH -->
+        <div ng-show="callsLogsList.length > 0 || search" class="pull-right record-filter-div">
+            <form class="form-inline" role="form">
+                <div class="form-group col-md-2">
+                    <div class="input-group">
+                        <span class="input-group-addon">From</span>
+                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="search.from"/>
+                    </div>
+                </div>
+                <div class="form-group col-md-2">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="search.to" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3 date-group-sm">
+                    <div class="input-group">
+                        <span class="input-group-addon">Date</span>
+                        <input type="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3 date-group-sm">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input type="date" class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                    </div>
+                </div>
+                <div class="form-group col-md-2 filter-field" style="width: 110px;">
+                    <div class="input-group">
+                        <select class="input-sm form-control" ng-model="search.status">
+                            <option value="">Call Status</option>
+                            <option value="queued">Queued</option>
+                            <option value="ringing">Ringing</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="busy">Busy</option>
+                            <option value="failed">Failed</option>
+                            <option value="no-answer">No Answer</option>
+                            <option value="queued">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-default btn-sm" ng-click="getCallsList()"><i class="fa fa-search"></i> Search</button>
+            </form>
         </div>
 
-        <div ng-hide="(callsLogsList | filter:query).length > 0" class="hero-unit no-records-alert" >
-            <h2><i class="icon-exclamation-sign"></i> No call records <span ng-show="callsLogsList.length == 0"></span> <span ng-show="callsLogsList.length > 0">matching query</span>. <small>Call your friends!</small></h2>
+        <div ng-hide="(callsLogsList | filter:query).length > 0" class="jumbotron no-records-alert" >
+            <h2><i class="fa fa-exclamation-circle"></i> No call records <span ng-show="callsLogsList.length == 0"></span> <span ng-show="callsLogsList.length > 0">matching query</span>. <small>Call your friends!</small></h2>
         </div>
 
         <table ng-show="(callsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
@@ -88,15 +92,15 @@
             <tbody>
             <tr ng-repeat="call in filtered = (callsLogsList | filter:query | orderBy:'date_created':true)">
             <!--<tr ng-repeat="call in callsLogsList">-->
-                <td><a href="" ng-click="showCallDetails(call)">{{ call.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
-                <td><div class="text-center"><i ng-class="call.direction == 'inbound' ? 'icon-signin' : (call.direction == 'outbound-api' ? 'icon-signout' : '')"></i><!-- {{ call.direction ? call.direction : '?' }} --></div></td>
+                <td><a href="" ng-click="showCallDetailsModal(call)">{{ call.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
+                <td><div class="text-center"><i ng-class="call.direction == 'inbound' ? 'fa fa-sign-in' : (call.direction == 'outbound-api' ? 'fa fa-sign-out' : '')"></i><!-- {{ call.direction ? call.direction : '?' }} --></div></td>
                 <td><div class="text-center">{{ call.from ? call.from : '?' }}</div></td>
                 <td><div class="text-center">{{ call.to ? call.to : '?' }}</div></td>
-                <td><div class="text-center"><i class="icon-phone"></i> </div></td>
+                <td><div class="text-center"><i class="fa fa-phone"></i> </div></td>
                 <td><div class="text-center">{{ call.status ? call.status : '?' }}</div></td>
                 <td><div class="text-center">{{ call.duration ? call.duration + 's' : '. . .' }}</div></td>
                 <td><div class="text-center">$ {{ call.cost ? call.cost : '0.00' }}</div></td>
-                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="icon-expand" tooltip="Recording Available"></i></a></div></td>-->
+                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-expand" tooltip="Recording Available"></i></a></div></td>-->
             </tr>
             </tbody>
             <tfoot>
@@ -105,110 +109,16 @@
                 <form class="form-inline text-center">
                     <h6>Items / Page</h6>
                     <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                        <button type="button" class="btn btn-small" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                        <button type="button" class="btn btn-small" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                        <button type="button" class="btn btn-small" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
                     </div>
                 </form>
             </td>
             <td colspan="99">
-                <pagination class="pagination pagination-small pull-right" on-select-page="pageChanged(page)" data-num-pages="noOfPages" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+                <pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="totalCalls" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
             </td>
             </tfoot>
         </table>
-    </div>
-</div>
-
-<!-- Call Details Modal -->
-<div modal="showingCallDetails" close="closeCallDetails()" options="modalOpts">
-    <div class="modal-header">
-        <h3 class="muted"><i class="icon-phone"></i> _ <i ng-class="callDetails.direction == 'inbound' ? 'icon-signin' : 'icon-signout'"></i> {{ callDetails.direction == 'inbound' ? callDetails.from : callDetails.to }} </h3>
-    </div>
-    <div class="modal-body">
-        <table class="table-condensed">
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Call SID</dt>
-                        <dd>{{ callDetails.sid }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>From</dt>
-                        <dd>{{ callDetails.from }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Date</dt>
-                        <dd>{{ callDetails.date_created | date:'medium' }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>To</dt>
-                        <dd>{{ callDetails.to }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Start Time</dt>
-                        <dd>{{ callDetails.start_time | date:'medium' }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Direction</dt>
-                        <dd>{{ callDetails.direction }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>End Time</dt>
-                        <dd>{{ callDetails.end_time | date:'medium' }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Status</dt>
-                        <dd>{{ callDetails.status }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Duration</dt>
-                        <dd>{{ callDetails.duration }}<small> seconds</small></dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Price</dt>
-                        <dd>$ {{ callDetails.price }}</dd>
-                    </dl>
-                </td>
-            </tr>
-        </table>
-    </div>
-    <div class="modal-footer">
-        <button class="btn" ng-click="closeCallDetails()">Close</button>
     </div>
 </div>
