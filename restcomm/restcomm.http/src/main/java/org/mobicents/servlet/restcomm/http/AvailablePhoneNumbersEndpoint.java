@@ -16,10 +16,11 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
 import com.thoughtworks.xstream.XStream;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
@@ -42,13 +44,14 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumberList;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.http.converter.AvailablePhoneNumberConverter;
 import org.mobicents.servlet.restcomm.http.converter.AvailablePhoneNumberListConverter;
+import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.voipinnovations.GetDIDListResponse;
 import org.mobicents.servlet.restcomm.http.voipinnovations.LATA;
@@ -81,6 +84,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     protected ServletContext context;
     protected Configuration configuration;
     private XStream xstream;
+    protected Gson gson;
 
     private String header;
 
@@ -118,6 +122,10 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RateCenterConverter());
         xstream.registerConverter(new StateConverter());
         xstream.registerConverter(new TNConverter());
+        final GsonBuilder builder = new GsonBuilder();
+        builder.setPrettyPrinting();
+        gson = builder.create();
+
     }
 
     private String header(final String login, final String password) {
@@ -159,6 +167,8 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
                         if (APPLICATION_XML_TYPE == responseType) {
                             return ok(xstream.toXML(new RestCommResponse(new AvailablePhoneNumberList(numbers))),
                                     APPLICATION_XML).build();
+                        } else if (APPLICATION_JSON_TYPE == responseType) {
+                            return ok(gson.toJson(numbers), APPLICATION_JSON).build();
                         }
                     }
                 }
