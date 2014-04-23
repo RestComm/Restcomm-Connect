@@ -13,7 +13,12 @@ App.config([ '$routeProvider', function($routeProvider) {
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
 		controller : 'designerCtrl'
-	}).otherwise({
+	})
+	.when('/packaging/:projectName', {
+		templateUrl : 'templates/packaging.html',
+		controller : 'packagingCtrl'
+	})
+	.otherwise({
 		redirectTo : '/home'
 	});
 
