@@ -16,12 +16,14 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,10 +33,6 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
@@ -47,11 +45,9 @@ import org.apache.http.message.BasicNameValuePair;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumberList;
-import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.http.converter.AvailablePhoneNumberConverter;
 import org.mobicents.servlet.restcomm.http.converter.AvailablePhoneNumberListConverter;
-import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.voipinnovations.GetDIDListResponse;
 import org.mobicents.servlet.restcomm.http.voipinnovations.LATA;
@@ -74,6 +70,13 @@ import org.mobicents.servlet.restcomm.http.voipinnovations.converter.VoipInnovat
 import org.mobicents.servlet.restcomm.http.voipinnovations.converter.VoipInnovationsHeaderConverter;
 import org.mobicents.servlet.restcomm.http.voipinnovations.converter.VoipInnovationsResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
