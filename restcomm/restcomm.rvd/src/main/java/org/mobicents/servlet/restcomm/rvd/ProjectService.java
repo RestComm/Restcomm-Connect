@@ -20,6 +20,10 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.upgrade.ProjectUpgrader;
+import org.mobicents.servlet.restcomm.rvd.upgrade.ProjectUpgraderFactory;
+import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.NoUpgradePathException;
+import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 import org.mobicents.servlet.restcomm.rvd.validation.ProjectValidator;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidationResult;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
@@ -212,5 +216,44 @@ public class ProjectService {
 
     public void removeWavFromProject(String projectName, String wavName) throws WavItemDoesNotExist {
         projectStorage.deleteWav(projectName, wavName);
+    }
+    public void upgradeProject(String projectName) throws StorageException, UpgradeException {
+
+        String[] versionPath = new String[] {"rvd714","1.0"};
+
+        StateHeader header = null;
+        String startVersion = null;
+        try {
+            header = projectStorage.loadStateHeader(projectName);
+            startVersion = header.getVersion();
+        } catch (BadProjectHeader e) {
+            // it looks like this is an old project.
+            startVersion = "rvd714"; // assume this is an rvd714 project. It could be 713 as well...
+        }
+
+        String version = startVersion;
+        String source = projectStorage.loadProjectState(projectName);
+        JsonParser parser = new JsonParser();
+        JsonElement root = parser.parse(source);
+
+        for ( int i = 0; i < versionPath.length; i ++ ) {
+            if ( versionPath[i].equals(version) ) {
+                // we found the version to start the upgrade
+                ProjectUpgrader upgrader = ProjectUpgraderFactory.create(version);
+                root = upgrader.upgrade(root);
+                version = upgrader.getResultingVersion();
+
+                if (version.equals(versionPath[versionPath.length-1] ) )
+                    break;
+
+                // if we haven't reached the final version yet keep upgrading
+            }
+        }
+
+        if ( ! version.equals(versionPath[versionPath.length-1]) ) {
+            throw new NoUpgradePathException("No upgrade path for project " + projectName + "Best effort from version: " + startVersion + " - to version: " + version);
+        }
+
+        projectStorage.updateProjectState(projectName, root.toString());
     }
 }

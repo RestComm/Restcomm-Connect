@@ -42,6 +42,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
 
@@ -161,6 +162,26 @@ public class RvdManager {
                 return Response.status(Status.CONFLICT).build();
             } catch (StorageException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            }
+        } else
+            return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    @PUT
+    @Path("/upgrade")
+    public Response upgradeProject(@QueryParam("name") String projectName) {
+
+        // TODO IMPORTANT!!! sanitize the project name!!
+        if ( !RvdUtils.isEmpty(projectName) ) {
+            try {
+                projectService.upgradeProject(projectName);
+                return Response.ok().build();
+            }
+            catch (StorageException e) {
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            } catch (UpgradeException e) {
+                logger.error(e.getMessage(), e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
             }
         } else
             return Response.status(Status.BAD_REQUEST).build();
