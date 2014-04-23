@@ -55,7 +55,7 @@ body {
 }
 
 .record-filter-div {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 .no-records-alert {
@@ -70,7 +70,12 @@ a.clean-link {
     text-decoration: none;
 }
 
-input.ng-dirty.ng-invalid { border: solid 2px red; }
+input.ng-dirty.ng-invalid {
+    border-color: #e9322d;
+    -webkit-box-shadow: 0 0 6px #f8b9b7;
+    -moz-box-shadow: 0 0 6px #f8b9b7;
+    box-shadow: 0 0 6px #f8b9b7;
+}
 
 
 .truncate {
@@ -125,6 +130,7 @@ input.ng-dirty.ng-invalid { border: solid 2px red; }
 
 .form-dl > dt, .form-dl > dd {
     height: 36px;
+    margin-top: 5px;
 }
 
 /* Index.html classes ------------------------------------------------------- */
@@ -138,6 +144,9 @@ ul#rightMenu > li i {
 
 .dashboard-container {
     height: 260px;
+    width: 48.5%;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .dashboard-container > h1 {
@@ -220,3 +229,150 @@ ul#rightMenu > li i {
 .font-as-icon {
     font-size: 1.2em;
 }
+
+.notifications-wrapper {
+    position: fixed;
+    text-align: center;
+    width: 100%;
+    z-index: 1500;
+}
+
+.navbar-nav > li > a {padding-top:10px !important; padding-bottom:10px !important;}
+.navbar {min-height:24px; height: 40px;}
+.navbar-brand {padding: 10px; min-height: 24px;}
+
+
+
+
+/* BOOTSTRAP 3 has no side tabs.. why? :\ */
+.tabs-below > .nav-tabs,
+.tabs-right > .nav-tabs,
+.tabs-left > .nav-tabs {
+    border-bottom: 0;
+}
+
+.tab-content > .tab-pane,
+.pill-content > .pill-pane {
+    display: none;
+}
+
+.tab-content > .active,
+.pill-content > .active {
+    display: block;
+}
+
+.tabs-below > .nav-tabs {
+    border-top: 1px solid #ddd;
+}
+
+.tabs-below > .nav-tabs > li {
+    margin-top: -1px;
+    margin-bottom: 0;
+}
+
+.tabs-below > .nav-tabs > li > a {
+    -webkit-border-radius: 0 0 4px 4px;
+    -moz-border-radius: 0 0 4px 4px;
+    border-radius: 0 0 4px 4px;
+}
+
+.tabs-below > .nav-tabs > li > a:hover,
+.tabs-below > .nav-tabs > li > a:focus {
+    border-top-color: #ddd;
+    border-bottom-color: transparent;
+}
+
+.tabs-below > .nav-tabs > .active > a,
+.tabs-below > .nav-tabs > .active > a:hover,
+.tabs-below > .nav-tabs > .active > a:focus {
+    border-color: transparent #ddd #ddd #ddd;
+}
+
+.tabs-left > .nav-tabs > li,
+.tabs-right > .nav-tabs > li {
+    float: none;
+}
+
+.tabs-left > .nav-tabs > li > a,
+.tabs-right > .nav-tabs > li > a {
+    min-width: 74px;
+    margin-right: 0;
+    margin-bottom: 3px;
+}
+
+.tabs-left > .nav-tabs {
+    float: left;
+    margin-right: 19px;
+    border-right: 1px solid #ddd;
+}
+
+.tabs-left > .nav-tabs > li > a {
+    margin-right: -1px;
+    -webkit-border-radius: 4px 0 0 4px;
+    -moz-border-radius: 4px 0 0 4px;
+    border-radius: 4px 0 0 4px;
+}
+
+.tabs-left > .nav-tabs > li > a:hover,
+.tabs-left > .nav-tabs > li > a:focus {
+    border-color: #eeeeee #dddddd #eeeeee #eeeeee;
+}
+
+.tabs-left > .nav-tabs .active > a,
+.tabs-left > .nav-tabs .active > a:hover,
+.tabs-left > .nav-tabs .active > a:focus {
+    border-color: #ddd transparent #ddd #ddd;
+    *border-right-color: #ffffff;
+}
+
+.tabs-right > .nav-tabs {
+    float: right;
+    margin-left: 19px;
+    border-left: 1px solid #ddd;
+}
+
+.tabs-right > .nav-tabs > li > a {
+    margin-left: -1px;
+    -webkit-border-radius: 0 4px 4px 0;
+    -moz-border-radius: 0 4px 4px 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.tabs-right > .nav-tabs > li > a:hover,
+.tabs-right > .nav-tabs > li > a:focus {
+    border-color: #eeeeee #eeeeee #eeeeee #dddddd;
+}
+
+.tabs-right > .nav-tabs .active > a,
+.tabs-right > .nav-tabs .active > a:hover,
+.tabs-right > .nav-tabs .active > a:focus {
+    border-color: #ddd #ddd #ddd transparent;
+    *border-left-color: #ffffff;
+}
+
+.form-group + .form-group {
+    padding-left: 0;
+}
+
+.date-group-sm {
+    width: 210px;
+}
+
+.date-group-sm input.input-sm[type=date] {
+    width: 140px;
+}
+
+.temp-modal-lg > .modal-dialog {
+    width: 900px;
+}
+
+.provider-container {
+    width: 48.5%;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.provider-container dd.form-inline > select {
+    width: 80%;
+}
+
