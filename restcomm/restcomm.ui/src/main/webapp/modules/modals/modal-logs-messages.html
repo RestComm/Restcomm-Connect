@@ -1,0 +1,79 @@
+<div class="modal-header">
+    <h3 class="text-muted"><i class="fa fa-comments-o"></i> _ <i ng-class="messageDetails.direction == 'inbound' ? 'fa fa-sign-in' : 'fa fa-sign-out'"></i> {{ messageDetails.direction == 'inbound' ? messageDetails.from : messageDetails.to }} </h3>
+</div>
+<div class="modal-body">
+    <table class="table-condensed">
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>SID</dt>
+                    <dd>{{ messageDetails.sid }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Date</dt>
+                    <dd>{{ messageDetails.date_created | date:'medium' }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>From</dt>
+                    <dd>{{ messageDetails.from }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>To</dt>
+                    <dd>{{ messageDetails.to }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Direction</dt>
+                    <dd>{{ messageDetails.direction }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Status</dt>
+                    <dd>{{ messageDetails.status }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Price</dt>
+                    <dd>$ {{ messageDetails.price }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Body</dt>
+                    <dd>
+                        <blockquote style="word-break: break-all;">
+                            <p>{{ messageDetails.body }}</p>
+                            <small>{{ messageDetails.body.length }} chars</small>
+                        </blockquote>
+                    </dd>
+                </dl>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="closeMessageDetails()">Close</button>
+</div>
