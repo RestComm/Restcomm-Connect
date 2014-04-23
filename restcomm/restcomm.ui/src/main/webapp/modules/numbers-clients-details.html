@@ -1,55 +1,46 @@
-<ul class="nav nav-pills">
-    <li><a href="#/numbers/incoming">RESTCOMM NUMBERS</a></li>
-    <li class="active"><a href="#/numbers/clients">SIP CLIENTS</a></li>
-    <li><a href="#/numbers/outgoing">VERIFIED CALLER IDS</a></li>
-    <!--
-        <li><a href="#/numbers/shortcodes">SHORT CODES</a></li>
-        <li><a href="#/numbers/porting">PORTING REQUESTS</a></li>
-    -->
-</ul>
+<rc-numbers-pills></rc-numbers-pills>
 
-<div class="row-fluid">
-    <div class="span12 well well-small"><h1 class="page-header"><i class="icon-phone"></i> {{ clientDetails.login }}</h1>  <h2 class="page-subheader"> _ {{ clientDetails.friendly_name }}</h2></div>
-</div>
+<rc-page-title icon="phone" title="{{ clientDetails.login }}" sub-title="{{ clientDetails.friendly_name }}"></rc-page-title>
 
-<div class="well well-small">
-    <h3 class="muted details-header">Authentication</h3>
-    <fieldset>
-        <label class="checkbox pull-left account-details">
-            <input type=checkbox ng-checked="clientDetails.status == 1"><h4 class="no-margins">Account Enabled</h4>
-        </label>
-        <span class="pull-right form-inline">
-            <span class="span4">
-                <label for="client-login" class="account-details-field">
+<div class="well well-sm">
+    <h3 class="text-muted details-header">Authentication</h3>
+    <form class="form-inline">
+    <fieldset class="">
+        <div class="checkbox" style="font-size: 18px;">
+            <label>
+                <input type=checkbox ng-checked="clientDetails.status == 1">
+                <strong>Account Enabled</strong>
+            </label>
+        </div>
+        <span class="pull-right row form-group">
+            <span class="col-md-5">
+                <label for="client-login" class="col-md-3 account-details-field">
                     <h4>Login</h4>
                 </label>
-                <span>
-                    <input id="client-login" type="text" class="span2" placeholder="Login" ng-model="clientDetails.login" readonly />
+                <span class="col-md-2">
+                    <input id="client-login" type="text" class="form-control" placeholder="Login" ng-model="clientDetails.login" readonly />
                 </span>
             </span>
-            <span class="span3">
-                <label for="client-password" class="account-details-field">
+            <span class="col-md-5">
+                <label for="client-password" class="col-md-5 account-details-field">
                     <h4>Password</h4>
                 </label>
-                <span>
-                    <input id="client-password" type="password" class="span2" placeholder="Voice Request URL" ng-model="clientDetails.password" />
+                <span class="col-md-2">
+                    <input id="client-password" type="password" class="form-control" placeholder="Voice Request URL" ng-model="clientDetails.password" />
                 </span>
             </span>
         </span>
     </fieldset>
+    </form>
 </div>
-<div class="well well-small">
-    <h3 class="muted details-header">Voice</h3>
+<div class="well well-sm">
+    <h3 class="text-muted details-header">Voice</h3>
     <fieldset>
         <label class="pull-left" for="voice-url">
             <h4 class="account-detail-field-name">Voice Request URL</h4>
         </label>
-        <span class="pull-right">
-            <select class="input-small" ng-model="clientDetails.voice_method">
-                <option>GET</option>
-                <option>POST</option>
-            </select>
-            <input id="voice-url" type="text" class="span6" placeholder="Voice Request URL" ng-model="clientDetails.voice_url" />
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" apps="availableApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -57,12 +48,8 @@
         <label class="pull-left" for="voice-fallback-url">
             <h4 class="account-detail-field-name">Voice Fallback URL</h4>
         </label>
-        <span class="pull-right">
-            <select class="input-small" ng-model="clientDetails.voice_fallback_method">
-                <option>GET</option>
-                <option>POST</option>
-            </select>
-            <input id="voice-fallback-url" type="text" class="span6" placeholder="Voice Fallback URL" ng-model="clientDetails.voice_fallback_url" />
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="clientDetails.voice_fallback_method" url-var="clientDetails.voice_fallback_url" apps="availableApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -70,27 +57,19 @@
         <label class="pull-left" for="status-callback-url">
             <h4 class="account-detail-field-name">Status Callback URL</h4>
         </label>
-        <span class="pull-right">
-            <select class="input-small" ng-model="clientDetails.status_callback_method">
-                <option>GET</option>
-                <option>POST</option>
-            </select>
-            <input id="status-callback-url" type="text" class="span6" placeholder="Status Callback URL" ng-model="clientDetails.status_callback" />
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="clientDetails.status_callback_method" url-var="clientDetails.status_callback"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>
-<div class="well well-small">
-    <h3 class="muted details-header">SMS</h3>
+<div class="well well-sm">
+    <h3 class="text-muted details-header">SMS</h3>
     <fieldset>
         <label class="pull-left" for="sms-url">
             <h4 class="account-detail-field-name">SMS Request URL</h4>
         </label>
-        <span class="pull-right">
-            <select class="input-small" ng-model="clientDetails.sms_method">
-                <option>GET</option>
-                <option>POST</option>
-            </select>
-            <input id="sms-url" type="text" class="span6" placeholder="SMS Request URL" ng-model="clientDetails.sms_url" />
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="clientDetails.sms_method" url-var="clientDetails.sms_url"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -98,17 +77,13 @@
         <label class="pull-left" for="sms-fallback-url">
             <h4 class="account-detail-field-name">SMS Fallback URL</h4>
         </label>
-        <span class="pull-right">
-            <select class="input-small" ng-model="clientDetails.sms_fallback_method">
-                <option>GET</option>
-                <option>POST</option>
-            </select>
-            <input id="sms-fallback-url" type="text" class="span6" placeholder="SMS Fallback URL" ng-model="clientDetails.sms_fallback_url" />
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="clientDetails.sms_fallback_method" url-var="clientDetails.sms_fallback_url"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>
 <div class="">
-    <button class="btn btn-primary" ng-click="registerSIPClient(clientDetails)">Save Changes</button>
+    <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)">Save Changes</button>
     <a href="#/numbers/clients" class="btn">Close</a>
     <button class="btn btn-danger pull-right" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
 </div>

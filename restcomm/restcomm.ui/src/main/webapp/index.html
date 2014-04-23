@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html ng-app="restcomm">
+<html ng-app="rcApp">
     <head>
         <title>RestComm</title>
 
         <link rel="icon" type="image/png" href="resources/img/favicon.png">
-        <link rel="stylesheet" href="resources/css/font-awesome.min.css" />
-        <link rel="stylesheet" href="resources/css/bootstrap-combined.no-icons.min.css" />
+        <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css" />
+        <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css" />
+        <link rel="stylesheet" href="lib/animate/animate.css" />
         <link rel="stylesheet" href="resources/css/restcomm.css" />
         <style type="text/css">
 
@@ -87,109 +88,88 @@
         </style>
 
         <!-- Angular does some things with CSS so it's good to load this in the head -->
-        <script type="text/javascript" src="resources/js/jquery-1.10.2.min.js"></script>
-        <script type="text/javascript" src="resources/js/angular.min.js"></script>
-        <script type="text/javascript" src="resources/js/angular-route.min.js"></script>
-        <script type="text/javascript" src="resources/js/angular-resource.min.js"></script>
-        <script type="text/javascript" src="resources/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="resources/js/ui-bootstrap-0.4.0.min.js"></script>
+        <script type="text/javascript" src="lib/jquery/jquery.js"></script>
+        <script type="text/javascript" src="lib/angular/angular.min.js"></script>
+        <script type="text/javascript" src="lib/angular-route/angular-route.min.js"></script>
+        <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
+        <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+        <script type="text/javascript" src="lib/http-auth-interceptor/http-auth-interceptor.js"></script>
+
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
         <script type="text/javascript" src="resources/js/controllers.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/global.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/navbar.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/login.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/dashboard.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/logs-calls.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/logs-messages.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/logs-notifications.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/logs-recordings.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/logs-transcriptions.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/numbers-incoming.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/numbers-outgoing.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>
+        <script type="text/javascript" src="resources/js/services.js"></script>
+        <script type="text/javascript" src="resources/js/filters.js"></script>
+        <script type="text/javascript" src="resources/js/directives.js"></script>
     </head>
     <body>
         <div id="wrap">
-            <div class="navbar navbar-inverse navbar-fixed-top" ng-controller="MenuCtrl">
-                <div class="navbar-inner">
-                    <div class="container-fluid">
-                        <span class="brand navbar-logo"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
-                        <div class="nav-collapse collapse" ng-show="auth.isLoggedIn()">
-                            <ul class="nav">
+            <div class="notifications-wrapper" data-ng-show="notifications.data.length > 0">
+                <div ng-repeat="notification in notifications.data">
+                    <div class="alert alert-{{notification.type}}" style="padding: 9px; margin-bottom: 0;" ng-click="notifications.remove($index)">
+                        <span ng-show="notification.type == 'success'"><i class="fa fa-check-circle"></i> </span>
+                        <span ng-show="notification.type == 'info'"><i class="fa fa-info-circle"></i></span>
+                        <span ng-show="notification.type == 'danger'"><i class="fa fa-exclamation-circle"></i></span>
+                        <span ng-show="notification.type == 'warning'"><i class="fa fa-warning"></i></span>
+                        <strong>{{notification.header}}</strong> {{notification.message}}
+                    </div>
+                </div>
+            </div>
+            <div class="navbar navbar-inverse navbar-fixed-top" role="navigation" ng-controller="MenuCtrl">
+                <div class="container-fluid">
+                        <div class="navbar-header">
+                            <span class="navbar-brand"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
+                        </div>
+                        <div class="navbar-collapse collapse">
+                            <div ng-show="auth.isLoggedIn()">
+                            <ul class="nav navbar-nav">
                                 <li><a> </a></li>
-                                <li><a ng-href="#/dashboard"><i class="icon-dashboard"></i> Dashboard</a></li>
+                                <li><a ng-href="#/dashboard"><i class="fa fa-dashboard"></i> Dashboard</a></li>
                                 <li class="divider-vertical"></li>
-                                <li><a ng-href="#/numbers"><i class="icon-phone"></i> Numbers</a></li>
+                                <li><a ng-href="#/numbers"><i class="fa fa-phone"></i> Numbers</a></li>
                                 <li class="divider-vertical"></li>
-                                <li><a ng-href="#/logs"><i class="icon-file-text-alt"></i> Logs</a></li>
+                                <li><a ng-href="#/logs"><i class="fa fa-file-text-o"></i> Logs</a></li>
                                 <li class="divider-vertical"></li>
-                                <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="icon-sitemap"></i> RVD</a></li>
-                                <li class="divider-vertical"></li>
-                                <!--<li><a ng-href="#/providers"><i class="icon-cogs"></i> Providers</a></li>-->
+                                <!--<li><a ng-click="testNotifications()"><i class="fa fa-flag-checkered"></i> Notification</a></li>-->
                                 <!--<li class="divider-vertical"></li>-->
-                                <!--<li><a ng-href="#/usage"><i class="icon-bar-chart"></i> Usage</a></li>-->
+                                <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="fa fa-sitemap"></i> RVD</a></li>
+                                <li class="divider-vertical"></li>
+                                <!--<li><a ng-href="#/providers"><i class="fa fa-cogs"></i> Providers</a></li>-->
+                                <!--<li class="divider-vertical"></li>-->
+                                <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
                                 <!--<li class="divider-vertical"></li>-->
                             </ul>
-                            <ul class="nav pull-right">
+                            <ul class="nav navbar-nav pull-right">
                                 <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> {{ auth.getLoggedUser() }} <b class="caret"></b></a>
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ auth.getLoggedUser() }} <b class="caret"></b></a>
                                     <ul id="rightMenu" class="dropdown-menu">
-                                        <li><a href="#/profile/{{ auth.getAccountSid() }}"><i class="icon-cog"></i> Account Settings</a></li>
+                                        <li><a href="#/profile/{{ auth.getAccountSid() }}"><i class="fa fa-cog"></i> Account Settings</a></li>
                                         <li class="divider"></li>
-                                        <li class="nav-header">Sub Accounts</li>
-                                        <li ng-repeat="account in accountsList" ng-hide="account.sid == auth.getAccountSid()"><a href="#"><i ng-class="account.type == 'Full' ? 'icon-suitcase' : 'icon-code'"> </i> {{account.friendly_name}}</a></li>
+                                        <li class="navbar-header text-muted" style="margin-left: 10px;">Sub Accounts</li>
+                                        <li ng-repeat="account in accountsList" ng-hide="account.sid == auth.getAccountSid()"><a href="#"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>
                                         <li class="disabled"><a href="#"></a> </li>
                                         <li class="disabled"><a href="#"></a> </li>
-                                        <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccount();"><i class="icon-plus-sign"></i> Create New Account...</a> </li>
+                                        <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><i class="fa fa-plus"></i> Create New Account...</a> </li>
                                         <li class="divider"></li>
-                                        <li><a href="#/login" ng-click="logout()"><i class="icon-signout"></i> Sign Out</a></li>
+                                        <li><a href="#/login" ng-click="logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
                                     </ul>
                                 </li>
                             </ul>
+                            </div>
                         </div><!--/.nav-collapse -->
                     </div>
-                </div>
-
-                <!-- Register New Account Modal -->
-                <div modal="registeringNewAccount" close="closeRegisterAccount()" options="modalOpts">
-                    <div class="modal-header">
-                        <h3><i class="icon-user"></i> Create New Account</h3>
-                    </div>
-                    <div class="modal-body">
-                        <form name="myForm">
-                        <dl class="dl-horizontal form-dl">
-                            <!--<dt>Account SID</dt>-->
-                            <!--<dd><input type="text" class="input-xlarge" id="new-number-account-sid" ng-model="sid" placeholder="Account SID" disabled /></dd>-->
-                            <!--<hr class="small" />-->
-                            <dt>Friendly Name</dt>
-                            <dd>
-                                <input id="new-account-friendly-name" ng-model="newAccount.friendlyName" type="text" maxlength="64" placeholder="Wife Account" />
-                            </dd>
-                            <dt>Email Address</dt>
-                            <dd>
-                                <input id="new-account-email" ng-model="newAccount.email" type="email" placeholder="labs@restcomm.org" autofocus required />
-                            </dd>
-                            <dt>Password</dt>
-                            <dd>
-                                <input id="new-account-password" name="new-account-password" ng-model="newAccount.password" equals="{{newAccount.passwordConfirmation}}" type="password" placeholder="mySafeP@ssw0rD!" required />
-                            </dd>
-                            <dt>Confirm Password</dt>
-                            <dd>
-                                <input id="new-account-password-confirmation" name="new-account-password-confirmation" ng-model="newAccount.passwordConfirmation" equals="{{newAccount.password}}" type="password" placeholder="mySafeP@ssw0rD!" />
-                                <span></span>
-                            </dd>
-                            <dt>Role</dt>
-                            <dd>
-                                <select>
-                                    <option value="Administrator">Administrator</option>
-                                    <option value="Developer">Developer</option>
-                                </select>
-                            </dd>
-                            <dt>Status</dt>
-                            <dd>
-                                <select>
-                                    <option>Active</option>
-                                    <option>Suspended</option>
-                                    <option>Closed</option>
-                                </select>
-                            </dd>
-                        </dl>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn cancel" ng-click="closeRegisterAccount()">Cancel</button>
-                        <button class="btn btn-primary" ng-click="createAccount(newAccount)">Register</button>
-                    </div>
-                </div>
-
             </div>
             <div class="container" ng-view>
             </div>
@@ -200,7 +180,5 @@
                 </div>
             </div>
         </div>
-
-
     </body>
 </html>

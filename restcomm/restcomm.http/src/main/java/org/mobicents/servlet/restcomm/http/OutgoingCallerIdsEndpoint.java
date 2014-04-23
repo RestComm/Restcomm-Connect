@@ -22,7 +22,6 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
 import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
@@ -31,20 +30,21 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
+
 import static javax.ws.rs.core.MediaType.*;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
 import org.mobicents.servlet.restcomm.entities.OutgoingCallerId;
@@ -67,6 +67,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     protected OutgoingCallerIdsDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected AccountsDao accountsDao;
 
     public OutgoingCallerIdsEndpoint() {
         super();
@@ -79,6 +80,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getOutgoingCallerIdsDao();
+        accountsDao = storage.getAccountsDao();
         final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(OutgoingCallerId.class, converter);
@@ -116,7 +118,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
 
     protected Response getCallerId(final String accountSid, final String sid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:OutgoingCallerIds");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -137,7 +139,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
 
     protected Response getCallerIds(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:OutgoingCallerIds");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -155,7 +157,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     protected Response putOutgoingCallerId(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Create:OutgoingCallerIds");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -179,7 +181,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     protected Response updateOutgoingCallerId(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Modify:OutgoingCallerIds");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

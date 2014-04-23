@@ -45,7 +45,7 @@ public final class OutgoingCallerIdsXmlEndpoint extends OutgoingCallerIdsEndpoin
 
     private Response deleteOutgoingCallerId(String accountSid, String sid) {
         try {
-            secure(new Sid(accountSid), "RestComm:Delete:OutgoingCallerIds");
+            secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
