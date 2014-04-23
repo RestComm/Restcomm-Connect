@@ -325,6 +325,30 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		 });
 	}
 	
+	$scope.onUpgradePressed = function(name) {
+		console.log("Upgrading project " + name);
+		$scope.upgradeProject(name)
+		.then( 
+				function () { console.log("Project upgraded succesfully");},
+				function () { console.log("Error upgrading project")}
+		);
+	}
+	
+	$scope.upgradeProject = function(name) {
+		var deferred = $q.defer();
+		
+		$http({url: 'services/manager/projects/upgrade?name=' + $scope.projectName,
+				method: "PUT"
+		})
+		.success(function (data, status, headers, config) {
+			 deferred.resolve('Project upgraded');
+		 }).error(function (data, status, headers, config) {
+			 deferred.reject({type:'upgradeError', data:data});
+		 });	
+		
+		return deferred.promise;
+	}
+	
 	$scope.refreshWavList = function(projectName) {
 		$http({url: 'services/manager/projects/wavlist?name=' + projectName, method: "GET"})
 		.success(function (data, status, headers, config) {
