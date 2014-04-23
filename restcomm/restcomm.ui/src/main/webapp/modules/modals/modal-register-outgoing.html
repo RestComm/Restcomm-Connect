@@ -1,0 +1,34 @@
+<div class="modal-header">
+    <h3 class="no-margins"><i class="fa fa-phone"></i> Register Outgoing Caller ID</h3>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal">
+        <dl class="dl-horizontal form-dl">
+            <dt>Account SID</dt>
+            <dd>
+                <input type="text" class="form-control input-xlarge" id="new-number-account-sid" ng-model="sid" placeholder="Account SID" disabled />
+            </dd>
+            <hr>
+            <dt>Phone Number</dt>
+            <dd>
+                <span class="col-md-8">
+                    <input id="new-number-number" class="form-control" ng-model="$parent.newNumber.phone_number" type="tel" placeholder="Phone Number" required popover-placement="top" popover-trigger="focus" popover="A number you own. We'll call this number to verify!" />
+                </span>
+                <span class="col-md-4">
+                    <input id="new-number-extension" class="form-control" ng-model="$parent.newNumber.extension" type="tel" placeholder="Extension" required popover-placement="top" popover-trigger="focus" popover="Enter the 'w' character for 1/2 second pause." />
+                </span>
+            </dd>
+        </dl>
+        <div class="text-right">
+            <button type="button" ng-click="isCollapsed = !isCollapsed" class="btn btn-default btn-sm"><i class="fa fa-ellipsis-h"></i> Optional Parameters</legend></button>
+        </div>
+        <div collapse="isCollapsed">
+            <hr />
+            <div class="well"><h4><i class="fa fa-bullhorn"></i> C'mon.. play with defaults for now!</h4></div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default cancel" ng-click="closeRegisterOutgoingNumber()">Cancel</button>
+    <button class="btn btn-primary" ng-click="registerOutgoingNumber(newNumber)">Register</button>
+</div>

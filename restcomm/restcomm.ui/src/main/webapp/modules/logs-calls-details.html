@@ -1,17 +1,9 @@
-<ul class="nav nav-pills">
-    <li class="active"><a ng-href="#/logs/calls">CALLS</a></li>
-    <li><a href="#/logs/messages">MESSAGES</a></li>
-    <li><a href="#/logs/recordings">RECORDINGS</a></li>
-    <li><a href="#/logs/transcriptions">TRANSCRIPTIONS</a></li>
-    <li><a href="#/logs/notifications">NOTIFICATIONS</a></li>
-</ul>
+<rc-logs-pills></rc-logs-pills>
 
-<div class="row-fluid">
-    <div class="span12 well well-small"><h1 class="page-header"><i class="icon-file-text-alt"></i> LOGS</h1>  <h2 class="page-subheader"> _ CALLS</h2></div>
-</div>
+<rc-page-title icon="file-text-o" title="LOGS" sub-title="CALLS"></rc-page-title>
 
-<div class="well well-small">
-    <h3 class="muted details-header"><i class="icon-phone"></i> _ <i ng-class="callDetails.direction == 'inbound' ? 'icon-signin' : 'icon-signout'"></i> {{ callDetails.direction == 'inbound' ? callDetails.from : callDetails.to }} </h3>
+<div class="well well-sm">
+    <h3 class="text-muted details-header"><i class="fa fa-phone"></i> _ <i ng-class="callDetails.direction == 'inbound' ? 'fa fa-sign-in' : 'fa fa-sign-out'"></i> {{ callDetails.direction == 'inbound' ? callDetails.from : callDetails.to }} </h3>
     <table class="table-condensed">
         <tr>
             <td>
@@ -84,5 +76,5 @@
             </td>
         </tr>
     </table>
-    <a href="javascript:history.back();" class="btn"><i class="icon-chevron-left"></i> Back</a>
+    <a href="javascript:history.back();" class="btn"><i class="fa fa-chevron-left"></i> Back</a>
 </div>

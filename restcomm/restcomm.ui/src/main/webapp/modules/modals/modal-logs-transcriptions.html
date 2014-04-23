@@ -1,0 +1,63 @@
+<div class="modal-header">
+    <h3 class="text-muted"><i class="fa fa-edit"></i> _ Transcription </h3>
+</div>
+<div class="modal-body">
+    <table class="table-condensed">
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Transcription SID</dt>
+                    <dd>{{ transcriptionDetails.sid }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Date</dt>
+                    <dd>{{ transcriptionDetails.date_created | date:'medium' }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Status</dt>
+                    <dd>{{ transcriptionDetails.status }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Duration</dt>
+                    <dd>{{ transcriptionDetails.duration }}<small> seconds</small></dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Recording</dt>
+                    <dd>{{ transcriptionDetails.recording_sid }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Transcription Text</dt>
+                    <dd>
+                        <blockquote>
+                            <p>{{ transcriptionDetails.transcription_text }}</p>
+                            <small>{{ transcriptionDetails.transcription_text.length }} chars</small>
+                        </blockquote>
+                    </dd>
+                </dl>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="closeTranscriptionDetails()">Close</button>
+</div>
