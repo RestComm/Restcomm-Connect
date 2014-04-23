@@ -1,41 +1,41 @@
-<ul class="nav nav-pills">
-    <li><a ng-href="#/logs/calls">CALLS</a></li>
-    <li class="active"><a href="#/logs/messages">MESSAGES</a></li>
-    <li><a href="#/logs/recordings">RECORDINGS</a></li>
-    <li><a href="#/logs/transcriptions">TRANSCRIPTIONS</a></li>
-    <li><a href="#/logs/notifications">NOTIFICATIONS</a></li>
-</ul>
+<rc-logs-pills></rc-logs-pills>
 
-<div class="row-fluid">
-    <div class="span12 well well-small"><h1 class="page-header"><i class="icon-file-text-alt"></i> LOGS</h1>  <h2 class="page-subheader"> _ MESSAGES</h2></div>
-</div>
+<rc-page-title icon="file-text-o" title="LOGS" sub-title="MESSAGES"></rc-page-title>
 
-<div class="row-fluid">
-    <div class="span12">
-        <div ng-show="messagesLogsList.length > 0" class="pull-right record-filter-div">
-            <div class="form-inline">
-                <span class="input-prepend filter-field">
-                    <span class="add-on">Date</span>
-                    <input type="date" class="input-medium" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
-                </span>
-                <span class="input-prepend filter-field">
-                    <span class="add-on">From</span>
-                    <input type="text" class="input-medium" placeholder="From" ng-model="query.from" ng-change="filter()" />
-                </span>
-                <span class="input-prepend filter-field">
-                    <span class="add-on">To</span>
-                    <input type="text" class="input-medium" placeholder="To" ng-model="query.to" ng-change="filter()" />
-                </span>
-                <span class="input-prepend filter-field">
-                    <span class="add-on">Body</span>
-                    <input type="text" class="input-medium" placeholder="Message Body" ng-model="query.body" ng-change="filter()" />
-                </span>
-                <button class="btn btn-inverse" disabled><i class="icon-filter"></i> Filter</button>
-            </div>
+<div class="row">
+    <div class="col-md-12">
+        <div ng-show="messagesLogsList.length > 0" class="pull-left record-filter-div">
+            <form class="form-inline" role="form">
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">From</span>
+                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="query.from" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="query.to" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">Date</span>
+                        <input type="date" class="input-sm form-control" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">Body</span>
+                        <input type="text" class="input-sm form-control" placeholder="Message Body" ng-model="query.body" ng-change="filter()" />
+                    </div>
+                </div>
+                <button class="btn btn-default btn-sm hidden" disabled><i class="fa fa-filter"></i> Filter</button>
+            </form>
         </div>
 
-        <div ng-hide="(messagesLogsList | filter:query).length > 0" class="hero-unit no-records-alert">
-            <h2><i class="icon-exclamation-sign"></i> No message records <span ng-show="messagesLogsList.length == 0"></span> <span ng-show="messagesLogsList.length > 0">matching query</span>. <small>Text your friends!</small></h2>
+        <div ng-hide="(messagesLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
+            <h2><i class="fa fa-exclamation-circle"></i> No message records <span ng-show="messagesLogsList.length == 0"></span> <span ng-show="messagesLogsList.length > 0">matching query</span>. <small>Text your friends!</small></h2>
         </div>
 
         <table ng-show="(messagesLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
@@ -51,8 +51,8 @@
             </thead>
             <tbody>
             <tr ng-repeat="message in filtered = (messagesLogsList | filter:query | orderBy:'date_created':true) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
-                <td><a href="" ng-click="showMessageDetails(message)">{{ message.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
-                <td><div class="text-center"><i ng-class="message.direction == 'inbound' ? 'icon-signin' : (message.direction == 'outbound-reply' ? 'icon-signout' : '')"></i><!-- {{ message.direction ? message.direction : '?' }} --></div></td>
+                <td><a href="" ng-click="showMessageDetailsModal(message)">{{ message.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
+                <td><div class="text-center"><i ng-class="message.direction == 'inbound' ? 'fa fa-sign-in' : (message.direction == 'outbound-reply' ? 'fa fa-sign-out' : '')"></i><!-- {{ message.direction ? message.direction : '?' }} --></div></td>
                 <td><div class="text-center">{{ message.from ? message.from : '?' }}</div></td>
                 <td><div class="text-center">{{ message.to ? message.to : '?' }}</div></td>
                 <td><div class="text-center">{{ message.status ? message.status : '?' }}</div></td>
@@ -66,99 +66,16 @@
                 <form class="form-inline text-center">
                     <h6>Items / Page</h6>
                     <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                        <button type="button" class="btn btn-small" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                        <button type="button" class="btn btn-small" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                        <button type="button" class="btn btn-small" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
                     </div>
                 </form>
             </td>
             <td colspan="99">
-                <pagination class="pagination pagination-small pull-right" data-num-pages="noOfPages" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+                <pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="totalMessages" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
             </td>
             </tfoot>
         </table>
-    </div>
-</div>
-
-<!-- Message Details Modal -->
-<div modal="showingMessageDetails" close="closeMessageDetails()" options="modalOpts">
-    <div class="modal-header">
-        <h3 class="muted"><i class="icon-comments-alt"></i> _ <i ng-class="messageDetails.direction == 'inbound' ? 'icon-signin' : 'icon-signout'"></i> {{ messageDetails.direction == 'inbound' ? messageDetails.from : messageDetails.to }} </h3>
-    </div>
-    <div class="modal-body">
-        <table class="table-condensed">
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>SID</dt>
-                        <dd>{{ messageDetails.sid }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Date</dt>
-                        <dd>{{ messageDetails.date_created | date:'medium' }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>From</dt>
-                        <dd>{{ messageDetails.from }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>To</dt>
-                        <dd>{{ messageDetails.to }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Direction</dt>
-                        <dd>{{ messageDetails.direction }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Status</dt>
-                        <dd>{{ messageDetails.status }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Price</dt>
-                        <dd>$ {{ messageDetails.price }}</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <dl class="dl-horizontal">
-                        <dt>Body</dt>
-                        <dd>
-                            <blockquote>
-                                <p>{{ messageDetails.body }}</p>
-                                <small>{{ messageDetails.body.length }} chars</small>
-                            </blockquote>
-                        </dd>
-                    </dl>
-                </td>
-            </tr>
-        </table>
-    </div>
-    <div class="modal-footer">
-        <button class="btn" ng-click="closeMessageDetails()">Close</button>
     </div>
 </div>

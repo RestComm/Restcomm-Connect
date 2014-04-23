@@ -18,7 +18,6 @@ package org.mobicents.servlet.restcomm.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
@@ -32,13 +31,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Client;
@@ -61,6 +61,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     protected ClientsDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected AccountsDao accountsDao;
 
     public ClientsEndpoint() {
         super();
@@ -70,6 +71,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     public void init() {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         dao = storage.getClientsDao();
+        accountsDao = storage.getAccountsDao();
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
@@ -111,7 +113,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
 
     protected Response getClient(final String accountSid, final String sid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:Clients");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -132,7 +134,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
 
     protected Response getClients(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:Clients");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -168,7 +170,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
 
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Create:Clients");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -198,7 +200,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     protected Response updateClient(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Modify:Clients");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

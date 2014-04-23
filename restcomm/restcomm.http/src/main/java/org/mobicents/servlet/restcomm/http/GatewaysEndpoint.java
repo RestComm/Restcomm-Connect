@@ -11,18 +11,18 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import com.thoughtworks.xstream.XStream;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.entities.Gateway;
@@ -42,6 +42,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected GatewaysDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected AccountsDao accountsDao;
 
     public GatewaysEndpoint() {
         super();
@@ -54,6 +55,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getGatewaysDao();
+        accountsDao = storage.getAccountsDao();
         final GatewayConverter converter = new GatewayConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Gateway.class, converter);
@@ -93,7 +95,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected Response getGateway(final String sid, final MediaType responseType) {
         final Sid accountSid = Sid.generate(Sid.Type.INVALID);
         try {
-            secure(accountSid, "RestComm:Read:Gateways");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -115,7 +117,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected Response getGateways(final MediaType responseType) {
         final Sid accountSid = Sid.generate(Sid.Type.INVALID);
         try {
-            secure(accountSid, "RestComm:Read:Gateways");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -133,7 +135,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected Response putGateway(final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = Sid.generate(Sid.Type.INVALID);
         try {
-            secure(accountSid, "RestComm:Create:Gateways");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -157,7 +159,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected Response updateGateway(final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = Sid.generate(Sid.Type.INVALID);
         try {
-            secure(accountSid, "RestComm:Modify:Gateways");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

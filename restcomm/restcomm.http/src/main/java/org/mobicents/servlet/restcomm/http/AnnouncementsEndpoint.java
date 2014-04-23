@@ -18,6 +18,8 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.shiro.authz.AuthorizationException;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Announcement;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -49,6 +51,7 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     protected ActorRef synthesizer;
     protected Gson gson;
     protected XStream xstream;
+    protected AccountsDao dao;
 
     public AnnouncementsEndpoint() {
         super();
@@ -56,6 +59,8 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     public void init() {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        dao = storage.getAccountsDao();
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
@@ -76,7 +81,7 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     public Response putAnnouncement(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Create:Announcements");
+            secure(dao.getAccount(accountSid), "RestComm:Create:Announcements");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

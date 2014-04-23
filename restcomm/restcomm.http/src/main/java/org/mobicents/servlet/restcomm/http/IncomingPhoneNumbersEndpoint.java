@@ -49,6 +49,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
@@ -72,6 +73,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected IncomingPhoneNumbersDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected AccountsDao accountsDao;
 
     private String header;
 
@@ -86,6 +88,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         final Configuration runtime = configuration.subset("runtime-settings");
         super.init(runtime);
         dao = storage.getIncomingPhoneNumbersDao();
+        accountsDao = storage.getAccountsDao();
         final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(runtime);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(IncomingPhoneNumber.class, converter);
@@ -229,7 +232,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -250,7 +253,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected Response getIncomingPhoneNumbers(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -268,7 +271,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -300,7 +303,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Modify:IncomingPhoneNumbers");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
