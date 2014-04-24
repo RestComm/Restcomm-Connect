@@ -39,6 +39,7 @@ public class UssdRestcommResponse {
     private UssdMessageType messageType;
     private Boolean isFinalMessage = true;
     private String ussdCollectAction;
+    private String errorCode;
 
     public String getMessage() {
         return message;
@@ -92,26 +93,40 @@ public class UssdRestcommResponse {
         streamWriter.writeStartElement("ussd-data");
         streamWriter.writeCharacters("\n");
 
-        // Write Language element
-        streamWriter.writeStartElement("language");
-        streamWriter.writeAttribute("value", getLanguage());
-        streamWriter.writeEndElement();
-        streamWriter.writeCharacters("\n");
+        if (getLanguage() != null) {
+            // Write Language element
+            streamWriter.writeStartElement("language");
+            streamWriter.writeAttribute("value", getLanguage());
+            streamWriter.writeEndElement();
+            streamWriter.writeCharacters("\n");
+        }
 
-        // Write ussd-string
-        streamWriter.writeStartElement("ussd-string");
-        streamWriter.writeAttribute("value", getMessage());
-        streamWriter.writeEndElement();
-        streamWriter.writeCharacters("\n");
+        if (getMessage() != null) {
+            // Write ussd-string
+            streamWriter.writeStartElement("ussd-string");
+            streamWriter.writeAttribute("value", getMessage());
+            streamWriter.writeEndElement();
+            streamWriter.writeCharacters("\n");
+        }
 
-        streamWriter.writeStartElement("anyExt");
-        streamWriter.writeCharacters("\n");
-        streamWriter.writeStartElement("message-type");
-        streamWriter.writeCharacters(getUssdMessageType().name());
-        streamWriter.writeEndElement();
-        streamWriter.writeCharacters("\n");
-        streamWriter.writeEndElement();
-        streamWriter.writeCharacters("\n");
+        if (getUssdMessageType() != null) {
+            streamWriter.writeStartElement("anyExt");
+            streamWriter.writeCharacters("\n");
+            streamWriter.writeStartElement("message-type");
+            streamWriter.writeCharacters(getUssdMessageType().name());
+            streamWriter.writeEndElement();
+            streamWriter.writeCharacters("\n");
+            streamWriter.writeEndElement();
+            streamWriter.writeCharacters("\n");
+        }
+
+        if (getErrorCode() != null) {
+            // Write error code
+            streamWriter.writeStartElement("error-code");
+            streamWriter.writeAttribute("value", getErrorCode());
+            streamWriter.writeEndElement();
+            streamWriter.writeCharacters("\n");
+        }
 
         streamWriter.writeEndElement();
         streamWriter.writeCharacters("\n");
@@ -132,5 +147,13 @@ public class UssdRestcommResponse {
 
     public String getUssdCollectAction() {
         return ussdCollectAction;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
     }
 }

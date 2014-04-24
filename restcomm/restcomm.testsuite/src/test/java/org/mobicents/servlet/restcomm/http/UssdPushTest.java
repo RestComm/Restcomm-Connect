@@ -24,7 +24,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
+import java.text.ParseException;
 
+import javax.sip.RequestEvent;
+import javax.sip.SipException;
+import javax.sip.header.ContentTypeHeader;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
@@ -43,6 +48,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.ussd.UssdPullTestMessages;
 
 import com.google.gson.JsonObject;
 
@@ -65,6 +71,8 @@ public class UssdPushTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
+    private String ussdContentSubType = "vnd.3gpp.ussd+xml";
+    
     private static SipStackTool tool1;
     private static SipStackTool tool2;
 
@@ -109,7 +117,7 @@ public class UssdPushTest {
     }
     
     @Test
-    public void createUssdPushTest() throws InterruptedException {
+    public void createUssdPushTestNotifyOnly() throws InterruptedException, SipException, ParseException {
 
         SipCall bobCall = bobPhone.createSipCall();
         bobCall.listenForIncomingCall();
@@ -129,15 +137,19 @@ public class UssdPushTest {
         String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
         assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
         assertTrue(bobCall
-                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, null, "application", "sdp", null, null));
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, null, "application", ussdContentSubType, null, null));
 
-//        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
-//
-//        assertTrue(georgeCall.waitForIncomingCall(5000));
-//        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-//        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-//        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
-//                null, null));
+        assertTrue(receivedBody.trim().equals(UssdPushTestMessages.ussdPushNotifyOnlyMessage));
+
+        bobCall.waitForAck(5000);
+        
+        Request infoRequest = bobCall.getDialog().createRequest(Request.INFO);
+        
+        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
+        infoRequest.setContent(UssdPushTestMessages.ussdPushNotifyOnlyResponse.getBytes(), contentTypeHeader);
+
+        bobPhone.sendRequestWithTransaction(infoRequest, false, bobCall.getDialog());     
+
 
         Thread.sleep(3000);
 
