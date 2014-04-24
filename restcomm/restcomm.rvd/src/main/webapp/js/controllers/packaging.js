@@ -1,7 +1,7 @@
 angular.module('Rvd')
 .controller('packagingCtrl', function ($scope, $routeParams) {
 	$scope.protos = {
-			configOption: {name:'', label:''}
+			configOption: {name:'', label:'', type:'value', description:'', defaultValue:'', required: true }
 	}
 	$scope.projectName = $routeParams.projectName;
 	$scope.packageInfo = null;
@@ -16,9 +16,14 @@ angular.module('Rvd')
 		};
 	} 
 	
-	$scope.addConfigurationOption = function() {
-		console.log("Added configuration option");
-		$scope.packageInfo.config.options.push(angular.copy( $scope.protos.configOption ));
+	$scope.addConfigurationOption = function(selectedOption) {
+		console.log("Adding configuration option");
+		if ( selectedOption == "Add value" )
+			$scope.packageInfo.config.options.push(angular.copy( $scope.protos.configOption ));
+	}
+	
+	$scope.removeConfigurationOption = function (option) {
+		$scope.packageInfo.config.options.splice($scope.packageInfo.config.options.indexOf(option), 1);
 	}
 	
 	

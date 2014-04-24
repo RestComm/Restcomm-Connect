@@ -88,6 +88,11 @@ label {
 	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 0, 0, 0.6)
 }
 
+.ng-invalid.form-control.warn-unfocused {
+	border-color: rgba(255, 0, 0, 0.6);
+	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 0, 0, 0.6)
+}
+
 .validation-error {
 	font-size: 85%;
 	color: rgba(255, 0, 0, 0.6);
@@ -425,7 +430,19 @@ li.verb {
 	margin-left: 8px;
 }
 
+.packaging-config-option {
+	box-shadow: rgb(136, 136, 136) 0px 0px 3px;
+	padding-left: 12px;
+	padding-top: 1px;
+	border-radius: 2px;
+	background-color: white;
+}
 
+.packaging-config-option .close-button {
+	position: absolute;
+	right: 26px;
+	top: 9px;
+}
 
 
 /* Bootstrap extension for having a lot of stuff on nav-tabs */

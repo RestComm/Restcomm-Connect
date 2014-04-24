@@ -21,27 +21,48 @@
 	<div ng-show='packageInfo' class="row">
 	
 		<div class="form-group">
-			<span class="help-block">How to configure</span>
+			<label>How to configure</label>
 			<textarea class="form-control"></textarea>
 			<span class="help-block">Type a small text describing general configuration guidelines</span>
 		</div>
 		
-		<h4>Configuration options</h4>
+		<h3>Configuration options</h3>
 		<span class="help-block">Create parameters editable by the end user will help your app fit in the user's premises.</span>
 		<div basic-sortable list-model='packageInfo.config.options'>
-			<div ng-repeat="configOption in listModel" class="row">
-				<div class="form-group col-md-4">
-					<label>Name</label>
-					<input ng-model='configOption.name' class="form-control">
+			<div ng-repeat="configOption in listModel" class='packaging-config-option form-group'>
+				<div class="row">
+					<h4 ng-hide='configOption.label' class='col-md-11'>Untitled field</h4>
+					<h4 ng-show='configOption.label' class='col-md-11'>{{configOption.label}}</h4>
+					<div class="col-md-1"><span ng-click='removeConfigurationOption(configOption)' class="close-button fa fa-times rvd-clickable"></span></div>
 				</div>
-				<div class="form-group col-md-4">
-					<label>Label</label>
-					<input ng-model='configOption.label' class="form-control">
-				</div>				
+				<div class="row">
+					<div class="form-group col-md-3">
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name</label>
+						<input ng-model='configOption.name' class="form-control warn-unfocused" required>
+					</div>
+					<div class="form-group col-md-3">
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field">Label</label>
+						<input ng-model='configOption.label' class="form-control warn-unfocused" required>
+					</div>	
+					<div class="form-group col-md-3">
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">Default value</label>
+						<input ng-model='configOption.defaultValue' class="form-control">
+					</div>	
+					<div class="form-group col-md-3">
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">Required</label>
+						<div>
+							<input type='checkbox' ng-model='configOption.required'>
+						</div>
+					</div>									
+				</div>
+				<div class="row">
+					<div class="form-group col-md-6">
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed">Description</label>
+						<textarea ng-model='configOption.description' class="form-control warn-unfocused" required></textarea>
+					</div>
+				</div>
 			</div>
 		</div>
-		<button ng-click='addConfigurationOption()' type="button" class="btn btn-primary">Add option</button>
+		<multibutton ng-click='addConfigurationOption(selectedOption)' options="['Add value']" button-class="btn-primary"></multibutton>
 	</div>
-
-
 </div>
