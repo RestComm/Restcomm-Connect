@@ -62,11 +62,11 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
-import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetCallObservers;
 import org.mobicents.servlet.restcomm.telephony.InitializeOutbound;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
+import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreter;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
@@ -123,6 +123,7 @@ public class UssdCall extends UntypedActor  {
 
     private CallDetailRecordsDao callDetailrecordsDao;
     private CallDetailRecord outgoingCallRecord;
+    private ActorRef ussdInterpreter;
 
     public UssdCall(final SipFactory factory, final ActorRef gateway) {
         super();
@@ -142,6 +143,7 @@ public class UssdCall extends UntypedActor  {
         transitions.add(new Transition(uninitialized, ringing));
         transitions.add(new Transition(uninitialized, queued));
         transitions.add(new Transition(queued, dialing));
+        transitions.add(new Transition(dialing, dialing));
         transitions.add(new Transition(ringing, inProgress));
         transitions.add(new Transition(inProgress, processingUssdMessage));
         transitions.add(new Transition(processingUssdMessage, ready));
@@ -268,9 +270,13 @@ public class UssdCall extends UntypedActor  {
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
             lastResponse = response;
+            if(response.getStatus() == SipServletResponse.SC_OK && response.getRequest().getMethod().equalsIgnoreCase("INVITE")){
+                response.createAck().send();
+            }
         } else if (UssdRestcommResponse.class.equals(klass)) {
             //If direction is outbound, get the message and create the Invite
             if (!direction.equalsIgnoreCase("inbound")) {
+                this.ussdInterpreter = sender;
                 fsm.transition(message, dialing);
                 return;
             }
@@ -279,8 +285,6 @@ public class UssdCall extends UntypedActor  {
             fsm.transition(message, inProgress);
         } else if (InitializeOutbound.class.equals(klass)) {
             fsm.transition(message, queued);
-        } else if (Dial.class.equals(klass)) {
-            fsm.transition(message, dialing);
         }
     }
 
@@ -495,7 +499,10 @@ public class UssdCall extends UntypedActor  {
             }
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
+            application.setAttribute("UssdCall","true");
             application.setAttribute(UssdCall.class.getName(), self);
+            if(ussdInterpreter != null)
+                application.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
             invite = factory.createRequest(application, "INVITE", from, to);
             invite.pushRoute(uri);
 

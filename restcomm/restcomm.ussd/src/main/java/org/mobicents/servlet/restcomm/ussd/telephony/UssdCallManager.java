@@ -157,7 +157,9 @@ public class UssdCallManager extends UntypedActor {
             } else if ("ACK".equals(method)) {
                 processRequest(request);
             }
-        }  else if (CreateCall.class.equals(klass)) {
+        } else if (message instanceof SipServletResponse) {
+            response(message);
+        } else if (CreateCall.class.equals(klass)) {
             try {
                 this.createCallRequest = (CreateCall) message;
                 sender.tell(new CallManagerResponse<ActorRef>(outbound(message)), self);
@@ -319,5 +321,16 @@ public class UssdCallManager extends UntypedActor {
         builder.setStatusCallbackMethod(request.callbackMethod());
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);
+    }
+
+    public void response(final Object message) throws IOException {
+        final ActorRef self = self();
+        final SipServletResponse response = (SipServletResponse) message;
+        final SipApplicationSession application = response.getApplicationSession();
+        if (application.isValid()) {
+            // otherwise the response is coming back to a Voice app hosted by Restcomm
+            final ActorRef ussdCall = (ActorRef) application.getAttribute(UssdCall.class.getName());
+            ussdCall.tell(response, self);
+        }
     }
 }

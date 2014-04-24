@@ -782,7 +782,14 @@ public class UssdInterpreter extends UntypedActor {
                         ussdRestcommResponse.setIsFinalMessage(true);
                     }
                 } else {
-                    ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSNotify_Request);
+                    //USSD PUSH
+                    if (hasCollect) {
+                        ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSRequest_Request);
+                        ussdRestcommResponse.setIsFinalMessage(false);
+                    } else {
+                        ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSNotify_Request);
+                        ussdRestcommResponse.setIsFinalMessage(true);
+                    }
                 }
                 ussdCall.tell(ussdRestcommResponse, source);
             }
@@ -818,8 +825,8 @@ public class UssdInterpreter extends UntypedActor {
             SipServletResponse okay = info.createResponse(200);
             okay.send();
 
-            UssdInfoRequest ussdResponse = new UssdInfoRequest(info);
-            String ussdText = ussdResponse.getMessage();
+            UssdInfoRequest ussdInfoRequest = new UssdInfoRequest(info);
+            String ussdText = ussdInfoRequest.getMessage();
             if (ussdCollectAction != null && !ussdCollectAction.isEmpty() && ussdText != null) {
                 URI target = null;
                 try {
@@ -862,6 +869,13 @@ public class UssdInterpreter extends UntypedActor {
                 ussdCollectTag = null;
                 ussdLanguageTag = null;
                 ussdMessageTags = new LinkedBlockingQueue<Tag>();
+                return;
+            } else if (ussdInfoRequest.getUssdMessageType().equals(UssdMessageType.unstructuredSSNotify_Response)) {
+                UssdRestcommResponse ussdRestcommResponse = new UssdRestcommResponse();
+                ussdRestcommResponse.setErrorCode("1");
+                ussdRestcommResponse.setMessage(ussdRestcommResponse.createUssdPayload());
+                ussdRestcommResponse.setIsFinalMessage(true);
+                ussdCall.tell(ussdRestcommResponse, source);
                 return;
             }
             // Ask the parser for the next action to take.

@@ -74,7 +74,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
     @Override
     protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
         if(isUssdMessage(response)){
-            ussdManager.tell(ussdManager, null);
+            ussdManager.tell(response, null);
         } else {
             manager.tell(response, null);
         }
