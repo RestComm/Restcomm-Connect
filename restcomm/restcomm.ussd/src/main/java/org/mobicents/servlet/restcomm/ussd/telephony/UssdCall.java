@@ -34,9 +34,11 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.sip.Address;
 import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
@@ -60,6 +62,7 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
+import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetCallObservers;
 import org.mobicents.servlet.restcomm.telephony.InitializeOutbound;
@@ -94,6 +97,7 @@ public class UssdCall extends UntypedActor  {
     private final State processingUssdMessage;
     private final State completed;
     private final State queued;
+    private final State dialing;
 
     // SIP runtime stuff.
     private final SipFactory factory;
@@ -119,7 +123,7 @@ public class UssdCall extends UntypedActor  {
 
     private CallDetailRecordsDao callDetailrecordsDao;
     private CallDetailRecord outgoingCallRecord;
-    
+
     public UssdCall(final SipFactory factory, final ActorRef gateway) {
         super();
         final ActorRef source = self();
@@ -131,16 +135,20 @@ public class UssdCall extends UntypedActor  {
         processingUssdMessage = new State("processing UssdMessage", new ProcessingUssdMessage(source), null);
         completed = new State("Completed", new Completed(source), null);
         queued = new State("queued", new Queued(source), null);
+        dialing = new State("dialing", new Dialing(source), null);
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, ringing));
+        transitions.add(new Transition(uninitialized, queued));
+        transitions.add(new Transition(queued, dialing));
         transitions.add(new Transition(ringing, inProgress));
         transitions.add(new Transition(inProgress, processingUssdMessage));
         transitions.add(new Transition(processingUssdMessage, ready));
         transitions.add(new Transition(processingUssdMessage, inProgress));
         transitions.add(new Transition(processingUssdMessage, completed));
         transitions.add(new Transition(processingUssdMessage, processingUssdMessage));
+        transitions.add(new Transition(processingUssdMessage, dialing));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -261,11 +269,18 @@ public class UssdCall extends UntypedActor  {
             final SipServletResponse response = (SipServletResponse) message;
             lastResponse = response;
         } else if (UssdRestcommResponse.class.equals(klass)) {
+            //If direction is outbound, get the message and create the Invite
+            if (!direction.equalsIgnoreCase("inbound")) {
+                fsm.transition(message, dialing);
+                return;
+            }
             fsm.transition(message, processingUssdMessage);
         } else if (Answer.class.equals(klass)) {
             fsm.transition(message, inProgress);
         } else if (InitializeOutbound.class.equals(klass)) {
             fsm.transition(message, queued);
+        } else if (Dial.class.equals(klass)) {
+            fsm.transition(message, dialing);
         }
     }
 
@@ -387,7 +402,7 @@ public class UssdCall extends UntypedActor  {
 
         }
     }
-    
+
     private final class Queued extends AbstractAction {
         public Queued(final ActorRef source) {
             super(source);
@@ -460,7 +475,51 @@ public class UssdCall extends UntypedActor  {
                 outgoingCallRecord = builder.build();
                 callDetailrecordsDao.addCallDetailRecord(outgoingCallRecord);
             }
+        }
+    }
 
+    private final class Dialing extends AbstractAction {
+        public Dialing(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            UssdRestcommResponse ussdRequest = (UssdRestcommResponse) message;
+            final ActorRef self = self();
+            // Create a SIP invite to initiate a new session.
+            final StringBuilder buffer = new StringBuilder();
+            buffer.append(to.getHost());
+            if (to.getPort() > -1) {
+                buffer.append(":").append(to.getPort());
+            }
+            final SipURI uri = factory.createSipURI(null, buffer.toString());
+            final SipApplicationSession application = factory.createApplicationSession();
+            application.setAttribute(UssdCall.class.getName(), self);
+            invite = factory.createRequest(application, "INVITE", from, to);
+            invite.pushRoute(uri);
+
+            if (headers != null) {
+                // adding custom headers for SIP Out
+                // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                Set<Map.Entry<String, String>> entrySet = headers.entrySet();
+                for (Map.Entry<String, String> entry : entrySet) {
+                    invite.addHeader("X-" + entry.getKey(), entry.getValue());
+                }
+            }
+            invite.addHeader("X-RestComm-ApiVersion", apiVersion);
+            invite.addHeader("X-RestComm-AccountSid", accountId.toString());
+            invite.addHeader("X-RestComm-CallSid", id.toString());
+            final SipSession session = invite.getSession();
+            session.setHandler("CallManager");
+
+            invite.setContent(ussdRequest.createUssdPayload().toString(), ussdContentType);
+
+            // Send the invite.
+            invite.send();
+            // Set the timeout period.
+            final UntypedActorContext context = getContext();
+            context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
         }
     }
 }

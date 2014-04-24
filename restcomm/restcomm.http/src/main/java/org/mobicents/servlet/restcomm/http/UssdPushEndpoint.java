@@ -83,7 +83,8 @@ public class UssdPushEndpoint extends AbstractEndpoint {
     private Gson gson;
     private GsonBuilder builder;
     private XStream xstream;
-    
+    private CallDetailRecordListConverter listConverter;
+
     public UssdPushEndpoint() {
         super();
     }
@@ -108,12 +109,12 @@ public class UssdPushEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
     }
-    
+
     @SuppressWarnings("unchecked")
     protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountId = new Sid(accountSid);
         try {
-            secure(accountId, "RestComm:Create:Calls");
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -207,7 +208,7 @@ public class UssdPushEndpoint extends AbstractEndpoint {
         }
         return result;
     }
-    
+
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
         if (!data.containsKey("From")) {
             throw new NullPointerException("From can not be null.");

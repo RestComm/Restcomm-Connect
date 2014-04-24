@@ -49,6 +49,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
+import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.InitializeOutbound;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreter;
@@ -84,7 +85,6 @@ public class UssdCallManager extends UntypedActor {
     private final String ussdGatewayUri;
     private final String ussdGatewayUsername;
     private final String ussdGatewayPassword;
-    
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -164,6 +164,8 @@ public class UssdCallManager extends UntypedActor {
             } catch (final Exception exception) {
                 sender.tell(new CallManagerResponse<ActorRef>(exception), self);
             }
+        } else if (ExecuteCallScript.class.equals(klass)) {
+            execute(message);
         }
 
     }
@@ -272,7 +274,7 @@ public class UssdCallManager extends UntypedActor {
         final String uri = ussdGatewayUri;
         final String ussdUsername = (request.username() != null) ? request.username() : ussdGatewayUsername;
         final String ussdPassword = (request.password() != null) ? request.password() : ussdGatewayPassword;
-        
+
         SipURI from = (SipURI)sipFactory.createSipURI(request.from(), uri);
         SipURI to = (SipURI)sipFactory.createSipURI(request.to(), uri);
 
@@ -299,5 +301,23 @@ public class UssdCallManager extends UntypedActor {
         }
         return result;
     }
-    
+
+    private void execute(final Object message) {
+        final ExecuteCallScript request = (ExecuteCallScript) message;
+        final ActorRef self = self();
+        final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self);
+        builder.setAccount(request.account());
+        builder.setVersion(request.version());
+        builder.setUrl(request.url());
+        builder.setMethod(request.method());
+        builder.setFallbackUrl(request.fallbackUrl());
+        builder.setFallbackMethod(request.fallbackMethod());
+        builder.setStatusCallback(request.callback());
+        builder.setStatusCallbackMethod(request.callbackMethod());
+        final ActorRef interpreter = builder.build();
+        interpreter.tell(new StartInterpreter(request.call()), self);
+    }
 }
