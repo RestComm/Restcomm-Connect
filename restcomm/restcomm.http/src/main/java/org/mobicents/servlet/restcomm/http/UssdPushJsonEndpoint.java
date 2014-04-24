@@ -39,5 +39,4 @@ public class UssdPushJsonEndpoint extends UssdPushEndpoint {
     public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return putCall(accountSid, data, APPLICATION_JSON_TYPE);
     }
-    
 }
