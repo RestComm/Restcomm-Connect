@@ -279,7 +279,7 @@ Date("2012-04-24"),
 "Default Administrator Account",
 null,
 "Full",
-"active",
+"uninitialized",
 "77f8c12cc7b8f8423e5c38b035249166",
 "Administrator",
 "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf");
