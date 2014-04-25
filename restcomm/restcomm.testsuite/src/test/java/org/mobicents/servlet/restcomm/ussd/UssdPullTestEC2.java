@@ -48,6 +48,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -55,6 +56,7 @@ import org.junit.runner.RunWith;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
+@Ignore //Ignore because this will be running only manually against an EC2 instance
 public class UssdPullTestEC2 {
 
     private final static Logger logger = Logger.getLogger(UssdPullTestEC2.class.getName());
