@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -100,13 +101,34 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         } else
         if ( "redirect".equals(kind) ) {
             return upgradeRedirectStep(sourceStep);
-        }            
+        } else
+        if ( "hungup".equals(kind) ) {
+            return upgradeHungupStep(sourceStep);
+        } else
+        if ( "externalService".equals(kind) ) {
+            return upgradeExternalServiceStep(sourceStep);
+        } else
+        if ( "reject".equals(kind) ) {
+            return upgradeRejectStep(sourceStep);
+        } else
+        if ( "pause".equals(kind) ) {
+            return upgradePauseStep(sourceStep);
+        } else
+        if ( "sms".equals(kind) ) {
+            return upgradeSmsStep(sourceStep);
+        } else
+        if ( "record".equals(kind) ) {
+            return upgradeRecordStep(sourceStep);
+        } else
+        if ( "fax".equals(kind) ) {
+            return upgradeFaxStep(sourceStep);
+        }           
 
         return sourceStep;
     }
 
-    private JsonElement upgradeSayStep(JsonElement sourceSay) {
-        JsonObject o = sourceSay.getAsJsonObject();
+    private JsonElement upgradeSayStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = new JsonObject();
 
         t.add("name", o.get("name"));
@@ -249,6 +271,121 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         if ( o.get("method").isJsonPrimitive() && !"".equals(o.get("method").getAsString()) )
             method = o.get("method").getAsString();
         t.add("method", o.get(method));       
+
+        t.add("iface", new JsonObject());
+
+        return t;
+    }
+    
+    private JsonElement upgradeHungupStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = new JsonObject();
+
+        t.add("name", o.get("name"));
+        t.add("kind", o.get("kind"));
+        t.add("label", o.get("label"));
+        t.add("title", o.get("title"));
+
+        t.add("iface", new JsonObject());
+
+        return t;
+    }   
+    
+    private JsonElement upgradeExternalServiceStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = o;
+        
+        o.remove("nextVariable");
+        t.add("iface", new JsonObject());
+
+        return t;
+    }    
+    
+    private JsonElement upgradeRejectStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = new JsonObject();
+
+        t.add("name", o.get("name"));
+        t.add("kind", o.get("kind"));
+        t.add("label", o.get("label"));
+        t.add("title", o.get("title"));
+        
+        if ( o.get("reason").isJsonPrimitive() &&  !"".equals(o.get("reason").getAsString()) )
+            t.add("reason", o.get("reason"));
+        
+        t.add("iface", new JsonObject());
+
+        return t;
+    }
+    
+    private JsonElement upgradePauseStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = new JsonObject();
+
+        t.add("name", o.get("name"));
+        t.add("kind", o.get("kind"));
+        t.add("label", o.get("label"));
+        t.add("title", o.get("title"));
+        
+        if ( o.get("length").isJsonPrimitive() && o.get("length").getAsJsonPrimitive().isNumber() )
+            t.add("length",o.get("length"));
+
+        t.add("iface", new JsonObject());
+
+        return t;
+    }   
+    
+    private JsonElement upgradeSmsStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = o;
+        
+        if (t.get("next").isJsonPrimitive() && "".equals(t.get("next").getAsString()) )
+            t.add("next", null);
+
+        t.add("iface", new JsonObject());
+
+        return t;
+    }
+    
+    private JsonElement upgradeRecordStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = new JsonObject();
+
+        t.add("name", o.get("name"));
+        t.add("kind", o.get("kind"));
+        t.add("label", o.get("label"));
+        t.add("title", o.get("title"));        
+        if (o.get("next").isJsonPrimitive() && "".equals(o.get("next").getAsString()) )
+            t.add("next", null);  
+        else
+            t.add("next",o.get("next"));
+        t.add("method", o.get("method"));
+        if ( !o.get("timeout").isJsonNull() )
+            t.add("timeout", o.get("timeout"));
+        if ( !o.get("finishOnKey").isJsonNull() )
+            t.add("finishOnKey", o.get("finishOnKey"));
+        if ( !o.get("maxLength").isJsonNull() )
+            t.add("maxLength", o.get("maxLength"));
+        if ( !o.get("transcribe").isJsonNull() )
+            t.add("transcribe", o.get("transcribe"));
+        if ( !o.get("transcribe").isJsonNull() )
+            t.add("transcribe", o.get("transcribe"));
+        if ( !o.get("transcribeCallback").isJsonNull() )
+            t.add("transcribeCallback", o.get("transcribeCallback"));
+        
+        // omit playbeep
+        
+        t.add("iface", new JsonObject());
+
+        return t;
+    }
+
+    private JsonElement upgradeFaxStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = o;
+
+        if (t.get("next").isJsonPrimitive() && "".equals(t.get("next").getAsString()) )
+            t.add("next", null);
 
         t.add("iface", new JsonObject());
 
