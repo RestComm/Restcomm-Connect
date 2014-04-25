@@ -27,7 +27,9 @@ import java.net.URL;
 import java.text.ParseException;
 
 import javax.sip.RequestEvent;
+import javax.sip.ResponseEvent;
 import javax.sip.SipException;
+import javax.sip.address.Address;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
@@ -36,6 +38,7 @@ import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -146,20 +149,97 @@ public class UssdPushTest {
         Request infoRequest = bobCall.getDialog().createRequest(Request.INFO);
         
         ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
-        infoRequest.setContent(UssdPushTestMessages.ussdPushNotifyOnlyResponse.getBytes(), contentTypeHeader);
+        infoRequest.setContent(UssdPushTestMessages.ussdPushNotifyOnlyClientResponse.getBytes(), contentTypeHeader);
 
-        bobPhone.sendRequestWithTransaction(infoRequest, false, bobCall.getDialog());     
-
-
+        SipTransaction sipTransaction = bobPhone.sendRequestWithTransaction(infoRequest, false, bobCall.getDialog());
+        assertNotNull(sipTransaction);
+        ResponseEvent response = (ResponseEvent) bobPhone.waitResponse(sipTransaction, 5000);
+        assertNotNull(response);
+        assertTrue(response.getResponse().getStatusCode() == Response.OK);
+        
         Thread.sleep(3000);
 
         bobCall.listenForDisconnect();
-//        assertTrue(georgeCall.disconnect());
-//        assertTrue(georgeCall.waitForAck(5000));
-
-        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.waitForDisconnect(5000));        
         assertTrue(bobCall.respondToDisconnect());
+
+        receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(receivedBody.trim().equals(UssdPushTestMessages.ussdPushNotifyOnlyFinalResponse));
     }
+    
+    @Test
+    public void createUssdPushTestCollect() throws InterruptedException, SipException, ParseException {
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "bob";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-"+version+"/ussd-rcml-collect.xml";
+
+        JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        //Wait for the USSD Push Tree Message 
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, null, "application", ussdContentSubType, null, null));
+        
+        assertTrue(receivedBody.equals(UssdPushTestMessages.ussdPushCollectMessage));
+
+        bobCall.waitForAck(5000);
+        String toTag = bobCall.getDialog().getLocalTag();
+        Address bobAddress = bobPhone.getAddress();
+        
+        //Prepare and send USSD Response "1" for the tree menu
+        Request infoRequest = bobCall.getDialog().createRequest(Request.INFO);
+        
+        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
+        infoRequest.setContent(UssdPushTestMessages.ussdPushCollectClientResponse.getBytes(), contentTypeHeader);
+
+        SipTransaction sipTransaction = bobPhone.sendRequestWithTransaction(infoRequest, false, bobCall.getDialog());
+        assertNotNull(sipTransaction);
+        ResponseEvent response = (ResponseEvent) bobPhone.waitResponse(sipTransaction, 5000);
+        assertNotNull(response);
+        assertTrue(response.getResponse().getStatusCode() == Response.OK);
+        
+        assertTrue(bobPhone.listenRequestMessage());
+        RequestEvent requestEvent = bobPhone.waitRequest(30*1000);
+        
+        assertNotNull(requestEvent);  
+        assertTrue(requestEvent.getRequest().getMethod().equalsIgnoreCase("INFO"));
+        bobPhone.sendReply(requestEvent, 200, "OK", toTag, bobAddress, 0);
+        
+
+        String receivedUssdPayload = new String(requestEvent.getRequest().getRawContent());
+        assertTrue(receivedUssdPayload.equals(UssdPushTestMessages.ussdPushNotifyOnlyMessage));
+
+        //Prepare and send final "OK" USSD message to end the communication
+        Request infoRequestFinal = bobCall.getDialog().createRequest(Request.INFO);
+        
+        infoRequestFinal.setContent(UssdPushTestMessages.ussdPushNotifyOnlyClientResponse.getBytes(), contentTypeHeader);
+
+        SipTransaction sipTransactionFinal = bobPhone.sendRequestWithTransaction(infoRequestFinal, false, bobCall.getDialog());
+        assertNotNull(sipTransactionFinal);
+        ResponseEvent responseFinal = (ResponseEvent) bobPhone.waitResponse(sipTransactionFinal, 5000);
+        assertNotNull(responseFinal);
+        assertTrue(responseFinal.getResponse().getStatusCode() == Response.OK);
+        
+//        Thread.sleep(3000);
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(5000));        
+        assertTrue(bobCall.respondToDisconnect());
+
+        receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(receivedBody.trim().equals(UssdPushTestMessages.ussdPushNotifyOnlyFinalResponse));
+    }    
     
     @Deployment(name = "UssdPushTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
@@ -175,7 +255,6 @@ public class UssdPushTest {
         archive.addAsWebInfResource("org/mobicents/servlet/restcomm/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml.xml");
         archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-collect.xml");
-        archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-character-limit-exceed.xml");
         logger.info("Packaged Test App");
         return archive;
     }

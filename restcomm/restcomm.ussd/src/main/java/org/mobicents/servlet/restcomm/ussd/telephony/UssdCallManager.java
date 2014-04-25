@@ -253,7 +253,8 @@ public class UssdCallManager extends UntypedActor {
                 applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
                 isFoundHostedApp = true;
             } else {
-                throw new Exception("Number not found");
+                logger.info("USSD Number registration NOT FOUND");
+                request.createResponse(SipServletResponse.SC_NOT_FOUND).send();
             }
         }
         return isFoundHostedApp;

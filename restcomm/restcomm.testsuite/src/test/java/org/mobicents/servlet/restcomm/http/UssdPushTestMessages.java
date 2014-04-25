@@ -34,12 +34,47 @@ public class UssdPushTestMessages {
             +"</anyExt>\n"
             +"</ussd-data>";
 
-    static String ussdPushNotifyOnlyResponse = "<ussd-data>\n"
+    static String ussdPushNotifyOnlyClientResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" 
+            + "<ussd-data>\n"
             + "<language>en</language>\n"
             + "<ussd-string></ussd-string>\n"
             + "<anyExt>\n"
             + "<message-type>unstructuredSSNotify_Response</message-type>\n"
             + "</anyExt>\n"
             + "</ussd-data>";
+    
+    static String ussdPushNotifyOnlyFinalResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<ussd-data>\n"
+            + "<error-code value=\"1\"></error-code>\n"
+            + "</ussd-data>";
 
+    static String ussdPushCollectMessage = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"></language>\n"
+            + "<ussd-string value=\"Please press\n1 For option1\n2 For option2\"></ussd-string>\n"
+            + "<anyExt>\n"
+            + "<message-type>unstructuredSSRequest_Request</message-type>\n"
+            + "</anyExt>\n"
+            + "</ussd-data>\n";
+    
+    static String ussdPushCollectClientResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<ussd-data>\n"
+            + "\t<language value=\"en\"/>\n"
+            + "\t<ussd-string value=\"1\"/>\n"
+            + "\t<anyExt>\n"
+            + "\t\t<message-type>unstructuredSSRequest_Response</message-type>\n"
+            + "\t</anyExt>\n"
+            + "</ussd-data>";
+    
+//    <?xml version="1.0" encoding="UTF-8"?>
+//    <ussd-data>
+//    <language value="en"></language>
+//    <ussd-string value="Please press
+//    1 For option1
+//    2 For option2"></ussd-string>
+//    <anyExt>
+//    <message-type>unstructuredSSRequest_Request</message-type>
+//    </anyExt>
+//    </ussd-data>
+    
 }
