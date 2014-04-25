@@ -329,7 +329,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		console.log("Upgrading project " + name);
 		$scope.upgradeProject(name)
 		.then( 
-				function () { console.log("Project upgraded succesfully");},
+				function () { 
+					console.log("Project upgraded succesfully");
+					$location.path("/designer/" + name);
+				},
 				function () { console.log("Error upgrading project")}
 		);
 	}
