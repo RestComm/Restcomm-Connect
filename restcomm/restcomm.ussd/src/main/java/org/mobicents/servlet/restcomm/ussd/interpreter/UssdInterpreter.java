@@ -77,11 +77,10 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
-import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.ussd.commons.UssdInfoRequest;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdMessageType;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
-import org.mobicents.servlet.restcomm.ussd.commons.UssdInfoRequest;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
@@ -112,7 +111,6 @@ public class UssdInterpreter extends UntypedActor {
     final State observeCall;
     final State acquiringCallInfo;
     final State finished;
-    final State initializingCall;
 
     private final State preparingMessage;
     private final State processingInfoRequest;
@@ -183,7 +181,6 @@ public class UssdInterpreter extends UntypedActor {
         downloadingFallbackRcml = new State("downloading fallback rcml", new DownloadingFallbackRcml(source), null);
         preparingMessage = new State("Preparing message", new PreparingMessage(source), null);
         processingInfoRequest = new State("Processing info request from client", new ProcessingInfoRequest(source), null);
-        initializingCall = new State("initializing call", new InitializingCall(source),null);
 
         ready = new State("ready", new Ready(source), null);
         notFound = new State("notFound", new NotFound(source), null);
@@ -192,7 +189,6 @@ public class UssdInterpreter extends UntypedActor {
 
         transitions.add(new Transition(uninitialized, acquiringCallInfo));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
-        transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(downloadingRcml, ready));
         transitions.add(new Transition(downloadingRcml, notFound));
         transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
@@ -788,7 +784,11 @@ public class UssdInterpreter extends UntypedActor {
                         ussdRestcommResponse.setIsFinalMessage(false);
                     } else {
                         ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSNotify_Request);
-                        ussdRestcommResponse.setIsFinalMessage(true);
+                        if (ussdRestcommResponse.getErrorCode() != null) {
+                            ussdRestcommResponse.setIsFinalMessage(true);
+                        } else {
+                            ussdRestcommResponse.setIsFinalMessage(false);
+                        }
                     }
                 }
                 ussdCall.tell(ussdRestcommResponse, source);
@@ -873,7 +873,6 @@ public class UssdInterpreter extends UntypedActor {
             } else if (ussdInfoRequest.getUssdMessageType().equals(UssdMessageType.unstructuredSSNotify_Response)) {
                 UssdRestcommResponse ussdRestcommResponse = new UssdRestcommResponse();
                 ussdRestcommResponse.setErrorCode("1");
-                ussdRestcommResponse.setMessage(ussdRestcommResponse.createUssdPayload());
                 ussdRestcommResponse.setIsFinalMessage(true);
                 ussdCall.tell(ussdRestcommResponse, source);
                 return;
@@ -907,48 +906,6 @@ public class UssdInterpreter extends UntypedActor {
                 }
                 callback();
             }
-        }
-    }
-
-    private final class InitializingCall extends AbstractAction {
-        public InitializingCall(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final DownloaderResponse response = (DownloaderResponse) message;
-
-            final Class<?> klass = message.getClass();
-            if (CallResponse.class.equals(klass)) {
-                // Update the interpreter state.
-                //                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                //                callInfo = response.get();
-                callState = callInfo.state();
-                if (callState.name().equalsIgnoreCase(CallStateChanged.State.IN_PROGRESS.name())) {
-                    final CallStateChanged event = new CallStateChanged(CallStateChanged.State.IN_PROGRESS);
-                    source.tell(event, source);
-                    // fsm.transition(event, acquiringCallMediaGroup);
-                    return;
-                }
-                // Update the storage.
-                if (callRecord != null) {
-                    callRecord = callRecord.setStatus(callState.toString());
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                    records.updateCallDetailRecord(callRecord);
-                }
-                // Update the application.
-                callback();
-                // Start dialing.
-                ussdCall.tell(new Dial(), source);
-            }
-            //            else if (Tag.class.equals(klass)) {
-            //                // Update the interpreter state.
-            //                verb = (Tag) message;
-            //                // Answer the call.
-            //                ussdCall.tell(new Answer(), source);
-            //            }
         }
     }
 

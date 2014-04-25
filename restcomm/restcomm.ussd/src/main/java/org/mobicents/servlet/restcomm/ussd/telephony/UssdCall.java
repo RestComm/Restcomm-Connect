@@ -111,6 +111,7 @@ public class UssdCall extends UntypedActor  {
     private CreateCall.Type type;
     private long timeout;
     private SipServletRequest invite;
+    private SipServletRequest outgoingInvite;
     private SipServletResponse lastResponse;
     private Map<String, String> headers;
 
@@ -143,7 +144,7 @@ public class UssdCall extends UntypedActor  {
         transitions.add(new Transition(uninitialized, ringing));
         transitions.add(new Transition(uninitialized, queued));
         transitions.add(new Transition(queued, dialing));
-        transitions.add(new Transition(dialing, dialing));
+        transitions.add(new Transition(dialing, processingUssdMessage));
         transitions.add(new Transition(ringing, inProgress));
         transitions.add(new Transition(inProgress, processingUssdMessage));
         transitions.add(new Transition(processingUssdMessage, ready));
@@ -275,7 +276,7 @@ public class UssdCall extends UntypedActor  {
             }
         } else if (UssdRestcommResponse.class.equals(klass)) {
             //If direction is outbound, get the message and create the Invite
-            if (!direction.equalsIgnoreCase("inbound")) {
+            if (!direction.equalsIgnoreCase("inbound") && outgoingInvite == null) {
                 this.ussdInterpreter = sender;
                 fsm.transition(message, dialing);
                 return;
@@ -374,7 +375,12 @@ public class UssdCall extends UntypedActor  {
         @Override
         public void execute(final Object message) throws Exception {
             UssdRestcommResponse ussdRequest = (UssdRestcommResponse) message;
-            SipSession session = invite.getSession();
+            SipSession session = null;
+            if (direction.equalsIgnoreCase("inbound")) {
+                session = invite.getSession();
+            } else {
+                session = outgoingInvite.getSession();
+            }
             SipServletRequest request = null;
 
             if(ussdRequest.getIsFinalMessage()) {
@@ -383,7 +389,7 @@ public class UssdCall extends UntypedActor  {
             } else {
                 request = session.createRequest("INFO");
             }
-            request.setContent(ussdRequest.createUssdPayload().toString(), ussdContentType);
+            request.setContent(ussdRequest.createUssdPayload().toString().trim(), ussdContentType);
 
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
             if (realInetUri != null) {
@@ -503,27 +509,27 @@ public class UssdCall extends UntypedActor  {
             application.setAttribute(UssdCall.class.getName(), self);
             if(ussdInterpreter != null)
                 application.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
-            invite = factory.createRequest(application, "INVITE", from, to);
-            invite.pushRoute(uri);
+            outgoingInvite = factory.createRequest(application, "INVITE", from, to);
+            outgoingInvite.pushRoute(uri);
 
             if (headers != null) {
                 // adding custom headers for SIP Out
                 // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                 Set<Map.Entry<String, String>> entrySet = headers.entrySet();
                 for (Map.Entry<String, String> entry : entrySet) {
-                    invite.addHeader("X-" + entry.getKey(), entry.getValue());
+                    outgoingInvite.addHeader("X-" + entry.getKey(), entry.getValue());
                 }
             }
-            invite.addHeader("X-RestComm-ApiVersion", apiVersion);
-            invite.addHeader("X-RestComm-AccountSid", accountId.toString());
-            invite.addHeader("X-RestComm-CallSid", id.toString());
-            final SipSession session = invite.getSession();
+            outgoingInvite.addHeader("X-RestComm-ApiVersion", apiVersion);
+            outgoingInvite.addHeader("X-RestComm-AccountSid", accountId.toString());
+            outgoingInvite.addHeader("X-RestComm-CallSid", id.toString());
+            final SipSession session = outgoingInvite.getSession();
             session.setHandler("CallManager");
 
-            invite.setContent(ussdRequest.createUssdPayload().toString(), ussdContentType);
+            outgoingInvite.setContent(ussdRequest.createUssdPayload().toString(), ussdContentType);
 
             // Send the invite.
-            invite.send();
+            outgoingInvite.send();
             // Set the timeout period.
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));

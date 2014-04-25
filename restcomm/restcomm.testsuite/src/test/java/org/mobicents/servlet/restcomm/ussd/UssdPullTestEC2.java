@@ -55,21 +55,21 @@ import org.junit.runner.RunWith;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-@RunWith(Arquillian.class)
-public class UssdPullTest {
+public class UssdPullTestEC2 {
 
-    private final static Logger logger = Logger.getLogger(UssdPullTest.class.getName());
+    private final static Logger logger = Logger.getLogger(UssdPullTestEC2.class.getName());
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     
     private static SipStackTool tool1;
 
+    private String ec2IPAddress = "54.198.164.153";
+    private String myIpAddress = "192.168.1.70";
+    
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+    private String bobContact = "sip:bob@"+myIpAddress+":5090";
     
-    private String ussdPullDid = "sip:5544@127.0.0.1:5080";
-    private String ussdPullWithCollectDID = "sip:5555@127.0.0.1:5080";
-    private String ussdPullMessageLengthExceeds = "sip:5566@127.0.0.1:5080";
+    private String ussdPullWithCollectDID = "sip:*123#@"+ec2IPAddress+":5080";
     
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -78,8 +78,8 @@ public class UssdPullTest {
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, myIpAddress, "5090", ec2IPAddress+":5080");
+        bobPhone = bobSipStack.createSipPhone(ec2IPAddress, SipStack.PROTOCOL_UDP, 5080, bobContact);
     }
 
     @After
@@ -92,35 +92,6 @@ public class UssdPullTest {
             bobSipStack.dispose();
             bobSipStack = null;
         }
-    }
-
-    @Test
-    public void testUssdPull() {
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullDid, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
-        assertLastOperationSuccess(bobCall);
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseBob == Response.TRYING);
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
-        
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(bobCall.sendInviteOkAck());
-        
-        assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
-        
-        assertTrue(bobCall.listenForDisconnect());
-        
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        bobCall.respondToDisconnect();
-        SipRequest bye = bobCall.getLastReceivedRequest();
-        String receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
-        bobCall.dispose();
     }
 
     @Test
@@ -145,7 +116,7 @@ public class UssdPullTest {
         assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
         String toTag = bobCall.getDialog().getLocalTag();
         Address bobAddress = bobPhone.getAddress();
-        
+        bobPhone.setLoopback(true);
         assertTrue(bobPhone.listenRequestMessage());
         RequestEvent requestEvent = bobPhone.waitRequest(30*1000);
         
@@ -156,8 +127,8 @@ public class UssdPullTest {
 
         String receivedUssdPayload = new String(requestEvent.getRequest().getRawContent());
         System.out.println("receivedUssdPayload: \n"+receivedUssdPayload);
-        System.out.println("UssdPullTestMessages.ussdRestcommResponseWithCollect: \n"+UssdPullTestMessages.ussdRestcommResponseWithCollect);
-        assertTrue(receivedUssdPayload.equals(UssdPullTestMessages.ussdRestcommResponseWithCollect.trim()));
+        System.out.println("UssdPullTestMessagesEC2.ussdRestcommResponseWithCollect: \n"+UssdPullTestMessagesEC2.ussdRestcommResponseWithCollect);
+        assertTrue(receivedUssdPayload.equals(UssdPullTestMessagesEC2.ussdRestcommResponseWithCollect.trim()));
         
         Request infoResponse = requestEvent.getDialog().createRequest(Request.INFO);
         ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
@@ -170,58 +141,8 @@ public class UssdPullTest {
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
         receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessagesEC2.ussdRestcommResponse.trim()));
         bobCall.dispose();
-    }
-
-    @Test
-    public void testUssdMessageLengthExceeds() {
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, UssdPullTestMessages.ussdClientRequestBodyForMessageLenghtExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
-        assertLastOperationSuccess(bobCall);
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
-
-        if (responseBob == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-        
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(bobCall.sendInviteOkAck());
-        
-        assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
-        
-        assertTrue(bobCall.listenForDisconnect());
-        
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        bobCall.respondToDisconnect();
-        SipRequest bye = bobCall.getLastReceivedRequest();
-        String receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponseForMessageLengthExceeds.trim()));
-        bobCall.dispose();
-    }
-    
-    @Deployment(name = "UssdPullTest", managed = true, testable = false)
-    public static WebArchive createWebArchiveNoGw() {
-        logger.info("Packaging Test App");
-        final WebArchive archive = ShrinkWrapMaven.resolver()
-                .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("org/mobicents/servlet/restcomm/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
-        archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml.xml");
-        archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-collect.xml");
-        archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-character-limit-exceed.xml");
-        logger.info("Packaged Test App");
-        return archive;
     }
 
 }
