@@ -254,6 +254,7 @@ public class ProjectService {
             throw new NoUpgradePathException("No upgrade path for project " + projectName + "Best effort from version: " + startVersion + " - to version: " + version);
         }
 
-        //projectStorage.updateProjectState(projectName, root.toString());
+        projectStorage.backupProjectState(projectName);
+        projectStorage.updateProjectState(projectName, root.toString());
     }
 }

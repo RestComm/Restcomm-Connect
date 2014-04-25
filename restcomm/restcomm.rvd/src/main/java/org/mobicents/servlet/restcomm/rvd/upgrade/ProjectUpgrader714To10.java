@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -122,7 +121,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         } else
         if ( "fax".equals(kind) ) {
             return upgradeFaxStep(sourceStep);
-        }           
+        }
 
         return sourceStep;
     }
@@ -146,7 +145,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
 
         return t;
     }
-    
+
     private JsonElement upgradePlayStep(JsonElement sourceSay) {
         JsonObject o = sourceSay.getAsJsonObject();
         JsonObject t = new JsonObject();
@@ -158,26 +157,26 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         if ( !o.get("loop").isJsonNull() )
             t.add("loop", o.get("loop"));
         t.add("playType", o.get("playType"));
-        
+
         String wavUrl = "";
         if ( o.get("wavUrl").getAsJsonPrimitive().isString() )
             wavUrl = o.get("wavUrl").getAsJsonPrimitive().getAsString();
         JsonObject remote = new JsonObject();
         remote.addProperty("wavUrl", wavUrl);
         t.add("remote", remote);
-        
+
         String wavLocalFilename = "";
         if ( o.get("wavLocalFilename").getAsJsonPrimitive().isString() )
             wavLocalFilename = o.get("wavLocalFilename").getAsJsonPrimitive().getAsString();
         JsonObject local = new JsonObject();
         remote.addProperty("wavLocalFilename", wavLocalFilename);
-        t.add("local", local);   
-        
+        t.add("local", local);
+
         t.add("iface", new JsonObject());
 
         return t;
-    }   
-    
+    }
+
     private JsonElement upgradeGatherStep(JsonElement source) {
         JsonObject o = source.getAsJsonObject();
         JsonObject t = new JsonObject();
@@ -188,21 +187,22 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("title", o.get("title"));
         t.add("method", o.get("method"));
         if ( o.get("timeout").isJsonPrimitive() && o.get("timeout").getAsJsonPrimitive().isNumber() )
-            t.add("timeout", o.get("timeout")); 
+            t.add("timeout", o.get("timeout"));
         if ( !o.get("finishOnKey").isJsonNull()  && !"".equals(o.get("finishOnKey").getAsString()) )
-            t.add("finishOnKey", o.get("finishOnKey")); 
+            t.add("finishOnKey", o.get("finishOnKey"));
         if ( o.get("numDigits").isJsonPrimitive() && o.get("numDigits").getAsJsonPrimitive().isNumber() )
-            t.add("numDigits", o.get("numDigits"));         
-        
+            t.add("numDigits", o.get("numDigits"));
+        t.add("gatherType", o.get("gatherType"));
+
         JsonObject collectdigits = new JsonObject();
         collectdigits.add("next", o.get("next"));
         collectdigits.add("collectVariable", o.get("collectVariable"));
         collectdigits.addProperty("scope", "module");
         t.add("collectdigits", collectdigits);
-        
+
         JsonObject menu = new JsonObject();
         menu.add("mappings", o.get("mappings"));
-        
+
         JsonObject sourceSteps = o.getAsJsonObject("steps");
         JsonArray targetSteps = new JsonArray();
         for ( JsonElement stepNameElement : o.getAsJsonArray("stepnames") ) {
@@ -215,7 +215,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("iface", new JsonObject());
 
         return t;
-    }    
+    }
 
     private JsonElement upgradeDialStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
@@ -225,7 +225,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("kind", o.get("kind"));
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
-        
+
         String dialType = o.get("dialType").getAsString();
         JsonObject noun = new JsonObject();
         if ( "number".equals(dialType) ) {
@@ -239,7 +239,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         if ( "conference".equals(dialType) ) {
             noun.addProperty("dialType","conference");
             noun.add("destination", o.get("conference"));
-        } else      
+        } else
         if ( "sipuri".equals(dialType) ) {
             noun.addProperty("dialType","sipuri");
             noun.add("destination", o.get("sipuri"));
@@ -247,12 +247,12 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         JsonArray dialNouns = new JsonArray();
         dialNouns.add(noun);
         t.add("dialNouns", dialNouns);
-        
+
         t.add("iface", new JsonObject());
 
         return t;
     }
-    
+
     private JsonElement upgradeRedirectStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = new JsonObject();
@@ -261,22 +261,22 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("kind", o.get("kind"));
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
-        
+
         String url = null;
         if ( o.get("url").isJsonPrimitive() && !"".equals(o.get("url").getAsString()) )
             url = o.get("url").getAsString();
         t.add("url", o.get(url));
-        
+
         String method = null;
         if ( o.get("method").isJsonPrimitive() && !"".equals(o.get("method").getAsString()) )
             method = o.get("method").getAsString();
-        t.add("method", o.get(method));       
+        t.add("method", o.get(method));
 
         t.add("iface", new JsonObject());
 
         return t;
     }
-    
+
     private JsonElement upgradeHungupStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = new JsonObject();
@@ -289,18 +289,18 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("iface", new JsonObject());
 
         return t;
-    }   
-    
+    }
+
     private JsonElement upgradeExternalServiceStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = o;
-        
+
         o.remove("nextVariable");
         t.add("iface", new JsonObject());
 
         return t;
-    }    
-    
+    }
+
     private JsonElement upgradeRejectStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = new JsonObject();
@@ -309,15 +309,15 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("kind", o.get("kind"));
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
-        
+
         if ( o.get("reason").isJsonPrimitive() &&  !"".equals(o.get("reason").getAsString()) )
             t.add("reason", o.get("reason"));
-        
+
         t.add("iface", new JsonObject());
 
         return t;
     }
-    
+
     private JsonElement upgradePauseStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = new JsonObject();
@@ -326,19 +326,19 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("kind", o.get("kind"));
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
-        
+
         if ( o.get("length").isJsonPrimitive() && o.get("length").getAsJsonPrimitive().isNumber() )
             t.add("length",o.get("length"));
 
         t.add("iface", new JsonObject());
 
         return t;
-    }   
-    
+    }
+
     private JsonElement upgradeSmsStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = o;
-        
+
         if (t.get("next").isJsonPrimitive() && "".equals(t.get("next").getAsString()) )
             t.add("next", null);
 
@@ -346,7 +346,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
 
         return t;
     }
-    
+
     private JsonElement upgradeRecordStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = new JsonObject();
@@ -354,9 +354,9 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("name", o.get("name"));
         t.add("kind", o.get("kind"));
         t.add("label", o.get("label"));
-        t.add("title", o.get("title"));        
+        t.add("title", o.get("title"));
         if (o.get("next").isJsonPrimitive() && "".equals(o.get("next").getAsString()) )
-            t.add("next", null);  
+            t.add("next", null);
         else
             t.add("next",o.get("next"));
         t.add("method", o.get("method"));
@@ -372,9 +372,9 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
             t.add("transcribe", o.get("transcribe"));
         if ( !o.get("transcribeCallback").isJsonNull() )
             t.add("transcribeCallback", o.get("transcribeCallback"));
-        
+
         // omit playbeep
-        
+
         t.add("iface", new JsonObject());
 
         return t;
@@ -391,7 +391,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
 
         return t;
     }
-    
+
     @Override
     public String getResultingVersion() {
         return "1.0";

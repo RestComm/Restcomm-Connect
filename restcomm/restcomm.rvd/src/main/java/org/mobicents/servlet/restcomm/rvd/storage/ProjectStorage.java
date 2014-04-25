@@ -31,5 +31,6 @@ public interface ProjectStorage {
     String loadStep(String projectName, String nodeName, String stepName) throws StorageException;
     void storeNodeStepnames(String projectName, Node node) throws StorageException;
     List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException;
+    void backupProjectState(String projectName) throws StorageException;
 
 }
