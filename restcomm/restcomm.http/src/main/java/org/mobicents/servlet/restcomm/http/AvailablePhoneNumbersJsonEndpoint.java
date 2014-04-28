@@ -36,7 +36,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-@Path("/Accounts/{accountSid}/AvailablePhoneNumbers.json/US/Local")
+@Path("/Accounts/{accountSid}/AvailablePhoneNumbers/US/Local.json")
 @ThreadSafe
 public class AvailablePhoneNumbersJsonEndpoint extends AvailablePhoneNumbersEndpoint {
     public AvailablePhoneNumbersJsonEndpoint() {
