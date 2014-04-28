@@ -202,6 +202,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
 
         JsonObject menu = new JsonObject();
         menu.add("mappings", o.get("mappings"));
+        t.add("menu", menu);
 
         JsonObject sourceSteps = o.getAsJsonObject("steps");
         JsonArray targetSteps = new JsonArray();

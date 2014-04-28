@@ -321,35 +321,11 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
 		 }).error(function (data, status, headers, config) {
-			$scope.projectError = data.serverError;
+			 if ( data.serverError.className == 'IncompatibleProjectVersion' )
+				 $location.path("/upgrade/" + name)
+			 else
+				 $scope.projectError = data.serverError;
 		 });
-	}
-	
-	$scope.onUpgradePressed = function(name) {
-		console.log("Upgrading project " + name);
-		$scope.upgradeProject(name)
-		.then( 
-				function () { 
-					console.log("Project upgraded succesfully");
-					$location.path("/designer/" + name);
-				},
-				function () { console.log("Error upgrading project")}
-		);
-	}
-	
-	$scope.upgradeProject = function(name) {
-		var deferred = $q.defer();
-		
-		$http({url: 'services/manager/projects/upgrade?name=' + $scope.projectName,
-				method: "PUT"
-		})
-		.success(function (data, status, headers, config) {
-			 deferred.resolve('Project upgraded');
-		 }).error(function (data, status, headers, config) {
-			 deferred.reject({type:'upgradeError', data:data});
-		 });	
-		
-		return deferred.promise;
 	}
 	
 	$scope.refreshWavList = function(projectName) {
@@ -361,8 +337,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		});
 	}
 
-	
-	// First saves and then builds
 	$scope.buildProject = function() {
 		var deferred = $q.defer();
 		
@@ -619,8 +593,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		state.nodes = angular.copy($scope.nodes);
 		for ( var i=0; i < state.nodes.length; i++) {
 			var node = state.nodes[i];
-			for (var i=0; i<node.steps.length; i++) {
-				var step = node.steps[i];
+			for (var j=0; j<node.steps.length; j++) {
+				var step = node.steps[j];
 				if (step.kind == "gather") {
 					if (step.gatherType == "menu")
 						delete step.collectdigits;
