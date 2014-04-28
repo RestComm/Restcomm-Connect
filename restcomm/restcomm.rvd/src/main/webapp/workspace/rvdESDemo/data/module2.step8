@@ -1,1 +1,1 @@
-{"phrase":"Welcome back $rName, $rSurname, you are about to see the Awesomeness of Restcom","iface":{"optionsVisible":false},"kind":"say","label":"say","title":"say","isCollapsed":false,"name":"step8"}
+{"phrase":"Welcome back $rName, $rSurname, you are about to see the Awesomeness of Restcom","kind":"say","label":"say","title":"say","name":"step8"}
