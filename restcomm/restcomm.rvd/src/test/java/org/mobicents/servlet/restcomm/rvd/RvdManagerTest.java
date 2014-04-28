@@ -81,7 +81,8 @@ public class RvdManagerTest {
     
     public RvdManagerTest()  {
     }
-/*
+
+    /*
     @Test
     public void testCreateValidProject() throws Exception {
         String projectName = "newProject";

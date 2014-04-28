@@ -18,6 +18,10 @@ App.config([ '$routeProvider', function($routeProvider) {
 		templateUrl : 'templates/packaging.html',
 		controller : 'packagingCtrl'
 	})
+	.when('/upgrade/:projectName', {
+		templateUrl : 'templates/upgrade.html',
+		controller : 'upgradeCtrl'
+	})	
 	.otherwise({
 		redirectTo : '/home'
 	});
@@ -61,8 +65,8 @@ App.factory('protos', function () {
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
 			hungup: {kind:'hungup', label:'hang up', title:'hang up',iface:{}},
 			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, iface:{}},
-			reject: {kind:'reject', label:'reject', title:'reject', reason:null,iface:{}},
-			pause: {kind:'pause', label:'pause', title:'pause', length:null, iface:{}},
+			reject: {kind:'reject', label:'reject', title:'reject', reason:undefined,iface:{}},
+			pause: {kind:'pause', label:'pause', title:'pause', length:undefined, iface:{}},
 			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
 			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:undefined, finishOnKey:undefined, maxLength:undefined, transcribe:undefined, transcribeCallback:undefined, playBeep:undefined, iface:{}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},

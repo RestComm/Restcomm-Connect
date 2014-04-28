@@ -345,4 +345,16 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error reading node file - " + filepath);
         }
     }
+
+    @Override
+    public void backupProjectState(String projectName) throws StorageException {
+        File sourceStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state");
+        File backupStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state" + ".old");
+
+        try {
+            FileUtils.copyFile(sourceStateFile, backupStateFile);
+        } catch (IOException e) {
+            throw new StorageException("Error creating state file backup: " + backupStateFile);
+        }
+    }
 }
