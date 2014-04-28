@@ -56,7 +56,7 @@ public class RvdController {
         String rcmlResponse;
         try {
             String targetParam = requestParams.getFirst("target");
-            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest, requestParams);
+            Interpreter interpreter = new Interpreter(rvdSettings, projectStorage, targetParam, appname, httpRequest, requestParams);
             rcmlResponse = interpreter.interpret();
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);

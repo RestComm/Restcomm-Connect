@@ -7,12 +7,7 @@
 		"kind": {"enum": ["pause"]},
 		"label": {"type": "string"},
 		"title": {"type": "string"},
-		"length": {
-			"oneOf" : [
-				{"type": "null"},
-				{"type": "integer", "minimum": 1}
-			]
-		},
+		"length": {"type": "integer", "minimum": 1},
 	
 		"iface": {"type": "object"}
 	},
