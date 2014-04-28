@@ -89,6 +89,7 @@ public class Interpreter {
 
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
+    private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
 
@@ -107,7 +108,8 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+    public Interpreter(RvdSettings settings, ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+        this.rvdSettings = settings;
         this.projectStorage = projectStorage;
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
@@ -189,6 +191,10 @@ public class Interpreter {
 
         // xstream.aliasField(alias, definedIn, fieldName);
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
+    }
+
+    public RvdSettings getRvdSettings() {
+        return rvdSettings;
     }
 
     public String getAppName() {
