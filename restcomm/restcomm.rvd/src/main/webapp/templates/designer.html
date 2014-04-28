@@ -5,9 +5,6 @@
 			<div ng-switch-when='ProjectDoesNotExist' class='navbar-text navbar-rvd-centered'>
 				Project <em>{{projectName}}</em> not  found. <a href="#">View available projects</a>
 			</div>
-			<div ng-switch-when='IncompatibleProjectVersion' class='navbar-text navbar-rvd-centered'>
-				Project <em>{{projectName}}</em> was created using a different version of RVD. <a class="rvd-clickable" ng-click="onUpgradePressed(projectName)">Upgrade</a> or <a href="#">view available projects</a>
-			</div>
 			<div ng-switch-default class='navbar-text navbar-rvd-centered'>
 				Unknown error. <a href="#">View available projects</a>
 			</div>			
