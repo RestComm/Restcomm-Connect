@@ -30,22 +30,22 @@
 		<div basic-sortable list-model='packageInfo.config.options'>
 			<div ng-repeat="configOption in listModel" class='packaging-config-option form-group'>
 				<div class="row">
-					<h4 ng-hide='configOption.label' class='col-md-11'>Untitled field</h4>
+					<h4 ng-hide='configOption.label' class='col-md-11'>Untitled option</h4>
 					<h4 ng-show='configOption.label' class='col-md-11'>{{configOption.label}}</h4>
 					<div class="col-md-1"><span ng-click='removeConfigurationOption(configOption)' class="close-button fa fa-times rvd-clickable"></span></div>
 				</div>
 				<div class="row">
 					<div class="form-group col-md-3">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name</label>
-						<input ng-model='configOption.name' class="form-control warn-unfocused" required>
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name *</label>
+						<input ng-model='configOption.name' class="form-control" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}">
 					</div>
 					<div class="form-group col-md-3">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field">Label</label>
-						<input ng-model='configOption.label' class="form-control warn-unfocused" required>
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">Label *</label>
+						<input ng-model='configOption.label' class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}">
 					</div>	
 					<div class="form-group col-md-3">
 						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">Default value</label>
-						<input ng-model='configOption.defaultValue' class="form-control">
+						<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}">
 					</div>	
 					<div class="form-group col-md-3">
 						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">Required</label>
@@ -56,8 +56,8 @@
 				</div>
 				<div class="row">
 					<div class="form-group col-md-6">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed">Description</label>
-						<textarea ng-model='configOption.description' class="form-control warn-unfocused" required></textarea>
+						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed">Description *</label>
+						<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"></textarea>
 					</div>
 				</div>
 			</div>
