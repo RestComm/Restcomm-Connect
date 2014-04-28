@@ -63,8 +63,9 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
         dao = storage.getAccountsDao();
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        Configuration ttsConfiguration = configuration.subset("speech-synthesizer");
         configuration = configuration.subset("runtime-settings");
-        synthesizer = tts(configuration);
+        synthesizer = tts(ttsConfiguration);
         super.init(configuration);
         final AnnouncementConverter converter = new AnnouncementConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
