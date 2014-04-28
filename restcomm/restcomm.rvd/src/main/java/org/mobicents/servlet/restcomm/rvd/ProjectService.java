@@ -48,7 +48,7 @@ public class ProjectService {
     RvdSettings settings;
 
     // configuration parameters
-    private static final String workspaceDirectoryName = "workspace";
+    //private static final String workspaceDirectoryName = "workspace";
     private static final String wavsDirectoryName = "wavs";
 
     //private String workspaceBasePath;
@@ -59,9 +59,9 @@ public class ProjectService {
         this.settings = settings;
         //workspaceBasePath = this.servletContext.getRealPath(File.separator) + workspaceDirectoryName;
     }
-    public static String getWorkspacedirectoryname() {
-        return workspaceDirectoryName;
-    }
+    //public static String getWorkspacedirectoryname() {
+    //    return workspaceDirectoryName;
+    //}
     public static String getWavsdirectoryname() {
         return wavsDirectoryName;
     }
