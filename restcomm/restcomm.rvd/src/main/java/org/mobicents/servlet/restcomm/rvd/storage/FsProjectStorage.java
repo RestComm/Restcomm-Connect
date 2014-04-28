@@ -349,7 +349,7 @@ public class FsProjectStorage implements ProjectStorage {
     @Override
     public void backupProjectState(String projectName) throws StorageException {
         File sourceStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state");
-        File backupStateFile = new File(workspaceBasePath + File.separator + projectName + ".old" + File.separator + "state");
+        File backupStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state" + ".old");
 
         try {
             FileUtils.copyFile(sourceStateFile, backupStateFile);
