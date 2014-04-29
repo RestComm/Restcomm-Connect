@@ -356,7 +356,10 @@ public final class Call extends UntypedActor {
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
         String realIP = message.getInitialRemoteAddr();
-        int realPort = message.getInitialRemotePort();
+        Integer realPort = message.getInitialRemotePort();
+//        if (realPort == null)
+//            realPort = 5060;
+
         final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
         final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
