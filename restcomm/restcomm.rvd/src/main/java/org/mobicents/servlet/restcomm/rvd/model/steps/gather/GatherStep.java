@@ -96,7 +96,8 @@ public class GatherStep extends Step {
             if ( "application".equals(collectdigits.scope) ) {
                 logger.debug("'" + variableName + "' is application scoped");
                 // if it is, create a sticky_* variable named after it
-                interpreter.getVariables().put(RvdSettings.STICKY_PREFIX + variableName, variableValue);
+                //interpreter.getVariables().put(RvdSettings.STICKY_PREFIX + variableName, variableValue);
+                interpreter.putStickyVariable(variableName, variableValue);
             }
             // in any case initialize the module-scoped variable
             interpreter.getVariables().put(variableName, variableValue);

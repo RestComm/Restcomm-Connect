@@ -59,22 +59,27 @@
 					
 					<div ng-repeat="assignment in step.assignments" class="assignment form-group">
 						<div class="row">
-							<div class='col-md-3' ng-class='{"rvd-disabled":!(step.doRouting && step.nextType=="responseBased")}'>
+							<div class="col-md-5">
 								<div class="input-group input-group-sm form-group">
+									<span class="input-group-addon">Assign to</span>
+									<input ng-model='assignment.destVariable' type="text" class="form-control" placeholder='type variable name' required></input>
+									<span class="input-group-addon">Scope</span>
+									<select ng-model='assignment.scope' class="form-control">
+										<option value='module'>module</option>
+										<option value='application'>application</option>
+									</select>
+								</div>
+								
+								<div ng-class='{"rvd-disabled":!(step.doRouting && step.nextType=="responseBased")}' class="input-group input-group-sm form-group">
 									<span class="input-group-addon">Module scope</span>
 									<select sync-model ng-disabled='!(step.doRouting && step.nextType=="responseBased")'  ng-model='assignment.moduleNameScope' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
 										<option value="">-- All --</option>
 									</select>  
-								</div>							
-							</div>
-							<div class="col-md-3">
-								<div class="input-group input-group-sm form-group">
-									<span class="input-group-addon">Assign to</span>
-									<input ng-model='assignment.destVariable' type="text" class="form-control" placeholder='type variable name' required></input>
-								</div>
+								</div>	
+								
 							</div>
 							
-							<div class="col-md-5">
+							<div class="col-md-6">
 							<value-extractor extractor-model='assignment.valueExtractor'></value-extractor>
 							</div>
 							<div class="col-md-1">
