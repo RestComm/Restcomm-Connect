@@ -357,8 +357,8 @@ public final class Call extends UntypedActor {
         // and store it to the sip session to be used as request uri later
         String realIP = message.getInitialRemoteAddr();
         Integer realPort = message.getInitialRemotePort();
-//        if (realPort == null)
-//            realPort = 5060;
+        if (realPort == null)
+            realPort = 5060;
 
         final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
         final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
