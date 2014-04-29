@@ -72,6 +72,7 @@ public class DialTest {
     private static SipStackTool tool2;
     private static SipStackTool tool3;
     private static SipStackTool tool4;
+    private static SipStackTool tool5;
 
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
@@ -94,6 +95,11 @@ public class DialTest {
     private SipPhone georgePhone;
     private String georgeContact = "sip:+131313@127.0.0.1:5070";
 
+    // Fotini is a simple SIP Client. Will not register with Restcomm
+    private SipStack fotiniSipStack;
+    private SipPhone fotiniPhone;
+    private String fotiniContact = "sip:fotini@127.0.0.1";
+    
     private String dialConf = "sip:+12223334451@127.0.0.1:5080";
     private String dialFork = "sip:+12223334452@127.0.0.1:5080";
     private String dialURI = "sip:+12223334454@127.0.0.1:5080";
@@ -112,6 +118,7 @@ public class DialTest {
         tool2 = new SipStackTool("CallTestDial2");
         tool3 = new SipStackTool("CallTestDial3");
         tool4 = new SipStackTool("CallTestDial4");
+        tool5 = new SipStackTool("CallTestDial5");
     }
 
     @Before
@@ -127,6 +134,9 @@ public class DialTest {
 
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        
+        fotiniSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
+        fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
     }
 
     @After
@@ -157,6 +167,13 @@ public class DialTest {
         }
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
+        }
+        
+        if (fotiniPhone != null) {
+            fotiniPhone.dispose();
+        }
+        if (fotiniSipStack != null) {
+            fotiniSipStack.dispose();
         }
         deployer.undeploy("DialTest");
     }
@@ -217,6 +234,74 @@ public class DialTest {
             @Override
             public void run() {
                 assertTrue(bobCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+
+        // assertTrue(bobCall.waitForDisconnect(30 * 1000));
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+    
+    @Test
+    public synchronized void testDialConferenceWithContactHeaderPortNull() throws InterruptedException {
+        deployer.deploy("DialTest");
+
+        final SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.initiateOutgoingCall(fotiniContact, dialConf, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(fotiniCall);
+        assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = fotiniCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, fotiniCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, fotiniCall.getLastReceivedResponse().getStatusCode());
+        fotiniCall.sendInviteOkAck();
+        assertTrue(!(fotiniCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // George calls to the conference
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, dialConf, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
+
+        if (responseGeorge == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+        georgeCall.sendInviteOkAck();
+        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // Wait for the media to play and the call to hangup.
+        fotiniCall.listenForDisconnect();
+        georgeCall.listenForDisconnect();
+
+        // Start a new thread for george to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+
+        // Start a new thread for bob to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(fotiniCall.waitForDisconnect(30 * 1000));
             }
         }).start();
 
