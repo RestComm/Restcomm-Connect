@@ -105,6 +105,8 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -1366,11 +1368,11 @@ public final class Call extends UntypedActor {
         /**
          * Maximum number of attempts
          */
-        private final int MAX_ATTEMPTS = 3;
+        private final int MAX_ATTEMPTS = 6;
         /**
          * Waiting time (in milliseconds) between attempts
          */
-        private final int ATTEMPT_WAIT = 250;
+        private final int ATTEMPT_WAIT = 500;
         /**
          * Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS.
          */
@@ -1386,12 +1388,17 @@ public final class Call extends UntypedActor {
                 // Close remote connection if cannot audit after max number of attempts
                 fsm.transition(message, closingRemoteConnection);
             } else {
-                if(this.attempts > 0) {
-                    // TODO wait ATTEMPT_WAIT before attempting again
-                }
+                attempts++;
                 // Delegate AUCX work to the remote connection
                 // The Call actor will receive the MGCP response to the AUCX
-                remoteConn.tell(new InspectConnection(), self());
+                if(this.attempts == 1) {
+                    // First attempt - no need to wait
+                    remoteConn.tell(new InspectConnection(), self());
+                } else {
+                    // Future attempts will be spaced between them for the duration of WAIT_ATTEMPTS
+                    Timeout timeout = new Timeout(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
+                    Patterns.ask(remoteConn, new InspectConnection(), timeout);
+                }
             }
         }
     }
