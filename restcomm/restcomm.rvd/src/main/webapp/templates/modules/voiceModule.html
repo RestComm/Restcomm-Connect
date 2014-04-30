@@ -1,6 +1,6 @@
-<div>
-	<div class='sortable-steps root' sortable-steps>
-		<div class='step' ng-repeat='step in orderedSteps'>
+<div>	
+	<div basic-sortable list-model="node.steps" class='steps step-list' item-added='addStep'>
+		<div class='step' ng-repeat='step in node.steps'>
 			<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
 		</div>
 	</div>

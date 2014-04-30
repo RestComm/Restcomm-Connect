@@ -12,7 +12,7 @@
 
 		<div class="row">
 			<div class="col-md-12">					
-				<div basic-sortable list-model='step.messages' class='ussd-collect-messages form-group' ng-class='{"drop-area-image":step.messages.length==0}' item-added='nestUssdMessage(item,pos,listmodel)'>	
+				<div basic-sortable list-model='step.messages' class='ussd-collect-messages form-group' ng-class='{"drop-area-image":step.messages.length==0}' item-added='nestUssdMessage'>	
 					<div ng-repeat='message in step.messages'>
 						<div class="input-group input-group form-group">
 							<span class="input-group-addon"><i class='fa fa-phone'></i></span>
