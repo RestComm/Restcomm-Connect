@@ -35,8 +35,12 @@ public class RvdSettings {
             XStream xstream = new XStream();
             xstream.alias("rvd", RvdConfig.class);
             RvdConfig rvdConfig = (RvdConfig) xstream.fromXML( is );
-            if (rvdConfig.getWorkspaceLocation() != null  &&  !"".equals(rvdConfig.getWorkspaceLocation()) )
-                workspaceBasePath = rvdConfig.getWorkspaceLocation();
+            if (rvdConfig.getWorkspaceLocation() != null  &&  !"".equals(rvdConfig.getWorkspaceLocation()) ) {
+                if ( rvdConfig.getWorkspaceLocation().startsWith("/") )
+                    workspaceBasePath = rvdConfig.getWorkspaceLocation(); // this is an absolute path
+                else
+                    workspaceBasePath = servletContext.getRealPath(File.separator) + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked under RVD context
+            }
         } catch (StreamException e) {
             logger.warn("RVD configuration file not found - WEB-INF/rvd.xml");
         }
