@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.interpreter;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
+
+import java.net.URLEncoder;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -85,10 +88,12 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.XStream;
 
+
 public class Interpreter {
 
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
+    private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
 
@@ -107,7 +112,8 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+    public Interpreter(RvdSettings settings, ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+        this.rvdSettings = settings;
         this.projectStorage = projectStorage;
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
@@ -189,6 +195,10 @@ public class Interpreter {
 
         // xstream.aliasField(alias, definedIn, fieldName);
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
+    }
+
+    public RvdSettings getRvdSettings() {
+        return rvdSettings;
     }
 
     public String getAppName() {
@@ -288,10 +298,7 @@ public class Interpreter {
 
             if (rcmlModel == null )
                 rcmlModel = new RcmlResponse();
-            //String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
-            String nodefile_json = projectStorage.loadNodeStepnames(appName, target.getNodename());//FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
-            List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>() {
-            }.getType());
+            List<String> nodeStepnames = projectStorage.loadNodeStepnames(appName, target.getNodename());
 
             // if no starting step has been specified in the target, use the first step of the node as default
             if (target.getStepname() == null && !nodeStepnames.isEmpty())
@@ -432,6 +439,8 @@ public class Interpreter {
                                 logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
                                 if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
                                     String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                                    if ( "application".equals(assignment.getScope()) )
+                                        putStickyVariable(assignment.getDestVariable(), value);
                                     variables.put(assignment.getDestVariable(), value );
                                 } else
                                     logger.debug("skipped assignment to " + assignment.getDestVariable() );
@@ -440,6 +449,10 @@ public class Interpreter {
                             for ( Assignment assignment : esStep.getAssignments() ) {
                                 logger.debug("working on variable " + assignment.getDestVariable() );
                                 String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+
+                                if ( "application".equals(assignment.getScope()) )
+                                    putStickyVariable(assignment.getDestVariable(), value);
+
                                 variables.put(assignment.getDestVariable(), value );
                             }
 
@@ -525,7 +538,17 @@ public class Interpreter {
                 query += "?";
             else
                 query += "&";
-            query += key + "=" + pairs.get(key);
+
+            String encodedValue = "";
+            String value = pairs.get(key);
+            if ( value != null )
+                try {
+                    encodedValue = URLEncoder.encode( value, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    logger.warn("Error encoding RVD variable " + key + ": " + value, e);
+                }
+
+            query += key + "=" + encodedValue;
         }
 
         // append sticky parameters
@@ -535,7 +558,17 @@ public class Interpreter {
                     query += "?";
                 else
                     query += "&";
-                query += variableName + "=" + variables.get(variableName);
+
+                String encodedValue = "";
+                String value = variables.get(variableName);
+                if ( value != null )
+                    try {
+                        encodedValue = URLEncoder.encode( value, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        logger.warn("Error encoding RVD variable " + variableName + ": " + value, e);
+                    }
+
+                query += variableName + "=" + encodedValue;
             }
         }
 
@@ -649,6 +682,10 @@ public class Interpreter {
                 getVariables().put(localVariableName, variableValue);
             }
         }
+    }
+
+    public void putStickyVariable(String name, String value) {
+            variables.put(RvdSettings.STICKY_PREFIX + name, value);
     }
 
     /**

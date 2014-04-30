@@ -16,6 +16,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -23,7 +24,9 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -94,6 +97,7 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
+    /*
     @Override
     public String loadNodeStepnames(String projectName, String nodeName) throws StorageException {
         String content;
@@ -116,6 +120,7 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error writing stepnames file - " + filepath , e);
         }
     }
+    */
 
     @Override
     public void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException {
@@ -304,5 +309,52 @@ public class FsProjectStorage implements ProjectStorage {
         StateHeader header = gson.fromJson(header_element, StateHeader.class);
 
         return header;
+    }
+
+    @Override
+    public void storeNodeStepnames(String projectName, Node node) throws StorageException {
+        List<String> stepnames = new ArrayList<String>();
+        for ( Step step : node.getSteps() ) {
+            stepnames.add(step.getName());
+        }
+
+        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + node.getName() + ".node";
+        File outFile = new File(filepath);
+
+        Gson gson = new Gson();
+        String stepnamesString = gson.toJson(stepnames);
+
+        try {
+            FileUtils.writeStringToFile(outFile, stepnamesString, "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException("Error writing node file - " + filepath , e);
+        }
+    }
+
+    @Override
+    public List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException {
+        String content;
+        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + nodeName + ".node";
+        try {
+            content = FileUtils.readFileToString(new File(filepath));
+
+            Gson gson = new Gson();
+            List<String> stepnames = gson.fromJson(content, new TypeToken<List<String>>(){}.getType());
+            return stepnames;
+        } catch (IOException e) {
+            throw new StorageException("Error reading node file - " + filepath);
+        }
+    }
+
+    @Override
+    public void backupProjectState(String projectName) throws StorageException {
+        File sourceStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state");
+        File backupStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state" + ".old");
+
+        try {
+            FileUtils.copyFile(sourceStateFile, backupStateFile);
+        } catch (IOException e) {
+            throw new StorageException("Error creating state file backup: " + backupStateFile);
+        }
     }
 }

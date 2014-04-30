@@ -20,8 +20,7 @@ public class GatherStep extends Step {
     private Integer timeout;
     private String finishOnKey;
     private Integer numDigits;
-    private Map<String, Step> steps;
-    private List<String> stepnames;
+    private List<Step> steps;
     private Menu menu;
     private Collectdigits collectdigits;
     private String gatherType;
@@ -55,8 +54,8 @@ public class GatherStep extends Step {
         rcmlStep.setMethod(method);
         rcmlStep.setNumDigits(numDigits);
 
-        for (String nestedStepName : stepnames)
-            rcmlStep.getSteps().add(steps.get(nestedStepName).render(interpreter));
+        for (Step nestedStep : steps)
+            rcmlStep.getSteps().add(nestedStep.render(interpreter));
 
         return rcmlStep;
     }
@@ -97,7 +96,8 @@ public class GatherStep extends Step {
             if ( "application".equals(collectdigits.scope) ) {
                 logger.debug("'" + variableName + "' is application scoped");
                 // if it is, create a sticky_* variable named after it
-                interpreter.getVariables().put(RvdSettings.STICKY_PREFIX + variableName, variableValue);
+                //interpreter.getVariables().put(RvdSettings.STICKY_PREFIX + variableName, variableValue);
+                interpreter.putStickyVariable(variableName, variableValue);
             }
             // in any case initialize the module-scoped variable
             interpreter.getVariables().put(variableName, variableValue);
