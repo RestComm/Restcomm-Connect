@@ -47,24 +47,12 @@ public class ProjectService {
     ProjectStorage projectStorage;
     RvdSettings settings;
 
-    // configuration parameters
-    //private static final String workspaceDirectoryName = "workspace";
-    private static final String wavsDirectoryName = "wavs";
-
-    //private String workspaceBasePath;
-
     public ProjectService(ProjectStorage projectStorage, ServletContext servletContext, RvdSettings settings) {
         this.servletContext = servletContext;
         this.projectStorage = projectStorage;
         this.settings = settings;
-        //workspaceBasePath = this.servletContext.getRealPath(File.separator) + workspaceDirectoryName;
     }
-    //public static String getWorkspacedirectoryname() {
-    //    return workspaceDirectoryName;
-    //}
-    public static String getWavsdirectoryname() {
-        return wavsDirectoryName;
-    }
+
 
     /**
      * Builds the startUrl for an application based on the application name and the incoming httpRequest. It is depending on the
@@ -82,12 +70,6 @@ public class ProjectService {
         URI startURI = new URI(httpRequest.getScheme(), null, httpRequest.getServerName(),
                 (httpRequest.getServerPort() == 80 ? -1 : httpRequest.getServerPort()), httpRequest.getContextPath()
                         + httpRequest.getServletPath() + "/apps/" + projectName + "/controller", null, null);
-
-        /*
-         * String startUrl = httpRequest.getScheme() + "://" + httpRequest.getServerName() + (httpRequest.getServerPort() == 80
-         * ? "" : (":"+ httpRequest.getServerPort())) + httpRequest.getContextPath() + httpRequest.getServletPath() + "/apps/" +
-         * projectName + "/controller"; return startUrl;
-         */
 
         return startURI.toASCIIString();
     }
@@ -160,15 +142,10 @@ public class ProjectService {
 
     public void createProject(String projectName, String kind) throws StorageException, InvalidServiceParameters {
         String protoSuffix = null;
-        if ( "voice".equals(kind) )
-            protoSuffix = "_voice";
-        else
-        if ( "ussd".equals(kind) )
-            protoSuffix = "_ussd";
-        else
+        if ( !"voice".equals(kind) && !"ussd".equals(kind) )
             throw new InvalidServiceParameters("Invalid project kind specified - '" + kind + "'");
 
-        projectStorage.cloneProject(settings.getOption("protoProjectName") + protoSuffix, projectName);
+        projectStorage.cloneProtoProject(kind, projectName);
     }
 
     public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException, ValidationFrameworkException, ValidationException, IncompatibleProjectVersion {
