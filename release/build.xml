@@ -654,7 +654,7 @@
             <zipfileset dir="${release.eap6.dir}" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}" 
             	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
         </zip>
-		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
+		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
 			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}/bin" >
                 <include name="*.sh" />
             </zipfileset>
