@@ -34,10 +34,7 @@
             </dd>
             <dt>Status</dt>
             <dd>
-                <select class="form-control">
-                    <option>Active</option>
-                    <option>Suspended</option>
-                    <option>Closed</option>
+                <select class="form-control" ng-init="newAccount.status = statuses[1]" ng-model="newAccount.status" ng-options="status for status in statuses">
                 </select>
             </dd>
         </dl>
