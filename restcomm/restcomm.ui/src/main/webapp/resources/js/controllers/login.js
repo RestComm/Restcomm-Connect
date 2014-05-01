@@ -2,19 +2,23 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, AuthService, Notifications) {
+rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications) {
 
   $scope.alerts = [];
 
   $scope.credentials = {
-    host: window.location.host,
+    host: window.location.host/*,
     sid: "administrator@company.com",
-    token: "RestComm"
+    token: "RestComm"*/
   };
 
   $scope.login = function() {
     AuthService.login($scope.credentials).
       success(function(data, status, headers, config) {
+        if (data.status && data.status == 'suspended') {
+          showAccountSuspended($dialog);
+          return;
+        }
         // Success may come in many forms...
         if (status == 200) {
           if(AuthService.getWaitingReset(data)) {
@@ -65,4 +69,11 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
    }, true);
    */
 
+  var showAccountSuspended = function($dialog) {
+    var title = 'Account Suspended';
+    var msg = 'Your account has been suspended. Please contact the support team for further information.';
+    var btns = [{result:'cancel', label: 'Close', cssClass: 'btn-default'}];
+
+    $dialog.messageBox(title, msg, btns).open();
+  };
 });
