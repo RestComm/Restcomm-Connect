@@ -169,7 +169,6 @@
 	<available file="${telscale-sipservlets.tomcat.distro.zip.path}" property="got.telscale-sipservlets-tomcat" />
 	<target name="get-telscale-sipservlets-tomcat" unless="got.telscale-sipservlets-tomcat">
 		<echo>Downloading Telscale SipServlets Tomcat version: ${telscale-sipservlets-as7.version}</echo>
-		<echo>telscale-sipservlets.tomcat.distro.zip.path: ${telscale-sipservlets.tomcat.distro.zip.path} </echo>
 		<exec failonerror="true" executable="wget">
 		    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
 		    <arg value="\-\-password=t31sca13fi13s" />-->
@@ -656,7 +655,7 @@
             	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
         </zip>
 		<zip destfile="${base.dir}/TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
-			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin" >
+			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}/bin" >
                 <include name="*.sh" />
             </zipfileset>
 			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin" >
