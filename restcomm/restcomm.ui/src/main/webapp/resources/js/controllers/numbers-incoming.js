@@ -4,7 +4,7 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Incoming : List ---------------------------------------------------
 
-rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, SessionService, RCommNumbers) {
+rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, SessionService, RCommNumbers, Notifications) {
   $anchorScroll(); // scroll to top
   $scope.sid = SessionService.get("sid");
 
@@ -47,7 +47,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
   // delete incoming number --------------------------------------------------
 
   $scope.confirmNumberDelete = function(phone) {
-    confirmNumberDelete(phone, $dialog, $scope, RCommNumbers);
+    confirmNumberDelete(phone, $dialog, $scope, RCommNumbers, Notifications);
   }
 
   $scope.numbersList = RCommNumbers.query({accountSid: $scope.sid});
@@ -55,7 +55,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, Notifications) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications) {
 
   // are we editing details...
   if($scope.phoneSid = $routeParams.phoneSid) {
@@ -118,7 +118,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     }
 
     return params;
-  }
+  };
 
   $scope.registerIncomingNumber = function(number) {
     var params = createNumberParams(number);
@@ -138,6 +138,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     RCommNumbers.update({accountSid: $scope.sid, phoneSid: $scope.phoneSid}, $.param(params),
       function() { // success
         Notifications.success('Number "' + number.phone_number + '" updated successfully!');
+        $location.path( "/numbers/incoming/" );
       },
       function() { // error
         Notifications.error('Failed to update number "' + number.phone_number + '".');
@@ -146,14 +147,31 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   };
 
   $scope.confirmNumberDelete = function(phone) {
-    confirmNumberDelete(phone, $dialog, $scope, RCommNumbers, $location);
+    confirmNumberDelete(phone, $dialog, $scope, RCommNumbers, Notifications, $location);
+  };
+
+  $scope.searching = false;
+
+  $scope.findNumbers = function(areaCode) {
+    $scope.searching = true;
+    $scope.availableNumbers = RCommAvailableNumbers.query({accountSid: $scope.sid, areaCode: areaCode});
+    $scope.availableNumbers.$promise.then(
+      //success
+      function(value){
+        $scope.searching = false;
+      },
+      //error
+      function(error){
+        $scope.searching = false;
+      }
+    );
   }
 };
 
 var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notifications, $location) {
   var title = 'Delete Number ' + phone.phone_number;
   var msg = 'Are you sure you want to delete incoming number ' + phone.phone_number + ' (' + phone.friendly_name +  ') ? This action cannot be undone.';
-  var btns = [{result:'cancel', label: 'Cancel'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
+  var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
 
   $dialog.messageBox(title, msg, btns)
     .open()
@@ -161,6 +179,7 @@ var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notific
       if (result == "confirm") {
         RCommNumbers.delete({accountSid:$scope.sid, phoneSid:phone.sid}, {},
           function() {
+            Notifications.success('The incoming number "' + phone.phone_number + '" has been deleted.');
             if($location) {
               $location.path( "/numbers/incoming/" );
             }
@@ -170,6 +189,7 @@ var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notific
           },
           function() {
             // TODO: Show alert on delete failure...
+            Notifications.error('Failed to delete the incoming number ' + phone.phone_number);
           }
         );
       }
