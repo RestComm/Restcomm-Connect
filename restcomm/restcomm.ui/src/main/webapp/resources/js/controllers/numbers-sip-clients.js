@@ -148,7 +148,7 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
 var confirmClientDelete = function(client, $dialog, $scope, RCommClients, $location) {
   var title = 'Delete SIP Client \'' + client.login + '\'';
   var msg = 'Are you sure you want to delete SIP Client ' + client.login + ' (' + client.friendly_name +  ') ? This action cannot be undone.';
-  var btns = [{result:'cancel', label: 'Cancel'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
+  var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
 
   $dialog.messageBox(title, msg, btns)
     .open()
