@@ -33,13 +33,18 @@ import com.google.gson.JsonParser;
 
 public class FsProjectStorage implements ProjectStorage {
     static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
-    private RvdSettings rvdSettings;
 
     private String workspaceBasePath;
+    private String prototypeProjectPath;
 
     public FsProjectStorage(RvdSettings settings) {
-        this.rvdSettings = settings;
-        this.workspaceBasePath = rvdSettings.getWorkspaceBasePath();
+        this.workspaceBasePath = settings.getWorkspaceBasePath();
+        this.prototypeProjectPath = settings.getPrototypeProjectsPath();
+    }
+
+    public FsProjectStorage(String workspaceBasePath, String prototypeProjectPath) {
+        this.workspaceBasePath = workspaceBasePath;
+        this.prototypeProjectPath = prototypeProjectPath;
     }
 
     private String getProjectBasePath(String name) {
@@ -207,7 +212,7 @@ public class FsProjectStorage implements ProjectStorage {
 
     @Override
     public void cloneProtoProject(String kind, String clonedName) throws StorageException {
-        String protoProjectPath = rvdSettings.getPrototypeProjectsPath() + File.separator + RvdSettings.PROTO_DIRECTORY_PREFIX + "_" + kind;
+        String protoProjectPath = prototypeProjectPath + File.separator + RvdSettings.PROTO_DIRECTORY_PREFIX + "_" + kind;
         File sourceDir = new File( protoProjectPath );
         String destProjectPath = workspaceBasePath + File.separator + clonedName;
         File destDir = new File(destProjectPath);

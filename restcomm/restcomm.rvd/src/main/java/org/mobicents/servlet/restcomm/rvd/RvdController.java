@@ -39,7 +39,7 @@ public class RvdController {
     @PostConstruct
     void init() {
         gson = new Gson();
-        rvdSettings = new RvdSettings(servletContext);
+        rvdSettings = RvdSettings.getInstance(servletContext);
         projectStorage = new FsProjectStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
