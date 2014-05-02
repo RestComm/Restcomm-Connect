@@ -200,9 +200,11 @@ public class RvdManager {
             try {
                 UpgradeService upgradeService = new UpgradeService(projectStorage);
                 upgradeService.upgradeProject(projectName);
+                logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
                 // re-build project
                 BuildService buildService = new BuildService(projectStorage);
                 buildService.buildProject(projectName);
+                logger.info("project '" + projectName + "' built");
                 return Response.ok().build();
             }
             catch (StorageException e) {
