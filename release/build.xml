@@ -233,7 +233,7 @@
 	<target name="extract-telscale-sipservlets-tomcat" depends="get-telscale-sipservlets-tomcat,extract-hsqldb">
 		<delete dir="${checkout.telscale-sipservlets-tomcat.dir}" failonerror="false" />
 		<unzip src="${telscale-sipservlets.tomcat.distro.zip.path}" dest="${release.tomcat.dir}">
-			<mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets.version}-apache-tomcat-7.0.50/*" to="*"/>
+			<mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets-as7.version}-apache-tomcat-7.0.50/*" to="*"/>
 		</unzip>
 	</target>
 
@@ -348,6 +348,7 @@
     <target name="copy-restcomm">
         <echo>Copy restcomm </echo>
 		<!--JBOSS AS5 default profile-->
+	<delete file="${release.dir}/server/default/conf/dars/mobicents-dar.properties" failonerror="false" />
 	<copy tofile="${release.dir}/server/default/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
         <!--copy tofile="${release.dir}/server/default/deploy/restcomm.war" failonerror="true" 
@@ -386,6 +387,7 @@
         	file="${basedir}/Telestax-EULA.pdf"/>
 
 	<!--JBoss AS5 all profile-->
+	<delete file="${release.dir}/server/all/conf/dars/mobicents-dar.properties" failonerror="false" />
 	<copy tofile="${release.dir}/server/all/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
         <!--copy tofile="${release.dir}/server/all/deploy/restcomm.war" failonerror="true" 
@@ -417,29 +419,37 @@
 	<!--tomcat-->
 	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true" 
         	file="${basedir}/catalina.sh"/>
+	<copy tofile="${release.tomcat.dir}/bin/setenv.sh" failonerror="true" 
+        	file="${basedir}/setenv.sh"/>
+	<delete file="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="false" />
 	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
 	<!--copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true" 
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
 	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
-	<copy todir="${release.tomcat.dir}/webapps/restcomm" failonerror="true">
+	<!-- <copy todir="${release.tomcat.dir}/webapps/restcomm" failonerror="true">
                 <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
-        </copy>
+        </copy>-->
+	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
+		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+	
 	<!-- Copy Admin UI -->
         <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
         	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 
 	<!-- Copy RVD -->
-        <copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
+        <!--<copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
 		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset> 
-        </copy>
+        </copy>-->
+	<copy tofile="${release.tomcat.dir}/webapps/restcomm-rvd.war" failonerror="true"
+		file="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
 
 	<!--Copy Rvd ES Demo-->	
-	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo" failonerror="true"
+	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo.war" failonerror="true"
 		file="${basedir}/RvdExternalServicesDemo.war"/>
 
 	<!-- Copy Config scripts -->
@@ -460,6 +470,7 @@
        		includes="**/*.sh"/>
 
         <!--JBoss AS7-->
+	<delete file="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="false" />
         <copy tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true" 
                 file="${basedir}/mobicents-dar.properties"/>
 	<!--Use exploded WAR-->
@@ -511,6 +522,7 @@
      		includes="**/*.sh"/>
 
 	<!--JBoss EAP6-->
+	<delete file="${release.eap6.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="false" />
         <copy tofile="${release.eap6.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true" 
                 file="${basedir}/mobicents-dar.properties"/>
 	<!--Use exploded WAR-->
@@ -658,18 +670,18 @@
 			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}/bin" >
                 <include name="*.sh" />
             </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/bin" >
+			<zipfileset dir="${release.tomcat.dir}/bin" prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}/bin" >
                 <exclude name="*.sh" />
             </zipfileset>
 			<zipfileset dir="${release.tomcat.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
-				prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+				prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
                 <include name="*.sh" />
             </zipfileset>
 			<zipfileset dir="${release.tomcat.dir}/telscale-media/telscale-media-server/bin" 
-				prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+				prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
                 <exclude name="*.sh" />
             </zipfileset>
-			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat6-${telscale.restcomm.release.version}"
+			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}"
 				excludes="**/bin/**"/>
 		</zip>
 	</target>
