@@ -30,9 +30,6 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
      * Upgrades a ProjectState JsonElement to the next version in the version path
      */
     public JsonElement upgrade(JsonElement sourceElement) {
-
-        logger.info("Upgrading project from version rvd714 to 1.0");
-
         JsonObject source = sourceElement.getAsJsonObject();
         JsonObject target = new JsonObject();
 
@@ -78,7 +75,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         }
         target.add("nodes", tNodes);
 
-        logger.debug(target.toString());
+        //logger.debug(target.toString());
 
         return target;
     }
