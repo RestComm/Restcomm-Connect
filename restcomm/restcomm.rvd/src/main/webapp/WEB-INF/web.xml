@@ -6,6 +6,12 @@
 	<display-name>RVD</display-name>
 
 	<servlet>
+		<servlet-name>RVD Initialization Servlet</servlet-name>
+		<servlet-class>org.mobicents.servlet.restcomm.rvd.bootstrap.RvdInitializationServlet</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+
+	<servlet>
 		<servlet-name>RVD Services</servlet-name>
 		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
 		<!-- automatic package scanning for some reason does not work with Jersey 
@@ -20,6 +26,8 @@
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
+
+	
 	<servlet-mapping>
 		<servlet-name>RVD Services</servlet-name>
 		<url-pattern>/services/*</url-pattern>

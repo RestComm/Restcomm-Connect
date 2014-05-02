@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
 import java.io.InputStream;
+
 import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
@@ -12,7 +13,7 @@ import com.thoughtworks.xstream.io.StreamException;
 
 public class RvdSettings {
     static final Logger logger = Logger.getLogger(RvdSettings.class.getName());
-    private ServletContext servletContext;
+    private static RvdSettings instance = null;
 
     private static final String WORKSPACE_DIRECTORY_NAME = "workspace";
     public static final String PROTO_DIRECTORY_PREFIX = "_proto";
@@ -23,10 +24,18 @@ public class RvdSettings {
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
 
     private String workspaceBasePath;
+    private String prototypeProjectsPath;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
 
-    public RvdSettings(ServletContext servletContext) {
-        this.servletContext = servletContext;
+    public static RvdSettings getInstance(ServletContext servletContext) {
+        if ( instance == null ) {
+            instance = new RvdSettings(servletContext);
+        }
+        return instance;
+    }
+
+    private RvdSettings(ServletContext servletContext) {
+        this.prototypeProjectsPath = servletContext.getRealPath(File.separator) + "protoProjects";
         String workspaceBasePath = servletContext.getRealPath(File.separator) + WORKSPACE_DIRECTORY_NAME;
 
         // Try loading from configuration from XML file
@@ -56,8 +65,7 @@ public class RvdSettings {
 
     // for RVD 7.1.5 and later
     public String getPrototypeProjectsPath() {
-        String workspaceBasePath = servletContext.getRealPath(File.separator) + "protoProjects";
-        return workspaceBasePath;
+        return prototypeProjectsPath;
     }
 
     public static String getRvdProjectVersion() {
@@ -71,4 +79,5 @@ public class RvdSettings {
     public void setExternalServiceBase(String externalServiceBase) {
         this.externalServiceBase = externalServiceBase;
     }
+
 }
