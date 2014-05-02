@@ -44,6 +44,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
@@ -51,7 +52,7 @@ import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFramew
 @Path("/manager/projects")
 public class RvdManager {
 
-    static final Logger logger = Logger.getLogger(BuildService.class.getName());
+    static final Logger logger = Logger.getLogger(RvdManager.class.getName());
 
     @Context
     ServletContext servletContext;
@@ -62,7 +63,7 @@ public class RvdManager {
 
     @PostConstruct
     void init() {
-        rvdSettings = new RvdSettings(servletContext);
+        rvdSettings = RvdSettings.getInstance(servletContext);
         projectStorage = new FsProjectStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
@@ -197,11 +198,13 @@ public class RvdManager {
         // TODO IMPORTANT!!! sanitize the project name!!
         if ( !RvdUtils.isEmpty(projectName) ) {
             try {
-                projectService.upgradeProject(projectName);
+                UpgradeService upgradeService = new UpgradeService(projectStorage);
+                upgradeService.upgradeProject(projectName);
+                logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
                 // re-build project
-                ProjectStorage projectStorage = new FsProjectStorage(rvdSettings);
                 BuildService buildService = new BuildService(projectStorage);
                 buildService.buildProject(projectName);
+                logger.info("project '" + projectName + "' built");
                 return Response.ok().build();
             }
             catch (StorageException e) {
@@ -250,7 +253,7 @@ public class RvdManager {
         } catch (ProjectDoesNotExist e) {
             return Response.status(Status.NOT_FOUND).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
         } catch (IncompatibleProjectVersion e) {
-            logger.error(e);
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
         }
     }

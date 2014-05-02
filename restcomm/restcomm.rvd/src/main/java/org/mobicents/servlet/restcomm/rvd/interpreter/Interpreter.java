@@ -28,7 +28,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
@@ -91,7 +90,7 @@ import com.thoughtworks.xstream.XStream;
 
 public class Interpreter {
 
-    static final Logger logger = Logger.getLogger(BuildService.class.getName());
+    static final Logger logger = Logger.getLogger(Interpreter.class.getName());
 
     private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
@@ -422,6 +421,7 @@ public class Interpreter {
                     HttpEntity entity = response.getEntity();
                     if ( entity != null ) {
                         String entity_string = EntityUtils.toString(entity);
+                        logger.debug("ES Response: " + entity_string);
                         JsonElement response_element = parser.parse(entity_string);
 
                         String nextModuleName = null;
