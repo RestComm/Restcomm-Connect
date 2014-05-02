@@ -558,9 +558,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (!finishDialing.equals(state))
                         fsm.transition(message, finished);
                 }
-//                else if (!forking.equals(state) || call == sender()) {
-//                    fsm.transition(message, finished);
-//                }
+                //                else if (!forking.equals(state) || call == sender()) {
+                //                    fsm.transition(message, finished);
+                //                }
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 fsm.transition(message, finishDialing);
             }
@@ -1233,12 +1233,34 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             final String text = verb.text();
             if (text != null && !text.isEmpty()) {
-                // Handle bridging.
-                isForking = false;
-                final CreateCall create = new CreateCall(e164(callerId(verb)), e164(text), null, null, false, timeout(verb),
-                        CreateCall.Type.PSTN, accountId);
-                callManager.tell(create, source);
-            } else if (verb.hasChildren()) {
+                //Build the appropriate tag for the text, such as Number, Client or SIP
+                final Tag.Builder builder = Tag.builder();
+                // Read the next tag.
+                if(text.contains("@")) {
+                    builder.setName(Nouns.SIP);
+                } else if (text.startsWith("client")) {
+                    builder.setName(Nouns.client);
+                } else {
+                    builder.setName(Nouns.number);
+                }
+                builder.setText(text);
+                Tag numberTag = builder.build();
+
+                //Change the Dial verb to include the Tag we created before 
+                Tag.Builder tagBuilder = Tag.builder();
+                tagBuilder.addChild(numberTag);
+                tagBuilder.setIterable(verb.isIterable());
+                tagBuilder.setName(verb.name());
+                tagBuilder.setParent(verb.parent());
+                for (Attribute attribute : verb.attributes()) {
+                    if(attribute != null)
+                        tagBuilder.addAttribute(attribute);
+                }
+                verb = null;
+                verb = tagBuilder.build();
+            }
+
+            if (verb.hasChildren()) {
                 // Handle conferencing.
                 final Tag child = conference(verb);
                 if (child != null) {
@@ -1544,8 +1566,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (callInfo.state().equals(CallStateChanged.State.COMPLETED)) {
                     parameters.add(new BasicNameValuePair("DialCallStatus", callInfo.state().toString()));
                 } else {
-                parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
-                        .toString()));
+                    parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
+                            .toString()));
                 }
                 parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
