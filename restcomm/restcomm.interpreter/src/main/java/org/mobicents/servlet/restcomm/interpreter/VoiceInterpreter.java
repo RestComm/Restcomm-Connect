@@ -1246,7 +1246,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 builder.setText(text);
                 Tag numberTag = builder.build();
 
-                //Change the Dial verb to include the Tag we created before 
+                //Change the Dial verb to include the Tag we created before
                 Tag.Builder tagBuilder = Tag.builder();
                 tagBuilder.addChild(numberTag);
                 tagBuilder.setIterable(verb.isIterable());
