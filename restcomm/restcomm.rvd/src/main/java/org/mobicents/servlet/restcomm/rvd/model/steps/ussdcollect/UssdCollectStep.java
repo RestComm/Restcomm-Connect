@@ -56,7 +56,7 @@ public class UssdCollectStep extends Step {
         return rcml;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
-        logger.debug("UssdCollect handler");
+        logger.info("UssdCollect handler");
         if ("menu".equals(gatherType)) {
 
             boolean handled = false;

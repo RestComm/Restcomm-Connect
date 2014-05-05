@@ -60,7 +60,7 @@ public class GatherStep extends Step {
         return rcmlStep;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
-        logger.debug("handling gather action");
+        logger.info("handling gather action");
 
         String digitsString = interpreter.getRequestParams().getFirst("Digits");
         if ( digitsString != null )
