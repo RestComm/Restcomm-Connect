@@ -94,7 +94,7 @@ public class RecordStep extends Step {
     }
 
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
-        logger.debug("handling record action");
+        logger.info("handling record action");
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
