@@ -261,7 +261,7 @@ public class RvdManager {
     @POST
     @Path("/uploadwav")
     public Response uploadWavFile(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
-        logger.debug("running /uploadwav");
+        logger.info("running /uploadwav");
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {

@@ -421,7 +421,7 @@ public class Interpreter {
                     HttpEntity entity = response.getEntity();
                     if ( entity != null ) {
                         String entity_string = EntityUtils.toString(entity);
-                        logger.debug("ES Response: " + entity_string);
+                        logger.info("ES Response: " + entity_string);
                         JsonElement response_element = parser.parse(entity_string);
 
                         String nextModuleName = null;
@@ -433,7 +433,7 @@ public class Interpreter {
                             if ( nextModuleName == null )
                                 throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
 
-                            logger.debug( "Dynamic routing enabled. Chosen target: " + nextModuleName);
+                            logger.info( "Dynamic routing enabled. Chosen target: " + nextModuleName);
                             for ( Assignment assignment : esStep.getAssignments() ) {
                                 logger.debug("working on variable " + assignment.getDestVariable() );
                                 logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
