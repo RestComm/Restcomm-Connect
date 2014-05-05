@@ -1227,11 +1227,16 @@ public final class Call extends UntypedActor {
                 gateway.tell(new DestroyConnection(remoteConn), source);
                 remoteConn = null;
             }
+
+            invite.createResponse(503, "Problem to setup services").send();
             // Explicitly invalidate the application session.
-            if (invite.getSession().isValid())
-                invite.getSession().invalidate();
-            if (invite.getApplicationSession().isValid())
-                invite.getApplicationSession().invalidate();
+            if (invite.getSession().isValid()){
+                invite.getSession().setInvalidateWhenReady(true);
+            }
+            if (invite.getApplicationSession().isValid()){
+                invite.getApplicationSession().setInvalidateWhenReady(true);
+            }
+
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);
