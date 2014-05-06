@@ -87,9 +87,9 @@ public class FaxStep extends Step {
         String FaxStatus = interpreter.getRequestParams().getFirst("FaxStatus");  //.getHttpRequest().getParameter("FaxStatus");
 
         if ( FaxSid != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsSid", FaxSid);
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "FaxSid", FaxSid);
         if (FaxStatus != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsStatus", FaxStatus);
+            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "FaxStatus", FaxStatus);
 
         interpreter.interpret( getNext(), null );
     }
