@@ -31,6 +31,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
@@ -234,33 +235,26 @@ public class Interpreter {
     }
 
 
-    public String interpret() throws StorageException {
-        //String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
+    public String interpret() throws RvdException {
+        String response = null;
+
         String projectfile_json = projectStorage.loadProjectOptions(appName);
         ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
         }.getType());
         nodeNames = projectOptions.getNodeNames();
 
-        String response = null;
-        try {
-            if (targetParam == null || "".equals(targetParam)) {
-                // No target has been specified. Load the default from project file
-                targetParam = projectOptions.getDefaultTarget();
-                if (targetParam == null)
-                    throw new UndefinedTarget();
-                logger.debug("override default target to " + targetParam);
-            }
-
-            handleStickyParameters();
-            processRequestParameters();
-
-
-            response = interpret(targetParam, null);
-        } catch (InterpreterException e) {
-            logger.error(e.getMessage(), e);
-            response = "<Response><Hangup/></Response>";
+        if (targetParam == null || "".equals(targetParam)) {
+            // No target has been specified. Load the default from project file
+            targetParam = projectOptions.getDefaultTarget();
+            if (targetParam == null)
+                throw new UndefinedTarget();
+            logger.debug("override default target to " + targetParam);
         }
 
+        handleStickyParameters();
+        processRequestParameters();
+
+        response = interpret(targetParam, null);
         return response;
     }
 
