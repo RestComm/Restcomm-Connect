@@ -17,12 +17,10 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
-
 import com.google.gson.Gson;
 
 @Path("/apps/{appname}/controller")
@@ -45,23 +43,20 @@ public class RvdController {
     }
 
     private Response runInterpreter( String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
+        String rcmlResponse;
         try {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
-        } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
 
-        String rcmlResponse;
-        try {
             String targetParam = requestParams.getFirst("target");
             Interpreter interpreter = new Interpreter(rvdSettings, projectStorage, targetParam, appname, httpRequest, requestParams);
             rcmlResponse = interpreter.interpret();
-        } catch (StorageException e) {
+
+        } catch ( RvdException e ) {
             logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            rcmlResponse = "<Response><Hangup/></Response>";
         }
+
 
         logger.debug(rcmlResponse);
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
