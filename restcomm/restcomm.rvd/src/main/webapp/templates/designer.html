@@ -58,7 +58,7 @@
 	
 				<div ng-show='!projectKind || projectKind=="voice"' class='form-group'>
 					<div basic-draggable drop-target='.steps' class="verb-button button-play label label-primary rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
+					<div basic-draggable drop-target='.steps' drag-model='protos.stepProto.say' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>					
 					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>					
 					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>					

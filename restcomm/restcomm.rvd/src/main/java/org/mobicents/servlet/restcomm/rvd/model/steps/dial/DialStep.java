@@ -76,7 +76,7 @@ public class DialStep extends Step {
         if ( DialCallDuration != null )
             interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallDuration", DialCallDuration);
 
-        interpreter.interpret( nextModule, null );
+        interpreter.interpret( nextModule, null, null );
     }
 
 }

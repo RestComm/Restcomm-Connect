@@ -70,17 +70,55 @@ angular.module('basicDragdrop', [])
         }
     };
 })
-.directive('basicDraggable', function () {
+
+.directive('basicDraggable', ['dragService', function (dragService) {
     return {
         restrict: 'A',
-        scope: {
-        },
+        //scope: {
+        //},
         
-        link: function (scope,element,attrs) {
+        link: function (scope,element,attrs) {			
             element.draggable({
                 helper: 'clone',
                 connectToSortable: attrs.dropTarget,
             });
+            
+            element.bind('dragstart', function (event, ui)  {
+				console.log("started dragging" );
+				var dragModel = attrs.class;
+				if ( attrs.dragModel ) {
+					console.log("setting dragModel to " + attrs.dragModel);
+					dragModel = scope.$eval(attrs.dragModel);
+					console.log( dragModel );
+				}
+				var dragId = dragService.newDrag(dragModel);
+				console.log( "created new drag: " + dragId );
+			});
         }
     };
-});
+}])
+
+.directive('basicDroppable', ['dragService', function(dragService) {
+	return {
+		restrict: 'A',
+		//scope: ,
+		link: function (scope,element,attrs) {
+			element.droppable({accept: attrs.dropAccept, greedy:true});
+		
+			element.bind('drop', function (event,ui) {
+				//event.stopImmediatePropagation();
+				//console.log("basicDroppable.drop: event.target = " );
+				//console.log( event.target );
+				
+				if (dragService.dragActive()) {
+					
+					
+					var dragInfo = dragService.popDrag();
+					scope.$apply( function () {
+						scope.$eval(attrs.dropModel+"=aaa", {aaa:dragInfo.model});
+					} );
+				}
+			});
+		}
+	}
+}]);

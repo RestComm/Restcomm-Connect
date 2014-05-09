@@ -254,7 +254,7 @@ public class Interpreter {
         handleStickyParameters();
         processRequestParameters();
 
-        response = interpret(targetParam, null);
+        response = interpret(targetParam, null, null);
         return response;
     }
 
@@ -275,7 +275,7 @@ public class Interpreter {
     }
 
 
-    public String interpret(String targetParam, RcmlResponse rcmlModel ) throws InterpreterException, StorageException {
+    public String interpret(String targetParam, RcmlResponse rcmlModel, Step prependStep ) throws InterpreterException, StorageException {
 
         logger.debug("starting interpeter for " + targetParam);
 
@@ -297,6 +297,13 @@ public class Interpreter {
             if (target.getStepname() == null && !nodeStepnames.isEmpty())
                 target.setStepname(nodeStepnames.get(0));
 
+            // Prepend step if required. Usually used for error messages
+            if ( prependStep != null ) {
+                RcmlStep rcmlStep = prependStep.render(this);
+                logger.debug("Prepending say step: " + rcmlStep );
+                rcmlModel.steps.add( rcmlStep );
+            }
+
             boolean startstep_found = false;
             for (String stepname : nodeStepnames) {
 
@@ -309,7 +316,7 @@ public class Interpreter {
                     String rerouteTo = processStep(step); // is meaningful only for some of the steps like ExternalService steps
                     // check if we have to break the currently rendered module
                     if ( rerouteTo != null )
-                        return interpret(rerouteTo, rcmlModel);
+                        return interpret(rerouteTo, rcmlModel, null);
                     // otherwise continue rendering the current module
                     RcmlStep rcmlStep = step.render(this);
                     if ( rcmlStep != null)

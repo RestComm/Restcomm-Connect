@@ -91,6 +91,6 @@ public class FaxStep extends Step {
         if (FaxStatus != null )
             interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "FaxStatus", FaxStatus);
 
-        interpreter.interpret( getNext(), null );
+        interpreter.interpret( getNext(), null, null );
     }
 }
