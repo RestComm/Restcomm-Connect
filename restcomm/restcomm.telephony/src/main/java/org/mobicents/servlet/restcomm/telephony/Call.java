@@ -266,6 +266,7 @@ public final class Call extends UntypedActor {
 //        transitions.add(new Transition(openingRemoteConnection, inProgress));
         transitions.add(new Transition(openingRemoteConnection, auditingRemoteConnection));
         transitions.add(new Transition(auditingRemoteConnection, inProgress));
+        transitions.add(new Transition(auditingRemoteConnection, noAnswer));
         transitions.add(new Transition(auditingRemoteConnection, auditingRemoteConnection));
         transitions.add(new Transition(auditingRemoteConnection, closingRemoteConnection));
         transitions.add(new Transition(dialing, busy));
@@ -593,7 +594,7 @@ public final class Call extends UntypedActor {
                 }
             }
         } else if (message instanceof ReceiveTimeout) {
-            fsm.transition(message, failingNoAnswer);
+                fsm.transition(message, failingNoAnswer);
         } else if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
@@ -716,6 +717,9 @@ public final class Call extends UntypedActor {
             group = getMediaGroup(message);
             sender.tell(new CallResponse<ActorRef>(group), self);
         } else if(AuditConnectionResponse.class.equals(klass)) {
+            // XXX restore timeout - hrosa
+//            getContext().setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
+
             AuditConnectionResponse response = (AuditConnectionResponse) message;
             int returnCode = response.getReturnCode().getValue();
             if(returnCode == ReturnCode.TRANSACTION_EXECUTED_NORMALLY) {
@@ -1368,11 +1372,11 @@ public final class Call extends UntypedActor {
         /**
          * Maximum number of attempts
          */
-        private final int MAX_ATTEMPTS = 6;
+        private final int MAX_ATTEMPTS = 10;
         /**
          * Waiting time (in milliseconds) between attempts
          */
-        private final int ATTEMPT_WAIT = 500;
+        private final int ATTEMPT_WAIT = 50;
         /**
          * Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS.
          */
@@ -1384,7 +1388,8 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            if(this.attempts == this.MAX_ATTEMPTS) {
+            if(this.attempts > this.MAX_ATTEMPTS) {
+                logger.info("AUCX: reached max number of attempt. Closing connection.");
                 // Close remote connection if cannot audit after max number of attempts
                 fsm.transition(message, closingRemoteConnection);
             } else {
@@ -1396,6 +1401,8 @@ public final class Call extends UntypedActor {
                     remoteConn.tell(new InspectConnection(), self());
                 } else {
                     // Future attempts will be spaced between them for the duration of WAIT_ATTEMPTS
+                    logger.info("AUCX: issuing attempt "+attempts+"in "+ATTEMPT_WAIT+"ms.");
+
                     Timeout timeout = new Timeout(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
                     Patterns.ask(remoteConn, new InspectConnection(), timeout);
                 }
