@@ -208,6 +208,8 @@ public final class Connection extends UntypedActor {
         InfoCode[] requestedInfo = new InfoCode[] { InfoCode.ConnectionMode };
         AuditConnection aucx = new AuditConnection(source, endpointId, connId, requestedInfo);
         gateway.tell(aucx, source);
+        // XXX Temporary workaround because mms blocks during DTLS handshake - hrosa
+//        getContext().setReceiveTimeout(Duration.create(0, TimeUnit.MILLISECONDS));
     }
 
     private void stopObserving(final Object message) {
