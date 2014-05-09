@@ -313,4 +313,29 @@ angular.module('ng').directive('ngFocus', function($timeout) {
  };
 });
 
+/*
+ * Adds to scope: buttonOptions, selectedOption, addedClasses
+ */
+App.directive('multibutton', function () {
+	return  {
+		restrict: 'E',
+		scope:true,
+		templateUrl: 'templates/directive/multibutton.html',
+		link: function (scope,element,attrs) {
+			scope.buttonOptions = scope.$eval(attrs.options);
+			if (scope.buttonOptions.length > 0 )
+				scope.selectedOption = scope.buttonOptions[0];
+			else
+				scope.selectedOption = "";
+			
+			scope.addedClasses = attrs.buttonClass;
+		},
+		controller: function($scope) {
+			$scope.selectOption = function(option) {
+				$scope.selectedOption = option;
+			}
+		}
+	}
+});
+
 
