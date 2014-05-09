@@ -8,6 +8,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 	$scope.projectKind = $routeParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd')
 		$scope.projectKind = 'voice';
+	$scope.error = undefined; 
 
 	
 	$scope.refreshProjectList = function() {
