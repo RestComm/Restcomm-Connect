@@ -83,6 +83,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	//console.log( $routeParams );
 	
 	$scope.stepService = stepService;
+	$scope.protos = protos;
 	
 	// Prototype and constant data structures	
 	$scope.languages = [

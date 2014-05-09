@@ -426,6 +426,10 @@ li.verb {
 }
 
 
+label {
+	color: #737373;
+}
+
 
 
 /* Bootstrap extension for having a lot of stuff on nav-tabs */

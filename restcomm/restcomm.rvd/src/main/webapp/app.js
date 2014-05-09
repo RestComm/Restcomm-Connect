@@ -39,13 +39,43 @@ App.factory('stepService', ['protos', function(protos) {
 	return stepService;
 }]);
 
+App.factory( 'dragService', [function () {
+	var dragInfo;
+	var dragId = 0;
+	var pDragActive = false;
+	var serviceInstance = {
+		newDrag: function (model) {
+			dragId ++;
+			pDragActive = true;
+			if ( typeof(model) === 'object' )
+				dragInfo = { id : dragId, model : model };
+			else
+				dragInfo = { id : dragId, class : model };
+				
+			return dragId;
+		},
+		popDrag:  function () {
+			if ( pDragActive ) {
+				var dragInfoCopy = angular.copy(dragInfo);
+				pDragActive = false;
+				return dragInfoCopy;
+			}
+		},
+		dragActive: function () {
+			return pDragActive; 
+		}
+		
+	};
+	return serviceInstance;
+}]);
+
 App.factory('protos', function () {
 	var accessOperationProtos = {
 			object:{kind:'object',fixed:false, terminal:false},
 			array:{kind:'array',fixed:false, terminal:false},
 			value:{kind:'value',fixed:false, terminal:true},	
 	}
-	return { 
+	var protoInstance = { 
 		nodes: {
 				voice: {kind:'voice', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
 				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},		
@@ -55,7 +85,7 @@ App.factory('protos', function () {
 			// Voice
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
 			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
+			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:[], validation: undefined , gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
 			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
@@ -81,6 +111,8 @@ App.factory('protos', function () {
 			sipuri: {dialType: 'sipuri', destination:''},
 		}
 	};
+	protoInstance.stepProto.gather.validation = {messageStep: protoInstance.stepProto.say, pattern: ""};
+	return protoInstance;
 });
 
 

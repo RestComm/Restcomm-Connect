@@ -116,6 +116,6 @@ public class RecordStep extends Step {
         if (Digits != null )
             interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "Digits", Digits);
 
-        interpreter.interpret( getNext(), null );
+        interpreter.interpret( getNext(), null, null );
     }
 }

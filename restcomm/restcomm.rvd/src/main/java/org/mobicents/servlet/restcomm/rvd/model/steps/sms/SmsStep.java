@@ -88,6 +88,6 @@ public class SmsStep extends Step {
         if (SmsStatus != null )
             interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsStatus", SmsStatus);
 
-        interpreter.interpret( getNext(), null );
+        interpreter.interpret( getNext(), null, null );
     }
 }
