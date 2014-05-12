@@ -2,12 +2,14 @@ App.controller('homeCtrl', function ($scope) {
 	
 });
 
-App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams) {
+App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams, $timeout) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd')
 		$scope.projectKind = 'voice';
+	$scope.error = undefined; 
+	$scope.notifications = [];
 
 	
 	$scope.refreshProjectList = function() {
@@ -28,6 +30,16 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 		.success(function (data, status, headers, config) {
 			console.log( "project created");
 			$location.path("/designer/" + name);
+		 })
+		 .error(function (data, status, headers, config) {
+			if (status == 409) {
+				console.log("project already exists");
+				$scope.notifications.unshift({message:"A Voice or USSD project  with that name already exists" });
+				$timeout(function () {
+					console.log("removing notification");
+					$scope.notifications.pop(); 
+				}, 5000);
+			}
 		 });
 	}
 	
