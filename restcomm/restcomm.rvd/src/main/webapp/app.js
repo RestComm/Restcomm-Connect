@@ -338,4 +338,36 @@ App.directive('multibutton', function () {
 	}
 });
 
+App.directive('inputGroupSelect', function () {
+	return  {
+		restrict: 'E',
+		replace: true,
+		scope:true,
+		templateUrl: 'templates/directive/inputGroupSelect.html',
+		link: function (scope,element,attrs) {
+			scope.buttonOptions = scope.$eval(attrs.options);
+			if (scope.buttonOptions.length > 0 )
+				scope.selectedOption = scope.buttonOptions[0];
+			else
+				scope.selectedOption = "";
+			
+			scope.addedClasses = attrs.buttonClass;
+		},
+		controller: function($scope) {
+			$scope.selectOption = function(option) {
+				$scope.selectedOption = option;
+			}
+		}
+	}
+});
+
+App.directive('gatherStep', function () {
+	return {
+			restrict: 'A',
+			link: function (scope, element, attrs) {
+				console.log("linking gatherStep");
+			}
+	}
+});
+
 
