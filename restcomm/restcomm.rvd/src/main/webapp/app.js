@@ -111,7 +111,7 @@ App.factory('protos', function () {
 			sipuri: {dialType: 'sipuri', destination:''},
 		}
 	};
-	protoInstance.stepProto.gather.validation = {messageStep: protoInstance.stepProto.say, pattern: ""};
+	protoInstance.stepProto.gather.validation = {messageStep: protoInstance.stepProto.say, pattern: "", userPattern:'' userPatternType:"One of"};
 	return protoInstance;
 });
 
@@ -344,19 +344,25 @@ App.directive('inputGroupSelect', function () {
 		replace: true,
 		scope:true,
 		templateUrl: 'templates/directive/inputGroupSelect.html',
-		link: function (scope,element,attrs) {
+		require: 'ngModel',
+		link: function (scope,element,attrs,ctrl) {
+			
+			scope.selectOption = function(option) {
+				scope.selectedOption = option;
+				ctrl.$setViewValue(option);
+			}
+			
+			ctrl.$render = function() {
+				scope.selectedOption = ctrl.$viewValue;
+			};
+			
 			scope.buttonOptions = scope.$eval(attrs.options);
 			if (scope.buttonOptions.length > 0 )
 				scope.selectedOption = scope.buttonOptions[0];
 			else
 				scope.selectedOption = "";
-			
 			scope.addedClasses = attrs.buttonClass;
-		},
-		controller: function($scope) {
-			$scope.selectOption = function(option) {
-				$scope.selectedOption = option;
-			}
+			scope.menuClasses = attrs.menuClass;
 		}
 	}
 });
@@ -366,6 +372,28 @@ App.directive('gatherStep', function () {
 			restrict: 'A',
 			link: function (scope, element, attrs) {
 				console.log("linking gatherStep");
+				
+				function updatePattern(scope) {
+					if ( scope.step.validation.userPatternType == 'Any of')
+							scope.step.validation.pattern = '^[' + scope.step.validation.userPattern + ']*$';
+					else
+					if ( scope.step.validation.userPatternType == 'Regex')
+						scope.step.validation.pattern = scope.step.validation.userPattern;
+					else
+					if ( scope.step.validation.userPatternType == 'One of')
+						scope.step.validation.pattern = '^[' + scope.step.validation.userPattern + ']$';
+				}
+				
+				scope.$watch('step.validation.userPatternType',function (newValue, oldValue) {
+					if ( newValue != oldValue )
+						updatePattern(scope);
+				});
+				
+				scope.$watch('step.validation.userPattern',function (newValue, oldValue) {
+					if ( newValue != oldValue )
+						updatePattern(scope);
+				});
+				
 			}
 	}
 });

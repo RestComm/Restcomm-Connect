@@ -1,5 +1,5 @@
 
-<div class="step step-gather panel panel-rvdstep step-{{step.name}}">
+<div gather-step class="step step-gather panel panel-rvdstep step-{{step.name}}">
 		<div class="panel-heading">
 			<ng-include src="'templates/stepHeading.html'"></ng-include>
 		</div>
@@ -107,9 +107,13 @@
 									<span class="input-group-addon help-tooltip"  tooltip='Define acceptable input by using a regex pattern. Leave blank for no validation.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>
 										Validation pattern
 									</span>
-									<input ng-model='step.validation.pattern' class="form-control">
+									<input ng-model='step.validation.userPattern' class="form-control">
+									<input-group-select ng-model='step.validation.userPatternType' 	 options='["One of","Any of", "Regex"]' button-class='btn-default' menu-class='pull-right'></input-group-select>
 								</div>
-								<span class="help-block"><small>Example: ^[12]$</small></span>
+								<!--Pattern: {{step.validation.pattern}}<br/>-->
+
+								
+								<span class="help-block"><small>Effective regex: {{step.validation.pattern}}</small></span>
 							</div>
 							
 							<label>Say if invalid</label>
