@@ -36,7 +36,6 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 				console.log("project already exists");
 				$scope.notifications.unshift({message:"A Voice or USSD project  with that name already exists" });
 				$timeout(function () {
-					console.log("removing notification");
 					$scope.notifications.pop(); 
 				}, 5000);
 			}
