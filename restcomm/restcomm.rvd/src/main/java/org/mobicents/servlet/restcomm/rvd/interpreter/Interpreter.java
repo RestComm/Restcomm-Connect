@@ -687,7 +687,7 @@ public class Interpreter {
      * prefix in their names.
      */
     private void processRequestParameters() {
-        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","CallStatus","ApiVersion","Direction","CallerName"}));
+        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
         for ( String anyVariableName : getRequestParams().keySet() ) {
             if ( validNames.contains(anyVariableName) ) {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
