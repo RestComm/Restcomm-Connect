@@ -9,7 +9,7 @@
 				<form name="form" novalidate>
 					<div class="input-group input-group-sm">
 						<span class="input-group-addon">Reason</span>
-						<select name="method" ng-model='step.reason' ng-options='pair.value as pair.caption for pair in rejectOptions' class="form-control">
+						<select name="method" auto-clear ng-model='step.reason' ng-options='pair.value as pair.caption for pair in rejectOptions' class="form-control">
 							<option value=""></option>
 						</select>
 					</div>

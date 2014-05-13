@@ -76,7 +76,7 @@ public class SmsStep extends Step {
         return rcmlStep;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
-        logger.debug("handling sms action");
+        logger.info("handling sms action");
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 

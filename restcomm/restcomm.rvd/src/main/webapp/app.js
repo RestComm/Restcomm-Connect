@@ -13,7 +13,12 @@ App.config([ '$routeProvider', function($routeProvider) {
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
 		controller : 'designerCtrl'
-	}).otherwise({
+	})
+	.when('/upgrade/:projectName', {
+		templateUrl : 'templates/upgrade.html',
+		controller : 'upgradeCtrl'
+	})	
+	.otherwise({
 		redirectTo : '/home'
 	});
 
@@ -22,36 +27,13 @@ App.config([ '$routeProvider', function($routeProvider) {
 
 
 App.factory('stepService', ['protos', function(protos) {
-	//console.log("protos");
-	//console.log( protos);
 	var stepService = {
 		serviceName: 'stepService',
-		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
 		lastStepId: 0,
-			
-		getMapValuesByIndex: function (map, index) {
-			var values = [];
-			for ( var i = 0; i < index.length; i ++ ) {
-				if ( typeof (map[ index[i] ]) !== 'undefined' )
-					values.push (map [index [i]]);
-			}
-			return values;
-		}, 
-		addStep: function ( steps, stepnames, kind, index ) {
-			var newstep = angular.copy(protos.stepProto[kind])
-			newstep.name = 'step' + (++this.lastStepId);
-			steps[newstep.name] = newstep;
-			stepnames.splice(index, 0, newstep.name);
-			//stepnames.push(newstep.name) ;
-		},	
-		removeStep: function (steps, stepnames, removed_step, orderedSteps ) {
-			delete steps[removed_step.name];
-			stepnames.splice( stepnames.indexOf(removed_step.name), 1 );
-			orderedSteps.length = 0; //.splice(0, orderedSteps.length, this.getMapValuesByIndex(steps, stepnames) );
-			orderedSteps.push.apply(orderedSteps, this.getMapValuesByIndex(steps, stepnames) );
-			//console.log( orderedSteps );
-		},
-		 
+			 
+		newStepName: function () {
+			return 'step' + (++this.lastStepId);
+		}		 
 	};
 	
 	return stepService;
@@ -65,22 +47,22 @@ App.factory('protos', function () {
 	}
 	return { 
 		nodes: {
-				voice: {kind:'voice', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},
-				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},		
+				voice: {kind:'voice', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
+				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},		
 		},
 		accessOperationProtos: accessOperationProtos,
 		stepProto: {
 			// Voice
 			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
 			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
+			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
 			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
 			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
 			hungup: {kind:'hungup', label:'hang up', title:'hang up',iface:{}},
 			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, iface:{}},
-			reject: {kind:'reject', label:'reject', title:'reject', reason:null,iface:{}},
-			pause: {kind:'pause', label:'pause', title:'pause', length:null, iface:{}},
+			reject: {kind:'reject', label:'reject', title:'reject', reason:undefined,iface:{}},
+			pause: {kind:'pause', label:'pause', title:'pause', length:undefined, iface:{}},
 			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
 			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:undefined, finishOnKey:undefined, maxLength:undefined, transcribe:undefined, transcribeCallback:undefined, playBeep:undefined, iface:{}},
 			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
@@ -138,101 +120,6 @@ App.directive("syncModules", function(){
             	});            	
             }
         }
-});
-
-
-App.directive('sortableSteps',function(stepService){
-  return {
-	  scope: true,	  
-	  
-    link:function(scope,el,attrs){
-		
-		if ( typeof(scope.step) === 'undefined' ) {
-			//console.log( 'PARENT SCOPE' );
-			//console.log(scope);
-			scope.steps = scope.node.steps;
-			scope.stepnames = scope.node.stepnames;
-		}
-		else {
-			//console.log( 'NESTED SCOPE' );
-			//console.log(scope);
-			scope.steps = scope.step.steps;
-			scope.stepnames = scope.step.stepnames;
-		}
-		scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-		
-		el.sortable({
-			revert: true,
-			handle: '.panel-heading',
-			//scrollSensitivity: 20,
-			tolerance: 'pointer',
-			placeholder: 'sortable-placeholder'
-		});
-		//el.disableSelection();
-      
-	  function getMapValuesByIndex(map, index) {
-			var values = [];
-			for ( var i = 0; i < index.length; i ++ ) {
-				if ( typeof (map[ index[i] ]) !== 'undefined' )
-					values.push (map [index [i]]);
-			}
-			return values;
-	  }      
-   
-      el.on( "sortbeforestop", function( event, ui ) { 
-		  
-		  //if ( $(this).hasClass('nested') != ui.item.hasClass('nested') )
-			//return;
-		  
-		  var to_index = el.children().index(ui.item);		  
-		  if ( ui.item.hasClass('verb-button') ) {
-			  // a new step should be created
-			  var r = /kind-([^ ]+)/
-			  var m = r.exec(ui.item.attr('class'));
-			  ui.item.remove();
-			  if ( m != null ) {
-				  var kind = m[1];
-				  scope.$apply( function () {
-					stepService.addStep( scope.steps, scope.stepnames, kind, to_index );
-			        scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-				  });  
-			  }
-		  } else
-		  if ( ui.item.hasClass('step') ) {
-			  // just reordering steps
-			  
-			  var from_index = scope.stepnames.indexOf( ui.item.scope().step.name );
-			  //console.log( 'inserting element from position: ' + from_index );
-			  //console.log( 'inserting element at position: ' + to_index );
-			  var temp = scope.stepnames[to_index];
-			  scope.$apply( function () {
-				scope.stepnames[to_index] = scope.stepnames[from_index];
-				scope.stepnames[from_index] = temp;
-				scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-			})
-		  }
-		  
-		  if ( $(this).hasClass('nested') )
-			event.stopImmediatePropagation();
-      } );
-    }
-  }
-});
-
-
-App.directive('myDraggable',function(){
-  
-  return 	{
-				link:function(scope,el,attrs){
-					el.draggable({
-						connectToSortable: attrs.myDraggable,
-						helper: "clone",
-						revert: "invalid"
-					});
-					/*el.disableSelection(); */
-				}
-			}
-  
 });
 
 
@@ -310,13 +197,7 @@ App.directive('valueExtractor', ['protos', function (protos) {
 				break;
 				case 'value':
 					return " value";
-				break;
-				/*case 'float':
-					return " get Float value";
 				break;	
-				case 'boolean':
-					return " get Boolean value";
-				break;*/		
 				}
 				return "UNKNOWN";
 			}

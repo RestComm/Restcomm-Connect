@@ -78,9 +78,9 @@ import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.ussd.commons.UssdInfoRequest;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdMessageType;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
-import org.mobicents.servlet.restcomm.ussd.commons.UssdInfoRequest;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
@@ -466,7 +466,8 @@ public class UssdInterpreter extends UntypedActor {
                     ussdCall.tell(new Answer(), source);
                     // fsm.transition(message, downloadingRcml);
                 } else {
-                    // fsm.transition(message, initializingCall);
+                    fsm.transition(message, downloadingRcml);
+                    //                     fsm.transition(message, initializingCall);
                 }
             }
         } else if (DownloaderResponse.class.equals(klass)) {
@@ -776,6 +777,19 @@ public class UssdInterpreter extends UntypedActor {
                         ussdRestcommResponse.setMessageType(UssdMessageType.processUnstructuredSSRequest_Response);
                         ussdRestcommResponse.setIsFinalMessage(true);
                     }
+                } else {
+                    //USSD PUSH
+                    if (hasCollect) {
+                        ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSRequest_Request);
+                        ussdRestcommResponse.setIsFinalMessage(false);
+                    } else {
+                        ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSNotify_Request);
+                        if (ussdRestcommResponse.getErrorCode() != null) {
+                            ussdRestcommResponse.setIsFinalMessage(true);
+                        } else {
+                            ussdRestcommResponse.setIsFinalMessage(false);
+                        }
+                    }
                 }
                 ussdCall.tell(ussdRestcommResponse, source);
             }
@@ -811,8 +825,8 @@ public class UssdInterpreter extends UntypedActor {
             SipServletResponse okay = info.createResponse(200);
             okay.send();
 
-            UssdInfoRequest ussdResponse = new UssdInfoRequest(info);
-            String ussdText = ussdResponse.getMessage();
+            UssdInfoRequest ussdInfoRequest = new UssdInfoRequest(info);
+            String ussdText = ussdInfoRequest.getMessage();
             if (ussdCollectAction != null && !ussdCollectAction.isEmpty() && ussdText != null) {
                 URI target = null;
                 try {
@@ -855,6 +869,12 @@ public class UssdInterpreter extends UntypedActor {
                 ussdCollectTag = null;
                 ussdLanguageTag = null;
                 ussdMessageTags = new LinkedBlockingQueue<Tag>();
+                return;
+            } else if (ussdInfoRequest.getUssdMessageType().equals(UssdMessageType.unstructuredSSNotify_Response)) {
+                UssdRestcommResponse ussdRestcommResponse = new UssdRestcommResponse();
+                ussdRestcommResponse.setErrorCode("1");
+                ussdRestcommResponse.setIsFinalMessage(true);
+                ussdCall.tell(ussdRestcommResponse, source);
                 return;
             }
             // Ask the parser for the next action to take.

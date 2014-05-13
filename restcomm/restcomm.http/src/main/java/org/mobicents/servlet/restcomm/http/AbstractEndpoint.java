@@ -114,13 +114,4 @@ public abstract class AbstractEndpoint {
             throw new AuthorizationException();
         }
     }
-//    protected void secureWithAuthTokenOnly(final Account account, final String permission) throws AuthorizationException {
-//        final Subject subject = SecurityUtils.getSubject();
-//        final Sid accountSid = account.getSid();
-//        if ((subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission)))) {
-//            return;
-//        } else {
-//            throw new AuthorizationException();
-//        }
-//    }
 }

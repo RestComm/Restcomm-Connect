@@ -28,8 +28,11 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSessionEvent;
+import javax.servlet.sip.SipSessionListener;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.ussd.telephony.UssdCallManager;
@@ -43,8 +46,10 @@ import akka.actor.UntypedActorFactory;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener {
+public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener, SipSessionListener {
     private static final long serialVersionUID = 1L;
+
+    private static final Logger logger = Logger.getLogger(CallManagerProxy.class);
 
     private ActorSystem system;
     private ActorRef manager;
@@ -74,7 +79,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
     @Override
     protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
         if(isUssdMessage(response)){
-            ussdManager.tell(ussdManager, null);
+            ussdManager.tell(response, null);
         } else {
             manager.tell(response, null);
         }
@@ -149,7 +154,8 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
-        // Nothing to do.
+        logger.info("SipApplicationSessionEvent received. Invalidating the sipApplicationSession: "+event.getApplicationSession().getId());
+        event.getApplicationSession().invalidate();
     }
 
     private boolean isUssdMessage(SipServletMessage message) {
@@ -167,5 +173,21 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
             }
         }
         return isUssd;
+    }
+
+    @Override
+    public void sessionCreated(SipSessionEvent se) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void sessionDestroyed(SipSessionEvent se) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void sessionReadyToInvalidate(SipSessionEvent event) {
+        logger.info("SipSessionEvent received. Invalidating the sipSession: "+event.getSession().getId());
+        event.getSession().invalidate();
     }
 }

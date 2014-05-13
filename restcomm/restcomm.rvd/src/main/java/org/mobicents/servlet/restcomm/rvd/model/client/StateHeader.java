@@ -6,6 +6,14 @@ public class StateHeader {
     String version;
     public StateHeader() {
     }
+
+    public StateHeader(String projectKind, String startNodeName, String version) {
+        super();
+        this.projectKind = projectKind;
+        this.startNodeName = startNodeName;
+        this.version = version;
+    }
+
     public String getProjectKind() {
         return projectKind;
     }

@@ -119,7 +119,7 @@ public class UssdPullTest {
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
         String receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse));
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
         bobCall.dispose();
     }
 
@@ -157,7 +157,7 @@ public class UssdPullTest {
         String receivedUssdPayload = new String(requestEvent.getRequest().getRawContent());
         System.out.println("receivedUssdPayload: \n"+receivedUssdPayload);
         System.out.println("UssdPullTestMessages.ussdRestcommResponseWithCollect: \n"+UssdPullTestMessages.ussdRestcommResponseWithCollect);
-        assertTrue(receivedUssdPayload.equals(UssdPullTestMessages.ussdRestcommResponseWithCollect));
+        assertTrue(receivedUssdPayload.equals(UssdPullTestMessages.ussdRestcommResponseWithCollect.trim()));
         
         Request infoResponse = requestEvent.getDialog().createRequest(Request.INFO);
         ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
@@ -170,7 +170,7 @@ public class UssdPullTest {
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
         receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse));
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
         bobCall.dispose();
     }
 
@@ -201,7 +201,7 @@ public class UssdPullTest {
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
         String receivedUssdPayload = new String(bye.getRawContent());
-        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponseForMessageLengthExceeds));
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponseForMessageLengthExceeds.trim()));
         bobCall.dispose();
     }
     

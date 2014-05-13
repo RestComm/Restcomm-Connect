@@ -1,9 +1,9 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import org.apache.log4j.Logger;
-
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonSerializer;
+import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
@@ -54,7 +54,7 @@ public class BuildService {
         // Use the start node name as a default target. We could use a more specialized target too here
 
         // Build the nodes one by one
-        for (ProjectState.Node node : projectState.getNodes()) {
+        for (Node node : projectState.getNodes()) {
             buildNode(node, projectName);
             NodeName nodeName = new NodeName();
             nodeName.setName(node.getName());
@@ -76,15 +76,14 @@ public class BuildService {
      * @throws StorageException
      * @throws IOException
      */
-    private void buildNode(ProjectState.Node node, String projectName) throws StorageException {
+    private void buildNode(Node node, String projectName) throws StorageException {
         logger.debug("Building module " + node.getName() );
 
         // TODO sanitize node name!
 
-        projectStorage.storeNodeStepnames(projectName, node.getName(), gson.toJson(node.getStepnames()));
+        projectStorage.storeNodeStepnames(projectName, node);
         // process the steps one-by-one
-        for (String stepname : node.getSteps().keySet()) {
-            Step step = node.getSteps().get(stepname);
+        for (Step step : node.getSteps()) {
             logger.debug("Building step " + step.getKind() + " - " + step.getName() );
             projectStorage.storeNodeStep(projectName, node.getName(), step.getName(), gson.toJson(step));
         }

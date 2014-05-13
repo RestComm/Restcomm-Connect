@@ -2,12 +2,14 @@ angular.module('basicDragdrop', [])
 .directive('basicSortable', function() {
     return {
         restrict: 'A',
-        scope: {
+        scope: true,
+        /*{
             listModel: "=",
             itemAdded: "&",
-        },
+        },*/
 
         link: function (scope,element,attrs) {
+        	scope.listModel = scope.$eval(attrs.listModel);
             scope.dragIndex = -1;
             scope.internalDragging = null; // is it an already existing list item we are dragging or an external element
             scope.swapItems = function(fromPos, toPos) {
@@ -18,6 +20,7 @@ angular.module('basicDragdrop', [])
                     //console.log('swapped items ' + fromPos + ", " + toPos);
                 }
             }
+            scope.sortableModel = [1,2,3,4];
 
             element.sortable({
                 revert:true,
@@ -34,7 +37,7 @@ angular.module('basicDragdrop', [])
             
             
             element.bind( "sortbeforestop", function( event, ui ) {                 
-                event.stopImmediatePropagation();
+                //event.stopPropagation();
             });
             
             
@@ -47,13 +50,17 @@ angular.module('basicDragdrop', [])
                 else {
                     // External dragging
                     ui.item.remove();
-                    scope.itemAdded({item:ui.item,pos:drop_index,listmodel:scope.listModel});
+                    //scope.itemAdded({item:ui.item,pos:drop_index,listmodel:scope.listModel});
+                    var expression = attrs.itemAdded + "('" + ui.item.attr("class") + "'," + drop_index + ", listModel" + ")";
+                    console.log("addItem expression: " + expression);
+                    scope.$eval( expression );
                 }
             });
             
             element.bind("sortreceive", function (event,ui) {
                //console.log("on sortreceive"); 
                scope.internalDragging = false;
+               event.stopImmediatePropagation();
             });
             
             /*element.bind("sortactivate", function (event,ui) {

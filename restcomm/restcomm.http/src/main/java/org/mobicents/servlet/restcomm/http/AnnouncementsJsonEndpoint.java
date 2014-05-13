@@ -20,7 +20,7 @@ public final class AnnouncementsJsonEndpoint extends AnnouncementsEndpoint {
     }
 
     @POST
-    public Response putAnnouncement(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+    public Response putAnnouncement(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) throws Exception {
         return putAnnouncement(accountSid, data, MediaType.APPLICATION_JSON_TYPE);
     }
 }

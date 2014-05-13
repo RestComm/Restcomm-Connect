@@ -32,7 +32,8 @@ public final class AnnouncementConverter extends AbstractConverter implements Js
         writeGender(announcement.getGender(), object);
         writeLanguage(announcement.getLanguage(), object);
         writeText(announcement.getText(), object);
-        writeUri(announcement.getUri(), object);
+        if(announcement.getUri() != null)
+            writeUri(announcement.getUri(), object);
         return object;
     }
 

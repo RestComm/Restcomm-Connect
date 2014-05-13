@@ -88,11 +88,12 @@ label {
 	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 0, 0, 0.6)
 }
 
-.validation-error {
+.validation-error, .error-message {
 	font-size: 85%;
 	color: rgba(255, 0, 0, 0.6);
 	font-style: italic;
 }
+
 
 .navbar-rvd-centered {
 	float: none;
@@ -223,7 +224,7 @@ label {
 	margin-bottom: 5px;
 }
 
-
+/*
 .sortable-steps {
 	min-height: 300px;
 	padding-bottom: 50px;
@@ -232,6 +233,10 @@ label {
 .sortable-steps.nested {
 	min-height: 50px;
 	padding-bottom: 5px;
+}*/
+
+.step-list {
+	min-height: 500px;
 }
 
 .rvd-spinner {
@@ -334,6 +339,13 @@ li.verb {
 
 .dial-nouns {
 	min-height:50px;
+}
+
+.nested-steps {
+	min-height: 50px;
+}
+
+.button-say {
 }
 
 /* make draggable .label's occupy some space when dragged onto to sortables */

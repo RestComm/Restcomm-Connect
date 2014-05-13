@@ -16,7 +16,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
@@ -28,7 +27,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 @Immutable
 public final class CreateCall {
     public static enum Type {
-        CLIENT, PSTN, SIP
+        CLIENT, PSTN, SIP, USSD
     };
 
     private final String from;
@@ -40,7 +39,6 @@ public final class CreateCall {
     private final Type type;
     private final Sid accountId;
     private boolean createCDR = true;
-    private Configuration runtimeSettings = null;
 
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final Type type, final Sid accountId) {
