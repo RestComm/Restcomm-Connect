@@ -94,6 +94,8 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     protected XStream xstream;
     protected AccountsDao accountsDao;
 
+    private boolean normalizePhoneNumbers;
+
     public SmsMessagesEndpoint() {
         super();
     }
@@ -118,6 +120,8 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new SmsMessageListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+
+        normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
 
     protected Response getSmsMessage(final String accountSid, final String sid, final MediaType responseType) {
@@ -191,7 +195,8 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         }
         try {
             validate(data);
-            normalize(data);
+            if(normalizePhoneNumbers)
+                normalize(data);
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }

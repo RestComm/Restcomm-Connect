@@ -17,12 +17,10 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
-
 import com.google.gson.Gson;
 
 @Path("/apps/{appname}/controller")
@@ -39,29 +37,26 @@ public class RvdController {
     @PostConstruct
     void init() {
         gson = new Gson();
-        rvdSettings = new RvdSettings(servletContext);
+        rvdSettings = RvdSettings.getInstance(servletContext);
         projectStorage = new FsProjectStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
 
     private Response runInterpreter( String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
+        String rcmlResponse;
         try {
             if (!projectService.projectExists(appname))
                 return Response.status(Status.NOT_FOUND).build();
-        } catch (BadWorkspaceDirectoryStructure e) {
+
+            String targetParam = requestParams.getFirst("target");
+            Interpreter interpreter = new Interpreter(rvdSettings, projectStorage, targetParam, appname, httpRequest, requestParams);
+            rcmlResponse = interpreter.interpret();
+
+        } catch ( RvdException e ) {
             logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            rcmlResponse = "<Response><Hangup/></Response>";
         }
 
-        String rcmlResponse;
-        try {
-            String targetParam = requestParams.getFirst("target");
-            Interpreter interpreter = new Interpreter(projectStorage, targetParam, appname, httpRequest, requestParams);
-            rcmlResponse = interpreter.interpret();
-        } catch (StorageException e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
 
         logger.debug(rcmlResponse);
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
@@ -70,7 +65,7 @@ public class RvdController {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
-        logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        logger.info( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
         MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
         return runInterpreter(appname, httpRequest, requestParams);
@@ -80,8 +75,8 @@ public class RvdController {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
-        logger.debug("POST Params: " + requestParams.toString());
+        logger.info( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        logger.info("POST Params: " + requestParams.toString());
 
         return runInterpreter(appname, httpRequest, requestParams);
     }

@@ -110,6 +110,8 @@ public final class SmsInterpreter extends UntypedActor {
     private final ActorRef downloader;
     // The storage engine.
     private final DaoManager storage;
+    //Runtime configuration
+    private final Configuration runtime;
     // User specific configuration.
     private final Configuration configuration;
     // Information to reach the application that will be executed
@@ -176,7 +178,8 @@ public final class SmsInterpreter extends UntypedActor {
         this.service = service;
         this.downloader = downloader();
         this.storage = storage;
-        this.configuration = configuration;
+        this.runtime = configuration.subset("runtime-settings");
+        this.configuration = configuration.subset("sms-aggregator");
         this.accountId = accountId;
         this.version = version;
         this.url = url;
@@ -226,7 +229,7 @@ public final class SmsInterpreter extends UntypedActor {
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
-        final String base = configuration.getString("error-dictionary-uri");
+        final String base = runtime.getString("error-dictionary-uri");
         StringBuilder buffer = new StringBuilder();
         buffer.append(base);
         if (!base.endsWith("/")) {
@@ -646,21 +649,24 @@ public final class SmsInterpreter extends UntypedActor {
             attribute = verb.attribute("to");
             if (attribute != null) {
                 to = attribute.value();
-                if (to != null && !to.isEmpty()) {
-                    to = format(to);
-                    if (to == null) {
-                        to = verb.attribute("to").value();
-                        final Notification notification = notification(ERROR_NOTIFICATION, 14101, to
-                                + " is an invalid 'to' phone number.");
-                        notifications.addNotification(notification);
-                        service.tell(new DestroySmsSession(session), source);
-                        final StopInterpreter stop = StopInterpreter.instance();
-                        source.tell(stop, source);
-                        return;
-                    }
-                } else {
+                if (to == null) {
                     to = initialSessionRequest.from();
                 }
+//                if (to != null && !to.isEmpty()) {
+//                    to = format(to);
+//                    if (to == null) {
+//                        to = verb.attribute("to").value();
+//                        final Notification notification = notification(ERROR_NOTIFICATION, 14101, to
+//                                + " is an invalid 'to' phone number.");
+//                        notifications.addNotification(notification);
+//                        service.tell(new DestroySmsSession(session), source);
+//                        final StopInterpreter stop = StopInterpreter.instance();
+//                        source.tell(stop, source);
+//                        return;
+//                    }
+//                } else {
+//                    to = initialSessionRequest.from();
+//                }
             }
             // Parse <Sms> text.
             String body = verb.text();

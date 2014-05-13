@@ -13,21 +13,14 @@
 		"finishOnKey":{	"type": "string", "pattern": "($^)|(^[0-9*#]$)" },
 		"numDigits": {"type": "integer"},
 		"steps": {
-			"type": "object",
-			"patternProperties": {
-				"^step[0-9]+$": {
-					"type": "object",
-					"oneOf": [
-						{ "$ref": "saystep.json" },
-						{ "$ref": "playstep.json" }
-					]
-				}
-			},
-			"additionalProperties": false
-		},
-		"stepnames": {
 			"type": "array",
-			"items": {	"type":"string", "pattern":"^step[0-9]+$" }
+			"items": {
+				"type": "object",
+				"oneOf": [
+					{ "$ref": "saystep.json" },
+					{ "$ref": "playstep.json" }
+				]
+			}
 		},
 		"gatherType": {"enum": ["menu","collectdigits"]},
 		"menu": {
@@ -61,7 +54,7 @@
 		
 		"iface": {"type": "object"}
 	},
-	"required": ["name","kind","label","title","method","steps","stepnames","gatherType"]
+	"required": ["name","kind","label","title","method","steps","gatherType"]
 
 }
 

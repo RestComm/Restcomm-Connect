@@ -460,6 +460,18 @@ public final class CallManager extends UntypedActor {
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
         }
+//        else {
+//            SipSession sipSession = request.getSession();
+//            SipApplicationSession sipAppSession = request.getApplicationSession();
+//            if(sipSession.getInvalidateWhenReady()){
+//                logger.info("Invalidating sipSession: "+sipSession.getId());
+//                sipSession.invalidate();
+//            }
+//            if(sipAppSession.getInvalidateWhenReady()){
+//                logger.info("Invalidating sipAppSession: "+sipAppSession.getId());
+//                sipAppSession.invalidate();
+//            }
+//        }
     }
 
     private void execute(final Object message) {
@@ -646,7 +658,7 @@ public final class CallManager extends UntypedActor {
 
         final ActorContext context = getContext();
 
-        // The context.actorFor has been depreciated for actorSelection at the latest Akka release.
+        //TODO: The context.actorFor has been depreciated for actorSelection at the latest Akka release.
         return context.actorFor(callPath);
     }
 

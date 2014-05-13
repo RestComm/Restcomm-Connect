@@ -35,20 +35,24 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
+import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
 
 @Path("/manager/projects")
 public class RvdManager {
 
-    static final Logger logger = Logger.getLogger(BuildService.class.getName());
+    static final Logger logger = Logger.getLogger(RvdManager.class.getName());
 
     @Context
     ServletContext servletContext;
@@ -59,7 +63,7 @@ public class RvdManager {
 
     @PostConstruct
     void init() {
-        rvdSettings = new RvdSettings(servletContext);
+        rvdSettings = RvdSettings.getInstance(servletContext);
         projectStorage = new FsProjectStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
@@ -110,6 +114,27 @@ public class RvdManager {
         }
 
         return Response.ok().build();
+    }
+
+    /**
+     * Retrieves project header information. Returns  the project header or null if it does not exist (for old projects) as JSON - OK status.
+     * Returns INTERNAL_SERVER_ERROR status and no response body for serious errors
+     * @param name - The project name to get information for
+     */
+    @GET
+    @Path("info")
+    public Response projectInfo(@QueryParam("name") String name) {
+        StateHeader header = null;
+        try {
+            header = projectStorage.loadStateHeader(name);
+        } catch ( BadProjectHeader e ) {
+            logger.warn(e.getMessage());
+        } catch (StorageException e) {
+            logger.error(e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+        Gson gson = new Gson();
+        return Response.status(Status.OK).entity(gson.toJson(header)).type(MediaType.APPLICATION_JSON).build();
     }
 
     @POST
@@ -166,6 +191,32 @@ public class RvdManager {
             return Response.status(Status.BAD_REQUEST).build();
     }
 
+    @PUT
+    @Path("/upgrade")
+    public Response upgradeProject(@QueryParam("name") String projectName) {
+
+        // TODO IMPORTANT!!! sanitize the project name!!
+        if ( !RvdUtils.isEmpty(projectName) ) {
+            try {
+                UpgradeService upgradeService = new UpgradeService(projectStorage);
+                upgradeService.upgradeProject(projectName);
+                logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
+                // re-build project
+                BuildService buildService = new BuildService(projectStorage);
+                buildService.buildProject(projectName);
+                logger.info("project '" + projectName + "' built");
+                return Response.ok().build();
+            }
+            catch (StorageException e) {
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            } catch (UpgradeException e) {
+                logger.error(e.getMessage(), e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
+            }
+        } else
+            return Response.status(Status.BAD_REQUEST).build();
+    }
+
     @DELETE
     @Path("/delete")
     public Response deleteProject(@QueryParam("name") String projectName) {
@@ -202,7 +253,7 @@ public class RvdManager {
         } catch (ProjectDoesNotExist e) {
             return Response.status(Status.NOT_FOUND).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
         } catch (IncompatibleProjectVersion e) {
-            logger.error(e);
+            logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
         }
     }
@@ -210,7 +261,7 @@ public class RvdManager {
     @POST
     @Path("/uploadwav")
     public Response uploadWavFile(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
-        logger.debug("running /uploadwav");
+        logger.info("running /uploadwav");
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {

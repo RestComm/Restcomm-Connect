@@ -54,11 +54,16 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
         success(function(data, status, headers, config) {
           if (status == 200) {
             //if(data.date_created && data.date_created == data.date_updated) {
-            if(data.status && data.status == 'uninitialized') {
-              cacheSession(data, true);
-            }
-            else {
-              cacheSession(data, false);
+            if(data.status) {
+              if(data.status == 'uninitialized') {
+                cacheSession(data, true);
+              }
+              else if(data.status == 'suspended') {
+                // no-op
+              }
+              else if (data.status == 'active') {
+                cacheSession(data, false);
+              }
             }
           }
           else {
@@ -450,4 +455,36 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 
 rcServices.factory('RCommApps', function($resource) {
   return $resource('/restcomm-rvd/services/manager/projects/list');
+});
+
+rcServices.factory('RCommAvailableNumbers', function($resource) {
+  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/US/Local.:format?AreaCode=:areaCode',
+    {
+      accountSid: '@accountSid',
+      areaCode: '@areaCode',
+      format:'json'
+    },
+    {
+      view: {
+        method: 'GET',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+      },
+      test: {
+        method: 'GET',
+        url: '/restcomm-management/numbers.json'
+      },
+      delete: {
+        method:'DELETE',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+      }
+    }
+  );
+});
+
+rcServices.factory('RCommJMX', function($resource) {
+  return $resource('/jolokia/:op/:path',
+    {
+      op: 'read'
+    }
+  );
 });

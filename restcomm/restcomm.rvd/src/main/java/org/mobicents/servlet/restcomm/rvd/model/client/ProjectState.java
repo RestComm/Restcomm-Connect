@@ -1,7 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
 import java.util.List;
-import java.util.Map;
 
 public class ProjectState {
 
@@ -11,45 +10,6 @@ public class ProjectState {
     private Integer lastNodeId;
     private StateHeader header;
 
-
-    public static class Node {
-        private String name;
-        private String label;
-        private Map<String, Step> steps;
-        private List<String> stepnames;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public void setLabel(String label) {
-            this.label = label;
-        }
-
-        public Map<String, Step> getSteps() {
-            return steps;
-        }
-
-        public void setSteps(Map<String, Step> steps) {
-            this.steps = steps;
-        }
-
-        public List<String> getStepnames() {
-            return stepnames;
-        }
-
-        public void setStepnames(List<String> stepnames) {
-            this.stepnames = stepnames;
-        }
-    }
 
     public Integer getLastStepId() {
         return lastStepId;

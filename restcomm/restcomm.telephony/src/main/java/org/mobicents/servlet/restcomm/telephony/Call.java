@@ -356,7 +356,10 @@ public final class Call extends UntypedActor {
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
         String realIP = message.getInitialRemoteAddr();
-        int realPort = message.getInitialRemotePort();
+        Integer realPort = message.getInitialRemotePort();
+        if (realPort == null || realPort == -1)
+            realPort = 5060;
+
         final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
         final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
@@ -1224,11 +1227,16 @@ public final class Call extends UntypedActor {
                 gateway.tell(new DestroyConnection(remoteConn), source);
                 remoteConn = null;
             }
+
+            invite.createResponse(503, "Problem to setup services").send();
             // Explicitly invalidate the application session.
-            if (invite.getSession().isValid())
-                invite.getSession().invalidate();
-            if (invite.getApplicationSession().isValid())
-                invite.getApplicationSession().invalidate();
+            if (invite.getSession().isValid()){
+                invite.getSession().setInvalidateWhenReady(true);
+            }
+            if (invite.getApplicationSession().isValid()){
+                invite.getApplicationSession().setInvalidateWhenReady(true);
+            }
+
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);

@@ -5,9 +5,6 @@
 			<div ng-switch-when='ProjectDoesNotExist' class='navbar-text navbar-rvd-centered'>
 				Project <em>{{projectName}}</em> not  found. <a href="#">View available projects</a>
 			</div>
-			<div ng-switch-when='IncompatibleProjectVersion' class='navbar-text navbar-rvd-centered'>
-				Project <em>{{projectName}}</em> was created using a different version of RVD. <a href="#">View available projects</a>
-			</div>
 			<div ng-switch-default class='navbar-text navbar-rvd-centered'>
 				Unknown error. <a href="#">View available projects</a>
 			</div>			
@@ -60,24 +57,25 @@
 			<div class="col-md-2">
 	
 				<div ng-show='!projectKind || projectKind=="voice"' class='form-group'>
-					<div my-draggable='.sortable-steps' id='buttonsay' class="label label-primary verb-button kind-say rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
-					<div my-draggable='.sortable-steps' id='buttonplay' class="label label-primary verb-button kind-play rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
-					<div my-draggable='.sortable-steps.root' id='buttongather' class="label label-primary verb-button kind-gather rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>
-					<div my-draggable='.sortable-steps' id='buttondial' class="label label-primary verb-button kind-dial rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>
-					<div my-draggable='.sortable-steps' id='buttonhungup' class="label label-primary verb-button kind-hungup rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>
-					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
-					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-reject rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</div>
-					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-redirect rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
-					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-pause rvd-pickable"><i class='fa fa-pause'></i> &nbsp;Pause</div>
-					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-sms rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
-					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-record rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;Record</div>
-					<div my-draggable='.sortable-steps.root' class="label label-primary verb-button kind-fax rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-play label label-primary rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-externalService label label-primary rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-reject label label-primary rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</div>
+					
+					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-pause label label-primary rvd-pickable"><i class='fa fa-pause'></i> &nbsp;Pause</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-record label label-primary rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;Record</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-fax label label-primary rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
 				</div>			
 				<div ng-show='projectKind=="ussd"' class='form-group'>
-					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;Language</div>
-					<div basic-draggable drop-target='.ussd-collect-messages,.sortable-steps' class="label label-primary verb-button kind-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
-					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
-					<div basic-draggable drop-target='.sortable-steps' class="label label-primary verb-button kind-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;Language</div>
+					<div basic-draggable drop-target='.ussd-collect-messages,.steps' class="label label-primary verb-button button-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
 				</div>
 			
 				<div ng-show='projectKind=="voice"'>
@@ -143,9 +141,6 @@
 							
 							<ng-include src="'templates/modules/' + node.kind + 'Module.html'"></ng-include>
 							
-
-	
-	
 						</div>
 	
 					</div>

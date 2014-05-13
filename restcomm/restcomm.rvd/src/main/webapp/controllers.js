@@ -2,12 +2,14 @@ App.controller('homeCtrl', function ($scope) {
 	
 });
 
-App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams) {
+App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams, $timeout) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd')
 		$scope.projectKind = 'voice';
+	$scope.error = undefined; 
+	$scope.notifications = [];
 
 	
 	$scope.refreshProjectList = function() {
@@ -28,6 +30,15 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 		.success(function (data, status, headers, config) {
 			console.log( "project created");
 			$location.path("/designer/" + name);
+		 })
+		 .error(function (data, status, headers, config) {
+			if (status == 409) {
+				console.log("project already exists");
+				$scope.notifications.unshift({message:"A Voice or USSD project  with that name already exists" });
+				$timeout(function () {
+					$scope.notifications.pop(); 
+				}, 5000);
+			}
 		 });
 	}
 	
@@ -128,7 +139,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	// Project management
 	$scope.projectList = [];
-	//$scope.newProjectName = $routeParams.projectName;
 	
 	$scope.spinnerSettings = {
 		radius: 4,
@@ -210,14 +220,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.nodes.push( $newnode );
 		return $newnode;
 	};
-	/*$scope.addNodeAndFocus = function (editLabel, kind) {
-		//$scope.setVisibleNodes(kind);
-		var node = $scope.addNode(undefined, kind);
-		if (typeof editLabel !== undefined  && editLabel)
-			node.iface.editLabel = true;
-		$scope.setActiveNode(node);
-		return node;
-	};*/
 	$scope.removeNode = function( index) {
 		if ( index < $scope.nodes.length ) {
 			$scope.nodes.splice(index,1);
@@ -232,31 +234,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		for ( var i = 0; i < $scope.nodes.length; i++ ) {
 			var anynode = $scope.nodes[i];
 			alltargets.push( {label: anynode.label, name:anynode.name} );
-			/*
-			for ( var j=0; j < anynode.stepnames.length; j++ ) {
-				var stepname = anynode.stepnames[j];
-				if ( anynode.steps.hasOwnProperty(stepname) )
-					var step = anynode.steps[stepname];
-					var label = '';
-					switch ( step.kind ) {
-						case 'say': 
-							var max_phrase_length = 10;
-							label = " - Say " + step.phrase.substring(0, Math.min(step.phrase.length,10));
-							if ( step.phrase.length > max_phrase_length )
-								label += "...";
-						break;
-						default: label = " - " + step.label + " "; break;
-							
-						//case 'gather': label = " - Gather "; break;
-						//case 'dial': label = " - Dial "; break;
-						//case 'hungup': label = " - Hungup "; break;
-						//case 'dial': label = " - Dial "; break;
-					}
-					var name = anynode.name + "." + step.name;
-					label = anynode.label + "." + step.name + label;
-					alltargets.push( {label: label, name: name} );
-			}
-			*/
 		}
 		return alltargets;	
 	}
@@ -355,7 +332,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
 		 }).error(function (data, status, headers, config) {
-			$scope.projectError = data.serverError;
+			 if ( data.serverError.className == 'IncompatibleProjectVersion' )
+				 $location.path("/upgrade/" + name)
+			 else
+				 $scope.projectError = data.serverError;
 		 });
 	}
 	
@@ -368,8 +348,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		});
 	}
 
-	
-	// First saves and then builds
 	$scope.buildProject = function() {
 		var deferred = $q.defer();
 		
@@ -385,7 +363,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.addAssignment = function(step) {
 		console.log("adding assignment");
-		step.assignments.push({moduleNameScope: null, destVariable:'', valueExtractor: {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object)} });
+		step.assignments.push({moduleNameScope: null, destVariable:'', scope:'module', valueExtractor: {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object)} });
 	}
 	$scope.removeAssignment = function(step,assignment) {
 		step.assignments.splice( step.assignments.indexOf(assignment), 1 );
@@ -444,10 +422,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		});
 	}
 	
-	$scope.addDialNoun = function (item, pos, listmodel) {
+	$scope.addDialNoun = function (classAttribute, pos, listmodel) {
 		//console.log("adding dial noun");
 		r = RegExp("dial-noun-([^ ]+)");
-		m = r.exec( item.attr("class") );
+		m = r.exec( classAttribute );
 		if ( m != null ) {
 			//console.log("adding dial noun - " + m[1]);
 			$scope.$apply( function ()  {
@@ -459,6 +437,35 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.removeDialNoun = function (dialstep,noun) {
 		dialstep.dialNouns.splice( dialstep.dialNouns.indexOf(noun), 1 );
 	}
+	
+	$scope.addStep = function (classAttribute,pos,listmodel) {
+		console.log("Adding step ");
+		//console.log(item);
+		r = RegExp("button-([^ ]+)");
+		m = r.exec( classAttribute );
+		if ( m != null ) {
+			var step = angular.copy(protos.stepProto[ m[1] ]);
+			step.name = stepService.newStepName();
+			
+			console.log("adding step - " + m[1]);
+			$scope.$apply( function ()  {
+				listmodel.splice(pos,0, step);
+			});
+		}				
+	}
+	
+	$scope.removeStep = function (step,node_steps,steps) {
+		console.log("Removing step");
+		var container;
+		if ( typeof steps != 'undefined')
+			container = steps;
+		else
+			container = node_steps;
+		
+		container.splice( container.indexOf(step), 1);
+	}
+	
+
 	
 	$scope.onSavePressed = function() {
 		usSpinnerService.spin('spinner-save');
@@ -480,12 +487,12 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				} else if ( reason.type == 'validationError') {
 					console.log("Validation error");
 					$scope.addAlert("Project saved with validation errors", 'warning');
-					var r = /^\/nodes\/([0-9]+)\/steps\/([a-z]+[0-9]+)$/;
+					var r = /^\/nodes\/([0-9]+)\/steps\/([0-9]+)$/;
 					for (var i=0; i < reason.data.errorItems.length; i++) {
 						var failurePath = reason.data.errorItems[i].failurePath;
 						m = r.exec( reason.data.errorItems[i].failurePath );
 						if ( m != null ) {
-							console.log("warning in module " + m[1] + " step " + m[2]);
+							console.log("warning in module " + $scope.nodes[ m[1] ].name + " step " + $scope.nodes[ m[1] ].steps[m[2]].name);
 							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
 					}
@@ -522,8 +529,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.clearStepWarnings = function () {
 		for ( var i=0; i<$scope.nodes.length; i++ ) {
-			for (var stepname in $scope.nodes[i].steps)
-				$scope.nodes[i].steps[stepname].iface.showWarning = false;
+			for (var j=0; j< $scope.nodes[i].steps.length; j++)
+				$scope.nodes[i].steps[j].iface.showWarning = false;
 		}
 	}
 	
@@ -546,8 +553,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.getUssdNodeLang = function (node) {
 		var lang = "en";
-		for ( var stepname in node.steps ) {
-			var step = node.steps[stepname];
+		for ( var i=0; i>node.steps.length; i++ ) {
+			var step = node.steps[i];
 			if ( step.kind == "ussdLanguage") 
 				if (step.language != null  &&  step.language != 'en') {
 					lang = step.language;
@@ -559,8 +566,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.countNodeUssdChars = function (node) {
 		var sum = 0;
-		for ( var stepname in node.steps ) {
-			var step = node.steps[stepname];
+		for ( var i=0; i<node.steps.length; i++ ) {
+			var step = node.steps[i];
 			if ( step.kind == "ussdSay" ) 
 				sum += $scope.countUssdChars(step.text);
 			else
@@ -578,7 +585,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		return remaining;
 	}
 	
-	$scope.nestUssdMessage = function (item, pos, listmodel) {
+	$scope.nestUssdMessage = function (classAttribute, pos, listmodel) {
 		$scope.$apply( function ()  {
 			listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSayNested' ]));
 		});
@@ -597,8 +604,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		state.nodes = angular.copy($scope.nodes);
 		for ( var i=0; i < state.nodes.length; i++) {
 			var node = state.nodes[i];
-			for (var stepname in node.steps) {
-				var step = node.steps[stepname];
+			for (var j=0; j<node.steps.length; j++) {
+				var step = node.steps[j];
 				if (step.kind == "gather") {
 					if (step.gatherType == "menu")
 						delete step.collectdigits;
@@ -635,8 +642,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.nodes = packedState.nodes;
 		for ( var i=0; i < $scope.nodes.length; i++) {
 			var node = $scope.nodes[i];
-			for (var stepname in node.steps) {
-				var step = node.steps[stepname];
+			for (var j=0; j<node.steps.length; j++) {
+				var step = node.steps[j];
 				if (step.kind == "gather") {
 					if (step.gatherType == "menu")
 						step.collectdigits = angular.copy(protos.stepProto.gather.collectdigits);

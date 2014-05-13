@@ -1,0 +1,35 @@
+<div class="modal-header" style="background-color: #414141;">
+    <h3 class="text-muted"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax"> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm"> RestComm v<strong>7.1.5</strong> </h3>
+</div>
+<div class="modal-body">
+    <div class="well well-sm no-margins">
+        <h3 class="text-muted margin-left-10"><i class="fa fa-cog"></i> System</h3>
+        <div>
+            <dl class="dl-horizontal">
+                <dt>Operating System</dt>
+                <dd>{{ OS.Name }} {{ OS.Version}} ({{ OS.Arch }})</dd>
+                <dt>Processor</dt>
+                <dd>{{OS.AvailableProcessors}} CPUs // Process Load {{ OS.ProcessCpuLoad * 100 | number:2 }}% // System Load {{ OS.SystemCpuLoad * 100 | number:2 }}% (Average: {{ OS.SystemLoadAverage | number:2 }})</dd>
+                <dt>System Memory</dt>
+                <dd><strong>Physical</strong> {{OS.TotalPhysicalMemorySize | bytes }} (Free: {{ OS.FreePhysicalMemorySize | bytes }}) // <strong>SWAP</strong> {{ OS.TotalSwapSpaceSize | bytes}} (Free: {{ OS.FreeSwapSpaceSize | bytes }}) </dd>
+                <dt>JVM</dt>
+                <dd>{{ JVM.VmVendor }} {{ JVM.VmName }} {{ JVM.SystemProperties["java.runtime.version"] }} ({{ JVM.VmVersion }})</dd>
+                <dt>JVM Arguments</dt>
+                <dd>{{ JVM.InputArguments.join(" ") }}</dd>
+                <dt>JVM Memory</dt>
+                <dd><strong>Heap</strong> Init {{ Memory.HeapMemoryUsage.init | bytes }} // Used {{ Memory.HeapMemoryUsage.used | bytes }} // Committed {{ Memory.HeapMemoryUsage.committed | bytes }} // Max {{ Memory.HeapMemoryUsage.max | bytes }} </dd>
+                <dd><strong>Non-Heap</strong> Init {{ Memory.NonHeapMemoryUsage.init | bytes }} // Used {{ Memory.NonHeapMemoryUsage.used | bytes }} // Committed {{ Memory.NonHeapMemoryUsage.committed | bytes }} // Max {{ Memory.NonHeapMemoryUsage.max | bytes }} </dd>
+                <dt>Threads</dt>
+                <dd>{{ Threads.ThreadCount }} Threads, {{ Threads.DaemonThreadCount }} Daemon (Peak {{ Threads.PeakThreadCount }}, Started {{ Threads.TotalStartedThreadCount }}) </dd>
+                <dt>PID</dt>
+                <dd>{{ JVM.Name }}</dd>
+                <dt>Uptime</dt>
+                <dd>{{ JVM.StartTime | timeago:now:true }} (Started at {{ JVM.StartTime | date:'dd/MM/yyyy @ HH:mm' }})</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+<div class="modal-footer no-margins">
+    <button class="btn btn-success" ng-click="getData()"><i class="fa fa-refresh"></i> Refresh</button>
+    <button class="btn btn-default" ng-click="cancel()">Close</button>
+</div>

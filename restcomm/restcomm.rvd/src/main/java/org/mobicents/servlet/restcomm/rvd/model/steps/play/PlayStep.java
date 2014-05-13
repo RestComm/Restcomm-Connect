@@ -5,7 +5,7 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 
 public class PlayStep extends Step {
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
@@ -27,8 +27,7 @@ public class PlayStep extends Step {
         RcmlPlayStep playStep = new RcmlPlayStep();
         String url = "";
         if ("local".equals(playType))
-            //url = interpreter.getHttpRequest().getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + getWavLocalFilename();
-            url = interpreter.getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + local.wavLocalFilename;
+            url = interpreter.getContextPath() + "/" + interpreter.getRvdSettings().getWorkspaceBasePath() + "/" + interpreter.getAppName() + "/" + RvdSettings.WAVS_DIRECTORY_NAME + "/" + local.wavLocalFilename;
         else
             url = remote.wavUrl;
 
