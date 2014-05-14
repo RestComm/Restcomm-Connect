@@ -135,7 +135,7 @@ public class ProjectService {
 
     public void createProject(String projectName, String kind) throws StorageException, InvalidServiceParameters {
         String protoSuffix = null;
-        if ( !"voice".equals(kind) && !"ussd".equals(kind) )
+        if ( !"voice".equals(kind) && !"ussd".equals(kind) && !"sms".equals(kind) )
             throw new InvalidServiceParameters("Invalid project kind specified - '" + kind + "'");
 
         projectStorage.cloneProtoProject(kind, projectName);

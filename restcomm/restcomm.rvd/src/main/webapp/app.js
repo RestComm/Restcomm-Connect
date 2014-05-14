@@ -49,6 +49,7 @@ App.factory('protos', function () {
 		nodes: {
 				voice: {kind:'voice', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
 				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},		
+				sms: {kind:'sms', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
 		},
 		accessOperationProtos: accessOperationProtos,
 		stepProto: {
@@ -63,9 +64,9 @@ App.factory('protos', function () {
 			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, iface:{}},
 			reject: {kind:'reject', label:'reject', title:'reject', reason:undefined,iface:{}},
 			pause: {kind:'pause', label:'pause', title:'pause', length:undefined, iface:{}},
-			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
+			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:undefined, from:undefined, statusCallback:undefined,next:null,iface:{}},
 			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:undefined, finishOnKey:undefined, maxLength:undefined, transcribe:undefined, transcribeCallback:undefined, playBeep:undefined, iface:{}},
-			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
+			fax: {kind:'fax', label:'fax', title:'fax', to:undefined, from:undefined, text:'', next:null,statusCallback:undefined,iface:{}},
 			// USSD
 			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
 			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:'',scope:"module"}, text:'', language:null, messages:[], iface:{}},
