@@ -388,7 +388,7 @@ public class Interpreter {
                 try {
                     URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
                     if (uri_builder.getHost() == null ) {
-                        logger.info("External Service: Relative url is used. Will override from http request to RVD controller");
+                        logger.debug("External Service: Relative url is used. Will override from http request to RVD controller");
                         // if this is a relative url fill in missing fields from the request
                         uri_builder.setScheme(httpRequest.getScheme());
                         uri_builder.setHost(httpRequest.getServerName());
@@ -405,7 +405,8 @@ public class Interpreter {
                     throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
                 }
 
-                logger.info( "External Service: Requesting from url: " + url);
+                logger.info("Running ES request");
+                logger.debug("Requesting from url: " + url);
                 HttpGet get = new HttpGet( url );
                 CloseableHttpResponse response = client.execute( get );
 
@@ -415,7 +416,8 @@ public class Interpreter {
                     HttpEntity entity = response.getEntity();
                     if ( entity != null ) {
                         String entity_string = EntityUtils.toString(entity);
-                        logger.info("ES Response: " + entity_string);
+                        logger.info("ES: Received " + entity_string.length() + " bytes");
+                        logger.debug("ES Response: " + entity_string);
                         JsonElement response_element = parser.parse(entity_string);
 
                         String nextModuleName = null;
@@ -485,6 +487,8 @@ public class Interpreter {
      * expressions with their corresponding values from interpreter's variables map
      */
     public String populateVariables(String sourceText) {
+        if ( sourceText == null )
+            return sourceText;
 
         // This class serves strictly the purposes of the following algorithm
         final class VariableInText {

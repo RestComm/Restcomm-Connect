@@ -1,0 +1,35 @@
+{
+  "header": {
+    "projectKind": "sms",
+    "startNodeName": "start",
+    "version": "1.0"
+  },
+  "lastStepId": 1,
+  "lastNodeId": 0,
+  "nodes": [
+    {
+      "name": "start",
+      "kind": "sms",
+      "label": "Welcome",
+      "steps": [
+        {
+          "kind": "sms",
+          "label": "sms",
+          "title": "sms",
+          "text": "Welcome to Restcomm Visual Designer",
+          "iface": {
+            "optionsVisible": false
+          },
+          "name": "step1"
+        }
+      ],
+      "iface": {
+        "edited": false,
+        "editLabel": false
+      }
+    }
+  ],
+  "iface": {
+    "activeNode": 0
+  }
+}
