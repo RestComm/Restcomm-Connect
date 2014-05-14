@@ -83,11 +83,11 @@ App.factory('protos', function () {
 		accessOperationProtos: accessOperationProtos,
 		stepProto: {
 			// Voice
-			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
-			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:[], validation: undefined , gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
-			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
-			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
+			//say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
+			//play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
+			//gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:[], validation: undefined , gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
+			//dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
+			//number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
 			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
 			hungup: {kind:'hungup', label:'hang up', title:'hang up',iface:{}},
 			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, iface:{}},
@@ -103,15 +103,15 @@ App.factory('protos', function () {
 			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
 			
 			
-		},
-		dialNounProto: {
-			number: {dialType: 'number', destination:'', sendDigits:undefined, beforeConnectModule:undefined},
-			client: {dialType: 'client', destination:''},
-			conference: {dialType: 'conference', destination:'', nextModule:undefined, muted:undefined, beep:undefined, startConferenceOnEnter:undefined, endConferenceOnExit:undefined, waitUrl:undefined, waitModule:undefined, waitMethod:undefined, maxParticipants:undefined},
-			sipuri: {dialType: 'sipuri', destination:''},
-		}
+		}//,
+		//dialNounProto: {
+			//number: {dialType: 'number', destination:'', sendDigits:undefined, beforeConnectModule:undefined},
+			//client: {dialType: 'client', destination:''},
+			//conference: {dialType: 'conference', destination:'', nextModule:undefined, muted:undefined, beep:undefined, startConferenceOnEnter:undefined, endConferenceOnExit:undefined, waitUrl:undefined, waitModule:undefined, waitMethod:undefined, maxParticipants:undefined},
+			//sipuri: {dialType: 'sipuri', destination:''},
+		//}
 	};
-	protoInstance.stepProto.gather.validation = {messageStep: protoInstance.stepProto.say, pattern: "", userPattern:'' userPatternType:"One of"};
+	//protoInstance.stepProto.gather.validation = {messageStep: protoInstance.stepProto.say, pattern: "", iface:{userPattern:'', userPatternType:"One of"} };
 	return protoInstance;
 });
 
@@ -367,35 +367,8 @@ App.directive('inputGroupSelect', function () {
 	}
 });
 
-App.directive('gatherStep', function () {
-	return {
-			restrict: 'A',
-			link: function (scope, element, attrs) {
-				console.log("linking gatherStep");
-				
-				function updatePattern(scope) {
-					if ( scope.step.validation.userPatternType == 'Any of')
-							scope.step.validation.pattern = '^[' + scope.step.validation.userPattern + ']*$';
-					else
-					if ( scope.step.validation.userPatternType == 'Regex')
-						scope.step.validation.pattern = scope.step.validation.userPattern;
-					else
-					if ( scope.step.validation.userPatternType == 'One of')
-						scope.step.validation.pattern = '^[' + scope.step.validation.userPattern + ']$';
-				}
-				
-				scope.$watch('step.validation.userPatternType',function (newValue, oldValue) {
-					if ( newValue != oldValue )
-						updatePattern(scope);
-				});
-				
-				scope.$watch('step.validation.userPattern',function (newValue, oldValue) {
-					if ( newValue != oldValue )
-						updatePattern(scope);
-				});
-				
-			}
-	}
-});
+
+
+
 
 
