@@ -68,8 +68,8 @@ public class SmsStep extends Step {
             rcmlStep.setMethod(getMethod());
         }
 
-        rcmlStep.setFrom(getFrom());
-        rcmlStep.setTo(getTo());
+        rcmlStep.setFrom(interpreter.populateVariables(getFrom()));
+        rcmlStep.setTo(interpreter.populateVariables(getTo()));
         rcmlStep.setStatusCallback(getStatusCallback());
         rcmlStep.setText(interpreter.populateVariables(getText()));
 

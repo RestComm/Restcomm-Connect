@@ -77,6 +77,11 @@
 					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
 					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
 				</div>
+				<div ng-show='projectKind=="sms"' class='form-group'>
+					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+				</div>				
 			
 				<div ng-show='projectKind=="voice"'>
 					<h5 class='text-center'><strong>Audio resources</strong></h5>
