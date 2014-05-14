@@ -85,19 +85,19 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 });
 
 
-App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService) {
+App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
 	};
 		
-	//console.log("routeParam:");
-	//console.log( $routeParams );
+	// console.log("routeParam:");
+	// console.log( $routeParams );
 	
 	$scope.stepService = stepService;
 	$scope.protos = protos;
 	
-	// Prototype and constant data structures	
+	// Prototype and constant data structures
 	$scope.languages = [
 	                    {name:'bf',text:'Belgium-French'},
 	                    {name:'bp',text: 'Brazilian-Portugues'},
@@ -135,7 +135,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	
 	$scope.nodes = [];		
-	$scope.activeNode = 0 	// contains the currently active node for all kinds of nodes
+	$scope.activeNode = 0 	// contains the currently active node for all kinds
+							// of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
 	$scope.wavList = [];
 	
@@ -154,14 +155,14 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.nullValue = null;
 	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
-	//console.log("projectController stepService: " + stepService.stepNames );
+	// console.log("projectController stepService: " + stepService.stepNames );
 
 
 	// Functionality
 	// ------------------
 
 	$scope.loseFocus = function () {
-		//console.log('lost focus');
+		// console.log('lost focus');
 	}
 	
 	
@@ -203,7 +204,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.activeNode = (newindex != -1) ? newindex : 0 ;
 	};
 	$scope.setActiveNode = function ( node) {
-		//console.log( "in setActiveNode" );
+		// console.log( "in setActiveNode" );
 		$scope.setActiveNodeByIndex( $scope.nodes.indexOf(node) );
 	};
 	$scope.setActiveNodeByName = function ( nodename) {
@@ -242,9 +243,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 
 	/*
-	 * When targets change, broadcast an events so that all <select syncModel/> elements
-	 * update appropriately. It is uses as a workaround for cases when a selected target is
-	 * removed thus leaving the <select>'s model out of sync. 
+	 * When targets change, broadcast an events so that all <select syncModel/>
+	 * elements update appropriately. It is uses as a workaround for cases when
+	 * a selected target is removed thus leaving the <select>'s model out of
+	 * sync.
 	 */
 	$scope.$watch('getAllTargets().length', function(newValue, oldValue) {
 		$timeout( function () {
@@ -345,7 +347,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$http({url: 'services/manager/projects/wavlist?name=' + projectName, method: "GET"})
 		.success(function (data, status, headers, config) {
 			console.log('getting wav list')
-			//console.log( data );
+			// console.log( data );
 			$scope.wavList = data;
 		});
 	}
@@ -380,32 +382,47 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 
 	// File upload stuff for play verbs
 	$scope.onFileSelect = function($files) {
-		    //$files: an array of files selected, each file has name, size, and type.
+		    // $files: an array of files selected, each file has name, size, and
+			// type.
 		    for (var i = 0; i < $files.length; i++) {
 		      var file = $files[i];
 		      $scope.upload = $upload.upload({
 
-		        url: 'services/manager/projects/uploadwav?name=' + $scope.projectName , //upload.php script, node.js route, or servlet url
+		        url: 'services/manager/projects/uploadwav?name=' + $scope.projectName , // upload.php
+																						// script,
+																						// node.js
+																						// route,
+																						// or
+																						// servlet
+																						// url
 		        // method: POST or PUT,
 		        // headers: {'headerKey': 'headerValue'},
 		        // withCredential: true,
-		        //data: {myObj: $scope.myModelObj},
+		        // data: {myObj: $scope.myModelObj},
 		        file: file,
-		        // file: $files, //upload multiple files, this feature only works in HTML5 FromData browsers
-		        /* set file formData name for 'Content-Desposition' header. Default: 'file' */
-		        //fileFormDataName: myFile, //OR for HTML5 multiple upload only a list: ['name1', 'name2', ...]
-		        /* customize how data is added to formData. See #40#issuecomment-28612000 for example */
-		        //formDataAppender: function(formData, key, val){} 
+		        // file: $files, //upload multiple files, this feature only
+				// works in HTML5 FromData browsers
+		        /*
+				 * set file formData name for 'Content-Desposition' header.
+				 * Default: 'file'
+				 */
+		        // fileFormDataName: myFile, //OR for HTML5 multiple upload only
+				// a list: ['name1', 'name2', ...]
+		        /*
+				 * customize how data is added to formData. See
+				 * #40#issuecomment-28612000 for example
+				 */
+		        // formDataAppender: function(formData, key, val){}
 		      }).progress(function(evt) {
 		        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
 		      }).success(function(data, status, headers, config) {
 		        // file is uploaded successfully
 		    	  console.log('file uploaded successfully');
-		        //console.log(data);
+		        // console.log(data);
 		    	  $scope.$emit("fileupload");
 		      });
-		      //.error(...)
-		      //.then(success, error, progress); 
+		      // .error(...)
+		      // .then(success, error, progress);
 		    }
 	};
 	
@@ -425,13 +442,16 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.addDialNoun = function (classAttribute, pos, listmodel) {
-		//console.log("adding dial noun");
+		// console.log("adding dial noun");
 		r = RegExp("dial-noun-([^ ]+)");
 		m = r.exec( classAttribute );
 		if ( m != null ) {
-			//console.log("adding dial noun - " + m[1]);
+			// console.log("adding dial noun - " + m[1]);
+			var noun = $injector.invoke([m[1]+'NounModel', function(model){
+				return new model();
+			}]);	
 			$scope.$apply( function ()  {
-				listmodel.splice(pos,0, angular.copy(protos.dialNounProto[ m[1] ]));
+				listmodel.splice(pos,0, noun);
 			});
 		}
 	}
@@ -442,12 +462,15 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.addStep = function (classAttribute,pos,listmodel) {
 		console.log("Adding step ");
-		//console.log(item);
 		r = RegExp("button-([^ ]+)");
 		m = r.exec( classAttribute );
 		if ( m != null ) {
-			var step = angular.copy(protos.stepProto[ m[1] ]);
-			step.name = stepService.newStepName();
+			var step;
+			var stepkind = m[1];
+			step = $injector.invoke([stepkind+'Model', function(model){
+				var stepname = stepRegistry.name();
+				return new model(stepname);
+			}]);	
 			
 			console.log("adding step - " + m[1]);
 			$scope.$apply( function ()  {
@@ -503,9 +526,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		)
 		.finally(function () {
 			usSpinnerService.stop('spinner-save');
-			//console.log('save finished');
+			// console.log('save finished');
 		});
-		//.then( function () { console.log('project saved and built')});
+		// .then( function () { console.log('project saved and built')});
 	}
 	
 	$scope.$on('wavfileDeleted', function (event,data) {
@@ -537,9 +560,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	
-	/*    USSDSay / USSDCollect functions    */
+	/* USSDSay / USSDCollect functions */
 	
-	// cound how many characters are left for a ussd message. Make sure to disable trim on the bound input control
+	// cound how many characters are left for a ussd message. Make sure to
+	// disable trim on the bound input control
 	$scope.countUssdChars = function(text) {
 		return text.length;
 	}
@@ -548,7 +572,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.countUssdCollectChars = function(step) {
 		var counter = 0;
 		for (var i = 0; i <  step.messages.length; i ++) {
-			counter += step.messages[i].text.length + 1; // +1 for the newline at the end of this message
+			counter += step.messages[i].text.length + 1; // +1 for the
+															// newline at the
+															// end of this
+															// message
 		}
 		return counter;
 	}
@@ -602,32 +629,26 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.packState = function() {
 		var state = {header:{}, iface:{}};
-		state.lastStepId = stepService.lastStepId;
+		// state.lastStepId = stepService.lastStepId;
+		state.lastStepId = stepRegistry.current();
 		state.nodes = angular.copy($scope.nodes);
 		for ( var i=0; i < state.nodes.length; i++) {
 			var node = state.nodes[i];
 			for (var j=0; j<node.steps.length; j++) {
-				var step = node.steps[j];
-				if (step.kind == "gather") {
-					if (step.gatherType == "menu")
-						delete step.collectdigits;
-					else
-					if (step.gatherType == "collectdigits")
-						delete step.menu;
-				} else
-				if (step.kind == "play") {
-					if (step.playType == "local")
-						delete step.remote;
-					else if (step.playType == "remote")
-						delete step.local;
-				} else
-				if (step.kind == "ussdCollect") {
-					if (step.gatherType == "menu")
-						delete step.collectdigits;
-					else
-					if (step.gatherType == "collectdigits")
-						delete step.menu;
-				}
+				var step = $scope.nodes[i].steps[j];
+				var packedStep;
+				packedStep = step.pack();
+				node.steps[j] = packedStep;
+
+				/*
+				 * if (step.kind == "play") { if (step.playType == "local")
+				 * delete step.remote; else if (step.playType == "remote")
+				 * delete step.local; } else if (step.kind == "ussdCollect") {
+				 * if (step.gatherType == "menu") delete step.collectdigits;
+				 * else if (step.gatherType == "collectdigits") delete
+				 * step.menu; }
+				 */
+				
 			}
 		}
 		state.iface.activeNode = $scope.activeNode;
@@ -640,34 +661,44 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.unpackState = function (packedState) {
-		stepService.lastStepId = packedState.lastStepId;
-		$scope.nodes = packedState.nodes;
-		for ( var i=0; i < $scope.nodes.length; i++) {
-			var node = $scope.nodes[i];
+		stepRegistry.reset(packedState.lastStepId);
+		for ( var i=0; i < packedState.nodes.length; i++) {
+			var node = packedState.nodes[i];
 			for (var j=0; j<node.steps.length; j++) {
-				var step = node.steps[j];
-				if (step.kind == "gather") {
-					if (step.gatherType == "menu")
-						step.collectdigits = angular.copy(protos.stepProto.gather.collectdigits);
-					else
-					if (step.gatherType == "collectdigits")
-						step.menu = angular.copy(protos.stepProto.gather.menu);
-				} else
-				if (step.kind == "play") {
-					if (step.playType == "local")
-						step.remote = angular.copy(protos.stepProto.play.remote);
-					else if (step.playType == "remote")
-						step.local = angular.copy(protos.stepProto.play.local);
-				} else
-				if (step.kind == "ussdCollect") {
-					if (step.gatherType == "menu")
-						step.collectdigits = angular.copy(protos.stepProto.ussdCollect.collectdigits);
-					else
-					if (step.gatherType == "collectdigits")
-						step.menu = angular.copy(protos.stepProto.ussdCollect.menu);
-				}					
+				var step = stepPacker.unpack(node.steps[j]);
+				node.steps[j] = step;
 			}
 		}
+		$scope.nodes = packedState.nodes;
+		/*
+		 * for ( var i=0; i < $scope.nodes.length; i++) { var packedNode =
+		 * $scope.nodes[i]; for (var j=0; j<packedNode.steps.length; j++) { var
+		 * step; step = stepPacker.unpack(packedNode.steps[j]); $scope.nodes[i]
+		 */
+				// if (node.steps[j].kind == 'gather') {
+					
+				// } elsen
+					// step = node.steps[j];
+				/*
+				 * if (step.kind == "gather") { if (step.gatherType == "menu")
+				 * step.collectdigits =
+				 * angular.copy(protos.stepProto.gather.collectdigits); else if
+				 * (step.gatherType == "collectdigits") step.menu =
+				 * angular.copy(protos.stepProto.gather.menu); } else
+				 */
+				/*
+				 * if (step.kind == "play") { if (step.playType == "local")
+				 * step.remote = angular.copy(protos.stepProto.play.remote);
+				 * else if (step.playType == "remote") step.local =
+				 * angular.copy(protos.stepProto.play.local); } else if
+				 * (step.kind == "ussdCollect") { if (step.gatherType == "menu")
+				 * step.collectdigits =
+				 * angular.copy(protos.stepProto.ussdCollect.collectdigits);
+				 * else if (step.gatherType == "collectdigits") step.menu =
+				 * angular.copy(protos.stepProto.ussdCollect.menu); }
+				 */					
+			// }
+		// }
 		$scope.activeNode = packedState.iface.activeNode;
 		$scope.lastNodesId = packedState.lastNodeId;
 		$scope.startNodeName = packedState.header.startNodeName;	
