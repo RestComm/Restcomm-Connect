@@ -9,18 +9,13 @@
 		"title": {"type": "string"},
 		"text": {"type": "string"},
 		"next": { "$ref": "rvdproject-schema.json#/nullOrString" },
-		"to": { "$ref": "rvdproject-schema.json#/nullOrString" },
-		"from": { "$ref": "rvdproject-schema.json#/nullOrString" },
-		"method": {
-			"oneOf":[
-				{"type": "null"},
-				{"enum":["GET","POST"]}
-			]
-		},
-		"statusCallback": { "$ref": "rvdproject-schema.json#/nullOrString" },
+		"to": {"type": "string"},
+		"from": {"type": "string"},
+		"method": {"enum": ["GET","POST"]},
+		"statusCallback": {"type": "string"},
 		
 		"iface": {"type": "object"}
 	},
-	"required": ["name","kind","label","title","text","next","to","from","method","statusCallback"]	
+	"required": ["name","kind","label","title","text"]	
 }
 

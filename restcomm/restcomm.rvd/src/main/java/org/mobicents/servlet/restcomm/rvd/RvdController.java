@@ -65,7 +65,8 @@ public class RvdController {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
-        logger.info( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        logger.info("Received Restcomm GET request");
+        logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
         MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
         return runInterpreter(appname, httpRequest, requestParams);
@@ -75,8 +76,9 @@ public class RvdController {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        logger.info( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
-        logger.info("POST Params: " + requestParams.toString());
+        logger.info("Received Restcomm POST request");
+        logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        logger.debug("POST Params: " + requestParams.toString());
 
         return runInterpreter(appname, httpRequest, requestParams);
     }
