@@ -38,6 +38,7 @@ public final class InitializeOutbound {
     private final String apiVersion;
     private final Sid accountId;
     private final CreateCall.Type type;
+    private final DaoManager daoManager;
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
@@ -53,6 +54,7 @@ public final class InitializeOutbound {
         this.apiVersion = apiVersion;
         this.accountId = accountId;
         this.type = type;
+        this.daoManager = daoManager;
     }
 
     public String name() {
@@ -93,5 +95,9 @@ public final class InitializeOutbound {
 
     public CreateCall.Type type() {
         return type;
+    }
+
+    public DaoManager getDaoManager() {
+        return daoManager;
     }
 }
