@@ -145,6 +145,7 @@ public class UssdCall extends UntypedActor  {
         transitions.add(new Transition(uninitialized, queued));
         transitions.add(new Transition(queued, dialing));
         transitions.add(new Transition(dialing, processingUssdMessage));
+        transitions.add(new Transition(dialing, completed));
         transitions.add(new Transition(ringing, inProgress));
         transitions.add(new Transition(inProgress, processingUssdMessage));
         transitions.add(new Transition(processingUssdMessage, ready));
@@ -331,6 +332,11 @@ public class UssdCall extends UntypedActor  {
                 logger.info("Telling observers that state changed to RINGING");
                 observer.tell(event, source);
             }
+
+            if (outgoingCallRecord != null && direction.contains("outbound")) {
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
         }
     }
 
@@ -352,6 +358,13 @@ public class UssdCall extends UntypedActor  {
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
+            }
+
+            if (outgoingCallRecord != null && direction.contains("outbound")
+                    && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
+                callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
@@ -385,7 +398,6 @@ public class UssdCall extends UntypedActor  {
 
             if(ussdRequest.getIsFinalMessage()) {
              request = session.createRequest("BYE");
-//             fsm.transition(request, completed);
             } else {
                 request = session.createRequest("INFO");
             }
@@ -397,8 +409,9 @@ public class UssdCall extends UntypedActor  {
                         + " as a request uri of the BYE request");
                 request.setRequestURI(realInetUri);
             }
-
             request.send();
+            if(ussdRequest.getIsFinalMessage())
+                fsm.transition(request, completed);
         }
     }
 
@@ -409,7 +422,15 @@ public class UssdCall extends UntypedActor  {
 
         @Override
         public void execute(final Object message) throws Exception {
-
+            logger.info("At Completed STATE! Updating CDR");
+            if (outgoingCallRecord != null && direction.contains("outbound")) {
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.COMPLETED.name());
+                final DateTime now = DateTime.now();
+                outgoingCallRecord = outgoingCallRecord.setEndTime(now);
+                final int seconds = 0;
+                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
+                callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
         }
     }
 
@@ -429,6 +450,7 @@ public class UssdCall extends UntypedActor  {
             username = request.username();
             password = request.password();
             type = request.type();
+            callDetailrecordsDao = request.getDaoManager().getCallDetailRecordsDao();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
@@ -465,7 +487,7 @@ public class UssdCall extends UntypedActor  {
                 builder.setAccountSid(accountId);
                 builder.setTo(to.getUser());
                 builder.setCallerName(name);
-                String fromString = from.getUser() != null ? from.getUser() : "rcml app";
+                String fromString = from.getUser() != null ? from.getUser() : "USSD REST API";
                 builder.setFrom(fromString);
                 // builder.setForwardedFrom(callInfo.forwardedFrom());
                 // builder.setPhoneNumberSid(phoneId);
@@ -481,7 +503,6 @@ public class UssdCall extends UntypedActor  {
                 buffer.append(id.toString());
                 final URI uri = URI.create(buffer.toString());
                 builder.setUri(uri);
-
                 outgoingCallRecord = builder.build();
                 callDetailrecordsDao.addCallDetailRecord(outgoingCallRecord);
             }
