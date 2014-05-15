@@ -842,7 +842,7 @@ public final class Call extends UntypedActor {
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());
                     builder.setCallerName(name);
-                    String fromString = from.getUser() != null ? from.getUser() : "REST-API";
+                    String fromString = from.getUser() != null ? from.getUser() : "CALLS REST API";
                     builder.setFrom(fromString);
                     // builder.setForwardedFrom(callInfo.forwardedFrom());
                     // builder.setPhoneNumberSid(phoneId);
