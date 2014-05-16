@@ -17,28 +17,34 @@ angular.module('Rvd')
 .service('stepPacker', ['$injector', function($injector) {
 	this.unpack = function(source) {
 		var unpacked = $injector.invoke([source.kind+'Model', function(model){
-			return model.from(source);
+			var newStep = new model().init(source);
+			return newStep;
 		}]);
 		return unpacked;
 	}
 }])
-.factory('stepPrototype', function () {
-	return {
-		test: function () {
-			console.log('testing from stepPrototype: ' + this.kind);
-		},
-		pack: function () {
-			console.log("stepPrototype:pack() - "  + this.name);
+.factory('rvdModel', function () {
+	function RvdModel() {
+		this.test = function () {
+			console.log('testing from RvdModel: ' + this.kind);
+		}
+		this.pack = function () {
+			console.log("rvdModel:pack() - "  + this.name);
 			var clone = angular.copy(this);
 			return clone;
-		},
-		validate: function () {
+		}
+		this.validate = function () {
 			if (!this.iface)
 			this.iface = {};
 		}
+		this.init = function (from) {
+			angular.extend(this,from);
+			return this;
+		}
 	}
+	return RvdModel;
 })
-.factory('sayModel', ['stepPrototype', function SayModelFactory(stepPrototype) {
+.factory('sayModel', ['rvdModel', function SayModelFactory(rvdModel) {
 	function SayModel(name) {
 		if (name)
 			this.name = name;
@@ -51,19 +57,16 @@ angular.module('Rvd')
 		this.loop = undefined;
 		this.iface = {};
 	}
-	
-	SayModel.from = function(existing) {
-		var model = new SayModel();
-		angular.extend(model, existing);
-		model.validate(model);
-		return model;	
-	}
-	
-	SayModel.prototype = stepPrototype;
+
+	SayModel.prototype = new rvdModel();
+	SayModel.prototype.constructor = SayModel;
+	// Add Say methods here
+	// SayModel.prototype.method1 - function ()
+	// ...
 	
 	return SayModel;
 }])
-.factory('playModel', ['stepPrototype', function PlayModelFactory(stepPrototype) {
+.factory('playModel', ['rvdModel', function PlayModelFactory(rvdModel) {
 	function PlayModel(name) {
 		if (name)
 			this.name = name;
@@ -75,20 +78,10 @@ angular.module('Rvd')
 		this.local = {wavLocalFilename:''};
 		this.remote = {wavUrl:''};
 		this.iface = {};
-		
-		this.pack = PlayModel.pack;
-		this.validate = PlayModel.validate;
 	}
-	
-	PlayModel.from = function(existing) {
-		var model = new PlayModel();
-		angular.extend(model, existing);
-		model.validate(model);
-		return model;	
-	}
-	
-	// do not call this directly from the PlayModel  
-	PlayModel.validate = function() {
+	PlayModel.prototype = new rvdModel();
+	PlayModel.prototype.constructor = PlayModel; 
+	PlayModel.prototype.validate = function() {
 		if (!this.iface)
 			this.iface = {};
 		if (this.playType == "local")
@@ -96,18 +89,16 @@ angular.module('Rvd')
 		else if (this.playType == "remote")
 			this.local = {wavLocalFilename:''};
 	}
-	PlayModel.pack = function () {
+	PlayModel.prototype.pack = function () {
 			if (this.playType == "local")
 				delete this.remote;
 			else if (this.playType == "remote")
 				delete this.local;
 	}
 	
-	PlayModel.prototype = stepPrototype;
-	
 	return PlayModel;
 }])
-.factory('gatherModel', ['sayModel', 'stepPrototype', function GatherModelFactory(sayModel, stepPrototype) {
+.factory('gatherModel', ['sayModel', 'rvdModel', function GatherModelFactory(sayModel, rvdModel) {
 	function GatherModel(name) {
 		if (name)
 			this.name = name;
@@ -122,32 +113,23 @@ angular.module('Rvd')
 		this.steps = [];
 		this.validation = {messageStep: new sayModel(), pattern: "", iface:{userPattern:'', userPatternType:"One of"}};
 		this.gatherType = "menu";
-		this.menu = {mappings:[] }; /*{digits:1, next:"welcome.step1"}*/
+		this.menu = {mappings:[] }; //{digits:1, next:"welcome.step1"}
 		this.collectdigits = {collectVariable:'',next:'', scope:"module"};
 		this.iface = {}	;
-		
-		this.pack = GatherModel.pack;
-		this.validate = GatherModel.validate;
 	}	
-	
-	GatherModel.from = function(existing) {
-		var model = new GatherModel();
-		angular.extend(model, existing);
-		model.validate(model);
-		return model;	
+	GatherModel.prototype = new rvdModel();
+	GatherModel.prototype.constructor = GatherModel;
+	GatherModel.prototype.validate = function() {
+		if (!this.validation)
+				this.validation = {messageStep: new sayModel(), pattern: "", iface:{userPattern:'', userPatternType:"One of"}};
+		if (!this.validation.iface || angular.equals({},this.validation.iface) )
+			this.validation.iface = {userPattern:this.validation.pattern, userPatternType:"Regex"};
+		if (!this.menu)
+			this.menu = {mappings:[] };
+		if (!this.collectdigits)
+			this.collectdigits = {collectVariable:'',next:'', scope:"module"};
 	}
-	
-	GatherModel.validate = function(existing) {
-		if (!existing.validation)
-				existing.validation = {messageStep: new sayModel(), pattern: "", iface:{userPattern:'', userPatternType:"One of"}};
-		if (!existing.validation.iface || angular.equals({},existing.validation.iface) )
-			existing.validation.iface = {userPattern:existing.validation.pattern, userPatternType:"Regex"};
-		if (!existing.menu)
-			existing.menu = {mappings:[] };
-		if (!existing.collectdigits)
-			existing.collectdigits = {collectVariable:'',next:'', scope:"module"};
-	}
-	GatherModel.pack = function () {
+	GatherModel.prototype.pack = function () {
 		console.log("gatherModel:pack() - " + this.name);
 		var clone = angular.copy(this);
 		if (clone.gatherType == "menu")
@@ -157,12 +139,9 @@ angular.module('Rvd')
 			delete clone.menu;
 		return clone;
 	}
-	
-	GatherModel.prototype = stepPrototype;
-	
 	return GatherModel;
 }])
-.factory('dialModel', ['stepPrototype', 'numberNounModel', 'clientNounModel', 'conferenceNounModel', 'sipuriNounModel', function DialModelFactory(stepPrototype, NumberNounModel, ClientNounModel, ConferenceNounModel, SipuriNounModel ) {
+.factory('dialModel', ['rvdModel', 'numberNounModel', 'clientNounModel', 'conferenceNounModel', 'sipuriNounModel', function DialModelFactory(rvdModel, NumberNounModel, ClientNounModel, ConferenceNounModel, SipuriNounModel ) {
 	function DialModel(name) {
 		if (name)
 			this.name = name;
@@ -179,58 +158,48 @@ angular.module('Rvd')
 		this.record = undefined;
 		this.iface = {};
 	}
-	
-	DialModel.from = function(existing) {
-		var model = new DialModel();
-		angular.extend(model, existing);
-		for (var i=0; i<existing.dialNouns.length; i++) {
-			var noun = existing.dialNouns[i];
+	DialModel.prototype = new rvdModel();
+	DialModel.prototype.constructor = DialModel;	
+	DialModel.prototype.init = function(from) {
+		angular.extend(this, from);
+		for (var i=0; i<from.dialNouns.length; i++) {
+			var noun = from.dialNouns[i];
 			if ( noun.dialType == 'number' )
-				existing.dialNouns[i] = NumberNounModel.from(noun);
+				this.dialNouns[i] = new NumberNounModel().init(noun);
 			else if ( noun.dialType == 'client' ) 
-				existing.dialNouns[i] = ClientNounModel.from(noun);
+				this.dialNouns[i] = new ClientNounModel().init(noun);
 			else if ( noun.dialType == 'conference' ) 
-				existing.dialNouns[i] = ConferenceNounModel.from(noun);
+				this.dialNouns[i] = new ConferenceNounModel().init(noun);
 			else if ( noun.dialType == 'sipuri' ) 
-				existing.dialNouns[i] = SipuriNounModel.from(noun);
+				this.dialNouns[i] = new SipuriNounModel().init(noun);
 		}
-		model.validate(model);
-		return model;	
+		this.validate();
+		return this;
 	}
-	
-	DialModel.prototype = stepPrototype;
 	
 	return DialModel;
 }])
-.factory('numberNounModel',[function NumberNounModelFactory() {
+.factory('numberNounModel',['rvdModel', function NumberNounModelFactory(rvdModel) {
 	function NumberNounModel() {
 		this.dialType = 'number';
 		this.destination = '';
 		this.sendDigits = undefined;
 		this.beforeConnectModule = undefined;
 	}
-	NumberNounModel.from = function(existing) {
-		var model = new NumberNounModel();
-		angular.extend(model, existing);
-		model.validate(model);
-		return model;	
-	}
+	NumberNounModel.prototype = new rvdModel();
+	NumberNounModel.prototype.contructor = NumberNounModel;
 	return NumberNounModel;
 }])
-.factory('clientNounModel',[function ClientNounModelFactory() {
+.factory('clientNounModel',['rvdModel', function ClientNounModelFactory(rvdModel) {
 	function ClientNounModel() {
 		this.dialType = 'client';
 		this.destination = '';
 	}
-	ClientNounModel.from = function(existing) {
-		var model = new ClientNounModel();
-		angular.extend(model, existing);
-		model.validate(model);
-		return model;	
-	}
+	ClientNounModel.prototype = new rvdModel();
+	ClientNounModel.prototype.contructor = ClientNounModel;
 	return ClientNounModel;
 }])
-.factory('conferenceNounModel',[function ConferenceNounModelFactory() {
+.factory('conferenceNounModel',['rvdModel', function ConferenceNounModelFactory(rvdModel) {
 	function ConferenceNounModel() {
 		this.dialType = 'conference';
 		this.destination = '';
@@ -244,27 +213,188 @@ angular.module('Rvd')
 		this.waitMethod = undefined;
 		this.maxParticipants = undefined;
 	}
-	ConferenceNounModel.from = function(existing) {
-		var model = new ConferenceNounModel();
-		angular.extend(model, existing);
-		model.validate(model);
-		return model;	
-	}	
-	
+	ConferenceNounModel.prototype = new rvdModel();
+	ConferenceNounModel.prototype.contructor = ConferenceNounModel;
 	return ConferenceNounModel;
 }])
-.factory('sipuriNounModel',[function SipuriNounModelFactory() {
+.factory('sipuriNounModel',['rvdModel', function SipuriNounModelFactory(rvdModel) {
 	function SipuriNounModel() {
 		this.dialType = 'sipuri';
 		this.destination = '';
 	}
-	SipuriNounModel.from = function(existing) {
-		var model = new SipuriNounModel();
-		angular.extend(model, existing);
-		model.validate(model);
-		return model;	
-	}	
+	SipuriNounModel.prototype = new rvdModel();
+	SipuriNounModel.prototype.contructor = SipuriNounModel;
 	return SipuriNounModel;
+}])
+.factory('redirectModel', ['rvdModel', function RedirectModelFactory(rvdModel) {
+	function RedirectModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'redirect';
+		this.label = 'redirect';
+		this.title = 'redirect';
+		this.url  = null;
+		this.method = null;
+		this.iface = {};
+	}
+	RedirectModel.prototype = new rvdModel();
+	RedirectModel.prototype.contructor = RedirectModel;
+	return RedirectModel;
+}])
+.factory('hungupModel', ['rvdModel', function HungupModelFactory(rvdModel) {
+	function HungupModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'hungup';
+		this.label = 'hang up';
+		this.title = 'hang up';
+		this.iface = {};
+	}
+	HungupModel.prototype = new rvdModel();
+	HungupModel.prototype.contructor = HungupModel;
+	return HungupModel;
+}])
+.value('accessOperationKinds',['object','array','value'])
+.value('objectActions', ['propertyNamed'])
+.value('arrayActions', ['itemAtPosition'])
+.factory('esValueExtractor',['rvdModel',function (rvdModel) {
+	var accessOperationProtos = {
+		object:{kind:'object',fixed:false, terminal:false},
+		array:{kind:'array',fixed:false, terminal:false},
+		value:{kind:'value',fixed:false, terminal:true}
+	};
+	function EsValueExtractor() {
+		this.accessOperations = [];
+		this.lastOperation = angular.copy( accessOperationProtos.object );
+	}
+	EsValueExtractor.prototype = new rvdModel();
+	EsValueExtractor.prototype.constructor = EsValueExtractor;
+	EsValueExtractor.prototype.addOperation = function () {
+		console.log("adding operation");
+		this.lastOperation.fixed = true;
+		this.lastOperation.expression = this.operationExpression( this.lastOperation );
+		this.accessOperations.push(this.lastOperation);
+		this.lastOperation = angular.copy(accessOperationProtos.object)
+	}
+	EsValueExtractor.prototype.operationExpression = function (operation) {
+		switch (operation.kind) {
+		case 'object':
+			switch (operation.action) {
+			case 'propertyNamed':
+				return "."+operation.property;
+			}
+		break;
+		case 'array':
+			switch (operation.action) {
+			case 'itemAtPosition':
+				return "[" + operation.position + "]";
+			}
+		break;
+		case 'value':
+			return " value";
+		break;	
+		}
+		return "UNKNOWN";
+	}
+	EsValueExtractor.prototype.extractorModelExpression = function () {
+		var expr = '';
+		for ( var i=0; i < this.accessOperations.length; i++ ) {
+			expr += this.operationExpression(this.accessOperations[i]);
+		} 
+		return expr;
+	}
+	EsValueExtractor.prototype.isTerminal = function (kind) {
+		if (kind == null)
+			return false;
+		return accessOperationProtos[kind].terminal;
+	}
+	EsValueExtractor.prototype.doneAddingOperations = function () {
+		this.addOperation();
+		this.lastOperation = null;
+	}
+	EsValueExtractor.prototype.popOperation = function () { // removes last operation
+		if ( this.accessOperations.length > 0 ) {
+			this.lastOperation = this.accessOperations.pop();
+			this.lastOperation.fixed = false;
+		}
+	}	
+	return EsValueExtractor;
+}])
+.factory('esAssignment',['rvdModel','esValueExtractor',function (rvdModel,esValueExtractor) {
+	function EsAssignment() {
+		this.moduleNameScope = null;
+		this.destVariable = '';
+		this.scope = 'module';
+		this.valueExtractor = new esValueExtractor(); 
+	}
+	EsAssignment.prototype = new rvdModel();
+	EsAssignment.prototype.constructor = EsAssignment;
+	EsAssignment.prototype.init = function(from) {
+		angular.extend(this, from);
+		this.valueExtractor = new esValueExtractor().init(from.valueExtractor);
+		return this;
+	}
+	return EsAssignment;
+}])
+.factory('externalServiceModel', ['rvdModel','esAssignment','esValueExtractor', function ExternalServiceModelFactory(rvdModel,esAssignment,esValueExtractor) {
+	function ExternalServiceModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'externalService';
+		this.label = 'externalService';
+		this.title = 'external service';
+		this.url = '';
+		this.urlParams = [];
+		this.assignments = [];
+		this.next = '';
+		this.doRouting = false;
+		this.nextType = 'fixed';
+		this.nextValueExtractor = new esValueExtractor();
+		this.iface = {};		
+	}
+	ExternalServiceModel.prototype = new rvdModel();
+	ExternalServiceModel.prototype.contructor = ExternalServiceModel;
+	ExternalServiceModel.prototype.init = function(from) {
+		angular.extend(this, from);
+		for (var i=0; i<from.assignments.length; i++) {
+			var assignment = new esAssignment().init(from.assignments[i]);
+			this.assignments[i] = assignment;
+		}
+		this.validate();
+		return this;
+	}
+	ExternalServiceModel.prototype.addAssignment = function () {
+		this.assignments.push(new esAssignment());
+	}
+	return ExternalServiceModel;
+}])
+.factory('rejectModel', ['rvdModel', function RejectModelFactory(rvdModel) {
+	function RejectModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'reject';
+		this.label = 'reject';
+		this.title = 'reject';
+		this.reason = undefined;
+		this.iface = {};
+	}
+	RejectModel.prototype = new rvdModel();
+	RejectModel.prototype.contructor = RejectModel;
+	return RejectModel;
+}])
+.factory('pauseModel', ['rvdModel', function PauseModelFactory(rvdModel) {
+	function PauseModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'pause';
+		this.label = 'pause';
+		this.title = 'pause';
+		this.length = undefined;
+		this.iface = {};
+	}
+	PauseModel.prototype = new rvdModel();
+	PauseModel.prototype.contructor = PauseModel;
+	return PauseModel;
 }])
 
 ;
