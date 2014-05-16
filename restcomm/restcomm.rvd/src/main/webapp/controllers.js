@@ -616,16 +616,17 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.nestUssdMessage = function (classAttribute, pos, listmodel) {
 		$scope.$apply( function ()  {
-			listmodel.splice(pos,0, angular.copy(protos.stepProto[ 'ussdSayNested' ]));
+			var nestedMessage;
+			nestedMessage = $injector.invoke(['ussdSayNestedModel', function(model){
+				return new model();
+			}]);	
+			listmodel.splice(pos,0, nestedMessage);
 		});
 	}
 	
 	$scope.removeNestedMessage = function (step,nested) {
 		step.messages.splice( step.messages.indexOf(nested), 1 );
 	}
-
-	
-	
 	
 	$scope.packState = function() {
 		var state = {header:{}, iface:{}};
