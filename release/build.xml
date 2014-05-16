@@ -528,7 +528,7 @@
 	<copy file="${release.as7.dir}/modules/system/layers/base/org/mobicents/libs/main/jain-sip-ri-7.0.1-TelScale.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" failonerror="true"/>
         <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" /> 
 	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx" 
-     		includes="**/*.sh"/>
+		includes="**/*.sh"/>
 
 	<!--JBoss EAP6-->
 	<delete file="${release.eap6.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="false" />
@@ -647,11 +647,13 @@
 		</zip>
         <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}.zip" filesonly="false">
 			<zipfileset dir="${release.as7.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/bin" >
-                <include name="*.sh" />
-            </zipfileset>
+		                <include name="*.sh" />
+				<include name="**/*.sh"/>
+			</zipfileset>
 			<zipfileset dir="${release.as7.dir}/bin" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/bin" >
-                <exclude name="*.sh" />
-            </zipfileset>
+                		<exclude name="*.sh" />
+                		<exclude name="**/*.sh" />
+	               </zipfileset>
 			<zipfileset dir="${release.as7.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
 				prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
                 <include name="*.sh" />
@@ -665,11 +667,13 @@
         </zip>
         <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}.zip" filesonly="false">
 			<zipfileset dir="${release.eap6.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}/bin" >
-                <include name="*.sh" />
-            </zipfileset>
+		                <include name="*.sh" />
+				<include name="**/*.sh"/>
+			</zipfileset>
 			<zipfileset dir="${release.eap6.dir}/bin" prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}/bin" >
-                <exclude name="*.sh" />
-            </zipfileset>
+		                <exclude name="*.sh" />
+                		<exclude name="**/*.sh" />
+            		</zipfileset>
 			<zipfileset dir="${release.eap6.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
 				prefix="TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
                 <include name="*.sh" />
