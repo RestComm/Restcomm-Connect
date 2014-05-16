@@ -335,7 +335,7 @@ angular.module('Rvd')
 		return this;
 	}
 	return EsAssignment;
-}])
+}]) 
 .factory('externalServiceModel', ['rvdModel','esAssignment','esValueExtractor', function ExternalServiceModelFactory(rvdModel,esAssignment,esValueExtractor) {
 	function ExternalServiceModel(name) {
 		if (name)
