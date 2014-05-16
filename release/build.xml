@@ -379,6 +379,7 @@
 	<copy toDir="${release.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
 			<include name="**/*"/>
+			<exclude name="as7-config-scripts/**"/>
 		</fileset>
 	</copy>
 
@@ -456,6 +457,7 @@
 	<copy toDir="${release.tomcat.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
 			<include name="**/*"/>
+			<exclude name="as7-config-scripts/**"/>
 		</fileset>
 	</copy>
 
@@ -503,8 +505,15 @@
 	<copy toDir="${release.as7.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
 			<include name="**/*"/>
+			<exclude name="as7-config-scripts/**"/>
 		</fileset>
 	</copy>
+	<copy toDir="${release.as7.dir}/bin/restcomm" failonerror="true">
+		<fileset dir="${basedir}/config-scripts/as7-config-scripts/restcomm">
+			<include name="**/*"/>
+		</fileset>
+	</copy>
+	
 
 	<!-- Copy EULA -->
         <copy tofile="${release.as7.dir}/Telestax-EULA.pdf" failonerror="true" 
@@ -554,6 +563,12 @@
 	<!-- Copy Config scripts -->
 	<copy toDir="${release.eap6.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
+			<include name="**/*"/>
+			<exclude name="as7-config-scripts/**"/>
+		</fileset>
+	</copy>
+	<copy toDir="${release.eap6.dir}/bin/restcomm" failonerror="true">
+		<fileset dir="${basedir}/config-scripts/as7-config-scripts/restcomm">
 			<include name="**/*"/>
 		</fileset>
 	</copy>
