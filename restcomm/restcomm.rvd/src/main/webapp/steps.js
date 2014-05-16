@@ -98,7 +98,7 @@ angular.module('Rvd')
 	
 	return PlayModel;
 }])
-.factory('gatherModel', ['sayModel', 'rvdModel', function GatherModelFactory(sayModel, rvdModel) {
+.factory('gatherModel', ['rvdModel','sayModel','playModel', function GatherModelFactory(rvdModel, sayModel, playModel) {
 	function GatherModel(name) {
 		if (name)
 			this.name = name;
@@ -119,6 +119,20 @@ angular.module('Rvd')
 	}	
 	GatherModel.prototype = new rvdModel();
 	GatherModel.prototype.constructor = GatherModel;
+	GatherModel.prototype.init = function(from) {
+		angular.extend(this, from);
+		for (var i=0; i<from.steps.length; i++) {
+			var step;
+			if (from.steps[i].kind == 'say')
+				step = new sayModel().init(from.steps[i]);
+			else
+			if (from.steps[i].kind == 'play')
+				step = new playModel().init(from.steps[i]);
+			this.steps[i] = step;
+		}
+		this.validate();
+		return this;
+	}
 	GatherModel.prototype.validate = function() {
 		if (!this.validation)
 				this.validation = {messageStep: new sayModel(), pattern: "", iface:{userPattern:'', userPatternType:"One of"}};
@@ -396,5 +410,147 @@ angular.module('Rvd')
 	PauseModel.prototype.contructor = PauseModel;
 	return PauseModel;
 }])
+.factory('smsModel', ['rvdModel', function SmsModelFactory(rvdModel) {
+	function SmsModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'sms';
+		this.label = 'sms';
+		this.title = 'sms';
+		this.text = '';
+		this.to = undefined;
+		this.from = undefined;
+		this.statusCallback = undefined;
+		this.next = null;
+		this.iface = {};
+	}
+	SmsModel.prototype = new rvdModel();
+	SmsModel.prototype.contructor = SmsModel;
+	return SmsModel;
+}])
+.factory('faxModel', ['rvdModel', function FaxModelFactory(rvdModel) {
+	function FaxModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'fax';
+		this.label = 'fax';
+		this.title = 'fax';
+		this.text = '';
+		this.to = undefined;
+		this.from = undefined;
+		this.statusCallback = undefined;
+		this.next = null;
+		this.iface = {};
+	}
+	FaxModel.prototype = new rvdModel();
+	FaxModel.prototype.contructor = FaxModel;
+	return FaxModel;
+}])
+.factory('recordModel', ['rvdModel', function RecordModelFactory(rvdModel) {
+	function RecordModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'record';
+		this.label = 'record';
+		this.title = 'record';
+		this.next = null;
+		this.method = 'GET';
+		this.timeout = undefined;
+		this.finishOnKey = undefined;
+		this.maxLength = undefined;
+		this.transcribe = undefined;
+		this.transcribeCallback = undefined;
+		this.playBeep = undefined;
+		this.iface = {};
+	}
+	RecordModel.prototype = new rvdModel();
+	RecordModel.prototype.contructor = RecordModel;
+	return RecordModel;
+}])
+.factory('ussdSayModel', ['rvdModel', function UssdSayModelFactory(rvdModel) {
+	function UssdSayModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'ussdSay';
+		this.label = 'USSD Message';
+		this.title = 'USSD Message';
+		this.text = '';
+		this.language = null;
+		this.iface = {};
+	}
+	UssdSayModel.prototype = new rvdModel();
+	UssdSayModel.prototype.constructor = UssdSayModel;	
+	return UssdSayModel;
+}])
+.factory('ussdCollectModel', ['rvdModel','ussdSayNestedModel', function UssdCollectModelFactory(rvdModel,ussdSayNestedModel) {
+	function UssdCollectModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'ussdCollect';
+		this.label = 'USSD Collect';
+		this.title = 'USSD Collect';
+		this.gatherType = "menu";
+		this.menu = {mappings:[]};
+		this.collectdigits = {collectVariable:null,next:'',scope:"module"};
+		this.text = '';
+		this.language = null;
+		this.messages = [];
+		this.iface = {};
+	}
+	UssdCollectModel.prototype = new rvdModel();
+	UssdCollectModel.prototype.constructor = UssdCollectModel;	
+	UssdCollectModel.prototype.init = function(from) {
+		angular.extend(this, from);
+		for (var i=0; i<from.messages.length; i++) {
+			var message = new ussdSayNestedModel().init(from.messages[i]);
+			this.messages[i] = message;
+		}
+		this.validate();
+		return this;
+	}
+	UssdCollectModel.prototype.validate = function() {
+		//if (!this.validation)
+		//		this.validation = {messageStep: new sayModel(), pattern: "", iface:{userPattern:'', userPatternType:"One of"}};
+		//if (!this.validation.iface || angular.equals({},this.validation.iface) )
+		//	this.validation.iface = {userPattern:this.validation.pattern, userPatternType:"Regex"};
 
+		if (!this.menu)
+			this.menu = {mappings:[] };
+		if (!this.collectdigits)
+			this.collectdigits = {collectVariable:null,next:'', scope:"module"};
+	}
+	UssdCollectModel.prototype.pack = function () {
+		console.log("ussdCollectModel:pack() - " + this.name);
+		var clone = angular.copy(this);
+		if (clone.gatherType == "menu")
+			delete clone.collectdigits;
+		else
+		if (clone.gatherType == "collectdigits")
+			delete clone.menu;
+		return clone;
+	}	
+	return UssdCollectModel;
+}])
+.factory('ussdSayNestedModel', ['rvdModel', function UssdSayNestedModelFactory(rvdModel) {
+	function UssdSayNestedModel() {
+		this.text = '';
+	}
+	UssdSayNestedModel.prototype = new rvdModel();
+	UssdSayNestedModel.prototype.constructor = UssdSayNestedModel;	
+	return UssdSayNestedModel;
+}])
+.factory('ussdLanguageModel', ['rvdModel', function UssdLanguageModelFactory(rvdModel) {
+	function UssdLanguageModel(name) {
+		if (name)
+			this.name = name;
+		this.kind = 'ussdLanguage';
+		this.label = 'Language';
+		this.title = 'Language';
+		this.language = null;
+		this.iface = {};
+	}
+	UssdLanguageModel.prototype = new rvdModel();
+	UssdLanguageModel.prototype.constructor = UssdLanguageModel;	
+	return UssdLanguageModel;
+}])
 ;
