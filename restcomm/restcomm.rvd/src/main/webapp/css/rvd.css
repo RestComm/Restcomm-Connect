@@ -353,6 +353,7 @@ li.verb {
 .button-say {
 }
 
+
 /* make draggable .label's occupy some space when dragged onto to sortables */
 .label.ui-sortable-placeholder:empty {
 	display: inline;
@@ -409,6 +410,14 @@ li.verb {
 
 .target-mapping .close {
 	margin-right: 12px;
+}
+
+.rvd-panel {
+	border: 1px solid #d0d0d0;
+}
+
+.rvd-panel .panel-heading {
+	background-color: #f0f0f0;
 }
 
 /* 

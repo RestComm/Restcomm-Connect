@@ -308,11 +308,15 @@ App.directive('inputGroupSelect', function () {
 App.directive('rvdPanel', function () {
 	return {
 		transclude: true,
-		scope: true,
+		restrict: 'E',
+		scope: {
+			title:'=title',
+			closePanel:'&onClose',
+		},
 		templateUrl: 'templates/directive/rvdPanel.html',
 		link: function (scope,element,attrs) {
 			console.log("create a new panel");
-			scope.panel = {title: 'Untitled'};
+			//scope.panel = {title: 'Untitled'};
 		}
 	}
 });
