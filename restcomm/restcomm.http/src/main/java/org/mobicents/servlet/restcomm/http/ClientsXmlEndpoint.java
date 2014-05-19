@@ -46,7 +46,7 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
 
     private Response deleteClient(final String accountSid, final String sid) {
         try {
-            secure(new Sid(accountSid), "RestComm:Delete:Clients");
+            secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

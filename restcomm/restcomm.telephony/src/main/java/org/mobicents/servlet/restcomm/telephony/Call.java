@@ -19,6 +19,7 @@ package org.mobicents.servlet.restcomm.telephony;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
@@ -43,16 +44,23 @@ import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -83,6 +91,7 @@ import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.IPUtils;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
@@ -153,6 +162,9 @@ public final class Call extends UntypedActor {
     private String username;
     private String password;
     private CreateCall.Type type;
+    private URI recordingUri;
+    private Sid recordingSid;
+    private DateTime recordStarted;
     private long timeout;
     private SipServletRequest invite;
     private SipServletResponse lastResponse;
@@ -173,10 +185,19 @@ public final class Call extends UntypedActor {
     private DateTime created;
     private final List<ActorRef> observers;
 
+    // CallMediaGroup
     private ActorRef group;
     private ActorRef conference;
     private CallDetailRecord outgoingCallRecord;
     private CallDetailRecordsDao recordsDao;
+    private DaoManager daoManager;
+    private ActorRef initialCall;
+    private static Boolean recording = false;
+    private ActorRef outboundCall;
+    private ActorRef outboundCallBridgeEndpoint;
+
+    // Runtime Setting
+    private Configuration runtimeSettings;
 
     public Call(final SipFactory factory, final ActorRef gateway) {
         super();
@@ -237,6 +258,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(openingRemoteConnection, failed));
         transitions.add(new Transition(openingRemoteConnection, inProgress));
         transitions.add(new Transition(dialing, busy));
+//        transitions.add(new Transition(dialing, failingBusy));
         transitions.add(new Transition(dialing, canceling));
         transitions.add(new Transition(dialing, failingNoAnswer));
         transitions.add(new Transition(dialing, ringing));
@@ -311,16 +333,75 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from,
+                to, lastResponse);
         return new CallResponse<CallInfo>(info);
     }
 
-    private void invite(final Object message) {
+    private void invite(final Object message) throws Exception {
         final AddParticipant request = (AddParticipant) message;
         final Join join = new Join(bridge, ConnectionMode.SendRecv);
-        final ActorRef call = request.call();
+        outboundCall = request.call();
         final ActorRef self = self();
-        call.tell(join, self);
+        outboundCall.tell(join, self);
+    }
+
+    private SipURI getInitialIpAddressPort(SipServletMessage message) throws ServletParseException, UnknownHostException {
+        // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
+        // First get the Initial Remote Address (real address that the request came from)
+        // Then check the following:
+        // 1. If contact header address is private network address
+        // 2. If there are no "Record-Route" headers (there is no proxy in the call)
+        // 3. If contact header address != real ip address
+        // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
+        // and store it to the sip session to be used as request uri later
+        String realIP = message.getInitialRemoteAddr();
+        Integer realPort = message.getInitialRemotePort();
+        if (realPort == null || realPort == -1)
+            realPort = 5060;
+
+        final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
+        final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
+
+        InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
+        InetAddress inetAddress = InetAddress.getByName(realIP);
+
+        int remotePort = message.getRemotePort();
+        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
+        String remoteAddress = message.getRemoteAddr();
+
+        // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+        final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+        String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
+
+        SipURI uri = null;
+
+        if (initialIpBeforeLB != null) {
+            if (initialPortBeforeLB == null)
+                initialPortBeforeLB = "5060";
+            logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
+                    + initialPortBeforeLB + " to the session for later use");
+            realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+            uri = factory.createSipURI(null, realIP);
+        } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
+            logger.info("Contact header address " + contactAddr.toString()
+                    + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
+                    + " to the session for later use");
+            realIP = realIP + ":" + realPort;
+            uri = factory.createSipURI(null, realIP);
+        }
+        // //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
+        // //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
+        // //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
+        // else if(remotePort != contactPort) {
+        // logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
+        // + remoteAddress+":"+remotePort);
+        // realIP = remoteAddress+":"+remotePort;
+        // uri = factory.createSipURI(null, realIP);
+        // }
+        return uri;
     }
 
     private void observe(final Object message) {
@@ -330,6 +411,46 @@ public final class Call extends UntypedActor {
         if (observer != null) {
             observers.add(observer);
             observer.tell(new Observing(self), self);
+        }
+    }
+
+    private void startRecordingCall() throws Exception {
+        logger.info("Start recording call");
+        boolean playBeep = false;
+        String finishOnKey = "1234567890*#";
+        int maxLength = 3600;
+        int timeout = 5;
+        recordStarted = DateTime.now();
+        Record record = null;
+        record = new Record(recordingUri, timeout, maxLength, finishOnKey);
+        group.tell(record, null);
+        recording = true;
+    }
+
+    private void stopRecordingCall() throws UnsupportedAudioFileException, IOException {
+        logger.info("Stop recording call");
+        if (group != null) {
+            group.tell(new Stop(), null);
+            Double duration = WavUtils.getAudioDuration(recordingUri);
+            if (duration.equals(0.0)) {
+                final DateTime end = DateTime.now();
+                duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+            }
+            final Recording.Builder builder = Recording.builder();
+            builder.setSid(recordingSid);
+            builder.setAccountSid(accountId);
+            builder.setCallSid(id);
+            builder.setDuration(duration);
+            builder.setApiVersion(runtimeSettings.getString("api-version"));
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
+            buffer.append("/Recordings/").append(recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+            final Recording recording = builder.build();
+            RecordingsDao recordsDao = daoManager.getRecordingsDao();
+            recordsDao.addRecording(recording);
+        } else {
+            logger.info("Tried to stop recording but group was null.");
         }
     }
 
@@ -357,6 +478,36 @@ public final class Call extends UntypedActor {
             fsm.transition(message, acquiringMediaGatewayInfo);
         } else if (Reject.class.equals(klass)) {
             fsm.transition(message, busy);
+        } else if(JoinComplete.class.equals(klass)) {
+            if (sender.equals(outboundCall)) {
+                JoinComplete joinComplete = (JoinComplete)message;
+                outboundCallBridgeEndpoint = joinComplete.endpoint();
+                final Join join = new Join(outboundCallBridgeEndpoint, ConnectionMode.SendRecv);
+                group.tell(join, null);
+            }
+        } else if (StartRecordingCall.class.equals(klass)) {
+            StartRecordingCall startRecordingCall = (StartRecordingCall) message;
+            if (runtimeSettings == null)
+                this.runtimeSettings = startRecordingCall.getRuntimeSetting();
+            if (daoManager == null)
+                daoManager = startRecordingCall.getDaoManager();
+            if (accountId == null)
+                accountId = startRecordingCall.getAccountId();
+            recordingSid = startRecordingCall.getRecordingSid();
+            recordingUri = startRecordingCall.getRecordingUri();
+            recording = true;
+            startRecordingCall();
+        } else if (StopRecordingCall.class.equals(klass)) {
+            if(recording) {
+                StopRecordingCall stopRecoringdCall = (StopRecordingCall) message;
+                if (runtimeSettings == null)
+                    this.runtimeSettings = stopRecoringdCall.getRuntimeSetting();
+                if (daoManager == null)
+                    daoManager = stopRecoringdCall.getDaoManager();
+                if (accountId == null)
+                    accountId = stopRecoringdCall.getAccountId();
+                stopRecordingCall();
+            }
         } else if (MediaGatewayResponse.class.equals(klass)) {
             if (acquiringMediaGatewayInfo.equals(state)) {
                 fsm.transition(message, acquiringMediaSession);
@@ -452,14 +603,18 @@ public final class Call extends UntypedActor {
                 }
                 case SipServletResponse.SC_RINGING:
                 case SipServletResponse.SC_SESSION_PROGRESS: {
-                    if(!state.equals(ringing))
+                    if (!state.equals(ringing))
                         fsm.transition(message, ringing);
                     break;
                 }
                 case SipServletResponse.SC_BUSY_HERE:
                 case SipServletResponse.SC_BUSY_EVERYWHERE: {
                     sendCallInfoToObservers();
-                    fsm.transition(message, failingBusy);
+                    if(dialing.equals(state)){
+                        break;
+                    } else {
+                        fsm.transition(message, failingBusy);
+                    }
                     break;
                 }
                 case SipServletResponse.SC_UNAUTHORIZED:
@@ -507,8 +662,8 @@ public final class Call extends UntypedActor {
                 sender.tell(new CallResponse<ActorRef>(group), self);
             } else if (DestroyMediaGroup.class.equals(klass)) {
                 final DestroyMediaGroup request = (DestroyMediaGroup) message;
-                //                context.stop(request.group());
-                if(group != null && !group.isTerminated()) {
+                // context.stop(request.group());
+                if (group != null && !group.isTerminated()) {
                     context.stop(group);
                     group = null;
                 }
@@ -546,10 +701,11 @@ public final class Call extends UntypedActor {
     }
 
     @SuppressWarnings("unchecked")
-    private String patch(final String contentType, final byte[] data, final String externalIp) throws UnknownHostException, SdpException {
+    private String patch(final String contentType, final byte[] data, final String externalIp) throws UnknownHostException,
+    SdpException {
         final String text = new String(data);
         String patchedSdp = null;
-        if(contentType.equalsIgnoreCase("application/sdp")) {
+        if (contentType.equalsIgnoreCase("application/sdp")) {
             final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
             // Handle the connection at the session level.
             fix(sdp.getConnection(), externalIp);
@@ -563,7 +719,7 @@ public final class Call extends UntypedActor {
             String boundary = contentType.split(";")[1].split("=")[1];
             String[] parts = text.split(boundary);
             String sdpText = null;
-            for (String part: parts) {
+            for (String part : parts) {
                 if (part.contains("application/sdp")) {
                     sdpText = part.replaceAll("Content.*", "").replaceAll("--", "").trim();
                 }
@@ -647,7 +803,6 @@ public final class Call extends UntypedActor {
             username = request.username();
             password = request.password();
             type = request.type();
-            recordsDao = request.recordsDao();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
@@ -836,7 +991,7 @@ public final class Call extends UntypedActor {
             if (gatewayInfo.useNat()) {
                 final String externalIp = gatewayInfo.externalIP().getHostAddress();
                 final byte[] sdp = response.descriptor().toString().getBytes();
-                offer = patch("application/sdp",sdp, externalIp);
+                offer = patch("application/sdp", sdp, externalIp);
             } else {
                 offer = response.descriptor().toString();
             }
@@ -867,46 +1022,27 @@ public final class Call extends UntypedActor {
                 final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
                 ringing.send();
 
-                // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
-                // First get the Initial Remote Address (real address that the request came from)
-                // Then check the following:
-                //    1. If contact header address is private network address
-                //    2. If there are no "Record-Route" headers (there is no proxy in the call)
-                //    3. If contact header address != real ip address
-                // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
-                // and store it to the sip session to be used as request uri later
-                String realIP = invite.getInitialRemoteAddr();
-                final ListIterator<String> recordRouteHeaders = invite.getHeaders("Record-Route");
-                final Address contactAddr = factory.createAddress(invite.getHeader("Contact"));
+                SipURI initialInetUri = getInitialIpAddressPort(invite);
 
-                InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-                InetAddress inetAddress = InetAddress.getByName(realIP);
+                if (initialInetUri != null)
+                    invite.getSession().setAttribute("realInetUri", initialInetUri);
 
-                //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
-                final String initialIpBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-                String initialPortBeforeLB = invite.getHeader("X-Sip-Balancer-InitialRemotePort");
-
-                if (initialIpBeforeLB != null) {
-                    if(initialPortBeforeLB == null)
-                        initialPortBeforeLB = "5060";
-                    logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB+":"+initialPortBeforeLB
-                            + " to the session for later use");
-                    realIP = initialIpBeforeLB+":"+initialPortBeforeLB;
-                    final SipURI uri = factory.createSipURI(null, realIP);
-                    invite.getSession().setAttribute("realInetUri", uri);
-                } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
-                        && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
-                    logger.info("Contact header address " + contactAddr.toString()
-                            + " is a private network ip address, storing Initial Remote Address " + realIP
-                            + " to the session for later use");
-                    realIP = realIP + ":" + ((SipURI) contactAddr.getURI()).getPort();
-                    final SipURI uri = factory.createSipURI(null, realIP);
-                    invite.getSession().setAttribute("realInetUri", uri);
-                }
             } else if (message instanceof SipServletResponse) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
+                // Check if we have to record the call
             }
+            // Start recording if RecordingType.RECORD_FROM_RINGING
+            //            if (recordingType != null && recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING)) {
+            //                if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
+            //                    logger.info("Starting recording call with recording type: " + recordingType.toString());
+            //                    logger.info("Telling initial call to start recording");
+            //                    initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
+            //                } else {
+            //                    logger.info("Starting recording call with recording type: " + recordingType.toString());
+            //                    startRecordingCall();
+            //                }
+            //            }
             // Notify the observers.
             external = CallStateChanged.State.RINGING;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1063,9 +1199,9 @@ public final class Call extends UntypedActor {
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-            if(invite.getSession().isValid())
+            if (invite.getSession().isValid())
                 invite.getSession().invalidate();
-            if(invite.getApplicationSession().isValid())
+            if (invite.getApplicationSession().isValid())
                 invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
@@ -1092,9 +1228,9 @@ public final class Call extends UntypedActor {
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-            if(invite.getSession().isValid())
+            if (invite.getSession().isValid())
                 invite.getSession().invalidate();
-            if(invite.getApplicationSession().isValid())
+            if (invite.getApplicationSession().isValid())
                 invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
@@ -1127,8 +1263,31 @@ public final class Call extends UntypedActor {
             if (response.getStatus() == SipServletResponse.SC_OK
                     && (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction))) {
                 SipServletRequest ack = response.createAck();
+                SipSession session = response.getSession();
+
+                SipServletRequest originalInvite = response.getRequest();
+                SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+
+                if (realInetUri != null) {
+                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                            + " as a request uri of the ACK");
+                    ack.setRequestURI(realInetUri);
+                }
+
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
+
+                //                // Check if we have to record the call
+                //                if (recordingType.equals(CreateCall.RecordingType.RECORD_FROM_ANSWER)) {
+                //                    if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
+                //                        logger.info("Starting recording call with recording type: " + recordingType.toString());
+                //                        logger.info("Telling initial call to start recording");
+                //                        initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
+                //                    } else {
+                //                        logger.info("Starting recording call with recording type: " + recordingType.toString());
+                //                        startRecordingCall();
+                //                    }
+                //                }
             }
 
             final String externalIp = invite.getInitialRemoteAddr();
@@ -1149,7 +1308,10 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
             if (updatingInternalLink.equals(state) && conference != null) {
-                conference.tell(new JoinComplete(), source);
+                //If this is the outbound leg for an outbound call, conference is the initial call
+                //Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
+                //Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
+                conference.tell(new JoinComplete(bridge), source);
             }
             if (openingRemoteConnection.equals(state)) {
                 final ConnectionStateChanged response = (ConnectionStateChanged) message;
@@ -1158,7 +1320,7 @@ public final class Call extends UntypedActor {
                 String answer = null;
                 if (gatewayInfo.useNat()) {
                     final String externalIp = gatewayInfo.externalIP().getHostAddress();
-                    answer = patch("application/sdp",sdp, externalIp);
+                    answer = patch("application/sdp", sdp, externalIp);
                 } else {
                     answer = response.descriptor().toString();
                 }
@@ -1191,7 +1353,6 @@ public final class Call extends UntypedActor {
 
     /**
      * Patches an SDP description by trimming and making sure it ends with a new line.
-     *
      * @param sdpDescription The SDP description to be patched.
      * @return The patched SDP description
      * @author hrosa
@@ -1332,7 +1493,10 @@ public final class Call extends UntypedActor {
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
                 okay.send();
-
+                if(recording){
+                    logger.info("Call - Will stop recording now");
+                    stopRecordingCall();
+                }
             } else if (message instanceof SipServletResponse) {
                 final SipServletResponse resp = (SipServletResponse) message;
                 if (resp.equals(SipServletResponse.SC_BUSY_HERE) || resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)) {

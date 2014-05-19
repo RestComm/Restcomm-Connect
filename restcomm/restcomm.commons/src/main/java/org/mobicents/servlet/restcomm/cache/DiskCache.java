@@ -53,12 +53,14 @@ public final class DiskCache extends UntypedActor {
         }
         // Create the cache path if specified.
         final File path = new File(temp);
-        if (create) {
-            path.mkdirs();
-        }
+//        if (create) {
+//            path.mkdirs();
+//        }
+
         // Make sure the cache path exists and is a directory.
         if (!path.exists() || !path.isDirectory()) {
-            throw new IllegalArgumentException(location + " is not a valid cache location.");
+//            throw new IllegalArgumentException(location + " is not a valid cache location.");
+            path.mkdirs();
         }
         // Format the cache URI.
         this.location = temp;

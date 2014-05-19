@@ -1,0 +1,46 @@
+<!-- Register New Account Modal -->
+<div class="modal-header">
+    <h3 class="no-margins"><i class="fa fa-user"></i> Create New Account</h3>
+</div>
+<div class="modal-body">
+    <form name="myForm" class="form-horizontal">
+        <dl class="dl-horizontal form-dl">
+            <!--<dt>Account SID</dt>-->
+            <!--<dd><input type="text" class="input-xlarge" id="new-number-account-sid" ng-model="sid" placeholder="Account SID" disabled /></dd>-->
+            <!--<hr class="small" />-->
+            <dt>Friendly Name</dt>
+            <dd>
+                <input id="new-account-friendly-name" class="form-control" ng-model="newAccount.friendlyName" type="text" maxlength="64" placeholder="Wife Account" />
+            </dd>
+            <dt>Email Address</dt>
+            <dd>
+                <input id="new-account-email" class="form-control" ng-model="newAccount.email" type="email" placeholder="labs@restcomm.org" autofocus required />
+            </dd>
+            <dt>Password</dt>
+            <dd>
+                <input id="new-account-password" class="form-control" name="new-account-password" ng-model="newAccount.password" equals="{{newAccount.passwordConfirmation}}" type="password" placeholder="mySafeP@ssw0rD!" required />
+            </dd>
+            <dt>Confirm Password</dt>
+            <dd>
+                <input id="new-account-password-confirmation" class="form-control" name="new-account-password-confirmation" ng-model="newAccount.passwordConfirmation" equals="{{newAccount.password}}" type="password" placeholder="mySafeP@ssw0rD!" />
+                <span></span>
+            </dd>
+            <dt>Role</dt>
+            <dd>
+                <select class="form-control">
+                    <option value="Administrator">Administrator</option>
+                    <option value="Developer">Developer</option>
+                </select>
+            </dd>
+            <dt>Status</dt>
+            <dd>
+                <select class="form-control" ng-init="newAccount.status = statuses[1]" ng-model="newAccount.status" ng-options="status for status in statuses">
+                </select>
+            </dd>
+        </dl>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="createAccount(newAccount)">Register</button>
+</div>

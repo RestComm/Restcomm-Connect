@@ -45,7 +45,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     private Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
         try {
-            secure(new Sid(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
+            secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

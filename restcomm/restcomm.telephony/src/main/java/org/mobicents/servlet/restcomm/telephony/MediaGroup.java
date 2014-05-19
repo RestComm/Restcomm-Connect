@@ -65,6 +65,12 @@ public final class MediaGroup extends UntypedActor {
     private final State openingLink;
     private final State updatingLink;
     private final State deactivating;
+    //Join Outboundcall Bridge endpoint to the IVR
+    private final State acquiringInternalLink;
+    private final State initializingInternalLink;
+    private final State openingInternalLink;
+    private final State updatingInternalLink;
+
     // FSM.
     private final FiniteStateMachine fsm;
     // MGCP runtime stuff.
@@ -73,9 +79,14 @@ public final class MediaGroup extends UntypedActor {
     private final MediaSession session;
     private ActorRef link;
     private ActorRef ivr;
+    private ActorRef recordCallIvr;
     private boolean ivrInUse;
     // Runtime stuff.
     private final List<ActorRef> observers;
+
+    private ActorRef internalLinkEndpoint;
+    private ActorRef internalLink;
+    private ConnectionMode internalLinkMode;
 
     public MediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint) {
         super();
@@ -90,6 +101,10 @@ public final class MediaGroup extends UntypedActor {
         openingLink = new State("opening link", new OpeningLink(source), null);
         updatingLink = new State("updating link", new UpdatingLink(source), null);
         deactivating = new State("deactivating", new Deactivating(source), null);
+        acquiringInternalLink = new State("acquiring internal link", new AcquiringInternalLink(source), null);
+        initializingInternalLink = new State("initializing internal link", new InitializingInternalLink(source), null);
+        openingInternalLink = new State("opening internal link", new OpeningInternalLink(source), null);
+        updatingInternalLink = new State("updating internal link", new UpdatingInternalLink(source), null);
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, acquiringIvr));
@@ -107,6 +122,13 @@ public final class MediaGroup extends UntypedActor {
         transitions.add(new Transition(updatingLink, deactivating));
         transitions.add(new Transition(active, deactivating));
         transitions.add(new Transition(deactivating, inactive));
+        //Join Outbound call Bridge endpoint to IVR endpoint
+        transitions.add(new Transition(active, acquiringInternalLink));
+        transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
+        transitions.add(new Transition(initializingInternalLink, openingInternalLink));
+        transitions.add(new Transition(openingInternalLink, updatingInternalLink));
+        transitions.add(new Transition(updatingInternalLink, active));
+
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the MGCP state.
@@ -190,11 +212,15 @@ public final class MediaGroup extends UntypedActor {
             }
         } else if (StartMediaGroup.class.equals(klass)) {
             fsm.transition(message, acquiringIvr);
+        } else if (Join.class.equals(klass)) {
+            fsm.transition(message, acquiringInternalLink);
         } else if (MediaGatewayResponse.class.equals(klass)) {
             if (acquiringIvr.equals(state)) {
                 fsm.transition(message, acquiringLink);
             } else if (acquiringLink.equals(state)) {
                 fsm.transition(message, initializingLink);
+            } else if (acquiringInternalLink.equals(state)) {
+                fsm.transition(message, initializingInternalLink);
             }
         } else if (LinkStateChanged.class.equals(klass)) {
             final LinkStateChanged response = (LinkStateChanged) message;
@@ -203,11 +229,17 @@ public final class MediaGroup extends UntypedActor {
                     fsm.transition(message, openingLink);
                 } else if (openingLink.equals(state) || deactivating.equals(state) || updatingLink.equals(state)) {
                     fsm.transition(message, inactive);
+                } if (initializingInternalLink.equals(state)) {
+                    fsm.transition(message, openingInternalLink);
                 }
             } else if (LinkStateChanged.State.OPEN == response.state()) {
                 if (openingLink.equals(state)) {
                     fsm.transition(message, updatingLink);
                 } else if (updatingLink.equals(state)) {
+                    fsm.transition(message, active);
+                } if (openingInternalLink.equals(state)) {
+                    fsm.transition(message, updatingInternalLink);
+                } if (updatingInternalLink.equals(state)) {
                     fsm.transition(message, active);
                 }
             }
@@ -338,6 +370,63 @@ public final class MediaGroup extends UntypedActor {
         }
     }
 
+    //Join OutboundCall Bridge endpoint to the IVR endpoint for recording - START
+    private final class AcquiringInternalLink extends AbstractAction {
+        public AcquiringInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final Class<?> klass = message.getClass();
+            if (Join.class.equals(klass)) {
+                final Join request = (Join) message;
+                internalLinkEndpoint = request.endpoint();
+                internalLinkMode = request.mode();
+            }
+            gateway.tell(new CreateLink(session), source);
+        }
+    }
+
+    private final class InitializingInternalLink extends AbstractAction {
+        public InitializingInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void execute(Object message) throws Exception {
+            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
+            internalLink = response.get();
+            internalLink.tell(new Observe(source), source);
+            internalLink.tell(new InitializeLink(internalLinkEndpoint, ivr), source);
+        }
+    }
+
+    private final class OpeningInternalLink extends AbstractAction {
+        public OpeningInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            internalLink.tell(new OpenLink(internalLinkMode), source);
+        }
+    }
+
+    private final class UpdatingInternalLink extends AbstractAction {
+        public UpdatingInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final UpdateLink update = new UpdateLink(ConnectionMode.SendRecv, UpdateLink.Type.PRIMARY);
+            internalLink.tell(update, source);
+        }
+    }
+    //Join OutboundCall Bridge endpoint to the IVR endpoint for recording - END
+
     private final class Active extends AbstractAction {
         public Active(final ActorRef source) {
             super(source);
@@ -364,6 +453,14 @@ public final class MediaGroup extends UntypedActor {
                 gateway.tell(new DestroyLink(link), source);
                 link = null;
             }
+            if (internalLink != null) {
+                gateway.tell(new DestroyLink(internalLink), source);
+                internalLink = null;
+            }
+            if (internalLinkEndpoint != null) {
+                gateway.tell(new DestroyEndpoint(internalLinkEndpoint), source);
+                internalLinkEndpoint = null;
+            }
             if (ivr != null) {
                 gateway.tell(new DestroyEndpoint(ivr), source);
                 ivr = null;
@@ -383,7 +480,10 @@ public final class MediaGroup extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            link.tell(new CloseLink(), source);
+            if (link != null)
+                link.tell(new CloseLink(), source);
+            if(internalLink != null)
+                internalLink.tell(new CloseLink(), source);
         }
     }
 
@@ -392,6 +492,14 @@ public final class MediaGroup extends UntypedActor {
         if (link != null) {
             gateway.tell(new DestroyLink(link), null);
             link = null;
+        }
+        if (internalLink != null) {
+            gateway.tell(new DestroyLink(internalLink), null);
+            internalLink = null;
+        }
+        if (internalLinkEndpoint != null) {
+            gateway.tell(new DestroyEndpoint(internalLinkEndpoint), null);
+            internalLinkEndpoint = null;
         }
         if (ivr != null) {
             gateway.tell(new DestroyEndpoint(ivr), null);

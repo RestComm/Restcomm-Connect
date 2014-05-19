@@ -29,13 +29,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication;
 
-@RunWith(Arquillian.class)
+//@RunWith(Arquillian.class)
 public class RvdManagerTest {
     
-    @ArquillianResource
+    //@ArquillianResource
     URL deploymentUrl;
     
-    @Deployment (testable = false)
+    //@Deployment (testable = false)
     public static WebArchive createDeployment() {
        WebArchive archive = ShrinkWrap.create(WebArchive.class,"restcomm-rvd.war");       
        

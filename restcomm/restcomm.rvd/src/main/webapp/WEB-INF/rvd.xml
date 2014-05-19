@@ -1,4 +1,13 @@
 <rvd>
-	<!--  Absolute path of the projects workspace e.g. /home/otsakir/Restcomm/standalone/deployments/restcomm-rvd.war/workspace -->
-	<!-- <workspaceLocation></workspaceLocation> -->
+	<!--  A path to the projects' workspace. Both absolute and relative paths are supported. Relative paths
+	are related RVD web application context. Namely $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/.
+	This option is required.
+
+		Absolute path example:
+			/home/otsakir/Restcomm/standalone/deployments/restcomm-rvd.war/workspace 
+		
+		Relative path example:
+			workspace
+	-->
+	<workspaceLocation>workspace</workspaceLocation>
 </rvd>

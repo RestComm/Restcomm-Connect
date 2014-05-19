@@ -33,7 +33,7 @@ public class OutboudProxyCallsTest {
 
     private final static Logger logger = Logger.getLogger(OutboudProxyCallsTest.class.getName());
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;

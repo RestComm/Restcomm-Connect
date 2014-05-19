@@ -47,7 +47,7 @@ public class OutboundProxyEndpointTest {
 
     private final static Logger logger = Logger.getLogger(OutboundProxyEndpointTest.class.getName());
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;
@@ -171,10 +171,10 @@ public class OutboundProxyEndpointTest {
         archive.addAsLibrary(dependency);
 //        archive.delete("/WEB-INF/sip.xml");
 //        archive.delete("/WEB-INF/conf/restcomm.xml");
-//        archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/data/hsql/restcomm.script");
 //        archive.addAsWebInfResource("sip.xml");
 //        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-//        archive.addAsWebInfResource("restcomm_with_Data.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }

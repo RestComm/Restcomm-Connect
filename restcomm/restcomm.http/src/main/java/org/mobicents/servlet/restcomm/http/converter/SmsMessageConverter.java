@@ -110,7 +110,7 @@ public class SmsMessageConverter extends AbstractConverter implements JsonSerial
     }
 
     private void writeDateSent(final DateTime dateSent, final JsonObject object) {
-        object.addProperty("date_sent", dateSent.toString());
+        object.addProperty("date_sent", dateSent != null ? dateSent.toString() : null);
     }
 
     private void writeDirection(final String direction, final HierarchicalStreamWriter writer) {

@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>restcomm</artifactId>
 		<groupId>com.telestax.servlet</groupId>
-		<version>7.2.0-TelScale-SNAPSHOT</version>
+		<version>7.1.5-TelScale-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -72,13 +72,11 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 
 		<dependency>

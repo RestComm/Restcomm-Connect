@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import gov.nist.javax.sip.message.MessageExt;
 
+import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 
@@ -37,8 +38,11 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 //import org.mobicents.servlet.restcomm.telephony.Version;
 import org.mobicents.servlet.restcomm.telephony.security.DigestServerAuthenticationMethod;
+
+import com.google.gson.JsonObject;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -50,7 +54,7 @@ import org.mobicents.servlet.restcomm.telephony.security.DigestServerAuthenticat
 public class DialTest {
     private final static Logger logger = Logger.getLogger(DialTest.class.getName());
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
             53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
             48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
@@ -61,10 +65,14 @@ public class DialTest {
     @ArquillianResource
     private Deployer deployer;
 
+    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
     private static SipStackTool tool4;
+    private static SipStackTool tool5;
 
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
@@ -87,10 +95,16 @@ public class DialTest {
     private SipPhone georgePhone;
     private String georgeContact = "sip:+131313@127.0.0.1:5070";
 
+    // Fotini is a simple SIP Client. Will not register with Restcomm
+    private SipStack fotiniSipStack;
+    private SipPhone fotiniPhone;
+    private String fotiniContact = "sip:fotini@127.0.0.1";
+    
     private String dialConf = "sip:+12223334451@127.0.0.1:5080";
     private String dialFork = "sip:+12223334452@127.0.0.1:5080";
     private String dialURI = "sip:+12223334454@127.0.0.1:5080";
     private String dialClient = "sip:+12223334455@127.0.0.1:5080";
+    private String dialClientWithRecord = "sip:+12223334499@127.0.0.1:5080";
     private String dialNumber = "sip:+12223334456@127.0.0.1:5080";
     private String notFoundDialNumber = "sip:+12223334457@127.0.0.1:5080";
     private String dialSip = "sip:+12223334458@127.0.0.1:5080";
@@ -104,6 +118,7 @@ public class DialTest {
         tool2 = new SipStackTool("CallTestDial2");
         tool3 = new SipStackTool("CallTestDial3");
         tool4 = new SipStackTool("CallTestDial4");
+        tool5 = new SipStackTool("CallTestDial5");
     }
 
     @Before
@@ -119,6 +134,9 @@ public class DialTest {
 
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        
+        fotiniSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
+        fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
     }
 
     @After
@@ -149,6 +167,13 @@ public class DialTest {
         }
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
+        }
+        
+        if (fotiniPhone != null) {
+            fotiniPhone.dispose();
+        }
+        if (fotiniSipStack != null) {
+            fotiniSipStack.dispose();
         }
         deployer.undeploy("DialTest");
     }
@@ -209,6 +234,74 @@ public class DialTest {
             @Override
             public void run() {
                 assertTrue(bobCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+
+        // assertTrue(bobCall.waitForDisconnect(30 * 1000));
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+    
+    @Test
+    public synchronized void testDialConferenceWithContactHeaderPortNull() throws InterruptedException {
+        deployer.deploy("DialTest");
+
+        final SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.initiateOutgoingCall(fotiniContact, dialConf, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(fotiniCall);
+        assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = fotiniCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, fotiniCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, fotiniCall.getLastReceivedResponse().getStatusCode());
+        fotiniCall.sendInviteOkAck();
+        assertTrue(!(fotiniCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // George calls to the conference
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, dialConf, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
+
+        if (responseGeorge == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+        georgeCall.sendInviteOkAck();
+        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // Wait for the media to play and the call to hangup.
+        fotiniCall.listenForDisconnect();
+        georgeCall.listenForDisconnect();
+
+        // Start a new thread for george to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+
+        // Start a new thread for bob to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(fotiniCall.waitForDisconnect(30 * 1000));
             }
         }).start();
 
@@ -417,6 +510,73 @@ public class DialTest {
     }
 
     @Test
+    public synchronized void testDialClientAliceWithRecord() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+        
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithRecord, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(7000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+        
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(30 * 1000));
+        assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
+        Request messageReceived = bobCall.getLastReceivedMessageRequest();
+        assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
+        
+        Thread.sleep(3000);
+        
+        final String deploymentUrl = "http://127.0.0.1:8080/restcomm.application-"+this.version+"/";
+        JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
+        assertNotNull(recordings);
+        assertTrue("7.0".equalsIgnoreCase(recordings.get("duration").getAsString()));
+        assertNotNull(recordings.get("uri").getAsString());
+    }
+
+    
+    @Test
     public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -588,7 +748,7 @@ public class DialTest {
 
         henriqueCall.listenForDisconnect();
 
-        Thread.sleep(5000);
+        Thread.sleep(8000);
 
         // hangup.
 
@@ -826,7 +986,7 @@ public class DialTest {
     // with Dial Action screening
     public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
-
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -892,7 +1052,7 @@ public class DialTest {
     // with Dial Action screening
     public synchronized void testDialSipDialTagScreening180Decline() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
-
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -1027,6 +1187,7 @@ public class DialTest {
         archive.addAsWebResource("dial-fork-entry.xml");
         archive.addAsWebResource("dial-uri-entry.xml");
         archive.addAsWebResource("dial-client-entry.xml");
+        archive.addAsWebResource("dial-client-entry-with-recording.xml");
         archive.addAsWebResource("dial-sip.xml");
         archive.addAsWebResource("dial-sip-auth.xml");
         archive.addAsWebResource("dial-sip-screening.xml");
@@ -1035,6 +1196,7 @@ public class DialTest {
         archive.addAsWebResource("sip-url-screening-test.jsp");
         archive.addAsWebResource("sip-dial-url-screening-test.jsp");
         archive.addAsWebResource("hello-play.xml");
+        archive.addAsWebResource("send-sms.xml");
         logger.info("Packaged Test App");
         return archive;
     }

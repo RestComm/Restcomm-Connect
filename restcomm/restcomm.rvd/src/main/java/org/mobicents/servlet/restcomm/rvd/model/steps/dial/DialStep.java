@@ -50,7 +50,7 @@ public class DialStep extends Step {
     }
 
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
-        logger.debug("handling dial action");
+        logger.info("handling dial action");
         if ( RvdUtils.isEmpty(nextModule) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
@@ -76,7 +76,7 @@ public class DialStep extends Step {
         if ( DialCallDuration != null )
             interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallDuration", DialCallDuration);
 
-        interpreter.interpret( nextModule, null );
+        interpreter.interpret( nextModule, null, null );
     }
 
 }

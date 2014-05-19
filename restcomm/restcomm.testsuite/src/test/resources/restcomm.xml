@@ -62,6 +62,13 @@
 			<allow-fallback-to-primary>true</allow-fallback-to-primary>
 		</outbound-proxy>
 		
+		<!-- TelScale USSD Gateway -->
+		<ussd-gateway>
+			<ussd-gateway-uri>127.0.0.1:5090</ussd-gateway-uri>
+			<ussd-gateway-user></ussd-gateway-user>
+			<ussd-gateway-password></ussd-gateway-password>
+		</ussd-gateway>
+		
 		<!-- Each permission is represented as three columns Domain:Action:Target 
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
@@ -138,7 +145,7 @@
 		interface for more information. -->
 	<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
 		<outbound-prefix></outbound-prefix>
-		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
+		<outbound-endpoint>127.0.0.1:5090</outbound-endpoint>
 	</sms-aggregator>
 
 	<!-- The Fax Service is used to send and receive faxes on behalf of RestComm. -->
