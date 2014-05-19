@@ -28,9 +28,10 @@
 		<h3>Configuration options</h3>
 		<span class="help-block">Create parameters editable by the end user will help your app fit in the user's premises.</span>
 		
+		{{packageInfo.config.options}}
 		<div basic-sortable list-model='packageInfo.config.options'>
 			<div ng-repeat="configOption in listModel" class='form-group'>
-				<rvd-panel title="configOption.label" on-close='removeItem(configOption)'>This is a panel
+				<rvd-panel title="configOption.label" on-close='removeConfigurationOption(configOption)'>
 					<div class="row">
 						<div class="form-group col-md-3">
 							<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name *</label>
