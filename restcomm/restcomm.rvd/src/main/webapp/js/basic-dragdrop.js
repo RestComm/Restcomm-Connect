@@ -20,11 +20,20 @@ angular.module('basicDragdrop', [])
                     //console.log('swapped items ' + fromPos + ", " + toPos);
                 }
             }
-            scope.sortableModel = [1,2,3,4];
+			/*scope.removeItem(item) {
+				console.log('removing item: ');
+				console.log(item);
+			}*/
+			
+			scope.removeItem = function (item) {
+				console.log('closing panel: ' + scope.listModel.indexOf(item) );
+				console.log(item);
+				scope.listModel.splice(scope.listModel.indexOf(item),1);
+			}
 
             element.sortable({
                 revert:true,
-                //containment:element,
+                handle:'.rvd-handle',
             });
             
             element.bind("sortstart", function (event,ui) {
