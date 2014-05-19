@@ -252,6 +252,7 @@ angular.module('ng').directive('ngFocus', function($timeout) {
 /*
  * Adds to scope: buttonOptions, selectedOption, addedClasses
  */
+/*
 App.directive('multibutton', function () {
 	return  {
 		restrict: 'E',
@@ -273,6 +274,7 @@ App.directive('multibutton', function () {
 		}
 	}
 });
+*/
 
 App.directive('inputGroupSelect', function () {
 	return  {
@@ -299,6 +301,18 @@ App.directive('inputGroupSelect', function () {
 				scope.selectedOption = "";
 			scope.addedClasses = attrs.buttonClass;
 			scope.menuClasses = attrs.menuClass;
+		}
+	}
+});
+
+App.directive('rvdPanel', function () {
+	return {
+		transclude: true,
+		scope: true,
+		templateUrl: 'templates/directive/rvdPanel.html',
+		link: function (scope,element,attrs) {
+			console.log("create a new panel");
+			scope.panel = {title: 'Untitled'};
 		}
 	}
 });
