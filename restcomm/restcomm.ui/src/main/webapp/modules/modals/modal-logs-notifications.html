@@ -1,0 +1,78 @@
+<div class="modal-header">
+    <h3 class="text-muted"><i class="fa fa-thumb-tack"></i> _ <i ng-class="notificationDetails.log == 0 ? 'fa fa-remove-sign' : 'fa fa-warning-sign'"></i> Notification </h3>
+</div>
+<div class="modal-body">
+    <table class="table-condensed">
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Notification SID</dt>
+                    <dd>{{ notificationDetails.sid }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Date</dt>
+                    <dd>{{ notificationDetails.date_created | date:'medium' }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Call SID</dt>
+                    <dd>{{ notificationDetails.call_sid }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Log</dt>
+                    <dd>{{ notificationDetails.log == 0 ? "0 (error)" : "1 (warning)" }}</dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Error Code</dt>
+                    <dd>{{ notificationDetails.error_code }} <a href="{{ notificationDetails.more_info }}" target="_blank"><small>MORE INFO</small></a></dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Message</dt>
+                    <dd><blockquote><p>{{ notificationDetails.message_text | newlines }}</p></blockquote></dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Request</dt>
+                    <dd>{{ notificationDetails.request_method }} @ {{ notificationDetails.request_url }}</dd>
+                    <dd><small class="text-muted"><strong>Variables</strong></small></dd>
+                    <dd><pre>{{ notificationDetails.request_variables | newlines }}</pre></dd>
+                </dl>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt>Response</dt>
+                    <dd><pre>{{ notificationDetails.response_body | newlines }}</pre></dd>
+                    <dd><small class="text-muted"><strong>HEADERS</strong></small></dd>
+                    <dd><pre>{{ notificationDetails.response_headers | newlines }}</pre></dd>
+                </dl>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="closeNotificationDetails()">Close</button>
+</div>

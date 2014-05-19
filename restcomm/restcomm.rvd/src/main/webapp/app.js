@@ -43,48 +43,44 @@ App.factory('stepService', ['protos', function(protos) {
 	return stepService;
 }]);
 
+App.factory( 'dragService', [function () {
+	var dragInfo;
+	var dragId = 0;
+	var pDragActive = false;
+	var serviceInstance = {
+		newDrag: function (model) {
+			dragId ++;
+			pDragActive = true;
+			if ( typeof(model) === 'object' )
+				dragInfo = { id : dragId, model : model };
+			else
+				dragInfo = { id : dragId, class : model };
+				
+			return dragId;
+		},
+		popDrag:  function () {
+			if ( pDragActive ) {
+				var dragInfoCopy = angular.copy(dragInfo);
+				pDragActive = false;
+				return dragInfoCopy;
+			}
+		},
+		dragActive: function () {
+			return pDragActive; 
+		}
+		
+	};
+	return serviceInstance;
+}]);
+
 App.factory('protos', function () {
-	var accessOperationProtos = {
-			object:{kind:'object',fixed:false, terminal:false},
-			array:{kind:'array',fixed:false, terminal:false},
-			value:{kind:'value',fixed:false, terminal:true},	
-	}
-	return { 
+	var protoInstance = { 
 		nodes: {
 				voice: {kind:'voice', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
 				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},		
 		},
-		accessOperationProtos: accessOperationProtos,
-		stepProto: {
-			// Voice
-			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
-			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
-			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
-			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
-			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
-			hungup: {kind:'hungup', label:'hang up', title:'hang up',iface:{}},
-			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, iface:{}},
-			reject: {kind:'reject', label:'reject', title:'reject', reason:undefined,iface:{}},
-			pause: {kind:'pause', label:'pause', title:'pause', length:undefined, iface:{}},
-			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
-			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:undefined, finishOnKey:undefined, maxLength:undefined, transcribe:undefined, transcribeCallback:undefined, playBeep:undefined, iface:{}},
-			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
-			// USSD
-			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
-			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:'',scope:"module"}, text:'', language:null, messages:[], iface:{}},
-			ussdSayNested: {text:''},
-			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
-			
-			
-		},
-		dialNounProto: {
-			number: {dialType: 'number', destination:'', sendDigits:undefined, beforeConnectModule:undefined},
-			client: {dialType: 'client', destination:''},
-			conference: {dialType: 'conference', destination:'', nextModule:undefined, muted:undefined, beep:undefined, startConferenceOnEnter:undefined, endConferenceOnExit:undefined, waitUrl:undefined, waitModule:undefined, waitMethod:undefined, maxParticipants:undefined},
-			sipuri: {dialType: 'sipuri', destination:''},
-		}
 	};
+	return protoInstance;
 });
 
 
@@ -152,8 +148,7 @@ App.directive('autoClear', [function() {
   }]
 );
 
-
-App.directive('valueExtractor', ['protos', function (protos) {
+App.directive('valueExtractor', ['protos','accessOperationKinds','objectActions','arrayActions', function (protos,accessOperationKinds,objectActions,arrayActions) {
 	return {
 		restrict: 'E',
 		templateUrl: 'templates/directive/valueExtractor.html',
@@ -161,65 +156,9 @@ App.directive('valueExtractor', ['protos', function (protos) {
 			extractorModel: '='
 		},
 		link: function(scope,el,attrs) {
-			//scope.extractorModel = {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object) }
-			scope.accessOperationKinds = ['object', 'array', 'value'];
-			scope.objectActions = ['propertyNamed'];
-			scope.arrayActions = ['itemAtPosition'];
-			
-			scope.addOperation = function (extractorModel) {
-				console.log("adding operation");
-				extractorModel.lastOperation.fixed = true;
-				extractorModel.lastOperation.expression = scope.operationExpression( extractorModel.lastOperation );
-				extractorModel.accessOperations.push(extractorModel.lastOperation);
-				extractorModel.lastOperation = angular.copy(protos.accessOperationProtos.object)
-			}
-			scope.doneAddingOperations = function (extractorModel) {
-				scope.addOperation(extractorModel);
-				extractorModel.lastOperation = null;
-			}
-			
-			scope.popOperation = function (extractorModel) { // removes last operation
-				if ( extractorModel.accessOperations.length > 0 ) {
-					extractorModel.lastOperation = extractorModel.accessOperations.pop();
-					extractorModel.lastOperation.fixed = false;
-				}
-			}
-			
-			scope.operationExpression = function (operation) {
-				switch (operation.kind) {
-				case 'object':
-					switch (operation.action) {
-					case 'propertyNamed':
-						return "."+operation.property;
-					}
-				break;
-				case 'array':
-					switch (operation.action) {
-					case 'itemAtPosition':
-						return "[" + operation.position + "]";
-					}
-				break;
-				case 'value':
-					return " value";
-				break;	
-				}
-				return "UNKNOWN";
-			}
-			
-			scope.extractorModelExpression = function (extractorModel) {
-				var expr = '';
-				for ( var i=0; i < extractorModel.accessOperations.length; i++ ) {
-					expr += scope.operationExpression(extractorModel.accessOperations[i]);
-				} 
-				return expr;
-			}
-			
-			scope.isTerminal = function (kind) {
-				if (kind == null)
-					return false;
-				return protos.accessOperationProtos[kind].terminal;
-			}
-
+			scope.accessOperationKinds = accessOperationKinds; //['object', 'array', 'value'];
+			scope.objectActions = objectActions; //['propertyNamed'];
+			scope.arrayActions = arrayActions; //['itemAtPosition'];
 		}
 	}
 }]);
@@ -310,6 +249,59 @@ angular.module('ng').directive('ngFocus', function($timeout) {
  };
 });
 
+/*
+ * Adds to scope: buttonOptions, selectedOption, addedClasses
+ */
+App.directive('multibutton', function () {
+	return  {
+		restrict: 'E',
+		scope:true,
+		templateUrl: 'templates/directive/multibutton.html',
+		link: function (scope,element,attrs) {
+			scope.buttonOptions = scope.$eval(attrs.options);
+			if (scope.buttonOptions.length > 0 )
+				scope.selectedOption = scope.buttonOptions[0];
+			else
+				scope.selectedOption = "";
+			
+			scope.addedClasses = attrs.buttonClass;
+		},
+		controller: function($scope) {
+			$scope.selectOption = function(option) {
+				$scope.selectedOption = option;
+			}
+		}
+	}
+});
+
+App.directive('inputGroupSelect', function () {
+	return  {
+		restrict: 'E',
+		replace: true,
+		scope:true,
+		templateUrl: 'templates/directive/inputGroupSelect.html',
+		require: 'ngModel',
+		link: function (scope,element,attrs,ctrl) {
+			
+			scope.selectOption = function(option) {
+				scope.selectedOption = option;
+				ctrl.$setViewValue(option);
+			}
+			
+			ctrl.$render = function() {
+				scope.selectedOption = ctrl.$viewValue;
+			};
+			
+			scope.buttonOptions = scope.$eval(attrs.options);
+			if (scope.buttonOptions.length > 0 )
+				scope.selectedOption = scope.buttonOptions[0];
+			else
+				scope.selectedOption = "";
+			scope.addedClasses = attrs.buttonClass;
+			scope.menuClasses = attrs.menuClass;
+		}
+	}
+});
 
 
 

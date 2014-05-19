@@ -17,9 +17,9 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.CallStateChanged.State;
 
 import javax.servlet.sip.SipServletResponse;
 

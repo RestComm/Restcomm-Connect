@@ -1,105 +1,78 @@
-<div class="row-fluid">
-    <div class="span12 well well-small"><h1 class="page-header"><i class="icon-user"></i> PROFILE</h1>  <h2 class="page-subheader"> _ {{ account.friendly_name }}</h2></div>
-</div>
+<rc-page-title icon="user" title="PROFILE" sub-title="{{ account.friendly_name }}"></rc-page-title>
 
-<h5>&nbsp;</h5>
-
-
-<div class="row-fluid form-horizontal">
-    <div class="span3">
+<div class="row">
+    <div class="col-md-3">
         <div class="tabbable tabs-left">
-            <ul class="nav nav-tabs" >
+            <ul class="nav nav-tabs" style="margin: 0; width: 100%;" >
                 <li ng-repeat-start="acc in accounts" class="disabled" ng-show="$index == 1"><a>SUB ACCOUNTS</a></li>
-                <li ng-repeat-end ng-class="acc.sid == account.sid ? 'active grey-tab' : ''"><a href="#/profile/{{acc.sid}}" ng-class="$first ? 'icon-pushpin' : ''"> {{ acc.friendly_name }}</a></li>
+                <li ng-repeat-end ng-class="acc.sid == account.sid ? 'active grey-tab' : ''"><a href="#/profile/{{acc.sid}}" ng-class="$first ? 'fa fa-link' : ''"> {{ acc.friendly_name }}</a></li>
             </ul>
         </div>
     </div>
-    <div class="span9">
-        <form name="profileForm">
+    <div class="col-md-9" style="padding: 0;">
+        <form name="profileForm" class="form-horizontal">
         <div class="well">
-            <h3 class="muted details-header"><i class="icon-cog"></i> Account Settings</h3>
-            <div class="row-fluid form-horizontal">
-                <div class="span12">
-                    <div class="control-group">
-                        <label class="control-label" for="account-sid">
-                            <h5 class="no-margins">Account SID</h5>
-                        </label>
-                        <div class="controls">
-                            <input id="account-sid" type="text" class="span12" placeholder="Account SID" ng-value="account.sid" readonly />
-                        </div>
+            <h3 class="text-muted details-header"><i class="fa fa-cog"></i> Account Settings</h3>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="account-sid">Account SID</label>
+                <div class="col-md-8">
+                    <input id="account-sid" type="text" class="form-control" placeholder="Account SID" ng-value="account.sid" readonly />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="date-created">
+                    <h5 class="no-margins">Date Created/Updated</h5>
+                </label>
+                <div class="col-md-4">
+                    <input id="date-created" type="text" class="form-control" placeholder="Date Created" ng-value="account.date_created|date:'EEE, d MMMM y, HH:mm:ss'" readonly />
+                </div>
+                <div class="col-md-4">
+                    <input id="date-updated" type="text" class="form-control" placeholder="Date Updated" ng-value="account.date_updated|date:'EEE, d MMMM y, HH:mm:ss'" readonly />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="friendly-name">
+                    <h5 class="no-margins">Friendly Name</h5>
+                </label>
+                <div class="col-md-8">
+                    <input id="friendly-name" type="text" class="form-control" placeholder="Friendly Name" maxlength="64" ng-model="account.friendly_name" />
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error':!profileForm.newPassword.$valid}">
+                <label class="col-md-4 control-label" for="date-created">
+                    <h5 class="no-margins">Password</h5>
+                </label>
+                <div class="col-md-4">
+                    <input id="newPassword" name="newPassword" type="password" class="form-control" placeholder="New Password" ng-model="newPassword" />
+                </div>
+                <div class="col-md-4">
+                    <input id="passwordConfirmation" name="newPassword2" type="password" class="form-control" placeholder="Confirm New Password" ng-model="newPassword2" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="account-type">
+                    <h5 class="no-margins">Type</h5>
+                </label>
+                <div class="col-md-2">
+                    <select ng-model="account.type" id="account-type" class="form-control">
+                        <option value="Trial">Trial</option>
+                        <option value="Basic">Basic</option>
+                        <option value="Full">Full</option>
+                    </select>
+                </div>
+                <label class="col-md-2 control-label">
+                    <h5 class="no-margins">Status</h5>
+                </label>
+                <div class="col-md-4">
+                    <div class="btn-group" data-toggle="buttons-radio">
+                        <button type="button" class="btn btn-success" ng-class="account.status == 'active' ? 'active' : 'opacity70'" ng-click="account.status = 'active'"><i class="fa fa-check-circle"></i> Active</button>
+                        <button type="button" class="btn btn-danger" ng-class="account.status == 'suspended' ? 'active' : 'opacity70'" ng-click="account.status = 'suspended'"><i class="fa fa-exclamation-circle"></i> Suspended</button>
                     </div>
                 </div>
             </div>
-            <div class="row-fluid form-horizontal">
-                <div class="span12">
-                    <div class="control-group">
-                        <label class="control-label" for="date-created">
-                            <h5 class="no-margins">Date Created/Updated</h5>
-                        </label>
-                        <div class="controls">
-                            <input id="date-created" type="text" class="span6" placeholder="Date Created" ng-value="account.date_created|date:'EEE, d MMMM y, HH:mm:ss'" readonly /> &nbsp;
-                            <input id="date-updated" type="text" class="span6" placeholder="Date Updated" ng-value="account.date_updated|date:'EEE, d MMMM y, HH:mm:ss'" readonly />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row-fluid form-horizontal">
-                <div class="span12">
-                    <div class="control-group">
-                        <label class="control-label" for="friendly-name">
-                            <h5 class="no-margins">Friendly Name</h5>
-                        </label>
-                        <div class="controls">
-                            <input id="friendly-name" type="text" class="span12" placeholder="Friendly Name" maxlength="64" ng-model="account.friendly_name" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row-fluid form-horizontal">
-                <div class="span12">
-                    <div class="control-group" ng-class="{error:!profileForm.newPassword.$valid}">
-                        <label class="control-label" for="date-created">
-                            <h5 class="no-margins">Password</h5>
-                        </label>
-                        <div class="controls">
-                            <input id="newPassword" name="newPassword" type="password" class="span6" placeholder="New Password" ng-model="newPassword" /> &nbsp;
-                            <input id="passwordConfirmation" name="newPassword2" type="password" class="span6" placeholder="Confirm New Password" ng-model="newPassword2" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row-fluid form-horizontal">
-                <div class="span4">
-                    <div class="control-group">
-                        <label class="control-label" for="account-type">
-                            <h5 class="no-margins">Type</h5>
-                        </label>
-                        <div class="controls">
-                            <select ng-model="account.type" id="account-type" class="input-small">
-                                <option value="Trial">Trial</option>
-                                <option value="Basic">Basic</option>
-                                <option value="Full">Full</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="offset1 span4">
-                    <div class="control-group">
-                        <label class="control-label">
-                            <h5 class="no-margins">Status</h5>
-                        </label>
-                        <div class="controls">
-                            <div class="btn-group" data-toggle="buttons-radio">
-                                <button type="button" class="btn btn-success" ng-class="account.status == 'active' ? 'active' : 'opacity70'" ng-click="account.status = 'active'"><i class="icon-check-sign"></i> Active</button>
-                                <button type="button" class="btn btn-danger" ng-class="account.status == 'suspended' ? 'active' : 'opacity70'" ng-click="account.status = 'suspended'"><i class="icon-exclamation-sign"></i> Suspended</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row-fluid form-horizontal">
-                    <div class="span12">
-                        <alert type="alert.type" close="closeAlert()" ng-show="$parent.alert.show">{{alert.msg}}</alert>
-                    </div>
+            <div class="row form-horizontal">
+                <div class="col-md-12">
+                    <alert type="alert.type" close="closeAlert()" ng-show="$parent.alert.show">{{alert.msg}}</alert>
                 </div>
             </div>
         </div>
@@ -107,7 +80,7 @@
 
         <div class="">
             <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="accountChanged" ng-disabled="!accountValid">Save</button>
-            <button class="btn pull-right margin-left-10" ng-click="resetChanges()" ng-show="accountChanged">Reset Changes</button>
+            <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="accountChanged">Reset Changes</button>
             <button class="btn btn-danger pull-left disabled">Delete Account</button>
         </div>
 

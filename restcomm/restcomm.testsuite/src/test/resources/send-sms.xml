@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+			<Sms to="bob" from="+12223334499">Hello World!</Sms>
+</Response>

@@ -29,6 +29,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
 import org.junit.runner.RunWith;
+
+import akka.event.slf4j.Logger;
 //import org.mobicents.servlet.restcomm.telephony.Version;
 
 
@@ -49,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 @Ignore
 @RunWith(Arquillian.class)
 public final class UserAgentManagerTest {
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;
@@ -82,6 +84,10 @@ public final class UserAgentManagerTest {
             receiver.dispose();
         }
         deployer.undeploy("UserAgentTest");
+    }
+    @Test
+    public void testVersion() {
+        
     }
 
     @Test

@@ -1,5 +1,5 @@
 
-<div class="step step-gather panel panel-rvdstep step-{{step.name}}">
+<div gather-step class="step step-gather panel panel-rvdstep step-{{step.name}}">
 		<div class="panel-heading">
 			<ng-include src="'templates/stepHeading.html'"></ng-include>
 		</div>
@@ -73,7 +73,7 @@
 							<form name="form" novalidate>
 								<div class='form-group row'>
 									<div class='col-md-12'>
-										<div class="input-group input-group-sm">
+										<div class="input-group">
 											<span class="input-group-addon">Assign to</span>
 											<input name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
 											<span class="input-group-addon">Scope</span>
@@ -87,9 +87,9 @@
 								</div>
 								<div class='form-group row'>
 									<div class='col-md-12'>
-										<div class="input-group input-group-sm">
+										<div class="input-group">
 											<span class="input-group-addon">Continue to</span>
-											<select sync-model name='next' ng-model='step.collectdigits.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
+											<select sync-model name='next' ng-model='step.collectdigits.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control">
 												<option value=""></option>
 											</select>
 										</div>
@@ -98,17 +98,31 @@
 									
 								</div>
 							</form>
-						</div>				
-						<!--
-						<div ng-show="step.gatherType=='custom'">
-							<div class='form-group row'>
-								<div class='col-md-12'>
-									<textarea ng-model='step.customHandlerSrc' class="texteditor-field form-control">{{step.customHandlerSrc}}</textarea>
+						</div>	
+						
+						<div>
+							<h4>Validation</h4>
+							<div ng-show="step.gatherType=='collectdigits'" class="form-group">
+								<div class="input-group">
+									<span class="input-group-addon help-tooltip"  tooltip='Define acceptable input by using a regex pattern. Leave blank for no validation.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>
+										Validation pattern
+									</span>
+									<input ng-model='step.validation.iface.userPattern' class="form-control">
+									<input-group-select ng-model='step.validation.iface.userPatternType' options='["One of", "Regex"]' button-class='btn-default' menu-class='pull-right'></input-group-select>
 								</div>
+								<!--Pattern: {{step.validation.pattern}}<br/>-->
+
+								
+								<span class="help-block"><small>Effective regex: {{step.validation.pattern}}</small></span>
 							</div>
+							
+							<label>Say if invalid</label>
+							<textarea ng-model='step.validation.messageStep.phrase' type="text" class="form-control" placeholder='You typed a wrong option. Please try again'></textarea>
+							<!--<div basic-droppable drop-model='step.invalidInputStep' drop-accept='.verb-button.button-say' style="width:50px; height:100px; background-color:grey;">
+							</div>-->
 						</div>
-						-->
-					
+						<!-- {{step.validation}} -->			
+						
 					</div>
 					<!-- 
 					<div ng-show="step.iface.advancedView">

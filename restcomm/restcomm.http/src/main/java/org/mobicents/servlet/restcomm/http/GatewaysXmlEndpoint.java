@@ -46,7 +46,7 @@ public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
     private Response deleteGateway(final String sid) {
         final Sid accountSid = Sid.generate(Sid.Type.INVALID);
         try {
-            secure(accountSid, "RestComm:Modify:Gateways");
+            secure(super.accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

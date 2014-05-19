@@ -48,7 +48,6 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
@@ -199,7 +198,8 @@ public final class CallManager extends UntypedActor {
     private void check(final Object message) throws IOException {
         final SipServletRequest request = (SipServletRequest) message;
         String content = new String(request.getRawContent());
-        if (request.getContentLength() == 0 || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
+        if (request.getContentLength() == 0
+                || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
             final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
             response.send();
         }
@@ -276,19 +276,24 @@ public final class CallManager extends UntypedActor {
      * @param request
      * @param accounts
      * @param applications
-     * @param id
+     * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id) {
+            final ApplicationsDao applications, String phone) {
         boolean isFoundHostedApp = false;
-
+        // Format the destination to an E.164 phone number.
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String formatedPhone = null;
         try {
-            // Format the destination to an E.164 phone number.
-            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-            final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(id, "US"), PhoneNumberFormat.E164);
+        formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+        } catch (Exception e) {}
+        try {
             // Try to find an application defined for the phone number.
             final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            final IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+            IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(formatedPhone);
+            if (number == null) {
+                number = numbers.getIncomingPhoneNumber(phone);
+            }
             if (number != null) {
                 final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
@@ -325,7 +330,7 @@ public final class CallManager extends UntypedActor {
                 interpreter.tell(new StartInterpreter(call), self);
                 isFoundHostedApp = true;
             }
-        } catch (final NumberParseException notANumber) {
+        } catch (Exception notANumber) {
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
@@ -551,12 +556,8 @@ public final class CallManager extends UntypedActor {
         }
         final ActorRef call = call();
         final ActorRef self = self();
-        final CallDetailRecordsDao recordsDao = null;
-        if (request.isCreateCDR()) {
-            storage.getCallDetailRecordsDao();
-        }
         final InitializeOutbound init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(),
-                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), recordsDao);
+                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
         call.tell(init, self);
         return call;
     }
@@ -645,7 +646,7 @@ public final class CallManager extends UntypedActor {
 
         final ActorContext context = getContext();
 
-        // The context.actorFor has been depreciated for actorSelection at the latest Akka release.
+        //TODO: The context.actorFor has been depreciated for actorSelection at the latest Akka release.
         return context.actorFor(callPath);
     }
 

@@ -42,6 +42,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -74,6 +75,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
     private Gson gson;
     private GsonBuilder builder;
     private XStream xstream;
+    protected AccountsDao accountsDao;
 
     public OutboundProxyEndpoint() {
         super();
@@ -85,6 +87,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        accountsDao = daos.getAccountsDao();
         super.init(configuration);
         builder = new GsonBuilder();
         builder.setPrettyPrinting();
@@ -96,7 +99,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
 
     protected Response getProxies(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:OutboundProxies");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -123,7 +126,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
 
     protected Response switchProxy(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:OutboundProxies");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -150,7 +153,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
 
     protected Response getActiveProxy(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:OutboundProxies");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

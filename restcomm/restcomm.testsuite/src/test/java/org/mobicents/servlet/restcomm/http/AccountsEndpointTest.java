@@ -13,6 +13,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -27,25 +28,40 @@ import com.google.gson.JsonObject;
 public class AccountsEndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointTest.class.getName());
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getInstance().getRestCommVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
+    static boolean accountUpdated = false;
 
     private String adminUsername = "administrator@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String newAdminPassword = "mynewpassword";
+    private String newAdminAuthToken = "8e70383c69f7a3b7ea3f71b02f3e9731";
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
+    
+    @Test
+    public void testGetAccount() {
+        // Get Account using admin email address and user email address
+        JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
+                adminAuthToken, adminUsername);
+        assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
 
+    }
+    
     @Test
     public void testCreateAccount() {
+        RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                adminUsername, newAdminPassword, adminAccountSid, null);
+        accountUpdated = true;
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, userEmailAddress, userPassword);
+                adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken, userEmailAddress);
+                newAdminAuthToken, userEmailAddress);
 
         String usernameHashed = "AC" + (new Md5Hash(userEmailAddress).toString());
         assertTrue(createAccountResponse.get("sid").getAsString().equals(usernameHashed));
@@ -57,15 +73,19 @@ public class AccountsEndpointTest {
 
     @Test
     public void testGetAccounts() {
+        if (!accountUpdated){
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        } 
         // Create account
-        RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+        RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
                 userEmailAddress, userPassword);
         // Get Account using admin email address and user email address
         JsonObject account1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken, userEmailAddress);
+                newAdminAuthToken, userEmailAddress);
         // Get Account using admin account sid and user sid
         JsonObject account2 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, account1.get("sid").getAsString());
+                newAdminAuthToken, account1.get("sid").getAsString());
 
         assertTrue(account1.toString().equals(account2.toString()));
 
@@ -74,6 +94,7 @@ public class AccountsEndpointTest {
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        logger.info("version");
         final WebArchive archive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
@@ -136,7 +157,7 @@ public class AccountsEndpointTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_accounts_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }

@@ -35,13 +35,16 @@ public class FsProjectStorage implements ProjectStorage {
     static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
 
     private String workspaceBasePath;
-    private String protoDirectoryName;
-    private String wavsDirectoryName;
+    private String prototypeProjectPath;
 
     public FsProjectStorage(RvdSettings settings) {
-        this.workspaceBasePath = settings.getOption("workspaceBasePath");
-        this.protoDirectoryName = settings.getOption("protoProjectName");
-        this.wavsDirectoryName = settings.getOption("wavsDirectoryName");
+        this.workspaceBasePath = settings.getWorkspaceBasePath();
+        this.prototypeProjectPath = settings.getPrototypeProjectsPath();
+    }
+
+    public FsProjectStorage(String workspaceBasePath, String prototypeProjectPath) {
+        this.workspaceBasePath = workspaceBasePath;
+        this.prototypeProjectPath = prototypeProjectPath;
     }
 
     private String getProjectBasePath(String name) {
@@ -49,7 +52,7 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     private String getProjectWavsPath(String projectName) {
-        return getProjectBasePath(projectName) + File.separator + wavsDirectoryName;
+        return getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME;
     }
 
     @Override
@@ -151,7 +154,7 @@ public class FsProjectStorage implements ProjectStorage {
             File[] entries = workspaceDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
-                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(protoDirectoryName))
+                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(RvdSettings.PROTO_DIRECTORY_PREFIX))
                         return true;
                     return false;
                 }
@@ -176,11 +179,15 @@ public class FsProjectStorage implements ProjectStorage {
         return items;
     }
 
-    @Override
-    public void cloneProject(String name, String clonedName) throws StorageException {
-        File sourceDir = new File(workspaceBasePath + File.separator + name);
-        File destDir = new File(workspaceBasePath + File.separator + clonedName);
-        try {
+    /**
+     * A low-level function to copy projects. It can be used both for creating new projects out of prototype projects
+     * or simply cloning projects
+     * @param sourceDir
+     * @param destDir
+     * @throws IOException
+     * @throws ProjectDirectoryAlreadyExists
+     */
+    private void cloneProject(File sourceDir, File destDir) throws IOException, ProjectDirectoryAlreadyExists {
             if (!destDir.exists()) {
                     FileUtils.copyDirectory(sourceDir, destDir);
                     // set the modified date of the "state" file to reflect the fact that we are dealing with a new project
@@ -190,10 +197,30 @@ public class FsProjectStorage implements ProjectStorage {
             } else {
                 throw new ProjectDirectoryAlreadyExists();
             }
+    }
+
+    @Override
+    public void cloneProject(String name, String clonedName) throws StorageException {
+        File sourceDir = new File(workspaceBasePath + File.separator + name);
+        File destDir = new File(workspaceBasePath + File.separator + clonedName);
+        try {
+            cloneProject( sourceDir, destDir);
         } catch (IOException e) {
             throw new StorageException("Error cloning project '" + name + "' to '" + clonedName + "'" , e);
         }
+    }
 
+    @Override
+    public void cloneProtoProject(String kind, String clonedName) throws StorageException {
+        String protoProjectPath = prototypeProjectPath + File.separator + RvdSettings.PROTO_DIRECTORY_PREFIX + "_" + kind;
+        File sourceDir = new File( protoProjectPath );
+        String destProjectPath = workspaceBasePath + File.separator + clonedName;
+        File destDir = new File(destProjectPath);
+        try {
+            cloneProject( sourceDir, destDir);
+        } catch (IOException e) {
+            throw new StorageException("Error cloning project '" + protoProjectPath + "' to '" + destProjectPath + "'" , e);
+        }
     }
 
     @Override

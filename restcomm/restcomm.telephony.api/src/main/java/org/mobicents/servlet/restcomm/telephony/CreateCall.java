@@ -22,11 +22,12 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author gvagenas@telestax.com
  */
 @Immutable
 public final class CreateCall {
     public static enum Type {
-        CLIENT, PSTN, SIP
+        CLIENT, PSTN, SIP, USSD
     };
 
     private final String from;

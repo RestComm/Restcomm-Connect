@@ -1,0 +1,11 @@
+<div class="input-group-btn">
+  <button type="button" class="btn {{addedClasses}} dropdown-toggle" data-toggle="dropdown">
+	  {{selectedOption}}
+	  <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu {{menuClasses}}" role="menu">
+	<li ng-repeat="option in buttonOptions">
+		<a ng-click='selectOption(option)'>{{option}}</a>
+	</li>
+  </ul>
+</div>

@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.telestax.servlet</groupId>
     <artifactId>restcomm</artifactId>
-    <version>7.2.0-TelScale-SNAPSHOT</version>
+    <version>7.1.5-TelScale-SNAPSHOT</version>
   </parent>
   
   <artifactId>restcomm.telephony</artifactId>
@@ -116,6 +116,13 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.interpreter</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.ussd</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

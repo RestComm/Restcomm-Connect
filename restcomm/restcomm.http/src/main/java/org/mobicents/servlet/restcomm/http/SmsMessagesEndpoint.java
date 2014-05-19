@@ -29,7 +29,6 @@ import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-
 import com.thoughtworks.xstream.XStream;
 
 import java.math.BigDecimal;
@@ -48,14 +47,15 @@ import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -92,6 +92,9 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     protected SmsMessagesDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected AccountsDao accountsDao;
+
+    private boolean normalizePhoneNumbers;
 
     public SmsMessagesEndpoint() {
         super();
@@ -103,6 +106,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         dao = storage.getSmsMessagesDao();
+        accountsDao = storage.getAccountsDao();
         aggregator = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);
@@ -116,11 +120,13 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new SmsMessageListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+
+        normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
 
     protected Response getSmsMessage(final String accountSid, final String sid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:SmsMessages");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -141,7 +147,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
 
     protected Response getSmsMessages(final String accountSid, final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Read:SmsMessages");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -183,13 +189,14 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     protected Response putSmsMessage(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         try {
-            secure(new Sid(accountSid), "RestComm:Create:SmsMessages");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         try {
             validate(data);
-            normalize(data);
+            if(normalizePhoneNumbers)
+                normalize(data);
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
