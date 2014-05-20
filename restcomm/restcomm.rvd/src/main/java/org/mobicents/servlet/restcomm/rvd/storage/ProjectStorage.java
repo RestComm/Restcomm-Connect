@@ -6,11 +6,12 @@ import java.util.List;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.packaging.PackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
 
-public interface ProjectStorage {
+public interface ProjectStorage extends PackagingStorage {
     String loadProjectOptions(String projectName) throws StorageException;
     void storeProjectOptions(String projectName, String projectOptions) throws StorageException;
     void clearBuiltProject(String projectName) throws StorageException;

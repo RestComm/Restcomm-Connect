@@ -6,14 +6,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.packaging.PackagingService;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
@@ -29,12 +33,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class ProjectService {
+public class ProjectService implements PackagingService {
+    static final Logger logger = Logger.getLogger(ProjectService.class.getName());
+
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
 
     ProjectStorage projectStorage;
@@ -187,4 +195,32 @@ public class ProjectService {
     public void removeWavFromProject(String projectName, String wavName) throws WavItemDoesNotExist {
         projectStorage.deleteWav(projectName, wavName);
     }
+
+
+    @Override
+    public void saveRappConfig(ServletInputStream rappConfig, String projectName) throws RvdException {
+        String data;
+        try {
+            data = IOUtils.toString(rappConfig);
+        } catch (IOException e) {
+            throw new RvdException("Error getting app configuration from the request", e);
+        }
+        projectStorage.storeRappConfig(data, projectName);
+
+    }
+    public void saveRappConfig(String rappConfig, String projectName) {
+        projectStorage.storeRappConfig(rappConfig, projectName);
+    }
+
+    /**
+     * Builds a RappConfig object out of its JSON representation
+     *
+     */
+    @Override
+    public RappConfig toModel(Class<RappConfig> clazz, String data) {
+        logger.debug("Not yet implemented!!");
+        return null;
+    }
+
+
 }

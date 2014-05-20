@@ -1,30 +1,30 @@
 angular.module('Rvd')
-.controller('packagingCtrl', function ($scope, $routeParams, PackageInfo, ConfigOption) {
+.controller('packagingCtrl', function ($scope, $routeParams, RappConfig, ConfigOption) {
 	$scope.protos = {
 			configOption: {name:'', label:'', type:'value', description:'', defaultValue:'', required: true }
 	}
 	$scope.projectName = $routeParams.projectName;
-	$scope.packageInfo = null;
+	$scope.rappConfig = null;
 	$scope.ConfigOption = 
 	
-	$scope.getPackageInfo = function (projectName) {
+	$scope.getRappConfig = function (projectName) {
 		// retrieve package information from server
 		// ...
-		$scope.packageInfo = new PackageInfo().init({config: {options: []} });
+		$scope.rappConfig = new RappConfig().init({config: {options: []} });
 	} 
 	
 	$scope.addConfigurationOption = function(type) {
 		console.log("Adding configuration option");
-		$scope.packageInfo.addOption( ConfigOption.getTypeByLabel(type));
+		$scope.rappConfig.addOption( ConfigOption.getTypeByLabel(type));
 	}
 	
 	$scope.removeConfigurationOption = function (option) {
-		$scope.packageInfo.removeOption(option);
+		$scope.rappConfig.removeOption(option);
 	}
 	
 	
 	// initialization stuff
-	$scope.getPackageInfo($scope.projectName);
+	$scope.getRappConfig($scope.projectName);
 	
 	console.log("Initializing packaging controller");
 })
@@ -39,19 +39,19 @@ angular.module('Rvd')
 	ConfigOption.getTypeLabels = function() {	return labels;	}
 	return ConfigOption;
 }])
-.factory('PackageInfo', ['rvdModel', 'ConfigOption', function (rvdModel, ConfigOption) {
-	function PackageInfo() {
-		this.config = { options: []};
+.factory('RappConfig', ['rvdModel', 'ConfigOption', function (rvdModel, ConfigOption) {
+	function RappConfig() {
+		this.options = [];
 	};
-	PackageInfo.prototype = new rvdModel();
-	PackageInfo.prototype.constructor = PackageInfo;
-	PackageInfo.prototype.addOption = function (type) {
-		this.config.options.push( new ConfigOption(type) );
+	RappConfig.prototype = new rvdModel();
+	RappConfig.prototype.constructor = RappConfig;
+	RappConfig.prototype.addOption = function (type) {
+		this.options.push( new ConfigOption(type) );
 	}
-	PackageInfo.prototype.removeOption = function (option) {
-		this.config.options.splice(this.config.options.indexOf(option,1));
+	RappConfig.prototype.removeOption = function (option) {
+		this.options.splice(this.options.indexOf(option,1));
 	}
-	return PackageInfo;
+	return RappConfig;
 }])
 ;
 
