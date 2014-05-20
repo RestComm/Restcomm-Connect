@@ -22,6 +22,7 @@ public class RvdSettings {
     private static final String RVD_PROJECT_VERSION = "1.0"; // version for rvd project syntax
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
+    public static final String PACKAGING_DIRECTORY_NAME = "packaging";
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;

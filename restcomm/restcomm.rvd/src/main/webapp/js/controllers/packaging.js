@@ -1,13 +1,21 @@
 angular.module('Rvd')
 .controller('packagingCtrl', function ($scope, $routeParams, RappConfig, ConfigOption, $http) {
-	$scope.protos = {
-			configOption: {name:'', label:'', type:'value', description:'', defaultValue:'', required: true }
-	}
 	
 	$scope.getRappConfig = function (projectName) {
-		// retrieve package information from server
-		// ...
-		$scope.rappConfig = new RappConfig().init({options: []});
+		$http({
+			url:  'services/manager/projects/package/config?name=' + projectName,
+			method: 'GET',
+		})
+		.success(function (data, status, headers, config) {
+			$scope.rappConfig = new RappConfig().init(data);
+		})
+		.error(function (data, status, headers,config) {
+			if ( status != 404 ) {
+				// TO-DO show some serious error here.
+				// ...
+				console.log("server error occured");
+			}
+		});
 	} 
 	
 	$scope.addConfigurationOption = function(type) {
@@ -39,7 +47,9 @@ angular.module('Rvd')
 	var types = ['value'];
 	var typesByLabel = {'Add value': 'value'};
 	
-	function ConfigOption() {};
+	function ConfigOption() {
+		// {name:'', label:'', type:'value', description:'', defaultValue:'', required: true }
+	};
 	ConfigOption.prototype = new rvdModel();
 	ConfigOption.prototype.constructor = ConfigOption;
 	ConfigOption.getTypeByLabel = function(type) { return typesByLabel[type];	}
