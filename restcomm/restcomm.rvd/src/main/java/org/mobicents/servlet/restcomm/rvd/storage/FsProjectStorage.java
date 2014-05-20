@@ -384,4 +384,10 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error creating state file backup: " + backupStateFile);
         }
     }
+
+    @Override
+    public void storeRappConfig(String data, String projectName) {
+        // TODO Auto-generated method stub
+        logger.debug("storing RappConfig for project " + projectName);
+    }
 }

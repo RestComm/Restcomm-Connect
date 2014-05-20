@@ -34,6 +34,7 @@ import com.google.gson.JsonObject;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
@@ -388,6 +389,31 @@ public class RvdManager {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
+    }
+
+
+   // @GET
+   // @Path("package/")
+
+    @POST
+    @Path("/package/config")
+    public Response savePackage(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
+
+        // TODO IMPORTANT!!! sanitize the project name!!
+
+        logger.info("saving app configuration for project " + projectName);
+        try {
+            try {
+                projectService.saveRappConfig(request.getInputStream(), projectName);
+                logger.info("saved app configuration for project " + projectName);
+                return Response.ok().build();
+            } catch (IOException e) {
+                throw new RvdException("Error saving app configuration", e);
+            }
+        } catch (RvdException e) {
+            logger.error(e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
 }

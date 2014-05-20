@@ -11,13 +11,13 @@
 	</nav>
 
 	
-	<div ng-hide='packageInfo' class="row">
+	<div ng-hide='rappConfig' class="row">
 		<div class="col-md-3 col-centered">
 			Welcome the RAS packaging tool. It will help you package you application before submiting it to the application store.
 		</div>
 	</div>
 	
-	<div ng-show='packageInfo'>
+	<div ng-show='rappConfig'>
 	
 		<div class="form-group">
 			<h4>How to configure</h4>
@@ -28,8 +28,8 @@
 		<h3>Configuration options</h3>
 		<span class="help-block">Create parameters editable by the end user will help your app fit in the user's premises.</span>
 		
-		{{packageInfo.config.options}}
-		<div basic-sortable list-model='packageInfo.config.options'>
+		{{rappConfig.options}}
+		<div basic-sortable list-model='rappConfig.options'>
 			<div ng-repeat="configOption in listModel" class='form-group'>
 				<rvd-panel title="configOption.label" on-close='removeConfigurationOption(configOption)'>
 					<div class="row">
