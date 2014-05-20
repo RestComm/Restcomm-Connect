@@ -386,8 +386,46 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     @Override
-    public void storeRappConfig(String data, String projectName) {
+    public void storeRappConfig(String data, String projectName) throws StorageException {
         // TODO Auto-generated method stub
         logger.debug("storing RappConfig for project " + projectName);
+
+        // create packaging directory if it does not exist
+        String packagingPath = getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME;
+        File packageDir = new File(packagingPath);
+        if (!(packageDir.exists() && packageDir.isDirectory()))
+            packageDir.mkdir();
+
+        if (packageDir.exists() && packageDir.isDirectory()) {
+            File configFile = new File(packagingPath + File.separator + "config");
+            try {
+                FileUtils.writeStringToFile(configFile, data, "UTF-8");
+            } catch (IOException e) {
+                throw new StorageException("Error creating config file: " + configFile, e);
+            }
+        } else {
+            throw new StorageException("Error storing app configuration. Bad packaging directory structure");
+        }
+
+    }
+
+    @Override
+    public String loadRappConfig(String projectName) throws StorageException {
+        String configPath = getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "config";
+        try {
+            return FileUtils.readFileToString(new File(configPath));
+        } catch (IOException e) {
+            throw new StorageException("Error reading from file " + configPath);
+        }
+    }
+
+    /**
+     * Returns true if there is application configuration for the specified project. Otherwise it returns false
+     */
+    @Override
+    public boolean hasRappConfig(String projectName) {
+        if ( new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "config").exists() )
+            return true;
+        return false;
     }
 }

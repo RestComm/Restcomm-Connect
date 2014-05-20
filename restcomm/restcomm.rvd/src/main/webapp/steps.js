@@ -29,7 +29,7 @@ angular.module('Rvd')
 			console.log('testing from RvdModel: ' + this.kind);
 		}
 		this.pack = function () {
-			console.log("rvdModel:pack() - "  + this.name);
+			console.log("rvdModel:pack()");
 			var clone = angular.copy(this);
 			return clone;
 		}

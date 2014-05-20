@@ -36,6 +36,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -209,7 +210,7 @@ public class ProjectService implements PackagingService {
         projectStorage.storeRappConfig(data, projectName);
 
     }
-    public void saveRappConfig(String rappConfig, String projectName) {
+    public void saveRappConfig(String rappConfig, String projectName) throws StorageException {
         projectStorage.storeRappConfig(rappConfig, projectName);
     }
 
@@ -219,8 +220,16 @@ public class ProjectService implements PackagingService {
      */
     @Override
     public RappConfig toModel(Class<RappConfig> clazz, String data) {
-        logger.debug("Not yet implemented!!");
-        return null;
+        Gson gson = new Gson();
+        RappConfig rappConfig = gson.fromJson(data, RappConfig.class);
+        return rappConfig;
+    }
+
+
+    @Override
+    public RappConfig getRappConfig(String projectName) throws StorageException {
+        String data = projectStorage.loadRappConfig(projectName);
+        return toModel(RappConfig.class, data);
     }
 
 

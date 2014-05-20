@@ -391,16 +391,9 @@ public class RvdManager {
 
     }
 
-
-   // @GET
-   // @Path("package/")
-
     @POST
     @Path("/package/config")
-    public Response savePackage(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
-
-        // TODO IMPORTANT!!! sanitize the project name!!
-
+    public Response saveAppConfig(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
         logger.info("saving app configuration for project " + projectName);
         try {
             try {
@@ -411,7 +404,26 @@ public class RvdManager {
                 throw new RvdException("Error saving app configuration", e);
             }
         } catch (RvdException e) {
-            logger.error(e);
+            logger.error(e, e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
+        }
+    }
+
+    @GET
+    @Path("/package/config")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getAppConfig(@QueryParam("name") String projectName) {
+        logger.debug("retrieving app package for project " + projectName);
+
+        if (! projectStorage.hasRappConfig(projectName) )
+            return Response.status(Status.NOT_FOUND).build();
+
+        String appConfig;
+        try {
+            appConfig = projectStorage.loadRappConfig(projectName);
+            return Response.ok().entity(appConfig).build();
+        } catch (StorageException e) {
+            logger.error(e, e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
         }
     }
