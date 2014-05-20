@@ -187,7 +187,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         try {
             final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
             final PhoneNumber phoneNumber = phoneNumberUtil.parse(number, "US");
-            String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.NATIONAL);
+            String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164);
             return friendlyName;
         } catch (final Exception ignored) {
             return number;
@@ -203,8 +203,9 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
                     for (final NXX nxx : npa.nxxs()) {
                         for (final TN tn : nxx.tns()) {
                             final String name = getFriendlyName(tn.number());
+                            final String phoneNumber = name;
                             // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
-                            final AvailablePhoneNumber number = new AvailablePhoneNumber(name, tn.number(),
+                            final AvailablePhoneNumber number = new AvailablePhoneNumber(name, phoneNumber,
                                     Integer.parseInt(lata.name()), center.name(), null, null, state.name(), null, "US", true,
                                     null, null, tn.t38());
                             numbers.add(number);
