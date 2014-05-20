@@ -171,7 +171,7 @@ configMobicentsProperties() {
 
 # MAIN
 echo 'Configuring RestComm...'
-configJavaOpts
+#configJavaOpts
 configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_IP"
 configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
