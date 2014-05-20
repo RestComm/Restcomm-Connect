@@ -1,16 +1,13 @@
 angular.module('Rvd')
-.controller('packagingCtrl', function ($scope, $routeParams, RappConfig, ConfigOption) {
+.controller('packagingCtrl', function ($scope, $routeParams, RappConfig, ConfigOption, $http) {
 	$scope.protos = {
 			configOption: {name:'', label:'', type:'value', description:'', defaultValue:'', required: true }
 	}
-	$scope.projectName = $routeParams.projectName;
-	$scope.rappConfig = null;
-	$scope.ConfigOption = 
 	
 	$scope.getRappConfig = function (projectName) {
 		// retrieve package information from server
 		// ...
-		$scope.rappConfig = new RappConfig().init({config: {options: []} });
+		$scope.rappConfig = new RappConfig().init({options: []});
 	} 
 	
 	$scope.addConfigurationOption = function(type) {
@@ -22,11 +19,21 @@ angular.module('Rvd')
 		$scope.rappConfig.removeOption(option);
 	}
 	
+	$scope.saveRappConfig = function (projectName,rappConfig) {
+		var packed = rappConfig.pack();
+		$http({
+			url: 'services/manager/projects/package/config?name=' + projectName,
+			method:'POST',
+			data: packed,
+			headers: {'Content-Type': 'application/data'}
+		})
+		.success(function () {console.log("App config saved")});
+	}
 	
 	// initialization stuff
+	$scope.projectName = $routeParams.projectName;
+	$scope.rappConfig = new RappConfig();
 	$scope.getRappConfig($scope.projectName);
-	
-	console.log("Initializing packaging controller");
 })
 .factory('ConfigOption', ['rvdModel', function (rvdModel) {
 	var types = ['value'];

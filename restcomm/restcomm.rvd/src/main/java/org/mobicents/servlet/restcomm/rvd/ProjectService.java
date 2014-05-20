@@ -205,6 +205,7 @@ public class ProjectService implements PackagingService {
         } catch (IOException e) {
             throw new RvdException("Error getting app configuration from the request", e);
         }
+        logger.debug("RappConfig json: " + data);
         projectStorage.storeRappConfig(data, projectName);
 
     }

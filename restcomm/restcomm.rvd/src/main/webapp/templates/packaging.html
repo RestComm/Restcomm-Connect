@@ -20,6 +20,9 @@
 	<div ng-show='rappConfig'>
 	
 		<div class="form-group">
+			<div class='pull-right'>
+				<a ng-click='saveRappConfig(projectName,rappConfig)'>Save</a>
+			</div>
 			<h4>How to configure</h4>
 			<textarea class="form-control"></textarea>
 			<span class="help-block">Type a small text describing general configuration guidelines</span>
