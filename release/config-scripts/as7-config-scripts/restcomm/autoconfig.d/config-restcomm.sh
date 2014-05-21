@@ -56,9 +56,7 @@ configRestcomm() {
 	        -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$static_address:8080\/restcomm\/cache<\/cache-uri>|" \
 	        -e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$static_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
 	        -e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$static_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
-	        -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|" \
-	        -e "s|<outbound-endpoint>.*<\/outbound-endpoint>|<outbound-endpoint>$outbound_ip<\/outbound-endpoint>|" \
-	        -e 's|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>#</outbound-prefix>|' $FILE > $FILE.bak;
+	        -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|" ;
 	else
 		sed -e "s|<local-address>$IP_ADDRESS_PATTERN<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 	        -e "s|<remote-address>$IP_ADDRESS_PATTERN<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
@@ -68,9 +66,7 @@ configRestcomm() {
 	        -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$bind_address:8080\/restcomm\/cache<\/cache-uri>|" \
 	        -e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
 	        -e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
-	        -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|" \
-	        -e "s|<outbound-endpoint>.*<\/outbound-endpoint>|<outbound-endpoint>$outbound_ip<\/outbound-endpoint>|" \
-	        -e 's|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>#</outbound-prefix>|' $FILE > $FILE.bak;
+	        -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|" ;
 	fi
 	mv $FILE.bak $FILE
 	echo 'Updated RestComm configuration'
