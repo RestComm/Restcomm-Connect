@@ -29,12 +29,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class ProjectService {
+    static final Logger logger = Logger.getLogger(ProjectService.class.getName());
+
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
 
     ProjectStorage projectStorage;
@@ -64,7 +68,10 @@ public class ProjectService {
                 (httpRequest.getServerPort() == 80 ? -1 : httpRequest.getServerPort()), httpRequest.getContextPath()
                         + httpRequest.getServletPath() + "/apps/" + projectName + "/controller", null, null);
 
-        return startURI.toASCIIString();
+        //logger.info("startURI.getPath(): " + startURI.getPath());
+        //logger.info("startURI.getRawPath(): " + startURI.getRawPath());
+        //logger.info("startURI.toASCIIString(): " + startURI.toASCIIString());
+        return startURI.getRawPath();  //toASCIIString();
     }
 
     /**
