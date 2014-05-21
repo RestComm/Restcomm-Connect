@@ -1,23 +1,6 @@
 angular.module('Rvd')
-.controller('packagingCtrl', function ($scope, $routeParams, RappConfig, ConfigOption, $http) {
-	
-	$scope.getRappConfig = function (projectName) {
-		$http({
-			url:  'services/manager/projects/package/config?name=' + projectName,
-			method: 'GET',
-		})
-		.success(function (data, status, headers, config) {
-			$scope.rappConfig = new RappConfig().init(data);
-		})
-		.error(function (data, status, headers,config) {
-			if ( status != 404 ) {
-				// TO-DO show some serious error here.
-				// ...
-				console.log("server error occured");
-			}
-		});
-	} 
-	
+.controller('packagingCtrl', function ($scope, $routeParams, RappConfig, ConfigOption, $http, rappConfigWrap) {
+
 	$scope.addConfigurationOption = function(type) {
 		console.log("Adding configuration option");
 		$scope.rappConfig.addOption( ConfigOption.getTypeByLabel(type));
@@ -40,9 +23,35 @@ angular.module('Rvd')
 	
 	// initialization stuff
 	$scope.projectName = $routeParams.projectName;
-	$scope.rappConfig = new RappConfig();
-	$scope.getRappConfig($scope.projectName);
+	$scope.rappConfig = rappConfigWrap.rappConfig;
+	$scope.configExists = rappConfigWrap.exists;
 })
+.factory('RappConfigService', ['$http', '$q', 'RappConfig', '$route', '$location', function ($http, $q, RappConfig,$route, $rootScope) {
+	var serviceFunctions = {
+		getRappConfig : function () {
+			var deferred = $q.defer();
+			$http({
+				url:  'services/manager/projects/package/config?name=' + $route.current.params.projectName,
+				method: 'GET',
+			})
+			.success(function (data, status, headers, config) {
+				var rappConfig = new RappConfig().init(data);
+				deferred.resolve({exists:true, rappConfig: rappConfig});
+			})
+			.error(function (data, status, headers,config) {
+				if ( status == 404 ) {
+					var rappConfig = new RappConfig();
+					deferred.resolve({exists:false, rappConfig: rappConfig});
+				} else {
+					console.log("server error occured");
+					deferred.reject({statusCode: status, message:'Sorry, the resource you were looking for could not be found'});
+				}
+			});
+			return deferred.promise;
+		}
+	}
+	return serviceFunctions;
+}])
 .factory('ConfigOption', ['rvdModel', function (rvdModel) {
 	var types = ['value'];
 	var typesByLabel = {'Add value': 'value'};

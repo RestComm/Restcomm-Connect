@@ -409,14 +409,25 @@ public class RvdManager {
         }
     }
 
+    /**
+     * Returns application configuration information. If there is no packaging data
+     * for this project yet it returns 404/NOT_FOUND. If the project does not even
+     * exist it returns 500/INTERNAL_SERVER_ERROR
+     * @param projectName
+     * @return
+     */
     @GET
     @Path("/package/config")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAppConfig(@QueryParam("name") String projectName) {
         logger.debug("retrieving app package for project " + projectName);
 
-        if (! projectStorage.hasRappConfig(projectName) )
-            return Response.status(Status.NOT_FOUND).build();
+        if (! projectStorage.hasRappConfig(projectName) ) {
+            if ( projectStorage.projectExists(projectName) )
+                return Response.status(Status.NOT_FOUND).build();
+            else
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
 
         String appConfig;
         try {

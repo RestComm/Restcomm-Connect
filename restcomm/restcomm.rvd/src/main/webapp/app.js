@@ -16,12 +16,17 @@ App.config([ '$routeProvider', function($routeProvider) {
 	})
 	.when('/packaging/:projectName', {
 		templateUrl : 'templates/packaging.html',
-		controller : 'packagingCtrl'
+		controller : 'packagingCtrl',
+		resolve: {
+			rappConfigWrap: function(RappConfigService) {
+				return RappConfigService.getRappConfig();
+			}
+		}
 	})
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
 		controller : 'upgradeCtrl'
-	})	
+	})		
 	.otherwise({
 		redirectTo : '/home'
 	});
