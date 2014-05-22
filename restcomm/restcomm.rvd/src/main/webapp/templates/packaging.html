@@ -26,6 +26,8 @@
 	<div class="form-group">
 		<div class='pull-right'>
 			<a ng-click='saveRappConfig(projectName,rappConfig)'>Save</a>
+			&nbsp;&nbsp;&nbsp;<a ng-click='preparePackage(projectName)'>I'm done configuring</a>
+			&nbsp;&nbsp;&nbsp;<a href='/restcomm-rvd/services/manager/projects/package/download?name={{projectName}}'>Download</a>
 		</div>
 		<h4>How to configure</h4>
 		<textarea class="form-control"></textarea>

@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.storage;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,6 +17,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
@@ -25,6 +28,8 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlr
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.packaging.exception.AppPackageDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -420,12 +425,41 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     /**
-     * Returns true if there is application configuration for the specified project. Otherwise it returns false
+     * Returns true if there is application configuration for the specified project. Otherwise it returns false.
+     * @throws ProjectDoesNotExist
      */
     @Override
-    public boolean hasRappConfig(String projectName) {
+    public boolean hasRappConfig(String projectName) throws ProjectDoesNotExist {
+        if (!projectExists(projectName))
+            throw new ProjectDoesNotExist();
         if ( new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "config").exists() )
             return true;
         return false;
+    }
+
+    @Override
+    public void storeAppPackage(String projectName, File packageFile) throws RvdException {
+        if (projectExists(projectName)) {
+            File destFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
+            try {
+                FileUtils.moveFile(packageFile, destFile);
+            } catch (IOException e) {
+                throw new PackagingException("Error moving app package file inside project", e);
+            }
+        } else
+            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
+    }
+
+    @Override
+    public InputStream getAppPackage(String projectName) throws RvdException {
+        if (projectExists(projectName)) {
+            File packageFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
+            try {
+                return new FileInputStream(packageFile);
+            } catch (FileNotFoundException e) {
+                throw new AppPackageDoesNotExist("No app package exists for project " + projectName);
+            }
+        } else
+            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
     }
 }

@@ -21,6 +21,14 @@ angular.module('Rvd')
 		.success(function () {console.log("App config saved")});
 	}
 	
+	$scope.preparePackage = function (projectName) {
+		$http({
+			url: 'services/manager/projects/package/prepare?name=' + projectName,
+			method: 'GET'
+		})
+		.success(function () {console.log("Package is ready for download")});
+	}
+	
 	// initialization stuff
 	$scope.projectName = $routeParams.projectName;
 	$scope.rappConfig = rappConfigWrap.rappConfig;

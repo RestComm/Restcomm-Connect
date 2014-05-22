@@ -1,9 +1,13 @@
 package org.mobicents.servlet.restcomm.rvd;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
@@ -17,6 +21,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.PackagingService;
+import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -230,6 +235,25 @@ public class ProjectService implements PackagingService {
     public RappConfig getRappConfig(String projectName) throws StorageException {
         String data = projectStorage.loadRappConfig(projectName);
         return toModel(RappConfig.class, data);
+    }
+
+
+    @Override
+    public InputStream createZipPackage(String projectName) throws RvdException {
+        try {
+            File tempFile = File.createTempFile("rapp",".tmp");
+            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(tempFile));
+            try {
+                zipOut.putNextEntry(new ZipEntry("/app"));
+                zipOut.finish();
+            } finally {
+                IOUtils.closeQuietly(zipOut);
+            }
+            projectStorage.storeAppPackage(projectName, tempFile);
+            return projectStorage.getAppPackage(projectName);
+        } catch (IOException e) {
+            throw new PackagingException("Error creating temporaty zip file ", e);
+        }
     }
 
 
