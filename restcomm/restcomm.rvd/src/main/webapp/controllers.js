@@ -1,5 +1,5 @@
 App.controller('AppCtrl', function ($rootScope, $scope) {
-	//console.log("Started AppCtrl");
+	console.log("Started AppCtrl");
 	$rootScope.$on("$routeChangeError", function(event, current, previous, rejection) {
         //console.log(event);
         console.log('on $routeChangeError');

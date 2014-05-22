@@ -2,41 +2,39 @@ package org.mobicents.servlet.restcomm.rvd.validation;
 
 import java.io.IOException;
 
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import com.github.fge.jsonschema.main.JsonSchema;
 
-public class ProjectValidator implements Validator {
+public class RappConfigValidator implements Validator {
 
-    String schemaVersion;
-    JsonSchema projectSchema;
+    //String schemaVersion;
+    JsonSchema schema;
 
-    public ProjectValidator() throws ProcessingException, IOException {
-        init( RvdSettings.getRvdProjectVersion() );
-    }
-
-    public ProjectValidator(  /*, String uri,*/ String schemaVersion ) throws ProcessingException, IOException {
-        init(schemaVersion);
-    }
-
-    private void init(String schemaVersion) throws ProcessingException {
+    public RappConfigValidator() throws RvdException {
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        projectSchema = factory.getJsonSchema("resource:/validation/rvdproject/" + schemaVersion + "/rvdproject-schema.json#/rvdproject");
+        String path = "resource:/validation/packaging/" + RvdSettings.getRvdProjectVersion() + "/rappConfig";
+        try {
+            schema = factory.getJsonSchema(path);
+        } catch (ProcessingException e) {
+            throw new RvdException("Error processing schema " + path, e);
+        }
     }
 
     @Override
     public ValidationResult validate(String json) throws ValidationFrameworkException {
-        JsonNode state;
+        JsonNode jsonnode;
         try {
-            state = JsonLoader.fromString(json);
+            jsonnode = JsonLoader.fromString(json);
             ProcessingReport report;
-            report = projectSchema.validate(state);
-            //System.out.println(report);
+            report = schema.validate(jsonnode);
             return new ValidationResult(report);
         } catch (IOException e) {
             throw new ValidationFrameworkException("Internal validation error", e);
@@ -44,7 +42,5 @@ public class ProjectValidator implements Validator {
             throw new ValidationFrameworkException("Internal validation error", e);
         }
     }
-
-
 
 }

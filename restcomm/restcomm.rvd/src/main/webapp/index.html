@@ -1,5 +1,5 @@
 <!doctype html>
-<html ng-app="Rvd">
+<html ng-app="Rvd" ng-controller="AppCtrl">
 
 <head>
 
@@ -41,7 +41,12 @@
 
 	<div class="container">
 
-		<div ng-view></div>	
+		<div ng-if="rvdError" class="">
+			<div class="text-center help-block">
+				{{rvdError.message}}
+			</div>
+		</div>
+		<div ng-hide="rvdError" ng-view></div>	
 		
 		<!-- 
 		<div class="row" ng-show="appView == 'spinner'">

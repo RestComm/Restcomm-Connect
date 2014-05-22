@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.packaging;
 
+import java.io.InputStream;
+
 import javax.servlet.ServletInputStream;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
@@ -11,4 +13,5 @@ public interface PackagingService {
     void saveRappConfig(String rappConfig, String projectName) throws StorageException;
     RappConfig getRappConfig(String projectName) throws StorageException;
     RappConfig toModel(Class<RappConfig> clazz, String data);
+    InputStream createZipPackage(String projectName) throws RvdException;
 }
