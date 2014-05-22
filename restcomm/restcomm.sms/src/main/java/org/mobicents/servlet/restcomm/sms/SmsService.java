@@ -52,7 +52,6 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 
-import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
@@ -149,45 +148,46 @@ public final class SmsService extends UntypedActor {
         // Handle the SMS message.
         final SipURI uri = (SipURI) request.getRequestURI();
         final String to = uri.getUser();
-        // There is no existing session so create a new one.
+        // Format the destination to an E.164 phone number.
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String phone = to;
         try {
-            // Format the destination to an E.164 phone number.
-            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-            final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
-            // Try to find an application defined for the phone number.
-            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-            if(number==null){
-                number = numbers.getIncomingPhoneNumber(to);
-            }
-            if (number != null) {
-                URI appUri = number.getSmsUrl();
-                ActorRef interpreter = null;
-                if(appUri != null) {
-                    final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
-                    builder.setSmsService(self);
-                    builder.setConfiguration(configuration);
-                    builder.setStorage(storage);
-                    builder.setAccount(number.getAccountSid());
-                    builder.setVersion(number.getApiVersion());
-                    final Sid sid = number.getSmsApplicationSid();
-                    if (sid != null) {
-                        final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsUrl()));
-                        builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
-                        builder.setFallbackMethod(application.getSmsFallbackMethod());
-                    } else {
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, appUri));
-                        builder.setMethod(number.getSmsMethod());
-                        URI appFallbackUrl = number.getSmsFallbackUrl();
-                        if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
-                            builder.setFallbackMethod(number.getSmsFallbackMethod());
-                        }
+        phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
+        } catch (Exception e) {}
+        // Try to find an application defined for the phone number.
+        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+        if(number==null){
+            number = numbers.getIncomingPhoneNumber(to);
+        }
+        if (number != null) {
+            URI appUri = number.getSmsUrl();
+            ActorRef interpreter = null;
+            if(appUri != null) {
+                final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
+                builder.setSmsService(self);
+                builder.setConfiguration(configuration);
+                builder.setStorage(storage);
+                builder.setAccount(number.getAccountSid());
+                builder.setVersion(number.getApiVersion());
+                final Sid sid = number.getSmsApplicationSid();
+                if (sid != null) {
+                    final Application application = applications.getApplication(sid);
+                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsUrl()));
+                    builder.setMethod(application.getSmsMethod());
+                    builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
+                    builder.setFallbackMethod(application.getSmsFallbackMethod());
+                } else {
+                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, appUri));
+                    builder.setMethod(number.getSmsMethod());
+                    URI appFallbackUrl = number.getSmsFallbackUrl();
+                    if (appFallbackUrl != null) {
+                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
-                    interpreter = builder.build();
                 }
+                interpreter = builder.build();
+            }
 //                else {
 //                    appUri = number.getVoiceUrl();
 //                    if (appUri != null) {
@@ -220,13 +220,11 @@ public final class SmsService extends UntypedActor {
 //                        interpreter = builder.build();
 //                    }
 //                }
-                final ActorRef session = session();
-                session.tell(request, self);
-                final StartInterpreter start = new StartInterpreter(session);
-                interpreter.tell(start, self);
-                isFoundHostedApp = true;
-            }
-        } catch (final NumberParseException ignored) {
+            final ActorRef session = session();
+            session.tell(request, self);
+            final StartInterpreter start = new StartInterpreter(session);
+            interpreter.tell(start, self);
+            isFoundHostedApp = true;
         }
         return isFoundHostedApp;
     }
