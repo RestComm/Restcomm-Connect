@@ -1,14 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +25,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
 import org.mobicents.servlet.restcomm.rvd.validation.ProjectValidator;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidationResult;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
@@ -240,21 +237,44 @@ public class ProjectService implements PackagingService {
 
     @Override
     public InputStream createZipPackage(String projectName) throws RvdException {
+
+        logger.debug("Create zip package for project " + projectName);
+
         try {
             File tempFile = File.createTempFile("rapp",".tmp");
-            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(tempFile));
+
+            Zipper zipper = new Zipper(tempFile);
             try {
-                zipOut.putNextEntry(new ZipEntry("/app"));
-                zipOut.finish();
+                zipper.addDirectory("/app/");
+                zipper.addFileContent("/app/config", projectStorage.loadRappConfig(projectName) );
+                zipper.addDirectory("/app/rvd/");
+                zipper.addFileContent("/app/rvd/state", projectStorage.loadProjectState(projectName));
+
+                zipper.addDirectory("/app/rvd/wavs/");
+                for ( WavItem wavItem : projectStorage.listWavs(projectName) ) {
+                    InputStream wavStream = projectStorage.getWav(projectName, wavItem.getFilename());
+                    try {
+                        zipper.addFile("app/rvd/wavs/" + wavItem.getFilename(), wavStream );
+                    } finally {
+                        wavStream.close();
+                    }
+                }
+
+
             } finally {
-                IOUtils.closeQuietly(zipOut);
+                zipper.finish();
             }
+
             projectStorage.storeAppPackage(projectName, tempFile);
+            // TODO - if FsProjectStorage  is not used, the temporaty file should still be removed (in this case it is not moved) !!!
+
+            logger.debug("Zip package created for project " + projectName);
+
             return projectStorage.getAppPackage(projectName);
         } catch (IOException e) {
             throw new PackagingException("Error creating temporaty zip file ", e);
         }
-    }
 
+    }
 
 }
