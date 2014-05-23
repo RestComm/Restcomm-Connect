@@ -128,6 +128,7 @@ public final class SmsInterpreter extends UntypedActor {
     // The RCML parser.
     private ActorRef parser;
     private Tag verb;
+    private boolean normalizeNumber;
 
     public SmsInterpreter(final ActorRef service, final Configuration configuration, final DaoManager storage,
             final Sid accountId, final String version, final URI url, final String method, final URI fallbackUrl,
@@ -187,6 +188,7 @@ public final class SmsInterpreter extends UntypedActor {
         this.fallbackUrl = fallbackUrl;
         this.fallbackMethod = fallbackMethod;
         this.sessions = new HashMap<Sid, ActorRef>();
+        this.normalizeNumber = runtime.getBoolean("normalize-numbers-for-outbound-calls");
     }
 
     private ActorRef downloader() {
@@ -202,12 +204,16 @@ public final class SmsInterpreter extends UntypedActor {
     }
 
     protected String format(final String number) {
-        final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
-        try {
-            final PhoneNumber result = numbersUtil.parse(number, "US");
-            return numbersUtil.format(result, PhoneNumberFormat.E164);
-        } catch (final NumberParseException ignored) {
-            return null;
+        if(normalizeNumber) {
+            final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
+            try {
+                final PhoneNumber result = numbersUtil.parse(number, "US");
+                return numbersUtil.format(result, PhoneNumberFormat.E164);
+            } catch (final NumberParseException ignored) {
+                return null;
+            }
+        } else {
+            return number;
         }
     }
 
@@ -652,21 +658,21 @@ public final class SmsInterpreter extends UntypedActor {
                 if (to == null) {
                     to = initialSessionRequest.from();
                 }
-//                if (to != null && !to.isEmpty()) {
-//                    to = format(to);
-//                    if (to == null) {
-//                        to = verb.attribute("to").value();
-//                        final Notification notification = notification(ERROR_NOTIFICATION, 14101, to
-//                                + " is an invalid 'to' phone number.");
-//                        notifications.addNotification(notification);
-//                        service.tell(new DestroySmsSession(session), source);
-//                        final StopInterpreter stop = StopInterpreter.instance();
-//                        source.tell(stop, source);
-//                        return;
-//                    }
-//                } else {
-//                    to = initialSessionRequest.from();
-//                }
+                //                if (to != null && !to.isEmpty()) {
+                //                    to = format(to);
+                //                    if (to == null) {
+                //                        to = verb.attribute("to").value();
+                //                        final Notification notification = notification(ERROR_NOTIFICATION, 14101, to
+                //                                + " is an invalid 'to' phone number.");
+                //                        notifications.addNotification(notification);
+                //                        service.tell(new DestroySmsSession(session), source);
+                //                        final StopInterpreter stop = StopInterpreter.instance();
+                //                        source.tell(stop, source);
+                //                        return;
+                //                    }
+                //                } else {
+                //                    to = initialSessionRequest.from();
+                //                }
             }
             // Parse <Sms> text.
             String body = verb.text();
