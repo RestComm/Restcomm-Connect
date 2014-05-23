@@ -28,6 +28,7 @@ public interface ProjectStorage extends PackagingStorage {
     void deleteProject(String projectName) throws StorageException;
     void storeWav(String projectName, String wavname, InputStream wavStream) throws StorageException;
     List<WavItem> listWavs(String projectName) throws StorageException;
+    InputStream getWav(String projectName, String filename) throws StorageException;
     void deleteWav(String projectName, String wavname) throws WavItemDoesNotExist;
     String loadStep(String projectName, String nodeName, String stepName) throws StorageException;
     void storeNodeStepnames(String projectName, Node node) throws StorageException;
