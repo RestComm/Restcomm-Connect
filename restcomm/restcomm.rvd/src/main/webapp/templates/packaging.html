@@ -1,6 +1,7 @@
 <div>
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="collapse navbar-collapse navbar-ex1-collapse">
+			<!--
 			<div class='navbar-text navbar-rvd-centered'>
 				<span>
 					<em>Package your application {{projectName}}</em>
@@ -8,7 +9,10 @@
 				</span>
 
 			</div>
-			<ul class="nav navbar-nav">
+			-->
+			
+			<ul class="nav navbar-nav navbar-right">
+				<li><a class='rvd-clickable-text' ng-click='saveRappConfig(projectName,rappConfig)'><i class='fa fa-save'></i>&nbsp; Save</a></li>
 			</ul>
 		</div>
 	</nav>
@@ -25,19 +29,19 @@
 
 	<div class="form-group">
 		<div class='pull-right'>
-			<a ng-click='saveRappConfig(projectName,rappConfig)'>Save</a>
+			<!-- <a ng-click='saveRappConfig(projectName,rappConfig)'>Save</a> -->
 			&nbsp;&nbsp;&nbsp;<a ng-click='preparePackage(projectName)'>I'm done configuring</a>
 			&nbsp;&nbsp;&nbsp;<a href='/restcomm-rvd/services/manager/projects/package/download?name={{projectName}}'>Download</a>
 		</div>
 		<h4>How to configure</h4>
-		<textarea class="form-control"></textarea>
+		<textarea ng-model='rappConfig.howTo' class="form-control"></textarea>
 		<span class="help-block">Type a small text describing general configuration guidelines</span>
 	</div>
 	
 	<h3>Configuration options</h3>
-	<span class="help-block">Create parameters editable by the end user will help your app fit in the user's premises.</span>
+	<span class="help-block">Customize you app by adding options. Add an option for any piece of information you need to be adjusted by the end user.</span>
 	
-	{{rappConfig}}
+	<!--{{rappConfig}} -->
 	<div basic-sortable list-model='rappConfig.options'>
 		<div ng-repeat="configOption in rappConfig.options" class='form-group'>
 			<rvd-panel title="configOption.label" on-close='removeConfigurationOption(configOption)'>

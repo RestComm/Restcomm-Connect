@@ -76,6 +76,7 @@ angular.module('Rvd')
 .factory('RappConfig', ['rvdModel', 'ConfigOption', function (rvdModel, ConfigOption) {
 	function RappConfig() {
 		this.options = [];
+		this.howTo = undefined;
 	};
 	RappConfig.prototype = new rvdModel();
 	RappConfig.prototype.constructor = RappConfig;
