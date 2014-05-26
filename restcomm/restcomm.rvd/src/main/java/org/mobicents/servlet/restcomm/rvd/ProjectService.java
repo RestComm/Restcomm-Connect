@@ -44,6 +44,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class ProjectService implements PackagingService {
+
     static final Logger logger = Logger.getLogger(ProjectService.class.getName());
 
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
@@ -75,7 +76,10 @@ public class ProjectService implements PackagingService {
                 (httpRequest.getServerPort() == 80 ? -1 : httpRequest.getServerPort()), httpRequest.getContextPath()
                         + httpRequest.getServletPath() + "/apps/" + projectName + "/controller", null, null);
 
-        return startURI.toASCIIString();
+        //logger.info("startURI.getPath(): " + startURI.getPath());
+        //logger.info("startURI.getRawPath(): " + startURI.getRawPath());
+        //logger.info("startURI.toASCIIString(): " + startURI.toASCIIString());
+        return startURI.getRawPath();  //toASCIIString();
     }
 
     /**
@@ -146,7 +150,7 @@ public class ProjectService implements PackagingService {
 
     public void createProject(String projectName, String kind) throws StorageException, InvalidServiceParameters {
         String protoSuffix = null;
-        if ( !"voice".equals(kind) && !"ussd".equals(kind) )
+        if ( !"voice".equals(kind) && !"ussd".equals(kind) && !"sms".equals(kind) )
             throw new InvalidServiceParameters("Invalid project kind specified - '" + kind + "'");
 
         projectStorage.cloneProtoProject(kind, projectName);
