@@ -21,7 +21,7 @@
 	
 	<!--Telscale binaries versions-->
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
-        <property name="telscale-sipservlets-as7.version" value="7.0.2-SNAPSHOT" />
+        <property name="telscale-sipservlets-as7.version" value="7.0.2.GA" />
 	<property name="telscale-media.version" value="6.1.2.GA" />
 	<property name="telscale-lb.version" value="7.0.1.GA" />
 	<property name="telscale-diameter.version" value="6.1.2.GA" />
@@ -44,8 +44,8 @@
 -->
         <property name="telscale-sipservlets.tomcat.distro.version" value="${telscale-sipservlets-as7.version}-apache-tomcat-7.0.50" />
         <property name="telscale-sipservlets.tomcat.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.tomcat.distro.version}.zip" />
-        <!-- <property name="telscale-sipservlets.as7.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.1.GA/TelScale-SIP-Servlets-7.0.1.GA-jboss-as-7.2.0.Final.zip" /> -->
-        <property name="telscale-sipservlets.tomcat.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.tomcat.download.distro.file}" />
+	<property name="telscale-sipservlets.tomcat.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.2.GA/${telscale-sipservlets.tomcat.download.distro.file}" />
+        <!-- <property name="telscale-sipservlets.tomcat.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.tomcat.download.distro.file}" />-->
         <property name="telscale-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.tomcat.download.distro.file}" />
 			
 	<!-- TelScale SIP Servlets 7.x on JBoss AS7-->
@@ -56,8 +56,8 @@
         <property name="telscale-sipservlets.as7.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.0.GA/TelScale-SIP-Servlets-7.0.0.GA-jboss-as-7.1.3.Final-1308082200.zip" /-->
         <property name="telscale-sipservlets.as7.distro.version" value="${telscale-sipservlets-as7.version}-jboss-as-7.2.0.Final" />
         <property name="telscale-sipservlets.as7.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.as7.distro.version}.zip" />
-        <!-- <property name="telscale-sipservlets.as7.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.1.GA/TelScale-SIP-Servlets-7.0.1.GA-jboss-as-7.2.0.Final.zip" /> -->
-        <property name="telscale-sipservlets.as7.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.as7.download.distro.file}" />
+	<property name="telscale-sipservlets.as7.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.2.GA/TelScale-SIP-Servlets-7.0.2.GA-jboss-as-7.2.0.Final.zip" />
+        <!--<property name="telscale-sipservlets.as7.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.as7.download.distro.file}" />-->
         <property name="telscale-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.as7.download.distro.file}" />
 
 	<!--TelScale SIP Servlets 7.x on JBoss EAP6-->
@@ -68,8 +68,8 @@
         <property name="telscale-sipservlets.eap6.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.0.GA/TelScale-SIP-Servlets-7.0.0.GA-jboss-eap-6.0-1308082151.zip" /-->
 	<property name="telscale-sipservlets.eap6.distro.version" value="${telscale-sipservlets-as7.version}-jboss-eap-6.2" />
         <property name="telscale-sipservlets.eap6.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.eap6.distro.version}.zip" />
-        <!--<property name="telscale-sipservlets.eap6.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.1.GA/TelScale-SIP-Servlets-7.0.1.GA-jboss-eap-6.2.zip" />-->
-        <property name="telscale-sipservlets.eap6.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.eap6.download.distro.file}" />
+        <property name="telscale-sipservlets.eap6.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.2.GA/TelScale-SIP-Servlets-7.0.2.GA-jboss-eap-6.2.zip" />
+        <!--<property name="telscale-sipservlets.eap6.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.eap6.download.distro.file}" />-->
         <property name="telscale-sipservlets.eap6.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.eap6.download.distro.file}" />
 
 	<property name="hsqldb.download.url" value="http://downloads.sourceforge.net/project/hsqldb/hsqldb/hsqldb_1_8_0/hsqldb_1_8_0_10.zip" />
@@ -170,11 +170,11 @@
 	<target name="get-telscale-sipservlets-tomcat" unless="got.telscale-sipservlets-tomcat">
 		<echo>Downloading Telscale SipServlets Tomcat version: ${telscale-sipservlets-as7.version}</echo>
 		<exec failonerror="true" executable="wget">
-		    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
-		    <arg value="\-\-password=t31sca13fi13s" />-->
-		    <arg value="--auth-no-challenge" />
-		    <arg value="--http-user=TeleStaxCore" />
-		    <arg value="--http-password=t31sc@1;3" />
+		    <arg value="--user=telscale-file-server@telestax.com" />
+		    <arg value="--password=t31sca13fi13s" />
+		    <!--<arg value="/-/-auth-no-challenge" />
+		    <arg value="/-/-http-user=TeleStaxCore" />
+		    <arg value="/-/-http-password=t31sc@1;3" />-->
 		    <arg value="${telscale-sipservlets.tomcat.download.url}" />
 		</exec>
 		<move file="${base.dir}/${telscale-sipservlets.tomcat.download.distro.file}" todir="${checkout.dir}"/>
@@ -185,11 +185,11 @@
         <target name="get-telscale-sipservlets-as7" unless="got.telscale-sipservlets-as7">
                 <echo>Downloading Telscale SipServlets JBoss AS7 version: ${telscale-sipservlets-as7.version}</echo>
                 <exec failonerror="true" executable="wget">
-                    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
-		    <arg value="\-\-password=t31sca13fi13s" /> -->
-		    <arg value="--auth-no-challenge" />
-		    <arg value="--http-user=TeleStaxCore" />
-		    <arg value="--http-password=t31sc@1;3" />
+                    <arg value="--user=telscale-file-server@telestax.com" />
+		    <arg value="--password=t31sca13fi13s" />
+		    <!--<arg value="/-/-auth-no-challenge" />
+		    <arg value="/-/-http-user=TeleStaxCore" />
+		    <arg value="/-/-http-password=t31sc@1;3" />-->
                     <arg value="${telscale-sipservlets.as7.download.url}" />
                 </exec>
                 <move file="${base.dir}/${telscale-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
@@ -200,11 +200,11 @@
         <target name="get-telscale-sipservlets-eap6" unless="got.telscale-sipservlets-eap6">
                 <echo>Downloading Telscale SipServlets JBoss EAP6 version: ${telscale-sipservlets-as7.version}</echo>
                 <exec failonerror="true" executable="wget">
-                    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
-		    <arg value="\-\-password=t31sca13fi13s" />-->
-		    <arg value="--auth-no-challenge" />
-		    <arg value="--http-user=TeleStaxCore" />
-		    <arg value="--http-password=t31sc@1;3" />
+                    <arg value="--user=telscale-file-server@telestax.com" />
+		    <arg value="--password=t31sca13fi13s" />
+		    <!--<arg value="/-/-auth-no-challenge" />
+		    <arg value="/-/-http-user=TeleStaxCore" />
+		    <arg value="/-/-http-password=t31sc@1;3" />-->
                     <arg value="${telscale-sipservlets.eap6.download.url}" />
                 </exec>
                 <move file="${base.dir}/${telscale-sipservlets.eap6.download.distro.file}" todir="${checkout.dir}"/>
@@ -525,7 +525,7 @@
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>-->
-	<copy file="${release.as7.dir}/modules/system/layers/base/org/mobicents/libs/main/jain-sip-ri-7.0.1-TelScale.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" failonerror="true"/>
+	<copy file="${release.as7.dir}/modules/system/layers/base/org/mobicents/libs/main/jain-sip-ri-7.0.2.GA-TelScale.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" failonerror="true"/>
         <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" /> 
 	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx" 
 		includes="**/*.sh"/>
