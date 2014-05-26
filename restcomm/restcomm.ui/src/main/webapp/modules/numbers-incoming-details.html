@@ -38,7 +38,7 @@
             <h4 class="account-detail-field-name">SMS Request URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.sms_method" url-var="numberDetails.sms_url"></rc-endpoint-url>
+            <rc-endpoint-url method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="availableApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -47,7 +47,7 @@
             <h4 class="account-detail-field-name">SMS Fallback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.sms_fallback_method" url-var="numberDetails.sms_fallback_url"></rc-endpoint-url>
+            <rc-endpoint-url method-var="numberDetails.sms_fallback_method" url-var="numberDetails.sms_fallback_url" apps="availableApps"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>

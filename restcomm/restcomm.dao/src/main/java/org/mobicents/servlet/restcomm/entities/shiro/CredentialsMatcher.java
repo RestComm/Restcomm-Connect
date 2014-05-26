@@ -16,10 +16,10 @@
  */
 package org.mobicents.servlet.restcomm.entities.shiro;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.credential.SimpleCredentialsMatcher;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
@@ -35,6 +35,12 @@ public final class CredentialsMatcher extends SimpleCredentialsMatcher {
     public boolean doCredentialsMatch(final AuthenticationToken token, final AuthenticationInfo info) {
         final String tokenCredentials = new String((char[]) token.getCredentials());
         final String accountCredentials = new String((char[]) info.getCredentials());
-        return accountCredentials.equals(tokenCredentials);
+
+        if (accountCredentials.equals(tokenCredentials)){
+            return true;
+        } else {
+            final String hashedToken = DigestUtils.md5Hex(tokenCredentials);
+            return accountCredentials.equals(hashedToken);
+        }
     }
 }

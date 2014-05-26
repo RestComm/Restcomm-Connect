@@ -17,6 +17,7 @@
 package org.mobicents.servlet.restcomm.sms;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import javax.servlet.ServletConfig;
@@ -51,7 +52,6 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 
-import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
@@ -100,34 +100,34 @@ public final class SmsService extends UntypedActor {
                 // Since the client failed to authenticate, we will ignore the message and not process further
                 return;
             }
+        }
 
-            // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
-            // registered
-
-            final String toUser = CallControlHelper.getUserSipId(request, useTo);
-            // Try to see if the request is destined for an application we are hosting.
-            if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
-                // Tell the sender we received the message okay.
-                final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
-                messageAccepted.send();
-                return;
-            } else {
-                // try to see if the request is destined to another registered client
-                if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
-                                      // have little control over
-                    Client toClient = clients.getClient(toUser);
-                    if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
-                                            // to the b2bua
-                        if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
-                            // if all goes well with proxying the SIP MESSAGE on to the target client
-                            // then we can end further processing of this request
-                            return;
-                        }
+        // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
+        // registered
+        final String toUser = CallControlHelper.getUserSipId(request, useTo);
+        // Try to see if the request is destined for an application we are hosting.
+        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
+            // Tell the sender we received the message okay.
+            final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
+            messageAccepted.send();
+            return;
+        } else {
+            // try to see if the request is destined to another registered client
+            if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
+                // have little control over
+                Client toClient = clients.getClient(toUser);
+                if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
+                    // to the b2bua
+                    if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
+                        // if all goes well with proxying the SIP MESSAGE on to the target client
+                        // then we can end further processing of this request
+                        return;
                     }
                 }
             }
         }
     }
+
 
     /**
      *
@@ -148,15 +148,22 @@ public final class SmsService extends UntypedActor {
         // Handle the SMS message.
         final SipURI uri = (SipURI) request.getRequestURI();
         final String to = uri.getUser();
-        // There is no existing session so create a new one.
+        // Format the destination to an E.164 phone number.
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String phone = to;
         try {
-            // Format the destination to an E.164 phone number.
-            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-            final String phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
-            // Try to find an application defined for the phone number.
-            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            final IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-            if (number != null) {
+        phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
+        } catch (Exception e) {}
+        // Try to find an application defined for the phone number.
+        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+        if(number==null){
+            number = numbers.getIncomingPhoneNumber(to);
+        }
+        if (number != null) {
+            URI appUri = number.getSmsUrl();
+            ActorRef interpreter = null;
+            if(appUri != null) {
                 final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
                 builder.setSmsService(self);
                 builder.setConfiguration(configuration);
@@ -171,19 +178,53 @@ public final class SmsService extends UntypedActor {
                     builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
                     builder.setFallbackMethod(application.getSmsFallbackMethod());
                 } else {
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsUrl()));
+                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, appUri));
                     builder.setMethod(number.getSmsMethod());
-                    builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
-                    builder.setFallbackMethod(number.getSmsFallbackMethod());
+                    URI appFallbackUrl = number.getSmsFallbackUrl();
+                    if (appFallbackUrl != null) {
+                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
+                    }
                 }
-                final ActorRef interpreter = builder.build();
-                final ActorRef session = session();
-                session.tell(request, self);
-                final StartInterpreter start = new StartInterpreter(session);
-                interpreter.tell(start, self);
-                isFoundHostedApp = true;
+                interpreter = builder.build();
             }
-        } catch (final NumberParseException ignored) {
+//                else {
+//                    appUri = number.getVoiceUrl();
+//                    if (appUri != null) {
+//                        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+//                        builder.setConfiguration(configuration);
+//                        builder.setStorage(storage);
+//                        builder.setCallManager(self);
+//                        builder.setSmsService(self);
+//                        builder.setAccount(number.getAccountSid());
+//                        builder.setVersion(number.getApiVersion());
+//                        final Account account = accounts.getAccount(number.getAccountSid());
+//                        builder.setEmailAddress(account.getEmailAddress());
+//                        final Sid sid = number.getVoiceApplicationSid();
+//                        if (sid != null) {
+//                            final Application application = applications.getApplication(sid);
+//                            builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
+//                            builder.setMethod(application.getVoiceMethod());
+//                            builder.setFallbackUrl(application.getVoiceFallbackUrl());
+//                            builder.setFallbackMethod(application.getVoiceFallbackMethod());
+//                            builder.setStatusCallback(application.getStatusCallback());
+//                            builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+//                        } else {
+//                            builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
+//                            builder.setMethod(number.getVoiceMethod());
+//                            builder.setFallbackUrl(number.getVoiceFallbackUrl());
+//                            builder.setFallbackMethod(number.getVoiceFallbackMethod());
+//                            builder.setStatusCallback(number.getStatusCallback());
+//                            builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+//                        }
+//                        interpreter = builder.build();
+//                    }
+//                }
+            final ActorRef session = session();
+            session.tell(request, self);
+            final StartInterpreter start = new StartInterpreter(session);
+            interpreter.tell(start, self);
+            isFoundHostedApp = true;
         }
         return isFoundHostedApp;
     }
@@ -251,7 +292,8 @@ public final class SmsService extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsSession(configuration, sipFactory, outboundInterface());
+                Configuration smsConfiguration = configuration.subset("sms-aggregator");
+                return new SmsSession(smsConfiguration, sipFactory, outboundInterface());
             }
         }));
     }

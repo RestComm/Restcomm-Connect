@@ -168,6 +168,54 @@ public class UssdPushTest {
     }
     
     @Test
+    public void createUssdPushTestNotifyOnlyFromIsRestcomm() throws InterruptedException, SipException, ParseException {
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "Restcomm";
+        String to = "bob";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-"+version+"/ussd-rcml.xml";
+
+        JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, null, "application", ussdContentSubType, null, null));
+
+        assertTrue(receivedBody.trim().equals(UssdPushTestMessages.ussdPushNotifyOnlyMessage));
+
+        bobCall.waitForAck(5000);
+        
+        Request infoRequest = bobCall.getDialog().createRequest(Request.INFO);
+        
+        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
+        infoRequest.setContent(UssdPushTestMessages.ussdPushNotifyOnlyClientResponse.getBytes(), contentTypeHeader);
+
+        SipTransaction sipTransaction = bobPhone.sendRequestWithTransaction(infoRequest, false, bobCall.getDialog());
+        assertNotNull(sipTransaction);
+        ResponseEvent response = (ResponseEvent) bobPhone.waitResponse(sipTransaction, 5000);
+        assertNotNull(response);
+        assertTrue(response.getResponse().getStatusCode() == Response.OK);
+        
+        Thread.sleep(3000);
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(5000));        
+        assertTrue(bobCall.respondToDisconnect());
+
+        receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(receivedBody.trim().equals(UssdPushTestMessages.ussdPushNotifyOnlyFinalResponse));
+    }
+    
+    @Test
     public void createUssdPushTestCollect() throws InterruptedException, SipException, ParseException {
 
         SipCall bobCall = bobPhone.createSipCall();
@@ -251,7 +299,7 @@ public class UssdPushTest {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("org/mobicents/servlet/restcomm/ussd/restcomm_conf_ussd_push.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("org/mobicents/servlet/restcomm/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml.xml");
         archive.addAsWebResource("org/mobicents/servlet/restcomm/ussd/ussd-rcml-collect.xml");
