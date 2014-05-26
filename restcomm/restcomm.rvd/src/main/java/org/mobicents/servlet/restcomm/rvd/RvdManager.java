@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -456,7 +457,9 @@ public class RvdManager {
         try {
             if (projectStorage.hasRappConfig(projectName) ) {
                 Validator validator = new RappConfigValidator();
-                projectService.createZipPackage(projectName);
+                //validator.validate(json)
+                RvdProject project = projectService.load(projectName);
+                projectService.createZipPackage(project);
                 return buildErrorResponse(Status.OK, RvdResponse.Status.OK, null);
             } else {
                 return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new PackagingDoesNotExist());

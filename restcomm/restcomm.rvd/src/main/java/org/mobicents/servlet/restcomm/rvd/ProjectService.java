@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +20,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.PackagingService;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
+import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
@@ -240,9 +242,10 @@ public class ProjectService implements PackagingService {
 
 
     @Override
-    public InputStream createZipPackage(String projectName) throws RvdException {
+    public InputStream createZipPackage(RvdProject project) throws RvdException {
 
-        logger.debug("Create zip package for project " + projectName);
+        logger.debug("Creating zip package for project " + project.getName());
+        String projectName = project.getName();
 
         try {
             File tempFile = File.createTempFile("rapp",".tmp");
@@ -254,13 +257,15 @@ public class ProjectService implements PackagingService {
                 zipper.addDirectory("/app/rvd/");
                 zipper.addFileContent("/app/rvd/state", projectStorage.loadProjectState(projectName));
 
-                zipper.addDirectory("/app/rvd/wavs/");
-                for ( WavItem wavItem : projectStorage.listWavs(projectName) ) {
-                    InputStream wavStream = projectStorage.getWav(projectName, wavItem.getFilename());
-                    try {
-                        zipper.addFile("app/rvd/wavs/" + wavItem.getFilename(), wavStream );
-                    } finally {
-                        wavStream.close();
+                if ( project.supportsWavs() ) {
+                    zipper.addDirectory("/app/rvd/wavs/");
+                    for ( WavItem wavItem : projectStorage.listWavs(projectName) ) {
+                        InputStream wavStream = projectStorage.getWav(projectName, wavItem.getFilename());
+                        try {
+                            zipper.addFile("app/rvd/wavs/" + wavItem.getFilename(), wavStream );
+                        } finally {
+                            wavStream.close();
+                        }
                     }
                 }
 
@@ -279,6 +284,18 @@ public class ProjectService implements PackagingService {
             throw new PackagingException("Error creating temporaty zip file ", e);
         }
 
+    }
+
+    /**
+     * Loads the project specified into an rvd project object
+     * @param projectName
+     * @return
+     * @throws RvdException
+     */
+    public RvdProject load(String projectName) throws RvdException {
+        String projectJson = projectStorage.loadProjectState(projectName);
+        RvdProject project = RvdProject.fromJson(projectName, projectJson);
+        return project;
     }
 
 }
