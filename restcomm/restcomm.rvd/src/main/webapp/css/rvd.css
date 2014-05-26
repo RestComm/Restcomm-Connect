@@ -408,6 +408,11 @@ li.verb {
 	opacity: 0.6
 }
 
+.sms-project .project-kind-thumb {
+	font-size: 70px;
+	padding: 7px;
+}
+
 .target-mapping .close {
 	margin-right: 12px;
 }

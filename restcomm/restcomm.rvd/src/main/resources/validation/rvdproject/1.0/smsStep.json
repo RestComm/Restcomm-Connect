@@ -18,3 +18,4 @@
 	},
 	"required": ["name","kind","label","title","text"]	
 }
+
