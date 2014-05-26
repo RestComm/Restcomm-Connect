@@ -280,11 +280,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
-        final String number = data.getFirst("PhoneNumber");
+        String number = data.getFirst("PhoneNumber");
         IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(e164(number));
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             dao.addIncomingPhoneNumber(incomingPhoneNumber);
+            number = number.substring(2);
             // Provision the number from VoIP Innovations if they own it.
             if (isValidDid(number)) {
                 assignDid(number);

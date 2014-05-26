@@ -16,11 +16,14 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +33,6 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
@@ -42,7 +42,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumberList;
@@ -72,6 +71,13 @@ import org.mobicents.servlet.restcomm.http.voipinnovations.converter.VoipInnovat
 import org.mobicents.servlet.restcomm.http.voipinnovations.converter.VoipInnovationsResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.thoughtworks.xstream.XStream;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -81,6 +87,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     protected ServletContext context;
     protected Configuration configuration;
     private XStream xstream;
+    protected Gson gson;
 
     private String header;
 
@@ -118,6 +125,10 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RateCenterConverter());
         xstream.registerConverter(new StateConverter());
         xstream.registerConverter(new TNConverter());
+        final GsonBuilder builder = new GsonBuilder();
+        builder.setPrettyPrinting();
+        gson = builder.create();
+
     }
 
     private String header(final String login, final String password) {
@@ -159,6 +170,8 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
                         if (APPLICATION_XML_TYPE == responseType) {
                             return ok(xstream.toXML(new RestCommResponse(new AvailablePhoneNumberList(numbers))),
                                     APPLICATION_XML).build();
+                        } else if (APPLICATION_JSON_TYPE == responseType) {
+                            return ok(gson.toJson(numbers), APPLICATION_JSON).build();
                         }
                     }
                 }
@@ -174,7 +187,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         try {
             final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
             final PhoneNumber phoneNumber = phoneNumberUtil.parse(number, "US");
-            String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.NATIONAL);
+            String friendlyName = phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164);
             return friendlyName;
         } catch (final Exception ignored) {
             return number;
@@ -190,8 +203,9 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
                     for (final NXX nxx : npa.nxxs()) {
                         for (final TN tn : nxx.tns()) {
                             final String name = getFriendlyName(tn.number());
+                            final String phoneNumber = name;
                             // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
-                            final AvailablePhoneNumber number = new AvailablePhoneNumber(name, tn.number(),
+                            final AvailablePhoneNumber number = new AvailablePhoneNumber(name, phoneNumber,
                                     Integer.parseInt(lata.name()), center.name(), null, null, state.name(), null, "US", true,
                                     null, null, tn.t38());
                             numbers.add(number);

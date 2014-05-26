@@ -64,7 +64,7 @@ public final class SmsServiceProxy extends SipServlet {
         final ServletContext context = config.getServletContext();
         final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
         Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        configuration = configuration.subset("sms-aggregator");
+//        configuration = configuration.subset("sms-aggregator");
         configuration.setProperty(ServletConfig.class.getName(), config);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
