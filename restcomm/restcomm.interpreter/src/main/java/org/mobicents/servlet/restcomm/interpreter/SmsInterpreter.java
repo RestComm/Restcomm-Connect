@@ -358,7 +358,7 @@ public final class SmsInterpreter extends UntypedActor {
         parameters.add(new BasicNameValuePair("From", from));
         final String to = format(initialSessionRequest.to());
         parameters.add(new BasicNameValuePair("To", to));
-        final String body = initialSessionRequest.body();
+        final String body = initialSessionRequest.body().trim();
         parameters.add(new BasicNameValuePair("Body", body));
         return parameters;
     }
@@ -676,7 +676,7 @@ public final class SmsInterpreter extends UntypedActor {
             }
             // Parse <Sms> text.
             String body = verb.text();
-            if (body == null || body.isEmpty() || body.length() > 160) {
+            if (body == null || body.isEmpty()) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 14103, body + " is an invalid SMS body.");
                 notifications.addNotification(notification);
                 service.tell(new DestroySmsSession(session), source);
