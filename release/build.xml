@@ -23,7 +23,7 @@
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
         <property name="telscale-sipservlets-as7.version" value="7.0.2.GA" />
 	<property name="telscale-media.version" value="6.1.2.GA" />
-	<property name="telscale-lb.version" value="7.0.1.GA" />
+	<property name="telscale-lb.version" value="7.0.2.GA" />
 	<property name="telscale-diameter.version" value="6.1.2.GA" />
 	
 	
@@ -583,7 +583,7 @@
         <zip destfile="${release.eap6.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>-->
-	<copy file="${release.eap6.dir}/modules/system/layers/base/org/mobicents/libs/main/jain-sip-ri-7.0.1-TelScale.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" failonerror="true"/>
+	<copy file="${release.eap6.dir}/modules/system/layers/base/org/mobicents/libs/main/jain-sip-ri-7.0.2.GA-TelScale.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" failonerror="true"/>
         <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" /> 
 	<chmod dir="${release.eap6.dir}/bin" perm="ugo+rx" 
      		includes="**/*.sh"/>
