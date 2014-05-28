@@ -104,7 +104,7 @@
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>1.8.0.10</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
-		<sip-ri.version>7.0.1-TelScale</sip-ri.version>
+		<sip-ri.version>7.0.2.GA-TelScale</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>7.0.0.CR1-TelScale</mss.arquillian.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
