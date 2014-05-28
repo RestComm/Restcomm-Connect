@@ -4,7 +4,7 @@
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>7.1.5-TelScale-SNAPSHOT</version>
+	<version>7.1.5.GA-TelScale</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -57,7 +57,7 @@
 		<connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
 		<developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
 		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
-		<tag>HEAD</tag>
+		<tag>ts715ga</tag>
 	</scm>
 
 	<distributionManagement>
@@ -447,7 +447,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g/>
+						<g />
 					</compilerArguments>
 					<source>1.6</source>
 					<target>1.6</target>
@@ -470,7 +470,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile/>
+					<useFile />
 				</configuration>
 				<dependencies>
 					<dependency>
