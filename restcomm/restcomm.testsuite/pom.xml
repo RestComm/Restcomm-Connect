@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>restcomm</artifactId>
 		<groupId>com.telestax.servlet</groupId>
-		<version>7.1.5.GA-TelScale</version>
+		<version>7.2.0-TelScale-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
