@@ -61,6 +61,6 @@ configLogDirectory() {
 ## MAIN
 echo 'Configuring Mobicents Media Server...'
 configUdpManager $BIND_ADDRESS $NETWORK $SUBNET_MASK
-configJavaOpts
+#configJavaOpts
 configLogDirectory
 echo 'Finished configuring Mobicents Media Server!'
