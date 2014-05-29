@@ -5,6 +5,342 @@
 ]>
 <!-- chapter id nickname: ittsss -->
 <chapter>
+
+<title>Getting Started and General Configuration</title>
+
+<section>
+<title>Quick Start Guide</title>
+<para>
+RestComm is a robust, powerful platform that will facilitate building comprehensive real-time communication solutions. The steps below will help you get started with ease.
+</para>
+
+<warning>
+<para>
+On a production system, please take into consideration the following:
+</para>
+<para>
+MMS can get into a bad state and report "Too many open files" error because of Linux default value on the total number of file descriptors.
+</para>
+<para>
+You can go to the following sites to see how to increase the maximum number of open files in your server:
+</para>
+<para>
+<ulink url="http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/"/>
+</para>
+<para>
+<ulink url="http://amitbhayani.blogspot.fr/2010/01/javanetsocketexception-too-many-open.html"/>
+</para>
+<para>
+
+</para>
+</warning>
+
+<itemizedlist mark='opencircle'>
+<title>Running RestComm on JBoss</title>
+<note>
+<title>JBoss Security</title>
+<para>
+Running a secure application is dependent on multiple factors. Restcomm runs on JBoss which implies that system security implemention can be handled at JBoss level. Please see the link below on how you can make your server environment more secure. <ulink url="https://community.jboss.org/wiki/SecureJboss?_sscc=t"/>
+</para>
+</note>
+
+<listitem>
+<para>
+Download <filename> TelScale-Restcomm-JBoss-AS7-XX.XX.GA.zip </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Using a terminal of your choice, extract the content of <filename> TelScale-Restcomm-XX.XX.GA.zip </filename> to a local directory on your computer. The root directoy into which you extract the content of the .zip file will be referred to as $RESTCOMM_HOME.
+</para>
+</listitem>
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permission of the <filename>run.sh</filename> as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo chmod +x ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+then start the TelScale Media Server as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+If all is correctly started you will see the following at the end of the bash terminal window
+<screen>
+[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL Started ]]]]]]]]]
+</screen>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Open another terminal and proceed as follows:
+</para>
+</listitem>
+
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permissions of all the <filename>.sh</filename> files in the bin directory as follows
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>sudo chmod +x ./*.sh </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Start RestComm by running the following command
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>sudo ./standalone.sh -c standalone-sip.xml</filename>
+</para>
+</listitem>
+
+<listitem>
+<para>
+If RestComm is correctly started you will see the following at the end of the terminal
+</para>
+
+<screen>
+INFO  [Version] TelScale Sip Servlets 6.1.3.GA-TelScale (build: Git Hash=r8947f2732ee64c76566ed6c0b236204c048538e1 date=201306131639) Started.
+17:30:05,854 INFO  [Version] 
+==============================================================================
+==                                                                          ==
+==                      Thank you for running TelScale                      ==
+==    Carrier Grade Communications Platform by the creators of Mobicents    ==
+==                    Copyright 2011-2013 Telestax, Inc.                    ==
+==                         http://www.telestax.com/                         ==
+==                                                                          ==
+==============================================================================
+
+</screen>
+</listitem>
+
+</itemizedlist>
+
+
+
+<itemizedlist mark='opencircle'>
+<title>Running RestComm on Tomcat</title>
+
+<listitem>
+<para>
+Download <filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Using a terminal of your choice, extract the content of <filename> TelScale-Restcomm-Tomcat-XX.XX.GA.zip </filename> to a local directory on your computer. The root directoy into which you extract the content of the .zip file will be referred to as $RESTCOMM_HOME.
+</para>
+</listitem>
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/telscale-media/telscale-media-server/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permission of the <filename>run.sh</filename> as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo chmod +x ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+then start the TelScale Media Server as follows
+</para>
+</listitem>
+<listitem>
+<para>
+sudo ./run.sh
+</para>
+</listitem>
+<listitem>
+<para>
+If all is correctly started you will see the following at the end of the bash terminal window
+<screen>
+[MainDeployer] [[[[[[[[[ Mobicents Media Server: release.version=3.0.0.FINAL Started ]]]]]]]]]
+</screen>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Open another terminal and proceed as follows:
+</para>
+</listitem>
+
+<listitem>
+<para>
+Go to <filename>$RESTCOMM_HOME/bin </filename>
+</para>
+</listitem>
+<listitem>
+<para>
+change the permissions of all the <filename>.sh</filename> files in the bin directory as follows
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>sudo chmod +x ./*.sh </filename>
+</para>
+</listitem>
+<listitem>
+<para>The content of the bin directory should be similar to the list below</para>
+<screen>
+bootstrap.jar                 digest.sh             tomcat-juli.jar
+catalina.bat                  setclasspath.bat      tomcat-native.tar.gz
+catalina.sh                   setclasspath.sh       tool-wrapper.bat
+catalina-tasks.xml            shutdown.bat          tool-wrapper.sh
+commons-daemon.jar            shutdown.sh           version.bat
+commons-daemon-native.tar.gz  startup.bat           version.sh
+cpappend.bat                  startup.sh
+digest.bat                    telestax-license.xml
+
+</screen>
+<para>
+Start RestComm by running the following command
+</para>
+</listitem>
+<listitem>
+<para>
+<filename> sudo ./catalina.sh run</filename>
+</para>
+</listitem>
+<listitem>
+<para>If RestComm is correctly started on Tomcat, you will see an output similar to the one below </para>
+<screen>
+Started.
+2013-08-15 19:02:46,903 INFO  [Version] (main) 
+==============================================================================
+==                                                                          ==
+==                      Thank you for running TelScale                      ==
+==    Carrier Grade Communications Platform by the creators of Mobicents    ==
+==                    Copyright 2011-2013 Telestax, Inc.                    ==
+==                         http://www.telestax.com/                         ==
+==                                                                          ==
+==============================================================================
+Aug 15, 2013 7:02:50 PM org.apache.catalina.startup.Catalina start
+INFO: Server startup in 14090 ms
+
+
+</screen>
+</listitem>
+
+
+
+
+</itemizedlist>
+
+
+
+
+
+</section>
+
+<section id="change-default-login">
+<title>Login into Restcomm and Changing the Default Password</title>
+<para>
+Before you start using Restcomm, you must change the default password. Please follow the steps below
+</para>
+
+
+<screen>
+Open your browser and go to http://127.0.0.1:8080/restcomm-management
+
+Enter the following information:
+   - Email/Account SID = administrator@company.com
+   - Password = RestComm
+   - Press the  Login button
+
+</screen>
+
+<para>
+You will see a screen similar to the one below
+</para>
+
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-version715-1.png"/>
+	</imageobject>
+</mediaobject>
+
+
+<para>
+In the screen below, change the password and update.
+</para>
+
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-version715-2.png"/>
+	</imageobject>
+</mediaobject>
+
+<para>
+Once the password has been changed, you can now log into the Admin Management interface and start using Restcomm.
+</para>
+
+</section>
+
+
+<section>
+<title>Testing the Demo Applications</title>
+
+
+<para>
+Restcomm comes prepackaged with multiple example applications designed to help you quickly get started. For more demos and configuration details please visit <ulink url="http://www.telestax.com/doc/">www.telestax.com/doc</ulink>
+</para>
+
+
+
+
+<section>
+<title>Demo 1 - Testing the Play Verb</title>
+
+<para>
+Start a SIP phone (see below) and dial <filename>1234@127.0.0.1:5080</filename>. You will hear a welcome message.
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/RestComm-ekiga-sip-phone-demo.png"/>
+	</imageobject>
+</mediaobject>
+<warning>
+Some SIP phones have codec incompatibility issues, in the above example, we used Ekiga. You may also try Jitsi or Sflphone. 
+</warning>
+
+
+
 	<title>Getting Started and General Configuration</title>
 
 	<section>
@@ -337,6 +673,7 @@
 			</warning>
 
 			<programlisting>
+
 <![CDATA[
 The application bound to the number 1234 can be found at
  <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-play.xml</filename>.
@@ -572,7 +909,7 @@ The application bound to the number 1238 can be found at
 
 			<programlisting>
 <![CDATA[
-The application bound to the number 1310 and 1311 can be found at 
+The application is bound to the number 1310 and 1311 can be found at 
 
 http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference.xml
 
@@ -595,7 +932,78 @@ http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference-moderator.x
 
 		</section>
 
+
+<section>
+<title>Demo 7 - RVD Say Verb</title>
+<para>
+This example is built using the Restcomm Visual Designer. You can register a SIP phone with the user bob or alice and password (1234). Then dial <filename>1239</filename>. You will hear a welcome message. 
+</para>
+
+<programlisting>
+<![CDATA[
+The application is bound to the number 1239. The link to the rvdSayVerbDemo is below:
+
+http://127.0.0.1:8080/restcomm-rvd/#/designer/rvdSayVerbDemo
+
+All project created with Restcomm Visual Designer are stored in the directory:
+
+$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace
+
+]]>
+</programlisting>
+
+</section>
+
+<section>
+<title>Demo 8 - RVD Gather Verb</title>
+<para>
+This demo uses the Gather verb to get user input and map it to the corresponding modules. You can register a SIP phone with the user bob or alice and password (1234). Then, dial <filename>1240</filename>. You will hear a welcome message asking you to press 1 for Sales or 2 for Technical Support. 
+</para>
+
+<programlisting>
+<![CDATA[
+The application is bound to the number 1240. The link to the rvdSayVerbDemo is below:
+
+http://127.0.0.1:8080/restcomm-rvd/#/designer/rvdCollectVerbDemo
+
+All project created with Restcomm Visual Designer are stored in the directory:
+
+$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace
+
+]]>
+</programlisting>
+
+</section>
+
+
+<section>
+<title>Demo 9 - RVD External Services</title>
+<para>
+This demo uses the External Services to Restcomm to an external program for more complex solutions. There are two parts to this demo application, the RVD app and the external servlet <filename>http://127.0.0.1:8080/RvdExternalServicesDemo/rvdESdemo</filename> which manages the logic. You can register a SIP phone with the user bob or alice and password (1234). Then, dial <filename>1241</filename>. You will be asked to enter a customer ID. You can enter number <filename>11 or 12</filename>. You will hear a corresponding welcome message depending on the customer ID you entered.
+</para>
+
+<programlisting>
+	<![CDATA[
+	The application is bound to the number 1241. The link to the rvdSayVerbDemo is below:
+
+	http://127.0.0.1:8080/restcomm-rvd/#/designer/rvdESDemo
+
+	All project created with Restcomm Visual Designer are stored in the directory:
+
+	$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace
+
+	The RvdExternalServicesDemo.war file is deployed in the directory $RESTCOMM_HOME/standalone/deployments/ 
+
+	]]>
+</programlisting>
+
+</section>
+
+
+</section>
+
 	</section>
+
 
 
 
@@ -621,6 +1029,7 @@ http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference-moderator.x
 				pluggable and TelScale RestComm is not
 				limited to any service provider or software platformz.</para>
 		</note>
+</section>
 		<section>
 			<title>Runtime Settings</title>
 			<para>
@@ -1164,4 +1573,5 @@ http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference-moderator.x
 			can be replaced with other alternatives provided by the acapela group. </entry> 
 			</row> </tbody> </tgroup> </table> </section> -->
 	</section>
+
 </chapter>

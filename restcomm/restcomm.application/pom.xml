@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.1.5-TelScale-SNAPSHOT</version>
+		<version>7.2.0-TelScale-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm.application</artifactId>
@@ -179,7 +179,6 @@
 		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
-			<version>7.0.0.GA-TelScale</version>
 			<scope>compile</scope>
 		</dependency>
 

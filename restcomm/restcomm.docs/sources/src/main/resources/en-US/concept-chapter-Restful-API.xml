@@ -2663,4 +2663,84 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 			</formalpara>
 		</section>
 	</section>
+
+
+
+
+
+	<section>
+		<title>OutboundProxy</title>
+		<para>Using Outbound proxy endpoint you can get the details of Primary
+			and Backup outbound proxy,
+			get the current active outbound proxy and
+			also switch outbound proxy.</para>
+		<formalpara>
+			<title>OutboundProxy Resource URI</title>
+			<para>/2012-04-24//Accounts/{accountSid}/OutboundProxy</para>
+		</formalpara>
+
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the list of outbound proxies.</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>/2012-04-24//Accounts/{accountSid}/OutboundProxy/switchProxy</para>
+				<para>Switch the outbound proxy and returns the proxy in use</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>/2012-04-24//Accounts/{accountSid}/OutboundProxy/getActiveProxy</para>
+				<para>Returns the currently active outbound proxy</para>
+			</formalpara>
+		</section>
+	</section>
+
+<section>
+		<title>UssdPush</title>
+		<para>A UssdPush resource represents a message sent from Restcomm to a USSD gateway.</para>
+		<formalpara>
+			<title>UssdPush Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/UssdPush</para>
+		</formalpara>
+	<section>
+			<title>Supported Operations</title>
+				<formalpara>
+				<title>HTTP POST</title>
+				<para>Sends a Ussd message to the configured USSD Gataeway</para>
+				</formalpara>
+
+	</section>
+	
+	<formalpara>
+			<title>Example of UssdPush</title>
+
+	   <programlisting role="XML">
+
+		<![CDATA[
+
+		The USSD gateway to which Restcomm must send the UssdMessage must be configured in the restcomm.xml file. IP address and port must be configured. Username/password for the USSD are optional.
+
+		<!-- TelScale USSD Gateway -->
+		<ussd-gateway>
+		<ussd-gateway-uri>IP_USSD_GW:PORT_NUMBER</ussd-gateway-uri>
+		<ussd-gateway-user></ussd-gateway-user>
+		<ussd-gateway-password></ussd-gateway-password>
+		</ussd-gateway>
+
+
+
+
+		See below a curl example for the USSD Push:
+
+		curl -X POST -H "application/json" http://ACae6e420f425248d6a26948c17a9e2acf:YOUR_PWD@RESTCOMM_IP_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a-d "From=Restcomm" -d "To=123" -d "Url=http://RESTCOMM_IP_ADDRESS:8080/restcomm-rvd/services/apps/YOUR_USSD_APP/controller"
+			]]>
+
+			</programlisting>
+
+	</formalpara>
+</section>
+
 </chapter>

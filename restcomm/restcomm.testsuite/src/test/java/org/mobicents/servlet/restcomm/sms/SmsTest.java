@@ -82,8 +82,16 @@ public class SmsTest {
     
     private String dialSendSMS = "sip:+12223334444@127.0.0.1:5080";
     private String dialSendSMS2 = "sip:+12223334445@127.0.0.1:5080";
+    private String dialSendSMS2_Greek = "sip:+12223334447@127.0.0.1:5080";
+    private String dialSendSMS2_Greek_Huge = "sip:+12223334448@127.0.0.1:5080";
     private String dialSendSMS3 = "sip:+12223334446@127.0.0.1:5080";
 
+    private String greekHugeMessage = "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
+            + "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
+            + "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
+            + "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
+            + "Καλημερα Καλημερα Καλημερα";
+    
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("SmsTest1");
@@ -185,6 +193,58 @@ public class SmsTest {
     }
     
     @Test
+    public void TestIncomingSmsSendToClientAliceGreekHugeMessage() throws ParseException, InterruptedException {
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForMessage();
+        
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingMessage(dialSendSMS2_Greek_Huge, null, greekHugeMessage);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.ACCEPTED);
+
+        //Restcomm receives the SMS message from Bob, matches the DID with an RCML application, and executes it.
+        //The new RCML application sends an SMS to Alice with body "Hello World!"
+        
+        assertTrue(aliceCall.waitForMessage(5 * 1000));
+        String msgReceived = new String(aliceCall.getLastReceivedMessageRequest().getRawContent());
+        assertTrue(greekHugeMessage.equals(msgReceived));
+        aliceCall.sendMessageResponse(200, "OK-From-Alice", 3600);
+    }
+    
+    @Test
+    public void TestIncomingSmsSendToClientAliceGreek() throws ParseException, InterruptedException {
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForMessage();
+        
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingMessage(dialSendSMS2_Greek, null, "Καλώς τον Γιώργο!");
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.ACCEPTED);
+
+        //Restcomm receives the SMS message from Bob, matches the DID with an RCML application, and executes it.
+        //The new RCML application sends an SMS to Alice with body "Hello World!"
+        
+        assertTrue(aliceCall.waitForMessage(5 * 1000));
+        String msgReceived = new String(aliceCall.getLastReceivedMessageRequest().getRawContent());
+        assertTrue("Καλώς τον Γιώργο!".equals(msgReceived));
+        aliceCall.sendMessageResponse(200, "OK-From-Alice", 3600);
+    }
+    
+    @Test
     public void TestIncomingSmsSendToNumber1313() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", "sip:1313@127.0.0.1:5091", 3600, 3600));
@@ -224,6 +284,8 @@ public class SmsTest {
         archive.addAsWebInfResource("restcomm_SmsTest.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_SmsTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("send-sms-test.xml");
+        archive.addAsWebResource("send-sms-test-greek.xml");
+        archive.addAsWebResource("send-sms-test-greek_huge.xml");
         archive.addAsWebResource("send-sms-test2.xml");
         archive.addAsWebResource("dial-client-entry.xml");
         logger.info("Packaged Test App");
