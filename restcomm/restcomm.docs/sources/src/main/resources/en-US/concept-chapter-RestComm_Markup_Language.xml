@@ -1671,11 +1671,67 @@ A more complex Dial, specifying custom settings as attributes on Dial, including
 		</programlisting>
 	</section>
 
+
+
 <section>
 		<title>UssdCollect</title>
-		<para>The UssdCollect verb is a USSD integration with Restcomm. When fully configured with a USSD gateway, Restcomm will send all UssdMessage to the configured gateway</para>
-		<table>
-		   <title>Pause Attributes</title>
+		<para>The UssdCollect verb is a USSD integration with Restcomm resource. When fully configured with a USSD gateway, Restcomm will send all UssdMessage to the configured gateway</para>
+		
+
+	    <formalpara>
+	    	<title>Example</title>
+	    	<para>For an example of how to use the USSDCollect verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+	<![CDATA[
+	<Response>
+		<UssdCollect action="http://my.controller.net">
+			<UssdMessage> 1 for first option</UssdMessage>
+			<UssdMessage> 2 for first option</UssdMessage>
+			<UssdMessage> 3 for first option</UssdMessage>
+		</UssdCollect>
+	</Response>
+	]]>
+		</programlisting>
+
+
+<section>
+<title>UssdMessage</title>
+
+<note>
+<para>
+Before you can send an USSD message you must first configure the restcomm.xml with the USSD gateway information. See <xref linkend="ussdpush-api"/> for more information.
+</para>
+</note>
+		<para>The UssdMessage verb contains the message that Restcomm will send to the USSD gateway</para>
+
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The UssdMessage can be nested inside of the USSDCollect verb.</para>
+	    </formalpara>
+
+		<formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the USSDCollect verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+	<![CDATA[
+	<Response>
+		<UssdMessage>Test USSD Message</UssdMessage></UssdCollect>
+	</Response>
+	]]>
+		</programlisting>
+
+</section>		
+
+<section>
+<title>Language</title>
+		<para>The language noun let you specify the language of the USSD message that is sent to the USSD gateway</para>
+
+
+
+<table>
+		   <title>Language Attributes</title>
 		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
 			<colspec colname='c1' />
 			<colspec colname='c2' />
@@ -1696,28 +1752,27 @@ A more complex Dial, specifying custom settings as attributes on Dial, including
 			</tbody>
 		</tgroup>
 	    </table>
-	    <formalpara>
-	    	<title>Language</title>
-	    	<para>The 'Language' attribute specifies the language of the UssdMessage.</para>
-	    </formalpara>
+
 	    <formalpara>
 	    	<title>Nesting</title>
-	    	<para>The UssdMessage can be nested inside of the USSDCollect verb.</para>
+	    	<para>The Language noun cannot be nested. If not specified, English language is default</para>
 	    </formalpara>
 	    <formalpara>
-	    	<title>Examples</title>
-	    	<para>For an example of how to use the USSDCollect verb see below.</para>
+	    	<title>Example</title>
+	    	<para>For an example of how to use the USSD Language noun see below.</para>
 	    </formalpara>
 	    <programlisting role="XML">
 	<![CDATA[
 	<Response>
-		<Language>el</Language>
-		<UssdCollect action="http://my.controller.net">
+		<Language>fr</Language>
 		<UssdMessage>Test USSD Message</UssdMessage></UssdCollect>
 	</Response>
 	]]>
 		</programlisting>
+
 	</section>
+
+</section>
 
 
 </chapter>

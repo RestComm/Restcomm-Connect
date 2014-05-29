@@ -2698,7 +2698,7 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 		</section>
 	</section>
 
-<section>
+<section id="ussdpush-api">
 		<title>UssdPush</title>
 		<para>A UssdPush resource represents a message sent from Restcomm to a USSD gateway.</para>
 		<formalpara>
