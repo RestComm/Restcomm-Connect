@@ -1753,7 +1753,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             // Parse <Sms> text.
             String body = verb.text();
-            if (body == null || body.isEmpty() || body.length() > 160) {
+            if (body == null || body.isEmpty()) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 14103, body + " is an invalid SMS body.");
                 notifications.addNotification(notification);
                 sendMail(notification);

@@ -1670,4 +1670,54 @@ A more complex Dial, specifying custom settings as attributes on Dial, including
 		&lt;/Response&gt;
 		</programlisting>
 	</section>
+
+<section>
+		<title>UssdCollect</title>
+		<para>The UssdCollect verb is a USSD integration with Restcomm. When fully configured with a USSD gateway, Restcomm will send all UssdMessage to the configured gateway</para>
+		<table>
+		   <title>Pause Attributes</title>
+		   <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<colspec colname='c1' />
+			<colspec colname='c2' />
+			<colspec colname='c3' />
+			<thead>
+				<row>
+					<entry align="center">Name</entry>
+					<entry align="center">Allowed Values</entry>
+					<entry align="center">Default Value</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry>Language</entry>
+					<entry>bf, bp, en, en-gb,cf, cs, dan, fi es, fr, de, el, it, nl, no, pl, pt, ru, ar, ca, sv, tr</entry>
+					<entry>en</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	    </table>
+	    <formalpara>
+	    	<title>Language</title>
+	    	<para>The 'Language' attribute specifies the language of the UssdMessage.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Nesting</title>
+	    	<para>The UssdMessage can be nested inside of the USSDCollect verb.</para>
+	    </formalpara>
+	    <formalpara>
+	    	<title>Examples</title>
+	    	<para>For an example of how to use the USSDCollect verb see below.</para>
+	    </formalpara>
+	    <programlisting role="XML">
+	<![CDATA[
+	<Response>
+		<Language>el</Language>
+		<UssdCollect action="http://my.controller.net">
+		<UssdMessage>Test USSD Message</UssdMessage></UssdCollect>
+	</Response>
+	]]>
+		</programlisting>
+	</section>
+
+
 </chapter>

@@ -64,7 +64,9 @@ public final class Downloader extends UntypedActor {
         do {
             final DefaultHttpClient client = new DefaultHttpClient();
             client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
+//            client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
             request = request(temp);
+//            request.setHeader(CoreProtocolPNames.HTTP_CONTENT_CHARSET, Consts.UTF_8.name());
             response = client.execute((HttpUriRequest) request);
             code = response.getStatusLine().getStatusCode();
             if (isRedirect(code)) {
@@ -140,7 +142,7 @@ public final class Downloader extends UntypedActor {
         } else if ("POST".equalsIgnoreCase(method)) {
             final List<NameValuePair> parameters = descriptor.getParameters();
             final HttpPost post = new HttpPost(uri);
-            post.setEntity(new UrlEncodedFormEntity(parameters));
+            post.setEntity(new UrlEncodedFormEntity(parameters, "UTF-8"));
             return post;
         } else {
             throw new IllegalArgumentException(method + " is not a supported downloader method.");
