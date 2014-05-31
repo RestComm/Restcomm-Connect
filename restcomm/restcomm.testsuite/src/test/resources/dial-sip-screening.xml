@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Dial timeLimit="10" timeout="10" action="http://127.0.0.1:8080/restcomm.application-7.1.5-TelScale-SNAPSHOT/sip-dial-url-screening-test.jsp" method="POST">
-	  <Sip url="http://127.0.0.1:8080/restcomm.application-7.1.5-TelScale-SNAPSHOT/sip-url-screening-test.jsp" method="POST">sip:alice@127.0.0.1:5091?mycustomheader=foo&myotherheader=bar</Sip>
+	<Dial timeLimit="10" timeout="10" action="http://127.0.0.1:8080/restcomm.application-7.2.0-TelScale-SNAPSHOT/sip-dial-url-screening-test.jsp" method="POST">
+	  <Sip url="http://127.0.0.1:8080/restcomm.application-7.2.0-TelScale-SNAPSHOT/sip-url-screening-test.jsp" method="POST">sip:alice@127.0.0.1:5091?mycustomheader=foo&myotherheader=bar</Sip>
 	</Dial>
 </Response>
