@@ -28,6 +28,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication;
+import org.mobicents.servlet.restcomm.rvd.http.RvdManager;
 
 //@RunWith(Arquillian.class)
 public class RvdManagerTest {

@@ -26,7 +26,11 @@ App.config([ '$routeProvider', function($routeProvider) {
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
 		controller : 'upgradeCtrl'
-	})		
+	})
+	.when('/rappManager', {
+		templateUrl : 'templates/rappManager.html',
+		controller : 'rappManager'
+	})			
 	.otherwise({
 		redirectTo : '/home'
 	});

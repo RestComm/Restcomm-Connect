@@ -1,9 +1,7 @@
-package org.mobicents.servlet.restcomm.rvd;
+package org.mobicents.servlet.restcomm.rvd.http;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -31,11 +29,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
-import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
@@ -56,7 +57,7 @@ import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationExcept
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
 
 @Path("/manager/projects")
-public class RvdManager {
+public class RvdManager extends UploadRestService {
 
     static final Logger logger = Logger.getLogger(RvdManager.class.getName());
 
@@ -327,40 +328,6 @@ public class RvdManager {
         }
     }
 
-    protected int size(InputStream stream) {
-        int length = 0;
-        try {
-            byte[] buffer = new byte[2048];
-            int size;
-            while ((size = stream.read(buffer)) != -1) {
-                length += size;
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return length;
-
-    }
-
-    protected String read(InputStream stream) {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                reader.close();
-            } catch (IOException e) {
-            }
-        }
-        return sb.toString();
-
-    }
 
     @GET
     @Path("/wavlist")
