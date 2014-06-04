@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd;
+package org.mobicents.servlet.restcomm.rvd.http;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -17,14 +17,17 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+
 import com.google.gson.Gson;
 
 @Path("/apps/{appname}/controller")
-public class RvdController {
+public class RvdController implements RestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
 
     @Context
