@@ -132,11 +132,11 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
         t.add("phrase", o.get("phrase"));
-        if ( !o.get("voice").isJsonNull() && !o.get("voice").getAsString().equals("") )
+        if ( o.get("voice") != null && !o.get("voice").isJsonNull() && !o.get("voice").getAsString().equals("") )
             t.add("voice", o.get("voice"));
-        if ( !o.get("loop").isJsonNull() )
+        if ( o.get("loop") != null && !o.get("loop").isJsonNull() )
             t.add("loop", o.get("loop"));
-        if ( !o.get("language").isJsonNull() && !o.get("language").getAsString().equals("") )
+        if ( o.get("language") != null && !o.get("language").isJsonNull() && !o.get("language").getAsString().equals("") )
             t.add("language", o.get("language"));
         t.add("iface", new JsonObject());
 
@@ -151,19 +151,19 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("kind", o.get("kind"));
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
-        if ( !o.get("loop").isJsonNull() )
+        if ( o.get("loop") != null && !o.get("loop").isJsonNull() )
             t.add("loop", o.get("loop"));
         t.add("playType", o.get("playType"));
 
         String wavUrl = "";
-        if ( o.get("wavUrl").getAsJsonPrimitive().isString() )
+        if ( o.get("wavUrl") != null && o.get("wavUrl").getAsJsonPrimitive().isString() )
             wavUrl = o.get("wavUrl").getAsJsonPrimitive().getAsString();
         JsonObject remote = new JsonObject();
         remote.addProperty("wavUrl", wavUrl);
         t.add("remote", remote);
 
         String wavLocalFilename = "";
-        if ( o.get("wavLocalFilename").getAsJsonPrimitive().isString() )
+        if ( o.get("wavLocalFilename") != null && o.get("wavLocalFilename").getAsJsonPrimitive().isString() )
             wavLocalFilename = o.get("wavLocalFilename").getAsJsonPrimitive().getAsString();
         JsonObject local = new JsonObject();
         remote.addProperty("wavLocalFilename", wavLocalFilename);
@@ -183,11 +183,11 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
         t.add("method", o.get("method"));
-        if ( o.get("timeout").isJsonPrimitive() && o.get("timeout").getAsJsonPrimitive().isNumber() )
+        if ( o.get("timeout") != null && o.get("timeout").isJsonPrimitive() && o.get("timeout").getAsJsonPrimitive().isNumber() )
             t.add("timeout", o.get("timeout"));
-        if ( !o.get("finishOnKey").isJsonNull()  && !"".equals(o.get("finishOnKey").getAsString()) )
+        if ( o.get("finishOnKey") != null && !o.get("finishOnKey").isJsonNull()  && !"".equals(o.get("finishOnKey").getAsString()) )
             t.add("finishOnKey", o.get("finishOnKey"));
-        if ( o.get("numDigits").isJsonPrimitive() && o.get("numDigits").getAsJsonPrimitive().isNumber() )
+        if ( o.get("numDigits") != null && o.get("numDigits").isJsonPrimitive() && o.get("numDigits").getAsJsonPrimitive().isNumber() )
             t.add("numDigits", o.get("numDigits"));
         t.add("gatherType", o.get("gatherType"));
 
@@ -266,7 +266,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("url", o.get(url));
 
         String method = null;
-        if ( o.get("method").isJsonPrimitive() && !"".equals(o.get("method").getAsString()) )
+        if ( o.get("method") != null && o.get("method").isJsonPrimitive() && !"".equals(o.get("method").getAsString()) )
             method = o.get("method").getAsString();
         t.add("method", o.get(method));
 
@@ -325,7 +325,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
 
-        if ( o.get("length").isJsonPrimitive() && o.get("length").getAsJsonPrimitive().isNumber() )
+        if ( o.get("length") != null && o.get("length").isJsonPrimitive() && o.get("length").getAsJsonPrimitive().isNumber() )
             t.add("length",o.get("length"));
 
         t.add("iface", new JsonObject());
@@ -353,22 +353,20 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("kind", o.get("kind"));
         t.add("label", o.get("label"));
         t.add("title", o.get("title"));
-        if (o.get("next").isJsonPrimitive() && "".equals(o.get("next").getAsString()) )
+        if (o.get("next") != null && o.get("next").isJsonPrimitive() && "".equals(o.get("next").getAsString()) )
             t.add("next", null);
         else
             t.add("next",o.get("next"));
         t.add("method", o.get("method"));
-        if ( !o.get("timeout").isJsonNull() )
+        if ( o.get("timeout") != null && !o.get("timeout").isJsonNull() )
             t.add("timeout", o.get("timeout"));
-        if ( !o.get("finishOnKey").isJsonNull() )
+        if ( o.get("finishOnKey") != null && !o.get("finishOnKey").isJsonNull() )
             t.add("finishOnKey", o.get("finishOnKey"));
-        if ( !o.get("maxLength").isJsonNull() )
+        if ( o.get("maxLength") != null && !o.get("maxLength").isJsonNull() )
             t.add("maxLength", o.get("maxLength"));
-        if ( !o.get("transcribe").isJsonNull() )
+        if ( o.get("transcribe") != null && !o.get("transcribe").isJsonNull() )
             t.add("transcribe", o.get("transcribe"));
-        if ( !o.get("transcribe").isJsonNull() )
-            t.add("transcribe", o.get("transcribe"));
-        if ( !o.get("transcribeCallback").isJsonNull() )
+        if ( o.get("transcribeCallback") != null && !o.get("transcribeCallback").isJsonNull() )
             t.add("transcribeCallback", o.get("transcribeCallback"));
 
         // omit playbeep
