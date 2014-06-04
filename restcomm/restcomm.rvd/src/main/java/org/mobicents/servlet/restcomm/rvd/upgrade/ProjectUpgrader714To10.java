@@ -163,7 +163,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("remote", remote);
 
         String wavLocalFilename = "";
-        if ( o.get("wavLocalFilename") != null && o.get("wavLocalFilename").getAsJsonPrimitive().isString() )
+        if ( o.get("wavLocalFilename") != null && o.get("wavLocalFilename").isJsonPrimitive() && o.get("wavLocalFilename").getAsJsonPrimitive().isString() )
             wavLocalFilename = o.get("wavLocalFilename").getAsJsonPrimitive().getAsString();
         JsonObject local = new JsonObject();
         remote.addProperty("wavLocalFilename", wavLocalFilename);
