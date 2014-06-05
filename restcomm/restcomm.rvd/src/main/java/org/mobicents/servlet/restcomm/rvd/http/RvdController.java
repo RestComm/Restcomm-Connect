@@ -27,7 +27,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import com.google.gson.Gson;
 
 @Path("/apps/{appname}/controller")
-public class RvdController implements RestService {
+public class RvdController extends RestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
 
     @Context

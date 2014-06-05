@@ -45,7 +45,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class ProjectService implements PackagingService {
+public class ProjectService {
 
     static final Logger logger = Logger.getLogger(ProjectService.class.getName());
 
@@ -206,85 +206,7 @@ public class ProjectService implements PackagingService {
     }
 
 
-    @Override
-    public void saveRappConfig(ServletInputStream rappConfig, String projectName) throws RvdException {
-        String data;
-        try {
-            data = IOUtils.toString(rappConfig);
-        } catch (IOException e) {
-            throw new RvdException("Error getting app configuration from the request", e);
-        }
-        logger.debug("RappConfig json: " + data);
-        projectStorage.storeRappConfig(data, projectName);
-
-    }
-    public void saveRappConfig(String rappConfig, String projectName) throws StorageException {
-        projectStorage.storeRappConfig(rappConfig, projectName);
-    }
-
-    /**
-     * Builds a RappConfig object out of its JSON representation
-     *
-     */
-    @Override
-    public RappConfig toModel(Class<RappConfig> clazz, String data) {
-        Gson gson = new Gson();
-        RappConfig rappConfig = gson.fromJson(data, RappConfig.class);
-        return rappConfig;
-    }
-
-
-    @Override
-    public RappConfig getRappConfig(String projectName) throws StorageException {
-        String data = projectStorage.loadRappConfig(projectName);
-        return toModel(RappConfig.class, data);
-    }
-
-
-    @Override
-    public InputStream createZipPackage(RvdProject project) throws RvdException {
-
-        logger.debug("Creating zip package for project " + project.getName());
-        String projectName = project.getName();
-
-        try {
-            File tempFile = File.createTempFile("rapp",".tmp");
-
-            Zipper zipper = new Zipper(tempFile);
-            try {
-                zipper.addDirectory("/app/");
-                zipper.addFileContent("/app/config", projectStorage.loadRappConfig(projectName) );
-                zipper.addDirectory("/app/rvd/");
-                zipper.addFileContent("/app/rvd/state", projectStorage.loadProjectState(projectName));
-
-                if ( project.supportsWavs() ) {
-                    zipper.addDirectory("/app/rvd/wavs/");
-                    for ( WavItem wavItem : projectStorage.listWavs(projectName) ) {
-                        InputStream wavStream = projectStorage.getWav(projectName, wavItem.getFilename());
-                        try {
-                            zipper.addFile("app/rvd/wavs/" + wavItem.getFilename(), wavStream );
-                        } finally {
-                            wavStream.close();
-                        }
-                    }
-                }
-
-
-            } finally {
-                zipper.finish();
-            }
-
-            projectStorage.storeAppPackage(projectName, tempFile);
-            // TODO - if FsProjectStorage  is not used, the temporaty file should still be removed (in this case it is not moved) !!!
-
-            logger.debug("Zip package created for project " + projectName);
-
-            return projectStorage.getAppPackage(projectName);
-        } catch (IOException e) {
-            throw new PackagingException("Error creating temporaty zip file ", e);
-        }
-
-    }
+    
 
     /**
      * Loads the project specified into an rvd project object

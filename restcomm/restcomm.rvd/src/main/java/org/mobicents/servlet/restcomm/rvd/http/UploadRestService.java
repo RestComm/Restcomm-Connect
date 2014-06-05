@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class UploadRestService implements RestService {
+public class UploadRestService extends RestService {
 
     public UploadRestService() {
         // TODO Auto-generated constructor stub

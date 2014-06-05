@@ -1,7 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.http;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -36,12 +35,9 @@ import org.mobicents.servlet.restcomm.rvd.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -51,8 +47,6 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
-import org.mobicents.servlet.restcomm.rvd.validation.RappConfigValidator;
-import org.mobicents.servlet.restcomm.rvd.validation.Validator;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
 
@@ -73,11 +67,6 @@ public class RvdManager extends UploadRestService {
         rvdSettings = RvdSettings.getInstance(servletContext);
         projectStorage = new FsProjectStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
-    }
-
-    Response buildErrorResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, RvdException exception) {
-        RvdResponse rvdResponse = new RvdResponse(rvdStatus).setException(exception);
-        return Response.status(httpStatus).entity(rvdResponse.asJson()).build();
     }
 
     @GET
@@ -367,97 +356,4 @@ public class RvdManager extends UploadRestService {
         }
 
     }
-
-    @POST
-    @Path("/package/config")
-    public Response saveAppConfig(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
-        logger.info("saving app configuration for project " + projectName);
-        try {
-            try {
-                projectService.saveRappConfig(request.getInputStream(), projectName);
-                logger.info("saved app configuration for project " + projectName);
-                return Response.ok().build();
-            } catch (IOException e) {
-                throw new RvdException("Error saving app configuration", e);
-            }
-        } catch (RvdException e) {
-            logger.error(e, e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
-        }
-    }
-
-    /**
-     * Returns application configuration information. If there is no packaging data
-     * for this project yet it returns 404/NOT_FOUND. If the project does not even
-     * exist it returns 500/INTERNAL_SERVER_ERROR
-     * @param projectName
-     * @return
-     */
-    @GET
-    @Path("/package/config")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAppConfig(@QueryParam("name") String projectName) {
-        logger.debug("retrieving app package for project " + projectName);
-
-        try {
-            if (! projectStorage.hasRappConfig(projectName) )
-                return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
-               //return Response.status(Status.NOT_FOUND).build();
-
-            String appConfig;
-            appConfig = projectStorage.loadRappConfig(projectName);
-            return Response.ok().entity(appConfig).build();
-        } catch (StorageException e) {
-            logger.error(e, e);
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        } catch (RvdException e){
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        }
-    }
-
-    @GET
-    @Path("/package/prepare")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response preparePackage(@QueryParam("name") String projectName) {
-        logger.debug("preparig app zip for project " + projectName);
-
-        try {
-            if (projectStorage.hasRappConfig(projectName) ) {
-                Validator validator = new RappConfigValidator();
-                //validator.validate(json)
-                RvdProject project = projectService.load(projectName);
-                projectService.createZipPackage(project);
-                return buildErrorResponse(Status.OK, RvdResponse.Status.OK, null);
-            } else {
-                return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new PackagingDoesNotExist());
-            }
-        } catch (RvdException e) {
-            logger.error(e,e);
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        }
-    }
-
-    @GET
-    @Path("/package/download")
-    public Response downloadPackage(@QueryParam("name") String projectName) {
-        logger.debug("downloading app zip for project " + projectName);
-
-        try {
-            if (projectStorage.hasRappConfig(projectName) ) {
-                Validator validator = new RappConfigValidator();
-                InputStream zipStream = projectStorage.getAppPackage(projectName);
-                return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename = rapp.zip").build();
-
-
-            } else {
-                return null;
-                //return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new PackagingDoesNotExist());
-            }
-        } catch (RvdException e) {
-            logger.error(e,e);
-            //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-            return null;
-        }
-    }
-
 }
