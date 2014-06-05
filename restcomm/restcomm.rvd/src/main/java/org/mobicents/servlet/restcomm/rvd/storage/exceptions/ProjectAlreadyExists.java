@@ -1,19 +1,17 @@
 package org.mobicents.servlet.restcomm.rvd.storage.exceptions;
 
+public class ProjectAlreadyExists extends StorageException {
 
-public class ProjectDirectoryAlreadyExists extends ProjectAlreadyExists {
-
-    public ProjectDirectoryAlreadyExists() {
-        super();
+    public ProjectAlreadyExists() {
         // TODO Auto-generated constructor stub
     }
 
-    public ProjectDirectoryAlreadyExists(String message, Throwable cause) {
+    public ProjectAlreadyExists(String message, Throwable cause) {
         super(message, cause);
         // TODO Auto-generated constructor stub
     }
 
-    public ProjectDirectoryAlreadyExists(String message) {
+    public ProjectAlreadyExists(String message) {
         super(message);
         // TODO Auto-generated constructor stub
     }

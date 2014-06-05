@@ -15,7 +15,11 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -26,13 +30,16 @@ public class RasRestService extends UploadRestService {
 
     @Context
     ServletContext servletContext;
-    //private RvdSettings rvdSettings;
+    private RvdSettings settings;
+    private ProjectStorage storage;
     private RasService rasService;
 
     @PostConstruct
     void init() {
-        //rvdSettings = RvdSettings.getInstance(servletContext);
-        rasService = new RasService();
+        settings = RvdSettings.getInstance(servletContext);
+        storage = new FsProjectStorage(settings);
+        rasService = new RasService(storage);
+
     }
 
     /**

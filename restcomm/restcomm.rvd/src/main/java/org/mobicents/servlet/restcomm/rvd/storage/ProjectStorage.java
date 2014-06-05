@@ -11,21 +11,15 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
 
-public interface ProjectStorage extends PackagingStorage {
+public interface ProjectStorage extends PackagingStorage, ProjectManagementStorage {
     String loadProjectOptions(String projectName) throws StorageException;
     void storeProjectOptions(String projectName, String projectOptions) throws StorageException;
     void clearBuiltProject(String projectName) throws StorageException;
     String loadProjectState(String projectName) throws StorageException;
-    //String loadNodeStepnames(String projectName, String nodeName) throws StorageException;
     StateHeader loadStateHeader(String projectName) throws StorageException;
-   // void storeNodeStepnames(String projectName, String nodeName, String stepNames) throws StorageException;
     void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException;
-    boolean projectExists(String projectName);
-    List<String> listProjectNames() throws StorageException;
     void cloneProject(String name, String clonedName) throws StorageException;
     void updateProjectState(String projectName, String newState) throws StorageException;
-    void renameProject(String projectName, String newProjectName) throws StorageException;
-    void deleteProject(String projectName) throws StorageException;
     void storeWav(String projectName, String wavname, InputStream wavStream) throws StorageException;
     List<WavItem> listWavs(String projectName) throws StorageException;
     InputStream getWav(String projectName, String filename) throws StorageException;
@@ -34,5 +28,5 @@ public interface ProjectStorage extends PackagingStorage {
     void storeNodeStepnames(String projectName, Node node) throws StorageException;
     List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException;
     void backupProjectState(String projectName) throws StorageException;
-    void cloneProtoProject(String kind, String clonedName) throws StorageException;
+    void cloneProtoProject(String kind, String clonedName) throws StorageException;    
 }
