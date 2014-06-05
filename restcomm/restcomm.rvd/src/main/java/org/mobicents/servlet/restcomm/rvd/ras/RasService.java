@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 
@@ -16,9 +17,11 @@ import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 public class RasService {
 
     static final Logger logger = Logger.getLogger(RasService.class.getName());
+    
+    ProjectStorage storage;
 
-    public RasService() {
-        // TODO Auto-generated constructor stub
+    public RasService(ProjectStorage storage) {
+        this.storage = storage;
     }
 
 
@@ -32,6 +35,8 @@ public class RasService {
         logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
+        
+        
     }
 
 }

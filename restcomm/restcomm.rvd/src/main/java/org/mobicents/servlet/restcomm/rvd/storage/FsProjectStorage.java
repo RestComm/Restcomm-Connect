@@ -24,6 +24,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
@@ -104,31 +105,6 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error loading project state file - " + filepath , e);
         }
     }
-
-    /*
-    @Override
-    public String loadNodeStepnames(String projectName, String nodeName) throws StorageException {
-        String content;
-        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + nodeName + ".node";
-        try {
-            content = FileUtils.readFileToString(new File(filepath));
-            return content;
-        } catch (IOException e) {
-            throw new StorageException("Error reading file - " + filepath);
-        }
-    }
-
-    @Override
-    public void storeNodeStepnames(String projectName,String nodeName, String stepNames) throws StorageException {
-        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + nodeName + ".node";
-        File outFile = new File(filepath);
-        try {
-            FileUtils.writeStringToFile(outFile, stepNames, "UTF-8");
-        } catch (IOException e) {
-            throw new StorageException("Error writing stepnames file - " + filepath , e);
-        }
-    }
-    */
 
     @Override
     public void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException {
@@ -392,7 +368,6 @@ public class FsProjectStorage implements ProjectStorage {
 
     @Override
     public void storeRappConfig(String data, String projectName) throws StorageException {
-        // TODO Auto-generated method stub
         logger.debug("storing RappConfig for project " + projectName);
 
         // create packaging directory if it does not exist
@@ -480,5 +455,17 @@ public class FsProjectStorage implements ProjectStorage {
         else
             throw new WavItemDoesNotExist("Wav file does not exist - " + filename );
 
+    }
+
+    @Override
+    public void createProjectSlot(String projectName) throws StorageException {
+        if ( projectExists(projectName) )
+            throw new ProjectAlreadyExists("Project '" + projectName + "' already exists");
+        
+        String projectPath = getProjectBasePath(projectName) +  File.separator + projectName;
+        File projectDirectory = new File(projectPath);
+        if ( !projectDirectory.mkdir() )
+            throw new StorageException("Cannot create project directory. Don't know why.");
+        
     }
 }
