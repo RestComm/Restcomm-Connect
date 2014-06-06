@@ -31,7 +31,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.AppPackageDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
-
+import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -366,29 +366,8 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
-    @Override
-    public void storeRappConfig(String data, String projectName) throws StorageException {
-        logger.debug("storing RappConfig for project " + projectName);
 
-        // create packaging directory if it does not exist
-        String packagingPath = getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME;
-        File packageDir = new File(packagingPath);
-        if (!(packageDir.exists() && packageDir.isDirectory()))
-            packageDir.mkdir();
-
-        if (packageDir.exists() && packageDir.isDirectory()) {
-            File configFile = new File(packagingPath + File.separator + "config");
-            try {
-                FileUtils.writeStringToFile(configFile, data, "UTF-8");
-            } catch (IOException e) {
-                throw new StorageException("Error creating config file: " + configFile, e);
-            }
-        } else {
-            throw new StorageException("Error storing app configuration. Bad packaging directory structure");
-        }
-
-    }
-
+/*
     @Override
     public String loadRappConfig(String projectName) throws StorageException {
         String configPath = getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "config";
@@ -398,16 +377,28 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error reading from file " + configPath);
         }
     }
+*/
 
     /**
      * Returns true if there is application configuration for the specified project. Otherwise it returns false.
      * @throws ProjectDoesNotExist
      */
+    /*
     @Override
     public boolean hasRappConfig(String projectName) throws ProjectDoesNotExist {
         if (!projectExists(projectName))
             throw new ProjectDoesNotExist();
         if ( new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "config").exists() )
+            return true;
+        return false;
+    }
+    */
+
+    @Override
+    public boolean hasPackaging(String projectName) throws ProjectDoesNotExist {
+        if (!projectExists(projectName))
+            throw new ProjectDoesNotExist();
+        if ( new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME ).exists() )
             return true;
         return false;
     }
@@ -439,6 +430,60 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     /**
+     * Create a packaging directory inside the project if it does not exist
+     * @param projectName
+     * @return a File pointing to the newlly created or existing directory
+     * @throws StorageException
+     */
+    private File createPackagingDir(String projectName) throws StorageException {
+        String packagingPath = getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME;
+        File packageDir = new File(packagingPath);
+        if (!(packageDir.exists() && packageDir.isDirectory())) {
+            if (! packageDir.mkdir() ) {
+                throw new StorageException("Error creating packaging directory. Bad directory structure");
+            }
+        }
+        return packageDir;
+    }
+
+    private void storeFile( Object item, Class<?> itemClass, File configFile) throws StorageException {
+        Gson gson = new Gson();
+        String data = gson.toJson(item, itemClass);
+        try {
+            FileUtils.writeStringToFile(configFile, data, "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException("Error creating file in storage: " + configFile, e);
+        }
+    }
+
+
+    @Override
+    public Rapp loadRapp(String projectName) throws StorageException {
+        Gson gson = new Gson();
+
+        try {
+            File file = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "rapp");
+            String data = FileUtils.readFileToString(file, "UTF-8");
+            Rapp rapp = gson.fromJson(data, Rapp.class);
+            return rapp;
+
+        } catch (IOException e) {
+            throw new StorageException("Error loading rapp for project '" + projectName + "'");
+        }
+    }
+
+
+    @Override
+    public void storeRapp(Rapp rapp, String projectName) throws StorageException {
+        logger.debug("storing Rapp for project " + projectName);
+
+        File packagingDir = createPackagingDir(projectName);
+        File file = new File(packagingDir.getPath() + File.separator + "rapp");
+        storeFile( rapp, rapp.getClass(), file );
+    }
+
+
+    /**
      * Returns an InputStream to the wav specified or throws an error if not found. DON'T FORGET TO CLOSE the
      * input stream after using. It is actually a FileInputStream.
      */
@@ -461,11 +506,12 @@ public class FsProjectStorage implements ProjectStorage {
     public void createProjectSlot(String projectName) throws StorageException {
         if ( projectExists(projectName) )
             throw new ProjectAlreadyExists("Project '" + projectName + "' already exists");
-        
+
         String projectPath = getProjectBasePath(projectName) +  File.separator + projectName;
         File projectDirectory = new File(projectPath);
         if ( !projectDirectory.mkdir() )
             throw new StorageException("Cannot create project directory. Don't know why.");
-        
+
     }
+
 }

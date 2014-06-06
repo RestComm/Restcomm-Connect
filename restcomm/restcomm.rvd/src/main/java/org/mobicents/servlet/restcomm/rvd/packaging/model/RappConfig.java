@@ -3,7 +3,10 @@ package org.mobicents.servlet.restcomm.rvd.packaging.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RappConfig {
+import org.mobicents.servlet.restcomm.rvd.validation.ValidatableModel;
+import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
+
+public class RappConfig extends ValidatableModel {
     public  class ConfigOption {
         public String name;
         public String label;
@@ -16,5 +19,11 @@ public class RappConfig {
 
     public RappConfig() {
 
+    }
+
+    @Override
+    public ValidationReport validate(ValidationReport report) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

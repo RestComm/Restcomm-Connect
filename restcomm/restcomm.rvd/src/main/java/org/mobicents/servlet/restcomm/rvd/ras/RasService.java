@@ -4,13 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.servlet.ServletInputStream;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
@@ -18,6 +16,8 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
+import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 import com.google.gson.Gson;
 
@@ -29,28 +29,19 @@ import com.google.gson.Gson;
 public class RasService {
 
     static final Logger logger = Logger.getLogger(RasService.class.getName());
-    
+
     ProjectStorage storage;
 
     public RasService(ProjectStorage storage) {
         this.storage = storage;
     }
-    
-    public void saveRappConfig(ServletInputStream rappConfig, String projectName) throws RvdException {
-        String data;
-        try {
-            data = IOUtils.toString(rappConfig);
-        } catch (IOException e) {
-            throw new RvdException("Error getting app configuration from the request", e);
-        }
-        logger.debug("RappConfig json: " + data);
-        storage.storeRappConfig(data, projectName);
 
-    }
-    
-    public void saveRappConfig(String rappConfig, String projectName) throws StorageException {
+    /*
+    public void saveRappConfig(RappConfig rappConfig, String projectName) throws RvdException {
+        // validate here...
         storage.storeRappConfig(rappConfig, projectName);
     }
+    */
 
     /**
      * Builds a RappConfig object out of its JSON representation
@@ -63,24 +54,26 @@ public class RasService {
     }
 
 
-    public RappConfig getRappConfig(String projectName) throws StorageException {
-        String data = storage.loadRappConfig(projectName);
-        return toModel(RappConfig.class, data);
-    }
-
-
     public InputStream createZipPackage(RvdProject project) throws RvdException {
 
         logger.debug("Creating zip package for project " + project.getName());
         String projectName = project.getName();
 
+        // extract info and config parts of a Rapp
+        Gson gson = new Gson();
+        Rapp rapp = storage.loadRapp(projectName);
+        String configData = gson.toJson(rapp.getConfig());
+        String infoData = gson.toJson(rapp.getInfo());
+
+        // create the zip bundle
         try {
             File tempFile = File.createTempFile("rapp",".tmp");
 
             Zipper zipper = new Zipper(tempFile);
             try {
                 zipper.addDirectory("/app/");
-                zipper.addFileContent("/app/config", storage.loadRappConfig(projectName) );
+                zipper.addFileContent("/app/info", infoData );
+                zipper.addFileContent("/app/config", configData );
                 zipper.addDirectory("/app/rvd/");
                 zipper.addFileContent("/app/rvd/state", storage.loadProjectState(projectName));
 
@@ -111,7 +104,7 @@ public class RasService {
             throw new PackagingException("Error creating temporaty zip file ", e);
         }
 
-    }    
+    }
 
 
     /**
@@ -124,8 +117,22 @@ public class RasService {
         logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
-        
-        
+
+
+    }
+
+    public void saveApp(Rapp rapp, String projectName) throws RvdValidationException, StorageException {
+        ValidationReport report = rapp.validate();
+        if ( ! report.isOk() )
+            throw new RvdValidationException("Cannot validate rapp", report);
+
+        storage.storeRapp(rapp, projectName);
+        //storage.storeRappInfo(rapp.getInfo(), projectName);
+        //storage.storeRappConfig(rapp.getConfig(), projectName);
+    }
+
+    public Rapp getApp(String projectName) throws StorageException {
+        return storage.loadRapp(projectName);
     }
 
 }

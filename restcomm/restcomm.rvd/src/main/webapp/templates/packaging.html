@@ -12,70 +12,83 @@
 			-->
 			
 			<ul class="nav navbar-nav navbar-right">
-				<li><a class='rvd-clickable-text' ng-click='saveRappConfig(projectName,rappConfig)'><i class='fa fa-save'></i>&nbsp; Save</a></li>
+				<li><a class='rvd-clickable-text' ng-click='saveRapp(projectName,rapp)'><i class='fa fa-save'></i>&nbsp; Save</a></li>
 			</ul>
 		</div>
 	</nav>
 
 
 	
-	<div ng-hide='rappConfig' class="row">
+	<div ng-hide='rapp' class="row">
 		<div class="col-md-3 col-centered">
 			Welcome the RAS packaging tool. It will help you package you application before submiting it to the application store.
 		</div>
 	</div>
 	
-	<div ng-show='rappConfig'>
+	<div ng-show='rapp'>
 
-	<div class="form-group">
-		<div class='pull-right'>
-			<!-- <a ng-click='saveRappConfig(projectName,rappConfig)'>Save</a> -->
-			&nbsp;&nbsp;&nbsp;<a ng-click='preparePackage(projectName)'>I'm done configuring</a>
-			&nbsp;&nbsp;&nbsp;<a href='/restcomm-rvd/services/manager/projects/package/download?name={{projectName}}'>Download</a>
+		<div class="form-group">
+			<div class='pull-right'>
+				<!-- <a ng-click='saveRappConfig(projectName,rapp)'>Save</a> -->
+				&nbsp;&nbsp;&nbsp;<a ng-click='preparePackage(projectName)'>I'm done configuring</a>
+				&nbsp;&nbsp;&nbsp;<a href='/restcomm-rvd/services/ras/packaging/download?name={{projectName}}'>Download</a>
+			</div>
+			
+			<h4>Choose a name</h4>
+			<input ng-model='rapp.info.name' class='form-control' required>
+			<span class="help-block">Type the name of the application to be used in the application store</span>
+
+			<h4>Summary</h4>
+			<input ng-model='rapp.info.description' class='form-control' required>
+			<span class="help-block">Describe your application</span>
+
+			<h4>Version</h4>
+			<input ng-model='rapp.info.appVersion' class='form-control' required>
+			<span class="help-block">The version of your application. For new applications type 1</span>
+			
+			<h4>How to configure</h4>
+			<textarea ng-model='rapp.config.howTo' class="form-control"></textarea>
+			<span class="help-block">Type a small text describing general configuration guidelines</span>
 		</div>
-		<h4>How to configure</h4>
-		<textarea ng-model='rappConfig.howTo' class="form-control"></textarea>
-		<span class="help-block">Type a small text describing general configuration guidelines</span>
-	</div>
-	
-	<h3>Configuration options</h3>
-	<span class="help-block">Customize you app by adding options. Add an option for any piece of information you need to be adjusted by the end user.</span>
-	
-	<!--{{rappConfig}} -->
-	<div basic-sortable list-model='rappConfig.options'>
-		<div ng-repeat="configOption in rappConfig.options" class='form-group'>
-			<rvd-panel title="configOption.label" on-close='removeConfigurationOption(configOption)'>
-				<div class="row">
-					<div class="form-group col-md-3">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name *</label>
-						<input ng-model='configOption.name' class="form-control" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}">
-					</div>
-					<div class="form-group col-md-3">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">Label *</label>
-						<input ng-model='configOption.label' class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}">
-					</div>	
-					<div class="form-group col-md-3">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">Default value</label>
-						<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}">
-					</div>	
-					<div class="form-group col-md-3">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">Required</label>
-						<div>
-							<input type='checkbox' ng-model='configOption.required'>
+		
+		<h3>Configuration options</h3>
+		<span class="help-block">Customize you app by adding options. Add an option for any piece of information you need to be adjusted by the end user.</span>
+		
+		<!--{{rapp}} -->
+		<div basic-sortable list-model='rapp.config.options'>
+			<div ng-repeat="configOption in rapp.config.options" class='form-group'>
+				<rvd-panel title="configOption.label" on-close='removeConfigurationOption(configOption)'>
+					<div class="row">
+						<div class="form-group col-md-3">
+							<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name *</label>
+							<input ng-model='configOption.name' class="form-control" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}">
 						</div>
-					</div>									
-				</div>
-				<div class="row">
-					<div class="form-group col-md-6">
-						<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed">Description *</label>
-						<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"></textarea>
+						<div class="form-group col-md-3">
+							<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">Label *</label>
+							<input ng-model='configOption.label' class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}">
+						</div>	
+						<div class="form-group col-md-3">
+							<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">Default value</label>
+							<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}">
+						</div>	
+						<div class="form-group col-md-3">
+							<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">Required</label>
+							<div>
+								<input type='checkbox' ng-model='configOption.required'>
+							</div>
+						</div>									
 					</div>
-			</div>				
-			</rvd-panel>
+					<div class="row">
+						<div class="form-group col-md-6">
+							<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed">Description *</label>
+							<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"></textarea>
+						</div>
+				</div>				
+				</rvd-panel>
+			</div>
 		</div>
-	</div>
-
-	<multibutton ng-click='addConfigurationOption(selectedOption)' options="['Add value']" button-class="btn-primary"></multibutton>
+	
+		<multibutton ng-click='addConfigurationOption(selectedOption)' options="['Add value']" button-class="btn-primary"></multibutton>
 </div>
 
 

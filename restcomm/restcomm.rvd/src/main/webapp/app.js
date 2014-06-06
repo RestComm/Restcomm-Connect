@@ -18,8 +18,8 @@ App.config([ '$routeProvider', function($routeProvider) {
 		templateUrl : 'templates/packaging.html',
 		controller : 'packagingCtrl',
 		resolve: {
-			rappConfigWrap: function(RappConfigService) {
-				return RappConfigService.getRappConfig();
+			rappWrap: function(RappService) {
+				return RappService.getRapp();
 			}
 		}
 	})

@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd.validation.exceptions;
+package org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 
