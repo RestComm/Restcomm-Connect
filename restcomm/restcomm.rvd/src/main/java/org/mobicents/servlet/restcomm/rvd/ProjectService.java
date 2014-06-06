@@ -1,25 +1,24 @@
 package org.mobicents.servlet.restcomm.rvd;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ProjectValidator;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ValidationResult;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationFrameworkException;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.packaging.PackagingService;
-import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -27,12 +26,6 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
-import org.mobicents.servlet.restcomm.rvd.validation.ProjectValidator;
-import org.mobicents.servlet.restcomm.rvd.validation.ValidationResult;
-import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
-import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -40,7 +33,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -206,7 +198,7 @@ public class ProjectService {
     }
 
 
-    
+
 
     /**
      * Loads the project specified into an rvd project object

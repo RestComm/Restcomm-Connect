@@ -14,5 +14,5 @@ public interface ProjectManagementStorage {
     void renameProject(String projectName, String newProjectName) throws StorageException;
     void deleteProject(String projectName) throws StorageException;
     boolean projectExists(String projectName);
-    List<String> listProjectNames() throws StorageException;    
+    List<String> listProjectNames() throws StorageException;
 }

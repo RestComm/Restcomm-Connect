@@ -1,18 +1,22 @@
-package org.mobicents.servlet.restcomm.rvd.ras;
+package org.mobicents.servlet.restcomm.rvd.packaging.model;
+
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.validation.ValidatableModel;
+import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 
 /**
  * General information about the app. It is usually directly loaded or stored from info.xml file
  * @author "Tsakiridis Orestis"
  *
  */
-public class AppInfo {
+public class RappInfo extends ValidatableModel {
 
     private String name;
     private String description;
     private String appVersion;
-    private String rvdAppVersion;
+    private String rvdAppVersion = RvdSettings.getRvdProjectVersion();
 
-    public AppInfo() {
+    public RappInfo() {
         // TODO Auto-generated constructor stub
     }
 
@@ -46,6 +50,12 @@ public class AppInfo {
 
     public void setRvdAppVersion(String rvdAppVersion) {
         this.rvdAppVersion = rvdAppVersion;
+    }
+
+    @Override
+    public ValidationReport validate(ValidationReport report) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 

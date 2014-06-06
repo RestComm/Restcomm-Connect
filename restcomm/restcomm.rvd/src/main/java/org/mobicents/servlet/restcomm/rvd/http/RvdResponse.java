@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.ExceptionResult;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 
 import com.google.gson.Gson;
 
@@ -10,6 +11,7 @@ public class RvdResponse {
     public enum Status { OK, INVALID, ERROR }
     Status rvdStatus; // ok - invalid - error
     ExceptionResult exception;
+    ValidationReport report;
 
     public RvdResponse() {
         rvdStatus = Status.OK;
@@ -29,6 +31,11 @@ public class RvdResponse {
         exception = e.getExceptionSummary();
         rvdStatus = Status.ERROR;
         }
+        return this;
+    }
+
+    public RvdResponse setReport(ValidationReport report) {
+        this.report = report;
         return this;
     }
 

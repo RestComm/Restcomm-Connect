@@ -1,19 +1,19 @@
 angular.module('Rvd')
-.controller('packagingCtrl', function ($scope, $routeParams, RappConfig, ConfigOption, $http, rappConfigWrap) {
+.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap) {
 
 	$scope.addConfigurationOption = function(type) {
 		console.log("Adding configuration option");
-		$scope.rappConfig.addOption( ConfigOption.getTypeByLabel(type));
+		$scope.rapp.config.addOption( ConfigOption.getTypeByLabel(type));
 	}
 	
 	$scope.removeConfigurationOption = function (option) {
-		$scope.rappConfig.removeOption(option);
+		$scope.rapp.config.removeOption(option);
 	}
 	
-	$scope.saveRappConfig = function (projectName,rappConfig) {
-		var packed = rappConfig.pack();
+	$scope.saveRapp = function (projectName,rapp) {
+		var packed = rapp.pack();
 		$http({
-			url: 'services/manager/projects/package/config?name=' + projectName,
+			url: 'services/ras/packaging/app/save?name=' + projectName,
 			method:'POST',
 			data: packed,
 			headers: {'Content-Type': 'application/data'}
@@ -23,7 +23,7 @@ angular.module('Rvd')
 	
 	$scope.preparePackage = function (projectName) {
 		$http({
-			url: 'services/manager/projects/package/prepare?name=' + projectName,
+			url: 'services/ras/packaging/app/prepare?name=' + projectName,
 			method: 'GET'
 		})
 		.success(function () {console.log("Package is ready for download")});
@@ -31,25 +31,24 @@ angular.module('Rvd')
 	
 	// initialization stuff
 	$scope.projectName = $routeParams.projectName;
-	$scope.rappConfig = rappConfigWrap.rappConfig;
-	$scope.configExists = rappConfigWrap.exists;
+	$scope.rapp = rappWrap.rapp;
 })
-.factory('RappConfigService', ['$http', '$q', 'RappConfig', '$route', '$location', function ($http, $q, RappConfig,$route, $rootScope) {
+.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', function ($http, $q, Rapp,$route, $rootScope) {
 	var serviceFunctions = {
-		getRappConfig : function () {
+		getRapp : function () {
 			var deferred = $q.defer();
 			$http({
-				url:  'services/manager/projects/package/config?name=' + $route.current.params.projectName,
+				url:  'services/ras/packaging/app?name=' + $route.current.params.projectName,
 				method: 'GET',
 			})
 			.success(function (data, status, headers, config) {
-				var rappConfig = new RappConfig().init(data);
-				deferred.resolve({exists:true, rappConfig: rappConfig});
+				var rapp = new Rapp().init(data);
+				deferred.resolve({exists:true, rapp: rapp});
 			})
 			.error(function (data, status, headers,config) {
 				if ( status == 404 ) {
-					var rappConfig = new RappConfig();
-					deferred.resolve({exists:false, rappConfig: rappConfig});
+					var rapp = new Rapp();
+					deferred.resolve({exists:false, rapp: rapp});
 				} else {
 					console.log("server error occured");
 					deferred.reject({statusCode: status, message:'Sorry, the resource you were looking for could not be found'});
@@ -88,5 +87,29 @@ angular.module('Rvd')
 	}
 	return RappConfig;
 }])
+.factory('RappInfo', ['rvdModel', function (rvdModel) {
+	function RappInfo() {
+		
+	};
+	RappInfo.prototype = new rvdModel();
+	RappInfo.prototype.constructor = RappInfo;
+	return RappInfo;
+}])
+.factory('Rapp', ['rvdModel', 'RappConfig', 'RappInfo', function (rvdModel, RappConfig, RappInfo) {
+	function Rapp() {
+		this.config = new RappConfig();
+		this.info = new RappInfo();
+	};
+	Rapp.prototype = new rvdModel();
+	Rapp.prototype.constructor = Rapp;
+	Rapp.prototype.init = function (from) {
+		angular.extend(this, from);
+		this.info = new RappInfo().init(from.info);
+		this.config = new RappConfig().init(from.config);
+		return this;
+	}
+	return Rapp;
+}])
+
 ;
 

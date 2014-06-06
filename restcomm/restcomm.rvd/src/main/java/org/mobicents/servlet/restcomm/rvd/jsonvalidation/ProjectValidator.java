@@ -1,14 +1,16 @@
-package org.mobicents.servlet.restcomm.rvd.validation;
+package org.mobicents.servlet.restcomm.rvd.jsonvalidation;
 
 import java.io.IOException;
 
-import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationFrameworkException;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 
 public class ProjectValidator implements Validator {

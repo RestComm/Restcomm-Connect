@@ -1,7 +1,7 @@
-package org.mobicents.servlet.restcomm.rvd.validation.exceptions;
+package org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
-import org.mobicents.servlet.restcomm.rvd.validation.ValidationResult;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ValidationResult;
 
 public class ValidationException extends RvdException {
     private ValidationResult validationResult;
