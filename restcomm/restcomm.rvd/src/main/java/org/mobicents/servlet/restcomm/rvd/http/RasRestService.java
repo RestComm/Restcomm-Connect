@@ -162,7 +162,7 @@ public class RasRestService extends UploadRestService {
      * @return
      */
     @POST
-    @Path("/manager/projects/new")
+    @Path("/app/new")
     public Response newRasApp(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 

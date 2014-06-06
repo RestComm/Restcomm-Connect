@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -118,7 +121,31 @@ public class RasService {
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
 
+        String infoPath = tempDir.getPath() + "/app/" + "info";
+        RappInfo info = storage.loadModelFromFile( infoPath, RappInfo.class );
 
+        // create a project with the application name specified in the package. This should be a default. The user should be able to override it
+        String newProjectName = storage.getAvailableProjectName(info.getName());
+        storage.createProjectSlot(newProjectName);
+
+        // add project state
+        storage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
+
+        // and wav files one-by-one (if any)
+        File wavDir = new File(tempDir.getPath() + "/app/rvd/wavs");
+        if ( wavDir.exists() ) {
+            File[] wavFiles = wavDir.listFiles();
+            for ( File wavFile : wavFiles ) {
+                storage.storeWav(newProjectName, wavFile.getName(), wavFile);
+            }
+        }
+
+        // now remove temporary directory
+        try {
+            FileUtils.deleteDirectory(tempDir);
+        } catch (IOException e) {
+            throw new RasException("Error removing temporary directory after importing project '" + newProjectName + "'");
+        }
     }
 
     public void saveApp(Rapp rapp, String projectName) throws RvdValidationException, StorageException {

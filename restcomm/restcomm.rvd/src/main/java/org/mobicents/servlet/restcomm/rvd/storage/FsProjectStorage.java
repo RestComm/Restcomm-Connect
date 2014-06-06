@@ -84,6 +84,17 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     @Override
+    public void storeProjectState(String projectName, File sourceStateFile) throws StorageException {
+        String destFilepath = getProjectBasePath(projectName) + File.separator + "state";
+        try {
+            FileUtils.copyFile(sourceStateFile, new File(destFilepath));
+        } catch (IOException e) {
+            throw new StorageException("Error storing state for project '" + projectName + "'", e );
+        }
+
+    }
+
+    @Override
     public void clearBuiltProject(String projectName) {
 
         String projectPath = getProjectBasePath(projectName) + File.separator + projectName + File.separator;
@@ -236,6 +247,16 @@ public class FsProjectStorage implements ProjectStorage {
             FileUtils.deleteDirectory(projectDir);
         } catch (IOException e) {
             throw new StorageException("Error removing directory '" + projectName + "'", e);
+        }
+    }
+
+    @Override
+    public void storeWav(String projectName, String wavname, File sourceWavFile) throws StorageException {
+        String destWavPathname = getProjectWavsPath(projectName) + File.separator + wavname;
+        try {
+            FileUtils.copyFile(sourceWavFile, new File(destWavPathname));
+        } catch (IOException e) {
+            throw new StorageException( "Error coping wav file into project " + projectName + ": " + sourceWavFile + " -> " + destWavPathname, e );
         }
     }
 
@@ -457,30 +478,6 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
 
-    @Override
-    public Rapp loadRapp(String projectName) throws StorageException {
-        Gson gson = new Gson();
-
-        try {
-            File file = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "rapp");
-            String data = FileUtils.readFileToString(file, "UTF-8");
-            Rapp rapp = gson.fromJson(data, Rapp.class);
-            return rapp;
-
-        } catch (IOException e) {
-            throw new StorageException("Error loading rapp for project '" + projectName + "'");
-        }
-    }
-
-
-    @Override
-    public void storeRapp(Rapp rapp, String projectName) throws StorageException {
-        logger.debug("storing Rapp for project " + projectName);
-
-        File packagingDir = createPackagingDir(projectName);
-        File file = new File(packagingDir.getPath() + File.separator + "rapp");
-        storeFile( rapp, rapp.getClass(), file );
-    }
 
 
     /**
@@ -507,11 +504,82 @@ public class FsProjectStorage implements ProjectStorage {
         if ( projectExists(projectName) )
             throw new ProjectAlreadyExists("Project '" + projectName + "' already exists");
 
-        String projectPath = getProjectBasePath(projectName) +  File.separator + projectName;
+        String projectPath = workspaceBasePath +  File.separator + projectName;
         File projectDirectory = new File(projectPath);
         if ( !projectDirectory.mkdir() )
-            throw new StorageException("Cannot create project directory. Don't know why.");
+            throw new StorageException("Cannot create project directory. Don't know why - " + projectDirectory );
 
     }
+
+    @Override
+    public Rapp loadRapp(File file) throws StorageException {
+        Gson gson = new Gson();
+        try {
+            String data = FileUtils.readFileToString(file, "UTF-8");
+            Rapp rapp = gson.fromJson(data, Rapp.class);
+            return rapp;
+
+        } catch (IOException e) {
+            throw new StorageException("Error loading rapp file '" + file + "'");
+        }
+    }
+
+    @Override
+    public <T> T loadModelFromFile(String filepath, Class<T> modelClass) throws StorageException {
+        File file = new File(filepath);
+        return loadModelFromFile(file, modelClass);
+    }
+
+    @Override
+    public <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException {
+        Gson gson = new Gson();
+        try {
+            String data = FileUtils.readFileToString(file, "UTF-8");
+            T instance = gson.fromJson(data, modelClass);
+            return instance;
+
+        } catch (IOException e) {
+            throw new StorageException("Error loading model from file '" + file + "'", e);
+        }
+    }
+
+    @Override
+    public Rapp loadRapp(String projectName) throws StorageException {
+            File file = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "rapp");
+            return loadRapp(file);
+    }
+
+
+    @Override
+    public void storeRapp(Rapp rapp, String projectName) throws StorageException {
+        logger.debug("storing Rapp for project " + projectName);
+
+        File packagingDir = createPackagingDir(projectName);
+        File file = new File(packagingDir.getPath() + File.separator + "rapp");
+        storeFile( rapp, rapp.getClass(), file );
+    }
+
+    /**
+     * Returns an non-existing project name based on the given one. Ideally it returns the same name. If null or blank
+     * project name given the 'Untitled' name is tried.
+     * @throws StorageException in case the first 50 project names tried are already occupied
+     */
+    @Override
+    public String getAvailableProjectName(String projectName) throws StorageException {
+        if ( projectName == null || "".equals(projectName) )
+            projectName = "Unititled";
+
+        String baseProjectName = projectName;
+        int counter = 1;
+        while (true && counter < 50) { // try up to 50 times, no more
+            if ( ! projectExists(projectName) )
+                return projectName;
+            projectName = baseProjectName + " " +  counter;
+            counter ++;
+        }
+
+        throw new StorageException("Can't find an available project name for base name '" + projectName + "'");
+    }
+
 
 }
