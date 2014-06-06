@@ -8,7 +8,8 @@ var rcMod = angular.module('rcApp', [
   'ui.bootstrap',
   'angular-md5',
   'loadingOnAJAX',
-  'ui.bootstrap.modal.dialog'
+  'ui.bootstrap.modal.dialog',
+  'angularFileUpload'
 ]);
 
 rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
@@ -34,6 +35,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
     when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl'}).
     when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
     when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
+    when('/ras', {templateUrl: 'modules/rapp-manager.html', controller: 'RappManagerCtrl'}).
     otherwise({redirectTo: '/dashboard'});
 
   // $locationProvider.html5Mode(true);
