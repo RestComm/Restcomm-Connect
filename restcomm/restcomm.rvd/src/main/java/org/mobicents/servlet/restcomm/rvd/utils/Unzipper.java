@@ -27,15 +27,20 @@ public class Unzipper {
 
            while ( zipEntry != null ) {
               String fileName = zipEntry.getName();
-              String filePathname = outputDirectory.getPath() + File.separator + fileName;
+              String pathname = outputDirectory.getPath() + File.separator + fileName;
 
-              logger.debug("creating new file from zip: " + filePathname);
-              FileOutputStream fileEntryStream = new FileOutputStream(new File(filePathname));
+              if (zipEntry.isDirectory()) {
+                  logger.debug("creating new directory from zip: " + pathname);
+                  new File(pathname).mkdirs();
+              }
+              else {
+                  logger.debug("creating new file from zip: " + pathname);
+                  FileOutputStream fileEntryStream = new FileOutputStream(new File(pathname));
+                  IOUtils.copy(zipInputStream, fileEntryStream);
+                  fileEntryStream.close();
+              }
 
-              IOUtils.copy(zipInputStream, fileEntryStream);
-
-               fileEntryStream.close();
-               zipEntry = zipInputStream.getNextEntry();
+              zipEntry = zipInputStream.getNextEntry();
            }
            zipInputStream.closeEntry();
 

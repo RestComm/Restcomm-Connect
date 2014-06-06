@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.storage;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
@@ -12,6 +13,9 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist
 
 
 public interface ProjectStorage extends PackagingStorage, ProjectManagementStorage {
+    <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException;
+    <T> T loadModelFromFile(String filepath, Class<T> modelClass) throws StorageException;
+    String getAvailableProjectName(String projectName) throws StorageException;
     String loadProjectOptions(String projectName) throws StorageException;
     void storeProjectOptions(String projectName, String projectOptions) throws StorageException;
     void clearBuiltProject(String projectName) throws StorageException;
@@ -21,6 +25,7 @@ public interface ProjectStorage extends PackagingStorage, ProjectManagementStora
     void cloneProject(String name, String clonedName) throws StorageException;
     void updateProjectState(String projectName, String newState) throws StorageException;
     void storeWav(String projectName, String wavname, InputStream wavStream) throws StorageException;
+    void storeWav(String projectName, String wavname, File sourceWavFile) throws StorageException;
     List<WavItem> listWavs(String projectName) throws StorageException;
     InputStream getWav(String projectName, String filename) throws StorageException;
     void deleteWav(String projectName, String wavname) throws WavItemDoesNotExist;
@@ -29,5 +34,5 @@ public interface ProjectStorage extends PackagingStorage, ProjectManagementStora
     List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException;
     void backupProjectState(String projectName) throws StorageException;
     void cloneProtoProject(String kind, String clonedName) throws StorageException;
-
+    void storeProjectState(String projectName, File sourceStateFile) throws StorageException;
 }
