@@ -13,6 +13,12 @@ public class Rapp extends ValidatableModel {
     private RappInfo info;
     private RappConfig config;
 
+    public Rapp(RappInfo info, RappConfig config) {
+        super();
+        this.info = info;
+        this.config = config;
+    }
+
     public RappInfo getInfo() {
         return info;
     }
