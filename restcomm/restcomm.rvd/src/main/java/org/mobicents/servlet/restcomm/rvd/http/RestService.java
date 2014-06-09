@@ -20,4 +20,9 @@ public class RestService {
         RvdResponse rvdResponse = new RvdResponse( RvdResponse.Status.OK );
         return Response.status(Response.Status.OK).entity(rvdResponse.asJson()).build();
     }
+
+    Response buildOkResponse(Object payload) {
+        RvdResponse rvdResponse = new RvdResponse().setOkPayload(payload);
+        return Response.status(Response.Status.OK).entity(rvdResponse.asJson()).build();
+    }
 }

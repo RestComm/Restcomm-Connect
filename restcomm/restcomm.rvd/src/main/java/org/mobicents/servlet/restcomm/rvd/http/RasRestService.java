@@ -26,6 +26,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -157,13 +158,14 @@ public class RasRestService extends UploadRestService {
 
     /**
      * Create a new application by uploading a ras package
-     * @param projectName
+     * @param projectNameOverride - NOT IMPLEMENTED - if specified, the project should be named like this. Otherwise a best effort is made so
+     * that the project is named according to the the package content
      * @param request
      * @return
      */
     @POST
     @Path("/app/new")
-    public Response newRasApp(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
+    public Response newRasApp(@QueryParam("name") String projectNameOverride, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
         try {
@@ -182,8 +184,10 @@ public class RasRestService extends UploadRestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
-                        rasService.importAppToWorkspace(item.openStream());
+                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream());
                         fileinfo.addProperty("name", item.getName());
+                        fileinfo.addProperty("projectName", effectiveProjectName);
+
                     }
                     if (item.getName() == null) {
                         logger.warn( "non-file part found in upload");
@@ -205,6 +209,23 @@ public class RasRestService extends UploadRestService {
         }
 
     }
+
+    @GET
+    @Path("/app/getconfig")
+    public Response getConfig(@QueryParam("name") String projectName) {
+        logger.info("getting configuration options for " + projectName);
+
+        RappConfig rappConfig;
+        try {
+            rappConfig = rasService.getRappConfig(projectName);
+            return buildOkResponse(rappConfig);
+        } catch (StorageException e) {
+            logger.error(e.getMessage(), e);
+            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        }
+    }
+
+
 
 
 }

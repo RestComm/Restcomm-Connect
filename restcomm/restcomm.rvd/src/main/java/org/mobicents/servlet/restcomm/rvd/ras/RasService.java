@@ -113,16 +113,19 @@ public class RasService {
     /**
      * Unzips the package stream in a temporary directory and creates an app out of it
      * @param packageZipStream
+     * @return The name (some sort of identifier) of the new project created
      * @throws RvdException
      */
-    public void importAppToWorkspace( InputStream packageZipStream ) throws RvdException {
+    public String importAppToWorkspace( InputStream packageZipStream ) throws RvdException {
         File tempDir = RvdUtils.createTempDir();
         logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
 
-        String infoPath = tempDir.getPath() + "/app/" + "info";
-        RappInfo info = storage.loadModelFromFile( infoPath, RappInfo.class );
+        //String infoPath = tempDir.getPath() + "/app/" + "info";
+        RappInfo info = storage.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
+        RappConfig config = storage.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
+
 
         // create a project with the application name specified in the package. This should be a default. The user should be able to override it
         String newProjectName = storage.getAvailableProjectName(info.getName());
@@ -140,12 +143,18 @@ public class RasService {
             }
         }
 
+        // Store rapp for later usage
+        Rapp rapp = new Rapp(info, config);
+        storage.storeRapp(rapp, newProjectName);
+
         // now remove temporary directory
         try {
             FileUtils.deleteDirectory(tempDir);
         } catch (IOException e) {
-            throw new RasException("Error removing temporary directory after importing project '" + newProjectName + "'");
+            logger.warn(new RasException("Error removing temporary directory after importing project '" + newProjectName + "'"));
         }
+
+        return newProjectName;
     }
 
     public void saveApp(Rapp rapp, String projectName) throws RvdValidationException, StorageException {
@@ -160,6 +169,11 @@ public class RasService {
 
     public Rapp getApp(String projectName) throws StorageException {
         return storage.loadRapp(projectName);
+    }
+
+    public RappConfig getRappConfig(String projectName) throws StorageException {
+        Rapp rapp = storage.loadRapp(projectName);
+        return rapp.getConfig();
     }
 
 }

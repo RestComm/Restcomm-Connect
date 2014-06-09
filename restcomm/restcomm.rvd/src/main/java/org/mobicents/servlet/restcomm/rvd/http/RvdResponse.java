@@ -12,6 +12,7 @@ public class RvdResponse {
     Status rvdStatus; // ok - invalid - error
     ExceptionResult exception;
     ValidationReport report;
+    Object payload; // for OK responses that are meant for data retrieval
 
     public RvdResponse() {
         rvdStatus = Status.OK;
@@ -36,6 +37,12 @@ public class RvdResponse {
 
     public RvdResponse setReport(ValidationReport report) {
         this.report = report;
+        return this;
+    }
+
+    public RvdResponse setOkPayload(Object payload) {
+        this.payload = payload;
+        rvdStatus = Status.OK;
         return this;
     }
 
