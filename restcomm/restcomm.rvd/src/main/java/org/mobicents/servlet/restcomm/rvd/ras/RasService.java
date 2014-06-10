@@ -10,6 +10,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
@@ -97,12 +98,12 @@ public class RasService {
                 zipper.finish();
             }
 
-            storage.storeAppPackage(projectName, tempFile);
+            storage.storeRappBinary(projectName, tempFile);
             // TODO - if FsProjectStorage  is not used, the temporaty file should still be removed (in this case it is not moved) !!!
 
             logger.debug("Zip package created for project " + projectName);
 
-            return storage.getAppPackage(projectName);
+            return storage.getRappBinary(projectName);
         } catch (IOException e) {
             throw new PackagingException("Error creating temporaty zip file ", e);
         }
@@ -174,6 +175,13 @@ public class RasService {
     public RappConfig getRappConfig(String projectName) throws StorageException {
         Rapp rapp = storage.loadRapp(projectName);
         return rapp.getConfig();
+    }
+
+    public RappBinaryInfo getBinaryInfo(String projectName) {
+        RappBinaryInfo binaryInfo = new RappBinaryInfo();
+        binaryInfo.setExists( storage.binaryAvailable(projectName) );
+
+        return binaryInfo;
     }
 
 }

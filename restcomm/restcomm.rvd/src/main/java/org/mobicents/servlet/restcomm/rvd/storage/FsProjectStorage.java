@@ -32,6 +32,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.AppPackageDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
+
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -425,20 +426,22 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     @Override
-    public void storeAppPackage(String projectName, File packageFile) throws RvdException {
+    public void storeRappBinary(String projectName, File packageFile) throws RvdException {
         if (projectExists(projectName)) {
             File destFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
             try {
-                FileUtils.moveFile(packageFile, destFile);
+                //FileUtils.moveFile(packageFile, destFile);
+                FileUtils.copyFile(packageFile, destFile);
+                FileUtils.deleteQuietly(packageFile);
             } catch (IOException e) {
-                throw new PackagingException("Error moving app package file inside project", e);
+                throw new PackagingException("Error copying binary file inside project", e);
             }
         } else
             throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
     }
 
     @Override
-    public InputStream getAppPackage(String projectName) throws RvdException {
+    public InputStream getRappBinary(String projectName) throws RvdException {
         if (projectExists(projectName)) {
             File packageFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
             try {
@@ -579,6 +582,14 @@ public class FsProjectStorage implements ProjectStorage {
         }
 
         throw new StorageException("Can't find an available project name for base name '" + projectName + "'");
+    }
+
+    @Override
+    public boolean binaryAvailable(String projectName) {
+        File binaryFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
+        if ( binaryFile.exists() )
+            return true;
+        return false;
     }
 
 

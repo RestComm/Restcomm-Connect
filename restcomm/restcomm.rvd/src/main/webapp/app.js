@@ -1,4 +1,5 @@
 var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' ,'angularSpinner','basicDragdrop']);
+var rvdMod = App;
 
 App.config([ '$routeProvider', function($routeProvider) {
 	
@@ -15,7 +16,7 @@ App.config([ '$routeProvider', function($routeProvider) {
 		controller : 'designerCtrl'
 	})
 	.when('/packaging/:projectName', {
-		templateUrl : 'templates/packaging.html',
+		templateUrl : 'templates/packaging/form.html',
 		controller : 'packagingCtrl',
 		resolve: {
 			rappWrap: function(RappService) {
@@ -23,6 +24,11 @@ App.config([ '$routeProvider', function($routeProvider) {
 			}
 		}
 	})
+	.when('/packaging/:projectName/download', {
+		templateUrl : 'templates/packaging/download.html',
+		controller : 'packagingDownloadCtrl',
+		resolve: { binaryInfo: packagingDownloadCtrl.getBinaryInfo }
+	})	
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
 		controller : 'upgradeCtrl'

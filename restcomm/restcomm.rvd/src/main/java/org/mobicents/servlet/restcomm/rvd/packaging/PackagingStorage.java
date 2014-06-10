@@ -12,8 +12,9 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 public interface PackagingStorage {
     Rapp loadRapp(String projectName) throws StorageException;
     Rapp loadRapp(File rapp) throws StorageException;
-    void storeAppPackage(String projectName, File packageFile) throws RvdException;
-    InputStream getAppPackage(String projectName) throws RvdException;
+    void storeRappBinary(String projectName, File packageFile) throws RvdException;
+    InputStream getRappBinary(String projectName) throws RvdException;
     boolean hasPackaging(String projectName) throws ProjectDoesNotExist;
+    boolean binaryAvailable(String projectName);
     void storeRapp(Rapp rapp, String projectName) throws StorageException;
 }

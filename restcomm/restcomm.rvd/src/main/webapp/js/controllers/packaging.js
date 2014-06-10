@@ -1,5 +1,4 @@
-angular.module('Rvd')
-.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap) {
+rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location) {
 
 	$scope.addConfigurationOption = function(type) {
 		console.log("Adding configuration option");
@@ -18,22 +17,53 @@ angular.module('Rvd')
 			data: packed,
 			headers: {'Content-Type': 'application/data'}
 		})
-		.success(function () {console.log("App config saved")});
+		.success(function () {
+			console.log("App config saved");
+			$scope.isNewRapp = false;
+		});
 	}
 	
 	$scope.preparePackage = function (projectName) {
+		
 		$http({
 			url: 'services/ras/packaging/app/prepare?name=' + projectName,
 			method: 'GET'
 		})
-		.success(function () {console.log("Package is ready for download")});
+		.success(function () {
+			console.log("Package is ready for download");
+			$location.path("/packaging/" + projectName + "/download");
+		});
 	}
 	
 	// initialization stuff
 	$scope.projectName = $routeParams.projectName;
 	$scope.rapp = rappWrap.rapp;
-})
-.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', function ($http, $q, Rapp,$route, $rootScope) {
+	$scope.isNewRapp = !rappWrap.exists;
+	$scope.showErrors = false; // show validation messages
+});
+
+var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function ($scope, binaryInfo, $routeParams) {
+	$scope.test = binaryInfo;
+	$scope.binaryInfo = binaryInfo;
+	$scope.projectName = $routeParams.projectName;
+});
+
+packagingDownloadCtrl.getBinaryInfo = function ($q, $http, $route) {
+	var deferred = $q.defer();
+	$http({
+		url: 'services/ras/packaging/binary/info?name=' + $route.current.params.projectName,
+		method: 'GET'
+	})
+	.success(function (data, status) {
+		console.log("Package is ready for download");
+		deferred.resolve(data.payload); // this is binaryInfo
+	})
+	.error(function () {deferred.reject("error reading binary package information")});
+	return deferred.promise;
+}
+
+
+rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', function ($http, $q, Rapp,$route, $rootScope) {
 	var serviceFunctions = {
 		getRapp : function () {
 			var deferred = $q.defer();
@@ -89,7 +119,7 @@ angular.module('Rvd')
 }])
 .factory('RappInfo', ['rvdModel', function (rvdModel) {
 	function RappInfo() {
-		
+		this.appVersion = 1;
 	};
 	RappInfo.prototype = new rvdModel();
 	RappInfo.prototype.constructor = RappInfo;
