@@ -592,5 +592,30 @@ public class FsProjectStorage implements ProjectStorage {
         return false;
     }
 
+    @Override
+    public void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException {
+        File bootstrapFile = new File(getProjectBasePath(projectName) + File.separator + "bootstrap");
+        FileOutputStream outputStream;
+        try {
+            outputStream = new FileOutputStream(getProjectBasePath(projectName) + File.separator + "bootstrap");
+            try {
+                IOUtils.write(bootstrapInfo, outputStream, "UTF-8");
+            } catch (IOException e) {
+                throw new StorageException("Error saving app bootstrap file: " + bootstrapFile, e);
+            } finally {
+                outputStream.close();
+            }
+        } catch (FileNotFoundException e) {
+            throw new StorageException("Cannot open bootstrap file for writing: " + bootstrapFile);
+        } catch (IOException e) {
+            // this comes from outputStream.close(). We will ignore it
+            logger.warn("Cannot close bootstrap file after writing: " + bootstrapFile, e);
+        }
+    }
+
+    public void loadBootstrapInfo(String projectName) {
+
+    }
+
 
 }

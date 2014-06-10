@@ -1,10 +1,23 @@
 <div class="row">
 	<h2>{{projectName}}</h2>
-	<h4>Configure app</h4>
+	<h4>Configure application parameters</h4>
 	
+	<div class="form-group" ng-repeat="option in rappConfig.options">
+		<label>{{option.label}}</label>
+		<input ng-model="option.value" type="text" class="form-control">
+		<span class="help-block">{{option.description}}</span>
+		
+	</div>
+	
+	<!--
 	<div>
 	config: {{rappConfig}}
 	</div>
+	-->
+	<br/>
+	<div class="form-group">
+		<button ng-click="enableConfiguration(rappConfig)" type="button" class="btn btn-primary">Enable configuration</button>
+	</div>
 	
-	This is rapmanager-config template
+
 </div>

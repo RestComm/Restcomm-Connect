@@ -24,10 +24,49 @@ rcMod.controller('RappManagerCtrl', function($scope, $upload, $location) {
 });
 
 // Will need this controller when resolving its dependencies. 
-var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig) {
+var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, $http) {
+	
+	$scope.initRappConfig = function (rappConfig) {
+		var i;
+		for ( i=0; i < rappConfig.options.length; i++ ) {
+			if ( rappConfig.options[i].defaultValue )
+				rappConfig.options[i].value = rappConfig.options[i].defaultValue;
+		}
+	}
+	
+	$scope.enableConfiguration = function (rappConfig) {
+		console.log("enabling configuration");
+		var bootstrapObject = $scope.generateBootstrap(rappConfig);
+		console.log(bootstrapObject);
+		$http({
+			url: '/restcomm-rvd/services/ras/app/bootstrap?name=' + $scope.projectName,
+			method: 'POST',
+			data: rappConfig,
+			headers: {'Content-Type': 'application/data'}
+		}).success(function (data) {
+			if ( data.rvdStatus == 'OK')
+				console.log("successfully saved bootstrap information");
+			else
+				console.log("Rvd error while saving bootstrap information");
+		}).error(function () {
+			console.log("http error while saving bootstrap info");
+		});
+	}
+	// Creates a bootstrap object out of current configuration options
+	$scope.generateBootstrap = function (rappConfig) {
+		var bootstrapObject = {};
+		var i;
+		for (i=0; i < rappConfig.options.length; i ++ ) {
+			bootstrapObject[rappConfig.options[i].name] = rappConfig.options[i].value;
+		}
+		return bootstrapObject;
+	}
+		
 	console.log("running RappManagerConfigCtrl");
 	$scope.projectName = $routeParams.projectName;
 	$scope.rappConfig = rappConfig;
+	
+	$scope.initRappConfig($scope.rappConfig);
 });
 
 rappManagerConfigCtrl.loadRappConfig = function ($q, $http, $route) {
