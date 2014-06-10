@@ -241,6 +241,30 @@ public class RasRestService extends UploadRestService {
         }
     }
 
+    /**
+     * Sets bootstrap parameters for the application.
+     * @param request
+     * @param projectName
+     * @return
+     */
+    @POST
+    @Path("/app/bootstrap")
+    public Response setBootstrap(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
+        logger.info("saving bootstrap parameters for app '" + projectName + "'");
+        try {
+            String bootstrapInfo;
+            bootstrapInfo = IOUtils.toString(request.getInputStream());
+
+            storage.storeBootstrapInfo(bootstrapInfo, projectName);
+            return buildOkResponse();
+
+        } catch (StorageException e) {
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+        } catch (IOException e) {
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new RvdException("Error reading from request stream", e));
+        }
+    }
+
 
 
 

@@ -35,4 +35,5 @@ public interface ProjectStorage extends PackagingStorage, ProjectManagementStora
     void backupProjectState(String projectName) throws StorageException;
     void cloneProtoProject(String kind, String clonedName) throws StorageException;
     void storeProjectState(String projectName, File sourceStateFile) throws StorageException;
+    void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException;
 }
