@@ -26,6 +26,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
@@ -135,6 +136,21 @@ public class RasRestService extends UploadRestService {
         }
     }
 
+    /**
+     * Returns info about a zipped package (binary) including if it is available or not
+     * @param projectName
+     * @return
+     */
+    @GET
+    @Path("/packaging/binary/info")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getBinaryStatus(@QueryParam("name") String projectName) {
+        logger.debug("getting binary info for project " + projectName);
+
+        RappBinaryInfo binaryInfo = rasService.getBinaryInfo(projectName);
+        return buildOkResponse(binaryInfo);
+    }
+
     @GET
     @Path("/packaging/download")
     public Response downloadPackage(@QueryParam("name") String projectName) {
@@ -143,7 +159,7 @@ public class RasRestService extends UploadRestService {
         try {
             if (storage.hasPackaging(projectName) ) {
                 //Validator validator = new RappConfigValidator();
-                InputStream zipStream = storage.getAppPackage(projectName);
+                InputStream zipStream = storage.getRappBinary(projectName);
                 return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename = rapp.zip").build();
             } else {
                 return null;
