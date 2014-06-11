@@ -1,22 +1,31 @@
 package org.mobicents.servlet.restcomm.rvd.storage;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.packaging.PackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
-import com.google.gson.JsonElement;
 
-
-public interface ProjectStorage extends PackagingStorage, ProjectManagementStorage {
+public interface ProjectStorage extends ProjectManagementStorage {
     <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException;
     <T> T loadModelFromFile(String filepath, Class<T> modelClass) throws StorageException;
+    <T> T loadModelFromProjectFile(String projectName, String path, String filename, Class<T> modelClass) throws StorageException;
+    void storeProjectFile(String data, String projectName, String path, String filename) throws StorageException;
+    String loadProjectFile(String projectName, String path, String filename ) throws StorageException;
+    void storeProjectFile(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException;
+    void storeProjectBinaryFile(File sourceFile, String projectName, String path, String filename) throws RvdException;
+    InputStream getProjectBinaryFile(String projectName, String path, String filename) throws RvdException, FileNotFoundException;
+    boolean projectPathExists(String projectName, String path) throws ProjectDoesNotExist;
+    boolean projectFileExists(String projectName, String path, String filename);
+
     String getAvailableProjectName(String projectName) throws StorageException;
     String loadProjectOptions(String projectName) throws StorageException;
     void storeProjectOptions(String projectName, String projectOptions) throws StorageException;
@@ -37,6 +46,8 @@ public interface ProjectStorage extends PackagingStorage, ProjectManagementStora
     void backupProjectState(String projectName) throws StorageException;
     void cloneProtoProject(String kind, String clonedName) throws StorageException;
     void storeProjectState(String projectName, File sourceStateFile) throws StorageException;
-    void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException;
-    JsonElement loadBootstrapInfo(String appName) throws StorageException;
+
+
+
+
 }

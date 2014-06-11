@@ -7,11 +7,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -28,10 +30,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlr
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
-import org.mobicents.servlet.restcomm.rvd.packaging.exception.AppPackageDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
-
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -415,42 +414,11 @@ public class FsProjectStorage implements ProjectStorage {
     }
     */
 
-    @Override
-    public boolean hasPackaging(String projectName) throws ProjectDoesNotExist {
-        if (!projectExists(projectName))
-            throw new ProjectDoesNotExist();
-        if ( new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME ).exists() )
-            return true;
-        return false;
-    }
 
-    @Override
-    public void storeRappBinary(String projectName, File packageFile) throws RvdException {
-        if (projectExists(projectName)) {
-            File destFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
-            try {
-                //FileUtils.moveFile(packageFile, destFile);
-                FileUtils.copyFile(packageFile, destFile);
-                FileUtils.deleteQuietly(packageFile);
-            } catch (IOException e) {
-                throw new PackagingException("Error copying binary file inside project", e);
-            }
-        } else
-            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
-    }
 
-    @Override
-    public InputStream getRappBinary(String projectName) throws RvdException {
-        if (projectExists(projectName)) {
-            File packageFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
-            try {
-                return new FileInputStream(packageFile);
-            } catch (FileNotFoundException e) {
-                throw new AppPackageDoesNotExist("No app package exists for project " + projectName);
-            }
-        } else
-            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
-    }
+
+
+
 
     /**
      * Create a packaging directory inside the project if it does not exist
@@ -469,15 +437,7 @@ public class FsProjectStorage implements ProjectStorage {
         return packageDir;
     }
 
-    private void storeFile( Object item, Class<?> itemClass, File configFile) throws StorageException {
-        Gson gson = new Gson();
-        String data = gson.toJson(item, itemClass);
-        try {
-            FileUtils.writeStringToFile(configFile, data, "UTF-8");
-        } catch (IOException e) {
-            throw new StorageException("Error creating file in storage: " + configFile, e);
-        }
-    }
+
 
 
 
@@ -513,6 +473,7 @@ public class FsProjectStorage implements ProjectStorage {
 
     }
 
+    /*
     @Override
     public Rapp loadRapp(File file) throws StorageException {
         Gson gson = new Gson();
@@ -525,8 +486,13 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error loading rapp file '" + file + "'");
         }
     }
+    */
 
-    @Override
+    public <T> T loadModelFromProjectFile(String projectName, String path, String filename, Class<T> modelClass) throws StorageException {
+        return loadModelFromFile(getProjectBasePath(projectName) + File.separator + path + File.separator + filename, modelClass);
+    }
+
+
     public <T> T loadModelFromFile(String filepath, Class<T> modelClass) throws StorageException {
         File file = new File(filepath);
         return loadModelFromFile(file, modelClass);
@@ -545,21 +511,7 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
-    @Override
-    public Rapp loadRapp(String projectName) throws StorageException {
-            File file = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "rapp");
-            return loadRapp(file);
-    }
 
-
-    @Override
-    public void storeRapp(Rapp rapp, String projectName) throws StorageException {
-        logger.debug("storing Rapp for project " + projectName);
-
-        File packagingDir = createPackagingDir(projectName);
-        File file = new File(packagingDir.getPath() + File.separator + "rapp");
-        storeFile( rapp, rapp.getClass(), file );
-    }
 
     /**
      * Returns an non-existing project name based on the given one. Ideally it returns the same name. If null or blank
@@ -583,63 +535,91 @@ public class FsProjectStorage implements ProjectStorage {
         throw new StorageException("Can't find an available project name for base name '" + projectName + "'");
     }
 
+
+
     @Override
-    public boolean binaryAvailable(String projectName) {
-        File binaryFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
-        if ( binaryFile.exists() )
+    public void storeProjectFile(String data, String projectName, String path, String filename) throws StorageException {
+        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
+        try {
+            FileUtils.writeStringToFile(file, data, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            throw new StorageException("Error storing file '" + file + "' to project '" + projectName + "'", e);
+        }
+    }
+
+    @Override
+    public String loadProjectFile(String projectName, String path, String filename ) throws StorageException {
+        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
+        String data;
+        try {
+            data = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+            return data;
+        } catch (IOException e) {
+            throw new StorageException("Error loading file '" + file + "' from project '" + projectName + "'");
+        }
+    }
+
+
+    public void storeProjectFile(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException {
+        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
+        storeFile( item, itemClass, file);
+    }
+
+
+    private void storeFile( Object item, Class<?> itemClass, File file) throws StorageException {
+        Gson gson = new Gson();
+        String data = gson.toJson(item, itemClass);
+        try {
+            FileUtils.writeStringToFile(file, data, "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException("Error creating file in storage: " + file, e);
+        }
+    }
+
+    @Override
+    public void storeProjectBinaryFile(File sourceFile, String projectName, String path, String filename ) throws RvdException {
+        if (projectExists(projectName)) {
+            File destFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
+            try {
+                //FileUtils.moveFile(packageFile, destFile);
+                FileUtils.copyFile(sourceFile, destFile);
+                FileUtils.deleteQuietly(sourceFile);
+            } catch (IOException e) {
+                throw new PackagingException("Error copying binary file into project", e);
+            }
+        } else
+            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
+    }
+
+    @Override
+    public InputStream getProjectBinaryFile(String projectName, String path, String filename) throws RvdException, FileNotFoundException {
+        if (projectExists(projectName)) {
+            File packageFile = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
+            //try {
+                return new FileInputStream(packageFile);
+            //} catch (FileNotFoundException e) {
+            //    throw new AppPackageDoesNotExist("No app package exists for project " + projectName);
+            //}
+        } else
+            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
+    }
+
+
+    @Override
+    public boolean projectPathExists(String projectName, String path) throws ProjectDoesNotExist {
+        if (!projectExists(projectName))
+            throw new ProjectDoesNotExist();
+        if ( new File(getProjectBasePath(projectName) + File.separator + path ).exists() )
             return true;
         return false;
     }
 
     @Override
-    public void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException {
-        File bootstrapFile = new File(getProjectBasePath(projectName) + File.separator + "bootstrap");
-        FileOutputStream outputStream;
-        try {
-            outputStream = new FileOutputStream(getProjectBasePath(projectName) + File.separator + "bootstrap");
-            try {
-                IOUtils.write(bootstrapInfo, outputStream, "UTF-8");
-            } catch (IOException e) {
-                throw new StorageException("Error saving app bootstrap file: " + bootstrapFile, e);
-            } finally {
-                outputStream.close();
-            }
-        } catch (FileNotFoundException e) {
-            throw new StorageException("Cannot open bootstrap file for writing: " + bootstrapFile);
-        } catch (IOException e) {
-            // this comes from outputStream.close(). We will ignore it
-            logger.warn("Cannot close bootstrap file after writing: " + bootstrapFile, e);
-        }
+    public boolean projectFileExists(String projectName, String path, String filename) {
+        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
+        if ( file.exists() )
+            return true;
+        return false;
     }
-
-    @Override
-    public JsonElement loadBootstrapInfo(String projectName) throws StorageException {
-        String path = getProjectBasePath(projectName) + File.separator + "bootstrap";
-        try {
-            String data = FileUtils.readFileToString(new File(path), "UTF-8");
-            JsonParser parser = new JsonParser();
-            JsonElement rootElement = parser.parse(data);
-            return rootElement;
-
-            /*
-            if ( rootElement.isJsonObject() ) {
-                JsonObject rootObject = rootElement.getAsJsonObject();
-                for ( Entry<String, JsonElement> entry : rootObject.entrySet() ) {
-                    String name = entry.getKey();
-                    JsonElement valueElement = entry.getValue();
-                    String value;
-                    if ( valueElement.isJsonPrimitive() && valueElement.getAsJsonPrimitive().isString() ) {
-                        value = valueElement.getAsJsonPrimitive().getAsString();
-
-
-                    }
-                }
-            }
-            */
-        } catch (IOException e) {
-            throw new StorageException("Error reading bootstrap file: " + path);
-        }
-    }
-
 
 }

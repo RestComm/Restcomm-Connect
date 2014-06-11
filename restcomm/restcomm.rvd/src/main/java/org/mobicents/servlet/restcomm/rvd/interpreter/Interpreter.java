@@ -79,6 +79,7 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageR
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.Gson;
@@ -97,6 +98,7 @@ public class Interpreter {
 
     private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
+    private RasStorage rasStorage;
     private HttpServletRequest httpRequest;
 
     private XStream xstream;
@@ -117,6 +119,7 @@ public class Interpreter {
     public Interpreter(RvdSettings settings, ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
         this.rvdSettings = settings;
         this.projectStorage = projectStorage;
+        this.rasStorage = new RasStorage(projectStorage);
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
@@ -720,7 +723,10 @@ public class Interpreter {
      */
     private void processBootstrapParameters() throws StorageException {
 
-        JsonElement rootElement = projectStorage.loadBootstrapInfo(appName);
+        if ( ! rasStorage.hasBootstrapInfo(appName) )
+            return; // nothing to do
+
+        JsonElement rootElement = rasStorage.loadBootstrapInfo(appName);
 
         if ( rootElement.isJsonObject() ) {
             JsonObject rootObject = rootElement.getAsJsonObject();

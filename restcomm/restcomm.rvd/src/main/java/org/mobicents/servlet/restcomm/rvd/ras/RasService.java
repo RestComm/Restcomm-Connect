@@ -15,7 +15,9 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
+import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
@@ -35,9 +37,13 @@ public class RasService {
     static final Logger logger = Logger.getLogger(RasService.class.getName());
 
     ProjectStorage storage;
+    PackagingStorage packagingStorage;
+    RasStorage rasStorage;
 
     public RasService(ProjectStorage storage) {
         this.storage = storage;
+        this.packagingStorage = new PackagingStorage(storage);
+        this.rasStorage = new RasStorage(storage);
     }
 
     /*
@@ -65,7 +71,7 @@ public class RasService {
 
         // extract info and config parts of a Rapp
         Gson gson = new Gson();
-        Rapp rapp = storage.loadRapp(projectName);
+        Rapp rapp = packagingStorage.loadRapp(projectName);
         String configData = gson.toJson(rapp.getConfig());
         String infoData = gson.toJson(rapp.getInfo());
 
@@ -98,12 +104,12 @@ public class RasService {
                 zipper.finish();
             }
 
-            storage.storeRappBinary(projectName, tempFile);
+            packagingStorage.storeRappBinary(tempFile, projectName);
             // TODO - if FsProjectStorage  is not used, the temporaty file should still be removed (in this case it is not moved) !!!
 
             logger.debug("Zip package created for project " + projectName);
 
-            return storage.getRappBinary(projectName);
+            return packagingStorage.getRappBinary(projectName);
         } catch (IOException e) {
             throw new PackagingException("Error creating temporaty zip file ", e);
         }
@@ -146,7 +152,7 @@ public class RasService {
 
         // Store rapp for later usage
         Rapp rapp = new Rapp(info, config);
-        storage.storeRapp(rapp, newProjectName);
+        rasStorage.storeRapp(rapp, newProjectName);
 
         // now remove temporary directory
         try {
@@ -163,23 +169,21 @@ public class RasService {
         if ( ! report.isOk() )
             throw new RvdValidationException("Cannot validate rapp", report);
 
-        storage.storeRapp(rapp, projectName);
-        //storage.storeRappInfo(rapp.getInfo(), projectName);
-        //storage.storeRappConfig(rapp.getConfig(), projectName);
+        packagingStorage.storeRapp(rapp, projectName);
     }
 
     public Rapp getApp(String projectName) throws StorageException {
-        return storage.loadRapp(projectName);
+        return packagingStorage.loadRapp(projectName);
     }
 
     public RappConfig getRappConfig(String projectName) throws StorageException {
-        Rapp rapp = storage.loadRapp(projectName);
+        Rapp rapp = rasStorage.loadRapp(projectName);
         return rapp.getConfig();
     }
 
     public RappBinaryInfo getBinaryInfo(String projectName) {
         RappBinaryInfo binaryInfo = new RappBinaryInfo();
-        binaryInfo.setExists( storage.binaryAvailable(projectName) );
+        binaryInfo.setExists( packagingStorage.binaryAvailable(projectName) );
 
         return binaryInfo;
     }
