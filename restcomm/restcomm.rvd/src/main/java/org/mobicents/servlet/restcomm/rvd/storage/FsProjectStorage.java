@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -613,8 +612,33 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
-    public void loadBootstrapInfo(String projectName) {
+    @Override
+    public JsonElement loadBootstrapInfo(String projectName) throws StorageException {
+        String path = getProjectBasePath(projectName) + File.separator + "bootstrap";
+        try {
+            String data = FileUtils.readFileToString(new File(path), "UTF-8");
+            JsonParser parser = new JsonParser();
+            JsonElement rootElement = parser.parse(data);
+            return rootElement;
 
+            /*
+            if ( rootElement.isJsonObject() ) {
+                JsonObject rootObject = rootElement.getAsJsonObject();
+                for ( Entry<String, JsonElement> entry : rootObject.entrySet() ) {
+                    String name = entry.getKey();
+                    JsonElement valueElement = entry.getValue();
+                    String value;
+                    if ( valueElement.isJsonPrimitive() && valueElement.getAsJsonPrimitive().isString() ) {
+                        value = valueElement.getAsJsonPrimitive().getAsString();
+
+
+                    }
+                }
+            }
+            */
+        } catch (IOException e) {
+            throw new StorageException("Error reading bootstrap file: " + path);
+        }
     }
 
 
