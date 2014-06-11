@@ -41,7 +41,7 @@ var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($
 		$http({
 			url: '/restcomm-rvd/services/ras/app/bootstrap?name=' + $scope.projectName,
 			method: 'POST',
-			data: rappConfig,
+			data: bootstrapObject,
 			headers: {'Content-Type': 'application/data'}
 		}).success(function (data) {
 			if ( data.rvdStatus == 'OK')

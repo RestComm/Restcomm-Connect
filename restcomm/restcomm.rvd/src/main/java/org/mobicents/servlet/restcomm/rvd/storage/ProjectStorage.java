@@ -11,6 +11,8 @@ import org.mobicents.servlet.restcomm.rvd.packaging.PackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
+import com.google.gson.JsonElement;
+
 
 public interface ProjectStorage extends PackagingStorage, ProjectManagementStorage {
     <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException;
@@ -36,4 +38,5 @@ public interface ProjectStorage extends PackagingStorage, ProjectManagementStora
     void cloneProtoProject(String kind, String clonedName) throws StorageException;
     void storeProjectState(String projectName, File sourceStateFile) throws StorageException;
     void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException;
+    JsonElement loadBootstrapInfo(String appName) throws StorageException;
 }

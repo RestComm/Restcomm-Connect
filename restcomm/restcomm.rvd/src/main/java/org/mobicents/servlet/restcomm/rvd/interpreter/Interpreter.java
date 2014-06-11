@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,6 +84,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
@@ -252,11 +254,14 @@ public class Interpreter {
         }
 
         handleStickyParameters();
+        processBootstrapParameters();
         processRequestParameters();
 
         response = interpret(targetParam, null, null);
         return response;
     }
+
+
 
 
 
@@ -706,4 +711,50 @@ public class Interpreter {
             }
         }
     }
+
+    /** Add bootstrap parameters to the variables array. Usually these are used in application downloaded
+     * from the app store.
+     * @throws StorageException
+     *
+     *
+     */
+    private void processBootstrapParameters() throws StorageException {
+
+        JsonElement rootElement = projectStorage.loadBootstrapInfo(appName);
+
+        if ( rootElement.isJsonObject() ) {
+            JsonObject rootObject = rootElement.getAsJsonObject();
+            for ( Entry<String, JsonElement> entry : rootObject.entrySet() ) {
+                String name = entry.getKey();
+                JsonElement valueElement = entry.getValue();
+                String value;
+                if ( valueElement.isJsonPrimitive() && valueElement.getAsJsonPrimitive().isString() ) {
+                    value = valueElement.getAsJsonPrimitive().getAsString();
+                    getVariables().put(name, value);
+                    logger.debug("Loaded bootstrap parameter: " + name + " - " + value);
+                } else
+                    logger.warn("Warning. Not-string bootstrap value found for parameter: " + name);
+            }
+        }
+    }
+
+    /*
+     *  JsonParser parser = new JsonParser();
+
+                try {
+                    HttpEntity entity = response.getEntity();
+                    if ( entity != null ) {
+                        String entity_string = EntityUtils.toString(entity);
+                        logger.info("ES: Received " + entity_string.length() + " bytes");
+                        logger.debug("ES Response: " + entity_string);
+                        JsonElement response_element = parser.parse(entity_string);
+
+                        String nextModuleName = null;
+                        //boolean dynamicRouting = false;
+                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
+                            //dynamicRouting = true;
+                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+                            nextModuleNam
+                         */
+
 }
