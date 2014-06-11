@@ -21,6 +21,7 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
@@ -190,6 +191,8 @@ public class RasRestService extends UploadRestService {
     public Response newRasApp(@QueryParam("name") String projectNameOverride, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
+        BuildService buildService = new BuildService(storage);
+
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
                 Gson gson = new Gson();
@@ -207,6 +210,8 @@ public class RasRestService extends UploadRestService {
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
                         String effectiveProjectName = rasService.importAppToWorkspace(item.openStream());
+                        buildService.buildProject(effectiveProjectName);
+
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);
 
