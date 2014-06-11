@@ -31,7 +31,9 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
@@ -47,6 +49,8 @@ public class RasRestService extends UploadRestService {
     ServletContext servletContext;
     private RvdSettings settings;
     private ProjectStorage storage;
+    private RasStorage rasStorage;
+    private PackagingStorage packagingStorage;
     private RasService rasService;
     private ProjectService projectService;
 
@@ -54,6 +58,8 @@ public class RasRestService extends UploadRestService {
     void init() {
         settings = RvdSettings.getInstance(servletContext);
         storage = new FsProjectStorage(settings);
+        rasStorage = new RasStorage(storage);
+        packagingStorage = new PackagingStorage(storage);
         rasService = new RasService(storage);
         projectService = new ProjectService(storage, servletContext, settings);
     }
@@ -73,7 +79,7 @@ public class RasRestService extends UploadRestService {
         logger.debug("retrieving app package for project " + projectName);
 
         try {
-            if (! storage.hasPackaging(projectName) )
+            if (! packagingStorage.hasPackaging(projectName) )
                 return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
 
             Rapp rapp = rasService.getApp(projectName);
@@ -123,7 +129,7 @@ public class RasRestService extends UploadRestService {
         logger.debug("preparig app zip for project " + projectName);
 
         try {
-            if (storage.hasPackaging(projectName) ) {
+            if (packagingStorage.hasPackaging(projectName) ) {
                 RvdProject project = projectService.load(projectName);
                 rasService.createZipPackage(project);
                 return buildErrorResponse(Status.OK, RvdResponse.Status.OK, null);
@@ -157,9 +163,9 @@ public class RasRestService extends UploadRestService {
         logger.debug("downloading app zip for project " + projectName);
 
         try {
-            if (storage.hasPackaging(projectName) ) {
+            if (packagingStorage.hasPackaging(projectName) ) {
                 //Validator validator = new RappConfigValidator();
-                InputStream zipStream = storage.getRappBinary(projectName);
+                InputStream zipStream = packagingStorage.getRappBinary(projectName);
                 return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename = rapp.zip").build();
             } else {
                 return null;
@@ -255,7 +261,7 @@ public class RasRestService extends UploadRestService {
             String bootstrapInfo;
             bootstrapInfo = IOUtils.toString(request.getInputStream());
 
-            storage.storeBootstrapInfo(bootstrapInfo, projectName);
+            rasStorage.storeBootstrapInfo(bootstrapInfo, projectName);
             return buildOkResponse();
 
         } catch (StorageException e) {
