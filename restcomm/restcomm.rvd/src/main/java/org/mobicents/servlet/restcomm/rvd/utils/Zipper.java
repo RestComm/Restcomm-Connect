@@ -1,8 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
@@ -57,6 +59,71 @@ public class Zipper {
             throw new ZipperException("Error adding string content to zip " + zipFile, e);
         }
 
+    }
+
+    /**
+     * Adds a directory recursively into the zip. Files starting with "." are excluded.
+     * @param dirpath An absolute path to the directory to be added. It may contain a trailing slash - "/"
+     * @param includeRoot Add the parent directory too in the zip file or just its children
+     * @throws ZipperException
+     */
+    public void addDirectoryRecursively(String dirpath, boolean includeRoot) throws ZipperException {
+        File dir = new File(dirpath);
+        if ( dir.exists() && dir.isDirectory() ) {
+            String dirName = dir.getName();
+            String dirParent = dir.getParent();
+            if ( includeRoot ) {
+                addDirectory(dirName + "/");
+                addNestedDirectoryContents(dirParent + "/", dirName);
+            } else {
+                addNestedDirectoryContents(dirParent + "/" + dirName, "");
+            }
+        } else {
+            throw new ZipperException(dirpath + " is not a directory or does not exist");
+        }
+    }
+
+    /**
+     * Internal use function that implements the recursion logic. What changes throughout the recursion is the childPath that matches the
+     * path used while storing in the zip.
+     * @param rootPath
+     * @param childPath
+     * @throws ZipperException
+     */
+    private void addNestedDirectoryContents(String rootPath, String childPath) throws ZipperException {
+        String nestedPath = rootPath + childPath;
+        File dir = new File(nestedPath);
+
+        assert dir.isDirectory();
+
+        File[] childrenFiles = dir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".");
+            }
+        });
+
+        for ( File file : childrenFiles ) {
+            if ( file.isDirectory() ) {
+                addDirectory(childPath + "/" + file.getName() + "/");
+                addNestedDirectoryContents(rootPath, childPath + "/" + file.getName());
+            } else {
+                FileInputStream inputStream;
+                try {
+                    inputStream = new FileInputStream(file);
+                    try {
+                        addFile(childPath + "/" + file.getName(), inputStream);
+                    } finally {
+                        inputStream.close();
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new ZipperException("Error adding file " + file + " to zip", e);
+                } catch (IOException e ) {
+                    throw new ZipperException("Error closingfile " + file + " after adding it to zip", e);
+                }
+
+            }
+        }
     }
 
     /**

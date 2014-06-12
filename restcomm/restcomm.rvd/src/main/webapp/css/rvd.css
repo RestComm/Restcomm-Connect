@@ -529,6 +529,11 @@ textarea.medium {
 	width: 200px;
 }
 
+/* ----------------- #/project-manager/* view */
+.rvd-project-manager .rvd-project-item i {
+	color: #333;
+}
+
 
 
 

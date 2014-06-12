@@ -3,7 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.model.steps.dial;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.mobicents.servlet.restcomm.rvd.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 

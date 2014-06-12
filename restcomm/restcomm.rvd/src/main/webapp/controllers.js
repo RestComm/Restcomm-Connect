@@ -11,7 +11,7 @@ App.controller('homeCtrl', function ($scope) {
 	
 });
 
-App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams, $timeout) {
+App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams, $timeout, $upload) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
@@ -87,6 +87,21 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 		})
 		.error(function (data, status, headers, config) { console.log("cannot delete project"); });		
 	}
+	
+	$scope.onFileSelect_ImportProject = function($files) {
+	    for (var i = 0; i < $files.length; i++) {
+	      var file = $files[i];
+	      $scope.upload = $upload.upload({
+	        url: 'services/manager/projects/archive?name=' + $scope.projectName,
+	        file: file,
+	      }).progress(function(evt) {
+	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
+	      }).success(function(data, status, headers, config) {
+	    	  console.log('file uploaded successfully');
+	    	  $scope.refreshProjectList();
+	      });
+	    }
+	};
 	
     $scope.refreshProjectList();	
 	

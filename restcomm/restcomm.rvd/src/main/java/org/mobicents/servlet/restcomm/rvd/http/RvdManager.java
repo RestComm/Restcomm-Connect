@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.http;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -31,7 +32,7 @@ import com.google.gson.JsonObject;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
-import org.mobicents.servlet.restcomm.rvd.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
@@ -236,6 +237,66 @@ public class RvdManager extends UploadRestService {
             }
         } else
             return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    @GET
+    @Path("/archive")
+    public Response downloadArchive(@QueryParam("name") String projectName) {
+        logger.debug("downloading raw archive for project " + projectName);
+
+        InputStream archiveStream;
+        try {
+            archiveStream = projectService.archiveProject(projectName);
+            return Response.ok(archiveStream, "application/zip").header("Content-Disposition", "attachment; filename = " + projectName + ".zip").build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return null;
+        }
+    }
+
+    @POST
+    @Path("/archive")
+    public Response importProjectArchive(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
+        logger.debug("importing project from raw archive: " + projectName);
+
+        try {
+            if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
+                Gson gson = new Gson();
+                ServletFileUpload upload = new ServletFileUpload();
+                FileItemIterator iterator = upload.getItemIterator(request);
+
+                JsonArray fileinfos = new JsonArray();
+
+                while (iterator.hasNext()) {
+                    FileItemStream item = iterator.next();
+                    JsonObject fileinfo = new JsonObject();
+                    fileinfo.addProperty("fieldName", item.getFieldName());
+
+                    // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
+                    if (item.getName() != null) {
+
+                        String effectiveProjectName = projectService.importProjectFromArchive(item.openStream(), item.getName());
+                        //buildService.buildProject(effectiveProjectName);
+
+                        fileinfo.addProperty("name", item.getName());
+                        fileinfo.addProperty("projectName", effectiveProjectName);
+
+                    }
+                    if (item.getName() == null) {
+                        logger.warn( "non-file part found in upload");
+                        fileinfo.addProperty("value", read(item.openStream()));
+                    }
+                    fileinfos.add(fileinfo);
+                }
+                return Response.ok(gson.toJson(fileinfos), MediaType.APPLICATION_JSON).build();
+            } else {
+                String json_response = "{\"result\":[{\"size\":" + size(request.getInputStream()) + "}]}";
+                return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
+            }
+        } catch ( Exception e /* TODO - use a more specific  type !!! */) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GET
