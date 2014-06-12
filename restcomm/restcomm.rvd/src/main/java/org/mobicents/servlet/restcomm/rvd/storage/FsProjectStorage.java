@@ -29,8 +29,11 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExist
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
+import org.mobicents.servlet.restcomm.rvd.utils.exceptions.ZipperException;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
+
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -246,6 +249,55 @@ public class FsProjectStorage implements ProjectStorage {
             FileUtils.deleteDirectory(projectDir);
         } catch (IOException e) {
             throw new StorageException("Error removing directory '" + projectName + "'", e);
+        }
+    }
+
+    @Override
+    public InputStream archiveProject(String projectName) throws StorageException {
+        String path = getProjectBasePath(projectName);
+        File tempFile;
+        try {
+            tempFile = File.createTempFile("RVDprojectArchive",".zip");
+        } catch (IOException e1) {
+            throw new StorageException("Error creating temp file for archiving project " + projectName, e1);
+        }
+
+        InputStream archiveStream;
+        try {
+            Zipper zipper = new Zipper(tempFile);
+            zipper.addDirectoryRecursively(path, false);
+            zipper.finish();
+
+            // open a stream on this file
+            archiveStream = new FileInputStream(tempFile);
+            return archiveStream;
+        } catch (ZipperException e) {
+            throw new StorageException( "Error archiving " + projectName, e);
+        } catch (FileNotFoundException e) {
+            throw new StorageException("This is weird. Can't find the temp file i just created for archiving project " + projectName, e);
+        } finally {
+            // Always delete the file. The underlying file content still exists because the archiveStream refers to it (for Linux only). It will be deleted when the stream is closed
+            tempFile.delete();
+        }
+    }
+
+    @Override
+    public
+    void importProjectFromDirectory(File sourceProjectDirectory, String projectName, boolean overwrite) throws StorageException {
+        try {
+            createProjectSlot(projectName);
+        } catch (ProjectAlreadyExists e) {
+            if ( !overwrite )
+                throw e;
+            else {
+                File destProjectDirectory = new File(getProjectBasePath(projectName));
+                try {
+                    FileUtils.cleanDirectory(destProjectDirectory);
+                    FileUtils.copyDirectory(sourceProjectDirectory, destProjectDirectory);
+                } catch (IOException e1) {
+                    throw new StorageException("Error importing project '" + projectName + "' from directory: " + sourceProjectDirectory);
+                }
+            }
         }
     }
 

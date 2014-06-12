@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -26,9 +27,13 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
@@ -183,6 +188,32 @@ public class ProjectService {
         if (! projectStorage.projectExists(projectName))
             throw new ProjectDoesNotExist();
         projectStorage.deleteProject(projectName);
+    }
+
+    public InputStream archiveProject(String projectName) throws StorageException {
+        return projectStorage.archiveProject(projectName);
+    }
+
+    public String importProjectFromArchive(InputStream archiveStream, String archiveFilename) throws StorageException {
+        File archiveFile = new File(archiveFilename);
+        String projectName = FilenameUtils.getBaseName(archiveFile.getName());
+
+        // TODO Make these an atomic action!
+        projectName = projectStorage.getAvailableProjectName(projectName);
+        projectStorage.createProjectSlot(projectName);
+
+        File tempProjectDir;
+        try {
+            tempProjectDir = RvdUtils.createTempDir();
+        } catch (RvdException e) {
+            throw new StorageException("Error importing project from archive. Cannot create temp directory for project: " + projectName, e );
+        }
+        Unzipper unzipper = new Unzipper(tempProjectDir);
+        unzipper.unzip(archiveStream);
+
+        projectStorage.importProjectFromDirectory(tempProjectDir, projectName, true);
+
+        return projectName;
     }
 
     public void addWavToProject(String projectName, String wavName, InputStream wavStream) throws StorageException {
