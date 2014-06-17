@@ -14,6 +14,7 @@
 	<servlet>
 		<servlet-name>RVD Services</servlet-name>
 		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		
 		<!-- automatic package scanning for some reason does not work with Jersey 
 			in JBoss -->
 		<!-- <init-param> <param-name>com.sun.jersey.config.property.packages</param-name> 
@@ -24,6 +25,15 @@
 			<param-name>javax.ws.rs.Application</param-name>
 			<param-value>org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication</param-value>
 		</init-param>
+		
+		<!-- Enable resource matching trace for Jersey. Very handy. It uses HTTP headers in the REST response. -->
+		<!-- 
+		<init-param>
+            <param-name>com.sun.jersey.config.feature.Trace</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        -->
+		
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
