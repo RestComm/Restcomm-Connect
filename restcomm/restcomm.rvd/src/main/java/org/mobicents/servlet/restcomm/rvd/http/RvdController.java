@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.http;
 
+import java.io.InputStream;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -23,10 +25,12 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
 import com.google.gson.Gson;
 
-@Path("/apps/{appname}/controller")
+@Path("apps/{appname}")
 public class RvdController extends RestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
 
@@ -66,6 +70,7 @@ public class RvdController extends RestService {
     }
 
     @GET
+    @Path("controller")
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
         logger.info("Received Restcomm GET request");
@@ -84,6 +89,21 @@ public class RvdController extends RestService {
         logger.debug("POST Params: " + requestParams.toString());
 
         return runInterpreter(appname, httpRequest, requestParams);
+    }
+
+    @GET
+    @Path("resources/{filename}")
+    public Response getWav(@PathParam("appname") String projectName, @PathParam("filename") String filename ) {
+       InputStream wavStream;
+        try {
+            wavStream = projectStorage.getWav(projectName, filename);
+            return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename).build();
+        } catch (WavItemDoesNotExist e) {
+            return Response.status(Status.NOT_FOUND).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        } catch (StorageException e) {
+            //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        }
     }
 
 }
