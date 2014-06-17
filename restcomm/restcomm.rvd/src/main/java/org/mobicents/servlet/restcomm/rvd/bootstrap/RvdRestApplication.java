@@ -24,4 +24,7 @@ public class RvdRestApplication extends Application {
         classes.add(RasRestService.class);
         return classes;
     }
+
+
+
 }

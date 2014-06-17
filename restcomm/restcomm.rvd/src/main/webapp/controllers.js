@@ -22,7 +22,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 
 	
 	$scope.refreshProjectList = function() {
-		$http({url: 'services/manager/projects/list',
+		$http({url: 'services/projects',
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -33,7 +33,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 	}
 	
 	$scope.createNewProject = function(name, kind) {
-		$http({url: 'services/manager/projects?name=' + name + "&kind=" + kind,
+		$http({url: 'services/projects/' + name + "/?kind=" + kind,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
@@ -63,7 +63,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/manager/projects/rename?name=' + projectItem.name + "&newName=" + projectItem.newProjectName })
+		$http({ method: "PUT", url: 'services/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName })
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -79,7 +79,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 	}
 	
 	$scope.deleteProject = function(projectItem) {
-		$http({ method: "DELETE", url: 'services/manager/projects/delete?name=' + projectItem.name })
+		$http({ method: "DELETE", url: 'services/projects/' + projectItem.name })
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
@@ -92,7 +92,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: 'services/manager/projects/archive?name=' + $scope.projectName,
+	        url: 'services/projects/'+ $scope.projectName + '/archive',
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
@@ -330,7 +330,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		var deferred = $q.defer();
 		
 		var state = $scope.packState();
-		$http({url: 'services/manager/projects?name=' + $scope.projectName,
+		$http({url: 'services/projects/'+ $scope.projectName,
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}
@@ -349,7 +349,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.openProject = function(name) {
-		$http({url: 'services/manager/projects?name=' + name,
+		$http({url: 'services/projects/' + name,
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -367,7 +367,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.refreshWavList = function(projectName) {
-		$http({url: 'services/manager/projects/wavlist?name=' + projectName, method: "GET"})
+		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
 		.success(function (data, status, headers, config) {
 			console.log('getting wav list')
 			// console.log( data );
@@ -378,7 +378,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.buildProject = function() {
 		var deferred = $q.defer();
 		
-		$http({url: 'services/manager/projects/build?name=' + $scope.projectName, method: "POST"})
+		$http({url: 'services/projects/' + $scope.projectName + '/build', method: "POST"})
 		.success(function (data, status, headers, config) {
 			deferred.resolve('Build successfull');
 		 }).error(function (data, status, headers, config) {
@@ -411,7 +411,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		      var file = $files[i];
 		      $scope.upload = $upload.upload({
 
-		        url: 'services/manager/projects/uploadwav?name=' + $scope.projectName , // upload.php
+		        url: 'services/projects/' + $scope.projectName + '/wavs',
 																						// script,
 																						// node.js
 																						// route,
@@ -455,7 +455,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	});
 	
 	$scope.deleteWav = function (wavItem) {
-		$http({url: 'services/manager/projects/removewav?name=' + $scope.projectName + '&filename=' + wavItem.filename, method: "DELETE"})
+		$http({url: 'services/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
 		.success(function (data, status, headers, config) {
 			console.log("Deleted " + wavItem.filename);
 			$scope.$emit('wavfileDeleted', wavItem);

@@ -19,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.PathParam;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -51,7 +52,9 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 
-@Path("/manager/projects")
+
+//@Path("/manager/projects")
+@Path("projects")
 public class RvdManager extends UploadRestService {
 
     static final Logger logger = Logger.getLogger(RvdManager.class.getName());
@@ -71,7 +74,7 @@ public class RvdManager extends UploadRestService {
     }
 
     @GET
-    @Path("/list")
+    //@Path("list")
     @Produces(MediaType.APPLICATION_JSON)
     public Response listProjects(@Context HttpServletRequest request) {
 
@@ -98,7 +101,8 @@ public class RvdManager extends UploadRestService {
 
 
     @PUT
-    public Response createProject(@QueryParam("name") String name, @QueryParam("kind") String kind) {
+    @Path("{name}")
+    public Response createProject(@PathParam("name") String name, @QueryParam("kind") String kind) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
 
@@ -124,8 +128,9 @@ public class RvdManager extends UploadRestService {
      * @param name - The project name to get information for
      */
     @GET
-    @Path("info")
-    public Response projectInfo(@QueryParam("name") String name) {
+    //@Path("info")
+    @Path("{name}/info")
+    public Response projectInfo(@PathParam("name") String name) {
         StateHeader header = null;
         try {
             header = projectStorage.loadStateHeader(name);
@@ -140,7 +145,8 @@ public class RvdManager extends UploadRestService {
     }
 
     @POST
-    public Response updateProject(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
+    @Path("{name}")
+    public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
 
@@ -172,8 +178,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @PUT
-    @Path("/rename")
-    public Response renameProject(@QueryParam("name") String projectName, @QueryParam("newName") String projectNewName) {
+    //@Path("rename")
+    @Path("{name}/rename")
+    public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
         if ( !RvdUtils.isEmpty(projectName) && ! RvdUtils.isEmpty(projectNewName) ) {
@@ -194,8 +201,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @PUT
-    @Path("/upgrade")
-    public Response upgradeProject(@QueryParam("name") String projectName) {
+    //@Path("upgrade")
+    @Path("{name}/upgrade")
+    public Response upgradeProject(@PathParam("name") String projectName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
         if ( !RvdUtils.isEmpty(projectName) ) {
@@ -220,8 +228,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @DELETE
-    @Path("/delete")
-    public Response deleteProject(@QueryParam("name") String projectName) {
+    //@Path("delete")
+    @Path("{name}")
+    public Response deleteProject(@PathParam("name") String projectName) {
 
         // TODO IMPORTANT!!! sanitize the project name!!
         if ( ! RvdUtils.isEmpty(projectName) ) {
@@ -240,8 +249,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @GET
-    @Path("/archive")
-    public Response downloadArchive(@QueryParam("name") String projectName) {
+    //@Path("archive")
+    @Path("{name}/archive")
+    public Response downloadArchive(@PathParam("name") String projectName) {
         logger.debug("downloading raw archive for project " + projectName);
 
         InputStream archiveStream;
@@ -255,8 +265,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @POST
-    @Path("/archive")
-    public Response importProjectArchive(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
+    //@Path("archive")
+    @Path("{name}/archive")
+    public Response importProjectArchive(@PathParam("name") String projectName, @Context HttpServletRequest request) {
         logger.debug("importing project from raw archive: " + projectName);
 
         try {
@@ -300,8 +311,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @GET
+    @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response openProject(@QueryParam("name") String name, @Context HttpServletRequest request) {
+    public Response openProject(@PathParam("name") String name, @Context HttpServletRequest request) {
 
         // TODO CAUTION!!! sanitize name
         // ...
@@ -321,8 +333,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @POST
-    @Path("/uploadwav")
-    public Response uploadWavFile(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
+    //@Path("/uploadwav")
+    @Path("{name}/wavs")
+    public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request) {
         logger.info("running /uploadwav");
 
         try {
@@ -364,9 +377,25 @@ public class RvdManager extends UploadRestService {
         }
     }
 
+    @GET
+    @Path("{name}/wavs/{filename}")
+    public Response getWav(@PathParam("name") String projectName, @PathParam("filename") String filename ) {
+       InputStream wavStream;
+        try {
+            wavStream = projectStorage.getWav(projectName, filename);
+            return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename).build();
+        } catch (WavItemDoesNotExist e) {
+            return Response.status(Status.NOT_FOUND).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        } catch (StorageException e) {
+            //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        }
+    }
+
     @DELETE
-    @Path("/removewav")
-    public Response removeWavFile(@QueryParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) {
+    //@Path("/removewav")
+    @Path("{name}/wavs")
+    public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) {
         // !!! Sanitize project name
 
         try {
@@ -380,9 +409,10 @@ public class RvdManager extends UploadRestService {
 
 
     @GET
-    @Path("/wavlist")
+    //@Path("/wavlist")
+    @Path("{name}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listWavs(@QueryParam("name") String name) {
+    public Response listWavs(@PathParam("name") String name) {
         List<WavItem> items;
         try {
             if (!projectService.projectExists(name))
@@ -400,8 +430,9 @@ public class RvdManager extends UploadRestService {
     }
 
     @POST
-    @Path("/build")
-    public Response buildProject(@QueryParam("name") String name) {
+    @Path("{name}/build")
+    //@Path("/build")
+    public Response buildProject(@PathParam("name") String name) {
 
         // !!! SANITIZE project name
 

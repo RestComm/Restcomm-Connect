@@ -90,10 +90,12 @@ angular.module('Rvd')
 			this.local = {wavLocalFilename:''};
 	}
 	PlayModel.prototype.pack = function () {
-			if (this.playType == "local")
-				delete this.remote;
-			else if (this.playType == "remote")
-				delete this.local;
+		var clone = angular.copy(this);
+		if (clone.playType == "local")
+			delete clone.remote;
+		else if (clone.playType == "remote")
+			delete clone.local;
+		return clone;
 	}
 	
 	return PlayModel;
