@@ -26,7 +26,7 @@ public class PlayStep extends Step {
         RcmlPlayStep playStep = new RcmlPlayStep();
         String url = "";
         if ("local".equals(playType))
-            url = interpreter.getContextPath() + "/services/projects/" + interpreter.getAppName() + "/wavs/" + local.wavLocalFilename;
+            url = interpreter.getContextPath() + "/services/apps/" + interpreter.getAppName() + "/resources/" + local.wavLocalFilename;
         else
             url = interpreter.populateVariables(remote.wavUrl);
 
