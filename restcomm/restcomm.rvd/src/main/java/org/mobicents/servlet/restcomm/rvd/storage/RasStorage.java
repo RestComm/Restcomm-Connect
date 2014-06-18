@@ -36,4 +36,8 @@ public class RasStorage {
     public Rapp loadRapp(String projectName) throws StorageException {
         return storage.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
     }
+
+    //public List<RappInfo> listRapps() {
+
+    //}
 }

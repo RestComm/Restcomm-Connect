@@ -15,6 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.PathParam;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -42,7 +43,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-@Path("/ras")
+@Path("ras")
 public class RasRestService extends UploadRestService {
     static final Logger logger = Logger.getLogger(RasRestService.class.getName());
 
@@ -179,6 +180,12 @@ public class RasRestService extends UploadRestService {
         }
     }
 
+    //@GET
+    //@Path("apps")
+    //public Response listRapps(@Context HttpServletRequest request) {
+
+    //}
+
     /**
      * Create a new application by uploading a ras package
      * @param projectNameOverride - NOT IMPLEMENTED - if specified, the project should be named like this. Otherwise a best effort is made so
@@ -187,8 +194,8 @@ public class RasRestService extends UploadRestService {
      * @return
      */
     @POST
-    @Path("/app/new")
-    public Response newRasApp(@QueryParam("name") String projectNameOverride, @Context HttpServletRequest request) {
+    @Path("apps/{name}")
+    public Response newRasApp(@PathParam("name") String projectNameOverride, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
         BuildService buildService = new BuildService(storage);
@@ -238,8 +245,8 @@ public class RasRestService extends UploadRestService {
     }
 
     @GET
-    @Path("/app/getconfig")
-    public Response getConfig(@QueryParam("name") String projectName) {
+    @Path("apps/{name}/config")
+    public Response getConfig(@PathParam("name") String projectName) {
         logger.info("getting configuration options for " + projectName);
 
         RappConfig rappConfig;
@@ -259,8 +266,8 @@ public class RasRestService extends UploadRestService {
      * @return
      */
     @POST
-    @Path("/app/bootstrap")
-    public Response setBootstrap(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
+    @Path("apps/{name}/bootstrap")
+    public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
         logger.info("saving bootstrap parameters for app '" + projectName + "'");
         try {
             String bootstrapInfo;

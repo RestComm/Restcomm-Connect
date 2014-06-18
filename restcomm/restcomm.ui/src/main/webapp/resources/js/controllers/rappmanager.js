@@ -10,12 +10,13 @@ rcMod.controller('RappManagerCtrl', function($scope, $upload, $location) {
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: '/restcomm-rvd/services/ras/app/new?name=' + "testname" , // upload.php
+	        url: '/restcomm-rvd/services/ras/apps' + "/testname", // upload.php
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
 	      }).success(function(data, status, headers, config) {
 	    	  console.log('file uploaded successfully');
+	    	  //$location.path("/ras/apps/" + data[0].projectName + "/config");
 	    	  $location.path("/ras/config/" + data[0].projectName);
 	      });
 	    }
@@ -39,7 +40,7 @@ var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($
 		var bootstrapObject = $scope.generateBootstrap(rappConfig);
 		console.log(bootstrapObject);
 		$http({
-			url: '/restcomm-rvd/services/ras/app/bootstrap?name=' + $scope.projectName,
+			url: '/restcomm-rvd/services/ras/apps/' + $scope.projectName + '/bootstrap',
 			method: 'POST',
 			data: bootstrapObject,
 			headers: {'Content-Type': 'application/data'}
@@ -72,7 +73,7 @@ var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($
 rappManagerConfigCtrl.loadRappConfig = function ($q, $http, $route) {
 	var defer = $q.defer();
 	
-	$http({url: '/restcomm-rvd/services/ras/app/getconfig?name=' + $route.current.params.projectName, method: "GET" })
+	$http({url: '/restcomm-rvd/services/ras/apps/' + $route.current.params.projectName + '/config', method: "GET" })
 	.success(function (data, status, headers, config) {
 		if (data.rvdStatus == "OK") {
 			console.log("succesfull retrieved app config");
