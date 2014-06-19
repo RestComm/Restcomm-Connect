@@ -25,6 +25,15 @@ public class RvdRestApplication extends Application {
         return classes;
     }
 
+    /*
+    @Override
+    public Set<Object> getSingletons() {
+        Set<Object> singletons = new HashSet<Object>();
+        singletons.add(new TicketRepositoryProvider());
+        return super.getSingletons();
+    }
+    */
+
 
 
 }
