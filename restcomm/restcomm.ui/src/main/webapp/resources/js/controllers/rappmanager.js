@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('RappManagerCtrl', function($scope, $upload, $location) {
+var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products) {
 	console.log("running RappManagerCtrl");
 	$scope.test = "this is test var";
 	 
@@ -23,6 +23,27 @@ rcMod.controller('RappManagerCtrl', function($scope, $upload, $location) {
 	};
 	
 });
+
+rappManagerCtrl.getProducts = function ($q, $http) {
+	var deferred = $q.defer();
+	
+	var apikey = "f837224433386cbc24e647f6292c12a7";
+	var token = "bcdcd32f1e860cdca3d1f674e204dd0f";
+	
+	console.log("retrieving products from AppStore");
+	$http({
+		method:"GET", 
+		url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token
+	}).success(function (data) {
+		console.log("succesfully retrieved products from AppStore");
+		deferred.resolve(data);
+	}).error(function () {
+		console.log("http error while retrieving products from AppStore");
+		deferred.reject("http error");
+	});
+	
+	return deferred.promise;
+}
 
 // Will need this controller when resolving its dependencies. 
 var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, $http) {
