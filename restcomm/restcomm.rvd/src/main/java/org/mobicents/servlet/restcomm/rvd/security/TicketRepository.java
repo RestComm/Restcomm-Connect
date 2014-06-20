@@ -39,4 +39,13 @@ public class TicketRepository {
         return tickets.get(ticketId);
     }
 
+    public void invalidateTicket(String ticketId) {
+        Ticket ticket = tickets.get(ticketId);
+        if (ticket != null) {
+            tickets.remove(ticket.getTicketId());
+        } else {
+            logger.warn("Could not invalidate ticket " + ticketId + ". Ticket does not exist");
+        }
+    }
+
 }
