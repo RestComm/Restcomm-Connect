@@ -17,7 +17,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.PathParam;
@@ -43,8 +42,6 @@ import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationFr
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.security.Ticket;
-import org.mobicents.servlet.restcomm.rvd.security.TicketRepository;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -65,7 +62,6 @@ public class RvdManager extends UploadRestService {
     //@Resource
     //TicketRepository ticketRepository;
 
-
     @Context
     ServletContext servletContext;
     private ProjectService projectService;
@@ -78,24 +74,6 @@ public class RvdManager extends UploadRestService {
         rvdSettings = RvdSettings.getInstance(servletContext);
         projectStorage = new FsProjectStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
-    }
-
-    @GET
-    @Path("login")
-    public Response login() {
-        logger.debug("Running login");
-
-        // get username/password from request and authenticate against Restcomm
-        // ...
-        String userId = "otsakir@gmail.com";
-        //String password = "pass";
-
-        // if authentication succeeds create a ticket for this user and return its id
-        TicketRepository tickets = TicketRepository.getInstance();
-        Ticket ticket = new Ticket(userId);
-        tickets.putTicket( ticket );
-
-        return Response.ok().cookie( new NewCookie(RvdSettings.TICKET_COOKIE_NAME, ticket.getTicketId() )).build();
     }
 
     @GET
