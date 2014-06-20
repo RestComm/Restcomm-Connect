@@ -233,6 +233,10 @@ ul#rightMenu > li i {
 	cursor:copy;
 }
 
+.rappmanager .category-tag {
+	margin-right: 3px;
+}
+
 /* Providers classes -------------------------------------------------------- */
 
 .dl-small {
