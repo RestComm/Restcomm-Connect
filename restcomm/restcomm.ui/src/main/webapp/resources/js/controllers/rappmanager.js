@@ -2,9 +2,10 @@
 
 var rcMod = angular.module('rcApp');
 
-var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products) {
+var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, $sce) {
 	console.log("running RappManagerCtrl");
 	$scope.test = "this is test var";
+	$scope.products = products;
 	 
 	$scope.onFileSelect = function($files) {
 	    for (var i = 0; i < $files.length; i++) {
@@ -22,6 +23,10 @@ var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $uplo
 	    }
 	};
 	
+	$scope.formatHtml = function (markup) {
+		return $sce.trustAsHtml(markup);
+	}
+	
 });
 
 rappManagerCtrl.getProducts = function ($q, $http) {
@@ -35,8 +40,8 @@ rappManagerCtrl.getProducts = function ($q, $http) {
 		method:"GET", 
 		url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token
 	}).success(function (data) {
-		console.log("succesfully retrieved products from AppStore");
-		deferred.resolve(data);
+		console.log("succesfully retrieved " + data.products.length + " products from AppStore");
+		deferred.resolve(data.products);
 	}).error(function () {
 		console.log("http error while retrieving products from AppStore");
 		deferred.reject("http error");
