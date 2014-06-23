@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.rvd.validation;
+package org.mobicents.servlet.restcomm.rvd.jsonvalidation;
 
 import java.io.IOException;
 

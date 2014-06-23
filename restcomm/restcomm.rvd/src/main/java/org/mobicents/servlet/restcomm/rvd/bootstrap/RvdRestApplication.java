@@ -4,6 +4,7 @@ import javax.ws.rs.core.Application;
 
 import org.mobicents.servlet.restcomm.rvd.RvdController;
 import org.mobicents.servlet.restcomm.rvd.RvdManager;
+import org.mobicents.servlet.restcomm.rvd.http.LoginRestService;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,6 +21,7 @@ public class RvdRestApplication extends Application {
         // register resources
         classes.add(RvdManager.class);
         classes.add(RvdController.class);
+        classes.add(LoginRestService.class);
         return classes;
     }
 }
