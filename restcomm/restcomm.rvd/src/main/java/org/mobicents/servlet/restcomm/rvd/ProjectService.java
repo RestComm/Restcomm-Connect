@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ProjectValidator;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ValidationResult;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
@@ -20,8 +22,6 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.validation.ProjectValidator;
-import org.mobicents.servlet.restcomm.rvd.validation.ValidationResult;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationFrameworkException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.ValidationException;
 

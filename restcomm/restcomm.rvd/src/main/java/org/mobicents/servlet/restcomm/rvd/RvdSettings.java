@@ -23,6 +23,7 @@ public class RvdSettings {
     private static final String RVD_PROJECT_VERSION = "1.0"; // version for rvd project syntax
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
+    public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;

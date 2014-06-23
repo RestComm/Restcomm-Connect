@@ -20,6 +20,10 @@ public class RvdException extends Exception {
         // TODO Auto-generated constructor stub
     }
 
+    public ExceptionResult getExceptionSummary() {
+        return new ExceptionResult(getClass().getSimpleName(), getMessage());
+    }
+
     public String asJson() {
         Gson gson = new Gson();
         JsonObject errorResponse = new JsonObject();
