@@ -75,6 +75,7 @@ public class RvdController extends RestService {
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
         logger.info("Received Restcomm GET request");
         logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        //logger.info("Using restcommPublicIP: " + rvdSettings.getEffectiveRestcommIp(httpRequest));
         MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
         return runInterpreter(appname, httpRequest, requestParams);

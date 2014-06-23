@@ -322,6 +322,25 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
+    /**
+     * Returns an InputStream to the wav specified or throws an error if not found. DON'T FORGET TO CLOSE the
+     * input stream after using. It is actually a FileInputStream.
+     */
+    @Override
+    public InputStream getWav(String projectName, String filename) throws StorageException {
+        String wavpath = getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME + File.separator + filename;
+        File wavfile = new File(wavpath);
+        if ( wavfile.exists() )
+            try {
+                return new FileInputStream(wavfile);
+            } catch (FileNotFoundException e) {
+                throw new StorageException("Error reading wav: " + filename, e);
+            }
+        else
+            throw new WavItemDoesNotExist("Wav file does not exist - " + filename );
+
+    }
+
     @Override
     public List<WavItem> listWavs(String projectName) throws StorageException {
         List<WavItem> items = new ArrayList<WavItem>();
@@ -487,30 +506,6 @@ public class FsProjectStorage implements ProjectStorage {
             }
         }
         return packageDir;
-    }
-
-
-
-
-
-
-    /**
-     * Returns an InputStream to the wav specified or throws an error if not found. DON'T FORGET TO CLOSE the
-     * input stream after using. It is actually a FileInputStream.
-     */
-    @Override
-    public InputStream getWav(String projectName, String filename) throws StorageException {
-        String wavpath = getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME + File.separator + filename;
-        File wavfile = new File(wavpath);
-        if ( wavfile.exists() )
-            try {
-                return new FileInputStream(wavfile);
-            } catch (FileNotFoundException e) {
-                throw new StorageException("Error reading wav: " + filename, e);
-            }
-        else
-            throw new WavItemDoesNotExist("Wav file does not exist - " + filename );
-
     }
 
     @Override

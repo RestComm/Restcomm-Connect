@@ -380,8 +380,6 @@ public class RvdManager extends UploadRestService {
         }
     }
 
-
-
     @DELETE
     //@Path("/removewav")
     @Path("{name}/wavs")

@@ -671,7 +671,9 @@ public class Interpreter {
             int filenameBeforeStartPos = fileResource.lastIndexOf('/');
             if ( filenameBeforeStartPos != -1 ) {
                 wavFilename = fileResource.substring(filenameBeforeStartPos+1);
-                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                String hostname = rvdSettings.getEffectiveRestcommIp(request);
+                //URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(hostname).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
                 httpResource = httpUriBuilder.build().toString();
             }
         }
