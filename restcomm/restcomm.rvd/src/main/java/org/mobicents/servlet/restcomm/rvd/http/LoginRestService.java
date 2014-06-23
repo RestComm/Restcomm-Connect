@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -24,21 +25,23 @@ public class LoginRestService extends RestService {
 
     @Context
     ServletContext servletContext;
+    RvdSettings rvdSettings;
 
     @PostConstruct
     void init() {
+        rvdSettings = rvdSettings.getInstance(servletContext);
     }
 
     @GET
     @Path("login")
-    public Response login() {
+    public Response login(@Context HttpServletRequest request) {
         logger.debug("Running login");
 
         // get username/password from request and authenticate against Restcomm
         // ...
         String userId = "administrator@company.com";
         String password = "RestComm";
-        AuthenticationService authService = new AuthenticationService();
+        AuthenticationService authService = new AuthenticationService(rvdSettings, request);
 
         try {
             if ( authService.authenticate(userId, password) ) {

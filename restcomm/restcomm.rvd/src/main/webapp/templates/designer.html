@@ -110,7 +110,6 @@
 									<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
 								</div>
 							</div>
-								
 							<div class="col-md-12 text-center delete-confirmation " ng-show="wavItem.viewMode=='confirm-delete'">
 								<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
 								<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>

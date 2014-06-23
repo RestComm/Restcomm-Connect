@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.bootstrap;
 
 import javax.ws.rs.core.Application;
 
+
 import org.mobicents.servlet.restcomm.rvd.http.LoginRestService;
 import org.mobicents.servlet.restcomm.rvd.http.RasRestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdController;

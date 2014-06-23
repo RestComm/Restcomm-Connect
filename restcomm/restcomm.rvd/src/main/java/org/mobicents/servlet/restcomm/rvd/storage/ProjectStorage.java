@@ -46,7 +46,6 @@ public interface ProjectStorage extends ProjectManagementStorage {
     void backupProjectState(String projectName) throws StorageException;
     void cloneProtoProject(String kind, String clonedName) throws StorageException;
     void storeProjectState(String projectName, File sourceStateFile) throws StorageException;
-
     InputStream archiveProject(String projectName) throws StorageException;
     void importProjectFromDirectory(File sourceProjectDirectory, String projectName, boolean overwrite) throws StorageException;
 }
