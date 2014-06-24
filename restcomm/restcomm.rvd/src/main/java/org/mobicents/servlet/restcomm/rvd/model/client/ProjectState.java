@@ -1,6 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStep;
 
 public class ProjectState {
 
@@ -10,6 +14,34 @@ public class ProjectState {
     private Integer lastNodeId;
     private StateHeader header;
 
+
+    public ProjectState() {
+        super();
+    }
+
+    public static ProjectState createEmptyVoice(String owner) {
+        String kind = "voice";
+        ProjectState state = new ProjectState();
+
+        StateHeader header = new StateHeader();
+        header.owner = owner;
+        header.projectKind = kind;
+        header.version = RvdSettings.getPackagingVersion();
+        header.startNodeName = "start";
+        state.setHeader(header);
+
+        List<Node> nodes = new ArrayList<Node>();
+        Node node = Node.createDefault("voice", "start", "Welcome");
+        SayStep step = SayStep.createDefault("step1", "Welcome to Telestax Restcom Visual Designer Demo");
+        node.getSteps().add(step);
+        nodes.add(node);
+        state.setNodes(nodes);
+
+        state.setLastStepId(1);
+        state.setLastNodeId(0);
+
+        return state;
+    }
 
     public Integer getLastStepId() {
         return lastStepId;
@@ -46,5 +78,10 @@ public class ProjectState {
     public StateHeader getHeader() {
         return header;
     }
+
+    public void setHeader(StateHeader header) {
+        this.header = header;
+    }
+
 
 }

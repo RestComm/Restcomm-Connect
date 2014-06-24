@@ -693,37 +693,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				node.steps[j] = step;
 			}
 		}
+
 		$scope.nodes = packedState.nodes;
-		/*
-		 * for ( var i=0; i < $scope.nodes.length; i++) { var packedNode =
-		 * $scope.nodes[i]; for (var j=0; j<packedNode.steps.length; j++) { var
-		 * step; step = stepPacker.unpack(packedNode.steps[j]); $scope.nodes[i]
-		 */
-				// if (node.steps[j].kind == 'gather') {
-					
-				// } elsen
-					// step = node.steps[j];
-				/*
-				 * if (step.kind == "gather") { if (step.gatherType == "menu")
-				 * step.collectdigits =
-				 * angular.copy(protos.stepProto.gather.collectdigits); else if
-				 * (step.gatherType == "collectdigits") step.menu =
-				 * angular.copy(protos.stepProto.gather.menu); } else
-				 */
-				/*
-				 * if (step.kind == "play") { if (step.playType == "local")
-				 * step.remote = angular.copy(protos.stepProto.play.remote);
-				 * else if (step.playType == "remote") step.local =
-				 * angular.copy(protos.stepProto.play.local); } else if
-				 * (step.kind == "ussdCollect") { if (step.gatherType == "menu")
-				 * step.collectdigits =
-				 * angular.copy(protos.stepProto.ussdCollect.collectdigits);
-				 * else if (step.gatherType == "collectdigits") step.menu =
-				 * angular.copy(protos.stepProto.ussdCollect.menu); }
-				 */					
-			// }
-		// }
-		$scope.activeNode = packedState.iface.activeNode;
+		//$scope.activeNode = packedState.iface.activeNode;
 		$scope.lastNodesId = packedState.lastNodeId;
 		$scope.startNodeName = packedState.header.startNodeName;	
 		$scope.projectKind = packedState.header.projectKind;
