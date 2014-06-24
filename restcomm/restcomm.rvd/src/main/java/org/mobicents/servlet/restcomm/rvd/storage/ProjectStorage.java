@@ -32,6 +32,6 @@ public interface ProjectStorage {
     void storeNodeStepnames(String projectName, Node node) throws StorageException;
     List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException;
     void backupProjectState(String projectName) throws StorageException;
-    void cloneProtoProject(String kind, String clonedName) throws StorageException;
+    void cloneProtoProject(String kind, String clonedName, String owner) throws StorageException;
     InputStream getWav(String projectName, String filename) throws StorageException;
 }
