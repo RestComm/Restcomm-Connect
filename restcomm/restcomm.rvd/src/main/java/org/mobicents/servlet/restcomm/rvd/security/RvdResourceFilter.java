@@ -5,6 +5,7 @@ package org.mobicents.servlet.restcomm.rvd.security;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
@@ -40,6 +41,8 @@ public class RvdResourceFilter implements ResourceFilter, ContainerRequestFilter
         //SecurityContext secContext = request.getSecurityContext();
         //String authenticationScheme = secContext.getAuthenticationScheme();
         //Principal principal2 = secContext.getUserPrincipal();
+        SecurityContext securityContext = request.getSecurityContext();
+
 
         Cookie ticketCookie = request.getCookies().get(RvdSettings.TICKET_COOKIE_NAME);
         if ( ticketCookie != null ) {
@@ -52,6 +55,9 @@ public class RvdResourceFilter implements ResourceFilter, ContainerRequestFilter
             TicketRepository tickets =  TicketRepository.getInstance();
             Ticket ticket = tickets.findTicket(ticketId);
             if ( ticket != null ) {
+                RvdUser user = new RvdUser(ticket.getUserId());
+                securityContext = new RvdSecurityContext(user);
+                request.setSecurityContext(securityContext);
                 logger.debug("granted access to request with ticket id" + ticketId);
                 return request;
             }

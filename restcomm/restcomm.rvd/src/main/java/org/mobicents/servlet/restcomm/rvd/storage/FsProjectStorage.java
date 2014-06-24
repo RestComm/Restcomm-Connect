@@ -21,6 +21,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -36,18 +37,23 @@ import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 
 public class FsProjectStorage implements ProjectStorage {
     static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
 
     private String workspaceBasePath;
     private String prototypeProjectPath;
+    //private Gson gsonUtil;
+    private ModelMarshaler marshaler;
 
-    public FsProjectStorage(RvdSettings settings) {
+    public FsProjectStorage(RvdSettings settings, ModelMarshaler marshaler) {
         this.workspaceBasePath = settings.getWorkspaceBasePath();
         this.prototypeProjectPath = settings.getPrototypeProjectsPath();
+        this.marshaler = marshaler;
     }
 
     public FsProjectStorage(String workspaceBasePath, String prototypeProjectPath) {
@@ -204,14 +210,27 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
+    /**
+     * Pass owner as null in order to create a freely accessible project
+     */
     @Override
-    public void cloneProtoProject(String kind, String clonedName) throws StorageException {
+    public void cloneProtoProject(String kind, String clonedName, String owner) throws StorageException {
         String protoProjectPath = prototypeProjectPath + File.separator + RvdSettings.PROTO_DIRECTORY_PREFIX + "_" + kind;
         File sourceDir = new File( protoProjectPath );
         String destProjectPath = workspaceBasePath + File.separator + clonedName;
         File destDir = new File(destProjectPath);
         try {
             cloneProject( sourceDir, destDir);
+            if ( owner != null ) {
+                String state =  loadProjectState(clonedName);
+                Gson gson = new GsonBuilder()
+                                //.registerTypeAdapter(Step.class, new StepJsonDeserializer())
+                                //.registerTypeAdapter(Step.class, new StepJsonSerializer())
+                                .create();
+                ProjectState projectState = gson.fromJson(state, ProjectState.class);
+                projectState.getHeader().setOwner(owner);
+                updateProjectState(clonedName, gson.toJson(projectState));
+            }
         } catch (IOException e) {
             throw new StorageException("Error cloning project '" + protoProjectPath + "' to '" + destProjectPath + "'" , e);
         }
@@ -558,7 +577,35 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
+    @Override
+    public
+    ProjectState loadProject(String name) throws StorageException {
+        String stateData = loadProjectState(name);
+        return marshaler.toModel(stateData, ProjectState.class);
+    }
 
+
+
+    @Override
+    public
+    void storeProject(String name, ProjectState projectState, boolean firstTime) throws StorageException {
+        String stateData = marshaler.toData(projectState);
+        String destFilepath = getProjectBasePath(name) + File.separator + "state";
+        try {
+            FileUtils.writeStringToFile(new File(destFilepath), stateData, Charset.forName("UTF-8"));
+            if ( firstTime)
+                buildDirStructure(projectState, name);
+        } catch (IOException e) {
+            throw new StorageException("Error storing state for project '" + name + "'", e );
+        }
+    }
+
+    private void buildDirStructure(ProjectState state, String name) {
+        if ("voice".equals(state.getHeader().getProjectKind()) ) {
+            File wavsDir = new File( getProjectBasePath(name) + File.separator + "wavs" );
+            wavsDir.mkdir();
+        }
+    }
 
     /**
      * Returns an non-existing project name based on the given one. Ideally it returns the same name. If null or blank
