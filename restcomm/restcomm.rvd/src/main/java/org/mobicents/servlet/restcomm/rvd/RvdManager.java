@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -21,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -56,6 +58,9 @@ public class RvdManager {
 
     @Context
     ServletContext servletContext;
+    @Context
+    SecurityContext securityContext;
+
     private ProjectService projectService;
 
     private RvdSettings rvdSettings;
@@ -73,9 +78,14 @@ public class RvdManager {
     @Produces(MediaType.APPLICATION_JSON)
     public Response listProjects(@Context HttpServletRequest request) {
 
+        logger.debug("SecurityContext: " + securityContext);
+        logger.debug("User principal: " + securityContext.getUserPrincipal());
+        logger.debug("isSecure: " + securityContext.isSecure());
+
+        Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
         try {
-            items = projectService.getAvailableProjects();
+            items = projectService.getAvailableProjectsByOwner(loggedUser.getName()); // there has to be a user in the context. Only logged users are allowed to to run project manager services
             ProjectService.fillStartUrlsForProjects(items, request);
 
         } catch (BadWorkspaceDirectoryStructure e) {
@@ -100,8 +110,10 @@ public class RvdManager {
 
         // TODO IMPORTANT!!! sanitize the project name!!
 
+        Principal loggedUser = securityContext.getUserPrincipal();
+
         try {
-            projectService.createProject(name, kind);
+            projectService.createProject(name, kind, loggedUser.getName());
         } catch (ProjectDirectoryAlreadyExists e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.CONFLICT).build();

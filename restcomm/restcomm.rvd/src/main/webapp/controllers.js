@@ -666,7 +666,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				}					
 			}
 		}
-		$scope.activeNode = packedState.iface.activeNode;
+		//$scope.activeNode = packedState.iface.activeNode;
 		$scope.lastNodesId = packedState.lastNodeId;
 		$scope.startNodeName = packedState.header.startNodeName;	
 		$scope.projectKind = packedState.header.projectKind;

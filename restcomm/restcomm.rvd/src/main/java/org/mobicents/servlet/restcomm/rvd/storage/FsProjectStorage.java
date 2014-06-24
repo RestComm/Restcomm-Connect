@@ -17,7 +17,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
+import org.mobicents.servlet.restcomm.rvd.model.StepJsonSerializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -29,6 +32,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
@@ -211,14 +215,27 @@ public class FsProjectStorage implements ProjectStorage {
         }
     }
 
+    /**
+     * Pass owner as null in order to create a freely accessible project
+     */
     @Override
-    public void cloneProtoProject(String kind, String clonedName) throws StorageException {
+    public void cloneProtoProject(String kind, String clonedName, String owner) throws StorageException {
         String protoProjectPath = prototypeProjectPath + File.separator + RvdSettings.PROTO_DIRECTORY_PREFIX + "_" + kind;
         File sourceDir = new File( protoProjectPath );
         String destProjectPath = workspaceBasePath + File.separator + clonedName;
         File destDir = new File(destProjectPath);
         try {
             cloneProject( sourceDir, destDir);
+            if ( owner != null ) {
+                String state =  loadProjectState(clonedName);
+                Gson gson = new GsonBuilder()
+                                .registerTypeAdapter(Step.class, new StepJsonDeserializer())
+                                .registerTypeAdapter(Step.class, new StepJsonSerializer())
+                                .create();
+                ProjectState projectState = gson.fromJson(state, ProjectState.class);
+                projectState.getHeader().setOwner(owner);
+                updateProjectState(clonedName, gson.toJson(projectState));
+            }
         } catch (IOException e) {
             throw new StorageException("Error cloning project '" + protoProjectPath + "' to '" + destProjectPath + "'" , e);
         }

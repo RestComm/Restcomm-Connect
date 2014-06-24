@@ -121,6 +121,50 @@ public class ProjectService {
         return items;
     }
 
+    /**
+     * Returns the projects owned by ownerFilter (in addition to those that belong to none and are freely accessible). If ownerFilter is null only
+     * freely accessible projectds are returned.
+     * @param ownerFilter
+     * @throws StorageException
+     */
+    public List<ProjectItem> getAvailableProjectsByOwner(String ownerFilter) throws StorageException {
+
+        List<ProjectItem> items = new ArrayList<ProjectItem>();
+        for (String entry : projectStorage.listProjectNames() ) {
+
+            String kind = "voice";
+            String owner = null;
+            try {
+                StateHeader header = projectStorage.loadStateHeader(entry);
+                kind = header.getProjectKind();
+                owner = header.getOwner();
+            } catch ( BadProjectHeader e ) {
+                // for old projects
+                JsonParser parser = new JsonParser();
+                JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                JsonElement projectKind_element = root_element.get("projectKind");
+                if ( projectKind_element != null ) {
+                    kind = projectKind_element.getAsString();
+                }
+            }
+
+            if ( ownerFilter != null ) {
+                if ( owner == null || owner.equals(ownerFilter) ) {
+                    ProjectItem item = new ProjectItem();
+                    item.setName(entry);
+                    item.setKind(kind);
+                    items.add(item);
+                }
+            } else {
+                ProjectItem item = new ProjectItem();
+                item.setName(entry);
+                item.setKind(kind);
+                items.add(item);
+            }
+        }
+        return items;
+    }
+
     public String openProject(String projectName) throws ProjectDoesNotExist, StorageException, IncompatibleProjectVersion {
         if ( !projectExists(projectName) )
             throw new ProjectDoesNotExist();
@@ -140,12 +184,12 @@ public class ProjectService {
         return projectStorage.projectExists(projectName);
     }
 
-    public void createProject(String projectName, String kind) throws StorageException, InvalidServiceParameters {
+    public void createProject(String projectName, String kind, String owner) throws StorageException, InvalidServiceParameters {
         String protoSuffix = null;
         if ( !"voice".equals(kind) && !"ussd".equals(kind) && !"sms".equals(kind) )
             throw new InvalidServiceParameters("Invalid project kind specified - '" + kind + "'");
 
-        projectStorage.cloneProtoProject(kind, projectName);
+        projectStorage.cloneProtoProject(kind, projectName, owner);
     }
 
     public void updateProject(HttpServletRequest request, String projectName) throws IOException, StorageException, ValidationFrameworkException, ValidationException, IncompatibleProjectVersion {
