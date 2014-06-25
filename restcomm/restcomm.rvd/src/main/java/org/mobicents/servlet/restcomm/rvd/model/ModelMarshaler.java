@@ -24,4 +24,8 @@ public class ModelMarshaler {
         return gsonUtil.toJson(model);
     }
 
+    public Gson getGson() {
+        return gsonUtil;
+    }
+
 }
