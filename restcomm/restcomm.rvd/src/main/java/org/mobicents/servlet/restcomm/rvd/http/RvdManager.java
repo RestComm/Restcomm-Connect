@@ -49,7 +49,6 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -58,7 +57,6 @@ import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 
 
-//@Path("/manager/projects")
 @Path("projects")
 public class RvdManager extends RestService {
 
@@ -95,14 +93,32 @@ public class RvdManager extends RestService {
 
     }
 
-    ProjectState initActiveProject(String projectName) throws StorageException {
-        if (activeProject == null)
-            activeProject = projectStorage.loadProject(projectName);
-        return activeProject;
+    /**
+     * Make sure the specified project has been loaded and is available for use. Checks logged user too.
+     * Also the loaded project is placed in the activeProject variable
+     * @param projectName
+     * @return
+     * @throws StorageException, WebApplicationException/unauthorized
+     * @throws ProjectDoesNotExist
+     */
+    void assertProjectAvailable(String projectName) throws StorageException, ProjectDoesNotExist {
+        if (! projectStorage.projectExists(projectName))
+            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
+        ProjectState project = projectStorage.loadProject(projectName);
+        if ( project.getHeader().getOwner() != null ) {
+            // needs further checking
+            if ( securityContext.getUserPrincipal() != null ) {
+                String loggedUser = securityContext.getUserPrincipal().getName();
+                if ( loggedUser.equals(project.getHeader().getOwner() ) ) {
+                    this.activeProject = project;
+                }
+            }
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        activeProject = project;
     }
 
     @GET
-    //@Path("list")
     @Produces(MediaType.APPLICATION_JSON)
     public Response listProjects(@Context HttpServletRequest request) {
         logger.debug("SecurityContext: " + securityContext);
@@ -160,22 +176,16 @@ public class RvdManager extends RestService {
      * Retrieves project header information. Returns  the project header or null if it does not exist (for old projects) as JSON - OK status.
      * Returns INTERNAL_SERVER_ERROR status and no response body for serious errors
      * @param name - The project name to get information for
+     * @throws StorageException
+     * @throws ProjectDoesNotExist
      */
     @GET
     @Path("{name}/info")
-    public Response projectInfo(@PathParam("name") String name) {
-        StateHeader header = null;
-        try {
-            initActiveProject(name);
-            header = activeProject.getHeader();
-        } catch ( BadProjectHeader e ) {
-            logger.warn(e.getMessage());
-        } catch (StorageException e) {
-            logger.error(e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-        Gson gson = new Gson();
-        return Response.status(Status.OK).entity(gson.toJson(header)).type(MediaType.APPLICATION_JSON).build();
+    public Response projectInfo(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
+        assertProjectAvailable(name);
+
+        StateHeader header = activeProject.getHeader();
+        return Response.status(Status.OK).entity(marshaler.getGson().toJson(header)).type(MediaType.APPLICATION_JSON).build();
     }
 
     @POST
@@ -216,16 +226,12 @@ public class RvdManager extends RestService {
 
     @PUT
     @Path("{name}/rename")
-    public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName) {
-
-        // TODO IMPORTANT!!! sanitize the project name!!
+    public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName) throws StorageException, ProjectDoesNotExist {
         if ( !RvdUtils.isEmpty(projectName) && ! RvdUtils.isEmpty(projectNewName) ) {
+            assertProjectAvailable(projectName);
             try {
                 projectService.renameProject(projectName, projectNewName);
                 return Response.ok().build();
-            } catch (ProjectDoesNotExist e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.NOT_FOUND).build();
             } catch (ProjectDirectoryAlreadyExists e) {
                 logger.error(e.getMessage(), e);
                 return Response.status(Status.CONFLICT).build();
@@ -264,16 +270,11 @@ public class RvdManager extends RestService {
 
     @DELETE
     @Path("{name}")
-    public Response deleteProject(@PathParam("name") String projectName) {
-
-        // TODO IMPORTANT!!! sanitize the project name!!
+    public Response deleteProject(@PathParam("name") String projectName) throws ProjectDoesNotExist {
         if ( ! RvdUtils.isEmpty(projectName) ) {
             try {
                 projectService.deleteProject(projectName);
                 return Response.ok().build();
-            } catch (ProjectDoesNotExist e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.NOT_FOUND).build();
             } catch (StorageException e) {
                 logger.error("Error deleting project '" + projectName + "'", e);
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -284,8 +285,9 @@ public class RvdManager extends RestService {
 
     @GET
     @Path("{name}/archive")
-    public Response downloadArchive(@PathParam("name") String projectName) {
+    public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
         logger.debug("downloading raw archive for project " + projectName);
+        assertProjectAvailable(projectName);
 
         InputStream archiveStream;
         try {
@@ -345,11 +347,10 @@ public class RvdManager extends RestService {
     @GET
     @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response openProject(@PathParam("name") String name, @Context HttpServletRequest request) {
-
-        // TODO CAUTION!!! sanitize name
-        // ...
-
+    public Response openProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
+        assertProjectAvailable(name);
+        return Response.ok().entity(activeProject).build();
+        /*
         try {
             String projectState = projectService.openProject(name);
             return Response.ok().entity(projectState).build();
@@ -362,13 +363,14 @@ public class RvdManager extends RestService {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
         }
+        */
     }
 
     @POST
     @Path("{name}/wavs")
-    public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request) {
+    public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
         logger.info("running /uploadwav");
-
+        assertProjectAvailable(projectName);
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
                 Gson gson = new Gson();
@@ -410,9 +412,8 @@ public class RvdManager extends RestService {
 
     @DELETE
     @Path("{name}/wavs")
-    public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) {
-        // !!! Sanitize project name
-
+    public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
+        assertProjectAvailable(projectName);
         try {
             projectService.removeWavFromProject(projectName, wavname);
             return Response.ok().build();
@@ -426,11 +427,11 @@ public class RvdManager extends RestService {
     @GET
     @Path("{name}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listWavs(@PathParam("name") String name) {
+    public Response listWavs(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
+        assertProjectAvailable(name);
         List<WavItem> items;
         try {
-            if (!projectService.projectExists(name))
-                return Response.status(Status.NOT_FOUND).build();
+
             items = projectService.getWavs(name);
             Gson gson = new Gson();
             return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
@@ -445,7 +446,8 @@ public class RvdManager extends RestService {
 
     @POST
     @Path("{name}/build")
-    public Response buildProject(@PathParam("name") String name) {
+    public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
+        assertProjectAvailable(name);
         BuildService buildService = new BuildService(projectStorage);
         try {
             buildService.buildProject(name);
