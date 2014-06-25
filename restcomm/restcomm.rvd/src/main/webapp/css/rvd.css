@@ -534,6 +534,18 @@ textarea.medium {
 	color: #333;
 }
 
+/* ----------------- #/login view -------------------------- */
+
+
+/* ----------------- index.html ---------------------------- */
+.notifications-wrapper {
+    position: fixed;
+    text-align: center;
+    width: 100%;
+    z-index: 1;
+    top: 60px;
+}
+
 
 
 

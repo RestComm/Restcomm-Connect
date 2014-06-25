@@ -50,7 +50,4 @@ public class RvdResponse {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
-
-
-
 }
