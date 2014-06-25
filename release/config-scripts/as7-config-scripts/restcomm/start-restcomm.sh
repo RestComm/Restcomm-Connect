@@ -141,6 +141,10 @@ fi
 source $BASEDIR/utils/read-network-props.sh "$NET_INTERFACE"
 BIND_ADDRESS="$PRIVATE_IP"
 
+if [[ -z "$STATIC_ADDRESS" ]]; then
+	STATIC_ADDRESS=$BIND_ADDRESS
+fi
+
 # configure restcomm installation
 source $BASEDIR/autoconfigure.sh
 
