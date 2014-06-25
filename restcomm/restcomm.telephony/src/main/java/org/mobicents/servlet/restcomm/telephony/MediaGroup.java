@@ -200,6 +200,7 @@ public final class MediaGroup extends UntypedActor {
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
+        final ActorRef sender = sender();
         if (Observe.class.equals(klass)) {
             observe(message);
         } else if (StopObserving.class.equals(klass)) {
