@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Dial timeLimit="10" timeout="3" action="http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm.application-7.2.0-TelScale-SNAPSHOT/2012-04-24/DialAction" method="POST">
+	<Dial timeLimit="10" timeout="3" action="http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm.application-7.1.6-TelScale-SNAPSHOT/2012-04-24/DialAction" method="POST">
 	  <Client>alice</Client>
 	</Dial>
 </Response>
