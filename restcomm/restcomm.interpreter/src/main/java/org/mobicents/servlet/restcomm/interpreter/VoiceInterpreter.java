@@ -1454,7 +1454,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 getContext().stop(interpreter);
 
             }
-
             final AddParticipant add = new AddParticipant(outboundCall);
             call.tell(add, source);
         }
