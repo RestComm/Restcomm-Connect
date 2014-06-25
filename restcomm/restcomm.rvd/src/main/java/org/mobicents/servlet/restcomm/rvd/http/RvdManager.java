@@ -111,6 +111,7 @@ public class RvdManager extends RestService {
                 String loggedUser = securityContext.getUserPrincipal().getName();
                 if ( loggedUser.equals(project.getHeader().getOwner() ) ) {
                     this.activeProject = project;
+                    return;
                 }
             }
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -349,7 +350,7 @@ public class RvdManager extends RestService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response openProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
         assertProjectAvailable(name);
-        return Response.ok().entity(activeProject).build();
+        return Response.ok().entity(marshaler.toData(activeProject)).build();
         /*
         try {
             String projectState = projectService.openProject(name);

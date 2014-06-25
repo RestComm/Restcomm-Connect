@@ -4,11 +4,16 @@ package org.mobicents.servlet.restcomm.rvd.security;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.UserNotAuthenticated;
+import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
@@ -66,7 +71,10 @@ public class RvdResourceFilter implements ResourceFilter, ContainerRequestFilter
         //return request;
 
         logger.debug("denied access for request ");
-        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        RvdException e = new UserNotAuthenticated();
+        RvdResponse rvdResponse = new RvdResponse(RvdResponse.Status.ERROR).setException(e);
+        Response res = Response.status(Status.UNAUTHORIZED).entity(rvdResponse.asJson()).type(MediaType.APPLICATION_JSON).build();
+        throw new WebApplicationException( res );
     }
 
 }
