@@ -285,7 +285,7 @@ public final class CallManager extends UntypedActor {
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String formatedPhone = null;
         try {
-        formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
         } catch (Exception e) {}
         try {
             // Try to find an application defined for the phone number.
@@ -460,18 +460,18 @@ public final class CallManager extends UntypedActor {
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
         }
-//        else {
-//            SipSession sipSession = request.getSession();
-//            SipApplicationSession sipAppSession = request.getApplicationSession();
-//            if(sipSession.getInvalidateWhenReady()){
-//                logger.info("Invalidating sipSession: "+sipSession.getId());
-//                sipSession.invalidate();
-//            }
-//            if(sipAppSession.getInvalidateWhenReady()){
-//                logger.info("Invalidating sipAppSession: "+sipAppSession.getId());
-//                sipAppSession.invalidate();
-//            }
-//        }
+        //        else {
+        //            SipSession sipSession = request.getSession();
+        //            SipApplicationSession sipAppSession = request.getApplicationSession();
+        //            if(sipSession.getInvalidateWhenReady()){
+        //                logger.info("Invalidating sipSession: "+sipSession.getId());
+        //                sipSession.invalidate();
+        //            }
+        //            if(sipAppSession.getInvalidateWhenReady()){
+        //                logger.info("Invalidating sipAppSession: "+sipAppSession.getId());
+        //                sipAppSession.invalidate();
+        //            }
+        //        }
     }
 
     private void execute(final Object message) {
@@ -562,7 +562,12 @@ public final class CallManager extends UntypedActor {
             case SIP: {
                 to = (SipURI) sipFactory.createURI(request.to());
                 String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
-                from = outboundInterface(transport);
+                SipURI outboundIntf = outboundInterface(transport);
+                if (request.from() == null) {
+                    from = outboundInterface(transport);
+                } else {
+                    from = sipFactory.createSipURI(request.from(), outboundIntf.getHost()+":"+outboundIntf.getPort());
+                }
                 break;
             }
         }

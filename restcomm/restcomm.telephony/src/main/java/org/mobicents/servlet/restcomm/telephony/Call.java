@@ -842,7 +842,7 @@ public final class Call extends UntypedActor {
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());
                     builder.setCallerName(name);
-                    String fromString = from.getUser() != null ? from.getUser() : "CALLS REST API";
+                    String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
                     builder.setFrom(fromString);
                     // builder.setForwardedFrom(callInfo.forwardedFrom());
                     // builder.setPhoneNumberSid(phoneId);
@@ -1318,7 +1318,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            if (updatingInternalLink.equals(state) && conference != null) {
+            if (updatingInternalLink.equals(state) && conference != null && direction != "outbound-dial") {
                 // If this is the outbound leg for an outbound call, conference is the initial call
                 // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
                 // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
