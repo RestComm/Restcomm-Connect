@@ -20,10 +20,10 @@ import javax.ws.rs.Consumes;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
@@ -36,17 +36,24 @@ public class RvdController extends RestService {
 
     @Context
     ServletContext servletContext;
+    @Context
+    HttpServletRequest request;
+
     private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
     private ProjectService projectService;
     private Gson gson;
+    private RvdContext rvdContext;
+
+
 
     @PostConstruct
     void init() {
         gson = new Gson();
-        rvdSettings = RvdSettings.getInstance(servletContext);
-        projectStorage = new FsProjectStorage(rvdSettings);
-        projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
+        rvdContext = new RvdContext(request, servletContext);
+        rvdSettings = rvdContext.getSettings();
+        projectStorage = rvdContext.getProjectStorage();
+        projectService = new ProjectService(rvdContext);
     }
 
     private Response runInterpreter( String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
@@ -75,6 +82,7 @@ public class RvdController extends RestService {
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
         logger.info("Received Restcomm GET request");
         logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        //logger.info("Using restcommPublicIP: " + rvdSettings.getEffectiveRestcommIp(httpRequest));
         MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
         return runInterpreter(appname, httpRequest, requestParams);

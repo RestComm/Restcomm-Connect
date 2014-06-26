@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "RVD project 0.1",
+	"description": "Specification for RVD 7.1.4",	
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["play"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"playType": {"enum": ["local","remote"]},
+		"local": {
+			"type": "object",
+			"properties": {
+				"wavLocalFilename": {"type": "string", "minLength":1}
+			},
+			"required": ["wavLocalFilename"]
+		},
+		"remote": {
+			"type": "object",
+			"properties": {
+				"wavUrl": {"type": "string", "minLength":1}
+			},
+			"required": ["wavUrl"]			
+		},
+		"loop": {"type": "integer"},
+			
+		"iface": {"type": "object"}
+	},
+	"required": ["name","kind","label","title","playType"]	
+}
+

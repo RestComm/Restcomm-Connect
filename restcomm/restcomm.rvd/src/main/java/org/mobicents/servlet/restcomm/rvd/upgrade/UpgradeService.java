@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -23,9 +22,9 @@ public class UpgradeService {
         this.projectStorage = projectStorage;
     }
 
-    public UpgradeService(String otherWorkspaceLocation) {
-        this.projectStorage = new FsProjectStorage(otherWorkspaceLocation, null);
-    }
+    //public UpgradeService(String otherWorkspaceLocation) {
+    //    this.projectStorage = new FsProjectStorage(otherWorkspaceLocation, null);
+    //}
 
     /**
      * Upgrades a project to current RVD supported version
@@ -50,6 +49,8 @@ public class UpgradeService {
 
         if ( startVersion.equals(RvdSettings.getRvdProjectVersion()) )
             return false;
+
+        logger.info("Upgrading '" + projectName + "' from version " + startVersion);
 
         String version = startVersion;
         String source = projectStorage.loadProjectState(projectName);

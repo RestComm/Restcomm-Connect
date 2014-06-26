@@ -1,17 +1,29 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
+
+    private String name;
+    private String label;
+    private String kind;
+    private List<Step> steps;
 
     public Node() {
         // TODO Auto-generated constructor stub
     }
 
-    private String name;
-    private String label;
-    private List<Step> steps;
-    //private List<String> stepnames;
+    public static Node createDefault(String kind, String name, String label) {
+        Node node = new Node();
+        node.setName(name);
+        node.setLabel(label);
+        node.setKind(kind);
+        List<Step> steps = new ArrayList<Step>();
+        node.setSteps(steps);
+
+        return node;
+    }
 
     public String getName() {
         return name;
@@ -29,6 +41,14 @@ public class Node {
         this.label = label;
     }
 
+    public String getKind() {
+        return kind;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
     public List<Step> getSteps() {
         return steps;
     }
@@ -36,13 +56,4 @@ public class Node {
     public void setSteps(List<Step> steps) {
         this.steps = steps;
     }
-
-
-    /*public List<String> getStepnames() {
-        return stepnames;
-    }
-
-    public void setStepnames(List<String> stepnames) {
-        this.stepnames = stepnames;
-    }*/
 }

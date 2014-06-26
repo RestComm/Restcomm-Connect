@@ -10,4 +10,12 @@
 			workspace
 	-->
 	<workspaceLocation>workspace</workspaceLocation>
+	
+	<!-- Use a fixed ip address on the URL resources generated such as links to recorded .wav files etc. If not defined,
+		the destination ip of the request made by Restcomm to the RVD controller will be used. 
+	 -->
+	<!-- 
+	<restcommPublicIp>192.168.0.53</restcommPublicIp>
+	-->
+	
 </rvd>

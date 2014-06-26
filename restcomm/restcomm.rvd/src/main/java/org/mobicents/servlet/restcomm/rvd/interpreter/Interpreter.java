@@ -119,11 +119,9 @@ public class Interpreter {
     public Interpreter(RvdSettings settings, ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
         this.rvdSettings = settings;
         this.projectStorage = projectStorage;
-        this.rasStorage = new FsRasStorage(projectStorage);
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
-        //this.requestParameters = RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap());
         this.requestParams = requestParams;
 
         this.contextPath = httpRequest.getContextPath();
@@ -671,7 +669,9 @@ public class Interpreter {
             int filenameBeforeStartPos = fileResource.lastIndexOf('/');
             if ( filenameBeforeStartPos != -1 ) {
                 wavFilename = fileResource.substring(filenameBeforeStartPos+1);
-                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                String hostname = rvdSettings.getEffectiveRestcommIp(request);
+                //URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(hostname).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
                 httpResource = httpUriBuilder.build().toString();
             }
         }
