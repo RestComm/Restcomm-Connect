@@ -24,7 +24,7 @@ public class PackagingStorage {
     }
 
     public void storeRapp(Rapp rapp, String projectName) throws StorageException {
-        storage.storeProjectFile(rapp, rapp.getClass(), projectName, RvdSettings.PACKAGING_DIRECTORY_NAME, "rapp");
+        storage.storeFileToProject(rapp, rapp.getClass(), projectName, RvdSettings.PACKAGING_DIRECTORY_NAME, "rapp");
     }
 
     public void storeRappBinary(File sourceFile, String projectName ) throws RvdException {

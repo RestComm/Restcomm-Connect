@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
@@ -98,6 +99,12 @@ public class RasRestService extends UploadRestService {
     }
 
 
+    /**
+     * Creates or updates an app
+     * @param request
+     * @param projectName
+     * @return
+     */
     @POST
     @Path("/packaging/app/save")
     public Response saveApp(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
@@ -108,8 +115,11 @@ public class RasRestService extends UploadRestService {
 
             Gson gson = new Gson();
             Rapp rapp = gson.fromJson(rappData, Rapp.class);
-            rasService.saveApp(rapp, projectName);
-
+            if ( !packagingStorage.hasPackaging(projectName) ) {
+                rasService.createApp(rapp, projectName);
+            } else {
+                rasService.saveApp(rapp, projectName);
+            }
             return buildOkResponse();
 
         } catch (IOException e) {
@@ -121,6 +131,9 @@ public class RasRestService extends UploadRestService {
         } catch (StorageException e) {
             logger.error(e,e);
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        } catch (ProjectDoesNotExist e) {
+            logger.warn(e,e);
+            return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.ERROR,e);
         }
     }
 

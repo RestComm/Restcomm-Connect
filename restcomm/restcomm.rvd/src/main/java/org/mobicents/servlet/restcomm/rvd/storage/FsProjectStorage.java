@@ -612,7 +612,7 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
 
-    public void storeProjectFile(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException {
+    public void storeFileToProject(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException {
         File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
         storeFile( item, itemClass, file);
     }
