@@ -9,12 +9,12 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import com.google.gson.JsonElement;
 
 public interface RasStorage {
-    public void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException;
-    public boolean hasBootstrapInfo(String projectName);
-    public JsonElement loadBootstrapInfo(String projectName) throws StorageException;
-    public void storeRapp(Rapp rapp, String projectName) throws StorageException;
-    public Rapp loadRapp(String projectName) throws StorageException;
-    public List<RappInfo> listRapps() throws StorageException;
+    void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException;
+    boolean hasBootstrapInfo(String projectName);
+    JsonElement loadBootstrapInfo(String projectName) throws StorageException;
+    void storeRapp(Rapp rapp, String projectName) throws StorageException;
+    Rapp loadRapp(String projectName) throws StorageException;
+    List<RappInfo> listRapps(List<String> projectNames) throws StorageException;
 }
 
 

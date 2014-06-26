@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStream;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
@@ -24,10 +25,13 @@ public class RvdSettings {
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
+    public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
+    private RvdConfig rvdConfig;  // the configuration settings from rvd.xml
+    private String effectiveRestcommIp; // the IP address to access .wavs and other resources from the internet. It takes into account rvd.xml and servletContext
 
     public static RvdSettings getInstance(ServletContext servletContext) {
         if ( instance == null ) {
@@ -45,7 +49,7 @@ public class RvdSettings {
             InputStream is = servletContext.getResourceAsStream("/WEB-INF/rvd.xml");
             XStream xstream = new XStream();
             xstream.alias("rvd", RvdConfig.class);
-            RvdConfig rvdConfig = (RvdConfig) xstream.fromXML( is );
+            rvdConfig = (RvdConfig) xstream.fromXML( is );
             if (rvdConfig.getWorkspaceLocation() != null  &&  !"".equals(rvdConfig.getWorkspaceLocation()) ) {
                 if ( rvdConfig.getWorkspaceLocation().startsWith("/") )
                     workspaceBasePath = rvdConfig.getWorkspaceLocation(); // this is an absolute path
@@ -84,6 +88,16 @@ public class RvdSettings {
 
     public void setExternalServiceBase(String externalServiceBase) {
         this.externalServiceBase = externalServiceBase;
+    }
+
+    public String getEffectiveRestcommIp(HttpServletRequest request) {
+        String ipFromXml = rvdConfig.getRestcommPublicIp();
+
+        String ip = request.getLocalAddr(); // use request ip as default
+        if ( ipFromXml != null  &&  !"".equals(ipFromXml) ) {
+            ip = ipFromXml;
+        }
+        return ip;
     }
 
 }

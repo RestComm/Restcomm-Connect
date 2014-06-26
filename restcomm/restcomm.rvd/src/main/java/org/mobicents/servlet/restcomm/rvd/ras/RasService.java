@@ -6,6 +6,7 @@ import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
@@ -16,6 +17,7 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsRasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -26,6 +28,7 @@ import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 import com.google.gson.Gson;
+
 import java.util.UUID;
 /**
  * Functionality for importing and setting up an app from the app store
@@ -36,14 +39,17 @@ public class RasService {
 
     static final Logger logger = Logger.getLogger(RasService.class.getName());
 
-    ProjectStorage storage;
+    ProjectStorage projectStorage;
     FsPackagingStorage packagingStorage;
     FsRasStorage rasStorage;
+    FsStorageBase storageBase;
 
-    public RasService(ProjectStorage storage) {
-        this.storage = storage;
-        this.packagingStorage = new FsPackagingStorage(storage);
-        this.rasStorage = new FsRasStorage(storage);
+
+    public RasService(RvdContext rvdContext) {
+        this.storageBase = rvdContext.getStorageBase();
+        this.projectStorage = rvdContext.getProjectStorage();
+        this.packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
+        this.rasStorage = new FsRasStorage(rvdContext.getStorageBase());
     }
 
     /*
@@ -85,12 +91,12 @@ public class RasService {
                 zipper.addFileContent("/app/info", infoData );
                 zipper.addFileContent("/app/config", configData );
                 zipper.addDirectory("/app/rvd/");
-                zipper.addFileContent("/app/rvd/state", storage.loadProjectState(projectName));
+                zipper.addFileContent("/app/rvd/state", projectStorage.loadProjectState(projectName));
 
                 if ( project.supportsWavs() ) {
                     zipper.addDirectory("/app/rvd/wavs/");
-                    for ( WavItem wavItem : storage.listWavs(projectName) ) {
-                        InputStream wavStream = storage.getWav(projectName, wavItem.getFilename());
+                    for ( WavItem wavItem : projectStorage.listWavs(projectName) ) {
+                        InputStream wavStream = projectStorage.getWav(projectName, wavItem.getFilename());
                         try {
                             zipper.addFile("app/rvd/wavs/" + wavItem.getFilename(), wavStream );
                         } finally {
@@ -130,23 +136,22 @@ public class RasService {
         unzipper.unzip(packageZipStream);
 
         //String infoPath = tempDir.getPath() + "/app/" + "info";
-        RappInfo info = storage.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
-        RappConfig config = storage.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
-
+        RappInfo info = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
+        RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
 
         // create a project with the application name specified in the package. This should be a default. The user should be able to override it
-        String newProjectName = storage.getAvailableProjectName(info.getName());
-        storage.createProjectSlot(newProjectName);
+        String newProjectName = projectStorage.getAvailableProjectName(info.getName());
+        projectStorage.createProjectSlot(newProjectName);
 
         // add project state
-        storage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
+        projectStorage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
 
         // and wav files one-by-one (if any)
         File wavDir = new File(tempDir.getPath() + "/app/rvd/wavs");
         if ( wavDir.exists() ) {
             File[] wavFiles = wavDir.listFiles();
             for ( File wavFile : wavFiles ) {
-                storage.storeWav(newProjectName, wavFile.getName(), wavFile);
+                projectStorage.storeWav(newProjectName, wavFile.getName(), wavFile);
             }
         }
 

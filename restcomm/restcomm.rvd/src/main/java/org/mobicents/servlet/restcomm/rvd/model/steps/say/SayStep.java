@@ -11,6 +11,17 @@ public class SayStep extends Step {
     private String language;
     private Integer loop;
 
+    public static SayStep createDefault(String name, String phrase) {
+        SayStep step = new SayStep();
+        step.setName(name);
+        step.setLabel("say");
+        step.setKind("say");
+        step.setTitle("say");
+        step.setPhrase(phrase);
+
+        return step;
+    }
+
     public String getPhrase() {
         return phrase;
     }

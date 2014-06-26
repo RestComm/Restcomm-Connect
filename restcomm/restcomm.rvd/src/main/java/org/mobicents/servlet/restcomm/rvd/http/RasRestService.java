@@ -25,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
@@ -35,7 +36,6 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsRasStorage;
@@ -47,26 +47,32 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 @Path("ras")
-public class RasRestService extends UploadRestService {
+public class RasRestService extends RestService {
     static final Logger logger = Logger.getLogger(RasRestService.class.getName());
 
     @Context
     ServletContext servletContext;
+    @Context
+    HttpServletRequest request;
+
     private RvdSettings settings;
-    private ProjectStorage storage;
+    private ProjectStorage projectStorage;
     private FsRasStorage rasStorage;
     private FsPackagingStorage packagingStorage;
     private RasService rasService;
     private ProjectService projectService;
+    private RvdContext rvdContext;
 
     @PostConstruct
     void init() {
-        settings = RvdSettings.getInstance(servletContext);
-        storage = new FsProjectStorage(settings);
-        rasStorage = new FsRasStorage(storage);
-        packagingStorage = new FsPackagingStorage(storage);
-        rasService = new RasService(storage);
-        projectService = new ProjectService(storage, servletContext, settings);
+        rvdContext = new RvdContext(request, servletContext);
+        settings = rvdContext.getSettings();
+        projectStorage = rvdContext.getProjectStorage();
+        rasStorage = new FsRasStorage(rvdContext.getStorageBase());
+        packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
+
+        rasService = new RasService(rvdContext);
+        projectService = new ProjectService(rvdContext);
     }
 
 
@@ -199,7 +205,8 @@ public class RasRestService extends UploadRestService {
     @Path("apps")
     public Response listRapps(@Context HttpServletRequest request) {
         try {
-            List<RappInfo> rapps = rasStorage.listRapps();
+            List<String> projectNames = projectStorage.listProjectNames();
+            List<RappInfo> rapps = rasStorage.listRapps(projectNames);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
@@ -219,7 +226,7 @@ public class RasRestService extends UploadRestService {
     public Response newRasApp(@PathParam("name") String projectNameOverride, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
-        BuildService buildService = new BuildService(storage);
+        BuildService buildService = new BuildService(projectStorage);
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
