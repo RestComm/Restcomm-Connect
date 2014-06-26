@@ -14,11 +14,13 @@
 			</thead>
 			<tbody>
 				<tr ng-repeat="product in products">
-					<td>{{product.info.title}}</td>
+					<td>{{product.info.title}}
+						<div class="text-muted">{{product.info.appId}}</div>
+					</td>
 					<td>
 						<span ng-repeat="(catid, category) in product.info.category" class="label label-default category-tag">{{category.name}}</span>
 					</td>
-					<td ><div ng-bind-html="formatHtml(product.info.content)"></div></td>
+					<td >{{product.info.excerpt}}</td>
 					<td>
 						<button type="button" class="btn btn-primary">Install</button>
 					</td>
