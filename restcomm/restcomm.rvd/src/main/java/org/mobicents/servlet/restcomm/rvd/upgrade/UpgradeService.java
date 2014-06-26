@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -24,7 +24,7 @@ public class UpgradeService {
     }
 
     public UpgradeService(String otherWorkspaceLocation) {
-        this.projectStorage = new FsProjectStorage(otherWorkspaceLocation, null);
+        this.projectStorage = new FsStorage(otherWorkspaceLocation, null);
     }
 
     /**

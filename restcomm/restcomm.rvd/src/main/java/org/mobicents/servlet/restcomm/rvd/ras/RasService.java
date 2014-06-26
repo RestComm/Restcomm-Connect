@@ -17,7 +17,7 @@ import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
 import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.RasStorageImpl;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
@@ -38,12 +38,12 @@ public class RasService {
 
     ProjectStorage storage;
     PackagingStorage packagingStorage;
-    RasStorage rasStorage;
+    RasStorageImpl rasStorage;
 
     public RasService(ProjectStorage storage) {
         this.storage = storage;
         this.packagingStorage = new PackagingStorage(storage);
-        this.rasStorage = new RasStorage(storage);
+        this.rasStorage = new RasStorageImpl(storage);
     }
 
     /*

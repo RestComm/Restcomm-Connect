@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServlet;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
@@ -21,7 +21,7 @@ public class RvdInitializationServlet extends HttpServlet {
         logger.info("Initializing RVD");
 
         RvdSettings settings = RvdSettings.getInstance(config.getServletContext());
-        ProjectStorage projectStorage = new FsProjectStorage(settings);
+        ProjectStorage projectStorage = new FsStorage(settings);
         UpgradeService upgradeService = new UpgradeService(projectStorage);
 
         try {
