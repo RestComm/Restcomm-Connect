@@ -30,7 +30,7 @@ public class RasStorage {
     }
 
     public void storeRapp(Rapp rapp, String projectName) throws StorageException {
-        storage.storeProjectFile(rapp, rapp.getClass(), projectName, "ras", "rapp");
+        storage.storeFileToProject(rapp, rapp.getClass(), projectName, "ras", "rapp");
     }
 
     public Rapp loadRapp(String projectName) throws StorageException {

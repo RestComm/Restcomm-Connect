@@ -20,7 +20,7 @@ public interface ProjectStorage extends ProjectManagementStorage {
     <T> T loadModelFromProjectFile(String projectName, String path, String filename, Class<T> modelClass) throws StorageException;
     void storeProjectFile(String data, String projectName, String path, String filename) throws StorageException;
     String loadProjectFile(String projectName, String path, String filename ) throws StorageException;
-    void storeProjectFile(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException;
+    void storeFileToProject(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException;
     void storeProjectBinaryFile(File sourceFile, String projectName, String path, String filename) throws RvdException;
     InputStream getProjectBinaryFile(String projectName, String path, String filename) throws RvdException, FileNotFoundException;
     boolean projectPathExists(String projectName, String path) throws ProjectDoesNotExist;

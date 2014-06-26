@@ -26,7 +26,7 @@ import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 import com.google.gson.Gson;
-
+import java.util.UUID;
 /**
  * Functionality for importing and setting up an app from the app store
  * @author "Tsakiridis Orestis"
@@ -164,11 +164,38 @@ public class RasService {
         return newProjectName;
     }
 
+    /**
+     * Updates packaging information for an app
+     * @param rapp
+     * @param projectName
+     * @throws RvdValidationException
+     * @throws StorageException
+     */
     public void saveApp(Rapp rapp, String projectName) throws RvdValidationException, StorageException {
         ValidationReport report = rapp.validate();
         if ( ! report.isOk() )
             throw new RvdValidationException("Cannot validate rapp", report);
 
+        // preserve the app's id
+        Rapp existingRapp = packagingStorage.loadRapp(projectName);
+        rapp.getInfo().setId( existingRapp.getInfo().getId() );
+
+        packagingStorage.storeRapp(rapp, projectName);
+    }
+
+    /**
+     * Creates packaging information for an app.
+     * @param rapp
+     * @param projectName
+     * @throws RvdValidationException
+     * @throws StorageException
+     */
+    public void createApp(Rapp rapp, String projectName) throws RvdValidationException, StorageException {
+        ValidationReport report = rapp.validate();
+        if ( ! report.isOk() )
+            throw new RvdValidationException("Cannot validate rapp", report);
+
+        rapp.getInfo().setId(generateAppId(projectName));
         packagingStorage.storeRapp(rapp, projectName);
     }
 
@@ -187,5 +214,12 @@ public class RasService {
 
         return binaryInfo;
     }
+
+    protected String generateAppId(String projectName) {
+        String id = UUID.randomUUID().toString();
+        return id;
+    }
+
+
 
 }
