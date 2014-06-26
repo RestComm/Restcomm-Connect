@@ -42,7 +42,7 @@ import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationFr
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
@@ -69,7 +69,7 @@ public class RvdManager extends UploadRestService {
     @PostConstruct
     void init() {
         rvdSettings = RvdSettings.getInstance(servletContext);
-        projectStorage = new FsProjectStorage(rvdSettings);
+        projectStorage = new FsStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
 
@@ -423,7 +423,7 @@ public class RvdManager extends UploadRestService {
 
         // !!! SANITIZE project name
 
-        ProjectStorage projectStorage = new FsProjectStorage(rvdSettings);
+        ProjectStorage projectStorage = new FsStorage(rvdSettings);
         BuildService buildService = new BuildService(projectStorage);
 
         try {

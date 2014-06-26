@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -31,12 +32,13 @@ import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotEx
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.RasStorageImpl;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
@@ -52,7 +54,7 @@ public class RasRestService extends UploadRestService {
     ServletContext servletContext;
     private RvdSettings settings;
     private ProjectStorage storage;
-    private RasStorage rasStorage;
+    private RasStorageImpl rasStorage;
     private PackagingStorage packagingStorage;
     private RasService rasService;
     private ProjectService projectService;
@@ -60,8 +62,8 @@ public class RasRestService extends UploadRestService {
     @PostConstruct
     void init() {
         settings = RvdSettings.getInstance(servletContext);
-        storage = new FsProjectStorage(settings);
-        rasStorage = new RasStorage(storage);
+        storage = new FsStorage(settings);
+        rasStorage = new RasStorageImpl(storage);
         packagingStorage = new PackagingStorage(storage);
         rasService = new RasService(storage);
         projectService = new ProjectService(storage, servletContext, settings);
@@ -193,11 +195,17 @@ public class RasRestService extends UploadRestService {
         }
     }
 
-    //@GET
-    //@Path("apps")
-    //public Response listRapps(@Context HttpServletRequest request) {
+    @GET
+    @Path("apps")
+    public Response listRapps(@Context HttpServletRequest request) {
+        try {
+            List<RappInfo> rapps = rasStorage.listRapps();
+            return buildOkResponse(rapps);
+        } catch (StorageException e) {
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+        }
 
-    //}
+    }
 
     /**
      * Create a new application by uploading a ras package

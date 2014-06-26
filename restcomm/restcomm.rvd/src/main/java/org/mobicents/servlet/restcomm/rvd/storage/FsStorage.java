@@ -39,23 +39,24 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-public class FsProjectStorage implements ProjectStorage {
-    static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
+public class FsStorage implements ProjectStorage {
+    static final Logger logger = Logger.getLogger(FsStorage.class.getName());
 
     private String workspaceBasePath;
     private String prototypeProjectPath;
 
-    public FsProjectStorage(RvdSettings settings) {
+    public FsStorage(RvdSettings settings) {
         this.workspaceBasePath = settings.getWorkspaceBasePath();
         this.prototypeProjectPath = settings.getPrototypeProjectsPath();
     }
 
-    public FsProjectStorage(String workspaceBasePath, String prototypeProjectPath) {
+    public FsStorage(String workspaceBasePath, String prototypeProjectPath) {
         this.workspaceBasePath = workspaceBasePath;
         this.prototypeProjectPath = prototypeProjectPath;
     }
 
-    private String getProjectBasePath(String name) {
+    // package-private method
+    String getProjectBasePath(String name) {
         return workspaceBasePath + File.separator + name;
     }
 
