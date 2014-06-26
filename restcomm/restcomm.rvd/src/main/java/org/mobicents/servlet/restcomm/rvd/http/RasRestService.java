@@ -35,10 +35,10 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
-import org.mobicents.servlet.restcomm.rvd.storage.FsStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.RasStorageImpl;
+import org.mobicents.servlet.restcomm.rvd.storage.FsRasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
@@ -54,17 +54,17 @@ public class RasRestService extends UploadRestService {
     ServletContext servletContext;
     private RvdSettings settings;
     private ProjectStorage storage;
-    private RasStorageImpl rasStorage;
-    private PackagingStorage packagingStorage;
+    private FsRasStorage rasStorage;
+    private FsPackagingStorage packagingStorage;
     private RasService rasService;
     private ProjectService projectService;
 
     @PostConstruct
     void init() {
         settings = RvdSettings.getInstance(servletContext);
-        storage = new FsStorage(settings);
-        rasStorage = new RasStorageImpl(storage);
-        packagingStorage = new PackagingStorage(storage);
+        storage = new FsProjectStorage(settings);
+        rasStorage = new FsRasStorage(storage);
+        packagingStorage = new FsPackagingStorage(storage);
         rasService = new RasService(storage);
         projectService = new ProjectService(storage, servletContext, settings);
     }

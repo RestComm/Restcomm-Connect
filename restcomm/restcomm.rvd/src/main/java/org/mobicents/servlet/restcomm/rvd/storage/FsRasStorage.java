@@ -11,11 +11,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 
-public class RasStorageImpl implements RasStorage {
-    private FsStorage storage;
+public class FsRasStorage implements RasStorage {
+    private FsStorageBase storage;
 
-    public RasStorageImpl( FsStorage projectStorage) {
-        this.storage = projectStorage;
+    public FsRasStorage( FsStorageBase storageBase) {
+        this.storage = storageBase;
     }
 
     public void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException {

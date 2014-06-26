@@ -39,34 +39,23 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-public class FsStorage implements ProjectStorage {
-    static final Logger logger = Logger.getLogger(FsStorage.class.getName());
+public class FsProjectStorage implements ProjectStorage {
+    static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
 
-    private String workspaceBasePath;
-    private String prototypeProjectPath;
+    private FsStorageBase storageBase;
 
-    public FsStorage(RvdSettings settings) {
-        this.workspaceBasePath = settings.getWorkspaceBasePath();
-        this.prototypeProjectPath = settings.getPrototypeProjectsPath();
-    }
-
-    public FsStorage(String workspaceBasePath, String prototypeProjectPath) {
-        this.workspaceBasePath = workspaceBasePath;
-        this.prototypeProjectPath = prototypeProjectPath;
-    }
-
-    // package-private method
-    String getProjectBasePath(String name) {
-        return workspaceBasePath + File.separator + name;
+    public FsProjectStorage(FsStorageBase storageBase) {
+        super();
+        this.storageBase = storageBase;
     }
 
     private String getProjectWavsPath(String projectName) {
-        return getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME;
+        return storageBase.getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME;
     }
 
     @Override
     public String loadProjectOptions(String projectName) throws StorageException {
-        String filepath = getProjectBasePath(projectName) + File.separator + "data" + File.separator + "project";
+        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data" + File.separator + "project";
         try {
             String projectOptions_json = FileUtils.readFileToString(new File(filepath));
             return projectOptions_json;
@@ -77,7 +66,7 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public void storeProjectOptions(String projectName, String projectOptions) throws StorageException {
-        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + "project";
+        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + "project";
         File outFile = new File( filepath );
         try {
             FileUtils.writeStringToFile(outFile, projectOptions, "UTF-8");
@@ -88,7 +77,7 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public void storeProjectState(String projectName, File sourceStateFile) throws StorageException {
-        String destFilepath = getProjectBasePath(projectName) + File.separator + "state";
+        String destFilepath = storageBase.getProjectBasePath(projectName) + File.separator + "state";
         try {
             FileUtils.copyFile(sourceStateFile, new File(destFilepath));
         } catch (IOException e) {
@@ -100,7 +89,7 @@ public class FsStorage implements ProjectStorage {
     @Override
     public void clearBuiltProject(String projectName) {
 
-        String projectPath = getProjectBasePath(projectName) + File.separator + projectName + File.separator;
+        String projectPath = storageBase.getProjectBasePath(projectName) + File.separator + projectName + File.separator;
         File dataDir = new File(projectPath + "data");
 
         // delete all files in directory
@@ -112,7 +101,7 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public String loadProjectState(String projectName) throws StorageException {
-        String filepath = getProjectBasePath(projectName) + File.separator + "state";
+        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "state";
         try {
             return FileUtils.readFileToString(new File(filepath), "UTF-8");
         } catch (IOException e) {
@@ -122,7 +111,7 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException {
-        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + nodeName + "." + stepName;
+        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + nodeName + "." + stepName;
         try {
             FileUtils.writeStringToFile(new File(filepath), content, "UTF-8");
         } catch (IOException e) {
@@ -133,7 +122,7 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public boolean projectExists(String projectName) {
-        File projectDir = new File(workspaceBasePath + File.separator + projectName);
+        File projectDir = new File(storageBase.getWorkspaceBasePath() + File.separator + projectName);
         if (projectDir.exists())
             return true;
         return false;
@@ -143,7 +132,7 @@ public class FsStorage implements ProjectStorage {
     public List<String> listProjectNames() throws BadWorkspaceDirectoryStructure {
         List<String> items = new ArrayList<String>();
 
-        File workspaceDir = new File(workspaceBasePath);
+        File workspaceDir = new File(storageBase.getWorkspaceBasePath() );
         if (workspaceDir.exists()) {
 
             File[] entries = workspaceDir.listFiles(new FileFilter() {
@@ -196,8 +185,8 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public void cloneProject(String name, String clonedName) throws StorageException {
-        File sourceDir = new File(workspaceBasePath + File.separator + name);
-        File destDir = new File(workspaceBasePath + File.separator + clonedName);
+        File sourceDir = new File(storageBase.getWorkspaceBasePath()  + File.separator + name);
+        File destDir = new File(storageBase.getWorkspaceBasePath()  + File.separator + clonedName);
         try {
             cloneProject( sourceDir, destDir);
         } catch (IOException e) {
@@ -205,11 +194,12 @@ public class FsStorage implements ProjectStorage {
         }
     }
 
+
     @Override
     public void cloneProtoProject(String kind, String clonedName) throws StorageException {
         String protoProjectPath = prototypeProjectPath + File.separator + RvdSettings.PROTO_DIRECTORY_PREFIX + "_" + kind;
         File sourceDir = new File( protoProjectPath );
-        String destProjectPath = workspaceBasePath + File.separator + clonedName;
+        String destProjectPath = storageBase.getWorkspaceBasePath()  + File.separator + clonedName;
         File destDir = new File(destProjectPath);
         try {
             cloneProject( sourceDir, destDir);
@@ -218,11 +208,12 @@ public class FsStorage implements ProjectStorage {
         }
     }
 
+
     @Override
     public void updateProjectState(String projectName, String newState) throws StorageException {
         FileOutputStream stateFile_os;
         try {
-            stateFile_os = new FileOutputStream(workspaceBasePath + File.separator + projectName + File.separator + "state");
+            stateFile_os = new FileOutputStream(storageBase.getWorkspaceBasePath()  + File.separator + projectName + File.separator + "state");
             IOUtils.write(newState, stateFile_os);
             stateFile_os.close();
         } catch (FileNotFoundException e) {
@@ -235,8 +226,8 @@ public class FsStorage implements ProjectStorage {
     @Override
     public void renameProject(String projectName, String newProjectName) throws StorageException {
         try {
-            File sourceDir = new File(workspaceBasePath + File.separator + projectName);
-            File destDir = new File(workspaceBasePath + File.separator + newProjectName);
+            File sourceDir = new File(storageBase.getWorkspaceBasePath()  + File.separator + projectName);
+            File destDir = new File(storageBase.getWorkspaceBasePath()  + File.separator + newProjectName);
             FileUtils.moveDirectory(sourceDir, destDir);
         } catch (IOException e) {
             throw new StorageException("Error renaming directory '" + projectName + "' to '" + newProjectName + "'");
@@ -246,7 +237,7 @@ public class FsStorage implements ProjectStorage {
     @Override
     public void deleteProject(String projectName) throws StorageException {
         try {
-            File projectDir = new File(workspaceBasePath + File.separator + projectName);
+            File projectDir = new File(storageBase.getWorkspaceBasePath()  + File.separator + projectName);
             FileUtils.deleteDirectory(projectDir);
         } catch (IOException e) {
             throw new StorageException("Error removing directory '" + projectName + "'", e);
@@ -255,7 +246,7 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public InputStream archiveProject(String projectName) throws StorageException {
-        String path = getProjectBasePath(projectName);
+        String path = storageBase.getProjectBasePath(projectName);
         File tempFile;
         try {
             tempFile = File.createTempFile("RVDprojectArchive",".zip");
@@ -291,7 +282,7 @@ public class FsStorage implements ProjectStorage {
             if ( !overwrite )
                 throw e;
             else {
-                File destProjectDirectory = new File(getProjectBasePath(projectName));
+                File destProjectDirectory = new File(storageBase.getProjectBasePath(projectName));
                 try {
                     FileUtils.cleanDirectory(destProjectDirectory);
                     FileUtils.copyDirectory(sourceProjectDirectory, destProjectDirectory);
@@ -371,7 +362,7 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public String loadStep(String projectName, String nodeName, String stepName) throws StorageException {
-        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + nodeName + "." + stepName;
+        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + nodeName + "." + stepName;
         try {
             return FileUtils.readFileToString(new File(filepath));
         } catch (IOException e) {
@@ -399,7 +390,7 @@ public class FsStorage implements ProjectStorage {
             stepnames.add(step.getName());
         }
 
-        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + node.getName() + ".node";
+        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + node.getName() + ".node";
         File outFile = new File(filepath);
 
         Gson gson = new Gson();
@@ -415,7 +406,7 @@ public class FsStorage implements ProjectStorage {
     @Override
     public List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException {
         String content;
-        String filepath = getProjectBasePath(projectName) + File.separator + "data/" + nodeName + ".node";
+        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + nodeName + ".node";
         try {
             content = FileUtils.readFileToString(new File(filepath));
 
@@ -429,8 +420,8 @@ public class FsStorage implements ProjectStorage {
 
     @Override
     public void backupProjectState(String projectName) throws StorageException {
-        File sourceStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state");
-        File backupStateFile = new File(workspaceBasePath + File.separator + projectName + File.separator + "state" + ".old");
+        File sourceStateFile = new File(storageBase.getWorkspaceBasePath()  + File.separator + projectName + File.separator + "state");
+        File backupStateFile = new File(storageBase.getWorkspaceBasePath()  + File.separator + projectName + File.separator + "state" + ".old");
 
         try {
             FileUtils.copyFile(sourceStateFile, backupStateFile);
@@ -480,7 +471,7 @@ public class FsStorage implements ProjectStorage {
      * @throws StorageException
      */
     private File createPackagingDir(String projectName) throws StorageException {
-        String packagingPath = getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME;
+        String packagingPath = storageBase.getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME;
         File packageDir = new File(packagingPath);
         if (!(packageDir.exists() && packageDir.isDirectory())) {
             if (! packageDir.mkdir() ) {
@@ -501,7 +492,7 @@ public class FsStorage implements ProjectStorage {
      */
     @Override
     public InputStream getWav(String projectName, String filename) throws StorageException {
-        String wavpath = getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME + File.separator + filename;
+        String wavpath = storageBase.getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME + File.separator + filename;
         File wavfile = new File(wavpath);
         if ( wavfile.exists() )
             try {
@@ -519,7 +510,7 @@ public class FsStorage implements ProjectStorage {
         if ( projectExists(projectName) )
             throw new ProjectAlreadyExists("Project '" + projectName + "' already exists");
 
-        String projectPath = workspaceBasePath +  File.separator + projectName;
+        String projectPath = storageBase.getWorkspaceBasePath()  +  File.separator + projectName;
         File projectDirectory = new File(projectPath);
         if ( !projectDirectory.mkdir() )
             throw new StorageException("Cannot create project directory. Don't know why - " + projectDirectory );
@@ -541,28 +532,7 @@ public class FsStorage implements ProjectStorage {
     }
     */
 
-    public <T> T loadModelFromProjectFile(String projectName, String path, String filename, Class<T> modelClass) throws StorageException {
-        return loadModelFromFile(getProjectBasePath(projectName) + File.separator + path + File.separator + filename, modelClass);
-    }
 
-
-    public <T> T loadModelFromFile(String filepath, Class<T> modelClass) throws StorageException {
-        File file = new File(filepath);
-        return loadModelFromFile(file, modelClass);
-    }
-
-    @Override
-    public <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException {
-        Gson gson = new Gson();
-        try {
-            String data = FileUtils.readFileToString(file, "UTF-8");
-            T instance = gson.fromJson(data, modelClass);
-            return instance;
-
-        } catch (IOException e) {
-            throw new StorageException("Error loading model from file '" + file + "'", e);
-        }
-    }
 
 
 
@@ -590,89 +560,11 @@ public class FsStorage implements ProjectStorage {
 
 
 
-    @Override
-    public void storeProjectFile(String data, String projectName, String path, String filename) throws StorageException {
-        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
-        try {
-            FileUtils.writeStringToFile(file, data, Charset.forName("UTF-8"));
-        } catch (IOException e) {
-            throw new StorageException("Error storing file '" + file + "' to project '" + projectName + "'", e);
-        }
-    }
-
-    @Override
-    public String loadProjectFile(String projectName, String path, String filename ) throws StorageException {
-        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
-        String data;
-        try {
-            data = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
-            return data;
-        } catch (IOException e) {
-            throw new StorageException("Error loading file '" + file + "' from project '" + projectName + "'");
-        }
-    }
 
 
-    public void storeFileToProject(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException {
-        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
-        storeFile( item, itemClass, file);
-    }
 
 
-    private void storeFile( Object item, Class<?> itemClass, File file) throws StorageException {
-        Gson gson = new Gson();
-        String data = gson.toJson(item, itemClass);
-        try {
-            FileUtils.writeStringToFile(file, data, "UTF-8");
-        } catch (IOException e) {
-            throw new StorageException("Error creating file in storage: " + file, e);
-        }
-    }
-
-    @Override
-    public void storeProjectBinaryFile(File sourceFile, String projectName, String path, String filename ) throws RvdException {
-        if (projectExists(projectName)) {
-            File destFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
-            try {
-                //FileUtils.moveFile(packageFile, destFile);
-                FileUtils.copyFile(sourceFile, destFile);
-                FileUtils.deleteQuietly(sourceFile);
-            } catch (IOException e) {
-                throw new PackagingException("Error copying binary file into project", e);
-            }
-        } else
-            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
-    }
-
-    @Override
-    public InputStream getProjectBinaryFile(String projectName, String path, String filename) throws RvdException, FileNotFoundException {
-        if (projectExists(projectName)) {
-            File packageFile = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
-            //try {
-                return new FileInputStream(packageFile);
-            //} catch (FileNotFoundException e) {
-            //    throw new AppPackageDoesNotExist("No app package exists for project " + projectName);
-            //}
-        } else
-            throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
-    }
 
 
-    @Override
-    public boolean projectPathExists(String projectName, String path) throws ProjectDoesNotExist {
-        if (!projectExists(projectName))
-            throw new ProjectDoesNotExist();
-        if ( new File(getProjectBasePath(projectName) + File.separator + path ).exists() )
-            return true;
-        return false;
-    }
-
-    @Override
-    public boolean projectFileExists(String projectName, String path, String filename) {
-        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
-        if ( file.exists() )
-            return true;
-        return false;
-    }
 
 }
