@@ -23,7 +23,7 @@ import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
-import org.mobicents.servlet.restcomm.rvd.storage.FsStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
@@ -45,7 +45,7 @@ public class RvdController extends RestService {
     void init() {
         gson = new Gson();
         rvdSettings = RvdSettings.getInstance(servletContext);
-        projectStorage = new FsStorage(rvdSettings);
+        projectStorage = new FsProjectStorage(rvdSettings);
         projectService = new ProjectService(projectStorage, servletContext, rvdSettings);
     }
 

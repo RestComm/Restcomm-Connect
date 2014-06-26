@@ -14,18 +14,15 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
 
-public interface ProjectStorage extends ProjectManagementStorage {
-    <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException;
-    <T> T loadModelFromFile(String filepath, Class<T> modelClass) throws StorageException;
-    <T> T loadModelFromProjectFile(String projectName, String path, String filename, Class<T> modelClass) throws StorageException;
-    void storeProjectFile(String data, String projectName, String path, String filename) throws StorageException;
-    String loadProjectFile(String projectName, String path, String filename ) throws StorageException;
-    void storeFileToProject(Object item, Class<?> itemClass, String projectName, String path, String filename ) throws StorageException;
-    void storeProjectBinaryFile(File sourceFile, String projectName, String path, String filename) throws RvdException;
-    InputStream getProjectBinaryFile(String projectName, String path, String filename) throws RvdException, FileNotFoundException;
-    boolean projectPathExists(String projectName, String path) throws ProjectDoesNotExist;
-    boolean projectFileExists(String projectName, String path, String filename);
-
+public interface ProjectStorage {
+    // Basic project management functions
+    void createProjectSlot(String projectName) throws StorageException;
+    void renameProject(String projectName, String newProjectName) throws StorageException;
+    void deleteProject(String projectName) throws StorageException;
+    boolean projectExists(String projectName);
+    List<String> listProjectNames() throws StorageException;
+        
+    // Higher level function
     String getAvailableProjectName(String projectName) throws StorageException;
     String loadProjectOptions(String projectName) throws StorageException;
     void storeProjectOptions(String projectName, String projectOptions) throws StorageException;

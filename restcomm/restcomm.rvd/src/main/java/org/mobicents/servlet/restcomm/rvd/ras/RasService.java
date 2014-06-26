@@ -15,9 +15,9 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
-import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.RasStorageImpl;
+import org.mobicents.servlet.restcomm.rvd.storage.FsRasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
@@ -37,13 +37,13 @@ public class RasService {
     static final Logger logger = Logger.getLogger(RasService.class.getName());
 
     ProjectStorage storage;
-    PackagingStorage packagingStorage;
-    RasStorageImpl rasStorage;
+    FsPackagingStorage packagingStorage;
+    FsRasStorage rasStorage;
 
     public RasService(ProjectStorage storage) {
         this.storage = storage;
-        this.packagingStorage = new PackagingStorage(storage);
-        this.rasStorage = new RasStorageImpl(storage);
+        this.packagingStorage = new FsPackagingStorage(storage);
+        this.rasStorage = new FsRasStorage(storage);
     }
 
     /*
