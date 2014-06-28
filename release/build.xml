@@ -158,6 +158,7 @@
 		    <arg value="--http-password=t31sca13fi13s" />
 		    <arg value="${telscale-sipservlets.download.url}" />
 		</exec>
+		<move file="${base.dir}/x6vwzbghwbp09ggr8uxu.zip" tofile="${base.dir}/${telscale-sipservlets.download.distro.file}"/>
 		<move file="${base.dir}/${telscale-sipservlets.download.distro.file}" todir="${checkout.dir}"/>
 	</target>
 
