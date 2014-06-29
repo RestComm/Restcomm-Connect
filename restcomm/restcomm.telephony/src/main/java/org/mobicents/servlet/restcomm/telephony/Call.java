@@ -97,6 +97,7 @@ import org.mobicents.servlet.restcomm.util.IPUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
@@ -105,8 +106,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -115,6 +114,7 @@ import akka.util.Timeout;
  * @author gvagenas@telestax.com (George Vagenas)
  */
 public final class Call extends UntypedActor {
+
     // Define possible directions.
     private static final String INBOUND = "inbound";
     private static final String OUTBOUND_API = "outbound-api";
@@ -1369,31 +1369,39 @@ public final class Call extends UntypedActor {
 
     private final class AuditingRemoteConnection extends AbstractAction {
 
-        /**
-         * Maximum number of attempts
-         */
+        // Maximum number of attempts
         private final int MAX_ATTEMPTS = 10;
-        /**
-         * Waiting time (in milliseconds) between attempts
-         */
-        private final int ATTEMPT_WAIT = 50;
-        /**
-         * Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS.
-         */
+
+        // Waiting time (in milliseconds) between attempts
+        private final int ATTEMPT_WAIT = 200;
+        private final FiniteDuration duration = new FiniteDuration(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
+
+        // Number of current attempts between calls.
+        // Cannot be greater than MAX_ATTEMPTS.
         private int attempts = 0;
+
+        private AuditWorker auditWorker;
 
         public AuditingRemoteConnection(ActorRef source) {
             super(source);
         }
 
+        public AuditWorker getAuditWorker() {
+            if(this.auditWorker == null) {
+                this.auditWorker = new AuditWorker();
+            }
+            return auditWorker;
+        }
+
         @Override
         public void execute(Object message) throws Exception {
-            if(this.attempts > this.MAX_ATTEMPTS) {
-                logger.info("AUCX: reached max number of attempt. Closing connection.");
+            if(attempts > this.MAX_ATTEMPTS) {
+                logger.warning("AUCX: reached max number of attempt. Closing connection.");
                 // Close remote connection if cannot audit after max number of attempts
                 fsm.transition(message, closingRemoteConnection);
             } else {
-                attempts++;
+                this.attempts++;
+
                 // Delegate AUCX work to the remote connection
                 // The Call actor will receive the MGCP response to the AUCX
                 if(this.attempts == 1) {
@@ -1401,12 +1409,19 @@ public final class Call extends UntypedActor {
                     remoteConn.tell(new InspectConnection(), self());
                 } else {
                     // Future attempts will be spaced between them for the duration of WAIT_ATTEMPTS
-                    logger.info("AUCX: issuing attempt "+attempts+"in "+ATTEMPT_WAIT+"ms.");
-
-                    Timeout timeout = new Timeout(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
-                    Patterns.ask(remoteConn, new InspectConnection(), timeout);
+                    logger.info("AUCX: issuing attempt "+attempts+" in "+ATTEMPT_WAIT+"ms.");
+                    getContext().system().scheduler().scheduleOnce(duration, getAuditWorker(), getContext().system().dispatcher());
                 }
             }
+        }
+
+        private class AuditWorker implements Runnable {
+
+            @Override
+            public void run() {
+                remoteConn.tell(new InspectConnection(), self());
+            }
+
         }
     }
 
