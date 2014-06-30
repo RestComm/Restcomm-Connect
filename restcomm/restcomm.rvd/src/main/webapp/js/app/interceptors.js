@@ -13,7 +13,17 @@ var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('Unauthorize
 						return $q.reject(response);
 					}
 				}
-        	}
+        	} else
+        	if (response.status === 404) {
+				if ( response.data && response.data.exception ) {
+					var exceptionName = response.data.exception.className;
+					console.log("exceptionName " + exceptionName);
+					if ( exceptionName == 'ProjectDoesNotExist' ) {
+						$location.path("/notfound");
+						return $q.reject(response);
+					}
+				}
+        	}        		
         	return response;
         }
     };

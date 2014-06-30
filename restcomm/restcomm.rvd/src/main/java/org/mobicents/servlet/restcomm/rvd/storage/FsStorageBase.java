@@ -87,6 +87,13 @@ public class FsStorageBase {
         return false;
     }
 
+    /**
+     * Checks if a file exists inside a project.
+     * @param projectName
+     * @param path - Example: "ras/rapp"
+     * @param filename
+     * @return
+     */
     public boolean projectFileExists(String projectName, String path, String filename) {
         File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
         if ( file.exists() )

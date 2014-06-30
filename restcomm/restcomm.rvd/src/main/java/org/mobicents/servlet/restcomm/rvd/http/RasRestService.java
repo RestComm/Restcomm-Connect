@@ -33,8 +33,8 @@ import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotEx
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
@@ -86,10 +86,11 @@ public class RasRestService extends RestService {
     @GET
     @Path("/packaging/app")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAppConfig(@QueryParam("name") String projectName) {
+    public Response getAppConfig(@QueryParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
         logger.debug("retrieving app package for project " + projectName);
 
-        try {
+        //try {
+
             if (! packagingStorage.hasPackaging(projectName) )
                 return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
 
@@ -98,12 +99,12 @@ public class RasRestService extends RestService {
 
             return Response.ok().entity(gson.toJson(rapp)).build();
 
-        } catch (StorageException e) {
-            logger.error(e, e);
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        } catch (RvdException e){
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        }
+        //} catch (StorageException e) {
+        //    logger.error(e, e);
+        //    return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        //} catch (RvdException e){
+        //    return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        //}
     }
 
 
@@ -206,7 +207,7 @@ public class RasRestService extends RestService {
     public Response listRapps(@Context HttpServletRequest request) {
         try {
             List<String> projectNames = projectStorage.listProjectNames();
-            List<RappInfo> rapps = rasStorage.listRapps(projectNames);
+            List<RappItem> rapps = rasStorage.listRapps(projectNames);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
