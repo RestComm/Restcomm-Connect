@@ -1,4 +1,4 @@
-var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('UnauthorizedResponseInterceptor', ['$q', '$location', function($q, $location) {
+var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('UnauthorizedResponseInterceptor', ['$q', '$location', '$rootScope', function($q, $location, $rootScope) {
     var responseInterceptor = {
         responseError: function(response) {
         	console.log("run UnauthorizedResponseInterceptor");
@@ -19,12 +19,13 @@ var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('Unauthorize
 					var exceptionName = response.data.exception.className;
 					console.log("exceptionName " + exceptionName);
 					if ( exceptionName == 'ProjectDoesNotExist' ) {
-						$location.path("/notfound");
+						//$location.path("/notfound");
+						$rootScope.$emit('resourceNotFound');
 						return $q.reject(response);
 					}
 				}
         	}        		
-        	return response;
+        	return $q.reject(response); //response;
         }
     };
 
