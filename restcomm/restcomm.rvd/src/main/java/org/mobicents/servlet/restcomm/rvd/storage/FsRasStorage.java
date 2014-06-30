@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
+import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
+import org.mobicents.servlet.restcomm.rvd.ras.RappItem.RappStatus;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.JsonElement;
@@ -57,12 +58,30 @@ public class FsRasStorage implements RasStorage {
      * @return
      * @throws StorageException
      */
-    public List<RappInfo> listRapps(List<String> projectNames) throws StorageException {
+    public List<RappItem> listRapps(List<String> projectNames) throws StorageException {
         //List<String> projectNames = storageBase.listProjectNames();
-        List<RappInfo> rapps = new ArrayList<RappInfo>();
+        List<RappItem> rapps = new ArrayList<RappItem>();
         for (String projectName : projectNames) {
-            Rapp rapp = storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
-            rapps.add(rapp.getInfo());
+            if ( storageBase.projectFileExists(projectName, "ras", "rapp") ) {
+                RappItem item = new RappItem();
+                item.setProjectName(projectName);
+
+                // load info from rapp file
+                Rapp rapp = storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
+                item.setRappInfo(rapp.getInfo());
+
+                // app status
+                boolean installedStatus = true;
+                boolean configuredStatus = hasBootstrapInfo(projectName);
+                boolean activeStatus = installedStatus && configuredStatus;
+                RappStatus[] statuses = new RappStatus[3];
+                statuses[0] = RappStatus.Installed; // always set
+                statuses[1] = configuredStatus ? RappStatus.Configured : RappStatus.Unconfigured;
+                statuses[2] = activeStatus ? RappStatus.Active : RappStatus.Inactive;
+                item.setStatus(statuses);
+
+                rapps.add(item);
+            }
         }
         return rapps;
     }
