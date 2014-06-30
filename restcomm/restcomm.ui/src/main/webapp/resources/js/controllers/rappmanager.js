@@ -2,11 +2,41 @@
 
 var rcMod = angular.module('rcApp');
 
-var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, $sce) {
+var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route) {
 	console.log("running RappManagerCtrl");
 	$scope.test = "this is test var";
 	$scope.products = products;
-	 
+	
+	$scope.localApps = localApps;
+	
+	
+	
+	$scope.getLocalApp = function(appId) {
+		for ( var i=0; i<localApps.length; i++ ) {
+			if (localApps[i].rappInfo.id == appId)
+				return localApps[i];
+		}
+		// return undefined;
+	}
+	
+	$scope.buildStatusMessage = function(statuses) {
+		if ( !statuses )
+			return "";
+		else
+		if ( statuses.indexOf('Unconfigured') != -1 )
+			return "Installed, needs configuration";
+		else
+		if ( statuses.indexOf('Active') != -1 )
+			return "Active";
+		else
+			return statuses;
+	}
+		
+	// merge AppStore and local information
+	for ( var i=0; i<products.length; i++ ) {
+		products[i].localApp = $scope.getLocalApp(products[i].info.appId);
+	}
+
 	$scope.onFileSelect = function($files) {
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
@@ -18,7 +48,8 @@ var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $uplo
 	      }).success(function(data, status, headers, config) {
 	    	  console.log('file uploaded successfully');
 	    	  //$location.path("/ras/apps/" + data[0].projectName + "/config");
-	    	  $location.path("/ras/config/" + data[0].projectName);
+	    	  //$location.path("/ras/config/" + data[0].projectName);
+	    	  $route.reload();
 	      });
 	    }
 	};
@@ -45,6 +76,22 @@ rappManagerCtrl.getProducts = function ($q, $http) {
 	}).error(function () {
 		console.log("http error while retrieving products from AppStore");
 		deferred.reject("http error");
+	});
+	
+	return deferred.promise;
+}
+
+rappManagerCtrl.getLocalApps = function ($q, $http) {
+	var deferred = $q.defer();
+	$http({
+		method:"GET",
+		url:"/restcomm-rvd/services/ras/apps"
+	}).success(function (data) {
+		console.log("successfully received local apps");
+		deferred.resolve(data.payload);
+	}).error(function () {
+		console.log("Error receiving local apps");
+		deferred.reject("error");
 	});
 	
 	return deferred.promise;
