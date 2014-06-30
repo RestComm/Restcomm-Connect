@@ -33,10 +33,6 @@ App.config([ '$routeProvider', function($routeProvider) {
 		templateUrl : 'templates/upgrade.html',
 		controller : 'upgradeCtrl'
 	})
-	.when('/rappManager', {
-		templateUrl : 'templates/rappManager.html',
-		controller : 'rappManager'
-	})	
 	.when('/login', {
 		templateUrl : 'templates/login.html',
 		controller : 'loginCtrl'
