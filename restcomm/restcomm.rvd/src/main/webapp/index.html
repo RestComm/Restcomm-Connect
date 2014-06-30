@@ -39,9 +39,9 @@
 		</div>
 	</div>
 	
-	<div class="notifications-wrapper" ng-show="notifications.length > 0">
-		<div ng-repeat="notification in notifications">
-			<div class="alert alert-{{notification.type}} rvd-notification" style="padding: 9px; margin-bottom: 0;" ng-click="notifications.remove($index)">
+	<div class="notifications-wrapper" ng-show="notifications.data.length > 0">
+		<div ng-repeat="notification in notifications.data">
+			<div class="alert alert-{{notification.type}} rvd-notification rvd-clickable-text" style="padding: 9px; margin-bottom: 0;" ng-click="notifications.remove($index)">
 				<span ng-show="notification.type == 'success'"><i class="fa fa-check-circle"></i> </span>
 				<span ng-show="notification.type == 'info'"><i class="fa fa-info-circle"></i></span>
 				<span ng-show="notification.type == 'danger'"><i class="fa fa-exclamation-circle"></i></span>
@@ -96,6 +96,7 @@
 	<script src="js/controllers/upgradeController.js"></script>
 	<script src="js/controllers/rappManager.js"></script>	
 	<script src="js/controllers/loginController.js"></script>
+	<script src="js/controllers/projectManager.js"></script>
 
 	
 	

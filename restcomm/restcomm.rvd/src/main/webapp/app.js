@@ -40,7 +40,7 @@ App.config([ '$routeProvider', function($routeProvider) {
 	.when('/login', {
 		templateUrl : 'templates/login.html',
 		controller : 'loginCtrl'
-	})		
+	})
 	.otherwise({
 		redirectTo : '/home'
 	});
