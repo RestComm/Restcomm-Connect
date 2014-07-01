@@ -69,7 +69,7 @@ rappManagerCtrl.getProducts = function ($q, $http) {
 	console.log("retrieving products from AppStore");
 	$http({
 		method:"GET", 
-		url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token
+		url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token + "&cacheInvalidator=" + new Date().getTime()
 	}).success(function (data) {
 		console.log("succesfully retrieved " + data.products.length + " products from AppStore");
 		deferred.resolve(data.products);
@@ -98,7 +98,7 @@ rappManagerCtrl.getLocalApps = function ($q, $http) {
 }
 
 // Will need this controller when resolving its dependencies. 
-var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, $http) {
+var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, $http, Notifications) {
 	
 	$scope.initRappConfig = function (rappConfig) {
 		var i;
@@ -118,8 +118,10 @@ var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($
 			data: bootstrapObject,
 			headers: {'Content-Type': 'application/data'}
 		}).success(function (data) {
-			if ( data.rvdStatus == 'OK')
+			if ( data.rvdStatus == 'OK') {
 				console.log("successfully saved bootstrap information");
+				Notifications.success('Application configured');
+			}
 			else
 				console.log("Rvd error while saving bootstrap information");
 		}).error(function () {
