@@ -179,7 +179,7 @@
 		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
-			<version>7.0.0.GA-TelScale</version>
+			<version>${sip-ri.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
