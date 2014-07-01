@@ -79,7 +79,6 @@ public final class MediaGroup extends UntypedActor {
     private final MediaSession session;
     private ActorRef link;
     private ActorRef ivr;
-    private ActorRef recordCallIvr;
     private boolean ivrInUse;
     // Runtime stuff.
     private final List<ActorRef> observers;
@@ -463,14 +462,6 @@ public final class MediaGroup extends UntypedActor {
                 gateway.tell(new DestroyLink(internalLink), source);
                 internalLink = null;
             }
-            if (internalLinkEndpoint != null) {
-                gateway.tell(new DestroyEndpoint(internalLinkEndpoint), source);
-                internalLinkEndpoint = null;
-            }
-            if (ivr != null) {
-                gateway.tell(new DestroyEndpoint(ivr), source);
-                ivr = null;
-            }
             // Notify the observers.
             final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
             for (final ActorRef observer : observers) {
@@ -490,20 +481,11 @@ public final class MediaGroup extends UntypedActor {
                 link.tell(new CloseLink(), source);
             if(internalLink != null)
                 internalLink.tell(new CloseLink(), source);
-            //TODO: DELETE OTHER LINKS AND ENDPOINTS HERE
         }
     }
 
     @Override
     public void postStop() {
-        if (link != null) {
-            gateway.tell(new DestroyLink(link), null);
-            link = null;
-        }
-        if (internalLink != null) {
-            gateway.tell(new DestroyLink(internalLink), null);
-            internalLink = null;
-        }
         if (internalLinkEndpoint != null) {
             gateway.tell(new DestroyEndpoint(internalLinkEndpoint), null);
             internalLinkEndpoint = null;
