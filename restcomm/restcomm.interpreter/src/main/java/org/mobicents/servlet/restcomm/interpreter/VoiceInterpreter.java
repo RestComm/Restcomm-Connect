@@ -2035,6 +2035,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Destroy the Call(s).
             callManager.tell(new DestroyCall(call), source);
+            if (outboundCall != null)
+                callManager.tell(new DestroyCall(outboundCall), source);
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
             context.stop(mailer);
