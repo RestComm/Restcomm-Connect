@@ -11,7 +11,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -22,15 +21,19 @@ import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
+import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
+import org.mobicents.servlet.restcomm.rvd.ras.RappItem.RappStatus;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExists;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
 import org.mobicents.servlet.restcomm.rvd.utils.exceptions.ZipperException;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
+
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -55,25 +58,14 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     @Override
-    public String loadProjectOptions(String projectName) throws StorageException {
-        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data" + File.separator + "project";
-        try {
-            String projectOptions_json = FileUtils.readFileToString(new File(filepath));
-            return projectOptions_json;
-        } catch (IOException e) {
-            throw new StorageException("Cannot read project options file - " + filepath , e);
-        }
+    public ProjectOptions loadProjectOptions(String projectName) throws StorageException {
+        ProjectOptions projectOptions = storageBase.loadModelFromProjectFile(projectName, "data", "project", ProjectOptions.class);
+        return projectOptions;
     }
 
     @Override
-    public void storeProjectOptions(String projectName, String projectOptions) throws StorageException {
-        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + "project";
-        File outFile = new File( filepath );
-        try {
-            FileUtils.writeStringToFile(outFile, projectOptions, "UTF-8");
-        } catch (IOException e) {
-            throw new StorageException("Cannot write project options file - " + filepath , e);
-        }
+    public void storeProjectOptions(String projectName, ProjectOptions projectOptions) throws StorageException {
+        storageBase.storeFileToProject(projectOptions, ProjectOptions.class, projectName, "data", "project");
     }
 
     @Override
@@ -88,19 +80,6 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     @Override
-    public void clearBuiltProject(String projectName) {
-
-        String projectPath = storageBase.getProjectBasePath(projectName) + File.separator + projectName + File.separator;
-        File dataDir = new File(projectPath + "data");
-
-        // delete all files in directory
-        for (File anyfile : dataDir.listFiles()) {
-            anyfile.delete();
-        }
-
-    }
-
-    @Override
     public String loadProjectState(String projectName) throws StorageException {
         String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "state";
         try {
@@ -109,6 +88,7 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error loading project state file - " + filepath , e);
         }
     }
+
 
     @Override
     public void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException {
@@ -163,67 +143,6 @@ public class FsProjectStorage implements ProjectStorage {
 
         return items;
     }
-
-    /**
-     * A low-level function to copy projects. It can be used both for creating new projects out of prototype projects
-     * or simply cloning projects
-     * @param sourceDir
-     * @param destDir
-     * @throws IOException
-     * @throws ProjectDirectoryAlreadyExists
-     */
-    private void cloneProject(File sourceDir, File destDir) throws IOException, ProjectDirectoryAlreadyExists {
-            if (!destDir.exists()) {
-                    FileUtils.copyDirectory(sourceDir, destDir);
-                    // set the modified date of the "state" file to reflect the fact that we are dealing with a new project
-                    File statefile = new File(destDir.getAbsolutePath() + File.separator + "state");
-                    if ( statefile.exists() )
-                        statefile.setLastModified(new Date().getTime());
-            } else {
-                throw new ProjectDirectoryAlreadyExists();
-            }
-    }
-
-    @Override
-    public void cloneProject(String name, String clonedName) throws StorageException {
-        File sourceDir = new File(storageBase.getWorkspaceBasePath()  + File.separator + name);
-        File destDir = new File(storageBase.getWorkspaceBasePath()  + File.separator + clonedName);
-        try {
-            cloneProject( sourceDir, destDir);
-        } catch (IOException e) {
-            throw new StorageException("Error cloning project '" + name + "' to '" + clonedName + "'" , e);
-        }
-    }
-
-    /**
-     * Pass owner as null in order to create a freely accessible project
-     */
-    /*
-
-    @Override
-    public void cloneProtoProject(String kind, String clonedName, String owner) throws StorageException {
-        String protoProjectPath = prototypeProjectPath + File.separator + RvdSettings.PROTO_DIRECTORY_PREFIX + "_" + kind;
-        File sourceDir = new File( protoProjectPath );
-        String destProjectPath = storageBase.getWorkspaceBasePath()  + File.separator + clonedName;
-        File destDir = new File(destProjectPath);
-        try {
-            cloneProject( sourceDir, destDir);
-            if ( owner != null ) {
-                String state =  loadProjectState(clonedName);
-                Gson gson = new GsonBuilder()
-                                //.registerTypeAdapter(Step.class, new StepJsonDeserializer())
-                                //.registerTypeAdapter(Step.class, new StepJsonSerializer())
-                                .create();
-                ProjectState projectState = gson.fromJson(state, ProjectState.class);
-                projectState.getHeader().setOwner(owner);
-                updateProjectState(clonedName, gson.toJson(projectState));
-            }
-        } catch (IOException e) {
-            throw new StorageException("Error cloning project '" + protoProjectPath + "' to '" + destProjectPath + "'" , e);
-        }
-    }
-    */
-
 
     @Override
     public void updateProjectState(String projectName, String newState) throws StorageException {
@@ -378,18 +297,15 @@ public class FsProjectStorage implements ProjectStorage {
 
     @Override
     public String loadStep(String projectName, String nodeName, String stepName) throws StorageException {
-        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + nodeName + "." + stepName;
-        try {
-            return FileUtils.readFileToString(new File(filepath));
-        } catch (IOException e) {
-            throw new StorageException("Error reading from file " + filepath);
-        }
+        return storageBase.loadProjectFile(projectName, "data", nodeName + "." + stepName);
     }
+
 
     @Override
     public StateHeader loadStateHeader(String projectName) throws StorageException {
+        String stateData = storageBase.loadProjectFile(projectName, ".", "state");
         JsonParser parser = new JsonParser();
-        JsonElement header_element = parser.parse(loadProjectState(projectName)).getAsJsonObject().get("header");
+        JsonElement header_element = parser.parse(stateData).getAsJsonObject().get("header");
         if ( header_element == null )
             throw new BadProjectHeader("No header found. This is probably an old project");
 
@@ -405,33 +321,13 @@ public class FsProjectStorage implements ProjectStorage {
         for ( Step step : node.getSteps() ) {
             stepnames.add(step.getName());
         }
-
-        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + node.getName() + ".node";
-        File outFile = new File(filepath);
-
-        Gson gson = new Gson();
-        String stepnamesString = gson.toJson(stepnames);
-
-        try {
-            FileUtils.writeStringToFile(outFile, stepnamesString, "UTF-8");
-        } catch (IOException e) {
-            throw new StorageException("Error writing node file - " + filepath , e);
-        }
+        storageBase.storeFileToProject(stepnames, new TypeToken<List<String>>(){}.getType(), projectName, "data", node.getName() + ".node");
     }
 
     @Override
     public List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException {
-        String content;
-        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + nodeName + ".node";
-        try {
-            content = FileUtils.readFileToString(new File(filepath));
-
-            Gson gson = new Gson();
-            List<String> stepnames = gson.fromJson(content, new TypeToken<List<String>>(){}.getType());
-            return stepnames;
-        } catch (IOException e) {
-            throw new StorageException("Error reading node file - " + filepath);
-        }
+        List<String> stepnames = storageBase.loadModelFromProjectFile(projectName, "data", nodeName + ".node", new TypeToken<List<String>>(){}.getType());
+        return stepnames;
     }
 
     @Override
@@ -445,40 +341,6 @@ public class FsProjectStorage implements ProjectStorage {
             throw new StorageException("Error creating state file backup: " + backupStateFile);
         }
     }
-
-
-/*
-    @Override
-    public String loadRappConfig(String projectName) throws StorageException {
-        String configPath = getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "config";
-        try {
-            return FileUtils.readFileToString(new File(configPath));
-        } catch (IOException e) {
-            throw new StorageException("Error reading from file " + configPath);
-        }
-    }
-*/
-
-    /**
-     * Returns true if there is application configuration for the specified project. Otherwise it returns false.
-     * @throws ProjectDoesNotExist
-     */
-    /*
-    @Override
-    public boolean hasRappConfig(String projectName) throws ProjectDoesNotExist {
-        if (!projectExists(projectName))
-            throw new ProjectDoesNotExist();
-        if ( new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "config").exists() )
-            return true;
-        return false;
-    }
-    */
-
-
-
-
-
-
 
     /**
      * Create a packaging directory inside the project if it does not exist
@@ -496,12 +358,6 @@ public class FsProjectStorage implements ProjectStorage {
         }
         return packageDir;
     }
-
-
-
-
-
-
 
     /**
      * Returns an InputStream to the wav specified or throws an error if not found. DON'T FORGET TO CLOSE the
@@ -534,27 +390,10 @@ public class FsProjectStorage implements ProjectStorage {
 
     }
 
-    /*
-    @Override
-    public Rapp loadRapp(File file) throws StorageException {
-        Gson gson = new Gson();
-        try {
-            String data = FileUtils.readFileToString(file, "UTF-8");
-            Rapp rapp = gson.fromJson(data, Rapp.class);
-            return rapp;
-
-        } catch (IOException e) {
-            throw new StorageException("Error loading rapp file '" + file + "'");
-        }
-    }
-    */
-
-
-
     @Override
     public
     ProjectState loadProject(String name) throws StorageException {
-        String stateData = loadProjectState(name);
+        String stateData = storageBase.loadProjectFile(name, ".", "state");
         return marshaler.toModel(stateData, ProjectState.class);
     }
 
@@ -601,13 +440,72 @@ public class FsProjectStorage implements ProjectStorage {
         throw new StorageException("Can't find an available project name for base name '" + projectName + "'");
     }
 
+    public void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException {
+        storageBase.storeProjectFile(bootstrapInfo, projectName, ".", "bootstrap");
+    }
 
-    /*
-    @Override
-    public void cloneProtoProject(String kind, String clonedName, String owner) throws StorageException {
-        // TODO Auto-generated method stub
+    public boolean hasBootstrapInfo(String projectName) {
+        return storageBase.projectFileExists(projectName, ".", "bootstrap");
+    }
 
+    public JsonElement loadBootstrapInfo(String projectName) throws StorageException {
+        String data = storageBase.loadProjectFile(projectName, ".", "bootstrap");
+        JsonParser parser = new JsonParser();
+        JsonElement rootElement = parser.parse(data);
+        return rootElement;
+    }
+
+
+
+    public void storeRapp(Rapp rapp, String projectName) throws StorageException {
+        storageBase.storeFileToProject(rapp, rapp.getClass(), projectName, "ras", "rapp");
+    }
+
+    public Rapp loadRapp(String projectName) throws StorageException {
+        return storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
+    }
+
+    /**
+     * Is this projoct a ras application. Checks for the existence "ras" directory
+     * @param projectName
+     * @return
+     */
+   /* public boolean isRasApp(String projectName) {
+        if ( storage.getPro)
     }
     */
 
+    /**
+     * Creates a list of rapp info objects out of a set of projects
+     * @param projectNames
+     * @return
+     * @throws StorageException
+     */
+    public List<RappItem> listRapps(List<String> projectNames) throws StorageException {
+        //List<String> projectNames = storageBase.listProjectNames();
+        List<RappItem> rapps = new ArrayList<RappItem>();
+        for (String projectName : projectNames) {
+            if ( storageBase.projectFileExists(projectName, "ras", "rapp") ) {
+                RappItem item = new RappItem();
+                item.setProjectName(projectName);
+
+                // load info from rapp file
+                Rapp rapp = storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
+                item.setRappInfo(rapp.getInfo());
+
+                // app status
+                boolean installedStatus = true;
+                boolean configuredStatus = hasBootstrapInfo(projectName);
+                boolean activeStatus = installedStatus && configuredStatus;
+                RappStatus[] statuses = new RappStatus[3];
+                statuses[0] = RappStatus.Installed; // always set
+                statuses[1] = configuredStatus ? RappStatus.Configured : RappStatus.Unconfigured;
+                statuses[2] = activeStatus ? RappStatus.Active : RappStatus.Inactive;
+                item.setStatus(statuses);
+
+                rapps.add(item);
+            }
+        }
+        return rapps;
+    }
 }

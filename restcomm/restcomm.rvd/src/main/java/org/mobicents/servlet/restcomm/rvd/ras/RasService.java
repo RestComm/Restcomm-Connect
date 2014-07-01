@@ -19,7 +19,6 @@ import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.FsRasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
@@ -41,7 +40,6 @@ public class RasService {
 
     ProjectStorage projectStorage;
     FsPackagingStorage packagingStorage;
-    FsRasStorage rasStorage;
     FsStorageBase storageBase;
 
 
@@ -49,7 +47,6 @@ public class RasService {
         this.storageBase = rvdContext.getStorageBase();
         this.projectStorage = rvdContext.getProjectStorage();
         this.packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
-        this.rasStorage = new FsRasStorage(rvdContext.getStorageBase());
     }
 
     /*
@@ -157,7 +154,7 @@ public class RasService {
 
         // Store rapp for later usage
         Rapp rapp = new Rapp(info, config);
-        rasStorage.storeRapp(rapp, newProjectName);
+        projectStorage.storeRapp(rapp, newProjectName);
 
         // now remove temporary directory
         try {
@@ -209,7 +206,7 @@ public class RasService {
     }
 
     public RappConfig getRappConfig(String projectName) throws StorageException {
-        Rapp rapp = rasStorage.loadRapp(projectName);
+        Rapp rapp = projectStorage.loadRapp(projectName);
         return rapp.getConfig();
     }
 

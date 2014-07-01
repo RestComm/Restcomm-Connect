@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
@@ -109,7 +110,26 @@ public class FsStorageBase {
 
     private void storeFile( Object item, Class<?> itemClass, File file) throws StorageException {
         Gson gson = new Gson();
-        String data = gson.toJson(item, itemClass);
+        String data;
+        data = gson.toJson(item, itemClass);
+
+        try {
+            FileUtils.writeStringToFile(file, data, "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException("Error creating file in storage: " + file, e);
+        }
+    }
+
+    public void storeFileToProject(Object item, Type gsonType, String projectName, String path, String filename ) throws StorageException {
+        File file = new File(getProjectBasePath(projectName) + File.separator + path + File.separator + filename);
+        storeFile( item, gsonType, file);
+    }
+
+
+    private void storeFile( Object item, Type gsonType, File file) throws StorageException {
+        Gson gson = new Gson();
+        String data;
+        data = gson.toJson(item, gsonType);
         try {
             FileUtils.writeStringToFile(file, data, "UTF-8");
         } catch (IOException e) {
@@ -138,4 +158,27 @@ public class FsStorageBase {
             throw new StorageException("Error loading model from file '" + file + "'", e);
         }
     }
+
+    public <T> T loadModelFromProjectFile(String projectName, String path, String filename, Type gsonType) throws StorageException {
+        return loadModelFromFile(getProjectBasePath(projectName) + File.separator + path + File.separator + filename, gsonType);
+    }
+
+
+    public <T> T loadModelFromFile(String filepath, Type gsonType) throws StorageException {
+        File file = new File(filepath);
+        return loadModelFromFile(file, gsonType);
+    }
+
+    public <T> T loadModelFromFile(File file, Type gsonType) throws StorageException {
+        Gson gson = new Gson();
+        try {
+            String data = FileUtils.readFileToString(file, "UTF-8");
+            T instance = gson.fromJson(data, gsonType);
+            return instance;
+
+        } catch (IOException e) {
+            throw new StorageException("Error loading model from file '" + file + "'", e);
+        }
+    }
+
 }
