@@ -84,7 +84,7 @@
 	<property name="telscale-sipservlets-nolce.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/no-lce/${telscale-sipservlets-nolce.download.distro.file}" />
 	<property name="telscale-sipservlets-nolce.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets-nolce.download.distro.file}" />
 	
-	<property name="telscale-media.download.distro.file" value="TelScale-media-${telscale-media.version}.zip" />
+	<property name="telscale-media.download.distro.file" value="TelScale-media-server-${telscale-media.version}.zip" />
 	<!--property name="telscale-media.download.url" value="ftp://ftp.box.com/TelScale%20media/${telscale-media.version}/${telscale-media.download.distro.file}" /-->
 	<property name="telscale-media.download.url" value="http://ci.telestax.com/job/TelScale-media-Release/lastSuccessfulBuild/artifact/${telscale-media.download.distro.file}" />
 	<property name="telscale-media.distro.zip.path" value="${checkout.dir}/${telscale-media.download.distro.file}" />
