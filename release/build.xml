@@ -277,10 +277,13 @@
 	<!--Media-->
 	<available file="${telscale-media.distro.zip.path}" property="got.telscale-media" />
 	<target name="get-telscale-media" unless="got.telscale-media">
-		<echo>Downloading Telscale Slee version: ${telscale-media.version}</echo>
+		<echo>Downloading Telscale Media version: ${telscale-media.version}</echo>
 		<exec failonerror="true" executable="wget">
-		    <arg value="--user=telscale-file-server@telestax.com" />
-		    <arg value="--password=t31sca13fi13s" />
+		    <!--arg value="\-\-user=telscale-file-server@telestax.com" />
+		    <arg value="\-\-password=t31sca13fi13s" /-->
+		    <arg value="--auth-no-challenge" />
+		    <arg value="--http-user=telscale-file-server@telestax.com" />
+		    <arg value="--http-password=t31sca13fi13s" />
 		    <arg value="${telscale-media.download.url}" />
 		</exec>
 		<move file="${base.dir}/${telscale-media.download.distro.file}" todir="${checkout.dir}"/>
