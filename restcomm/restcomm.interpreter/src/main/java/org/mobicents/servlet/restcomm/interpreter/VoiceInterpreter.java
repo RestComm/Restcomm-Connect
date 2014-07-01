@@ -535,7 +535,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
-                    // outboundCall = sender;
+                    if(outboundCall == null)
+                        outboundCall = sender;
                     fsm.transition(message, acquiringOutboundCallInfo);
                 } else if (joiningCalls.equals(state)) {
                     fsm.transition(message, bridged);
@@ -725,7 +726,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (initializingConferenceMediaGroup.equals(state)) {
                     fsm.transition(message, joiningConference);
                 } else if (bridged.equals(state)) {
-                    if (dialRecordAttribute != null)
+                    if (dialRecordAttribute != null && dialRecordAttribute.value().equalsIgnoreCase("true"))
                         recordCall();
                 }
             } else if (MediaGroupStateChanged.State.INACTIVE == event.state()) {
@@ -1466,13 +1467,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if(dialRecordAttribute == null) {
-                //If we are not suppose to record the call we stop the IVR endpoint
-                callMediaGroup.tell(new Stop(), source);
-            }
             final int timeLimit = timeLimit(verb);
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
+            callMediaGroup.tell(new Stop(), source);
         }
     }
 

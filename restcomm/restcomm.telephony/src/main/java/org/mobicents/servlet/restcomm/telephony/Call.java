@@ -429,6 +429,7 @@ public final class Call extends UntypedActor {
     private void stopRecordingCall() throws UnsupportedAudioFileException, IOException {
         logger.info("Stop recording call");
         if (group != null) {
+            recording = false;
             group.tell(new Stop(), null);
             Double duration = WavUtils.getAudioDuration(recordingUri);
             if (duration.equals(0.0)) {
@@ -462,7 +463,7 @@ public final class Call extends UntypedActor {
         final ActorRef sender = sender();
         final State state = fsm.state();
         logger.info("********** Call's Current State: \"" + state.toString());
-        logger.info("********** Call Processing Message: \"" + klass.getName());
+        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : "+sender.getClass());
 
         if (Observe.class.equals(klass)) {
             observe(message);
@@ -1318,7 +1319,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            if (updatingInternalLink.equals(state) && conference != null && direction != "outbound-dial") {
+            if (updatingInternalLink.equals(state) && conference != null) { // && direction != "outbound-dial") {
                 // If this is the outbound leg for an outbound call, conference is the initial call
                 // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
                 // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
@@ -1502,6 +1503,11 @@ public final class Call extends UntypedActor {
                 }
 
                 bye.send();
+
+                if (recording) {
+                    logger.info("Call - Will stop recording now");
+                    stopRecordingCall();
+                }
             } else if (message instanceof SipServletRequest) {
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
