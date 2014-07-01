@@ -262,6 +262,10 @@ public final class MediaGroup extends UntypedActor {
             } else if (IvrEndpointResponse.class.equals(klass)) {
                 notification(message);
             }
+        } else if (ivrInUse) {
+            if (Stop.class.equals(klass)) {
+                stop();
+            }
         }
     }
 
@@ -278,6 +282,7 @@ public final class MediaGroup extends UntypedActor {
         builder.setRecordingLength(request.length());
         builder.setEndInputKey(request.endInputKey());
         builder.setRecordingId(request.destination());
+        stop();
         ivr.tell(builder.build(), self);
         ivrInUse = true;
     }
@@ -485,6 +490,7 @@ public final class MediaGroup extends UntypedActor {
                 link.tell(new CloseLink(), source);
             if(internalLink != null)
                 internalLink.tell(new CloseLink(), source);
+            //TODO: DELETE OTHER LINKS AND ENDPOINTS HERE
         }
     }
 

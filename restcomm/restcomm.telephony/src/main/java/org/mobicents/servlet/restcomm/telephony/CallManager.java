@@ -394,6 +394,7 @@ public final class CallManager extends UntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+        logger.debug("######### CallManager new message received, message instanceof : "+klass+" from sender : "+sender.getClass());
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
