@@ -397,6 +397,12 @@
 				<artifactId>mss-tomcat-embedded-7</artifactId>
 				<version>${mss.arquillian.version}</version>
 				<scope>test</scope>
+				<exclusions>
+				     <exclusion>
+				       <groupId>com.telscale.licensing</groupId>
+				       <artifactId>lce-core</artifactId>
+				     </exclusion>
+				   </exclusions>
 			</dependency>
 
 			<dependency>
