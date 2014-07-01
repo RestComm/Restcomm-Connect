@@ -4,7 +4,7 @@
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>7.1.5-TelScale-SNAPSHOT</version>
+	<version>7.1.6-TelScale-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -86,7 +86,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>7.0.1.GA-TelScale</sipservletapi.version>
+		<sipservletapi.version>7.0.2.GA-TelScale</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.27</servlet-api.version>
@@ -104,7 +104,7 @@
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>1.8.0.10</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
-		<sip-ri.version>7.0.1-TelScale</sip-ri.version>
+		<sip-ri.version>7.0.2.GA-TelScale</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>7.0.0.CR1-TelScale</mss.arquillian.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
@@ -136,9 +136,8 @@
 		<module>restcomm.ui</module>
 		<module>restcomm.rvd</module>
 		<module>restcomm.tts.att</module>
-    <module>restcomm.ussd</module>
-  </modules>
-
+    		<module>restcomm.ussd</module>
+  	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -447,7 +446,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g/>
+						<g />
 					</compilerArguments>
 					<source>1.6</source>
 					<target>1.6</target>
@@ -470,7 +469,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile/>
+					<useFile />
 				</configuration>
 				<dependencies>
 					<dependency>
@@ -511,6 +510,12 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<id>docs</id>
+			<modules>
+				<module>restcomm.docs</module>
+			</modules>
+		</profile>
 		<profile>
 			<id>set-git-hash</id>
 			<build>
