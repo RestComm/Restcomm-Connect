@@ -29,6 +29,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
@@ -79,7 +80,6 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageR
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.FsRasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.Gson;
@@ -88,7 +88,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.XStream;
 
 
@@ -98,7 +97,6 @@ public class Interpreter {
 
     private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
-    private FsRasStorage rasStorage;
     private HttpServletRequest httpRequest;
 
     private XStream xstream;
@@ -116,9 +114,9 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(RvdSettings settings, ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        this.rvdSettings = settings;
-        this.projectStorage = projectStorage;
+    public Interpreter(RvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+        this.rvdSettings = rvdContext.getSettings();
+        this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
@@ -241,9 +239,7 @@ public class Interpreter {
     public String interpret() throws RvdException {
         String response = null;
 
-        String projectfile_json = projectStorage.loadProjectOptions(appName);
-        ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
-        }.getType());
+        ProjectOptions projectOptions = projectStorage.loadProjectOptions(appName);
         nodeNames = projectOptions.getNodeNames();
 
         if (targetParam == null || "".equals(targetParam)) {
@@ -723,10 +719,10 @@ public class Interpreter {
      */
     private void processBootstrapParameters() throws StorageException {
 
-        if ( ! rasStorage.hasBootstrapInfo(appName) )
+        if ( ! projectStorage.hasBootstrapInfo(appName) )
             return; // nothing to do
 
-        JsonElement rootElement = rasStorage.loadBootstrapInfo(appName);
+        JsonElement rootElement = projectStorage.loadBootstrapInfo(appName);
 
         if ( rootElement.isJsonObject() ) {
             JsonObject rootObject = rootElement.getAsJsonObject();

@@ -63,7 +63,7 @@ public class RvdController extends RestService {
                 return Response.status(Status.NOT_FOUND).build();
 
             String targetParam = requestParams.getFirst("target");
-            Interpreter interpreter = new Interpreter(rvdSettings, projectStorage, targetParam, appname, httpRequest, requestParams);
+            Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams);
             rcmlResponse = interpreter.interpret();
 
         } catch ( RvdException e ) {

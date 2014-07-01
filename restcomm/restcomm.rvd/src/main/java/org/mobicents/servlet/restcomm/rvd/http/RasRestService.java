@@ -38,7 +38,6 @@ import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.FsRasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
@@ -57,7 +56,6 @@ public class RasRestService extends RestService {
 
     private RvdSettings settings;
     private ProjectStorage projectStorage;
-    private FsRasStorage rasStorage;
     private FsPackagingStorage packagingStorage;
     private RasService rasService;
     private ProjectService projectService;
@@ -68,7 +66,6 @@ public class RasRestService extends RestService {
         rvdContext = new RvdContext(request, servletContext);
         settings = rvdContext.getSettings();
         projectStorage = rvdContext.getProjectStorage();
-        rasStorage = new FsRasStorage(rvdContext.getStorageBase());
         packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
 
         rasService = new RasService(rvdContext);
@@ -207,7 +204,7 @@ public class RasRestService extends RestService {
     public Response listRapps(@Context HttpServletRequest request) {
         try {
             List<String> projectNames = projectStorage.listProjectNames();
-            List<RappItem> rapps = rasStorage.listRapps(projectNames);
+            List<RappItem> rapps = projectStorage.listRapps(projectNames);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
@@ -302,7 +299,7 @@ public class RasRestService extends RestService {
             String bootstrapInfo;
             bootstrapInfo = IOUtils.toString(request.getInputStream());
 
-            rasStorage.storeBootstrapInfo(bootstrapInfo, projectName);
+            projectStorage.storeBootstrapInfo(bootstrapInfo, projectName);
             return buildOkResponse();
 
         } catch (StorageException e) {
