@@ -149,9 +149,6 @@ public class RvdManager extends RestService {
     @PUT
     @Path("{name}")
     public Response createProject(@PathParam("name") String name, @QueryParam("kind") String kind) {
-
-        // TODO IMPORTANT!!! sanitize the project name!!
-
         Principal loggedUser = securityContext.getUserPrincipal();
 
         try {
