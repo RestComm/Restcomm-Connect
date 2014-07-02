@@ -58,9 +58,9 @@ import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 
 
 @Path("projects")
-public class RvdManager extends RestService {
+public class ProjectRestService extends RestService {
 
-    static final Logger logger = Logger.getLogger(RvdManager.class.getName());
+    static final Logger logger = Logger.getLogger(ProjectRestService.class.getName());
 
     //@Resource
     //TicketRepository ticketRepository;
@@ -333,6 +333,10 @@ public class RvdManager extends RestService {
                 String json_response = "{\"result\":[{\"size\":" + size(request.getInputStream()) + "}]}";
                 return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
             }
+        } catch ( StorageException e ) {
+            logger.warn(e);
+            logger.debug(e,e);
+            return buildErrorResponse(Status.BAD_REQUEST, RvdResponse.Status.ERROR, e);
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();

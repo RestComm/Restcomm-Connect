@@ -3,7 +3,6 @@ angular.module('Rvd')
 	return {
 			restrict: 'A',
 			link: function (scope, element, attrs) {
-				console.log("linking gatherStep");
 				if (scope.step) {
 					//gatherModel.validate(scope.step);
 				}

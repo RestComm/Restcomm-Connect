@@ -249,7 +249,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				$scope.refreshWavList(name);
 			// maybe override .error() also to display a message?
 		 }).error(function (data, status, headers, config) {
-			 if ( data.serverError.className == 'IncompatibleProjectVersion' )
+			 if ( data.serverError && (data.serverError.className == 'IncompatibleProjectVersion') )
 				 $location.path("/upgrade/" + name)
 			 else
 				 $scope.projectError = data.serverError;
@@ -259,8 +259,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.refreshWavList = function(projectName) {
 		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
 		.success(function (data, status, headers, config) {
-			console.log('getting wav list')
-			// console.log( data );
 			$scope.wavList = data;
 		});
 	}
@@ -302,32 +300,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		      $scope.upload = $upload.upload({
 
 		        url: 'services/projects/' + $scope.projectName + '/wavs',
-																						// script,
-																						// node.js
-																						// route,
-																						// or
-																						// servlet
-																						// url
-		        // method: POST or PUT,
-		        // headers: {'headerKey': 'headerValue'},
-		        // withCredential: true,
-		        // data: {myObj: $scope.myModelObj},
 		        file: file,
-		        // file: $files, //upload multiple files, this feature only
-				// works in HTML5 FromData browsers
-		        /*
-				 * set file formData name for 'Content-Desposition' header.
-				 * Default: 'file'
-				 */
-		        // fileFormDataName: myFile, //OR for HTML5 multiple upload only
-				// a list: ['name1', 'name2', ...]
-		        /*
-				 * customize how data is added to formData. See
-				 * #40#issuecomment-28612000 for example
-				 */
-		        // formDataAppender: function(formData, key, val){}
-		      }).progress(function(evt) {
-		        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
 		      }).success(function(data, status, headers, config) {
 		        // file is uploaded successfully
 		    	  console.log('file uploaded successfully');
@@ -578,6 +551,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		stepRegistry.reset(packedState.lastStepId);
 		for ( var i=0; i < packedState.nodes.length; i++) {
 			var node = packedState.nodes[i];
+			node.iface = {};
 			for (var j=0; j<node.steps.length; j++) {
 				var step = stepPacker.unpack(node.steps[j]);
 				node.steps[j] = step;

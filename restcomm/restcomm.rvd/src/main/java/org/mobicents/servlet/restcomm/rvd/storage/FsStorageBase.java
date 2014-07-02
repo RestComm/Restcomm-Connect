@@ -12,17 +12,18 @@ import org.apache.commons.io.FileUtils;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
-import com.google.gson.Gson;
-
 public class FsStorageBase {
     private String workspaceBasePath;
+    private ModelMarshaler marshaler;
 
-    public FsStorageBase(String workspaceBasePath) {
+    public FsStorageBase(String workspaceBasePath, ModelMarshaler marshaler) {
         super();
         this.workspaceBasePath = workspaceBasePath;
+        this.marshaler = marshaler;
     }
 
     // package-private method
@@ -109,9 +110,8 @@ public class FsStorageBase {
 
 
     private void storeFile( Object item, Class<?> itemClass, File file) throws StorageException {
-        Gson gson = new Gson();
         String data;
-        data = gson.toJson(item, itemClass);
+        data = marshaler.getGson().toJson(item, itemClass);
 
         try {
             FileUtils.writeStringToFile(file, data, "UTF-8");
@@ -127,9 +127,8 @@ public class FsStorageBase {
 
 
     private void storeFile( Object item, Type gsonType, File file) throws StorageException {
-        Gson gson = new Gson();
         String data;
-        data = gson.toJson(item, gsonType);
+        data = marshaler.getGson().toJson(item, gsonType);
         try {
             FileUtils.writeStringToFile(file, data, "UTF-8");
         } catch (IOException e) {
@@ -148,10 +147,9 @@ public class FsStorageBase {
     }
 
     public <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException {
-        Gson gson = new Gson();
         try {
             String data = FileUtils.readFileToString(file, "UTF-8");
-            T instance = gson.fromJson(data, modelClass);
+            T instance = marshaler.getGson().fromJson(data, modelClass);
             return instance;
 
         } catch (IOException e) {
@@ -170,10 +168,9 @@ public class FsStorageBase {
     }
 
     public <T> T loadModelFromFile(File file, Type gsonType) throws StorageException {
-        Gson gson = new Gson();
         try {
             String data = FileUtils.readFileToString(file, "UTF-8");
-            T instance = gson.fromJson(data, gsonType);
+            T instance = marshaler.getGson().fromJson(data, gsonType);
             return instance;
 
         } catch (IOException e) {

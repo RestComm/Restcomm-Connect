@@ -72,4 +72,10 @@ public abstract class RvdProject {
         return name;
     }
 
+    public ProjectState getState() {
+        return state;
+    }
+
+
+
 }

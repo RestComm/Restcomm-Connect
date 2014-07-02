@@ -20,7 +20,7 @@ public class RvdContext {
         this.servletContext = servletContext;
         this.marshaler = new ModelMarshaler();
         this.settings = RvdSettings.getInstance(servletContext);
-        this.storageBase = new FsStorageBase(this.settings.getWorkspaceBasePath());
+        this.storageBase = new FsStorageBase(this.settings.getWorkspaceBasePath(), marshaler);
         this.projectStorage = new FsProjectStorage(storageBase, marshaler);
     }
 

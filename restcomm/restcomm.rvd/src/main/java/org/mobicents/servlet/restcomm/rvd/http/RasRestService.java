@@ -15,6 +15,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.PathParam;
 
@@ -36,6 +37,7 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
+import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -51,6 +53,8 @@ public class RasRestService extends RestService {
 
     @Context
     ServletContext servletContext;
+    @Context
+    SecurityContext securityContext;
     @Context
     HttpServletRequest request;
 
@@ -71,7 +75,6 @@ public class RasRestService extends RestService {
         rasService = new RasService(rvdContext);
         projectService = new ProjectService(rvdContext);
     }
-
 
     /**
      * Returns application package information. If there is no packaging data
@@ -152,6 +155,7 @@ public class RasRestService extends RestService {
         try {
             if (packagingStorage.hasPackaging(projectName) ) {
                 RvdProject project = projectService.load(projectName);
+                project.getState().getHeader().setOwner(null); //  no owner should in the exported project
                 rasService.createZipPackage(project);
                 return buildErrorResponse(Status.OK, RvdResponse.Status.OK, null);
             } else {
@@ -225,6 +229,8 @@ public class RasRestService extends RestService {
         logger.info("uploading new ras app");
 
         BuildService buildService = new BuildService(projectStorage);
+        String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
+
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
@@ -242,7 +248,7 @@ public class RasRestService extends RestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
-                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream());
+                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser );
                         buildService.buildProject(effectiveProjectName);
 
                         fileinfo.addProperty("name", item.getName());
@@ -263,6 +269,10 @@ public class RasRestService extends RestService {
                 String json_response = "{\"result\":[{\"size\":" + size(request.getInputStream()) + "}]}";
                 return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
             }
+        } catch ( RestcommAppAlreadyExists e ) {
+            logger.warn(e);
+            logger.debug(e,e);
+            return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();

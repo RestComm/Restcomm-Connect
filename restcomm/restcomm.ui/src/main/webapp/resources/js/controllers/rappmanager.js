@@ -2,7 +2,28 @@
 
 var rcMod = angular.module('rcApp');
 
-var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route) {
+/*
+var appCtrl = rcMod.controller('AppCtrl', function($rootScope) {
+	console.log("in AppCtrl");
+	$rootScope.$on("$routeChangeError", function(event, current, previous, rejection) {
+        console.log('routeChange finished - error');
+        $rootScope.viewPending = false;
+    });
+    
+    $rootScope.$on("$routeChangeSuccess", function (event, current, previous, rejection) {
+		console.log('routeChange finished - success');
+		$rootScope.viewPending = false;
+	});
+    
+    $rootScope.$on('$routeChangeStart', function(event, current, previous, rejection){
+        console.log('routeChange started');
+        $rootScope.viewPending = true;
+	});
+});
+*/
+
+
+var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route, Notifications) {
 	console.log("running RappManagerCtrl");
 	$scope.test = "this is test var";
 	$scope.products = products;
@@ -46,10 +67,15 @@ var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $uplo
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
 	      }).success(function(data, status, headers, config) {
-	    	  console.log('file uploaded successfully');
-	    	  //$location.path("/ras/apps/" + data[0].projectName + "/config");
-	    	  //$location.path("/ras/config/" + data[0].projectName);
-	    	  $route.reload();
+			  if (status == 409) {
+	    		  console.log(data.exception.message);
+	    		  Notifications.error("This application is already installed")
+	    	  } else {
+				  console.log('Application uploaded successfully');
+				  //$location.path("/ras/apps/" + data[0].projectName + "/config");
+				  //$location.path("/ras/config/" + data[0].projectName);
+				  $route.reload();
+			  }
 	      });
 	    }
 	};

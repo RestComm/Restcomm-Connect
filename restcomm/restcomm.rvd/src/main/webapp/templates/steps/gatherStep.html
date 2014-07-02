@@ -14,10 +14,10 @@
 							<div class='step' ng-repeat='step in step.steps'>
 								<div ng-switch on="step.kind">
 									<div ng-switch-when="say">
-										<ng-include src="'templates/sayStep.html'"></ng-include>
+										<ng-include src="'templates/steps/sayStep.html'"></ng-include>
 									</div>
 									<div ng-switch-when="play">
-										<ng-include src="'templates/playStep.html'"></ng-include>
+										<ng-include src="'templates/steps/playStep.html'"></ng-include>
 									</div>																										
 								</div>
 							</div>

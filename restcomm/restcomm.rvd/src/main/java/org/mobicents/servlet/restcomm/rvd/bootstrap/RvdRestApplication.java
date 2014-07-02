@@ -6,7 +6,7 @@ import org.mobicents.servlet.restcomm.rvd.http.LoginRestService;
 import org.mobicents.servlet.restcomm.rvd.http.ProjectDoesNotExistMapper;
 import org.mobicents.servlet.restcomm.rvd.http.RasRestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdController;
-import org.mobicents.servlet.restcomm.rvd.http.RvdManager;
+import org.mobicents.servlet.restcomm.rvd.http.ProjectRestService;
 import org.mobicents.servlet.restcomm.rvd.http.StorageExceptionMapper;
 
 import java.util.HashSet;
@@ -22,7 +22,7 @@ public class RvdRestApplication extends Application {
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<Class<?>>();
         // register resources
-        classes.add(RvdManager.class);
+        classes.add(ProjectRestService.class);
         classes.add(RvdController.class);
         classes.add(RasRestService.class);
         classes.add(LoginRestService.class);
