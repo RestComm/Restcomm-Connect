@@ -52,7 +52,7 @@ angular.module('basicDragdrop', [])
                     ui.item.remove();
                     //scope.itemAdded({item:ui.item,pos:drop_index,listmodel:scope.listModel});
                     var expression = attrs.itemAdded + "('" + ui.item.attr("class") + "'," + drop_index + ", listModel" + ")";
-                    console.log("addItem expression: " + expression);
+                    //console.log("addItem expression: " + expression);
                     scope.$eval( expression );
                 }
             });

@@ -439,7 +439,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	}
 	
 	$scope.addStep = function (classAttribute,pos,listmodel) {
-		console.log("Adding step ");
+		//console.log("Adding step ");
 		//console.log(item);
 		r = RegExp("button-([^ ]+)");
 		m = r.exec( classAttribute );
@@ -447,7 +447,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 			var step = angular.copy(protos.stepProto[ m[1] ]);
 			step.name = stepService.newStepName();
 			
-			console.log("adding step - " + m[1]);
+			//console.log("adding step - " + m[1]);
 			$scope.$apply( function ()  {
 				listmodel.splice(pos,0, step);
 			});

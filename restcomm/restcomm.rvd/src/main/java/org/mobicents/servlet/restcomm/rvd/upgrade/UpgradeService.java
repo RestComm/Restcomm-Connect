@@ -51,6 +51,8 @@ public class UpgradeService {
         if ( startVersion.equals(RvdSettings.getRvdProjectVersion()) )
             return false;
 
+        logger.info("Upgrading '" + projectName + "' from version " + startVersion);
+
         String version = startVersion;
         String source = projectStorage.loadProjectState(projectName);
         JsonParser parser = new JsonParser();
