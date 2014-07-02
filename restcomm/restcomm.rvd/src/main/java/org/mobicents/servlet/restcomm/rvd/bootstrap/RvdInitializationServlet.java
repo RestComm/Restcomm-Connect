@@ -24,7 +24,7 @@ public class RvdInitializationServlet extends HttpServlet {
 
         RvdSettings settings = RvdSettings.getInstance(config.getServletContext());
         ModelMarshaler marshaler = new ModelMarshaler();
-        FsStorageBase storageBase = new FsStorageBase(settings.getWorkspaceBasePath());
+        FsStorageBase storageBase = new FsStorageBase(settings.getWorkspaceBasePath(), marshaler);
         ProjectStorage projectStorage = new FsProjectStorage(storageBase, marshaler);
         UpgradeService upgradeService = new UpgradeService(projectStorage);
 

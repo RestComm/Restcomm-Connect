@@ -153,6 +153,15 @@ angular.module('Rvd')
 		else
 		if (clone.gatherType == "collectdigits")
 			delete clone.menu;
+		for (var i=0; i<clone.steps.length; i++) {
+			var step;
+			if (clone.steps[i].kind == 'say')
+				step = clone.steps[i].pack();
+			else
+			if (clone.steps[i].kind == 'play')
+				step = clone.steps[i].pack();
+			clone.steps[i] = step;
+		}		
 		return clone;
 	}
 	return GatherModel;

@@ -52,6 +52,9 @@ public class FsProjectStorage implements ProjectStorage {
         this.marshaler = marshaler;
     }
 
+    public ModelMarshaler getMarshaler() {
+        return marshaler;
+    }
 
     private String getProjectWavsPath(String projectName) {
         return storageBase.getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME;
@@ -276,8 +279,8 @@ public class FsProjectStorage implements ProjectStorage {
                 item.setFilename(entry.getName());
                 items.add(item);
             }
-        } else
-            throw new BadWorkspaceDirectoryStructure();
+        }// else
+            //throw new BadWorkspaceDirectoryStructure();
 
         return items;
     }

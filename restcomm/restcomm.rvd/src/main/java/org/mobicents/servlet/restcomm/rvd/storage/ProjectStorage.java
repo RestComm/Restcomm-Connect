@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
@@ -58,5 +59,7 @@ public interface ProjectStorage {
 
     ProjectState loadProject(String name) throws StorageException;
     void storeProject(String name, ProjectState projectState, boolean firstTime) throws StorageException;
+
+    ModelMarshaler getMarshaler();
 
 }

@@ -22,6 +22,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
@@ -245,10 +246,7 @@ public class ProjectService {
         File archiveFile = new File(archiveFilename);
         String projectName = FilenameUtils.getBaseName(archiveFile.getName());
 
-        // TODO Make these an atomic action!
-        projectName = projectStorage.getAvailableProjectName(projectName);
-        projectStorage.createProjectSlot(projectName);
-
+        // First unzip to temp dir
         File tempProjectDir;
         try {
             tempProjectDir = RvdUtils.createTempDir();
@@ -257,6 +255,14 @@ public class ProjectService {
         }
         Unzipper unzipper = new Unzipper(tempProjectDir);
         unzipper.unzip(archiveStream);
+
+        // Then try to load in case we got garbage
+        FsStorageBase storageBase = new FsStorageBase(tempProjectDir.getParent(), projectStorage.getMarshaler());
+        ProjectState state = storageBase.loadModelFromFile(tempProjectDir.getPath() + File.separator + "state", ProjectState.class);
+
+        // TODO Make these an atomic action!
+        projectName = projectStorage.getAvailableProjectName(projectName);
+        projectStorage.createProjectSlot(projectName);
 
         projectStorage.importProjectFromDirectory(tempProjectDir, projectName, true);
 

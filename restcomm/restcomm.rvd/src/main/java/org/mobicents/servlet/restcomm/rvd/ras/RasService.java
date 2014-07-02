@@ -8,6 +8,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
@@ -16,6 +18,7 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
+import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
@@ -28,6 +31,7 @@ import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationExc
 
 import com.google.gson.Gson;
 
+import java.util.List;
 import java.util.UUID;
 /**
  * Functionality for importing and setting up an app from the app store
@@ -41,12 +45,15 @@ public class RasService {
     ProjectStorage projectStorage;
     FsPackagingStorage packagingStorage;
     FsStorageBase storageBase;
+    ModelMarshaler marshaler;
 
 
     public RasService(RvdContext rvdContext) {
         this.storageBase = rvdContext.getStorageBase();
+        this.marshaler = rvdContext.getMarshaler();
         this.projectStorage = rvdContext.getProjectStorage();
         this.packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
+
     }
 
     /*
@@ -88,7 +95,7 @@ public class RasService {
                 zipper.addFileContent("/app/info", infoData );
                 zipper.addFileContent("/app/config", configData );
                 zipper.addDirectory("/app/rvd/");
-                zipper.addFileContent("/app/rvd/state", projectStorage.loadProjectState(projectName));
+                zipper.addFileContent("/app/rvd/state", marshaler.toData(project.getState()) );
 
                 if ( project.supportsWavs() ) {
                     zipper.addDirectory("/app/rvd/wavs/");
@@ -121,12 +128,14 @@ public class RasService {
 
 
     /**
-     * Unzips the package stream in a temporary directory and creates an app out of it
+     * Unzips the package stream in a temporary directory and creates an app out of it. Since this action is initiated
+     * from AdminUI there is no easy way to authenticate the request without forcing the user login in RVD too. So, all
+     * requests are accepted and no loggedUser information is stored.
      * @param packageZipStream
      * @return The name (some sort of identifier) of the new project created
      * @throws RvdException
      */
-    public String importAppToWorkspace( InputStream packageZipStream ) throws RvdException {
+    public String importAppToWorkspace( InputStream packageZipStream, String loggedUser ) throws RvdException {
         File tempDir = RvdUtils.createTempDir();
         logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
         Unzipper unzipper = new Unzipper(tempDir);
@@ -136,12 +145,21 @@ public class RasService {
         RappInfo info = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
         RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
 
-        // create a project with the application name specified in the package. This should be a default. The user should be able to override it
+        // Make sure no such restcomm app already exists (single instance limitation)
+        List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
+        for ( RappItem rappItem : rappItems )
+            if ( rappItem.rappInfo.getId() != null && rappItem.rappInfo.getId().equals(info.getId()) )
+                throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.rappInfo.getId() + "  already exists. Cannot import " + info.getName() + " app");
+
+        // create a project placeholder with the application name specified in the package. This should be a default. The user should be able to override it
         String newProjectName = projectStorage.getAvailableProjectName(info.getName());
         projectStorage.createProjectSlot(newProjectName);
 
         // add project state
-        projectStorage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
+        ProjectState projectState = storageBase.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
+        projectState.getHeader().setOwner(null); // RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
+        projectStorage.storeProject(newProjectName, projectState, true);
+        //projectStorage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
 
         // and wav files one-by-one (if any)
         File wavDir = new File(tempDir.getPath() + "/app/rvd/wavs");

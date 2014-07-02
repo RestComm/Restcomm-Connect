@@ -1,4 +1,4 @@
-App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams, $timeout, $upload) {
+App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
@@ -84,8 +84,13 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
 	      }).success(function(data, status, headers, config) {
-	    	  console.log('file uploaded successfully');
+	    	  console.log('Project imported successfully');
 	    	  $scope.refreshProjectList();
+	      }).error(function(data, status, headers, config) {
+	    	  if (status == 400) {// BAD REQUEST
+	    		  console.log(data.exception.message);
+	    		  notifications.put({message:"Error importing project", type:"danger"});
+	    	  }
 	      });
 	    }
 	};

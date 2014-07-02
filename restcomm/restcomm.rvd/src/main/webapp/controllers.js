@@ -1,18 +1,18 @@
-App.controller('AppCtrl', function ($rootScope, $scope) {
+App.controller('AppCtrl', function ($rootScope) {
 	console.log("Started AppCtrl");
 	$rootScope.$on("$routeChangeError", function(event, current, previous, rejection) {
         //console.log(event);
         console.log('on $routeChangeError');
-        $scope.rvdError = rejection;
+        $rootScope.rvdError = rejection;
     });
     
     $rootScope.$on("resourceNotFound", function(p1, p2) {
     	console.log("resourceNotFound event caught");
-    	$scope.rvdError = {message: "The requested resource was not found. Sorry about that."};
+    	$rootScope.rvdError = {message: "The requested resource was not found. Sorry about that."};
     });
     
-    $scope.$on('$routeChangeStart', function(){
-        $scope.rvdError = undefined;
+    $rootScope.$on('$routeChangeStart', function(){
+    	$rootScope.rvdError = undefined;
 	});
 });
 
