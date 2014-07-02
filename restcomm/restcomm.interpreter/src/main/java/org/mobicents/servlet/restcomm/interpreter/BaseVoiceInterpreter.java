@@ -208,6 +208,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The call recording stuff.
     Sid recordingSid = null;
     URI recordingUri = null;
+    URI publicRecordingUri = null;
     // Information to reach the application that will be executed
     // by this interpreter.
     Sid accountId;
@@ -1481,11 +1482,17 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // Start recording.
             recordingSid = Sid.generate(Sid.Type.RECORDING);
             String path = configuration.subset("runtime-settings").getString("recordings-path");
+            String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
             if (!path.endsWith("/")) {
                 path += "/";
             }
+            if (!httpRecordingUri.endsWith("/")) {
+                httpRecordingUri += "/";
+            }
             path += recordingSid.toString() + ".wav";
+            httpRecordingUri += recordingSid.toString() + ".wav";
             recordingUri = URI.create(path);
+            publicRecordingUri = URI.create(httpRecordingUri);
             Record record = null;
             if (playBeep) {
                 final List<URI> prompts = new ArrayList<URI>(1);

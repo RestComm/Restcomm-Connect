@@ -1479,11 +1479,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         Configuration runtimeSettings = configuration.subset("runtime-settings");
         recordingSid = Sid.generate(Sid.Type.RECORDING);
         String path = runtimeSettings.getString("recordings-path");
+        String httpRecordingUri = runtimeSettings.getString("recordings-uri");
         if (!path.endsWith("/")) {
             path += "/";
         }
+        if (!httpRecordingUri.endsWith("/")) {
+            httpRecordingUri += "/";
+        }
         path += recordingSid.toString() + ".wav";
+        httpRecordingUri += recordingSid.toString() + ".wav";
         this.recordingUri = URI.create(path);
+        this.publicRecordingUri = URI.create(httpRecordingUri);
         call.tell(new StartRecordingCall(accountId, runtimeSettings, storage, recordingSid, recordingUri), null);
     }
 
@@ -1526,6 +1532,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.name()));
             parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
             parameters.add(new BasicNameValuePair("RecordingUrl", null));
+            parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
         }
         // Handle No-Answer calls
         else if (message instanceof ReceiveTimeout) {
@@ -1535,6 +1542,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final long dialCallDuration = new Interval(this.outboundCallInfo.dateCreated(), DateTime.now()).toDuration()
                         .getStandardSeconds();
                 final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
+                final String publicRecordingUrl = this.publicRecordingUri == null ? null : this.publicRecordingUri.toString();
 
                 parameters.add(new BasicNameValuePair("DialCallSid", dialCallSid));
                 // parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
@@ -1542,11 +1550,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
+                parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
                 parameters.add(new BasicNameValuePair("DialCallSid", null));
                 parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
+                parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
             }
         }
         // Handle the rest of the cases
@@ -1557,6 +1567,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final long dialCallDuration = new Interval(this.outboundCallInfo.dateCreated(), DateTime.now()).toDuration()
                         .getStandardSeconds();
                 final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
+                final String publicRecordingUrl = this.publicRecordingUri == null ? null : this.publicRecordingUri.toString();
 
                 parameters.add(new BasicNameValuePair("DialCallSid", dialCallSid));
                 //If Caller sent the BYE request, at the time we execute this method, the outbound call status is still in progress
@@ -1568,11 +1579,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
+                parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
                 parameters.add(new BasicNameValuePair("DialCallSid", null));
                 parameters.add(new BasicNameValuePair("DialCallStatus", null));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
+                parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
             }
         }
 

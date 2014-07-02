@@ -201,6 +201,7 @@ public class DialActionTest {
 
         assertTrue(data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("failed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
 
@@ -275,6 +276,7 @@ public class DialActionTest {
 
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -349,6 +351,7 @@ public class DialActionTest {
 
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -424,6 +427,7 @@ public class DialActionTest {
         assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -494,6 +498,7 @@ public class DialActionTest {
 
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("no_answer"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -563,6 +568,7 @@ public class DialActionTest {
         
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("busy"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
 
