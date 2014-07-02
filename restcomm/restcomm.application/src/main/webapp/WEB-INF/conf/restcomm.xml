@@ -195,7 +195,7 @@
 	<speech-synthesizer
 		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
-		<apikey></apikey>
+		<apikey>d80d266a1a7f46edac6b1a17ad797b63</apikey>
 		<languages>
 			<catalan>ca-es</catalan>
 			<chinese-china>zh-cn</chinese-china>
