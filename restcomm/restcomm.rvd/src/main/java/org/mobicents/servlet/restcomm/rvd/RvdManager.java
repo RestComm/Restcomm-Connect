@@ -302,6 +302,21 @@ public class RvdManager {
         }
     }
 
+    @GET
+    @Path("/getwav")
+    public Response getWav(@QueryParam("name") String projectName, @QueryParam("filename") String filename ) {
+       InputStream wavStream;
+        try {
+            wavStream = projectStorage.getWav(projectName, filename);
+            return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename).build();
+        } catch (WavItemDoesNotExist e) {
+            return Response.status(Status.NOT_FOUND).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        } catch (StorageException e) {
+            //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        }
+    }
+
     @DELETE
     @Path("/removewav")
     public Response removeWavFile(@QueryParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) {

@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.storage;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -267,6 +268,25 @@ public class FsProjectStorage implements ProjectStorage {
         } catch (IOException e) {
             throw new StorageException("Error writing to " + wavPathname, e);
         }
+    }
+
+    /**
+     * Returns an InputStream to the wav specified or throws an error if not found. DON'T FORGET TO CLOSE the
+     * input stream after using. It is actually a FileInputStream.
+     */
+    @Override
+    public InputStream getWav(String projectName, String filename) throws StorageException {
+        String wavpath = getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME + File.separator + filename;
+        File wavfile = new File(wavpath);
+        if ( wavfile.exists() )
+            try {
+                return new FileInputStream(wavfile);
+            } catch (FileNotFoundException e) {
+                throw new StorageException("Error reading wav: " + filename, e);
+            }
+        else
+            throw new WavItemDoesNotExist("Wav file does not exist - " + filename );
+
     }
 
     @Override
