@@ -136,9 +136,8 @@
 		<module>restcomm.ui</module>
 		<module>restcomm.rvd</module>
 		<module>restcomm.tts.att</module>
-    <module>restcomm.ussd</module>
-  </modules>
-
+    		<module>restcomm.ussd</module>
+  	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -511,6 +510,12 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<id>docs</id>
+			<modules>
+				<module>restcomm.docs</module>
+			</modules>
+		</profile>
 		<profile>
 			<id>set-git-hash</id>
 			<build>
