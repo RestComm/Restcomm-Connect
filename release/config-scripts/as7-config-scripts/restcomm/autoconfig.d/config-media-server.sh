@@ -10,7 +10,7 @@ configUdpManager() {
 	    -e "s|<property name=\"localNetwork\">$IP_ADDRESS_PATTERN<\/property>|<property name=\"localNetwork\">$2<\/property>|" \
 	    -e "s|<property name=\"localSubnet\">$IP_ADDRESS_PATTERN<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
 	    -e 's|<property name="useSbc">.*</property>|<property name="useSbc">true</property>|' \
-	    -e 's|<property name="dtmfDetectorDbi">.*</property>|<property name="dtmfDetectorDbi">36</property>|' \
+	    -e 's|<property name="dtmfDetectorDbi">.*</property>|<property name="dtmfDetectorDbi">0</property>|' \
 	    -e 's|<property name="lowestPort">.*</property>|<property name="lowestPort">64534</property>|' \
 	    -e 's|<property name="highestPort">.*</property>|<property name="highestPort">65535</property>|' \
 	    $FILE > $FILE.bak
