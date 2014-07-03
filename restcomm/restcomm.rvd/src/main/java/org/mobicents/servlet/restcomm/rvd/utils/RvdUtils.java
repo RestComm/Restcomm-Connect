@@ -1,10 +1,12 @@
 package org.mobicents.servlet.restcomm.rvd.utils;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.codec.binary.Base64;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 
 
@@ -50,5 +52,11 @@ public class RvdUtils {
             reducedMap.put(entry.getKey(), entry.getValue()[0]); // parameter arrays should have at least one value
         }
         return reducedMap;
+    }
+
+    public static String buildHttpAuthorizationToken(String username, String password) {
+        byte[] usernamePassBytes = (username + ":" + password).getBytes(Charset.forName("UTF-8"));
+        String authenticationToken = Base64.encodeBase64String(usernamePassBytes);
+        return authenticationToken;
     }
 }

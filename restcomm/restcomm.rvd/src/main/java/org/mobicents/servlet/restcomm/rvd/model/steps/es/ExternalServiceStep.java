@@ -12,6 +12,9 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 public class ExternalServiceStep extends Step {
 
     private String url;
+    private String method;
+    private String username;
+    private String password;
     private List<UrlParam> urlParams;
     private List<Assignment> assignments;
     private String next;
@@ -77,6 +80,18 @@ public class ExternalServiceStep extends Step {
     }
     public List<UrlParam> getUrlParams() {
         return this.urlParams;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     @Override

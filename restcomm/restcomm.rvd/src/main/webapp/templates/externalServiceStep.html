@@ -7,13 +7,29 @@
 				<div class="col-md-12">
 				
                     <div class="service-url-wrap">
-                    	<form class='form-group' name='form'>
-	                        <div class="input-group">
-	                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
-	                            <input name="url" class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="http://" ng-model='step.url' required></input>
-	                        </div>
-	                        <div class="validation-error"  ng-show="form.url.$invalid">Specify a valid URL that returns JSON</div>
-	                    </form>
+                    	<div class="row">
+	                    	<form class='form-group' name='form'>
+	                    		<div class="col-md-12">
+			                        <div class="input-group">
+			                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
+			                            <input name="url" ng-model='step.url' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="http://" required></input>
+			                            
+			                            <span ng-show="step.iface.advancedShown" class="input-group-addon">Method</span>
+		                        		<select ng-show="step.iface.advancedShown" ng-model='step.method' class="form-control">
+											<option value='GET'>GET</option>
+											<option value='POST'>POST</option>
+										</select>
+		                        		<span ng-show="step.iface.advancedShown" class="input-group-addon help-tooltip" tooltip='Username for BASIC HTTP authentication. Leave it blank if no authentication is used.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Username</span>
+		                        		<input ng-show="step.iface.advancedShown"  name="username" ng-model='step.username' class="form-control" type="text"></input>
+		                        		<span ng-show="step.iface.advancedShown" class="input-group-addon help-tooltip" tooltip='Password for BASIC HTTP authentication. Leave it blank if no authentication is used.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Password</span>
+		                        		<input ng-show="step.iface.advancedShown" name="password" ng-model='step.password' class="form-control" type="text"></input>
+		                        		<span class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>		
+			                            
+			                        </div>
+			                        <div class="validation-error"  ng-show="form.url.$invalid">Specify a valid URL that returns JSON</div>
+		                        </div>
+		                    </form>
+		                </div>
                         
                         <div class='row'>
                             <div ng-repeat='urlParam in step.urlParams' class="col-md-5">
