@@ -22,11 +22,15 @@ import javax.ws.rs.core.MultivaluedMap;
 import java.net.URLEncoder;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
@@ -81,6 +85,7 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConvert
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -412,21 +417,42 @@ public class Interpreter {
                             uri_builder.setPath("/" + uri_builder.getPath());
                     }
 
-                    for ( UrlParam urlParam : esStep.getUrlParams() ) {
-                        uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
+                    if ( esStep.getMethod() == null || "GET".equals(esStep.getMethod()) ) {
+                        for ( UrlParam urlParam : esStep.getUrlParams() ) {
+                            uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
+                        }
                     }
                     url = uri_builder.build();
                 } catch (URISyntaxException e) {
                     throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
                 }
 
+
+                // Send request
+
+                CloseableHttpResponse response;
                 logger.info("Running ES request");
                 logger.debug("Requesting from url: " + url);
-                HttpGet get = new HttpGet( url );
-                CloseableHttpResponse response = client.execute( get );
+                if ( "POST".equals(esStep.getMethod()) ) {
+                    HttpPost post = new HttpPost(url);
+                    List <NameValuePair> values = new ArrayList <NameValuePair>();
+                    for ( UrlParam urlParam : esStep.getUrlParams() )
+                        values.add(new BasicNameValuePair(urlParam.getName(), urlParam.getValue()));
+                    post.setEntity(new UrlEncodedFormEntity(values));
+                    post.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(), esStep.getPassword()));
+                    response = client.execute( post );
+                } else
+                if ( esStep.getMethod() == null || esStep.getMethod().equals("GET") ) {
+                    HttpGet get = new HttpGet( url );
+                    get.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(), esStep.getPassword()));
+                    response = client.execute( get );
+                } else
+                    throw new InterpreterException("Unknonwn HTTP method specified: " + esStep.getMethod() );
+
+
+                // Parse response
 
                 JsonParser parser = new JsonParser();
-
                 try {
                     HttpEntity entity = response.getEntity();
                     if ( entity != null ) {

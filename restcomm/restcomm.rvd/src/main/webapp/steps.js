@@ -360,6 +360,9 @@ angular.module('Rvd')
 		this.label = 'externalService';
 		this.title = 'external service';
 		this.url = '';
+		this.method = undefined;
+		this.username = undefined;
+		this.password = undefined;
 		this.urlParams = [];
 		this.assignments = [];
 		this.next = '';
