@@ -1,7 +1,6 @@
 	<div class="step externalService-step panel panel-rvdstep">
 		<div class="panel-heading">
-			<!-- <ng-include src="'templates/steps/stepHeading.html'"></ng-include> -->
-			<step-heading title="step.url"><small>{{step.url}}</small></step-heading>
+			<step-heading title="step.url"><small>{{step.url.length > 80 ? step.url.substring(0, 80) + "..." : step.url.substring(0, 80) }}</small></step-heading>
 		</div>
 		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 			<div class="row">

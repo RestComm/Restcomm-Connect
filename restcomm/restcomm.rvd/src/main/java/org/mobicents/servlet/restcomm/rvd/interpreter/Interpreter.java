@@ -400,7 +400,7 @@ public class Interpreter {
 
                 URI url;
                 try {
-                    URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
+                    URIBuilder uri_builder = new URIBuilder(populateVariables(esStep.getUrl()) ); // supports RVD variable expansion
                     if (uri_builder.getHost() == null ) {
                         logger.debug("External Service: Relative url is used. Will override from http request to RVD controller");
                         // if this is a relative url fill in missing fields from the request
@@ -423,7 +423,6 @@ public class Interpreter {
 
 
                 // Send request
-
                 CloseableHttpResponse response;
                 logger.info("Running ES request");
                 logger.debug("Requesting from url: " + url);
@@ -443,9 +442,7 @@ public class Interpreter {
                 } else
                     throw new InterpreterException("Unknonwn HTTP method specified: " + esStep.getMethod() );
 
-
                 // Parse response
-
                 JsonParser parser = new JsonParser();
                 try {
                     HttpEntity entity = response.getEntity();
