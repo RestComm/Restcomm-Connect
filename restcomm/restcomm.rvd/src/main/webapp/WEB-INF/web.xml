@@ -25,15 +25,17 @@
 			<param-name>javax.ws.rs.Application</param-name>
 			<param-value>org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication</param-value>
 		</init-param>
+		<init-param>
+  			<param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
+  			<param-value>org.mobicents.servlet.restcomm.rvd.security.RvdResourceFilterFactory</param-value>
+  		</init-param>
 		
 		<!-- Enable resource matching trace for Jersey. Very handy. It uses HTTP headers in the REST response. -->
-		<!-- 
+
 		<init-param>
             <param-name>com.sun.jersey.config.feature.Trace</param-name>
             <param-value>true</param-value>
         </init-param>
-        -->
-		
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
@@ -57,8 +59,25 @@
 		<param-value>false</param-value>
 	</context-param>
 
-
-
+<!-- 
+  <security-constraint>
+     <web-resource-collection>
+       <web-resource-name>Test Resource</web-resource-name>
+       <url-pattern>/services/projects/*</url-pattern>
+       <http-method>GET</http-method>
+     </web-resource-collection>
+     <auth-constraint>
+       <role-name>admin</role-name>
+     </auth-constraint>
+  </security-constraint>
+  <login-config>
+     <auth-method>BASIC</auth-method>
+     <realm-name>jaxrs_server</realm-name>
+  </login-config>
+  <security-role>
+     <role-name>admin</role-name>
+  </security-role>
+ -->
 
 
 </web-app>

@@ -1,4 +1,4 @@
-rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location) {
+rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications) {
 
 	$scope.addConfigurationOption = function(type) {
 		console.log("Adding configuration option");
@@ -20,6 +20,7 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 		.success(function () {
 			console.log("App config saved");
 			$scope.isNewRapp = false;
+			notifications.put({message:"Package information saved", type:"success"});
 		});
 	}
 	

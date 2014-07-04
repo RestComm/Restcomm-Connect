@@ -33,6 +33,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
@@ -83,7 +84,6 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageR
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
@@ -93,7 +93,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.XStream;
 
 
@@ -103,7 +102,6 @@ public class Interpreter {
 
     private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
-    private RasStorage rasStorage;
     private HttpServletRequest httpRequest;
 
     private XStream xstream;
@@ -121,14 +119,12 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(RvdSettings settings, ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        this.rvdSettings = settings;
-        this.projectStorage = projectStorage;
-        this.rasStorage = new RasStorage(projectStorage);
+    public Interpreter(RvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+        this.rvdSettings = rvdContext.getSettings();
+        this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
-        //this.requestParameters = RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap());
         this.requestParams = requestParams;
 
         this.contextPath = httpRequest.getContextPath();
@@ -248,9 +244,7 @@ public class Interpreter {
     public String interpret() throws RvdException {
         String response = null;
 
-        String projectfile_json = projectStorage.loadProjectOptions(appName);
-        ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
-        }.getType());
+        ProjectOptions projectOptions = projectStorage.loadProjectOptions(appName);
         nodeNames = projectOptions.getNodeNames();
 
         if (targetParam == null || "".equals(targetParam)) {
@@ -697,7 +691,9 @@ public class Interpreter {
             int filenameBeforeStartPos = fileResource.lastIndexOf('/');
             if ( filenameBeforeStartPos != -1 ) {
                 wavFilename = fileResource.substring(filenameBeforeStartPos+1);
-                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                String hostname = rvdSettings.getEffectiveRestcommIp(request);
+                //URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(hostname).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
                 httpResource = httpUriBuilder.build().toString();
             }
         }
@@ -749,10 +745,10 @@ public class Interpreter {
      */
     private void processBootstrapParameters() throws StorageException {
 
-        if ( ! rasStorage.hasBootstrapInfo(appName) )
+        if ( ! projectStorage.hasBootstrapInfo(appName) )
             return; // nothing to do
 
-        JsonElement rootElement = rasStorage.loadBootstrapInfo(appName);
+        JsonElement rootElement = projectStorage.loadBootstrapInfo(appName);
 
         if ( rootElement.isJsonObject() ) {
             JsonObject rootObject = rootElement.getAsJsonObject();

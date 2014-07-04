@@ -15,6 +15,7 @@ public class RappInfo extends ValidatableModel {
     private String description;
     private String appVersion;
     private String rvdAppVersion = RvdSettings.getRvdProjectVersion();
+    private String id;
 
     public RappInfo() {
         // TODO Auto-generated constructor stub
@@ -50,6 +51,14 @@ public class RappInfo extends ValidatableModel {
 
     public void setRvdAppVersion(String rvdAppVersion) {
         this.rvdAppVersion = rvdAppVersion;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Override

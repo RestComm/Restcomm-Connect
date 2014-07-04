@@ -23,7 +23,7 @@
 					<div class="col-md-12 text-center" ng-show="projectItem.viewMode=='view'" >
 							<a href="#/designer/{{projectItem.name}}" ng-click="openProject(projectItem.name)" style="margin-right:10px">{{projectItem.name}}</a>
 							<i ng-click="editProjectName(projectItem)" class="fa fa-pencil rvd-clickable" ></i>
-							<a href="/restcomm-rvd/services/manager/projects/archive?name={{projectItem.name}}"><i class="fa fa-download rvd-clickable" ></i></a>
+							<a href="/restcomm-rvd/services/projects/{{projectItem.name}}/archive"><i class="fa fa-download rvd-clickable" ></i></a>
 							<i ng-click="projectItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
 					</div>
 					
@@ -76,7 +76,7 @@
 			<div class="form-group">
 				<div class='drop-area' ng-file-drop="onFileSelect_ImportProject($files)"
 					ng-file-drag-over-class="dropping" ng-show="dropSupported">
-					<div class="drop-prompt">Drop packaged apps here to import</div>
+					<div class="drop-prompt">Drop RVD projects (.zip) here to import</div>
 				</div>
 				<div ng-file-drop-available="dropSupported=true"
 					ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
