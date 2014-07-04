@@ -11,7 +11,7 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 
 public class ExternalServiceStep extends Step {
 
-    private String url;
+    private String url; // supports RVD variable expansion when executing the HTTP request
     private String method;
     private String username;
     private String password;
