@@ -1,11 +1,57 @@
-<div class="row">
-	<div class="form-group">
-		<div class='drop-area' ng-file-drop="onFileSelect($files)"
-			ng-file-drag-over-class="dropping" ng-show="dropSupported">
-			<div class="drop-prompt">Drop packaged apps here</div>
-		</div>
-		<div ng-file-drop-available="dropSupported=true"
-			ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+<div class="rappmanager">
 
+	<rc-page-title icon="shopping-cart" title="Restcomm Apps" sub-title=""></rc-page-title>
+	<div class="row">
+		<div class="form-group">
+			<div class='drop-area' ng-file-drop="onFileSelect($files)"
+				ng-file-drag-over-class="dropping" ng-show="dropSupported">
+				<div class="drop-prompt">Drop packaged apps here</div>
+			</div>
+			<div ng-file-drop-available="dropSupported=true"
+				ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+		</div>
+	</div>
+	
+	<div class="row">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Title</th>
+					<th>Status</th>
+					<th>Categories</th>
+					<th>Description</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="product in products">
+					<td>{{product.info.title}}
+						<div class="text-muted">{{product.info.appId}}</div>
+					</td>
+					<td>
+						{{buildStatusMessage(product.localApp.status)}}
+						<div>
+							<a href="#/ras/config/{{product.localApp.projectName}}" ng-show="product.localApp && product.localApp.status.indexOf('Installed')!==-1 && product.localApp.status.indexOf('Unconfigured') !== -1">Configure</a>
+						</div>
+					</td>
+					<td>
+						<span ng-repeat="(catid, category) in product.info.category" class="label label-default category-tag">{{category.name}}</span>
+					</td>
+					<td >{{product.info.excerpt}}</td>
+					<td>
+						<a ng-show="!product.localApp" href="{{product.info.link}}" target="_blank" type="button" class="btn btn-primary">Get application</a>
+						<a ng-show="product.localApp" href="{{product.info.link}}" target="_blank">View in AppStore</a>
+					</td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<th colspan="5">Displaying {{products.length}} applications</th>
+				</tr>
+			</tfoot>
+		</table>
+	</div>
+	<div>
+		
 	</div>
 </div>

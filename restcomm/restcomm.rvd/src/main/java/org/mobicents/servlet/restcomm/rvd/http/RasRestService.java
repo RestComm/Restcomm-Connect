@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -14,7 +15,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.PathParam;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -23,18 +26,20 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
@@ -42,29 +47,34 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-@Path("/ras")
-public class RasRestService extends UploadRestService {
+@Path("ras")
+public class RasRestService extends RestService {
     static final Logger logger = Logger.getLogger(RasRestService.class.getName());
 
     @Context
     ServletContext servletContext;
+    @Context
+    SecurityContext securityContext;
+    @Context
+    HttpServletRequest request;
+
     private RvdSettings settings;
-    private ProjectStorage storage;
-    private RasStorage rasStorage;
-    private PackagingStorage packagingStorage;
+    private ProjectStorage projectStorage;
+    private FsPackagingStorage packagingStorage;
     private RasService rasService;
     private ProjectService projectService;
+    private RvdContext rvdContext;
 
     @PostConstruct
     void init() {
-        settings = RvdSettings.getInstance(servletContext);
-        storage = new FsProjectStorage(settings);
-        rasStorage = new RasStorage(storage);
-        packagingStorage = new PackagingStorage(storage);
-        rasService = new RasService(storage);
-        projectService = new ProjectService(storage, servletContext, settings);
-    }
+        rvdContext = new RvdContext(request, servletContext);
+        settings = rvdContext.getSettings();
+        projectStorage = rvdContext.getProjectStorage();
+        packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
 
+        rasService = new RasService(rvdContext);
+        projectService = new ProjectService(rvdContext);
+    }
 
     /**
      * Returns application package information. If there is no packaging data
@@ -76,10 +86,11 @@ public class RasRestService extends UploadRestService {
     @GET
     @Path("/packaging/app")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAppConfig(@QueryParam("name") String projectName) {
+    public Response getAppConfig(@QueryParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
         logger.debug("retrieving app package for project " + projectName);
 
-        try {
+        //try {
+
             if (! packagingStorage.hasPackaging(projectName) )
                 return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
 
@@ -88,15 +99,21 @@ public class RasRestService extends UploadRestService {
 
             return Response.ok().entity(gson.toJson(rapp)).build();
 
-        } catch (StorageException e) {
-            logger.error(e, e);
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        } catch (RvdException e){
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        }
+        //} catch (StorageException e) {
+        //    logger.error(e, e);
+        //    return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        //} catch (RvdException e){
+        //    return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        //}
     }
 
 
+    /**
+     * Creates or updates an app
+     * @param request
+     * @param projectName
+     * @return
+     */
     @POST
     @Path("/packaging/app/save")
     public Response saveApp(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
@@ -107,8 +124,11 @@ public class RasRestService extends UploadRestService {
 
             Gson gson = new Gson();
             Rapp rapp = gson.fromJson(rappData, Rapp.class);
-            rasService.saveApp(rapp, projectName);
-
+            if ( !packagingStorage.hasPackaging(projectName) ) {
+                rasService.createApp(rapp, projectName);
+            } else {
+                rasService.saveApp(rapp, projectName);
+            }
             return buildOkResponse();
 
         } catch (IOException e) {
@@ -120,6 +140,9 @@ public class RasRestService extends UploadRestService {
         } catch (StorageException e) {
             logger.error(e,e);
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        } catch (ProjectDoesNotExist e) {
+            logger.warn(e,e);
+            return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.ERROR,e);
         }
     }
 
@@ -132,6 +155,7 @@ public class RasRestService extends UploadRestService {
         try {
             if (packagingStorage.hasPackaging(projectName) ) {
                 RvdProject project = projectService.load(projectName);
+                project.getState().getHeader().setOwner(null); //  no owner should in the exported project
                 rasService.createZipPackage(project);
                 return buildErrorResponse(Status.OK, RvdResponse.Status.OK, null);
             } else {
@@ -179,6 +203,19 @@ public class RasRestService extends UploadRestService {
         }
     }
 
+    @GET
+    @Path("apps")
+    public Response listRapps(@Context HttpServletRequest request) {
+        try {
+            List<String> projectNames = projectStorage.listProjectNames();
+            List<RappItem> rapps = projectStorage.listRapps(projectNames);
+            return buildOkResponse(rapps);
+        } catch (StorageException e) {
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+        }
+
+    }
+
     /**
      * Create a new application by uploading a ras package
      * @param projectNameOverride - NOT IMPLEMENTED - if specified, the project should be named like this. Otherwise a best effort is made so
@@ -187,11 +224,13 @@ public class RasRestService extends UploadRestService {
      * @return
      */
     @POST
-    @Path("/app/new")
-    public Response newRasApp(@QueryParam("name") String projectNameOverride, @Context HttpServletRequest request) {
+    @Path("apps/{name}")
+    public Response newRasApp(@PathParam("name") String projectNameOverride, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
-        BuildService buildService = new BuildService(storage);
+        BuildService buildService = new BuildService(projectStorage);
+        String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
+
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
@@ -209,7 +248,7 @@ public class RasRestService extends UploadRestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
-                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream());
+                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser );
                         buildService.buildProject(effectiveProjectName);
 
                         fileinfo.addProperty("name", item.getName());
@@ -230,6 +269,10 @@ public class RasRestService extends UploadRestService {
                 String json_response = "{\"result\":[{\"size\":" + size(request.getInputStream()) + "}]}";
                 return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
             }
+        } catch ( RestcommAppAlreadyExists e ) {
+            logger.warn(e);
+            logger.debug(e,e);
+            return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -238,8 +281,8 @@ public class RasRestService extends UploadRestService {
     }
 
     @GET
-    @Path("/app/getconfig")
-    public Response getConfig(@QueryParam("name") String projectName) {
+    @Path("apps/{name}/config")
+    public Response getConfig(@PathParam("name") String projectName) {
         logger.info("getting configuration options for " + projectName);
 
         RappConfig rappConfig;
@@ -259,14 +302,14 @@ public class RasRestService extends UploadRestService {
      * @return
      */
     @POST
-    @Path("/app/bootstrap")
-    public Response setBootstrap(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
+    @Path("apps/{name}/bootstrap")
+    public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
         logger.info("saving bootstrap parameters for app '" + projectName + "'");
         try {
             String bootstrapInfo;
             bootstrapInfo = IOUtils.toString(request.getInputStream());
 
-            rasStorage.storeBootstrapInfo(bootstrapInfo, projectName);
+            projectStorage.storeBootstrapInfo(bootstrapInfo, projectName);
             return buildOkResponse();
 
         } catch (StorageException e) {

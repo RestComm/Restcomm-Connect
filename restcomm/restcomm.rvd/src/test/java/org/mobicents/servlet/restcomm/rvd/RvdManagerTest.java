@@ -28,7 +28,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication;
-import org.mobicents.servlet.restcomm.rvd.http.RvdManager;
+import org.mobicents.servlet.restcomm.rvd.http.ProjectRestService;
 
 //@RunWith(Arquillian.class)
 public class RvdManagerTest {
@@ -55,7 +55,7 @@ public class RvdManagerTest {
 
        archive.setWebXML(new File("src/main/webapp/WEB-INF/web.xml"));
        archive.addClass(RvdRestApplication.class);
-       archive.addClass(RvdManager.class);
+       archive.addClass(ProjectRestService.class);
        archive.addPackage("org.mobicents.servlet.restcomm.rvd");
        archive.addPackage("org.mobicents.servlet.restcomm.rvd.exceptions");
        archive.addPackage("org.mobicents.servlet.restcomm.rvd.model.client");

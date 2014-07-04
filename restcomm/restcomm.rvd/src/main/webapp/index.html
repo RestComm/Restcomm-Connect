@@ -23,7 +23,7 @@
 
 
 
-<body>
+<body> 
 	<div class="navbar navbar-inverse navbar-fixed-top bs-docs-nav">
 		<div class="navbar-header">
 			<span class='navbar-brand'>
@@ -38,6 +38,18 @@
 			
 		</div>
 	</div>
+	
+	<div class="notifications-wrapper" ng-show="notifications.data.length > 0">
+		<div ng-repeat="notification in notifications.data">
+			<div class="alert alert-{{notification.type}} rvd-notification rvd-clickable-text" style="padding: 9px; margin-bottom: 0;" ng-click="notifications.remove($index)">
+				<span ng-show="notification.type == 'success'"><i class="fa fa-check-circle"></i> </span>
+				<span ng-show="notification.type == 'info'"><i class="fa fa-info-circle"></i></span>
+				<span ng-show="notification.type == 'danger'"><i class="fa fa-exclamation-circle"></i></span>
+				<span ng-show="notification.type == 'warning'"><i class="fa fa-warning"></i></span>
+				<strong>{{notification.header}}</strong> {{notification.message}}
+			</div>
+		</div>
+	</div>	
 
 	<div class="container">
 
@@ -77,10 +89,14 @@
 	<script src="app.js"></script>	
 	<script src="steps.js"></script>
 	<script src="stepDirectives.js"></script>
+	<script src="js/app/interceptors.js"></script>	
+	<script src="js/app/services.js"></script>	
 	<script src="controllers.js"></script>
 	<script src="js/controllers/packaging.js"></script>
-	<script src="js/controllers/upgradeController.js"></script>
-	<script src="js/controllers/rappManager.js"></script>	
+	<script src="js/controllers/upgrade.js"></script>
+	<script src="js/controllers/projectManager.js"></script>
+	<script src="js/controllers/designer.js"></script>
+
 	
 	
 </body>

@@ -6,7 +6,10 @@ import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
@@ -15,9 +18,10 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
-import org.mobicents.servlet.restcomm.rvd.storage.PackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.RasStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
@@ -27,6 +31,8 @@ import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationExc
 
 import com.google.gson.Gson;
 
+import java.util.List;
+import java.util.UUID;
 /**
  * Functionality for importing and setting up an app from the app store
  * @author "Tsakiridis Orestis"
@@ -36,14 +42,18 @@ public class RasService {
 
     static final Logger logger = Logger.getLogger(RasService.class.getName());
 
-    ProjectStorage storage;
-    PackagingStorage packagingStorage;
-    RasStorage rasStorage;
+    ProjectStorage projectStorage;
+    FsPackagingStorage packagingStorage;
+    FsStorageBase storageBase;
+    ModelMarshaler marshaler;
 
-    public RasService(ProjectStorage storage) {
-        this.storage = storage;
-        this.packagingStorage = new PackagingStorage(storage);
-        this.rasStorage = new RasStorage(storage);
+
+    public RasService(RvdContext rvdContext) {
+        this.storageBase = rvdContext.getStorageBase();
+        this.marshaler = rvdContext.getMarshaler();
+        this.projectStorage = rvdContext.getProjectStorage();
+        this.packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
+
     }
 
     /*
@@ -85,12 +95,12 @@ public class RasService {
                 zipper.addFileContent("/app/info", infoData );
                 zipper.addFileContent("/app/config", configData );
                 zipper.addDirectory("/app/rvd/");
-                zipper.addFileContent("/app/rvd/state", storage.loadProjectState(projectName));
+                zipper.addFileContent("/app/rvd/state", marshaler.toData(project.getState()) );
 
                 if ( project.supportsWavs() ) {
                     zipper.addDirectory("/app/rvd/wavs/");
-                    for ( WavItem wavItem : storage.listWavs(projectName) ) {
-                        InputStream wavStream = storage.getWav(projectName, wavItem.getFilename());
+                    for ( WavItem wavItem : projectStorage.listWavs(projectName) ) {
+                        InputStream wavStream = projectStorage.getWav(projectName, wavItem.getFilename());
                         try {
                             zipper.addFile("app/rvd/wavs/" + wavItem.getFilename(), wavStream );
                         } finally {
@@ -118,41 +128,51 @@ public class RasService {
 
 
     /**
-     * Unzips the package stream in a temporary directory and creates an app out of it
+     * Unzips the package stream in a temporary directory and creates an app out of it. Since this action is initiated
+     * from AdminUI there is no easy way to authenticate the request without forcing the user login in RVD too. So, all
+     * requests are accepted and no loggedUser information is stored.
      * @param packageZipStream
      * @return The name (some sort of identifier) of the new project created
      * @throws RvdException
      */
-    public String importAppToWorkspace( InputStream packageZipStream ) throws RvdException {
+    public String importAppToWorkspace( InputStream packageZipStream, String loggedUser ) throws RvdException {
         File tempDir = RvdUtils.createTempDir();
         logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
 
         //String infoPath = tempDir.getPath() + "/app/" + "info";
-        RappInfo info = storage.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
-        RappConfig config = storage.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
+        RappInfo info = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
+        RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
 
+        // Make sure no such restcomm app already exists (single instance limitation)
+        List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
+        for ( RappItem rappItem : rappItems )
+            if ( rappItem.rappInfo.getId() != null && rappItem.rappInfo.getId().equals(info.getId()) )
+                throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.rappInfo.getId() + "  already exists. Cannot import " + info.getName() + " app");
 
-        // create a project with the application name specified in the package. This should be a default. The user should be able to override it
-        String newProjectName = storage.getAvailableProjectName(info.getName());
-        storage.createProjectSlot(newProjectName);
+        // create a project placeholder with the application name specified in the package. This should be a default. The user should be able to override it
+        String newProjectName = projectStorage.getAvailableProjectName(info.getName());
+        projectStorage.createProjectSlot(newProjectName);
 
         // add project state
-        storage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
+        ProjectState projectState = storageBase.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
+        projectState.getHeader().setOwner(null); // RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
+        projectStorage.storeProject(newProjectName, projectState, true);
+        //projectStorage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
 
         // and wav files one-by-one (if any)
         File wavDir = new File(tempDir.getPath() + "/app/rvd/wavs");
         if ( wavDir.exists() ) {
             File[] wavFiles = wavDir.listFiles();
             for ( File wavFile : wavFiles ) {
-                storage.storeWav(newProjectName, wavFile.getName(), wavFile);
+                projectStorage.storeWav(newProjectName, wavFile.getName(), wavFile);
             }
         }
 
         // Store rapp for later usage
         Rapp rapp = new Rapp(info, config);
-        rasStorage.storeRapp(rapp, newProjectName);
+        projectStorage.storeRapp(rapp, newProjectName);
 
         // now remove temporary directory
         try {
@@ -164,11 +184,38 @@ public class RasService {
         return newProjectName;
     }
 
+    /**
+     * Updates packaging information for an app
+     * @param rapp
+     * @param projectName
+     * @throws RvdValidationException
+     * @throws StorageException
+     */
     public void saveApp(Rapp rapp, String projectName) throws RvdValidationException, StorageException {
         ValidationReport report = rapp.validate();
         if ( ! report.isOk() )
             throw new RvdValidationException("Cannot validate rapp", report);
 
+        // preserve the app's id
+        Rapp existingRapp = packagingStorage.loadRapp(projectName);
+        rapp.getInfo().setId( existingRapp.getInfo().getId() );
+
+        packagingStorage.storeRapp(rapp, projectName);
+    }
+
+    /**
+     * Creates packaging information for an app.
+     * @param rapp
+     * @param projectName
+     * @throws RvdValidationException
+     * @throws StorageException
+     */
+    public void createApp(Rapp rapp, String projectName) throws RvdValidationException, StorageException {
+        ValidationReport report = rapp.validate();
+        if ( ! report.isOk() )
+            throw new RvdValidationException("Cannot validate rapp", report);
+
+        rapp.getInfo().setId(generateAppId(projectName));
         packagingStorage.storeRapp(rapp, projectName);
     }
 
@@ -177,7 +224,7 @@ public class RasService {
     }
 
     public RappConfig getRappConfig(String projectName) throws StorageException {
-        Rapp rapp = rasStorage.loadRapp(projectName);
+        Rapp rapp = projectStorage.loadRapp(projectName);
         return rapp.getConfig();
     }
 
@@ -187,5 +234,12 @@ public class RasService {
 
         return binaryInfo;
     }
+
+    protected String generateAppId(String projectName) {
+        String id = UUID.randomUUID().toString();
+        return id;
+    }
+
+
 
 }
