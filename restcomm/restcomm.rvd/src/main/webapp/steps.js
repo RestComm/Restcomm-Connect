@@ -282,6 +282,7 @@ angular.module('Rvd')
 .value('accessOperationKinds',['object','array','value'])
 .value('objectActions', ['propertyNamed'])
 .value('arrayActions', ['itemAtPosition'])
+
 .factory('esValueExtractor',['rvdModel',function (rvdModel) {
 	var accessOperationProtos = {
 		object:{kind:'object',fixed:false, terminal:false},
@@ -294,6 +295,12 @@ angular.module('Rvd')
 	}
 	EsValueExtractor.prototype = new rvdModel();
 	EsValueExtractor.prototype.constructor = EsValueExtractor;
+	EsValueExtractor.prototype.init = function(from) {
+		angular.extend(this, from);
+		if (!from.lastOperation)  // aimed to replace  undefined values with null
+			this.lastOperation = null;
+		return this;
+	}
 	EsValueExtractor.prototype.addOperation = function () {
 		console.log("adding operation");
 		this.lastOperation.fixed = true;
@@ -345,6 +352,7 @@ angular.module('Rvd')
 	}	
 	return EsValueExtractor;
 }])
+
 .factory('esAssignment',['rvdModel','esValueExtractor',function (rvdModel,esValueExtractor) {
 	function EsAssignment() {
 		this.moduleNameScope = null;
