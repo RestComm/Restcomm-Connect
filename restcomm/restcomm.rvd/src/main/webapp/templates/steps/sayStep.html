@@ -1,6 +1,6 @@
 	<div class="step say-step panel panel-rvdstep">
 		<div class="panel-heading">
-			<ng-include src="'templates/steps/stepHeading.html'"></ng-include>
+			<step-heading><small>{{step.phrase.length > 40 ? step.phrase.substring(0, 40) + "..." : step.phrase.substring(0, 40) }}</small></step-heading>
 		</div>
 		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 			<div class="row">
