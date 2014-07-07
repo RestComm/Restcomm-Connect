@@ -2,7 +2,7 @@
 	<div class="input-group input-group-sm form-group">
 		<span class="input-group-addon">{{extractorModelExpression(extractorModel)}}</span>
 		
-		<select ng-show='extractorModel.lastOperation != null' ng-change='extractorModel.lastOperation.action=""' ng-model='extractorModel.lastOperation.kind' ng-options='operationKind as operationKind for operationKind in accessOperationKinds' class="form-control input-sm" required></select>
+		<select ng-show='extractorModel.lastOperation != null' ng-change='resetOperation(extractorModel.lastOperation)' ng-model='extractorModel.lastOperation.kind' ng-options='operationKind as operationKind for operationKind in accessOperationKinds' class="form-control input-sm" required></select>
 
 		<span ng-if='extractorModel.lastOperation.kind=="object"' class="input-group-addon"></span>
 		<select ng-if='extractorModel.lastOperation.kind=="object"' ng-change='extractorModel.lastOperation.property=""' ng-model='extractorModel.lastOperation.action' ng-options='objectAction as objectAction for objectAction in objectActions' class="form-control input-sm" required></select>

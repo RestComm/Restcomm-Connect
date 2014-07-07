@@ -18,7 +18,7 @@
 							<span>remote &nbsp;</span>
 							<input ng-model='step.playType' value='remote' type="radio">
 						</span>		
-						<input name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' type='url' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
+						<input name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' type='text' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
 						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.local.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control" required></select>
 					</div>
 					<div class="validation-error" ng-show="step.playType=='remote' && form.wavUrl.$invalid">Type a valid .wav resource URL</div>
