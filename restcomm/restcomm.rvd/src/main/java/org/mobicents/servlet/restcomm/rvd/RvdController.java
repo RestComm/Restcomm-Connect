@@ -17,10 +17,12 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+
 import com.google.gson.Gson;
 
 @Path("/apps/{appname}/controller")
@@ -45,8 +47,11 @@ public class RvdController {
     private Response runInterpreter( String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
         String rcmlResponse;
         try {
-            if (!projectService.projectExists(appname))
+            if (!projectService.projectExists(appname)) {
+                ProjectDoesNotExist error = new ProjectDoesNotExist("Project '" + appname + "' does not exist");
+                logger.error(error, error);
                 return Response.status(Status.NOT_FOUND).build();
+            }
 
             String targetParam = requestParams.getFirst("target");
             Interpreter interpreter = new Interpreter(rvdSettings, projectStorage, targetParam, appname, httpRequest, requestParams);
