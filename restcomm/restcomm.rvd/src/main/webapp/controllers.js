@@ -553,7 +553,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.getUssdNodeLang = function (node) {
 		var lang = "en";
-		for ( var i=0; i>node.steps.length; i++ ) {
+		for ( var i=0; i<node.steps.length; i++ ) {
 			var step = node.steps[i];
 			if ( step.kind == "ussdLanguage") 
 				if (step.language != null  &&  step.language != 'en') {
