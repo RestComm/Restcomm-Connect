@@ -100,6 +100,7 @@ public class RvdManager {
 
         // TODO IMPORTANT!!! sanitize the project name!!
 
+        logger.info("Creating project " + name);
         try {
             projectService.createProject(name, kind);
         } catch (ProjectDirectoryAlreadyExists e) {
@@ -143,7 +144,7 @@ public class RvdManager {
         // TODO IMPORTANT!!! sanitize the project name!!
 
         if (projectName != null && !projectName.equals("")) {
-            logger.info("savingProject " + projectName);
+            logger.info("Saving project " + projectName);
             try {
                 projectService.updateProject(request, projectName);
                 return Response.ok().build();
@@ -158,6 +159,8 @@ public class RvdManager {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (ValidationException e) {
                 Gson gson = new Gson();
+                logger.warn("Validation failed for project " + projectName );
+                logger.debug(e,e);
                 return Response.ok(gson.toJson(e.getValidationResult()), MediaType.APPLICATION_JSON).build();
             } catch (IncompatibleProjectVersion e) {
                 logger.error(e);
@@ -241,9 +244,7 @@ public class RvdManager {
     @Produces(MediaType.APPLICATION_JSON)
     public Response openProject(@QueryParam("name") String name, @Context HttpServletRequest request) {
 
-        // TODO CAUTION!!! sanitize name
-        // ...
-
+        logger.info("Opening project " + name);
         try {
             String projectState = projectService.openProject(name);
             return Response.ok().entity(projectState).build();
@@ -261,7 +262,7 @@ public class RvdManager {
     @POST
     @Path("/uploadwav")
     public Response uploadWavFile(@QueryParam("name") String projectName, @Context HttpServletRequest request) {
-        logger.info("running /uploadwav");
+        logger.info("Uploading wav file to project " + projectName);
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
@@ -320,8 +321,7 @@ public class RvdManager {
     @DELETE
     @Path("/removewav")
     public Response removeWavFile(@QueryParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) {
-        // !!! Sanitize project name
-
+        logger.info("Removing wav file from project " + projectName);
         try {
             projectService.removeWavFromProject(projectName, wavname);
             return Response.ok().build();
@@ -389,9 +389,7 @@ public class RvdManager {
     @POST
     @Path("/build")
     public Response buildProject(@QueryParam("name") String name) {
-
-        // !!! SANITIZE project name
-
+        logger.info("Building project " + name);
         ProjectStorage projectStorage = new FsProjectStorage(rvdSettings);
         BuildService buildService = new BuildService(projectStorage);
 

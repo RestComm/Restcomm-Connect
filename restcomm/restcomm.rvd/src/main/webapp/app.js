@@ -164,7 +164,7 @@ App.directive('valueExtractor', ['protos', function (protos) {
 			scope.arrayActions = ['itemAtPosition'];
 			
 			scope.addOperation = function (extractorModel) {
-				console.log("adding operation");
+				//console.log("adding operation");
 				extractorModel.lastOperation.fixed = true;
 				extractorModel.lastOperation.expression = scope.operationExpression( extractorModel.lastOperation );
 				extractorModel.accessOperations.push(extractorModel.lastOperation);
@@ -180,6 +180,10 @@ App.directive('valueExtractor', ['protos', function (protos) {
 					extractorModel.lastOperation = extractorModel.accessOperations.pop();
 					extractorModel.lastOperation.fixed = false;
 				}
+			}
+			
+			scope.resetOperation = function( operation ) {
+				angular.copy(protos.accessOperationProtos[operation.kind], operation);
 			}
 			
 			scope.operationExpression = function (operation) {

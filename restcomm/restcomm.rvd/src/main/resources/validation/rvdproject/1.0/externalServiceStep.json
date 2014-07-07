@@ -54,38 +54,31 @@
 								"properties": {
 									"kind": {"enum": ["object"]},
 									"fixed": {"enum": [true]},
-									"terminal": {"enum":[false]},
 									"action": {"enum":["propertyNamed"]},
 									"property": {"type": "string", "minLength":1},
 									"expression": {"type": "string"}
 								},
-								"required": ["kind","fixed","terminal","action","property","expression"],
-								"additionalProperties": false
+								"required": ["kind","fixed","terminal","action","property","expression"]
 							},
 							{
 								"type": "object",
 								"properties": {
 									"kind": {"enum": ["array"]},
 									"fixed": {"enum": [true]},
-									"terminal": {"enum":[false]},
 									"action": {"enum":["itemAtPosition"]},
 									"position": {"type": "integer", "minimum":0},
 									"expression": {"type": "string"}
 								},
-								"required": ["kind","fixed","terminal","action","position","expression"],
-								"additionalProperties": false
+								"required": ["kind","fixed","terminal","action","position","expression"]
 							},
 							{
 								"type": "object",
 								"properties": {
 									"kind": {"enum": ["value"]},
 									"fixed": {"enum": [true]},
-									"terminal": {"enum":[false]},
-									"action": {"type":"string"},
 									"expression": {"type": "string"}
 								},
-								"required": ["kind","fixed","terminal","action","expression"],
-								"additionalProperties": false
+								"required": ["kind","fixed","terminal","expression"]
 							}												
 						]
 					}

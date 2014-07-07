@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ExternalServiceFailed;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ReferencedModuleDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
@@ -410,68 +411,89 @@ public class Interpreter {
                 HttpGet get = new HttpGet( url );
                 CloseableHttpResponse response = client.execute( get );
 
-                JsonParser parser = new JsonParser();
-
-                try {
-                    HttpEntity entity = response.getEntity();
-                    if ( entity != null ) {
-                        String entity_string = EntityUtils.toString(entity);
-                        logger.info("ES: Received " + entity_string.length() + " bytes");
-                        logger.debug("ES Response: " + entity_string);
-                        JsonElement response_element = parser.parse(entity_string);
-
-                        String nextModuleName = null;
-                        //boolean dynamicRouting = false;
-                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
-                            //dynamicRouting = true;
-                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
-                            nextModuleName = getNodeNameByLabel( moduleLabel );
-                            if ( nextModuleName == null )
-                                throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
-
-                            logger.info( "Dynamic routing enabled. Chosen target: " + nextModuleName);
-                            for ( Assignment assignment : esStep.getAssignments() ) {
-                                logger.debug("working on variable " + assignment.getDestVariable() );
-                                logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
-                                if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
-                                    String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
-                                    if ( "application".equals(assignment.getScope()) )
-                                        putStickyVariable(assignment.getDestVariable(), value);
-                                    variables.put(assignment.getDestVariable(), value );
-                                } else
-                                    logger.debug("skipped assignment to " + assignment.getDestVariable() );
-                            }
-                        }  else {
-                            for ( Assignment assignment : esStep.getAssignments() ) {
-                                logger.debug("working on variable " + assignment.getDestVariable() );
-                                String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
-
-                                if ( "application".equals(assignment.getScope()) )
-                                    putStickyVariable(assignment.getDestVariable(), value);
-
-                                variables.put(assignment.getDestVariable(), value );
-                            }
-
-                        }
-                        logger.debug("variables after processing ExternalService step: " + variables.toString() );
-                        if ( esStep.getDoRouting() ) {
-                            String next = "";
-                            if ( "fixed".equals( esStep.getNextType() ) )
-                                next = esStep.getNext();
-                            else
-                            if ( "responseBased".equals( esStep.getNextType() ))
-                                next = nextModuleName;
-                            if ( "".equals(next) )
-                                throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
-                            return next;
-                        }
-                    }
-                } catch (JsonSyntaxException e) {
-                    throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
-                } finally {
-                    response.close();
+                // Check for http errors
+                if ( response.getStatusLine().getStatusCode() < 200  ||  response.getStatusLine().getStatusCode() >= 300 ) {
+                    throw new ExternalServiceFailed("The external service request to '" + url + "' has failed. Status: " + response.getStatusLine());
                 }
 
+                logger.info("Received ES response with status: " + response.getStatusLine() );
+
+                boolean dynamicRouting = false;
+                if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) )
+                    dynamicRouting = true;
+
+
+
+                // should we parse the response ?
+                if ( dynamicRouting || esStep.getAssignments().size() > 0 ) {
+                    JsonParser parser = new JsonParser();
+                    try {
+                        HttpEntity entity = response.getEntity();
+                        if ( entity != null ) {
+                            String entity_string = EntityUtils.toString(entity);
+                            logger.info("ES: Received " + entity_string.length() + " bytes");
+                            logger.debug("ES Response: " + entity_string);
+                            JsonElement response_element = parser.parse(entity_string);
+
+                            String nextModuleName = null;
+                            if ( dynamicRouting ) {
+                                String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+                                nextModuleName = getNodeNameByLabel( moduleLabel );
+                                if ( nextModuleName == null )
+                                    throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
+
+                                logger.info( "Dynamic routing enabled. Chosen target: " + nextModuleName);
+                                for ( Assignment assignment : esStep.getAssignments() ) {
+                                    logger.debug("working on variable " + assignment.getDestVariable() );
+                                    logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
+                                    if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
+                                        String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                                        if ( "application".equals(assignment.getScope()) )
+                                            putStickyVariable(assignment.getDestVariable(), value);
+                                        variables.put(assignment.getDestVariable(), value );
+                                    } else
+                                        logger.debug("skipped assignment to " + assignment.getDestVariable() );
+                                }
+                            }  else {
+                                for ( Assignment assignment : esStep.getAssignments() ) {
+                                    logger.debug("working on variable " + assignment.getDestVariable() );
+                                    String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+
+                                    if ( "application".equals(assignment.getScope()) )
+                                        putStickyVariable(assignment.getDestVariable(), value);
+
+                                    variables.put(assignment.getDestVariable(), value );
+                                }
+
+                            }
+                            logger.debug("variables after processing ExternalService step: " + variables.toString() );
+                            if ( esStep.getDoRouting() ) {
+                                String next = "";
+                                if ( "fixed".equals( esStep.getNextType() ) )
+                                    next = esStep.getNext();
+                                else
+                                if ( "responseBased".equals( esStep.getNextType() ))
+                                    next = nextModuleName;
+                                if ( "".equals(next) )
+                                    throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
+                                return next;
+                            }
+                        }
+                    } catch (JsonSyntaxException e) {
+                        throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
+                    } finally {
+                        response.close();
+                    }
+                } else  { // no response body data is required
+                    if ( esStep.getDoRouting() ) {
+                        String next = "";
+                        if ( "fixed".equals( esStep.getNextType() ) )
+                            next = esStep.getNext();
+                        if ( "".equals(next) )
+                            throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
+                        return next;
+                    }
+                }
             }
             catch (IOException e) {
                 throw new ESRequestException("Error processing ExternalService step " + step.getName(), e);
