@@ -29,7 +29,7 @@ public class PlayStep extends Step {
             //url = interpreter.getContextPath() + "/" + interpreter.getRvdSettings().getWorkspaceBasePath() + "/" + interpreter.getAppName() + "/" + RvdSettings.WAVS_DIRECTORY_NAME + "/" + local.wavLocalFilename;
             url = interpreter.getContextPath() + "/services/manager/projects/getwav?name=" + interpreter.getAppName() + "&filename=" + local.wavLocalFilename;
         else
-            url = remote.wavUrl;
+            url = interpreter.populateVariables(remote.wavUrl);
 
         logger.debug("play url: " + url);
         playStep.setWavurl(url);
