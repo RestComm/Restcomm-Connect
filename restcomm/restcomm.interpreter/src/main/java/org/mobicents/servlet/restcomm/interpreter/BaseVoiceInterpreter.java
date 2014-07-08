@@ -1657,8 +1657,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         }
                     }
                     // Redirect to the action url.
+                    String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
+                    if (!httpRecordingUri.endsWith("/")) {
+                        httpRecordingUri += "/";
+                    }
+                    httpRecordingUri += recordingSid.toString() + ".wav";
+                    URI publicRecordingUri = URI.create(httpRecordingUri);
                     final List<NameValuePair> parameters = parameters();
                     parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                    parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
