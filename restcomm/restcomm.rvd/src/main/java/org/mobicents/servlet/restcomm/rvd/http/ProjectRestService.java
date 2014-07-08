@@ -48,6 +48,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
@@ -116,6 +117,7 @@ public class ProjectRestService extends RestService {
         activeProject = project;
     }
 
+    @RvdAuth
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listProjects(@Context HttpServletRequest request) {
@@ -146,6 +148,7 @@ public class ProjectRestService extends RestService {
 
 
 
+    @RvdAuth
     @PUT
     @Path("{name}")
     public Response createProject(@PathParam("name") String name, @QueryParam("kind") String kind) {
@@ -174,6 +177,7 @@ public class ProjectRestService extends RestService {
      * @throws StorageException
      * @throws ProjectDoesNotExist
      */
+    @RvdAuth
     @GET
     @Path("{name}/info")
     public Response projectInfo(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
@@ -183,6 +187,7 @@ public class ProjectRestService extends RestService {
         return Response.status(Status.OK).entity(marshaler.getGson().toJson(header)).type(MediaType.APPLICATION_JSON).build();
     }
 
+    @RvdAuth
     @POST
     @Path("{name}")
     public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) {
@@ -219,6 +224,7 @@ public class ProjectRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @PUT
     @Path("{name}/rename")
     public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName) throws StorageException, ProjectDoesNotExist {
@@ -237,6 +243,7 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.BAD_REQUEST).build();
     }
 
+    @RvdAuth
     @PUT
     @Path("{name}/upgrade")
     public Response upgradeProject(@PathParam("name") String projectName) {
@@ -263,6 +270,7 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.BAD_REQUEST).build();
     }
 
+    @RvdAuth
     @DELETE
     @Path("{name}")
     public Response deleteProject(@PathParam("name") String projectName) throws ProjectDoesNotExist {
@@ -294,6 +302,7 @@ public class ProjectRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @POST
     @Path("{name}/archive")
     public Response importProjectArchive(@PathParam("name") String projectName, @Context HttpServletRequest request) {
@@ -343,6 +352,7 @@ public class ProjectRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -365,6 +375,7 @@ public class ProjectRestService extends RestService {
         */
     }
 
+    @RvdAuth
     @POST
     @Path("{name}/wavs")
     public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
@@ -409,6 +420,7 @@ public class ProjectRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @DELETE
     @Path("{name}/wavs")
     public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
@@ -423,6 +435,7 @@ public class ProjectRestService extends RestService {
     }
 
 
+    @RvdAuth
     @GET
     @Path("{name}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
@@ -443,6 +456,7 @@ public class ProjectRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @POST
     @Path("{name}/build")
     public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
