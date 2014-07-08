@@ -1,6 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd.http;
 
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -24,13 +26,15 @@ import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 
 import com.google.gson.Gson;
 
-@Path("apps/{appname}")
+@Path("apps")
 public class RvdController extends RestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
 
@@ -77,7 +81,30 @@ public class RvdController extends RestService {
     }
 
     @GET
-    @Path("controller")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listApps(@Context HttpServletRequest request) {
+        List<ProjectItem> items;
+        try {
+            items = projectService.getAvailableProjects(); // there has to be a user in the context. Only logged users are allowed to to run project manager services
+            ProjectService.fillStartUrlsForProjects(items, request);
+
+        } catch (BadWorkspaceDirectoryStructure e) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (URISyntaxException e) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (StorageException e) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+
+        Gson gson = new Gson();
+        return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("{appname}/controller")
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
         logger.info("Received Restcomm GET request");
@@ -89,6 +116,7 @@ public class RvdController extends RestService {
     }
 
     @POST
+    @Path("{appname}/controller")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
@@ -100,7 +128,7 @@ public class RvdController extends RestService {
     }
 
     @GET
-    @Path("resources/{filename}")
+    @Path("{appname}/resources/{filename}")
     public Response getWav(@PathParam("appname") String projectName, @PathParam("filename") String filename ) {
        InputStream wavStream;
         try {
