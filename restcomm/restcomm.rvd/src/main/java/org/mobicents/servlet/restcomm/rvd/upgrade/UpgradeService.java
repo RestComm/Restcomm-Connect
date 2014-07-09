@@ -103,6 +103,8 @@ public class UpgradeService {
                 logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
             } catch (UpgradeException e) {
                 logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
+            } catch (Exception e) {
+                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
             }
         }
         if ( upgradedCount == 0 )

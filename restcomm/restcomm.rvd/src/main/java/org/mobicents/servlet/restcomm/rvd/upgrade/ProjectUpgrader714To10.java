@@ -156,7 +156,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         t.add("playType", o.get("playType"));
 
         String wavUrl = "";
-        if ( o.get("wavUrl") != null && o.get("wavUrl").getAsJsonPrimitive().isString() )
+        if ( o.get("wavUrl") != null && o.get("wavUrl").isJsonPrimitive() &&  o.get("wavUrl").getAsJsonPrimitive().isString() )
             wavUrl = o.get("wavUrl").getAsJsonPrimitive().getAsString();
         JsonObject remote = new JsonObject();
         remote.addProperty("wavUrl", wavUrl);
@@ -166,7 +166,7 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         if ( o.get("wavLocalFilename") != null && o.get("wavLocalFilename").isJsonPrimitive() && o.get("wavLocalFilename").getAsJsonPrimitive().isString() )
             wavLocalFilename = o.get("wavLocalFilename").getAsJsonPrimitive().getAsString();
         JsonObject local = new JsonObject();
-        remote.addProperty("wavLocalFilename", wavLocalFilename);
+        local.addProperty("wavLocalFilename", wavLocalFilename);
         t.add("local", local);
 
         t.add("iface", new JsonObject());
