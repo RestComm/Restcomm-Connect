@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
@@ -136,8 +137,8 @@
 		<module>restcomm.ui</module>
 		<module>restcomm.rvd</module>
 		<module>restcomm.tts.att</module>
-    		<module>restcomm.ussd</module>
-  	</modules>
+		<module>restcomm.ussd</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -545,7 +546,9 @@
 			<build>
 				<plugins>
 					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-release-plugin</artifactId>
+						<version>2.5</version>
 					</plugin>
 				</plugins>
 			</build>
@@ -659,12 +662,10 @@
 		</repository>
 
 		<!-- Local repository for the ATT TTS Java wrapper library -->
-<!-- 		<repository>
-			<id>project</id>
-			<url>file:///${basedir}/restcomm.tts.att/lib</url>
-		</repository>-->
-	</repositories> 
-	
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
+			</repository> -->
+	</repositories>
+
 	<pluginRepositories>
 		<pluginRepository>
 			<id>mobicents-public-repository-group</id>
