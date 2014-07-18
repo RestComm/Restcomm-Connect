@@ -83,7 +83,7 @@
 		<commons-io.version>2.4</commons-io.version>
 		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
-		<mobicents.mgcp.impl.version>6.1.2.GA-TelScale</mobicents.mgcp.impl.version>
+		<mobicents.mgcp.impl.version>6.1.3.436</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
