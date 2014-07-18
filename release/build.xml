@@ -155,11 +155,11 @@
 	<target name="get-telscale-sipservlets" unless="got.telscale-sipservlets">
 		<echo>Downloading Telscale SipServlets version: ${telscale-sipservlets.version}</echo>
 		<exec failonerror="true" executable="wget">
-		    <!--arg value="\-\-user=telscale-file-server@telestax.com" />
-		    <arg value="\-\-password=t31sca13fi13s" /-->
+		    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
+		    <arg value="\-\-password=t31sca13fi13s" />-->
 		    <arg value="--auth-no-challenge" />
-		    <arg value="--http-user=telscale-file-server@telestax.com" />
-		    <arg value="--http-password=t31sca13fi13s" />
+		    <arg value="--http-user=TeleStaxCore" />
+		    <arg value="--http-password=t31sc@1;3" />
 		    <arg value="${telscale-sipservlets.download.url}" />
 		</exec>
 		<move file="${base.dir}/x6vwzbghwbp09ggr8uxu.zip" tofile="${base.dir}/${telscale-sipservlets.download.distro.file}"/>
@@ -282,11 +282,11 @@
 	<target name="get-telscale-media" unless="got.telscale-media">
 		<echo>Downloading Telscale Media version: ${telscale-media.version}</echo>
 		<exec failonerror="true" executable="wget">
-		    <!--arg value="\-\-user=telscale-file-server@telestax.com" />
-		    <arg value="\-\-password=t31sca13fi13s" /-->
+		    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
+		    <arg value="\-\-password=t31sca13fi13s" />-->
 		    <arg value="--auth-no-challenge" />
-		    <arg value="--http-user=telscale-file-server@telestax.com" />
-		    <arg value="--http-password=t31sca13fi13s" />
+		    <arg value="--http-user=TeleStaxCore" />
+		    <arg value="--http-password=t31sc@1;3" />
 		    <arg value="${telscale-media.download.url}" />
 		</exec>
 		<move file="${base.dir}/${telscale-media.download.distro.file}" todir="${checkout.dir}"/>
