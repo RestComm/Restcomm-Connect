@@ -87,7 +87,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>7.0.2.GA-TelScale</sipservletapi.version>
+		<sipservletapi.version>7.0.3.258</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -523,12 +523,6 @@
 				<artifactId>mss-tomcat-embedded-7</artifactId>
 				<version>${mss.arquillian.version}</version>
 				<scope>test</scope>
-				<exclusions>
-				     <exclusion>
-				       <groupId>com.telscale.licensing</groupId>
-				       <artifactId>lce-core</artifactId>
-				     </exclusion>
-				   </exclusions>
 			</dependency>
 
 			<dependency>
