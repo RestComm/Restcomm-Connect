@@ -295,9 +295,9 @@
 	<target name="extract-telscale-media" depends="get-telscale-media">
 		<delete dir="${checkout.telscale-media.dir}" failonerror="false" />
 		<!--unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/-->
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.tomcat.dir}/telscale-media"/>
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.as7.dir}/telscale-media"/>
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.eap6.dir}/telscale-media"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.tomcat.dir}/telscale-media-server"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.as7.dir}/telscale-media-server"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.eap6.dir}/telscale-media-server"/>
 		
 		<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/-->
 		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
