@@ -294,12 +294,12 @@
 
 	<target name="extract-telscale-media" depends="get-telscale-media">
 		<delete dir="${checkout.telscale-media.dir}" failonerror="false" />
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/>
+		<!--unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/-->
 		<unzip src="${telscale-media.distro.zip.path}" dest="${release.tomcat.dir}/telscale-media"/>
 		<unzip src="${telscale-media.distro.zip.path}" dest="${release.as7.dir}/telscale-media"/>
 		<unzip src="${telscale-media.distro.zip.path}" dest="${release.eap6.dir}/telscale-media"/>
 		
-		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
+		<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/-->
 		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
 		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
 		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.eap6.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
@@ -639,7 +639,7 @@
 	
 	
 	<target name="make-final-zip" depends="set-time-stamp">
-		<fixcrlf srcdir="${release.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
+		<!--fixcrlf srcdir="${release.dir}/bin" includes="*.sh" eol="lf" eof="remove" /-->
 		<fixcrlf srcdir="${release.as7.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.eap6.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
@@ -728,7 +728,7 @@
 	</target>
 	
 	<target name="clean">
-	    <delete dir="${release.dir}"/>
+	    <!--delete dir="${release.dir}"/-->
 	    <delete dir="${release.tomcat.dir}"/>
             <delete dir="${release.as7.dir}"/>
 	    <delete dir="${release.hsqldb.dir}"/>
