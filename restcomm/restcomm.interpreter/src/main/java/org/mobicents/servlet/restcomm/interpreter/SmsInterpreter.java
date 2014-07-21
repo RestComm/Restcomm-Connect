@@ -536,10 +536,20 @@ public final class SmsInterpreter extends UntypedActor {
                     context.stop(parser);
                     parser = null;
                 }
+                try{
                 final String type = response.getContentType();
-                if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
-                    parser = parser(response.getContentAsString());
+                final String content = response.getContentAsString();
+                if ((type != null && content != null) && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
+                    parser = parser(content);
                 } else {
+                    final NotificationsDao notifications = storage.getNotificationsDao();
+                    final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
+                    notifications.addNotification(notification);
+                    final StopInterpreter stop = StopInterpreter.instance();
+                    source.tell(stop, source);
+                    return;
+                }
+                } catch (Exception e) {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);
