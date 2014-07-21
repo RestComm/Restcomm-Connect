@@ -25,18 +25,18 @@
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
         <property name="telscale-sipservlets-as7.version" value="7.0.3.258" />
 	<property name="jain-sip-ri.version" value="7.0.3.190" />
-	<property name="telscale-media.version" value="6.1.2.GA" />
+	<property name="telscale-media.version" value="6.1.3.436" />
 	<property name="telscale-lb.version" value="7.0.3.216" />
 	<property name="telscale-diameter.version" value="6.1.2.GA" />
 	
 	
 	<!--GET Telscale-Sip=Servlets & Telscale-Media-Server & Telscale Diameter - properties-->
 	<!-- TelScale Sip Servlet 6.1.3.GA on JBoss AS5-->
-	<property name="telscale-sipservlets.distro.version" value="${telscale-sipservlets.version}-jboss-as-5.1.0.GA-1306131642" />
+	<!--property name="telscale-sipservlets.distro.version" value="${telscale-sipservlets.version}-jboss-as-5.1.0.GA-1306131642" />
 	<property name="telscale-sipservlets.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.distro.version}.zip" />
-	<!--property name="telscale-sipservlets.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/${telscale-sipservlets.download.distro.file}" /-->
+	<!\-\-property name="telscale-sipservlets.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/${telscale-sipservlets.download.distro.file}" /\-\->
 	<property name="telscale-sipservlets.download.url" value="https://app.box.com/shared/static/x6vwzbghwbp09ggr8uxu.zip" />
-	<property name="telscale-sipservlets.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.download.distro.file}" />
+	<property name="telscale-sipservlets.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.download.distro.file}" /-->
 
 	<!-- TelScale SIP Servlets 7.x on Tomcat 7 -->
 	<!-- http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/TelScale-SIP-Servlets-7.0.2-SNAPSHOT-apache-tomcat-7.0.50.zip -->
@@ -86,8 +86,9 @@
 	<property name="telscale-sipservlets-nolce.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/6.1.3.GA/no-lce/${telscale-sipservlets-nolce.download.distro.file}" />
 	<property name="telscale-sipservlets-nolce.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets-nolce.download.distro.file}" />
 	
-	<property name="telscale-media.download.distro.file" value="TelScale-media-${telscale-media.version}.zip" />
-	<property name="telscale-media.download.url" value="ftp://ftp.box.com/TelScale%20media/${telscale-media.version}/${telscale-media.download.distro.file}" />
+	<property name="telscale-media.download.distro.file" value="TelScale-media-server-${telscale-media.version}.zip" />
+	<!--property name="telscale-media.download.url" value="ftp://ftp.box.com/TelScale%20media/${telscale-media.version}/${telscale-media.download.distro.file}" /-->
+	<property name="telscale-media.download.url" value="http://ci.telestax.com/job/TelScale-media-Release/lastSuccessfulBuild/artifact/${telscale-media.download.distro.file}" />
 	<property name="telscale-media.distro.zip.path" value="${checkout.dir}/${telscale-media.download.distro.file}" />
 	
 	<property name="telscale-diameter.download.distro.file" value="TelScale-diameter-${telscale-diameter.version}.zip" />
@@ -143,9 +144,10 @@
 	
 	<!--GET Telscale-Sip=Servlets & Telscale-Media-Server & Telscale Diameter - downloads-->
 	
-	<target name="get-deps" depends="get-telscale-sipservlets,get-telscale-sipservlets-tomcat,get-telscale-sipservlets-as7,get-telscale-sipservlets-eap6,get-telscale-media"/> <!--,get-telscale-diameter" -->
-	<target name="get-ami-deps" depends="get-ami-telscale-sipservlets,get-telscale-media"/> <!--,get-telscale-diameter" -->
-	<target name="extract-deps" depends="extract-telscale-sipservlets,extract-telscale-sipservlets-tomcat,extract-telscale-sipservlets-as7,extract-telscale-sipservlets-eap6,extract-telscale-media"/> <!--,extract-telscale-diameter" -->
+	<target name="get-deps" depends="get-telscale-sipservlets-tomcat,get-telscale-sipservlets-as7,get-telscale-sipservlets-eap6,get-telscale-media"/> <!--,get-telscale-diameter" -->
+	<target name="get-ami-deps" depends="get-ami-telscale-sipservlets,get-telscale-media"/> <!--,get-telscale
+-diameter" -->
+	<target name="extract-deps" depends="extract-telscale-sipservlets-tomcat,extract-telscale-sipservlets-as7,extract-telscale-sipservlets-eap6,extract-telscale-media"/> <!--,extract-telscale-diameter" -->
 	<target name="extract-ami-deps" depends="extract-ami-telscale-sipservlets,extract-telscale-media"/> <!--,extract-telscale-diameter" -->
 	
 	<!--SipServlets JBoss-->
@@ -153,11 +155,11 @@
 	<target name="get-telscale-sipservlets" unless="got.telscale-sipservlets">
 		<echo>Downloading Telscale SipServlets version: ${telscale-sipservlets.version}</echo>
 		<exec failonerror="true" executable="wget">
-		    <!--arg value="\-\-user=telscale-file-server@telestax.com" />
-		    <arg value="\-\-password=t31sca13fi13s" /-->
+		    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
+		    <arg value="\-\-password=t31sca13fi13s" />-->
 		    <arg value="--auth-no-challenge" />
-		    <arg value="--http-user=telscale-file-server@telestax.com" />
-		    <arg value="--http-password=t31sca13fi13s" />
+		    <arg value="--http-user=TeleStaxCore" />
+		    <arg value="--http-password=t31sc@1;3" />
 		    <arg value="${telscale-sipservlets.download.url}" />
 		</exec>
 		<move file="${base.dir}/x6vwzbghwbp09ggr8uxu.zip" tofile="${base.dir}/${telscale-sipservlets.download.distro.file}"/>
@@ -278,10 +280,13 @@
 	<!--Media-->
 	<available file="${telscale-media.distro.zip.path}" property="got.telscale-media" />
 	<target name="get-telscale-media" unless="got.telscale-media">
-		<echo>Downloading Telscale Slee version: ${telscale-media.version}</echo>
+		<echo>Downloading Telscale Media version: ${telscale-media.version}</echo>
 		<exec failonerror="true" executable="wget">
-		    <arg value="--user=telscale-file-server@telestax.com" />
-		    <arg value="--password=t31sca13fi13s" />
+		    <!--<arg value="\-\-user=telscale-file-server@telestax.com" />
+		    <arg value="\-\-password=t31sca13fi13s" />-->
+		    <arg value="--auth-no-challenge" />
+		    <arg value="--http-user=TeleStaxCore" />
+		    <arg value="--http-password=t31sc@1;3" />
 		    <arg value="${telscale-media.download.url}" />
 		</exec>
 		<move file="${base.dir}/${telscale-media.download.distro.file}" todir="${checkout.dir}"/>
@@ -289,12 +294,12 @@
 
 	<target name="extract-telscale-media" depends="get-telscale-media">
 		<delete dir="${checkout.telscale-media.dir}" failonerror="false" />
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/>
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.tomcat.dir}/telscale-media"/>
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.as7.dir}/telscale-media"/>
-		<unzip src="${telscale-media.distro.zip.path}" dest="${release.eap6.dir}/telscale-media"/>
+		<!--unzip src="${telscale-media.distro.zip.path}" dest="${release.dir}/telscale-media"/-->
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.tomcat.dir}/telscale-media/telscale-media-server"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.as7.dir}/telscale-media/telscale-media-server"/>
+		<unzip src="${telscale-media.distro.zip.path}" dest="${release.eap6.dir}/telscale-media/telscale-media-server"/>
 		
-		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
+		<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/-->
 		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
 		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
 		<copy file="${basedir}/mms-server-beans.xml" tofile="${release.eap6.dir}/telscale-media/telscale-media-server/deploy/server-beans.xml" failonerror="true"/>
@@ -359,34 +364,34 @@
     <target name="copy-restcomm">
         <echo>Copy restcomm </echo>
 		<!--JBOSS AS5 default profile-->
-	<delete file="${release.dir}/server/default/conf/dars/mobicents-dar.properties" failonerror="false" />
+	<!--delete file="${release.dir}/server/default/conf/dars/mobicents-dar.properties" failonerror="false" />
 	<copy tofile="${release.dir}/server/default/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
-        <!--copy tofile="${release.dir}/server/default/deploy/restcomm.war" failonerror="true" 
-        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
-	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
+        <!\-\-copy tofile="${release.dir}/server/default/deploy/restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/\-\->
+	<!\-\- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt \-\->
         <copy todir="${release.dir}/server/default/deploy/restcomm.war" failonerror="true">
                 <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
-	<!-- Copy Admin UI -->
+	<!\-\- Copy Admin UI \-\->
         <copy tofile="${release.dir}/server/default/deploy/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 
-	<!-- Copy RVD -->
+	<!\-\- Copy RVD \-\->
         <copy todir="${release.dir}/server/default/deploy/restcomm-rvd.war" failonerror="true">
 		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset> 
         </copy>
 
-	<!--Copy Rvd ES Demo-->	
+	<!\-\-Copy Rvd ES Demo\-\->	
 	<copy tofile="${release.dir}/server/default/deploy/RvdExternalServicesDemo.war" failonerror="true"
 		file="${basedir}/RvdExternalServicesDemo.war"/>
 
 
-	<!-- Copy Config scripts -->
+	<!\-\- Copy Config scripts \-\->
 	<copy toDir="${release.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
 			<include name="**/*"/>
@@ -394,39 +399,39 @@
 		</fileset>
 	</copy>
 
-	<!-- Copy EULA -->
+	<!\-\- Copy EULA \-\->
         <copy tofile="${release.dir}/Telestax-EULA.pdf" failonerror="true" 
-        	file="${basedir}/Telestax-EULA.pdf"/>
+        	file="${basedir}/Telestax-EULA.pdf"/-->
 
 	<!--JBoss AS5 all profile-->
-	<delete file="${release.dir}/server/all/conf/dars/mobicents-dar.properties" failonerror="false" />
+	<!--delete file="${release.dir}/server/all/conf/dars/mobicents-dar.properties" failonerror="false" />
 	<copy tofile="${release.dir}/server/all/conf/dars/mobicents-dar.properties" failonerror="true" 
         	file="${basedir}/mobicents-dar.properties"/>
-        <!--copy tofile="${release.dir}/server/all/deploy/restcomm.war" failonerror="true" 
-        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
-	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
+        <\!\-\-copy tofile="${release.dir}/server/all/deploy/restcomm.war" failonerror="true" 
+        	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/\-\->
+	<\!\-\- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt \-\->
         <copy todir="${release.dir}/server/all/deploy/restcomm.war" failonerror="true">
                 <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
-	<!-- Copy Admin UI -->
+	<\!\-\- Copy Admin UI \-\->
         <copy tofile="${release.dir}/server/all/deploy/restcomm-management.war" failonerror="true" 
         	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 
-	<!-- Copy RVD -->
+	<!\-\- Copy RVD \-\->
         <copy todir="${release.dir}/server/all/deploy/restcomm-rvd.war" failonerror="true" >
 		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset> 
         </copy>
 
-	<!--Copy Rvd ES Demo-->	
+	<!\-\-Copy Rvd ES Demo\-\->	
 	<copy tofile="${release.dir}/server/all/deploy/RvdExternalServicesDemo.war" failonerror="true"
 		file="${basedir}/RvdExternalServicesDemo.war"/>
 
 	<chmod dir="${release.dir}/bin" perm="ugo+rx" 
-       		includes="**/*.sh"/>
+       		includes="**/*.sh"/-->
 
 	<!--tomcat-->
 	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true" 
@@ -634,11 +639,11 @@
 	
 	
 	<target name="make-final-zip" depends="set-time-stamp">
-		<fixcrlf srcdir="${release.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
+		<!--fixcrlf srcdir="${release.dir}/bin" includes="*.sh" eol="lf" eof="remove" /-->
 		<fixcrlf srcdir="${release.as7.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.eap6.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
-		<zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}.zip" filesonly="false">
+		<!--zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}.zip" filesonly="false">
 			<zipfileset dir="${release.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}/bin" >
                 <include name="*.sh" />
             </zipfileset>
@@ -655,7 +660,7 @@
             </zipfileset>
             <zipfileset dir="${release.dir}" prefix="TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}" 
             	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
-		</zip>
+		</zip-->
         <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}.zip" filesonly="false">
 			<zipfileset dir="${release.as7.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}/bin" >
 		                <include name="*.sh" />
@@ -723,7 +728,7 @@
 	</target>
 	
 	<target name="clean">
-	    <delete dir="${release.dir}"/>
+	    <!--delete dir="${release.dir}"/-->
 	    <delete dir="${release.tomcat.dir}"/>
             <delete dir="${release.as7.dir}"/>
 	    <delete dir="${release.hsqldb.dir}"/>
