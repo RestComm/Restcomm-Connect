@@ -179,6 +179,7 @@
 		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
+			<version>${sip-ri.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
