@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Dial callerId="+13055872294">
-        <Number url="http://localhost:8080/restcomm/hello-play.xml">
+        <Number url="http://127.0.0.1:8080/restcomm/hello-play.xml">
             131313
         </Number>
     </Dial>
