@@ -46,8 +46,8 @@ configRestcomm() {
 	outbound_ip="$3"
 	
 	if [ -n "$static_address" ]; then 
-		sed -e "s|<local-address>$IP_ADDRESS_PATTERN<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-	        -e "s|<remote-address>$IP_ADDRESS_PATTERN<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+		sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
+	        -e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 	        -e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
 	        -e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
 	        -e "s|<external-address>.*<\/external-address>|<external-address>$static_address<\/external-address>|" \
@@ -58,8 +58,8 @@ configRestcomm() {
 	        -e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$static_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
 		-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
 	else
-		sed -e "s|<local-address>$IP_ADDRESS_PATTERN<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-	        -e "s|<remote-address>$IP_ADDRESS_PATTERN<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+		sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
+	        -e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 	        -e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
 	        -e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
 	        -e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$bind_address:8080\/restcomm\/audio<\/prompts-uri>|" \
