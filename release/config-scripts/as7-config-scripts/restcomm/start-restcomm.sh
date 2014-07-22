@@ -37,7 +37,11 @@ startRestcomm() {
 			echo "Using IP Address: $BIND_ADDRESS"
 			;;
 		*)
-			startRestComm 'standalone' $bind_address
+			# start restcomm on standalone mode
+			chmod +x $RESTCOMM_HOME/bin/standalone.sh
+			screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address
+			echo 'TelScale RestComm started running on standalone mode. Screen session: restcomm.'
+			echo "Using IP Address: $BIND_ADDRESS"
 			;;
 	esac
 
