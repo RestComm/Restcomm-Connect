@@ -57,5 +57,5 @@ configStandalone() {
 ## MAIN
 configLogs
 configLoadBalancer "$BIND_ADDRESS"
-configSipStack
+configSipStack "$BIND_ADDRESS"
 configStandalone
