@@ -74,6 +74,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
+    protected Configuration voipInnovationsConfiguration;
+    protected Configuration telestaxProxyConfiguration;
+    protected Boolean telestaxProxyEnabled;
+    protected String uri, username, password, endpoint;
 
     private String header;
 
@@ -99,8 +103,22 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new IncomingPhoneNumberListConverter(runtime));
         xstream.registerConverter(new RestCommResponseConverter(runtime));
-        final Configuration vi = configuration.subset("voip-innovations");
-        header = header(vi.getString("login"), vi.getString("password"));
+
+        voipInnovationsConfiguration = configuration.subset("voip-innovations");
+        telestaxProxyConfiguration = configuration.subset("telestax-proxy");
+        telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
+        if (telestaxProxyEnabled) {
+            uri = telestaxProxyConfiguration.getString("uri");
+            username = telestaxProxyConfiguration.getString("login");
+            password = telestaxProxyConfiguration.getString("password");
+            endpoint = telestaxProxyConfiguration.getString("endpoint");
+        } else {
+            uri = voipInnovationsConfiguration.getString("uri");
+            username = voipInnovationsConfiguration.getString("login");
+            password = voipInnovationsConfiguration.getString("password");
+            endpoint = voipInnovationsConfiguration.getString("endpoint");
+        }
+        this.header = header(username, password);
     }
 
     private String header(final String login, final String password) {
@@ -114,7 +132,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected boolean assignDid(final String did) {
         if (did != null && !did.isEmpty()) {
-            final Configuration vi = configuration.subset("voip-innovations");
             final StringBuilder buffer = new StringBuilder();
             buffer.append("<request id=\"\">");
             buffer.append(header);
@@ -122,12 +139,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
             buffer.append("<item>");
             buffer.append("<did>").append(did).append("</did>");
-            buffer.append("<endpointgroup>").append(vi.getString("endpoint")).append("</endpointgroup>");
+            buffer.append("<endpointgroup>").append(endpoint).append("</endpointgroup>");
             buffer.append("</item>");
             buffer.append("</body>");
             buffer.append("</request>");
             final String body = buffer.toString();
-            final HttpPost post = new HttpPost(vi.getString("uri"));
+            final HttpPost post = new HttpPost(uri);
             try {
                 List<NameValuePair> parameters = new ArrayList<NameValuePair>();
                 parameters.add(new BasicNameValuePair("apidata", body));
@@ -159,8 +176,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             buffer.append("</body>");
             buffer.append("</request>");
             final String body = buffer.toString();
-            final Configuration vi = configuration.subset("voip-innovations");
-            final HttpPost post = new HttpPost(vi.getString("uri"));
+            final HttpPost post = new HttpPost(uri);
             try {
                 List<NameValuePair> parameters = new ArrayList<NameValuePair>();
                 parameters.add(new BasicNameValuePair("apidata", body));
