@@ -562,7 +562,7 @@ public class DialTest {
         }
         
         bobCall.listenForMessage();
-        assertTrue(bobCall.waitForMessage(30 * 1000));
+        assertTrue(bobCall.waitForMessage(60 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
