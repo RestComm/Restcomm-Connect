@@ -88,7 +88,8 @@
 	
 	<property name="telscale-media.download.distro.file" value="TelScale-media-server-${telscale-media.version}.zip" />
 	<!--property name="telscale-media.download.url" value="ftp://ftp.box.com/TelScale%20media/${telscale-media.version}/${telscale-media.download.distro.file}" /-->
-	<property name="telscale-media.download.url" value="http://ci.telestax.com/job/TelScale-media-Release/lastSuccessfulBuild/artifact/${telscale-media.download.distro.file}" />
+	<!--<property name="telscale-media.download.url" value="http://ci.telestax.com/job/TelScale-media-Release/lastSuccessfulBuild/artifact/${telscale-media.download.distro.file}" />-->
+	<property name="telscale-media.download.url" value="http://ci.telestax.com/job/TelScale-media-Release/436/artifact/${telscale-media.download.distro.file}" />
 	<property name="telscale-media.distro.zip.path" value="${checkout.dir}/${telscale-media.download.distro.file}" />
 	
 	<property name="telscale-diameter.download.distro.file" value="TelScale-diameter-${telscale-diameter.version}.zip" />
