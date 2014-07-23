@@ -86,6 +86,11 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
+    protected Configuration voipInnovationsConfiguration;
+    protected Configuration telestaxProxyConfiguration;
+    protected Configuration activeConfiguration;
+    protected Boolean telestaxProxyEnabled;
+    protected String uri, username, password, endpoint;
     private XStream xstream;
     protected Gson gson;
 
@@ -99,13 +104,28 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         super.init(configuration.subset("runtime-settings"));
-        configuration = configuration.subset("voip-innovations");
-        this.header = header(configuration.getString("login"), configuration.getString("password"));
+        voipInnovationsConfiguration = configuration.subset("voip-innovations");
+        telestaxProxyConfiguration = configuration.subset("telestax-proxy");
+        telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
+        if (telestaxProxyEnabled) {
+            uri = telestaxProxyConfiguration.getString("uri");
+            username = telestaxProxyConfiguration.getString("login");
+            password = telestaxProxyConfiguration.getString("password");
+            endpoint = telestaxProxyConfiguration.getString("endpoint");
+            activeConfiguration = telestaxProxyConfiguration;
+        } else {
+            uri = voipInnovationsConfiguration.getString("uri");
+            username = voipInnovationsConfiguration.getString("login");
+            password = voipInnovationsConfiguration.getString("password");
+            endpoint = voipInnovationsConfiguration.getString("endpoint");
+            activeConfiguration = voipInnovationsConfiguration;
+        }
+        this.header = header(username, password);
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
-        xstream.registerConverter(new AvailablePhoneNumberConverter(configuration));
-        xstream.registerConverter(new AvailablePhoneNumberListConverter(configuration));
-        xstream.registerConverter(new RestCommResponseConverter(configuration));
+        xstream.registerConverter(new AvailablePhoneNumberConverter(activeConfiguration));
+        xstream.registerConverter(new AvailablePhoneNumberListConverter(activeConfiguration));
+        xstream.registerConverter(new RestCommResponseConverter(activeConfiguration));
         xstream.alias("response", VoipInnovationsResponse.class);
         xstream.alias("header", VoipInnovationsHeader.class);
         xstream.alias("body", VoipInnovationsBody.class);
@@ -154,7 +174,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
             buffer.append("</body>");
             buffer.append("</request>");
             final String body = buffer.toString();
-            final HttpPost post = new HttpPost(configuration.getString("uri"));
+            final HttpPost post = new HttpPost(uri);
             try {
                 List<NameValuePair> parameters = new ArrayList<NameValuePair>();
                 parameters.add(new BasicNameValuePair("apidata", body));
