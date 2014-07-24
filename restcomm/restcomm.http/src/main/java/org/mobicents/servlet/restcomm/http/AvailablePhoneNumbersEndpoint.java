@@ -105,7 +105,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         super.init(configuration.subset("runtime-settings"));
         voipInnovationsConfiguration = configuration.subset("voip-innovations");
-        telestaxProxyConfiguration = configuration.subset("telestax-proxy");
+        telestaxProxyConfiguration = configuration.subset("runtime-settings").subset("telestax-proxy");
         telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
         if (telestaxProxyEnabled) {
             uri = telestaxProxyConfiguration.getString("uri");
