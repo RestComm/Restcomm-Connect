@@ -105,7 +105,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(runtime));
 
         voipInnovationsConfiguration = configuration.subset("voip-innovations");
-        telestaxProxyConfiguration = configuration.subset("telestax-proxy");
+        telestaxProxyConfiguration = runtime.subset("telestax-proxy");
         telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
         if (telestaxProxyEnabled) {
             uri = telestaxProxyConfiguration.getString("uri");
