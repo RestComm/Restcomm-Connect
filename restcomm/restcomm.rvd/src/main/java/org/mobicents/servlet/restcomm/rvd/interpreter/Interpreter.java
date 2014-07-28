@@ -33,7 +33,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdContext;
+import org.mobicents.servlet.restcomm.rvd.ProjectLogger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
@@ -103,6 +103,23 @@ public class Interpreter {
     private RvdSettings rvdSettings;
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
+    private ProjectLogger projectLogger;
+
+    public ProjectLogger getProjectLogger() {
+        return projectLogger;
+    }
+
+    public void setProjectLogger(ProjectLogger projectLogger) {
+        this.projectLogger = projectLogger;
+    }
+
+    public void setRvdSettings(RvdSettings rvdSettings) {
+        this.rvdSettings = rvdSettings;
+    }
+
+    public void setProjectStorage(ProjectStorage projectStorage) {
+        this.projectStorage = projectStorage;
+    }
 
     private XStream xstream;
     private Gson gson;
@@ -118,12 +135,12 @@ public class Interpreter {
     private Map<String, String> variables = new HashMap<String, String>();
     private List<NodeName> nodeNames;
 
-
-    public Interpreter(RvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        this.rvdSettings = rvdContext.getSettings();
-        this.projectStorage = rvdContext.getProjectStorage();
+    public Interpreter(String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+        //this.rvdSettings = rvdContext.getSettings();
+        //this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
-        this.targetParam = targetParam;
+        this.targetParam = requestParams.getFirst("target");
+        //this.targetParam = targetParam;
         this.appName = appName;
         this.requestParams = requestParams;
 
@@ -425,7 +442,9 @@ public class Interpreter {
                 // Send request
                 CloseableHttpResponse response;
                 logger.info("Running ES request");
-                logger.debug("Requesting from url: " + url);
+                String message = "Requesting from url: " + url;
+                logger.debug(message);
+                projectLogger.log(message).tag("app",appName).tag("ES").tag("REQUEST").done();
                 if ( "POST".equals(esStep.getMethod()) ) {
                     HttpPost post = new HttpPost(url);
                     List <NameValuePair> values = new ArrayList <NameValuePair>();
@@ -433,6 +452,7 @@ public class Interpreter {
                         values.add(new BasicNameValuePair(urlParam.getName(), urlParam.getValue()));
                     post.setEntity(new UrlEncodedFormEntity(values));
                     post.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(), esStep.getPassword()));
+                    projectLogger.log(post).tag("app",appName).tag("ES").tag("POST").done();
                     response = client.execute( post );
                 } else
                 if ( esStep.getMethod() == null || esStep.getMethod().equals("GET") ) {
@@ -450,6 +470,7 @@ public class Interpreter {
                         String entity_string = EntityUtils.toString(entity);
                         logger.info("ES: Received " + entity_string.length() + " bytes");
                         logger.debug("ES Response: " + entity_string);
+                        projectLogger.log(entity_string).tag("app",appName).tag("ES").tag("RESPONSE").done();
                         JsonElement response_element = parser.parse(entity_string);
 
                         String nextModuleName = null;
@@ -486,6 +507,7 @@ public class Interpreter {
 
                         }
                         logger.debug("variables after processing ExternalService step: " + variables.toString() );
+                        projectLogger.log("variables after processing ExternalService step: " + variables.toString()).tag("app",appName).tag("ES").tag("VARIABLES").done();
                         if ( esStep.getDoRouting() ) {
                             String next = "";
                             if ( "fixed".equals( esStep.getNextType() ) )
@@ -495,6 +517,9 @@ public class Interpreter {
                                 next = nextModuleName;
                             if ( "".equals(next) )
                                 throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
+
+                            projectLogger.log("Routing enabled. Next module: " + next).tag("app",appName).tag("ES").tag("ROUTING").done();
+
                             return next;
                         }
                     }

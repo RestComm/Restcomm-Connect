@@ -26,6 +26,7 @@ public class RvdSettings {
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
     public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
+    public static final String PROJECT_LOG_FILENAME = "projectLog";
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
@@ -67,6 +68,10 @@ public class RvdSettings {
 
     public String getWorkspaceBasePath() {
         return this.workspaceBasePath;
+    }
+
+    public String getProjectBasePath(String projectName) {
+        return this.workspaceBasePath + File.separator + projectName;
     }
 
     // for RVD 7.1.5 and later
