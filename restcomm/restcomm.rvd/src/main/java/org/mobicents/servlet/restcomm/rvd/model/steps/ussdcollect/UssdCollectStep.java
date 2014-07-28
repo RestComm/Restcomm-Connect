@@ -69,12 +69,12 @@ public class UssdCollectStep extends Step {
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
                     // seems we found out menu selection
                     logger.debug("seems we found our menu selection");
-                    interpreter.interpret(mapping.next,null);
+                    interpreter.interpret(mapping.next,null,null);
                     handled = true;
                 }
             }
             if (!handled) {
-                interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null);
+                interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null,null);
             }
         }
         if ("collectdigits".equals(gatherType)) {
@@ -94,7 +94,7 @@ public class UssdCollectStep extends Step {
             // in any case initialize the module-scoped variable
             interpreter.getVariables().put(variableName, variableValue);
 
-            interpreter.interpret(collectdigits.next,null);
+            interpreter.interpret(collectdigits.next,null,null);
         }
     }
 }

@@ -1,0 +1,24 @@
+<div class="step redirect-step panel panel-rvdstep">
+	<div class="panel-heading">
+			<step-heading></step-heading>
+	</div>
+
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+		<div class="row">
+			<div class="col-md-12">				
+				<form name="form" novalidate>
+					<div class="input-group input-group-sm">
+						<span class="input-group-addon">Continue to</span>
+						<input type='text' name='url' ng-model='step.url' class="form-control" required ></input>
+						<span class='input-group-addon'>method</span>
+						<select name="method" ng-model='step.method' ng-options='method for method in methods' class="form-control">
+							<option value=""></option>
+						</select>
+					</div>
+					<div class="validation-error" ng-show="form.url.$invalid">Url is missing</div>
+				</form>
+				
+			</div>
+		</div>
+	</div>
+</div>
