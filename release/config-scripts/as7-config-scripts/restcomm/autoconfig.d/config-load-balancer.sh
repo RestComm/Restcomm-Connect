@@ -50,7 +50,7 @@ configStandalone() {
 		path_name="org.mobicents.ha.balancing.only"
 	fi
 	
-	sed -e "s|stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\".*\" |stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\"$path_name\" |" $lb_file > $lb_file.bak
+	sed -e "s|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\".*\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\"$path_name\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|" $lb_file > $lb_file.bak
 	mv -f $lb_file.bak $lb_file
 }
 
