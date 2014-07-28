@@ -150,6 +150,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                 parameters.add(new BasicNameValuePair("apidata", body));
                 post.setEntity(new UrlEncodedFormEntity(parameters));
                 final DefaultHttpClient client = new DefaultHttpClient();
+                if(telestaxProxyEnabled) {
+                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    post.addHeader("RequestType", "AssignDid");
+                }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                     final String content = StringUtils.toString(response.getEntity().getContent());
@@ -182,6 +188,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                 parameters.add(new BasicNameValuePair("apidata", body));
                 post.setEntity(new UrlEncodedFormEntity(parameters));
                 final DefaultHttpClient client = new DefaultHttpClient();
+                if(telestaxProxyEnabled) {
+                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    post.addHeader("RequestType", "IsValidDid");
+                }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                     final String content = StringUtils.toString(response.getEntity().getContent());
