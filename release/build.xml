@@ -23,6 +23,7 @@
 	
 	<!--Telscale binaries versions-->
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
+	<property name="sipservlets-build" value="266"/>
         <property name="telscale-sipservlets-as7.version" value="7.0.3.266" />
 	<property name="jain-sip-ri.version" value="7.0.3.190" />
 	<property name="telscale-media.version" value="6.1.3.436" />
@@ -49,7 +50,7 @@
         <property name="telscale-sipservlets.tomcat.distro.version" value="${telscale-sipservlets-as7.version}-apache-tomcat-7.0.50" />
         <property name="telscale-sipservlets.tomcat.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.tomcat.distro.version}.zip" />
         <!-- 	<property name="telscale-sipservlets.tomcat.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.2.GA/${telscale-sipservlets.tomcat.download.distro.file}" />-->
-	<property name="telscale-sipservlets.tomcat.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.tomcat.download.distro.file}" />
+	<property name="telscale-sipservlets.tomcat.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/${sipservlets-build}/artifact/${telscale-sipservlets.tomcat.download.distro.file}" />
         <property name="telscale-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.tomcat.download.distro.file}" />
 			
 	<!-- TelScale SIP Servlets 7.x on JBoss AS7-->
@@ -61,7 +62,7 @@
         <property name="telscale-sipservlets.as7.distro.version" value="${telscale-sipservlets-as7.version}-jboss-as-7.2.0.Final" />
         <property name="telscale-sipservlets.as7.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.as7.distro.version}.zip" />
 	<!--<property name="telscale-sipservlets.as7.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.2.GA/TelScale-SIP-Servlets-7.0.2.GA-jboss-as-7.2.0.Final.zip" />-->
-        <property name="telscale-sipservlets.as7.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.as7.download.distro.file}" />
+        <property name="telscale-sipservlets.as7.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/${sipservlets-build}/artifact/${telscale-sipservlets.as7.download.distro.file}" />
         <property name="telscale-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.as7.download.distro.file}" />
 
 	<!--TelScale SIP Servlets 7.x on JBoss EAP6-->
@@ -73,7 +74,7 @@
 	<property name="telscale-sipservlets.eap6.distro.version" value="${telscale-sipservlets-as7.version}-jboss-eap-6.2" />
         <property name="telscale-sipservlets.eap6.download.distro.file" value="TelScale-SIP-Servlets-${telscale-sipservlets.eap6.distro.version}.zip" />
         <!--<property name="telscale-sipservlets.eap6.download.url" value="ftp://ftp.box.com/TelScale%20SIP%20Servlets/7.0.2.GA/TelScale-SIP-Servlets-7.0.2.GA-jboss-eap-6.2.zip" />-->
-        <property name="telscale-sipservlets.eap6.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/lastSuccessfulBuild/artifact/${telscale-sipservlets.eap6.download.distro.file}" />
+        <property name="telscale-sipservlets.eap6.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/${sipservlets-build}/artifact/${telscale-sipservlets.eap6.download.distro.file}" />
         <property name="telscale-sipservlets.eap6.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.eap6.download.distro.file}" />
 
 	<property name="hsqldb.download.url" value="http://downloads.sourceforge.net/project/hsqldb/hsqldb/hsqldb_1_8_0/hsqldb_1_8_0_10.zip" />
