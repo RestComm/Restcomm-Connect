@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
-import org.mobicents.servlet.restcomm.rvd.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
@@ -54,11 +54,6 @@ public class DialStep extends Step {
         if ( RvdUtils.isEmpty(nextModule) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
-        String publicRecordingUrl = interpreter.getRequestParams().getFirst("PublicRecordingUrl");
-        if ( publicRecordingUrl != null ) {
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "PublicRecordingUrl", publicRecordingUrl);
-        }
-
         String restcommRecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
         if ( restcommRecordingUrl != null ) {
             try {
@@ -81,7 +76,7 @@ public class DialStep extends Step {
         if ( DialCallDuration != null )
             interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallDuration", DialCallDuration);
 
-        interpreter.interpret( nextModule, null );
+        interpreter.interpret( nextModule, null, null );
     }
 
 }

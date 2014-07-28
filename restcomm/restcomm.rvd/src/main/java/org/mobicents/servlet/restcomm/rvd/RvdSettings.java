@@ -21,8 +21,11 @@ public class RvdSettings {
 
     public static final String WAVS_DIRECTORY_NAME = "wavs";
     private static final String RVD_PROJECT_VERSION = "1.0"; // version for rvd project syntax
+    private static final String PACKAGING_VERSION = "1.0";
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
+    public static final String PACKAGING_DIRECTORY_NAME = "packaging";
+    public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
@@ -73,6 +76,10 @@ public class RvdSettings {
 
     public static String getRvdProjectVersion() {
         return RVD_PROJECT_VERSION;
+    }
+
+    public static String getPackagingVersion() {
+        return PACKAGING_VERSION;
     }
 
     public String getExternalServiceBase() {

@@ -88,6 +88,11 @@ label {
 	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 0, 0, 0.6)
 }
 
+.ng-invalid.form-control.warn-unfocused {
+	border-color: rgba(255, 0, 0, 0.6);
+	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 0, 0, 0.6)
+}
+
 .validation-error, .error-message {
 	font-size: 85%;
 	color: rgba(255, 0, 0, 0.6);
@@ -255,7 +260,7 @@ label {
 	margin: 10px 5px 5px 0px;
 }
 
-.rvd-project-item .confirm-delete {
+.rvd-project-item .delete-confirmation {
 	margin-top:5px; 
 	margin-bottom:15px;
 }
@@ -348,6 +353,7 @@ li.verb {
 .button-say {
 }
 
+
 /* make draggable .label's occupy some space when dragged onto to sortables */
 .label.ui-sortable-placeholder:empty {
 	display: inline;
@@ -411,6 +417,14 @@ li.verb {
 	margin-right: 12px;
 }
 
+.rvd-panel {
+	border: 1px solid #d0d0d0;
+}
+
+.rvd-panel .panel-heading {
+	background-color: #f0f0f0;
+}
+
 /* 
  * 
  * BOOTSTRAP CUSTOMIZATIONS 
@@ -431,6 +445,22 @@ li.verb {
 	margin-left: 8px;
 }
 
+.packaging-config-option {
+	box-shadow: rgb(136, 136, 136) 0px 0px 3px;
+	padding-left: 12px;
+	padding-top: 1px;
+	border-radius: 2px;
+	background-color: white;
+}
+
+.packaging-config-option .close-button {
+	position: absolute;
+	right: 26px;
+	top: 9px;
+}
+label {
+	color: #737373;
+}
 
 
 
@@ -493,5 +523,30 @@ li.verb {
 textarea.medium {
 	height: 150px;
 }
+
+/* ------------------ #/packaging/ view -------------------- */
+.rvd-packaging .col-md-4 .rvd-appversion {
+	width: 200px;
+}
+
+/* ----------------- #/project-manager/* view */
+.rvd-project-manager .rvd-project-item i {
+	color: #333;
+}
+
+/* ----------------- #/login view -------------------------- */
+
+
+/* ----------------- index.html ---------------------------- */
+.notifications-wrapper {
+    position: fixed;
+    text-align: center;
+    width: 100%;
+    z-index: 1;
+    top: 60px;
+}
+
+
+
 
 

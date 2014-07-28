@@ -1,0 +1,127 @@
+<div class="step ussdCollect-step panel panel-rvdstep">
+	<div class="panel-heading">
+			<step-heading></step-heading>
+	</div>
+
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+		<div class="row">
+			<div class="col-md-12 form-group">	
+				<div basic-draggable drop-target='.ussd-collect-messages' class="label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">					
+				<div basic-sortable list-model='step.messages' class='ussd-collect-messages form-group' ng-class='{"drop-area-image":step.messages.length==0}' item-added='nestUssdMessage'>	
+					<div ng-repeat='message in step.messages'>
+						<div class="input-group input-group form-group">
+							<span class="input-group-addon"><i class='fa fa-phone'></i></span>
+							<input ng-model='message.text' type='text' class='form-control' placeholder='message text here...' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type the message text. Add multiple messages to display separate lines.">
+							<!-- <span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.advancedShown = !dialnoun.advancedShown"></span> -->
+							<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeNestedMessage(step,message)"></span>
+						</div>
+					</div>
+				</div>
+				<div class='help-block' ng-show='countUssdCollectChars(step) > 0'>{{countUssdCollectChars(step)}} occupied</div>				
+					
+					
+				<!--		
+				<div class="form-group">
+					<span class="help-block">Message &nbsp;<i class="fa fa-info-circle rvd-clickable" popover='Display some help message [...]' popover-placement='top'></i></span>
+					<textarea ng-model='step.text' class="form-control medium"></textarea>
+					<div class='help-block' ng-show="countUssdCharsLeft(step.text) >= 0">{{countUssdCharsLeft(step.text)}} characters left</div>
+					<div class="validation-error" ng-show="countUssdCharsLeft(step.text) < 0">Message will be truncated!</div>						
+				</div>
+				-->
+				
+				<br/>
+				<div class="btn-group form-group">
+				  <button ng-click="step.gatherType='menu'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='menu'}"><i class="fa fa-sitemap">&nbsp;&nbsp;&nbsp;</i>Menu</button>
+				  <button ng-click="step.gatherType='collectdigits'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='collectdigits'}"><i class="fa fa-keyboard-o">&nbsp;&nbsp;&nbsp;</i>Collect reply</button>
+				</div>
+					
+				<div ng-show="step.gatherType=='menu'">
+					<div ng-repeat="mapping in step.menu.mappings" class='row target-mapping'>
+						<form name="form" novalidate>
+							<div class='col-md-5 form-group'>
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon">Reply</span>
+										<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="123" ng-model='mapping.digits' required></input>
+									</div>
+									<div class="validation-error"  ng-show="form.digits.$invalid">Invalid reply value</div>
+							</div>
+							<div class='col-md-6 form-group'>
+								<div class="input-group input-group-sm">
+									<span class="input-group-addon">Continue to	</span>
+									<select sync-model name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
+										<option value=""></option>
+									</select>
+								</div>
+								<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
+							</div>	
+							<div class='col-md-1 form-group'>
+								<button ng-click="removeGatherMapping(step,mapping)" type="button" class="close" aria-hidden="true">&times;</button>
+							</div>
+						</form>							
+					</div>					
+					<div class="form-group">
+						<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>Add option</span></button>
+					</div>	
+					
+					<!-- 
+					<i ng-click='step.iface.optionsVisible = !step.iface.optionsVisible' class='fa fa-cog rvd-clickable' ng-class="{'rvd-active': step.iface.optionsVisible }"></i>
+					<div collapse='!step.iface.optionsVisible' class='form-group'>
+						<br/>
+						<div class="input-group form-group pull-left language">
+							<span class="input-group-addon ">Language</span>
+							<select ng-model='step.language' null-if-empty ng-options='language.name as language.text for language in languages'  id="languageSelect" class="form-control say-language-dropdown" >
+								<option value=""></option>
+							</select>
+						</div>
+					</div>
+					 -->
+					
+					<!-- <module-picker options="getAllTargets()"></module-picker>-->
+					
+				</div>	
+				<div ng-show="step.gatherType=='collectdigits'">
+					<form name="form" novalidate>
+						<div class='row'>
+							<div class='col-md-6 form-group'>
+								<div class="input-group input-group-sm">
+									<span class="input-group-addon">Assign reply to</span>
+									<input null-if-empty name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
+									<span class="input-group-addon">Scope</span>
+									<select ng-model='step.collectdigits.scope' class="form-control">
+										<option value='module'>module</option>
+										<option value='application'>application</option>
+									</select>
+								</div>
+								<div class="validation-error" ng-show="form.collectVariable.$invalid">Type a valid variable name</div>
+							</div>
+							<div class='col-md-6 form-group'>
+								<div class="input-group input-group-sm">
+									<span class="input-group-addon">Continue to</span>
+									<select sync-model name='next' ng-model='step.collectdigits.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
+										<option value=""></option>
+									</select>
+								</div>
+								<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+							</div>
+							
+						</div>
+					</form>
+				</div>	
+				<!-- 		
+				<form name="form" novalidate>
+					<div class="form-group">
+						<span class="help-block">Text &nbsp;<i class="fa fa-info-circle rvd-clickable" popover='Display some help message [...]' popover-placement='top'></i></span>
+						<textarea ng-model='step.text' class="form-control ussd-menu"></textarea>	
+					</div>									
+				</form>
+				-->
+				
+			</div>
+		</div>
+	</div>
+</div>

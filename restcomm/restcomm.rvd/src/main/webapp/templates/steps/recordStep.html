@@ -1,0 +1,91 @@
+<div class="step record-step panel panel-rvdstep">
+	<div class="panel-heading">
+			<step-heading></step-heading>
+	</div>
+
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+		<form name='form' novalidate>
+			<div class='row form-group'>
+				<div class='col-md-4'>
+					<div class="input-group">
+						<span class="input-group-addon help-tooltip"  tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Choose the module to continue to after recording. "core_RecordingUrl", "core_RecordingDuration" and "core_Digits" variables will be available.'>Continue to</span>
+						<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control" required>
+							<option value=""></option>
+						</select>
+						<!-- 
+						<span class='input-group-addon'>method</span>
+						<select name="method" ng-model='step.method'  class="form-control">
+							<option value=""></option>
+							<option value="GET">GET</option>
+							<option value="POST">POST</option>
+						</select>
+						 -->
+					</div>
+					<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+				</div>
+				<div class='col-md-3'>
+					<div class="input-group">
+						<span class="input-group-addon">Play beep</span>
+						<!-- 
+			            <span class="input-group-addon">
+							<input ng-model='step.playBeep' type="checkbox">
+						</span>
+						 -->
+						<select ng-model='step.playBeep' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+								<option value=''></option>
+						</select>
+					</div>
+					
+					
+				</div>
+			</div>
+	
+			<i class="fa fa-cog rvd-clickable" ng-class="{'rvd-active': step.iface.optionsVisible }" ng-click="step.iface.optionsVisible = !step.iface.optionsVisible"></i>
+			<div ng-show='step.iface.optionsVisible'>
+				<div class='row form-group'>
+					<br/>
+					<div class='col-md-3'>
+						<div class="input-group input-group-sm">
+							<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='End the recording after a number of seconds of silence has passed. Defaults to 5 seconds'>Timeout</span>
+							<input ng-model='step.timeout' auto-clear type='number' class='form-control'/>
+						</div>
+					</div>
+					<div class='col-md-3'>
+						<div class="input-group input-group-sm">
+							<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='End the recording immediately after a key has been pressed'>Finish on key</span>
+							<input ng-model='step.finishOnKey' auto-clear ng-pattern='/^[0-9\#\*]*$/' type='text' class='form-control'/>
+						</div>
+					</div>
+					<div class='col-md-3'>
+						<div class="input-group input-group-sm">
+							<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Set the maximum length for the recording in seconds'>Max length</span>
+							<input ng-model='step.maxLength' auto-clear type='number' class='form-control'/>
+						</div>
+					</div>						
+				</div>
+				<div class='row form-group'>
+					<div class='col-md-2'>
+						<div class="input-group input-group-sm">
+							<span class="input-group-addon" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='If selected a text representation of the audio of the recording will be created'>Transcribe</span>
+				            <select ng-model='step.transcribe' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+								<option value=''></option>
+							</select>
+							<!-- 
+				            <span class="input-group-addon">
+								<input ng-model='step.transcribe' auto-clear type="checkbox">
+								
+							</span>
+							-->
+						</div>				
+					</div>
+					<div class='col-md-7'>
+						<div class="input-group input-group-sm">
+							<span class='input-group-addon' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="Specify a URL to make an asynchronous POST request when the transcription is complete. 'TranscriptionStatus', 'TranscriptionText', 'TranscriptionUrl' and 'RecordingUrl' parameters will be passed.">Tanscribe callback</span>
+							<input ng-model='step.transcribeCallback' type='text' auto-clear class='form-control' placeholder='http://...'/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
