@@ -454,7 +454,7 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 });
 
 rcServices.factory('RCommApps', function($resource) {
-  return $resource('/restcomm-rvd/services/manager/projects/list');
+	  return $resource('/restcomm-rvd/services/apps');
 });
 
 rcServices.factory('RCommAvailableNumbers', function($resource) {
