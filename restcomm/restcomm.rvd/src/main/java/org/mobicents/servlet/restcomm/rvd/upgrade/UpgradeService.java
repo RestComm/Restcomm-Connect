@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.upgrade;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
@@ -92,7 +93,8 @@ public class UpgradeService {
                     upgradedCount ++;
                     logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
                     try {
-                        buildService.buildProject(projectName);
+                        ProjectState projectState = projectStorage.loadProject(projectName);
+                        buildService.buildProject(projectName, projectState);
                         logger.info("project '" + projectName + "' built");
                     } catch (StorageException e) {
                         logger.warn("error building upgraded project '" + projectName + "'", e);

@@ -10,6 +10,17 @@ public class UssdSayStep extends Step {
 
     String text;
 
+    public static UssdSayStep createDefault(String name, String phrase) {
+        UssdSayStep step = new UssdSayStep();
+        step.setName(name);
+        step.setLabel("USSD Message");
+        step.setKind("ussdSay");
+        step.setTitle("USSD Message");
+        step.setText(phrase);
+
+        return step;
+    }
+
     public UssdSayStep() {
         // TODO Auto-generated constructor stub
     }

@@ -20,6 +20,18 @@ public class SmsStep extends Step {
     String statusCallback;
     String method;
     String next;
+
+    public static SmsStep createDefault(String name, String phrase) {
+        SmsStep step = new SmsStep();
+        step.setName(name);
+        step.setLabel("sms");
+        step.setKind("sms");
+        step.setTitle("sms");
+        step.setText(phrase);
+
+        return step;
+    }
+
     public String getNext() {
         return next;
     }

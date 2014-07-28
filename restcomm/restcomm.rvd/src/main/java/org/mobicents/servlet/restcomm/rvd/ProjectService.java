@@ -195,13 +195,23 @@ public class ProjectService {
         return projectStorage.projectExists(projectName);
     }
 
-    public void createProject(String projectName, String kind, String owner) throws StorageException, InvalidServiceParameters {
+    public ProjectState createProject(String projectName, String kind, String owner) throws StorageException, InvalidServiceParameters {
         if ( !"voice".equals(kind) && !"ussd".equals(kind) && !"sms".equals(kind) )
             throw new InvalidServiceParameters("Invalid project kind specified - '" + kind + "'");
 
-        ProjectState state = ProjectState.createEmptyVoice(owner);
+        ProjectState state = null;
+        if ( "voice".equals(kind) )
+            state = ProjectState.createEmptyVoice(owner);
+        else
+        if ( "ussd".equals(kind) )
+            state = ProjectState.createEmptyUssd(owner);
+        else
+        if ( "sms".equals(kind) )
+            state = ProjectState.createEmptySms(owner);
+
         projectStorage.createProjectSlot(projectName);
         projectStorage.storeProject(projectName, state, true);
+        return state;
     }
 
     public void updateProject(HttpServletRequest request, String projectName, ProjectState existingProject) throws IOException, StorageException, ValidationFrameworkException, ValidationException, IncompatibleProjectVersion {

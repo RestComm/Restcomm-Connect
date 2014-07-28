@@ -30,6 +30,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappBinaryInfo;
@@ -249,7 +250,8 @@ public class RasRestService extends RestService {
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
                         String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser );
-                        buildService.buildProject(effectiveProjectName);
+                        ProjectState projectState = projectStorage.loadProject(effectiveProjectName);
+                        buildService.buildProject(effectiveProjectName, projectState);
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);

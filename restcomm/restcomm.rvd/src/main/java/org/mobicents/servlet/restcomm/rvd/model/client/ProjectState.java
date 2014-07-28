@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
 import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.sms.SmsStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStep;
 
 public class ProjectState {
 
@@ -33,6 +35,54 @@ public class ProjectState {
         List<Node> nodes = new ArrayList<Node>();
         Node node = Node.createDefault("voice", "start", "Welcome");
         SayStep step = SayStep.createDefault("step1", "Welcome to Telestax Restcom Visual Designer Demo");
+        node.getSteps().add(step);
+        nodes.add(node);
+        state.setNodes(nodes);
+
+        state.setLastStepId(1);
+        state.setLastNodeId(0);
+
+        return state;
+    }
+
+    public static ProjectState createEmptySms(String owner) {
+        String kind = "sms";
+        ProjectState state = new ProjectState();
+
+        StateHeader header = new StateHeader();
+        header.owner = owner;
+        header.projectKind = kind;
+        header.version = RvdSettings.getPackagingVersion();
+        header.startNodeName = "start";
+        state.setHeader(header);
+
+        List<Node> nodes = new ArrayList<Node>();
+        Node node = Node.createDefault("sms", "start", "Welcome");
+        SmsStep step = SmsStep.createDefault("step1", "Welcome to Telestax Restcom Visual Designer");
+        node.getSteps().add(step);
+        nodes.add(node);
+        state.setNodes(nodes);
+
+        state.setLastStepId(1);
+        state.setLastNodeId(0);
+
+        return state;
+    }
+
+    public static ProjectState createEmptyUssd(String owner) {
+        String kind = "ussd";
+        ProjectState state = new ProjectState();
+
+        StateHeader header = new StateHeader();
+        header.owner = owner;
+        header.projectKind = kind;
+        header.version = RvdSettings.getPackagingVersion();
+        header.startNodeName = "start";
+        state.setHeader(header);
+
+        List<Node> nodes = new ArrayList<Node>();
+        Node node = Node.createDefault("ussd", "start", "Welcome");
+        UssdSayStep step = UssdSayStep.createDefault("step1", "Welcome to Telestax Restcom Visual Designer");
         node.getSteps().add(step);
         nodes.add(node);
         state.setNodes(nodes);
