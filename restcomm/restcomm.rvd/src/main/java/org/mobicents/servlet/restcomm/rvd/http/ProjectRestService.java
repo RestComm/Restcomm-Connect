@@ -155,7 +155,9 @@ public class ProjectRestService extends RestService {
         Principal loggedUser = securityContext.getUserPrincipal();
 
         try {
-            projectService.createProject(name, kind, loggedUser.getName());
+            ProjectState projectState = projectService.createProject(name, kind, loggedUser.getName());
+            BuildService buildService = new BuildService(projectStorage);
+            buildService.buildProject(name, projectState);
         } catch (ProjectDirectoryAlreadyExists e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.CONFLICT).build();
@@ -256,7 +258,7 @@ public class ProjectRestService extends RestService {
                 logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
                 // re-build project
                 BuildService buildService = new BuildService(projectStorage);
-                buildService.buildProject(projectName);
+                buildService.buildProject(projectName, activeProject);
                 logger.info("project '" + projectName + "' built");
                 return Response.ok().build();
             }
@@ -463,7 +465,7 @@ public class ProjectRestService extends RestService {
         assertProjectAvailable(name);
         BuildService buildService = new BuildService(projectStorage);
         try {
-            buildService.buildProject(name);
+            buildService.buildProject(name, activeProject);
             return Response.ok().build();
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);
