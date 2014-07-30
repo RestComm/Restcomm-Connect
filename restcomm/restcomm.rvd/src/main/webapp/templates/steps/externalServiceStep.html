@@ -121,7 +121,7 @@
                     			
 					<div class="row">
 						<div class="col-md-6">
-                            <div class="input-group input-group-sm routing-decision-controls">
+                            <div class="input-group input-group-sm routing-decision-controls form-group">
                                 <span class="input-group-addon">
 									<input ng-model='step.doRouting' type="checkbox">
 								</span>
@@ -135,10 +135,36 @@
 									<span>dynamic &nbsp;</span>
 									<input ng-model='step.nextType' value='responseBased' type="radio">
 								</span>								
+								<span ng-if='step.doRouting' class="input-group-addon">
+									<span>mapped &nbsp;</span>
+									<input ng-model='step.nextType' value='mapped' type="radio">
+								</span>
                                 
 								<!-- this is just a placeholder -->
 								<input ng-hide='step.doRouting' ng-disabled='true' class="form-control height-fix">
-							</div>						
+							</div>
+							<div>
+								<div class="form-group">
+									<button ng-show="step.nextType=='mapped'" ng-click="step.addRouteMapping()" type="button" class="btn btn-primary btn-sm"><span>Add mapping</span></button>
+								</div>
+								<div class="row route-mapping" ng-repeat="mapping in step.routeMappings">
+									<div class="input-group input-group-sm form-group col-md-11">
+										<span class="input-group-addon">Value</span>
+										<input ng-model="mapping.value" class="form-control" required>
+										<span class="input-group-addon">Continue to</span>
+										<!--<select ng-model="mapping.next" sync-modules="" ng-options="target.name as target.label for target in getAllTargets()" class="form-control" style="min-width:140px;"></select>-->
+										<select sync-modules name='next' ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
+											<option value=""></option>
+										</select> 										
+										
+									</div>
+									<div class="col-md-1">
+										<span ng-click="step.removeRouteMapping(mapping)" class="fa fa-times text-muted remove-button rvd-clickable"></span>
+									</div>
+								</div>
+								<div>{{step.routeMappings}}</div>
+							</div>
+													
 						</div>
                         <div class='col-md-6'>
                         	<form name='form'>
@@ -148,7 +174,7 @@
 									</select>   
 									<div class="validation-error"  ng-if="form.next.$invalid">Choose target module</div>
 								</div>                         
-                                <value-extractor ng-if='step.doRouting && step.nextType=="responseBased"' extractor-model='step.nextValueExtractor'></value-extractor>
+                                <value-extractor ng-if='step.doRouting && (step.nextType=="responseBased" || step.nextType=="mapped")' extractor-model='step.nextValueExtractor'></value-extractor>
                             </form>
                         </div>
 					</div>

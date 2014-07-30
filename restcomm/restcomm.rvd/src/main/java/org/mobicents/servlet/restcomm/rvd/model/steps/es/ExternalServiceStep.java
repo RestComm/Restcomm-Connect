@@ -22,6 +22,7 @@ public class ExternalServiceStep extends Step {
     private Boolean doRouting;
     private String nextType;
     private ValueExtractor nextValueExtractor;
+    private List<RouteMapping> routeMappings;
 
     public ValueExtractor getNextValueExtractor() {
         return nextValueExtractor;
@@ -37,6 +38,14 @@ public class ExternalServiceStep extends Step {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public List<RouteMapping> getRouteMappings() {
+        return routeMappings;
+    }
+
+    public void setRouteMappings(List<RouteMapping> routeMappings) {
+        this.routeMappings = routeMappings;
     }
 
     public List<Assignment> getAssignments() {

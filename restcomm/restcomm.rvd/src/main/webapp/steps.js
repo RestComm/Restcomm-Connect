@@ -386,6 +386,7 @@ angular.module('Rvd')
 		this.doRouting = false;
 		this.nextType = 'fixed';
 		this.nextValueExtractor = new esValueExtractor();
+		this.routeMappings = []; // [{value:undefined,next:undefined}]
 		this.iface = {};		
 	}
 	ExternalServiceModel.prototype = new rvdModel();
@@ -396,12 +397,29 @@ angular.module('Rvd')
 			var assignment = new esAssignment().init(from.assignments[i]);
 			this.assignments[i] = assignment;
 		}
+		this.nextValueExtractor = new esValueExtractor().init(from.nextValueExtractor);
 		this.validate();
 		return this;
 	}
+	ExternalServiceModel.prototype.pack = function () {
+		var clone = angular.copy(this);
+		if (clone.nextType != "mapped")
+			delete clone.routeMappings
+		return clone;
+	}
+	ExternalServiceModel.prototype.validate = function() {
+		if (!this.routeMappings)
+			this.routeMappings = [];
+	}	
 	ExternalServiceModel.prototype.addAssignment = function () {
 		this.assignments.push(new esAssignment());
 	}
+	ExternalServiceModel.prototype.addRouteMapping = function () {
+		this.routeMappings.push({value:undefined,next:undefined});
+	}
+	ExternalServiceModel.prototype.removeRouteMapping = function (mapping) {
+		this.routeMappings.splice(this.routeMappings.indexOf(mapping), 1);
+	}	
 	return ExternalServiceModel;
 }])
 .factory('rejectModel', ['rvdModel', function RejectModelFactory(rvdModel) {
