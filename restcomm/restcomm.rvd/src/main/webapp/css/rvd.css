@@ -273,7 +273,7 @@ value-extractor .btn.pull-right {
 	margin-left: 5px;
 }
 
-.assignment .remove-button {
+.assignment .remove-button, .route-mapping .remove-button {
 	margin-top: 7px;
 	
 }

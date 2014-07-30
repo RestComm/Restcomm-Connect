@@ -62,6 +62,7 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.dial.SipuriNounConverter;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.Assignment;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.es.RouteMapping;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ValueExtractor;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.RcmlFaxStep;
@@ -453,15 +454,28 @@ public class Interpreter {
                         JsonElement response_element = parser.parse(entity_string);
 
                         String nextModuleName = null;
-                        //boolean dynamicRouting = false;
-                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
-                            //dynamicRouting = true;
-                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
-                            nextModuleName = getNodeNameByLabel( moduleLabel );
-                            if ( nextModuleName == null )
-                                throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
 
-                            logger.info( "Dynamic routing enabled. Chosen target: " + nextModuleName);
+
+                        // Perform assignments
+
+                        if ( esStep.getDoRouting() && ("responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) ) {
+                            String evaluatedExpression = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+                            if ( "responseBased".equals(esStep.getNextType()) ) {
+                                nextModuleName = getNodeNameByLabel( evaluatedExpression );
+                            } else { // "mapped".equals(esStep.getNextType())
+                                if ( esStep.getRouteMappings() != null ) {
+                                    for ( RouteMapping mapping : esStep.getRouteMappings() ) {
+                                        if ( evaluatedExpression != null && evaluatedExpression.equals(mapping.getValue()) ) {
+                                            nextModuleName = mapping.getNext();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if ( nextModuleName == null )
+                                throw new ReferencedModuleDoesNotExist("No destination module found for '" + evaluatedExpression + "'");
+
+                            logger.info( "Dynamic/mapped routing enabled. Chosen target: " + nextModuleName);
                             for ( Assignment assignment : esStep.getAssignments() ) {
                                 logger.debug("working on variable " + assignment.getDestVariable() );
                                 logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
@@ -486,12 +500,16 @@ public class Interpreter {
 
                         }
                         logger.debug("variables after processing ExternalService step: " + variables.toString() );
+
+
+                        // Determine next module  if any
+
                         if ( esStep.getDoRouting() ) {
                             String next = "";
                             if ( "fixed".equals( esStep.getNextType() ) )
                                 next = esStep.getNext();
                             else
-                            if ( "responseBased".equals( esStep.getNextType() ))
+                            if ( "responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType()))
                                 next = nextModuleName;
                             if ( "".equals(next) )
                                 throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
