@@ -23,6 +23,9 @@ public class ExternalServiceStep extends Step {
     private String nextType;
     private ValueExtractor nextValueExtractor;
     private List<RouteMapping> routeMappings;
+    private String defaultNext;
+    private String exceptionNext;
+
 
     public ValueExtractor getNextValueExtractor() {
         return nextValueExtractor;
@@ -101,6 +104,23 @@ public class ExternalServiceStep extends Step {
 
     public String getPassword() {
         return password;
+    }
+
+
+    public String getDefaultNext() {
+        return defaultNext;
+    }
+
+    public void setDefaultNext(String defaultNext) {
+        this.defaultNext = defaultNext;
+    }
+
+    public String getExceptionNext() {
+        return exceptionNext;
+    }
+
+    public void setExceptionNext(String exceptionNext) {
+        this.exceptionNext = exceptionNext;
     }
 
     @Override

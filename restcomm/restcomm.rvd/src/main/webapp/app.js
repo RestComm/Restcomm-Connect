@@ -179,17 +179,6 @@ App.directive('valueExtractor', ['protos','accessOperationKinds','objectActions'
 	}
 }]);
 
-App.directive('modulePicker', [function () {
-	return {
-		restrict: 'E',
-		templateUrl: 'templates/directive/modulePicker.html',
-		scope: {
-			options: '=',
-		},
-		link: function (scope,el,attrs) {
-		},
-	};
-}]);
 
 App.directive('ussdModule', [function () {
 	return {

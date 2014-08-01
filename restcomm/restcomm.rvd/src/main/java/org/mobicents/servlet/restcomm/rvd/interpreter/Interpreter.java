@@ -42,7 +42,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ReferencedModuleDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceError;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
@@ -388,16 +388,16 @@ public class Interpreter {
      * If the step is executable (like ExternalService) it is executed
      * @param step
      * @return String The module name to continue rendering with
+     * @throws IOException
+     * @throws ClientProtocolException
      */
     private String processStep(Step step) throws InterpreterException {
         if (step.getClass().equals(ExternalServiceStep.class)) {
-
+            ExternalServiceStep esStep = (ExternalServiceStep) step;
+            String next = null;
             try {
 
-                ExternalServiceStep esStep = (ExternalServiceStep) step;
-
-                CloseableHttpClient client = HttpClients.createDefault();
-                //String url = populateVariables(esStep.getUrl());
+                // *** Build the request uri ***
 
                 URI url;
                 try {
@@ -412,20 +412,24 @@ public class Interpreter {
                             uri_builder.setPath("/" + uri_builder.getPath());
                     }
 
-                    if ( esStep.getMethod() == null || "GET".equals(esStep.getMethod()) ) {
-                        for ( UrlParam urlParam : esStep.getUrlParams() ) {
+                    if ( esStep.getMethod() == null || "GET".equals(esStep.getMethod()) )
+                        for ( UrlParam urlParam : esStep.getUrlParams() )
                             uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
-                        }
-                    }
+
                     url = uri_builder.build();
                 } catch (URISyntaxException e) {
                     throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
                 }
 
 
-                // Send request
+                // *** Make the request and get a status code and a response. Build a JsonElement from the response  ***
+
+                CloseableHttpClient client = HttpClients.createDefault();
                 CloseableHttpResponse response;
-                logger.info("Running ES request");
+                int statusCode;
+                JsonElement response_element = null;
+
+                logger.info("Requesting from url: " + url);
                 logger.debug("Requesting from url: " + url);
                 if ( "POST".equals(esStep.getMethod()) ) {
                     HttpPost post = new HttpPost(url);
@@ -443,92 +447,114 @@ public class Interpreter {
                 } else
                     throw new InterpreterException("Unknonwn HTTP method specified: " + esStep.getMethod() );
 
-                // Parse response
-                JsonParser parser = new JsonParser();
-                try {
-                    HttpEntity entity = response.getEntity();
-                    if ( entity != null ) {
-                        String entity_string = EntityUtils.toString(entity);
-                        logger.info("ES: Received " + entity_string.length() + " bytes");
-                        logger.debug("ES Response: " + entity_string);
-                        JsonElement response_element = parser.parse(entity_string);
+                statusCode = response.getStatusLine().getStatusCode();
 
-                        String nextModuleName = null;
+                // In  case of error in the service no need to proceed. Just continue the "onException" module if set
+                if ( statusCode >= 400 && statusCode < 600 ) {
+                    logger.info("Remote service failed with: " + response.getStatusLine());
+                    if ( ! RvdUtils.isEmpty(esStep.getExceptionNext()) )
+                        return esStep.getExceptionNext();
+                    else
+                        throw new RemoteServiceError("Service " + url + " failed with: " + response.getStatusLine() +". Throwing an error since no 'On Remote Exception' has been defined.");
+                }
+
+                // Build a JsonElement from the response
+               HttpEntity entity = response.getEntity();
+                if ( entity != null ) {
+                    JsonParser parser = new JsonParser();
+                    String entity_string = EntityUtils.toString(entity);
+                    //logger.info("ES: Received " + entity_string.length() + " bytes");
+                    //logger.debug("ES Response: " + entity_string);
+                    response_element = parser.parse(entity_string);
+                }
 
 
-                        // Perform assignments
+                // *** Determine what to do next. Find the next module name or whether to continue in the current module ***
 
-                        if ( esStep.getDoRouting() && ("responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) ) {
-                            String evaluatedExpression = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
-                            if ( "responseBased".equals(esStep.getNextType()) ) {
-                                nextModuleName = getNodeNameByLabel( evaluatedExpression );
-                            } else { // "mapped".equals(esStep.getNextType())
-                                if ( esStep.getRouteMappings() != null ) {
-                                    for ( RouteMapping mapping : esStep.getRouteMappings() ) {
-                                        if ( evaluatedExpression != null && evaluatedExpression.equals(mapping.getValue()) ) {
-                                            nextModuleName = mapping.getNext();
-                                            break;
-                                        }
+                if ( esStep.getDoRouting() ) {
+                    if ( "fixed".equals( esStep.getNextType() ) )
+                        next = esStep.getNext();
+                    else
+                    if ( "responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) {
+                        String nextValue = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+
+                        if ( "responseBased".equals(esStep.getNextType()) ) {
+                            next = getNodeNameByLabel( nextValue );
+                        } else
+                        if ( "mapped".equals(esStep.getNextType()) ) {
+                            if ( esStep.getRouteMappings() != null ) {
+                                for ( RouteMapping mapping : esStep.getRouteMappings() ) {
+                                    if ( nextValue != null && nextValue.equals(mapping.getValue()) ) {
+                                        next = mapping.getNext();
+                                        break;
                                     }
                                 }
                             }
-                            if ( nextModuleName == null )
-                                throw new ReferencedModuleDoesNotExist("No destination module found for '" + evaluatedExpression + "'");
+                        }
+                    }
+                    // if no next route has been found throw an error
+                    if ( RvdUtils.isEmpty(next) ) {
+                        throw new InterpreterException("No valid module could be found for ES routing"); // use a general exception for now.
+                        //next = esStep.getDefaultNext();
+                        //if ( RvdUtils.isEmpty(next) )
+                        //    throw new ReferencedModuleDoesNotExist("No module specified for ES routing and no default route exists either");
+                        //logger.debug("No valid route returned. Will use default route: " + next );
+                    }
+                    logger.info( "Routing enabled. Chosen target: " + next);
+                }
 
-                            logger.info( "Dynamic/mapped routing enabled. Chosen target: " + nextModuleName);
-                            for ( Assignment assignment : esStep.getAssignments() ) {
-                                logger.debug("working on variable " + assignment.getDestVariable() );
-                                logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
-                                if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
-                                    String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
-                                    if ( "application".equals(assignment.getScope()) )
-                                        putStickyVariable(assignment.getDestVariable(), value);
-                                    variables.put(assignment.getDestVariable(), value );
-                                } else
-                                    logger.debug("skipped assignment to " + assignment.getDestVariable() );
-                            }
-                        }  else {
-                            for ( Assignment assignment : esStep.getAssignments() ) {
-                                logger.debug("working on variable " + assignment.getDestVariable() );
-                                String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+
+                // *** Perform the assignments ***
+
+                try {
+                    if ( esStep.getDoRouting() && ("responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) ) {
+                        for ( Assignment assignment : esStep.getAssignments() ) {
+                            logger.debug("working on variable " + assignment.getDestVariable() );
+                            logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
+                            if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(next) ) {
+                                String value = null;
+                                try {
+                                    value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                                } catch ( BadExternalServiceResponse e ) {
+                                    logger.error("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response");
+                                    throw e;
+                                }
 
                                 if ( "application".equals(assignment.getScope()) )
                                     putStickyVariable(assignment.getDestVariable(), value);
-
                                 variables.put(assignment.getDestVariable(), value );
+                            } else
+                                logger.debug("skipped assignment to " + assignment.getDestVariable() );
+                        }
+                    }  else {
+                        for ( Assignment assignment : esStep.getAssignments() ) {
+                            logger.debug("working on variable " + assignment.getDestVariable() );
+                            String value = null;
+                            try {
+                                value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                            } catch ( BadExternalServiceResponse e ) {
+                                logger.error("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response");
+                                throw e;
                             }
 
-                        }
-                        logger.debug("variables after processing ExternalService step: " + variables.toString() );
+                            if ( "application".equals(assignment.getScope()) )
+                                putStickyVariable(assignment.getDestVariable(), value);
 
-
-                        // Determine next module  if any
-
-                        if ( esStep.getDoRouting() ) {
-                            String next = "";
-                            if ( "fixed".equals( esStep.getNextType() ) )
-                                next = esStep.getNext();
-                            else
-                            if ( "responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType()))
-                                next = nextModuleName;
-                            if ( "".equals(next) )
-                                throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
-                            return next;
+                            variables.put(assignment.getDestVariable(), value );
                         }
                     }
+                    logger.debug("variables after processing ExternalService step: " + variables.toString() );
                 } catch (JsonSyntaxException e) {
                     throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
-                } finally {
-                    response.close();
                 }
 
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new ESRequestException("Error processing ExternalService step " + step.getName(), e);
             }
+            return next;
 
+        } // if (step.getClass().equals(ExternalServiceStep.class))
 
-        }
         return null;
     }
 
