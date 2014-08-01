@@ -387,6 +387,8 @@ angular.module('Rvd')
 		this.nextType = 'fixed';
 		this.nextValueExtractor = new esValueExtractor();
 		this.routeMappings = []; // [{value:undefined,next:undefined}]
+		this.defaultNext = undefined;
+		this.exceptionNext = undefined;
 		this.iface = {};		
 	}
 	ExternalServiceModel.prototype = new rvdModel();

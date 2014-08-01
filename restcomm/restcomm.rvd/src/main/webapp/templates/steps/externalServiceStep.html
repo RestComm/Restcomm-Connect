@@ -86,9 +86,9 @@
 									</select>
 								</div>
 								
-								<div ng-class='{"rvd-disabled":!(step.doRouting && step.nextType=="responseBased")}' class="input-group input-group-sm form-group">
+								<div ng-class='{"rvd-disabled":!(step.doRouting && (step.nextType=="responseBased" || step.nextType=="mapped"))}' class="input-group input-group-sm form-group">
 									<span class="input-group-addon">Module scope</span>
-									<select sync-model ng-disabled='!(step.doRouting && step.nextType=="responseBased")'  ng-model='assignment.moduleNameScope' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
+									<select sync-model ng-disabled='!(step.doRouting && (step.nextType=="responseBased" || step.nextType=="mapped"))'  ng-model='assignment.moduleNameScope' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
 										<option value="">-- All --</option>
 									</select>  
 								</div>	
@@ -113,7 +113,8 @@
                             <ul>
                             	<li>Select 'fixed' to use a hardcoded module setting.</li>
                                 <li>Select 'dynamic' to route to a module specified in the service response. In your service implementation use the label of the module (the caption on module's the tab) to indicate your choice. Notice 'Module scope' option is enabled for each assignment. You can then select a module from the dropdown list to execute the assignment for this module only. Leave it blank to execute it for all module routes.</li>
-                                <li>Leave "Continue to" to unchecked to if you don't want to change the call flow at this point.</li>
+                                <li>Select 'mapped' to create mappings from values returned in your response to destination modules. The 'Module Scope' behaviour described in 'dynamic' applies here too.</li>
+                                <li>Leave "Continue to" unchecked if you don't want to change the call flow at this point.</li>
                             </ul>
                             <div class="wellinfo-rollup"><i ng-click='step.iface.routingHelpCollapsed = !step.iface.routingHelpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
                          </div> 
@@ -147,7 +148,7 @@
 								<div class="form-group">
 									<button ng-show="step.nextType=='mapped'" ng-click="step.addRouteMapping()" type="button" class="btn btn-primary btn-sm"><span>Add mapping</span></button>
 								</div>
-								<div class="row route-mapping" ng-repeat="mapping in step.routeMappings">
+								<div ng-repeat="mapping in step.routeMappings" ng-show="step.nextType=='mapped'" class="row route-mapping" >
 									<div class="input-group input-group-sm form-group col-md-11">
 										<span class="input-group-addon">Value</span>
 										<input ng-model="mapping.value" class="form-control" required>
@@ -162,7 +163,21 @@
 										<span ng-click="step.removeRouteMapping(mapping)" class="fa fa-times text-muted remove-button rvd-clickable"></span>
 									</div>
 								</div>
-								<div>{{step.routeMappings}}</div>
+								<br ng-show="step.doRouting && (step.nextType=='mapped' || step.nextType=='responseBased')">
+								<!-- 
+								<div class="row form-group" ng-show="step.doRouting && (step.nextType=='mapped' || step.nextType=='responseBased')">
+									<div class="input-group col-md-12">
+										<span class="input-group-addon">Default route</span>
+										<module-picker ng-model='step.defaultNext'></module-picker>
+									</div>
+								</div>
+								 -->
+								<div class="row form-group">
+									<div class="input-group col-md-12">
+										<span class="input-group-addon">On Remote Error</span>
+										<module-picker ng-model='step.exceptionNext'></module-picker>
+									</div>
+								</div>																
 							</div>
 													
 						</div>
