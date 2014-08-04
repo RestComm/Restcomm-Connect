@@ -1,0 +1,30 @@
+<div class="modal-header">
+	<h3 class="modal-title">Exceptions</h3>
+</div>
+<div class="modal-body">
+	<p>Add handler modules for various exceptions. Type the exception name to the left and the module that will handle the error to the right.</p>
+	<div class="form-group">
+		<button ng-click="addExceptionMapping()" type="button" class="btn btn-primary"><span>Add mapping</span></button>
+	</div>
+	<div ng-repeat="mapping in exceptionMappings" class="row" >
+		<div class="input-group form-group col-md-11">
+			<span class="input-group-addon">Exception name</span>
+			<input ng-model="mapping.exceptionName" class="form-control" required>
+			<span class="input-group-addon">Continue to</span>
+			<select name='next' ng-model='mapping.next' ng-options='module.name as module.label for module in moduleSummary' class="form-control height-fix" required>
+				<option value=""></option>
+			</select> 	
+		</div>
+		<div class="col-md-1">
+			<span ng-click="removeExceptionMapping(mapping)" class="fa fa-times text-muted remove-button rvd-clickable"></span>
+		</div>
+	</div>
+	<p>A catch all handler to be used if no specific mapping applies</p>
+	<select name='next' ng-model='mapping.next' ng-options='module.name as module.label for module in moduleSummary' class="form-control height-fix" required>
+		<option value=""></option>
+	</select> 
+</div>
+<div class="modal-footer">
+	<button class="btn btn-primary" ng-click="ok()">OK</button>
+	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

@@ -1,4 +1,4 @@
-App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker) {
+App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -564,6 +564,48 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.startNodeName = packedState.header.startNodeName;	
 		$scope.projectKind = packedState.header.projectKind;
 		$scope.version = packedState.header.version;
+	}
+	
+	
+	// Exception controller & functionality
+	
+	var exceptionConfigCtrl = function ($scope, $modalInstance, projectModules) {
+		$scope.moduleSummary = projectModules.getModuleSummary();
+		$scope.exceptionMappings = [];
+		
+		
+		$scope.addExceptionMapping = function() {
+			$scope.exceptionMappings.push({exceptionName:undefined, next:undefined});
+		}
+		$scope.removeExceptionMapping = function (mapping) {
+			$scope.exceptionMappings.splice($scope.exceptionMappings.indexOf(mapping), 1);
+		}
+
+		$scope.ok = function () {
+			$modalInstance.close(/* ... */);
+		};
+
+	  $scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	  };
+	};
+	$scope.showExceptionConfig = function () {
+		var modalInstance = $modal.open({
+		  templateUrl: 'templates/exceptionConfigModal.html',
+		  controller: exceptionConfigCtrl,
+		  size: 'lg',
+		  //resolve: {
+			//items: function () {
+			//  return $scope.items;
+			//}
+		  //}
+		});
+
+		modalInstance.result.then(function (selectedItem) {
+		  //$scope.selected = selectedItem;
+		}, function () {
+		  //$log.info('Modal dismissed at: ' + new Date());
+		});
 	}
 	
 		
