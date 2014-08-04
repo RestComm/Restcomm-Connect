@@ -74,7 +74,7 @@
 			<login>restcomm</login>
 			<password>restcomm</password>
 			<endpoint>restcomm_instance_id</endpoint>
-			<uri>https://127.0.0.1:2080</uri>
+			<uri>http://127.0.0.1:2080</uri>
 		</telestax-proxy>
 
 		<!-- TelScale USSD Gateway -->
