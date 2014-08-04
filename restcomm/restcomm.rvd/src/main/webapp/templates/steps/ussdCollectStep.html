@@ -14,7 +14,7 @@
 			<div class="col-md-12">					
 				<div basic-sortable list-model='step.messages' class='ussd-collect-messages form-group' ng-class='{"drop-area-image":step.messages.length==0}' item-added='nestUssdMessage'>	
 					<div ng-repeat='message in step.messages'>
-						<div class="input-group input-group form-group">
+						<div class="input-group input-group form-group rvd-handle">
 							<span class="input-group-addon"><i class='fa fa-phone'></i></span>
 							<input ng-model='message.text' type='text' class='form-control' placeholder='message text here...' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type the message text. Add multiple messages to display separate lines.">
 							<!-- <span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.advancedShown = !dialnoun.advancedShown"></span> -->
