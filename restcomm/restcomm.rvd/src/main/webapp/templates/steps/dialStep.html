@@ -29,7 +29,7 @@
 							<div ng-switch on="dialnoun.dialType">
 								<div ng-switch-when="number">
 									<div  class="input-group input-group-sm form-group">
-										<span class="input-group-addon"><i class='fa fa-phone'></i></span>
+										<span class="input-group-addon rvd-handle"><i class='fa fa-phone'></i></span>
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
 																			
 										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Send these DTMF tones after dialing the number">Send digits</span>
@@ -48,14 +48,14 @@
 								</div>
 								<div ng-switch-when="client">
 									<div  class="input-group input-group-sm form-group">
-										<span class="input-group-addon"><i class='fa fa-user'></i></span>
+										<span class="input-group-addon rvd-handle"><i class='fa fa-user'></i></span>
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='thomas' tooltip="Dial to client">
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 								</div>	
 								<div ng-switch-when="conference" class='form-group conference-noun'>
 									<div  class="input-group input-group-sm">
-										<span class="input-group-addon"><i class='fa fa-group'></i></span>
+										<span class="input-group-addon rvd-handle"><i class='fa fa-group'></i></span>
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1234' tooltip="Dial to conference">
 
 										<!-- 
@@ -101,7 +101,7 @@
 								</div>		
 								<div ng-switch-when="sipuri">
 									<div  class="input-group input-group-sm form-group">
-										<span class="input-group-addon">sip:</span>
+										<span class="input-group-addon rvd-handle">sip:</span>
 										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='sip:thomas@127.0.0.1:5080' tooltip="Dial to SIP URI">
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>

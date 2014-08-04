@@ -125,6 +125,10 @@ label {
 	opacity: 1.0;
 }
 
+.rvd-handle {
+	cursor: move;
+}
+
 .project-list {
 	list-style-type: none;
 }
