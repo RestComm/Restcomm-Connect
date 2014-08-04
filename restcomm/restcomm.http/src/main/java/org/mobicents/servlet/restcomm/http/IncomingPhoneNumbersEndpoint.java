@@ -443,7 +443,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         dao.removeIncomingPhoneNumber(new Sid(sid));
         return ok().build();
     }
-    
+
     protected boolean releaseDid(final String did) {
         if (did != null && !did.isEmpty()) {
             final StringBuilder buffer = new StringBuilder();
