@@ -13,8 +13,8 @@
         <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm" />
         <property name="restcomm.docs.eap6.dir" location="${release.eap6.dir}/docs/restcomm" />
 	<property name="checkout.dir" value="${base.dir}/checkout" />	
-	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
-	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" />
+	<!--property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
+	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" /-->
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
 	<!--
 	<property name="telscale.restcomm.release.version" value="7.1.6-SNAPSHOT"/>
@@ -113,7 +113,8 @@
 		</classpath>
 	</taskdef>
 	
-	<target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
+	<!--target name="release" depends="clean,get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" /-->
+	<target name="release" depends="clean,get-deps,extract-deps,build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-for-ami" depends="clean,get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-for-ami-no-clean" depends="get-ami-deps,extract-ami-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-no-clean" depends="get-deps,extract-deps,checkout-restcomm, build-telscale-restcomm, copy-restcomm, copy-docs, make-final-zip" />
