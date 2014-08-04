@@ -19,3 +19,27 @@ angular.module('Rvd')
 	
 	return notifications;
 }]);
+
+angular.module('Rvd').service('projectModules', [function () {
+	var serviceInstance = {moduleData: []};
+	
+	serviceInstance.addModule = function (module) {
+		serviceInstance.moduleData.push({name:module.name, label:module.label});
+	}
+	
+	serviceInstance.removeModule = function (module) {
+		serviceInstance.moduleData.splice(serviceInstance.moduleData.indexOf(module),1);
+	}
+	
+	serviceInstance.getModuleSummary = function () {
+		return serviceInstance.moduleData;
+	}
+	
+	serviceInstance.log = function () {
+		for (var i = 0; i < serviceInstance.moduleData.length; i++) {
+			console.log(serviceInstance.moduleData[i]);
+		}
+	}
+	
+	return serviceInstance;
+}]);
