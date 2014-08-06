@@ -1,11 +1,7 @@
 package org.mobicents.servlet.restcomm.http;
 
-import java.util.Map;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-
-import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -13,7 +9,6 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

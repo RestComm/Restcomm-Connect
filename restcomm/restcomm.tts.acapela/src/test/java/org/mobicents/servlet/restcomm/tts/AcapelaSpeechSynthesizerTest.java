@@ -16,15 +16,9 @@
  */
 package org.mobicents.servlet.restcomm.tts;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.testkit.JavaTestKit;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.util.Set;
@@ -32,13 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.Ignore;
-
-import static org.junit.Assert.*;
-
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
@@ -50,6 +40,13 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 
 import scala.concurrent.duration.FiniteDuration;
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.testkit.JavaTestKit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

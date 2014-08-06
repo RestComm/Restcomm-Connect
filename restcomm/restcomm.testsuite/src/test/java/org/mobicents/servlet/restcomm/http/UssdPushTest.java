@@ -52,7 +52,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.ussd.UssdPullTestMessages;
 
 import com.google.gson.JsonObject;
 

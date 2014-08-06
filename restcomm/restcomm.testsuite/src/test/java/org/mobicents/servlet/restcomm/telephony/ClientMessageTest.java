@@ -22,7 +22,6 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -30,9 +29,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.List;
 
-import javax.sip.Dialog;
 import javax.sip.address.SipURI;
-import javax.sip.message.Response;
 
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -44,7 +41,6 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
@@ -53,10 +49,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.CreateClientsTool;
-import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 /**
  * Client SIP MESSAGE Test. 

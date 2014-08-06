@@ -16,14 +16,12 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import javax.servlet.sip.SipServletResponse;
+
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged.State;
-
-import javax.servlet.sip.SipServletResponse;
-
-import static org.mobicents.servlet.restcomm.telephony.CallStateChanged.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
