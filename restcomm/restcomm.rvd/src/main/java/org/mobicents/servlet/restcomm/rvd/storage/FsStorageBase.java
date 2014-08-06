@@ -146,10 +146,27 @@ public class FsStorageBase {
         return loadModelFromFile(file, modelClass);
     }
 
+    public <T> T loadModelFromXMLFile(String filepath, Class<T> modelClass) throws StorageException {
+        File file = new File(filepath);
+        return loadModelFromXMLFile(file, modelClass);
+    }
+
     public <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException {
         try {
             String data = FileUtils.readFileToString(file, "UTF-8");
             T instance = marshaler.getGson().fromJson(data, modelClass);
+            return instance;
+
+        } catch (IOException e) {
+            throw new StorageException("Error loading model from file '" + file + "'", e);
+        }
+    }
+
+    // CAUTION! what happens if the typecasting fails? solve this..
+    public <T> T loadModelFromXMLFile(File file, Class<T> modelClass) throws StorageException {
+        try {
+            String data = FileUtils.readFileToString(file, "UTF-8");
+            T instance = (T) marshaler.getXStream().fromXML(data);
             return instance;
 
         } catch (IOException e) {

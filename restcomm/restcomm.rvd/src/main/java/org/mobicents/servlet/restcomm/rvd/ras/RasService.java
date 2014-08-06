@@ -30,6 +30,7 @@ import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 import com.google.gson.Gson;
+import com.thoughtworks.xstream.XStream;
 
 import java.util.List;
 import java.util.UUID;
@@ -81,9 +82,13 @@ public class RasService {
 
         // extract info and config parts of a Rapp
         Gson gson = new Gson();
+        XStream xstream = marshaler.getXStream();
+        xstream.alias("restcommApplication", RappInfo.class);
+
         Rapp rapp = packagingStorage.loadRapp(projectName);
         String configData = gson.toJson(rapp.getConfig());
-        String infoData = gson.toJson(rapp.getInfo());
+        //String infoData = gson.toJson(rapp.getInfo());
+        String infoData = xstream.toXML(rapp.getInfo());
 
         // create the zip bundle
         try {
@@ -92,7 +97,7 @@ public class RasService {
             Zipper zipper = new Zipper(tempFile);
             try {
                 zipper.addDirectory("/app/");
-                zipper.addFileContent("/app/info", infoData );
+                zipper.addFileContent("/app/info.xml", infoData );
                 zipper.addFileContent("/app/config", configData );
                 zipper.addDirectory("/app/rvd/");
                 zipper.addFileContent("/app/rvd/state", marshaler.toData(project.getState()) );
@@ -142,7 +147,8 @@ public class RasService {
         unzipper.unzip(packageZipStream);
 
         //String infoPath = tempDir.getPath() + "/app/" + "info";
-        RappInfo info = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
+        //RappInfo info = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
+        RappInfo info = storageBase.loadModelFromXMLFile( tempDir.getPath() + "/app/" + "info.xml", RappInfo.class );
         RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
 
         // Make sure no such restcomm app already exists (single instance limitation)
