@@ -19,11 +19,34 @@
  */
 package org.mobicents.servlet.restcomm.provisioning.number.api;
 
+import java.util.List;
+
 /**
+ * A POJO Representation of a Number. It contains the following properties :
+ * <ul>
+ * 	<li>country code - 2 letters Country Code as defined per http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2</li>
+ *  <li>MSISDN - Number in MSISDN representation ie 34911067000</li>
+ *  <li>Type - Mobile number or Fixed Line</li>
+ *  <li>Features- Whether the number provides Voice or/and SMS capabilities</li>
+ *  <li>Cost - cost of the number per minute</li>
+ * <ul>
+ * 
  * @author jean.deruelle@telestax.com
  *
  */
 public interface Number {
-
+	String getCountryCode();
+	void setCountryCode(String countryCode);
 	
+	String getMsisdn();
+	void setMsisdn(String msisdn);
+	
+	String getType();
+	void setType(String type);
+	
+	List<String> getFeatures();
+	void setFeatures(List<String> features);
+	
+	String getCost();
+	void setCost(String cost);
 }
