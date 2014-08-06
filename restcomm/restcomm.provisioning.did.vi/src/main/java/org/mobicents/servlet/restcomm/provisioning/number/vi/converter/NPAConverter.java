@@ -1,10 +1,10 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mobicents.servlet.restcomm.http.voipinnovations.NPA;
-import org.mobicents.servlet.restcomm.http.voipinnovations.NXX;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.NPA;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.NXX;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;

@@ -14,27 +14,26 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.telephony.config;
+package org.mobicents.servlet.restcomm.provisioning.number.vi;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class ObjectInstantiationException extends Exception {
-    private static final long serialVersionUID = 1L;
+public final class VoipInnovationsResponse {
+    private final VoipInnovationsHeader header;
+    private final VoipInnovationsBody body;
 
-    public ObjectInstantiationException() {
+    public VoipInnovationsResponse(final VoipInnovationsHeader header, final VoipInnovationsBody body) {
         super();
+        this.header = header;
+        this.body = body;
     }
 
-    public ObjectInstantiationException(final String message) {
-        super(message);
+    public VoipInnovationsHeader header() {
+        return header;
     }
 
-    public ObjectInstantiationException(final Throwable cause) {
-        super(cause);
-    }
-
-    public ObjectInstantiationException(final String message, final Throwable cause) {
-        super(message, cause);
+    public VoipInnovationsBody body() {
+        return body;
     }
 }

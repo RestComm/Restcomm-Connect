@@ -14,7 +14,9 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.http.voipinnovations;
+package org.mobicents.servlet.restcomm.provisioning.number.vi;
+
+import java.util.List;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
@@ -22,33 +24,21 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class TN {
-    private final String tier;
-    private final boolean t38;
-    private final boolean cnam;
-    private final String number;
+public final class NXX {
+    private final String name;
+    private final List<TN> tns;
 
-    public TN(final String tier, final boolean t38, final boolean cnam, final String number) {
+    public NXX(final String name, final List<TN> tns) {
         super();
-        this.tier = tier;
-        this.t38 = t38;
-        this.cnam = cnam;
-        this.number = number;
+        this.name = name;
+        this.tns = tns;
     }
 
-    public String tier() {
-        return tier;
+    public String name() {
+        return name;
     }
 
-    public boolean t38() {
-        return t38;
-    }
-
-    public boolean cnam() {
-        return cnam;
-    }
-
-    public String number() {
-        return number;
+    public List<TN> tns() {
+        return tns;
     }
 }

@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations;
+package org.mobicents.servlet.restcomm.provisioning.number.vi;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 

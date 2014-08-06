@@ -26,8 +26,8 @@ import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
-import org.mobicents.servlet.restcomm.telephony.config.ObjectFactory;
-import org.mobicents.servlet.restcomm.telephony.config.ObjectInstantiationException;
+import org.mobicents.servlet.restcomm.loader.ObjectFactory;
+import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

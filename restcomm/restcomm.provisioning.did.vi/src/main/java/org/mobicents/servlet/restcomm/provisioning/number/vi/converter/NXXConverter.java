@@ -1,13 +1,13 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
 
-import org.mobicents.servlet.restcomm.http.voipinnovations.NXX;
-import org.mobicents.servlet.restcomm.http.voipinnovations.TN;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mobicents.servlet.restcomm.provisioning.number.vi.NXX;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.TN;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-
-import java.util.List;
-import java.util.ArrayList;
 
 public final class NXXConverter extends AbstractConverter {
     public NXXConverter() {
