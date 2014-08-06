@@ -130,19 +130,19 @@
 		
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.provisioning.did.api</artifactId>
+			<artifactId>restcomm.provisioning.number.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.provisioning.did.vi</artifactId>
+			<artifactId>restcomm.provisioning.number.vi</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.provisioning.did.nexmo</artifactId>
+			<artifactId>restcomm.provisioning.number.nexmo</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
