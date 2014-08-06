@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
+ *
  */
 package org.mobicents.servlet.restcomm.provisioning.number.vi;
 
@@ -50,28 +50,29 @@ import com.thoughtworks.xstream.XStream;
 
 /**
  * @author jean
- *
  */
-public class VoIPInnovationsNumberProvisioning implements
-		PhoneNumberProvisioningManager {
+public class VoIPInnovationsNumberProvisioning implements PhoneNumberProvisioningManager {
 
-	private boolean teleStaxProxyEnabled;
-	private XStream xstream;
+    private boolean teleStaxProxyEnabled;
+    private XStream xstream;
     private String header;
     protected Boolean telestaxProxyEnabled;
     protected String uri, username, password, endpoint;
     protected Configuration activeConfiguration;
-    
+
     public VoIPInnovationsNumberProvisioning() {
-	}
-    
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#init(org.apache.commons.configuration.Configuration, boolean)
-	 */
-	@Override
-	public void init(Configuration phoneNumberProvisioningConfiguration, Configuration telestaxProxyConfiguration) {
-		telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#init(org.apache.commons.configuration
+     * .Configuration, boolean)
+     */
+    @Override
+    public void init(Configuration phoneNumberProvisioningConfiguration, Configuration telestaxProxyConfiguration) {
+        telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
         if (telestaxProxyEnabled) {
             uri = telestaxProxyConfiguration.getString("uri");
             username = telestaxProxyConfiguration.getString("login");
@@ -85,8 +86,8 @@ public class VoIPInnovationsNumberProvisioning implements
             endpoint = phoneNumberProvisioningConfiguration.getString("endpoint");
             activeConfiguration = phoneNumberProvisioningConfiguration;
         }
-        
-		this.header = header(username, password);
+
+        this.header = header(username, password);
         xstream = new XStream();
         xstream.alias("response", VoipInnovationsResponse.class);
         xstream.alias("header", VoipInnovationsHeader.class);
@@ -107,9 +108,9 @@ public class VoIPInnovationsNumberProvisioning implements
         xstream.registerConverter(new RateCenterConverter());
         xstream.registerConverter(new StateConverter());
         xstream.registerConverter(new TNConverter());
-	}
+    }
 
-	private String header(final String login, final String password) {
+    private String header(final String login, final String password) {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("<header><sender>");
         buffer.append("<login>").append(login).append("</login>");
@@ -117,8 +118,8 @@ public class VoIPInnovationsNumberProvisioning implements
         buffer.append("</sender></header>");
         return buffer.toString();
     }
-	
-	private String getFriendlyName(final String number) {
+
+    private String getFriendlyName(final String number) {
         try {
             final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
             final com.google.i18n.phonenumbers.Phonenumber.PhoneNumber phoneNumber = phoneNumberUtil.parse(number, "US");
@@ -140,9 +141,8 @@ public class VoIPInnovationsNumberProvisioning implements
                             final String name = getFriendlyName(tn.number());
                             final String phoneNumber = name;
                             // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
-                            final PhoneNumber number = new PhoneNumber(name, phoneNumber,
-                                    Integer.parseInt(lata.name()), center.name(), null, null, state.name(), null, "US", true,
-                                    null, null, tn.t38());
+                            final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
+                                    center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38());
                             numbers.add(number);
                         }
                     }
@@ -151,15 +151,18 @@ public class VoIPInnovationsNumberProvisioning implements
         }
         return numbers;
     }
-	
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#searchForNumbers(java.lang.String, java.lang.String, java.lang.String, boolean, boolean, boolean, boolean, int, int)
-	 */
-	@Override
-	public List<PhoneNumber> searchForNumbers(String country, String areaCode, String searchPattern, boolean smsEnabled, boolean mmsEnabled, boolean voiceEnabled,
-	boolean faxEnabled, int rangeSize, int rangeIndex) {
-		if (areaCode != null && !areaCode.isEmpty() && (areaCode.length() == 3)) {
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#searchForNumbers(java.lang.String,
+     * java.lang.String, java.lang.String, boolean, boolean, boolean, boolean, int, int)
+     */
+    @Override
+    public List<PhoneNumber> searchForNumbers(String country, String areaCode, String searchPattern, boolean smsEnabled,
+            boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled, int rangeSize, int rangeIndex) {
+        if (areaCode != null && !areaCode.isEmpty() && (areaCode.length() == 3)) {
             final StringBuilder buffer = new StringBuilder();
             buffer.append("<request id=\"\">");
             buffer.append(header);
@@ -177,10 +180,10 @@ public class VoIPInnovationsNumberProvisioning implements
                 parameters.add(new BasicNameValuePair("apidata", body));
                 post.setEntity(new UrlEncodedFormEntity(parameters));
                 final DefaultHttpClient client = new DefaultHttpClient();
-                if(teleStaxProxyEnabled) {
-                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                if (teleStaxProxyEnabled) {
+                    // This will work as a flag for LB that this request will need to be modified and proxied to VI
                     post.addHeader("TelestaxProxy", String.valueOf(teleStaxProxyEnabled));
-                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    // This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
                     post.addHeader("RequestType", "GetAvailablePhoneNumbersByAreaCode");
                 }
                 final HttpResponse response = client.execute(post);
@@ -196,36 +199,43 @@ public class VoIPInnovationsNumberProvisioning implements
             } catch (final Exception ignored) {
             }
         }
-		return new ArrayList<PhoneNumber>();
-	}
+        return new ArrayList<PhoneNumber>();
+    }
 
-	/* (non-Javadoc)
-	 * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#buyNumber(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
-	 */
-	@Override
-	public boolean buyNumber(String country, String number, String smsHttpURL,
-			String smsType, String voiceURL) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#buyNumber(java.lang.String,
+     * java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     */
+    @Override
+    public boolean buyNumber(String country, String number, String smsHttpURL, String smsType, String voiceURL) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#updateNumber(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
-	 */
-	@Override
-	public boolean updateNumber(String country, String number,
-			String smsHttpURL, String smsType, String voiceURL) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#updateNumber(java.lang.String,
+     * java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     */
+    @Override
+    public boolean updateNumber(String country, String number, String smsHttpURL, String smsType, String voiceURL) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#cancelNumber(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public boolean cancelNumber(String country, String number) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#cancelNumber(java.lang.String,
+     * java.lang.String)
+     */
+    @Override
+    public boolean cancelNumber(String country, String number) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
 }

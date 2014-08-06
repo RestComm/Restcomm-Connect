@@ -28,6 +28,16 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>com.googlecode.libphonenumber</groupId>
 			<artifactId>libphonenumber</artifactId>
 		</dependency>
@@ -71,6 +81,13 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.sms.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.number.api</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

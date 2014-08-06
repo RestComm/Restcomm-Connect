@@ -89,6 +89,13 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.number.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.asr</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>

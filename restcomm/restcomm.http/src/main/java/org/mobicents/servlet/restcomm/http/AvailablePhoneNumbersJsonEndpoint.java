@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
+ *
  */
 package org.mobicents.servlet.restcomm.http;
 
@@ -34,7 +34,6 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
- *
  */
 @Path("/Accounts/{accountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Local.json")
 @ThreadSafe
@@ -44,43 +43,40 @@ public class AvailablePhoneNumbersJsonEndpoint extends AvailablePhoneNumbersEndp
     }
 
     @GET
-    public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid, 
-    		@PathParam("IsoCountryCode") final String isoCountryCode,
-            @QueryParam("AreaCode") String areaCode,
-            @QueryParam("Contains") String filterPattern,
-            @QueryParam("SmsEnabled") String smsEnabled,
-            @QueryParam("MmsEnabled") String mmsEnabled,
-            @QueryParam("VoiceEnabled") String voiceEnabled,
-            @QueryParam("FaxEnabled") String faxEnabled,
-            @QueryParam("RangeSize") String rangeSize,
+    public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
+            @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
+            @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
+            @QueryParam("MmsEnabled") String mmsEnabled, @QueryParam("VoiceEnabled") String voiceEnabled,
+            @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("RangeSize") String rangeSize,
             @QueryParam("RangeIndex") String rangeIndex) {
-    	if (isoCountryCode != null && !isoCountryCode.isEmpty()) {
-        	int rangeSizeInt = -1;
-        	if(rangeSize != null && !rangeSize.isEmpty()) {
-        		rangeSizeInt = Integer.parseInt(rangeSize);
-        	}
-        	int rangeIndexInt = -1;
-        	if(rangeIndex != null && !rangeIndex.isEmpty()) {
-        		rangeIndexInt = Integer.parseInt(rangeIndex);
-        	}
-        	boolean smsEnabledBool = false;
-        	if(smsEnabled != null && !smsEnabled.isEmpty()) {
-        		smsEnabledBool = Boolean.parseBoolean(smsEnabled);
-        	}
-        	boolean mmsEnabledBool = false;
-        	if(mmsEnabled != null && !mmsEnabled.isEmpty()) {
-        		mmsEnabledBool = Boolean.parseBoolean(mmsEnabled);
-        	}
-        	boolean voiceEnabledBool = false;
-        	if(voiceEnabled != null && !voiceEnabled.isEmpty()) {
-        		voiceEnabledBool = Boolean.parseBoolean(voiceEnabled);
-        	}
-        	boolean faxEnabledBool = false;
-        	if(faxEnabled != null && !faxEnabled.isEmpty()) {
-        		faxEnabledBool = Boolean.parseBoolean(faxEnabled);
-        	}
-            return getAvailablePhoneNumbers(
-            		accountSid, isoCountryCode, areaCode, filterPattern, smsEnabledBool, mmsEnabledBool, voiceEnabledBool, faxEnabledBool, rangeSizeInt, rangeIndexInt, MediaType.APPLICATION_JSON_TYPE);
+        if (isoCountryCode != null && !isoCountryCode.isEmpty()) {
+            int rangeSizeInt = -1;
+            if (rangeSize != null && !rangeSize.isEmpty()) {
+                rangeSizeInt = Integer.parseInt(rangeSize);
+            }
+            int rangeIndexInt = -1;
+            if (rangeIndex != null && !rangeIndex.isEmpty()) {
+                rangeIndexInt = Integer.parseInt(rangeIndex);
+            }
+            boolean smsEnabledBool = false;
+            if (smsEnabled != null && !smsEnabled.isEmpty()) {
+                smsEnabledBool = Boolean.parseBoolean(smsEnabled);
+            }
+            boolean mmsEnabledBool = false;
+            if (mmsEnabled != null && !mmsEnabled.isEmpty()) {
+                mmsEnabledBool = Boolean.parseBoolean(mmsEnabled);
+            }
+            boolean voiceEnabledBool = false;
+            if (voiceEnabled != null && !voiceEnabled.isEmpty()) {
+                voiceEnabledBool = Boolean.parseBoolean(voiceEnabled);
+            }
+            boolean faxEnabledBool = false;
+            if (faxEnabled != null && !faxEnabled.isEmpty()) {
+                faxEnabledBool = Boolean.parseBoolean(faxEnabled);
+            }
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, areaCode, filterPattern, smsEnabledBool,
+                    mmsEnabledBool, voiceEnabledBool, faxEnabledBool, rangeSizeInt, rangeIndexInt,
+                    MediaType.APPLICATION_JSON_TYPE);
         } else {
             return status(BAD_REQUEST).build();
         }
