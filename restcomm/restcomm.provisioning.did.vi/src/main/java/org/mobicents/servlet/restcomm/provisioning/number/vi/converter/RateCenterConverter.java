@@ -1,40 +1,40 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mobicents.servlet.restcomm.http.voipinnovations.LATA;
-import org.mobicents.servlet.restcomm.http.voipinnovations.State;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.NPA;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.RateCenter;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 
-public final class StateConverter extends AbstractConverter {
-    public StateConverter() {
+public final class RateCenterConverter extends AbstractConverter {
+    public RateCenterConverter() {
         super();
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(final Class klass) {
-        return State.class.equals(klass);
+        return RateCenter.class.equals(klass);
     }
 
     @Override
     public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
         String name = null;
-        final List<LATA> latas = new ArrayList<LATA>();
+        final List<NPA> npas = new ArrayList<NPA>();
         while (reader.hasMoreChildren()) {
             reader.moveDown();
             final String child = reader.getNodeName();
             if ("name".equals(child)) {
                 name = reader.getValue();
-            } else if ("lata".equals(child)) {
-                final LATA lata = (LATA) context.convertAnother(null, LATA.class);
-                latas.add(lata);
+            } else if ("npa".equals(child)) {
+                final NPA npa = (NPA) context.convertAnother(null, NPA.class);
+                npas.add(npa);
             }
             reader.moveUp();
         }
-        return new State(name, latas);
+        return new RateCenter(name, npas);
     }
 }

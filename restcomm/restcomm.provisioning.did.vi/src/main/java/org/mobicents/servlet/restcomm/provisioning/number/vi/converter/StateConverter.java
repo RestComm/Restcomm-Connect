@@ -1,40 +1,40 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
 
-import org.mobicents.servlet.restcomm.http.voipinnovations.NPA;
-import org.mobicents.servlet.restcomm.http.voipinnovations.RateCenter;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mobicents.servlet.restcomm.provisioning.number.vi.LATA;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.State;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 
-import java.util.List;
-import java.util.ArrayList;
-
-public final class RateCenterConverter extends AbstractConverter {
-    public RateCenterConverter() {
+public final class StateConverter extends AbstractConverter {
+    public StateConverter() {
         super();
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(final Class klass) {
-        return RateCenter.class.equals(klass);
+        return State.class.equals(klass);
     }
 
     @Override
     public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
         String name = null;
-        final List<NPA> npas = new ArrayList<NPA>();
+        final List<LATA> latas = new ArrayList<LATA>();
         while (reader.hasMoreChildren()) {
             reader.moveDown();
             final String child = reader.getNodeName();
             if ("name".equals(child)) {
                 name = reader.getValue();
-            } else if ("npa".equals(child)) {
-                final NPA npa = (NPA) context.convertAnother(null, NPA.class);
-                npas.add(npa);
+            } else if ("lata".equals(child)) {
+                final LATA lata = (LATA) context.convertAnother(null, LATA.class);
+                latas.add(lata);
             }
             reader.moveUp();
         }
-        return new RateCenter(name, npas);
+        return new State(name, latas);
     }
 }

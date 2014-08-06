@@ -1,8 +1,8 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
 
-import org.mobicents.servlet.restcomm.http.voipinnovations.VoipInnovationsBody;
-import org.mobicents.servlet.restcomm.http.voipinnovations.VoipInnovationsHeader;
-import org.mobicents.servlet.restcomm.http.voipinnovations.VoipInnovationsResponse;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.VoipInnovationsBody;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.VoipInnovationsHeader;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.VoipInnovationsResponse;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;

@@ -14,26 +14,31 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.http.voipinnovations;
+package org.mobicents.servlet.restcomm.provisioning.number.vi;
+
+import java.util.List;
+
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class VoipInnovationsResponse {
-    private final VoipInnovationsHeader header;
-    private final VoipInnovationsBody body;
+@Immutable
+public final class NPA {
+    private final String name;
+    private final List<NXX> nxxs;
 
-    public VoipInnovationsResponse(final VoipInnovationsHeader header, final VoipInnovationsBody body) {
+    public NPA(final String name, final List<NXX> nxxs) {
         super();
-        this.header = header;
-        this.body = body;
+        this.name = name;
+        this.nxxs = nxxs;
     }
 
-    public VoipInnovationsHeader header() {
-        return header;
+    public String name() {
+        return name;
     }
 
-    public VoipInnovationsBody body() {
-        return body;
+    public List<NXX> nxxs() {
+        return nxxs;
     }
 }

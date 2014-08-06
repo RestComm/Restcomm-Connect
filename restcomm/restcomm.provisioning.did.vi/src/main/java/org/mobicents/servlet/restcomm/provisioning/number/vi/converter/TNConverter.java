@@ -1,6 +1,6 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
 
-import org.mobicents.servlet.restcomm.http.voipinnovations.TN;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.TN;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;

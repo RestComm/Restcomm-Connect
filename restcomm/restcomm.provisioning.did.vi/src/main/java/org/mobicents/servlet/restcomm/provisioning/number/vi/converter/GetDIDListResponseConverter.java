@@ -14,13 +14,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
+
+import org.mobicents.servlet.restcomm.provisioning.number.vi.GetDIDListResponse;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.State;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-
-import org.mobicents.servlet.restcomm.http.voipinnovations.GetDIDListResponse;
-import org.mobicents.servlet.restcomm.http.voipinnovations.State;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

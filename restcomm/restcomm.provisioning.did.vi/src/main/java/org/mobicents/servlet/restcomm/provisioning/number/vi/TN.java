@@ -14,9 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.http.voipinnovations;
-
-import java.util.List;
+package org.mobicents.servlet.restcomm.provisioning.number.vi;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
@@ -24,21 +22,33 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class RateCenter {
-    private final String name;
-    private final List<NPA> npas;
+public final class TN {
+    private final String tier;
+    private final boolean t38;
+    private final boolean cnam;
+    private final String number;
 
-    public RateCenter(final String name, final List<NPA> npas) {
+    public TN(final String tier, final boolean t38, final boolean cnam, final String number) {
         super();
-        this.name = name;
-        this.npas = npas;
+        this.tier = tier;
+        this.t38 = t38;
+        this.cnam = cnam;
+        this.number = number;
     }
 
-    public String name() {
-        return name;
+    public String tier() {
+        return tier;
     }
 
-    public List<NPA> npas() {
-        return npas;
+    public boolean t38() {
+        return t38;
+    }
+
+    public boolean cnam() {
+        return cnam;
+    }
+
+    public String number() {
+        return number;
     }
 }

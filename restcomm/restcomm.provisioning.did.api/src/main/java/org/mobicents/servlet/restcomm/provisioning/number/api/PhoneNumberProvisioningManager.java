@@ -31,20 +31,26 @@ public interface PhoneNumberProvisioningManager {
 
 	/**
 	 * Initialize the Manager with the restcommm configuration passed in restcomm.xml
-	 * @param configuration the configuration
+	 * @param phoneNumberProvisioningConfiguration the configuration
+	 * @param teleStaxProxyConfiguration if TeleStax proxy is enabled for DID provisioning
 	 */
-	public void init(Configuration configuration);
+	public void init(Configuration phoneNumberProvisioningConfiguration, Configuration teleStaxProxyConfiguration);
 	
 	/**
 	 * Search for a list of numbers matching the various parameters 
 	 * @param country 2 letters Country Code as defined per http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
+	 * @param areaCode the areaCode (US only)
 	 * @param searchPattern A matching pattern. Ex: 888
-	 * @param features Available features are SMS and VOICE, use a comma-separated values. Ex: SMS,VOICE,MMS
+	 * @param smsEnabled if the number should be SMS capable
+	 * @param mmsEnabled if the number should be MMS capable
+	 * @param voiceEnabled if the number should be Voice capable
+	 * @param faxEnabled if the number should be Fax capable
 	 * @param rangeSize Range size (max 100, default 10). Ex: 25
 	 * @param rangeIndex Range index (>0, default 1). Ex: 2
 	 * @return List of matching numbers
 	 */
-	public List<PhoneNumber> searchForNumbers(String country, String searchPattern, String features, int rangeSize, int rangeIndex);
+	public List<PhoneNumber> searchForNumbers(String country, String areaCode, String searchPattern, boolean smsEnabled, boolean mmsEnabled, boolean voiceEnabled,
+			boolean faxEnabled, int rangeSize, int rangeIndex);
 	
 	/**
 	 * Purchase a given inbound number.

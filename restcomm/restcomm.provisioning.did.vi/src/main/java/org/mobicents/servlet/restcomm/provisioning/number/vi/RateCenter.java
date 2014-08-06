@@ -14,7 +14,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.http.voipinnovations;
+package org.mobicents.servlet.restcomm.provisioning.number.vi;
 
 import java.util.List;
 
@@ -24,21 +24,21 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class State {
+public final class RateCenter {
     private final String name;
-    private final List<LATA> latas;
+    private final List<NPA> npas;
 
-    public State(final String name, final List<LATA> latas) {
+    public RateCenter(final String name, final List<NPA> npas) {
         super();
         this.name = name;
-        this.latas = latas;
+        this.npas = npas;
     }
 
     public String name() {
         return name;
     }
 
-    public List<LATA> latas() {
-        return latas;
+    public List<NPA> npas() {
+        return npas;
     }
 }

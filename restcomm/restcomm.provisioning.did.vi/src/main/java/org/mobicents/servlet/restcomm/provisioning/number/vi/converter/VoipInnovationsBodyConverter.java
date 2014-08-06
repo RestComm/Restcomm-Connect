@@ -1,7 +1,7 @@
-package org.mobicents.servlet.restcomm.http.voipinnovations.converter;
+package org.mobicents.servlet.restcomm.provisioning.number.vi.converter;
 
-import org.mobicents.servlet.restcomm.http.voipinnovations.GetDIDListResponse;
-import org.mobicents.servlet.restcomm.http.voipinnovations.VoipInnovationsBody;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.GetDIDListResponse;
+import org.mobicents.servlet.restcomm.provisioning.number.vi.VoipInnovationsBody;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;

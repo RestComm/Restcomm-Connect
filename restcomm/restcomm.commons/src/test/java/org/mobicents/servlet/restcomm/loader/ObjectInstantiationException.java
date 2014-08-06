@@ -14,41 +14,27 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.http.voipinnovations;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+package org.mobicents.servlet.restcomm.loader;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable
-public final class GetDIDListResponse {
-    private final String name;
-    private final String status;
-    private final int code;
-    private final State state;
+public final class ObjectInstantiationException extends Exception {
+    private static final long serialVersionUID = 1L;
 
-    public GetDIDListResponse(final String name, final String status, final int code, final State state) {
+    public ObjectInstantiationException() {
         super();
-        this.name = name;
-        this.status = status;
-        this.code = code;
-        this.state = state;
     }
 
-    public String name() {
-        return name;
+    public ObjectInstantiationException(final String message) {
+        super(message);
     }
 
-    public String status() {
-        return status;
+    public ObjectInstantiationException(final Throwable cause) {
+        super(cause);
     }
 
-    public int code() {
-        return code;
-    }
-
-    public State state() {
-        return state;
+    public ObjectInstantiationException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 }

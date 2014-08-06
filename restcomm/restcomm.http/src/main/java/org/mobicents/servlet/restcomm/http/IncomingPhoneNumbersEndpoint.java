@@ -74,6 +74,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
+    protected Configuration voipInnovationsConfiguration;
+    protected Configuration telestaxProxyConfiguration;
+    protected Boolean telestaxProxyEnabled;
+    protected String uri, username, password, endpoint;
 
     private String header;
 
@@ -99,8 +103,22 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new IncomingPhoneNumberListConverter(runtime));
         xstream.registerConverter(new RestCommResponseConverter(runtime));
-        final Configuration vi = configuration.subset("voip-innovations");
-        header = header(vi.getString("login"), vi.getString("password"));
+
+        voipInnovationsConfiguration = configuration.subset("voip-innovations");
+        telestaxProxyConfiguration = runtime.subset("telestax-proxy");
+        telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
+        if (telestaxProxyEnabled) {
+            uri = telestaxProxyConfiguration.getString("uri");
+            username = telestaxProxyConfiguration.getString("login");
+            password = telestaxProxyConfiguration.getString("password");
+            endpoint = telestaxProxyConfiguration.getString("endpoint");
+        } else {
+            uri = voipInnovationsConfiguration.getString("uri");
+            username = voipInnovationsConfiguration.getString("login");
+            password = voipInnovationsConfiguration.getString("password");
+            endpoint = voipInnovationsConfiguration.getString("endpoint");
+        }
+        this.header = header(username, password);
     }
 
     private String header(final String login, final String password) {
@@ -114,7 +132,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected boolean assignDid(final String did) {
         if (did != null && !did.isEmpty()) {
-            final Configuration vi = configuration.subset("voip-innovations");
             final StringBuilder buffer = new StringBuilder();
             buffer.append("<request id=\"\">");
             buffer.append(header);
@@ -122,17 +139,23 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
             buffer.append("<item>");
             buffer.append("<did>").append(did).append("</did>");
-            buffer.append("<endpointgroup>").append(vi.getString("endpoint")).append("</endpointgroup>");
+            buffer.append("<endpointgroup>").append(endpoint).append("</endpointgroup>");
             buffer.append("</item>");
             buffer.append("</body>");
             buffer.append("</request>");
             final String body = buffer.toString();
-            final HttpPost post = new HttpPost(vi.getString("uri"));
+            final HttpPost post = new HttpPost(uri);
             try {
                 List<NameValuePair> parameters = new ArrayList<NameValuePair>();
                 parameters.add(new BasicNameValuePair("apidata", body));
                 post.setEntity(new UrlEncodedFormEntity(parameters));
                 final DefaultHttpClient client = new DefaultHttpClient();
+                if(telestaxProxyEnabled) {
+                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    post.addHeader("RequestType", "AssignDid");
+                }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                     final String content = StringUtils.toString(response.getEntity().getContent());
@@ -159,13 +182,18 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             buffer.append("</body>");
             buffer.append("</request>");
             final String body = buffer.toString();
-            final Configuration vi = configuration.subset("voip-innovations");
-            final HttpPost post = new HttpPost(vi.getString("uri"));
+            final HttpPost post = new HttpPost(uri);
             try {
                 List<NameValuePair> parameters = new ArrayList<NameValuePair>();
                 parameters.add(new BasicNameValuePair("apidata", body));
                 post.setEntity(new UrlEncodedFormEntity(parameters));
                 final DefaultHttpClient client = new DefaultHttpClient();
+                if(telestaxProxyEnabled) {
+                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    post.addHeader("RequestType", "IsValidDid");
+                }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                     final String content = StringUtils.toString(response.getEntity().getContent());
@@ -207,7 +235,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
-                .append("/IncomingPhoneNumbers/").append(sid.toString());
+        .append("/IncomingPhoneNumbers/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
     }
@@ -399,5 +427,62 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
 
         return result;
+    }
+
+    public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        final String number = incomingPhoneNumber.getPhoneNumber();
+        String numberToRemoveFromVi = number;
+        if(numberToRemoveFromVi.startsWith("+1")){
+            numberToRemoveFromVi = numberToRemoveFromVi.replaceFirst("\\+1", "");
+        }
+        if (isValidDid(numberToRemoveFromVi)){
+            releaseDid(numberToRemoveFromVi);
+        }
+        dao.removeIncomingPhoneNumber(new Sid(sid));
+        return ok().build();
+    }
+
+    protected boolean releaseDid(final String did) {
+        if (did != null && !did.isEmpty()) {
+            final StringBuilder buffer = new StringBuilder();
+            buffer.append("<request id=\"\">");
+            buffer.append(header);
+            buffer.append("<body>");
+            buffer.append("<requesttype>").append("releaseDID").append("</requesttype>");
+            buffer.append("<item>");
+            buffer.append("<did>").append(did).append("</did>");
+            buffer.append("</item>");
+            buffer.append("</body>");
+            buffer.append("</request>");
+            final String body = buffer.toString();
+            final HttpPost post = new HttpPost(uri);
+            try {
+                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+                parameters.add(new BasicNameValuePair("apidata", body));
+                post.setEntity(new UrlEncodedFormEntity(parameters));
+                final DefaultHttpClient client = new DefaultHttpClient();
+                if(telestaxProxyEnabled) {
+                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    post.addHeader("RequestType", "ReleaseDid");
+                }
+                final HttpResponse response = client.execute(post);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    final String content = StringUtils.toString(response.getEntity().getContent());
+                    if (content.contains("<statuscode>100</statuscode>")) {
+                        return true;
+                    }
+                }
+            } catch (final Exception ignored) {
+            }
+        }
+        return false;
     }
 }
