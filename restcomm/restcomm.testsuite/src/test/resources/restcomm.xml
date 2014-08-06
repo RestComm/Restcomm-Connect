@@ -95,12 +95,14 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
-	<voip-innovations>
-		<login></login>
-		<password></password>
-		<endpoint></endpoint>
-		<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
-	</voip-innovations>
+	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+		<voip-innovations>
+			<login></login>
+			<password></password>
+			<endpoint></endpoint>
+			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
+		</voip-innovations>	
+	</phone-number-provisioning>
 
 	<smtp>
 		<host></host>

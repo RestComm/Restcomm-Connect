@@ -73,10 +73,8 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         super.init(configuration.subset("runtime-settings"));
         phoneNumberProvisioningConfiguration = configuration.subset("phone-number-provisioning");
-        boolean telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
-        if (telestaxProxyEnabled) {
-            telestaxProxyConfiguration = configuration.subset("runtime-settings").subset("telestax-proxy");
-        }
+        telestaxProxyConfiguration = configuration.subset("runtime-settings").subset("telestax-proxy");
+
         final String phoneNumberProvisioningManagerClass = configuration.getString("phone-number-provisioning[@class]");
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) new ObjectFactory(getClass().getClassLoader())
                 .getObjectInstance(phoneNumberProvisioningManagerClass);
