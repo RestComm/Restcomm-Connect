@@ -127,6 +127,24 @@
 			<artifactId>restcomm.sms.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.did.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.did.vi</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.did.nexmo</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>

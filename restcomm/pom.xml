@@ -131,6 +131,9 @@
 		<module>restcomm.interpreter</module>
 		<module>restcomm.http</module>
 		<module>restcomm.sms</module>
+		<module>restcomm.provisioning.number.api</module>
+		<module>restcomm.provisioning.number.vi</module>
+		<module>restcomm.provisioning.number.nexmo</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>

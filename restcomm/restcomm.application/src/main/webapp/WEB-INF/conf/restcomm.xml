@@ -97,6 +97,10 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
+	<did-provisioning class="org.mobicents.servlet.restcomm.did.provisioning.nexmo.NexmoManager">
+		
+	</did-provisioning>
+	
 	<voip-innovations>
 		<login></login>
 		<password></password>
