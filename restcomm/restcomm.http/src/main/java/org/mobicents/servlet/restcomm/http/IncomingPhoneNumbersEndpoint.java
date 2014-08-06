@@ -437,8 +437,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         final String number = incomingPhoneNumber.getPhoneNumber();
-        if (isValidDid(number)){
-            releaseDid(number);
+        String numberToRemoveFromVi = number;
+        if(numberToRemoveFromVi.startsWith("+1")){
+            numberToRemoveFromVi = numberToRemoveFromVi.replaceFirst("\\+1", "");
+        }
+        if (isValidDid(numberToRemoveFromVi)){
+            releaseDid(numberToRemoveFromVi);
         }
         dao.removeIncomingPhoneNumber(new Sid(sid));
         return ok().build();
