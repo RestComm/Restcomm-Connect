@@ -27,7 +27,7 @@ import org.apache.commons.configuration.Configuration;
  * @author jean.deruelle@telestax.com
  *
  */
-public interface NumberProvisioningManager {
+public interface PhoneNumberProvisioningManager {
 
 	/**
 	 * Initialize the Manager with the restcommm configuration passed in restcomm.xml
@@ -39,12 +39,12 @@ public interface NumberProvisioningManager {
 	 * Search for a list of numbers matching the various parameters 
 	 * @param country 2 letters Country Code as defined per http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
 	 * @param searchPattern A matching pattern. Ex: 888
-	 * @param features Available features are SMS and VOICE, use a comma-separated values. Ex: SMS,VOICE
+	 * @param features Available features are SMS and VOICE, use a comma-separated values. Ex: SMS,VOICE,MMS
 	 * @param rangeSize Range size (max 100, default 10). Ex: 25
 	 * @param rangeIndex Range index (>0, default 1). Ex: 2
 	 * @return List of matching numbers
 	 */
-	public List<Number> searchForNumbers(String country, String searchPattern, String features, int rangeSize, int rangeIndex);
+	public List<PhoneNumber> searchForNumbers(String country, String searchPattern, String features, int rangeSize, int rangeIndex);
 	
 	/**
 	 * Purchase a given inbound number.
