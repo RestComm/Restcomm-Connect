@@ -19,8 +19,10 @@ package org.mobicents.servlet.restcomm.sms;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
@@ -53,6 +55,8 @@ public final class SmsSession extends UntypedActor {
     private final List<ActorRef> observers;
     private final SipURI transport;
     private final Map<String, Object> attributes;
+    private ConcurrentHashMap<String, String> customRequestHeaderMap = new ConcurrentHashMap<String, String>();
+    private ConcurrentHashMap<String, String> customHttpHeaderMap;
 
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
@@ -77,8 +81,15 @@ public final class SmsSession extends UntypedActor {
         if (request.getContentLength() > 0) {
             body = new String(request.getRawContent());
         }
+        Iterator<String> headerIt = request.getHeaderNames();
+        while (headerIt.hasNext()) {
+            String headerName = headerIt.next();
+            if (headerName.startsWith("X-")) {
+                customRequestHeaderMap.put(headerName, request.getHeader(headerName));
+            }
+        }
         // Store the last sms event.
-        last = new SmsSessionRequest(from, to, body);
+        last = new SmsSessionRequest(from, to, body, customRequestHeaderMap);
         if (initial == null) {
             initial = last;
         }
@@ -121,6 +132,7 @@ public final class SmsSession extends UntypedActor {
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
         } else if (SmsSessionRequest.class.equals(klass)) {
+            customHttpHeaderMap = ((SmsSessionRequest)message).headers();
             outbound(message);
         } else if (message instanceof SipServletRequest) {
             inbound(message);
@@ -180,6 +192,13 @@ public final class SmsSession extends UntypedActor {
             sms.setContent(body, "text/plain");
             final SipSession session = sms.getSession();
             session.setHandler("SmsService");
+            if(customHttpHeaderMap != null && !customHttpHeaderMap.isEmpty()) {
+                Iterator<String> iter = customHttpHeaderMap.keySet().iterator();
+                while(iter.hasNext()){
+                    String headerName = iter.next();
+                    sms.setHeader(headerName, customHttpHeaderMap.get(headerName));
+                }
+            }
             sms.send();
         } catch (final Exception exception) {
             // Notify the observers.

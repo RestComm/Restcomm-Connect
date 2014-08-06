@@ -16,6 +16,8 @@
  */
 package org.mobicents.servlet.restcomm.sms;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
@@ -26,12 +28,15 @@ public final class SmsSessionRequest {
     private final String from;
     private final String to;
     private final String body;
+    private final ConcurrentHashMap<String, String> customHeaders;
 
-    public SmsSessionRequest(final String from, final String to, final String body) {
+    //TODO need to check which is using the SmsSessionRequest and modify accordingly to include or not the custom headers
+    public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
         super();
         this.from = from;
         this.to = to;
         this.body = body;
+        this.customHeaders = customHeaders;
     }
 
     public String from() {
@@ -44,5 +49,9 @@ public final class SmsSessionRequest {
 
     public String body() {
         return body;
+    }
+
+    public ConcurrentHashMap<String, String> headers() {
+        return customHeaders;
     }
 }
