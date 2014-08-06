@@ -1,12 +1,16 @@
 package org.mobicents.servlet.restcomm.rvd.model;
 
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 
 public class ModelMarshaler {
 
     private Gson gsonUtil;
+    private XStream xstream;
 
     public ModelMarshaler() {
         gsonUtil = new GsonBuilder()
@@ -26,6 +30,15 @@ public class ModelMarshaler {
 
     public Gson getGson() {
         return gsonUtil;
+    }
+
+    // lazy singleton function
+    public XStream getXStream() {
+        if (xstream == null) {
+            xstream = new XStream();
+            xstream.alias("restcommApplication", RappInfo.class);
+        }
+        return xstream;
     }
 
 }
