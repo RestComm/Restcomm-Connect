@@ -110,7 +110,7 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
-	<phone-number-provisioning class="org.mobicents.servlet.restcomm.did.provisioning.nexmo.NexmoManager">
+	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<voip-innovations>
 			<login></login>
 			<password></password>

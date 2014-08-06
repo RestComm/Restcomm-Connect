@@ -51,7 +51,7 @@ import com.thoughtworks.xstream.XStream;
 /**
  * @author jean
  */
-public class VoIPInnovationsNumberProvisioning implements PhoneNumberProvisioningManager {
+public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProvisioningManager {
 
     private boolean teleStaxProxyEnabled;
     private XStream xstream;
@@ -60,7 +60,7 @@ public class VoIPInnovationsNumberProvisioning implements PhoneNumberProvisionin
     protected String uri, username, password, endpoint;
     protected Configuration activeConfiguration;
 
-    public VoIPInnovationsNumberProvisioning() {
+    public VoIPInnovationsNumberProvisioningManager() {
     }
 
     /*
@@ -80,11 +80,12 @@ public class VoIPInnovationsNumberProvisioning implements PhoneNumberProvisionin
             endpoint = telestaxProxyConfiguration.getString("endpoint");
             activeConfiguration = telestaxProxyConfiguration;
         } else {
-            uri = phoneNumberProvisioningConfiguration.getString("uri");
-            username = phoneNumberProvisioningConfiguration.getString("login");
-            password = phoneNumberProvisioningConfiguration.getString("password");
-            endpoint = phoneNumberProvisioningConfiguration.getString("endpoint");
-            activeConfiguration = phoneNumberProvisioningConfiguration;
+            Configuration viConf = phoneNumberProvisioningConfiguration.subset("voip-innovations");
+            uri = viConf.getString("uri");
+            username = viConf.getString("login");
+            password = viConf.getString("password");
+            endpoint = viConf.getString("endpoint");
+            activeConfiguration = viConf;
         }
 
         this.header = header(username, password);

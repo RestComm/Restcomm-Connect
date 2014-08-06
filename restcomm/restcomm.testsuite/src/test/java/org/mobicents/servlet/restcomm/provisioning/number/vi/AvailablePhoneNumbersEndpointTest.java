@@ -41,7 +41,7 @@ public class AvailablePhoneNumbersEndpointTest {
     private String adminUsername = "administrator@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    private String baseURL = "/2012-04-24//Accounts/" + adminAccountSid + "/AvailablePhoneNumbers/";
+    private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/AvailablePhoneNumbers/";
     
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
@@ -56,7 +56,9 @@ public class AvailablePhoneNumbersEndpointTest {
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
-        String response = webResource.queryParam("areaCode","501").get(String.class);
+        String response = webResource.queryParam("AreaCode","501").get(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         
