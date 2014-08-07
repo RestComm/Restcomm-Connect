@@ -55,7 +55,9 @@ public final class SmsSession extends UntypedActor {
     private final List<ActorRef> observers;
     private final SipURI transport;
     private final Map<String, Object> attributes;
+    //Map for custom headers from inbound SIP MESSAGE
     private ConcurrentHashMap<String, String> customRequestHeaderMap = new ConcurrentHashMap<String, String>();
+    //Map for custom headers from HTTP App Server (when creating outbound SIP MESSAGE)
     private ConcurrentHashMap<String, String> customHttpHeaderMap;
 
     private SmsSessionRequest initial;
