@@ -30,6 +30,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.mobicents.servlet.restcomm.provisioning.number.vi.converter.GetDIDListResponseConverter;
@@ -52,7 +53,7 @@ import com.thoughtworks.xstream.XStream;
  * @author jean
  */
 public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProvisioningManager {
-
+    private static final Logger logger = Logger.getLogger(VoIPInnovationsNumberProvisioningManager.class);
     private boolean teleStaxProxyEnabled;
     private XStream xstream;
     private String header;
@@ -176,10 +177,12 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
             buffer.append("</request>");
             final String body = buffer.toString();
             final HttpPost post = new HttpPost(uri);
+
+            List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+            parameters.add(new BasicNameValuePair("apidata", body));
             try {
-                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-                parameters.add(new BasicNameValuePair("apidata", body));
                 post.setEntity(new UrlEncodedFormEntity(parameters));
+
                 final DefaultHttpClient client = new DefaultHttpClient();
                 if (teleStaxProxyEnabled) {
                     // This will work as a flag for LB that this request will need to be modified and proxied to VI
@@ -197,7 +200,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                         return numbers;
                     }
                 }
-            } catch (final Exception ignored) {
+            } catch (final Exception e) {
+                logger.warn("Couldn't reach uri for getting DIDs " + uri, e);
             }
         }
         return new ArrayList<PhoneNumber>();

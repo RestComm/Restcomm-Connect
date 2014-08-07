@@ -12,12 +12,18 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
@@ -42,12 +48,22 @@ public class AvailablePhoneNumbersEndpointTest {
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/AvailablePhoneNumbers/";
     
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
      * available local phone numbers in the United States in the 510 area code.
      */
     @Test
     public void testSearchUSLocalPhoneNumbersWith501AreaCode() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("getDIDs"))
+                .withRequestBody(containing("501"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -55,15 +71,18 @@ public class AvailablePhoneNumbersEndpointTest {
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
-        String response = webResource.queryParam("AreaCode","501").get(String.class);
+        ClientResponse clientResponse = webResource.queryParam("AreaCode","501").accept("application/json")
+                .get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
         
         System.out.println(jsonResponse);
         
-        assertTrue(jsonResponse.get("sid").getAsString().equals(adminAccountSid));
+        assertTrue(jsonResponse.size() == 32);
 
     }
     
