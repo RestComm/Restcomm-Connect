@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.vi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
@@ -132,7 +133,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         }
     }
 
-    private List<PhoneNumber> toAvailablePhoneNumbers(final GetDIDListResponse response) {
+    private List<PhoneNumber> toAvailablePhoneNumbers(final GetDIDListResponse response, Pattern searchPattern) {
         final List<PhoneNumber> numbers = new ArrayList<PhoneNumber>();
         final State state = response.state();
         for (final LATA lata : state.latas()) {
@@ -142,10 +143,12 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                         for (final TN tn : nxx.tns()) {
                             final String name = getFriendlyName(tn.number());
                             final String phoneNumber = name;
-                            // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
-                            final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
-                                    center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38());
-                            numbers.add(number);
+                            if(searchPattern == null || (searchPattern != null && searchPattern.matcher(phoneNumber).matches())) {
+                                // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
+                                final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
+                                        center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38());
+                                numbers.add(number);
+                            }
                         }
                     }
                 }
@@ -159,11 +162,17 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      *
      * @see
      * org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#searchForNumbers(java.lang.String,
-     * java.lang.String, java.lang.String, boolean, boolean, boolean, boolean, int, int)
+     * java.lang.String, java.util.regex.Pattern, boolean, boolean, boolean, boolean, int, int)
      */
     @Override
-    public List<PhoneNumber> searchForNumbers(String country, String areaCode, String searchPattern, boolean smsEnabled,
+    public List<PhoneNumber> searchForNumbers(String country, String areaCode, Pattern searchPattern, boolean smsEnabled,
             boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled, int rangeSize, int rangeIndex) {
+        logger.debug("searchPattern " + searchPattern);
+        if ((areaCode == null || !areaCode.isEmpty() || areaCode.length() < 3) &&
+                (searchPattern != null && !searchPattern.toString().isEmpty() && searchPattern.toString().length() >= 3)) {
+            areaCode = searchPattern.toString().substring(0, 3);
+            logger.debug("areaCode derived from searchPattern " + searchPattern);
+        }
         if (areaCode != null && !areaCode.isEmpty() && (areaCode.length() == 3)) {
             final StringBuilder buffer = new StringBuilder();
             buffer.append("<request id=\"\">");
@@ -196,7 +205,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                     final VoipInnovationsResponse result = (VoipInnovationsResponse) xstream.fromXML(content);
                     final GetDIDListResponse dids = (GetDIDListResponse) result.body().content();
                     if (dids.code() == 100) {
-                        final List<PhoneNumber> numbers = toAvailablePhoneNumbers(dids);
+                        final List<PhoneNumber> numbers = toAvailablePhoneNumbers(dids, searchPattern);
                         return numbers;
                     }
                 }
