@@ -848,6 +848,22 @@ The recommended audio file format is linear( 8000,16 bit , Mono ).
 			&lt;Sms&gt;Hello World!&lt;/Sms&gt;
 		&lt;/Response&gt;
 		</programlisting>
+		
+				<note>
+					<title>Sms Custom headers</title>
+					<para>
+						Restcomm will check for any custom headers and make use of them. 
+					</para>
+					<para>
+						In case of an incoming SMS (incoming SIP MESSAGE) Restcomm will scan the message for any headers starting with X- and if any found will be send to
+						the application server with the request (part of the query string in the case of HTTP GET or part of the message body in the case of HTTP POST)
+					</para>
+					<para>
+						The application server can also provide some custom http headers (again starting with X-) along with the RCML response, that Restcomm will store and use them
+						when creating the outgoing SMS message (in the case of RCML response is Sms).
+					</para>
+				</note>
+		
 	</section>
 	<section>
 		<title>Dial</title>
