@@ -25,6 +25,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -51,6 +52,7 @@ import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 @ThreadSafe
 public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
@@ -93,8 +95,24 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, String areaCode,
             String filterPattern, boolean smsEnabled, boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled,
             int rangeSize, int rangeIndex, final MediaType responseType) {
+        String searchPattern = "";
+        if (filterPattern != null && !filterPattern.isEmpty() && filterPattern.length() > 0 && filterPattern.length() <= 10) {
+            for(int i = 0; i < filterPattern.length(); i ++) {
+                char c = filterPattern.charAt(i);
+                boolean isDigit = (c >= '0' && c <= '9');
+                boolean isStar = c == '*';
+                if(!isDigit && !isStar) {
+                    searchPattern = searchPattern.concat(getNumber(c));
+                } else if (isStar) {
+                    searchPattern = searchPattern.concat("\\d");
+                } else {
+                    searchPattern = searchPattern.concat(Character.toString(c));
+                }
+            }
+        }
+        Pattern pattern = Pattern.compile(searchPattern);
         final List<PhoneNumber> phoneNumbers = phoneNumberProvisioningManager.searchForNumbers(isoCountryCode, areaCode,
-                filterPattern, smsEnabled, mmsEnabled, voiceEnabled, faxEnabled, rangeSize, rangeIndex);
+                pattern, smsEnabled, mmsEnabled, voiceEnabled, faxEnabled, rangeSize, rangeIndex);
         List<AvailablePhoneNumber> availablePhoneNumbers = toAvailablePhoneNumbers(phoneNumbers);
         if (MediaType.APPLICATION_XML_TYPE == responseType) {
             return ok(xstream.toXML(new RestCommResponse(new AvailablePhoneNumberList(availablePhoneNumbers))),
@@ -121,4 +139,26 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         }
         return availablePhoneNumbers;
     }
+
+    public static String getNumber(char letter) {
+        if (letter == 'A' || letter == 'B' || letter == 'C' || letter == 'a' || letter == 'b' || letter == 'c') {
+            return "1";
+        } else if (letter == 'D' || letter == 'E' || letter == 'F' || letter == 'd' || letter == 'e' || letter == 'f') {
+            return "2";
+        } else if (letter == 'G' || letter == 'H' || letter == 'I' || letter == 'g' || letter == 'h' || letter == 'i') {
+            return "3";
+        } else if (letter == 'J' || letter == 'K' || letter == 'L' || letter == 'j' || letter == 'k' || letter == 'l') {
+            return "4";
+        } else if (letter == 'M' || letter == 'N' || letter == 'O' || letter == 'm' || letter == 'n' || letter == 'o') {
+            return "5";
+        } else if (letter == 'P' || letter == 'Q' || letter == 'R' || letter == 'S' || letter == 'p' || letter == 'q' || letter == 'r' || letter == 's') {
+            return "6";
+        } else if (letter == 'T' || letter == 'U' || letter == 'V' || letter == 't' || letter == 'u' || letter == 'v') {
+            return "7";
+        } else if (letter == 'W' || letter == 'X' || letter == 'Y' || letter == 'Z' || letter == 'w' || letter == 'x' || letter == 'y' || letter == 'z') {
+            return "9";
+        }
+        return "0";
+    }
+
 }

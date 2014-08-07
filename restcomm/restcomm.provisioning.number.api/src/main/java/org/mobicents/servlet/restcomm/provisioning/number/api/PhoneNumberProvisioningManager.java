@@ -20,6 +20,7 @@
 package org.mobicents.servlet.restcomm.provisioning.number.api;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
 
@@ -51,7 +52,7 @@ public interface PhoneNumberProvisioningManager {
      * @param rangeIndex Range index (>0, default 1). Ex: 2
      * @return List of matching numbers
      */
-    List<PhoneNumber> searchForNumbers(String country, String areaCode, String searchPattern, boolean smsEnabled,
+    List<PhoneNumber> searchForNumbers(String country, String areaCode, Pattern searchPattern, boolean smsEnabled,
             boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled, int rangeSize, int rangeIndex);
 
     /**
