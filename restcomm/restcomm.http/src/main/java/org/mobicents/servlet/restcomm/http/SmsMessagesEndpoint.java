@@ -34,7 +34,9 @@ import com.thoughtworks.xstream.XStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Currency;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -203,6 +205,14 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         final String sender = data.getFirst("From");
         final String recipient = data.getFirst("To");
         final String body = data.getFirst("Body");
+        ConcurrentHashMap<String, String> customRestOutgoingHeaderMap = new ConcurrentHashMap<String, String>();
+        Iterator<String> iter = data.keySet().iterator();
+        while (iter.hasNext()) {
+            String name = iter.next();
+            if (name.startsWith("X-")){
+                customRestOutgoingHeaderMap.put(name, data.getFirst(name));
+            }
+        }
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
             Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(), expires);
@@ -220,7 +230,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
                     final ActorRef observer = observer();
                     session.tell(new Observe(observer), observer);
                     session.tell(new SmsSessionAttribute("record", record), null);
-                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body);
+                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body, customRestOutgoingHeaderMap);
                     session.tell(request, null);
                     if (APPLICATION_JSON_TYPE == responseType) {
                         return ok(gson.toJson(record), APPLICATION_JSON).build();
