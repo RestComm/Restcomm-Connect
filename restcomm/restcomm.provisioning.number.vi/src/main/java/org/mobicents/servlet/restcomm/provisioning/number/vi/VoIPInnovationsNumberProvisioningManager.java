@@ -143,7 +143,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                         for (final TN tn : nxx.tns()) {
                             final String name = getFriendlyName(tn.number());
                             final String phoneNumber = name;
-                            if(searchPattern == null || (searchPattern != null && searchPattern.matcher(phoneNumber).matches())) {
+                            if(searchPattern == null || (searchPattern != null && searchPattern.matcher(tn.number()).matches())) {
                                 // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
                                 final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
                                         center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38());
@@ -169,8 +169,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
             boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled, int rangeSize, int rangeIndex) {
         logger.debug("searchPattern " + searchPattern);
         if ((areaCode == null || !areaCode.isEmpty() || areaCode.length() < 3) &&
-                (searchPattern != null && !searchPattern.toString().isEmpty() && searchPattern.toString().length() >= 3)) {
-            areaCode = searchPattern.toString().substring(0, 3);
+                (searchPattern != null && !searchPattern.toString().isEmpty() && searchPattern.toString().length() >= 5)) {
+            areaCode = searchPattern.toString().substring(2, 5);
             logger.debug("areaCode derived from searchPattern " + searchPattern);
         }
         if (areaCode != null && !areaCode.isEmpty() && (areaCode.length() == 3)) {
