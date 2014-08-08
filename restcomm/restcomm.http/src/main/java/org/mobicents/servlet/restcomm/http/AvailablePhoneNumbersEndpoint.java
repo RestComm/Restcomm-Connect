@@ -100,7 +100,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, ListFilters listFilters, String filterPattern, final MediaType responseType) {
         try {
-            //secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
