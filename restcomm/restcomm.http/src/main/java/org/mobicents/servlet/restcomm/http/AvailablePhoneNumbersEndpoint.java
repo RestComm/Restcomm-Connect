@@ -27,6 +27,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -164,7 +165,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
             final MediaType responseType) {
         if (areaCode != null && !areaCode.isEmpty() && (areaCode.length() == 3)) {
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("<request id=\"\">");
+            buffer.append("<request id=\""+generateId()+"\">");
             buffer.append(header);
             buffer.append("<body>");
             buffer.append("<requesttype>").append("getDIDs").append("</requesttype>");
@@ -241,5 +242,9 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
             }
         }
         return numbers;
+    }
+
+    private String generateId() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 }
