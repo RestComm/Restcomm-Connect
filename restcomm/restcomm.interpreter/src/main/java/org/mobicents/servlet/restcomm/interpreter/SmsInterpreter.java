@@ -365,7 +365,7 @@ public final class SmsInterpreter extends UntypedActor {
         parameters.add(new BasicNameValuePair("From", from));
         final String to = format(initialSessionRequest.to());
         parameters.add(new BasicNameValuePair("To", to));
-        final String body = initialSessionRequest.body().trim();
+        final String body = initialSessionRequest.body();
         parameters.add(new BasicNameValuePair("Body", body));
 
         //Issue https://telestax.atlassian.net/browse/RESTCOMM-517. If Request contains custom headers pass them to the HTTP server.
