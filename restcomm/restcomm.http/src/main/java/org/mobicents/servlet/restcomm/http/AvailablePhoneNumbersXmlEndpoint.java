@@ -23,12 +23,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+
 import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
+
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -46,8 +49,11 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
             @QueryParam("MmsEnabled") String mmsEnabled, @QueryParam("VoiceEnabled") String voiceEnabled,
-            @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("RangeSize") String rangeSize,
-            @QueryParam("RangeIndex") String rangeIndex) {
+            @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("NearNumber") String nearNumber,
+            @QueryParam("NearLatLong") String nearLatLong, @QueryParam("Distance") String distance,
+            @QueryParam("InPostalCode") String inPostalCode, @QueryParam("InRegion") String inRegion,
+            @QueryParam("InRateCenter") String inRateCenter, @QueryParam("InLata") String inLata,
+            @QueryParam("RangeSize") String rangeSize, @QueryParam("RangeIndex") String rangeIndex) {
         if (isoCountryCode != null && !isoCountryCode.isEmpty()) {
             int rangeSizeInt = -1;
             if (rangeSize != null && !rangeSize.isEmpty()) {
@@ -57,24 +63,26 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
             if (rangeIndex != null && !rangeIndex.isEmpty()) {
                 rangeIndexInt = Integer.parseInt(rangeIndex);
             }
-            boolean smsEnabledBool = false;
+            Boolean smsEnabledBool = null;
             if (smsEnabled != null && !smsEnabled.isEmpty()) {
-                smsEnabledBool = Boolean.parseBoolean(smsEnabled);
+                smsEnabledBool = Boolean.valueOf(smsEnabled);
             }
-            boolean mmsEnabledBool = false;
+            Boolean mmsEnabledBool = null;
             if (mmsEnabled != null && !mmsEnabled.isEmpty()) {
-                mmsEnabledBool = Boolean.parseBoolean(mmsEnabled);
+                mmsEnabledBool = Boolean.valueOf(mmsEnabled);
             }
-            boolean voiceEnabledBool = false;
+            Boolean voiceEnabledBool = null;
             if (voiceEnabled != null && !voiceEnabled.isEmpty()) {
-                voiceEnabledBool = Boolean.parseBoolean(voiceEnabled);
+                voiceEnabledBool = Boolean.valueOf(voiceEnabled);
             }
-            boolean faxEnabledBool = false;
+            Boolean faxEnabledBool = null;
             if (faxEnabled != null && !faxEnabled.isEmpty()) {
-                faxEnabledBool = Boolean.parseBoolean(faxEnabled);
+                faxEnabledBool = Boolean.valueOf(faxEnabled);
             }
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, areaCode, filterPattern, smsEnabledBool,
-                    mmsEnabledBool, voiceEnabledBool, faxEnabledBool, rangeSizeInt, rangeIndexInt, APPLICATION_XML_TYPE);
+            ListFilters listFilters = new ListFilters(areaCode, null, smsEnabledBool,
+                    mmsEnabledBool, voiceEnabledBool, faxEnabledBool, nearNumber, nearLatLong, distance, inPostalCode, inRegion,
+                    inRateCenter, inLata, rangeSizeInt, rangeIndexInt, false, false);
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
         } else {
             return status(BAD_REQUEST).build();
         }

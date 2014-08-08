@@ -43,6 +43,7 @@ import org.mobicents.servlet.restcomm.http.converter.AvailablePhoneNumberListCon
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
 
@@ -92,9 +93,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         gson = builder.create();
     }
 
-    protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, String areaCode,
-            String filterPattern, boolean smsEnabled, boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled,
-            int rangeSize, int rangeIndex, final MediaType responseType) {
+    protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, ListFilters listFilters, String filterPattern, final MediaType responseType) {
         String searchPattern = "";
         if (filterPattern != null && !filterPattern.isEmpty()) {
             for(int i = 0; i < filterPattern.length(); i ++) {
@@ -111,11 +110,11 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
             }
             // completing the pattern to match any substring of the number
             searchPattern = "((" + searchPattern + ")+).*";
+            Pattern pattern = Pattern.compile(searchPattern);
+            listFilters.setFilterPattern(pattern);
         }
 
-        Pattern pattern = Pattern.compile(searchPattern);
-        final List<PhoneNumber> phoneNumbers = phoneNumberProvisioningManager.searchForNumbers(isoCountryCode, areaCode,
-                pattern, smsEnabled, mmsEnabled, voiceEnabled, faxEnabled, rangeSize, rangeIndex);
+        final List<PhoneNumber> phoneNumbers = phoneNumberProvisioningManager.searchForNumbers(isoCountryCode, listFilters);
         List<AvailablePhoneNumber> availablePhoneNumbers = toAvailablePhoneNumbers(phoneNumbers);
         if (MediaType.APPLICATION_XML_TYPE == responseType) {
             return ok(xstream.toXML(new RestCommResponse(new AvailablePhoneNumberList(availablePhoneNumbers))),

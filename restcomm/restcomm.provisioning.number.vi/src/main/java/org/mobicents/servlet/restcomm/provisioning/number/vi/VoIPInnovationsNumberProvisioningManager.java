@@ -32,6 +32,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.mobicents.servlet.restcomm.provisioning.number.vi.converter.GetDIDListResponseConverter;
@@ -133,21 +134,28 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         }
     }
 
-    private List<PhoneNumber> toAvailablePhoneNumbers(final GetDIDListResponse response, Pattern searchPattern) {
+    private List<PhoneNumber> toAvailablePhoneNumbers(final GetDIDListResponse response, ListFilters listFilters) {
+        Pattern searchPattern = listFilters.getFilterPattern();
         final List<PhoneNumber> numbers = new ArrayList<PhoneNumber>();
-        final State state = response.state();
-        for (final LATA lata : state.latas()) {
-            for (final RateCenter center : lata.centers()) {
-                for (final NPA npa : center.npas()) {
-                    for (final NXX nxx : npa.nxxs()) {
-                        for (final TN tn : nxx.tns()) {
-                            final String name = getFriendlyName(tn.number());
-                            final String phoneNumber = name;
-                            if(searchPattern == null || (searchPattern != null && searchPattern.matcher(tn.number()).matches())) {
-                                // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
-                                final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
-                                        center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38());
-                                numbers.add(number);
+        final List<State> states = response.states();
+        for (final State state : states) {
+            if(listFilters.getInRegion() == null || (listFilters.getInRegion() != null && !listFilters.getInRegion().isEmpty() && listFilters.getInRegion().equals(state.name()))) {
+                for (final LATA lata : state.latas()) {
+                    for (final RateCenter center : lata.centers()) {
+                        for (final NPA npa : center.npas()) {
+                            for (final NXX nxx : npa.nxxs()) {
+                                for (final TN tn : nxx.tns()) {
+                                    final String name = getFriendlyName(tn.number());
+                                    final String phoneNumber = name;
+                                    if(searchPattern == null || (searchPattern != null && searchPattern.matcher(tn.number()).matches())) {
+                                        if(listFilters.getFaxEnabled() == null || (listFilters.getFaxEnabled() != null && listFilters.getFaxEnabled() == tn.t38())) {
+                                            // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
+                                            final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
+                                                    center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38());
+                                            numbers.add(number);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -165,13 +173,22 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * java.lang.String, java.util.regex.Pattern, boolean, boolean, boolean, boolean, int, int)
      */
     @Override
-    public List<PhoneNumber> searchForNumbers(String country, String areaCode, Pattern searchPattern, boolean smsEnabled,
-            boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled, int rangeSize, int rangeIndex) {
-        logger.debug("searchPattern " + searchPattern);
+    public List<PhoneNumber> searchForNumbers(String country, ListFilters listFilters) {
+        if(logger.isDebugEnabled()) {
+            logger.debug("searchPattern " + listFilters.getFilterPattern());
+        }
+        String areaCode = listFilters.getAreaCode();
+        Pattern filterPattern = listFilters.getFilterPattern();
+        String searchPattern = null;
+        if(filterPattern != null) {
+            searchPattern = filterPattern.toString();
+        }
         if ((areaCode == null || !areaCode.isEmpty() || areaCode.length() < 3) &&
                 (searchPattern != null && !searchPattern.toString().isEmpty() && searchPattern.toString().length() >= 5)) {
             areaCode = searchPattern.toString().substring(2, 5);
-            logger.debug("areaCode derived from searchPattern " + searchPattern);
+            if(logger.isDebugEnabled()) {
+                logger.debug("areaCode derived from searchPattern " + searchPattern);
+            }
         }
         if (areaCode != null && !areaCode.isEmpty() && (areaCode.length() == 3)) {
             final StringBuilder buffer = new StringBuilder();
@@ -205,7 +222,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                     final VoipInnovationsResponse result = (VoipInnovationsResponse) xstream.fromXML(content);
                     final GetDIDListResponse dids = (GetDIDListResponse) result.body().content();
                     if (dids.code() == 100) {
-                        final List<PhoneNumber> numbers = toAvailablePhoneNumbers(dids, searchPattern);
+                        final List<PhoneNumber> numbers = toAvailablePhoneNumbers(dids, listFilters);
                         return numbers;
                     }
                 }
