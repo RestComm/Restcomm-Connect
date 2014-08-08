@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.http;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumberList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -64,6 +67,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     protected Configuration telestaxProxyConfiguration;
     protected Configuration activeConfiguration;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
+    private DaoManager daos;
     private XStream xstream;
     protected Gson gson;
 
@@ -74,6 +78,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     @PostConstruct
     public void init() throws ObjectInstantiationException {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration.subset("runtime-settings"));
         phoneNumberProvisioningConfiguration = configuration.subset("phone-number-provisioning");
         telestaxProxyConfiguration = configuration.subset("runtime-settings").subset("telestax-proxy");
@@ -94,6 +99,11 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     }
 
     protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, ListFilters listFilters, String filterPattern, final MediaType responseType) {
+        try {
+            //secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
         String searchPattern = "";
         if (filterPattern != null && !filterPattern.isEmpty()) {
             for(int i = 0; i < filterPattern.length(); i ++) {
