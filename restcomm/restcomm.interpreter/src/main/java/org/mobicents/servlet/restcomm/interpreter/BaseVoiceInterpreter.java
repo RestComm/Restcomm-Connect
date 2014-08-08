@@ -1825,7 +1825,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 // Store the sms record in the sms session.
                 session.tell(new SmsSessionAttribute("record", record), source);
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body);
+                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, null);
                 session.tell(sms, source);
                 smsSessions.put(sid, session);
             }

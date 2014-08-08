@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.vi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
@@ -192,7 +193,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         }
         if (areaCode != null && !areaCode.isEmpty() && (areaCode.length() == 3)) {
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("<request id=\"\">");
+            buffer.append("<request id=\""+generateId()+"\">");
             buffer.append(header);
             buffer.append("<body>");
             buffer.append("<requesttype>").append("getDIDs").append("</requesttype>");
@@ -267,6 +268,10 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
     public boolean cancelNumber(String country, String number) {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    private String generateId() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
 }

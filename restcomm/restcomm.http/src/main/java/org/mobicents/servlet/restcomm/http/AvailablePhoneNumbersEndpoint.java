@@ -162,5 +162,4 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         }
         return "0";
     }
-
 }
