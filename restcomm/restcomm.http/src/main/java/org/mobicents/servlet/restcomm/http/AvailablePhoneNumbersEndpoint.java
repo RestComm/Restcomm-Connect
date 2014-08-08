@@ -96,7 +96,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
             String filterPattern, boolean smsEnabled, boolean mmsEnabled, boolean voiceEnabled, boolean faxEnabled,
             int rangeSize, int rangeIndex, final MediaType responseType) {
         String searchPattern = "";
-        if (filterPattern != null && !filterPattern.isEmpty() && filterPattern.length() > 0 && filterPattern.length() <= 10) {
+        if (filterPattern != null && !filterPattern.isEmpty()) {
             for(int i = 0; i < filterPattern.length(); i ++) {
                 char c = filterPattern.charAt(i);
                 boolean isDigit = (c >= '0' && c <= '9');
@@ -109,7 +109,10 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
                     searchPattern = searchPattern.concat(Character.toString(c));
                 }
             }
+            // completing the pattern to match any substring of the number
+            searchPattern = "((" + searchPattern + ")+).*";
         }
+
         Pattern pattern = Pattern.compile(searchPattern);
         final List<PhoneNumber> phoneNumbers = phoneNumberProvisioningManager.searchForNumbers(isoCountryCode, areaCode,
                 pattern, smsEnabled, mmsEnabled, voiceEnabled, faxEnabled, rangeSize, rangeIndex);
