@@ -78,7 +78,7 @@ public final class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhone
             }
             ListFilters listFilters = new ListFilters(areaCode, null, smsEnabledBool,
                     mmsEnabledBool, voiceEnabledBool, faxEnabledBool, null, null, null, null, null,
-                    null, null, rangeSizeInt, rangeIndexInt, false, false);
+                    null, null, rangeSizeInt, rangeIndexInt, true, false);
             return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
         } else {
             return status(BAD_REQUEST).build();
