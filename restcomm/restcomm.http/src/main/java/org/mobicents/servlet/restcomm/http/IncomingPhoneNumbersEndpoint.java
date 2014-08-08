@@ -31,6 +31,7 @@ import static javax.ws.rs.core.Response.Status.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -133,7 +134,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected boolean assignDid(final String did) {
         if (did != null && !did.isEmpty()) {
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("<request id=\"\">");
+            buffer.append("<request id=\""+generateId()+"\">");
             buffer.append(header);
             buffer.append("<body>");
             buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
@@ -172,7 +173,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected boolean isValidDid(final String did) {
         if (did != null && !did.isEmpty()) {
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("<request id=\"\">");
+            buffer.append("<request id=\""+generateId()+"\">");
             buffer.append(header);
             buffer.append("<body>");
             buffer.append("<requesttype>").append("queryDID").append("</requesttype>");
@@ -451,7 +452,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected boolean releaseDid(final String did) {
         if (did != null && !did.isEmpty()) {
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("<request id=\"\">");
+            buffer.append("<request id=\""+generateId()+"\">");
             buffer.append(header);
             buffer.append("<body>");
             buffer.append("<requesttype>").append("releaseDID").append("</requesttype>");
@@ -484,5 +485,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             }
         }
         return false;
+    }
+
+    private String generateId() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 }

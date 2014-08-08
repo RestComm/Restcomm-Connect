@@ -16,9 +16,9 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import akka.actor.ActorRef;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
+import akka.actor.ActorRef;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)

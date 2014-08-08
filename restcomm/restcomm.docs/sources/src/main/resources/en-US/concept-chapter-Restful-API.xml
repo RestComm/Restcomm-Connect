@@ -2216,11 +2216,23 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 								<entry>The text of the message you want to send, limited to 160
 									characters.</entry>
 							</row>
+							<row>
+								<entry>Custom headers X- (optional)</entry>
+								<entry>Optionally you can provide as many custom headers as you
+									wish. The custom headers must start with X-,
+									for example "X-MyCustom-Header=My custom header value"</entry>
+							</row>
 						</tbody>
 					</tgroup>
 				</table>
 
 
+				<note>
+					<title>Using custom headers</title>
+					<para>
+						These additional headers will be part of the SIP MESSAGE that Restcomm will create and dispatch to the SMS Aggregator.
+					</para>
+				</note>
 
 				<note>
 					<title>Using SMS and making DID calls</title>
@@ -2260,6 +2272,14 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 				<programlisting>
 <![CDATA[
 curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
+
+]]>
+				</programlisting>
+
+				<para>To send the same SMS but this time also provide some additional headers:</para>
+				<programlisting>
+<![CDATA[
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm" -d "X-MyCustomHeader-1=Value1" -d "X-MyCustomHeader-2=Value2" 
 
 ]]>
 				</programlisting>
@@ -2698,26 +2718,27 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 		</section>
 	</section>
 
-<section id="ussdpush-api">
+	<section id="ussdpush-api">
 		<title>UssdPush</title>
-		<para>A UssdPush resource represents a message sent from Restcomm to a USSD gateway.</para>
+		<para>A UssdPush resource represents a message sent from Restcomm to a
+			USSD gateway.</para>
 		<formalpara>
 			<title>UssdPush Resource URI</title>
 			<para>/2012-04-24/Accounts/{AccountSid}/UssdPush</para>
 		</formalpara>
-	<section>
+		<section>
 			<title>Supported Operations</title>
-				<formalpara>
+			<formalpara>
 				<title>HTTP POST</title>
 				<para>Sends a Ussd message to the configured USSD Gataeway</para>
-				</formalpara>
+			</formalpara>
 
-	</section>
-	
-	<formalpara>
+		</section>
+
+		<formalpara>
 			<title>Example of UssdPush</title>
 
-	   <programlisting role="XML">
+			<programlisting role="XML">
 
 		<![CDATA[
 
@@ -2740,7 +2761,7 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 			</programlisting>
 
-	</formalpara>
-</section>
+		</formalpara>
+	</section>
 
 </chapter>
