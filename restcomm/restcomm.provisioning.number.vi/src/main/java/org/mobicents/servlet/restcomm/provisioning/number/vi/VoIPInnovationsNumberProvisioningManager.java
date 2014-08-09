@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -33,6 +35,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
@@ -57,12 +60,12 @@ import com.thoughtworks.xstream.XStream;
  */
 public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProvisioningManager {
     private static final Logger logger = Logger.getLogger(VoIPInnovationsNumberProvisioningManager.class);
-    private boolean teleStaxProxyEnabled;
     private XStream xstream;
     private String header;
     protected Boolean telestaxProxyEnabled;
     protected String uri, username, password, endpoint;
     protected Configuration activeConfiguration;
+    protected ContainerConfiguration containerConfiguration;
 
     public VoIPInnovationsNumberProvisioningManager() {
     }
@@ -75,7 +78,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * .Configuration, boolean)
      */
     @Override
-    public void init(Configuration phoneNumberProvisioningConfiguration, Configuration telestaxProxyConfiguration) {
+    public void init(Configuration phoneNumberProvisioningConfiguration, Configuration telestaxProxyConfiguration, ContainerConfiguration containerConfiguration) {
+        this.containerConfiguration = containerConfiguration;
         telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
         if (telestaxProxyEnabled) {
             uri = telestaxProxyConfiguration.getString("uri");
@@ -211,11 +215,15 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                 post.setEntity(new UrlEncodedFormEntity(parameters));
 
                 final DefaultHttpClient client = new DefaultHttpClient();
-                if (teleStaxProxyEnabled) {
+                if (telestaxProxyEnabled) {
                     // This will work as a flag for LB that this request will need to be modified and proxied to VI
-                    post.addHeader("TelestaxProxy", String.valueOf(teleStaxProxyEnabled));
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
                     // This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
                     post.addHeader("RequestType", "GetAvailablePhoneNumbersByAreaCode");
+                    //This will let LB match the DID to a node based on the node host+port
+                    for (SipURI uri: containerConfiguration.getOutboundInterfaces()) {
+                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+                    }
                 }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -226,6 +234,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                         final List<PhoneNumber> numbers = toAvailablePhoneNumbers(dids, listFilters);
                         return numbers;
                     }
+                } else {
+                    logger.warn("Couldn't reach uri for getting DIDs. Response status was: "+response.getStatusLine().getStatusCode());
                 }
             } catch (final Exception e) {
                 logger.warn("Couldn't reach uri for getting DIDs " + uri, e);
@@ -273,5 +283,4 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
     private String generateId() {
         return UUID.randomUUID().toString().replace("-", "");
     }
-
 }

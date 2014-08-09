@@ -16,17 +16,15 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.thoughtworks.xstream.XStream;
-
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -35,6 +33,8 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipURI;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -61,6 +61,14 @@ import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverte
 import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -156,6 +164,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                     post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
                     //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
                     post.addHeader("RequestType", "AssignDid");
+                    //This will let LB match the DID to a node based on the node host+port
+                    List<SipURI> uris = outboundInterface();
+                    for (SipURI uri: uris) {
+                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+                    }
                 }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -194,6 +207,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                     post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
                     //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
                     post.addHeader("RequestType", "IsValidDid");
+                    //This will let LB match the DID to a node based on the node host+port
+                    List<SipURI> uris = outboundInterface();
+                    for (SipURI uri: uris) {
+                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+                    }
                 }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -473,6 +491,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                     post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
                     //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
                     post.addHeader("RequestType", "ReleaseDid");
+                    //This will let LB match the DID to a node based on the node host+port
+                    List<SipURI> uris = outboundInterface();
+                    for (SipURI uri: uris) {
+                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+                    }
                 }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -489,5 +512,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     private String generateId() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<SipURI> outboundInterface() {
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
+        return uris;
     }
 }

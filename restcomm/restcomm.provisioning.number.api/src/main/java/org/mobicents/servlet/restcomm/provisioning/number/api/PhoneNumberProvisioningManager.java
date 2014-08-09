@@ -34,8 +34,9 @@ public interface PhoneNumberProvisioningManager {
      *
      * @param phoneNumberProvisioningConfiguration the configuration
      * @param teleStaxProxyConfiguration if TeleStax proxy is enabled for DID provisioning
+     * @param containerConfiguration with container configuration information
      */
-    void init(Configuration phoneNumberProvisioningConfiguration, Configuration teleStaxProxyConfiguration);
+    void init(Configuration phoneNumberProvisioningConfiguration, Configuration teleStaxProxyConfiguration, ContainerConfiguration containerConfiguration);
 
     /**
      * Search for a list of numbers matching the various parameters
