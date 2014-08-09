@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipURI;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -43,6 +45,7 @@ import org.mobicents.servlet.restcomm.http.converter.AvailablePhoneNumberListCon
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
@@ -81,7 +84,8 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         final String phoneNumberProvisioningManagerClass = configuration.getString("phone-number-provisioning[@class]");
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) new ObjectFactory(getClass().getClassLoader())
                 .getObjectInstance(phoneNumberProvisioningManagerClass);
-        phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration);
+        ContainerConfiguration containerConfiguration = new ContainerConfiguration(getOutboundInterfaces());
+        phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration, containerConfiguration);
 
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
@@ -161,5 +165,11 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
             return "9";
         }
         return "0";
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<SipURI> getOutboundInterfaces() {
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
+        return uris;
     }
 }
