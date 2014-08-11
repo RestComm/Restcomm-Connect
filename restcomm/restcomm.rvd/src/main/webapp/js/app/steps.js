@@ -25,11 +25,11 @@ angular.module('Rvd')
 }])
 .factory('rvdModel', function () {
 	function RvdModel() {
-		this.test = function () {
-			console.log('testing from RvdModel: ' + this.kind);
-		}
+		//this.test = function () {
+		//	console.log('testing from RvdModel: ' + this.kind);
+		//}
 		this.pack = function () {
-			console.log("rvdModel:pack()");
+			//console.log("rvdModel:pack()");
 			var clone = angular.copy(this);
 			return clone;
 		}
