@@ -1,4 +1,4 @@
-App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal) {
+App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, ModelBuilder) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -526,16 +526,6 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				var packedStep;
 				packedStep = step.pack();
 				node.steps[j] = packedStep;
-
-				/*
-				 * if (step.kind == "play") { if (step.playType == "local")
-				 * delete step.remote; else if (step.playType == "remote")
-				 * delete step.local; } else if (step.kind == "ussdCollect") {
-				 * if (step.gatherType == "menu") delete step.collectdigits;
-				 * else if (step.gatherType == "collectdigits") delete
-				 * step.menu; }
-				 */
-				
 			}
 		}
 		state.iface.activeNode = $scope.activeNode;
@@ -543,6 +533,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		state.header.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
 		state.header.projectKind = $scope.projectKind;	
 		state.header.version = $scope.version;
+		state.exceptionHandlingInfo = $scope.exceptionHandlingInfo.pack();
 		
 		return state;
 	}
@@ -559,11 +550,12 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		}
 
 		$scope.nodes = packedState.nodes;
-		//$scope.activeNode = packedState.iface.activeNode;
 		$scope.lastNodesId = packedState.lastNodeId;
 		$scope.startNodeName = packedState.header.startNodeName;	
 		$scope.projectKind = packedState.header.projectKind;
 		$scope.version = packedState.header.version;
+		$scope.exceptionHandlingInfo = ModelBuilder.build('ExceptionHandlingInfo').init(packedState.exceptionHadlingInfo);
+		
 	}
 	
 	
@@ -582,7 +574,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		}
 
 		$scope.ok = function () {
-			$modalInstance.close(/* ... */);
+			$modalInstance.close($scope.exceptionMappings);
 		};
 
 	  $scope.cancel = function () {
@@ -601,8 +593,8 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		  //}
 		});
 
-		modalInstance.result.then(function (selectedItem) {
-		  //$scope.selected = selectedItem;
+		modalInstance.result.then(function (exceptionMappings) {
+			console.log(exceptionMappings);
 		}, function () {
 		  //$log.info('Modal dismissed at: ' + new Date());
 		});
