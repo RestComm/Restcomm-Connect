@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<artifactId>restcomm</artifactId>
 		<groupId>com.telestax.servlet</groupId>
@@ -250,15 +251,15 @@
 			<version>${tomcat7.version}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
-		   <groupId>com.github.tomakehurst</groupId>
-		   <artifactId>wiremock</artifactId>
-		   <version>1.47</version>
-		
-		   <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson or Apache HTTP Client -->
-		    <classifier>standalone</classifier>
-		    <scope>test</scope>
+			<groupId>com.github.tomakehurst</groupId>
+			<artifactId>wiremock</artifactId>
+			<version>1.47</version>
+			<!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson 
+				or Apache HTTP Client -->
+			<classifier>standalone</classifier>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -279,6 +280,11 @@
 			<version>${mss.arquillian.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.mobicents.arquillian.container</groupId>
 			<artifactId>mss-arquillian-mediaserver-extension</artifactId>
 			<version>${mss.arquillian.version}</version>
@@ -293,8 +299,8 @@
 					<compilerArguments>
 						<g />
 					</compilerArguments>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
 			<plugin>
