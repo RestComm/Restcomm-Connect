@@ -228,18 +228,12 @@
 				<version>${javamail.version}</version>
 			</dependency>
 
-<!--			<dependency>
+			<dependency>
 				<groupId>javax.servlet</groupId>
-				<artifactId>servlet-api</artifactId>
-				<version>${servletapi.version}</version>
+				<artifactId>javax.servlet-api</artifactId>
+				<version>3.0.1</version>
 				<scope>provided</scope>
-			</dependency>-->
- 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>3.0.1</version>
-			<scope>provided</scope>
-		</dependency>
+			</dependency>
 			<dependency>
 				<groupId>org.mobicents.servlet.sip</groupId>
 				<artifactId>sip-servlets-spec</artifactId>
