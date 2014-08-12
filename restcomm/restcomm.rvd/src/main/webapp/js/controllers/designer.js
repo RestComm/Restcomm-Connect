@@ -9,6 +9,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	
 	$scope.stepService = stepService;
 	$scope.protos = protos;
+	$scope.selectedView = 'rcml';
 	
 	// Prototype and constant data structures
 	$scope.languages = [
