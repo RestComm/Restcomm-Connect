@@ -115,7 +115,7 @@
 			<login></login>
 			<password></password>
 			<endpoint></endpoint>
-			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
+			<uri>http://127.0.0.1:8090/test</uri>
 		</voip-innovations>	
 	</phone-number-provisioning>
 
