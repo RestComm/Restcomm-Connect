@@ -111,7 +111,7 @@
 		<mss.shrinkwrap.version>7.0.3.42</mss.shrinkwrap.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
 		<sipunit.version>2.0.0</sipunit.version>
-		<!--tomcat.version>6.0.35</tomcat.version-->
+		<!--tomcat.version>6.0.35</tomcat.version -->
 		<tomcat7.version>7.0.50</tomcat7.version>
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
@@ -230,11 +230,10 @@
 
 			<dependency>
 				<groupId>javax.servlet</groupId>
-				<artifactId>servlet-api</artifactId>
-				<version>${servletapi.version}</version>
+				<artifactId>javax.servlet-api</artifactId>
+				<version>3.0.1</version>
 				<scope>provided</scope>
 			</dependency>
-
 			<dependency>
 				<groupId>org.mobicents.servlet.sip</groupId>
 				<artifactId>sip-servlets-spec</artifactId>
@@ -402,11 +401,11 @@
 				<version>${mss.arquillian.version}</version>
 				<scope>test</scope>
 				<exclusions>
-				     <exclusion>
-				       <groupId>com.telscale.licensing</groupId>
-				       <artifactId>lce-core</artifactId>
-				     </exclusion>
-				   </exclusions>
+					<exclusion>
+						<groupId>com.telscale.licensing</groupId>
+						<artifactId>lce-core</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 
 			<dependency>
@@ -452,121 +451,118 @@
 
 	<dependencies>
 		<!-- Testing -->
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.scalatest</groupId>
-				<artifactId>scalatest_2.9.1</artifactId>
-				<version>${scalatest.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_2.9.1</artifactId>
+			<version>${scalatest.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-testkit_2.10</artifactId>
-				<version>${akka.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-testkit_2.10</artifactId>
+			<version>${akka.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.apache.tomcat</groupId>
-				<artifactId>tomcat-coyote</artifactId>
-				<version>${tomcat7.version}</version>
-				<scope>provided</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-coyote</artifactId>
+			<version>${tomcat7.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.apache.tomcat</groupId>
-				<artifactId>tomcat-jasper</artifactId>
-				<version>${tomcat7.version}</version>
-				<scope>provided</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jasper</artifactId>
+			<version>${tomcat7.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>javax.sip</groupId>
-				<artifactId>jain-sip-ri</artifactId>
-				<version>${sip-ri.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>javax.sip</groupId>
+			<artifactId>jain-sip-ri</artifactId>
+			<version>${sip-ri.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.mobicents.servlet.sip.containers</groupId>
-				<artifactId>sip-servlets-catalina-7</artifactId>
-				<version>${sipservletapi.version}</version>
-				<scope>provided</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.mobicents.servlet.sip.containers</groupId>
-				<artifactId>sip-servlets-tomcat-7</artifactId>
-				<version>${sipservletapi.version}</version>
-				<scope>provided</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-tomcat-7</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.mobicents.servlet.sip</groupId>
-				<artifactId>sip-servlets-application-router</artifactId>
-				<version>${sipservletapi.version}</version>
-				<scope>provided</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>sip-servlets-application-router</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>hsqldb</groupId>
-				<artifactId>hsqldb</artifactId>
-				<version>${hsqldb.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>${hsqldb.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.mobicents.arquillian.container</groupId>
-				<artifactId>mss-tomcat-embedded-7</artifactId>
-				<version>${mss.arquillian.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.mobicents.arquillian.container</groupId>
+			<artifactId>mss-tomcat-embedded-7</artifactId>
+			<version>${mss.arquillian.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.jboss.arquillian.junit</groupId>
-				<artifactId>arquillian-junit-container</artifactId>
-				<version>${arquillian.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.jboss.arquillian.junit</groupId>
+			<artifactId>arquillian-junit-container</artifactId>
+			<version>${arquillian.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.jboss.shrinkwrap.resolver</groupId>
-				<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-				<version>${shrinkwrap.resolver.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+			<version>${shrinkwrap.resolver.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.jboss.shrinkwrap.resolver</groupId>
-				<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
-				<version>${shrinkwrap.resolver.version}</version>
-				<scope>test</scope>
-			</dependency>
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+			<version>${shrinkwrap.resolver.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-			<dependency>
-				<groupId>org.cafesip.sipunit</groupId>
-				<artifactId>sipunit</artifactId>
-				<version>${sipunit.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.mobicents</groupId>
-				<artifactId>checkstyle</artifactId>
-				<version>${mobicents.checkstyle.version}</version>
-			</dependency>
+		<dependency>
+			<groupId>org.cafesip.sipunit</groupId>
+			<artifactId>sipunit</artifactId>
+			<version>${sipunit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents</groupId>
+			<artifactId>checkstyle</artifactId>
+			<version>${mobicents.checkstyle.version}</version>
+		</dependency>
 
-			<!--dependency>
-				<groupId>att</groupId>
-				<artifactId>naturalvoices</artifactId>
-				<version>5.1</version>
-			</dependency-->
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
+			<version>5.1</version> </dependency -->
 	</dependencies>
 
 	<build>
@@ -578,8 +574,8 @@
 					<compilerArguments>
 						<g />
 					</compilerArguments>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
 			<plugin>

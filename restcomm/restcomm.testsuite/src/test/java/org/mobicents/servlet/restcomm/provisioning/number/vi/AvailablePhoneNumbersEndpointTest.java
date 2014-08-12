@@ -354,7 +354,7 @@ public class AvailablePhoneNumbersEndpointTest {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm_AvailablePhoneNumbers_Test.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
