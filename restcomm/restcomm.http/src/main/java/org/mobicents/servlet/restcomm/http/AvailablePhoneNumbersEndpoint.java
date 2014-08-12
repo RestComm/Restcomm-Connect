@@ -49,7 +49,7 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
-import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
 
@@ -102,7 +102,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         gson = builder.create();
     }
 
-    protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, ListFilters listFilters, String filterPattern, final MediaType responseType) {
+    protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, PhoneNumberSearchFilters listFilters, String filterPattern, final MediaType responseType) {
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
         } catch (final AuthorizationException exception) {

@@ -33,7 +33,7 @@ public interface PhoneNumberProvisioningManager {
      * Initialize the Manager with the RestComm configuration passed in restcomm.xml
      *
      * @param phoneNumberProvisioningConfiguration the configuration
-     * @param teleStaxProxyConfiguration if TeleStax proxy is enabled for DID provisioning
+     * @param teleStaxProxyConfiguration the configuration from restcomm.xml contained within <phone-number-provisioning> tags
      * @param containerConfiguration with container configuration information
      */
     void init(Configuration phoneNumberProvisioningConfiguration, Configuration teleStaxProxyConfiguration, ContainerConfiguration containerConfiguration);
@@ -45,38 +45,33 @@ public interface PhoneNumberProvisioningManager {
      * @param listFilters contains all the filters that can be applied to restrict the results
      * @return List of matching numbers
      */
-    List<PhoneNumber> searchForNumbers(String country, ListFilters listFilters);
+    List<PhoneNumber> searchForNumbers(String country, PhoneNumberSearchFilters listFilters);
 
     /**
-     * Purchase a given inbound number.
+     * Purchase a given phone number previously searched through {@link #searchForNumbers(String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters) searchForNumbers} method.
      *
-     * @param country 2 letters Country Code as defined per http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
-     * @param number An available inbound number - defined as msisdn Ex: 34911067000 returned from
-     *        {@link #searchForNumbers(String, String, String, int, int) searchForNumbers} method.
-     * @param smsHttpURL The URL where the SMS received to the inbound number should be sent to
-     * @param smsType The associated system type for SMPP client only Ex: inbound
-     * @param voiceURL The SIP URL to which an incoming call or message should be sent to.
-     * @return true if the number was bought successfuly, false otherwise.
+     * @param number An available phone number - defined as msisdn Ex: 34911067000 returned from
+     *        {@link #searchForNumbers(String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters) searchForNumbers} method.
+     * @param phoneNumberParameters parameters set on the phone number purchase so the Provider knows where to route incoming messages (be it voice or SMS, MMS, USSD)
+     * @return true if the number was bought successfully, false otherwise.
      */
-    boolean buyNumber(String country, String number, String smsHttpURL, String smsType, String voiceURL);
+    boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters);
 
     /**
-     * Update the callbacks URL for an already purchased inbound number.
+     * Update the parameters for an already purchased phone number.
      *
-     * @param country 2 letters Country Code as defined per http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
-     * @param number the inbound number for which to modify the callnbacks - defined as msisdn Ex: 34911067000
-     * @param smsHttpURL The URL where the SMS received to the inbound number should be sent to
-     * @param smsType The associated system type for SMPP client only Ex: inbound
-     * @param voiceURL The SIP URL to which an incoming call or message should be sent to.
-     * @return true if the number was bought successfuly, false otherwise.
+     * @param number An available phone number - defined as msisdn Ex: 34911067000 returned from
+     *        {@link #searchForNumbers(String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters) searchForNumbers} method.
+     * @param phoneNumberParameters parameters set on the phone number purchase so the Provider knows where to route incoming messages (be it voice or SMS, MMS, USSD).
+     * @return true if the number was updated successfully, false otherwise.
      */
-    boolean updateNumber(String country, String number, String smsHttpURL, String smsType, String voiceURL);
+    boolean updateNumber(String number, PhoneNumberParameters phoneNumberParameters);
 
     /**
-     * Cancel an already purchased inbound number.
+     * Cancel an already purchased phone number.
      *
-     * @param country 2 letters Country Code as defined per http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
-     * @param number the inbound number to cancel -defined as msisdn Ex: 34911067000
+     * @param number the phonenumber to cancel -defined as msisdn Ex: 34911067000
+     * @return true if the number was cancelled successfully, false otherwise.
      */
-    boolean cancelNumber(String country, String number);
+    boolean cancelNumber(String number);
 }

@@ -21,6 +21,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.noContent;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
@@ -464,7 +465,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             releaseDid(numberToRemoveFromVi);
         }
         dao.removeIncomingPhoneNumber(new Sid(sid));
-        return ok().build();
+        return noContent().build();
     }
 
     protected boolean releaseDid(final String did) {
