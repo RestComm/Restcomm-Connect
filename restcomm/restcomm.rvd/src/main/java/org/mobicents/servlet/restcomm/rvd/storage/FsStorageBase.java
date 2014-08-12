@@ -14,6 +14,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 public class FsStorageBase {
@@ -152,6 +153,9 @@ public class FsStorageBase {
     }
 
     public <T> T loadModelFromFile(File file, Class<T> modelClass) throws StorageException {
+        if ( !file.exists() )
+            throw new StorageEntityNotFound("Cannot find file: " + file.getPath() );
+
         try {
             String data = FileUtils.readFileToString(file, "UTF-8");
             T instance = marshaler.getGson().fromJson(data, modelClass);
@@ -164,6 +168,9 @@ public class FsStorageBase {
 
     // CAUTION! what happens if the typecasting fails? solve this..
     public <T> T loadModelFromXMLFile(File file, Class<T> modelClass) throws StorageException {
+        if ( !file.exists() )
+            throw new StorageEntityNotFound("Cannot find file: " + file.getPath() );
+
         try {
             String data = FileUtils.readFileToString(file, "UTF-8");
             T instance = (T) marshaler.getXStream().fromXML(data);
@@ -185,6 +192,9 @@ public class FsStorageBase {
     }
 
     public <T> T loadModelFromFile(File file, Type gsonType) throws StorageException {
+        if ( !file.exists() )
+            throw new StorageEntityNotFound("Cannot find file: " + file.getPath() );
+
         try {
             String data = FileUtils.readFileToString(file, "UTF-8");
             T instance = marshaler.getGson().fromJson(data, gsonType);
