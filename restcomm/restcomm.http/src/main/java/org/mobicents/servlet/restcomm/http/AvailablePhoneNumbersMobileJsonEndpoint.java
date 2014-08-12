@@ -48,7 +48,7 @@ public class AvailablePhoneNumbersMobileJsonEndpoint extends AvailablePhoneNumbe
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
             @QueryParam("MmsEnabled") String mmsEnabled, @QueryParam("VoiceEnabled") String voiceEnabled,
-            @QueryParam("FaxEnabled") String faxEnabled,
+            @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("UssdEnabled") String ussdEnabled,
             @QueryParam("RangeSize") String rangeSize, @QueryParam("RangeIndex") String rangeIndex) {
         if (isoCountryCode != null && !isoCountryCode.isEmpty()) {
             int rangeSizeInt = -1;
@@ -75,8 +75,12 @@ public class AvailablePhoneNumbersMobileJsonEndpoint extends AvailablePhoneNumbe
             if (faxEnabled != null && !faxEnabled.isEmpty()) {
                 faxEnabledBool = Boolean.valueOf(faxEnabled);
             }
+            Boolean ussdEnabledBool = null;
+            if (ussdEnabled != null && !ussdEnabled.isEmpty()) {
+                ussdEnabledBool = Boolean.valueOf(ussdEnabled);
+            }
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
-                    mmsEnabledBool, voiceEnabledBool, faxEnabledBool, null, null, null, null, null,
+                    mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, true, false);
             return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_JSON_TYPE);
         } else {

@@ -58,7 +58,7 @@ public class AvailablePhoneNumbersTollFreeJsonEndpoint extends AvailablePhoneNum
                 rangeIndexInt = Integer.parseInt(rangeIndex);
             }
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, null,
-                    null, Boolean.TRUE, null, null, null, null, null, null,
+                    Boolean.TRUE, null, null, null, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, false, true);
             return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_JSON_TYPE);
         } else {

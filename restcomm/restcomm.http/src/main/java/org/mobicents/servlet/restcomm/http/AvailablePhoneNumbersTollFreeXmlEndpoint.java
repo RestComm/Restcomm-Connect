@@ -59,7 +59,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
                 rangeIndexInt = Integer.parseInt(rangeIndex);
             }
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, null,
-                    null, Boolean.TRUE, null, null, null, null, null, null,
+                    Boolean.TRUE, null, null, null, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, false, true);
             return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
         } else {
