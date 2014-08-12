@@ -1,4 +1,4 @@
-<div class='alert-container'>
+<div class='rvd-designer alert-container'>
 	<!-- navigation bar for errors -->
 	<nav ng-show='projectError' class="navbar navbar-default" role="navigation">
 		<div ng-switch on="projectError.className" class="collapse navbar-collapse navbar-ex1-collapse">
@@ -12,8 +12,7 @@
 	</nav>
 
 	<div ng-hide='projectError'>	
-	
-		<nav  class="navbar navbar-default" role="navigation">
+		<nav  class="rvd-menu navbar navbar-default" role="navigation">
 			<div class="collapse navbar-collapse navbar-ex1-collapse">
 	
 				<ul class="nav navbar-nav">
@@ -47,18 +46,52 @@
 			<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert(alert)">{{alert.msg}}</alert>
 		</div>
 		
-		<div class='row'>
+		<div class='row rvd-submenu'>
 			<div class='col-md-2'>
 				<div ng-show="nodeNamed(startNodeName)==null" class='rvd-subheader-message'>
 					<span class="validation-error">No <em>Startup module</em> is set</span>
 				</div>
 			</div>
-			<div class='col-md-8'>
+			<div class='col-md-10 rvd-view-selector'>
+				<ul class="nav nav-pills pull-right">
+					<li ng-class="{active: selectedView=='rcml'}"><a ng-click="selectedView='rcml'" class="rvd-clickable-text">RCML</a></li>
+					<li ng-class="{active: selectedView=='cc'}"><a ng-click="selectedView='cc'" class="rvd-clickable-text">Call Control</a></li>
+				</ul>
 			</div>
 	
 		</div>
 	
-		<div class="row">
+		<div ng-show="selectedView=='cc'" class="rvd-ccview row">
+			<div class="col-md-12">
+				<div class="form-group">
+					<label>Api Server Crendentials</label>
+					<div class="input-group">
+						<span class="input-group-addon">Username</span>
+						<input type="text" class="form-control">
+						<span class="input-group-addon">Password</span>
+						<input type="text" class="form-control">					
+					</div>
+				</div>
+				<div class="bg-info">
+					<h4>Start action</h4>
+					<div class="input-group form-group">
+						<span class="input-group-addon">Application</span>
+						<select class="form-control">
+							<option value="">{{projectName}} (current)</option>
+						</select>
+					</div>
+					<div class="input-group">
+						<span class="input-group-addon" >To</span>
+						<input type="text" class="form-control" placeholder="use this if not given in the initiating request">
+						<span class="input-group-addon">From</span>
+						<input type="text" class="form-control" placeholder="use this if not given in the initiating request">
+					</div>
+				</div>
+			</div>
+
+		</div>
+	
+		<div ng-show="selectedView=='rcml'" class="rvd-rcmlview row">
 	
 			<!-- Left menu -->
 			<div class="col-md-2">

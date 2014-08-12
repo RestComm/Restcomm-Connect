@@ -1,7 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.storage.exceptions;
 
 /**
- * Throw when the specific piece of data we are looking for does not exist. Used in cases where 
+ * Throw when the specific piece of data we are looking for does not exist. Used in cases where
  * such non-existance is not an indication of data invalidity
  * @author "Tsakiridis Orestis"
  *
