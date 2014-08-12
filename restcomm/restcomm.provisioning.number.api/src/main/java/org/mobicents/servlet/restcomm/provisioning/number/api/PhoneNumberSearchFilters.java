@@ -26,15 +26,84 @@ import java.util.regex.Pattern;
 /**
  * This POJO is holding the different filters that can be applied to Phone Number Search to filter the results
  *
+ * <p>
+ * The following filters are available for phone numbers search:
+ * </p>
+ * <table>
+ * <thead>
+ * <tr>
+ * <th align="left">Property</th>
+ * <th align="left">Description</th>
+ * </tr>
+ * </thead> <tbody>
+ * <tr>
+ * <td class='notranslate' align="left">AreaCode</td>
+ * <td align="left">The areacode for the phone number</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">FilterPattern</td>
+ * <td align="left">A pattern to match phone numbers on. Valid characters are '*' and [0-9a-zA-Z]. The '*' character will match any single digit.</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">SmsEnabled</td>
+ * <td align="left">This indicates whether the phone numbers can receive text messages. Possible values are true or false..</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">MmsEnabled</td>
+ * <td align="left">This indicates whether the phone numbers can receive MMS messages. Possible values are true or false..</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">VoiceEnabled</td>
+ * <td align="left">This indicates whether the phone numbers can receive calls. Possible values are true or false..</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">FaxEnabled</td>
+ * <td align="left">This indicates whether the phone numbers can receive fax message. Possible values are true or false..</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">UssdEnabled</td>
+ * <td align="left">This indicates whether the phone numbers can receive USSD messages. Possible values are true or false..</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">NearNumber</td>
+ * <td align="left">Given a phone number, find a geographically close number within Distance miles. Distance defaults to 25 miles.</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">NearLatLong</td>
+ * <td align="left">Given a latitude/longitude pair lat,long find geographically close numbers within Distance miles.</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">Distance</td>
+ * <td align="left">Specifies the search radius for a Near- query in miles. If not specified this defaults to 25 miles. Maximum searchable distance is 500 miles.</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">InPostalCode</td>
+ * <td align="left">Limit results to a particular postal code. Given a phone number, search within the same postal code as that number.</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">InRegion</td>
+ * <td align="left">Limit results to a particular region (i.e. State/Province). Given a phone number, search within the same Region as that number.</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">InRateCenter</td>
+ * <td align="left">Limit results to a specific rate center, or given a phone number search within the same rate center as that number. Requires InLata to be set as well.</td>
+ * </tr>
+ * <tr>
+ * <td class='notranslate' align="left">InLata</td>
+ * <td align="left">Limit results to a specific Local access and transport area (LATA - http://en.wikipedia.org/wiki/Local_access_and_transport_area). Given a phone number, search within the same LATA as that number.</td>
+ * </tr>
+ * </tbody>
+ * </table>
  * @author jean.deruelle@telestax.com
  */
-public class ListFilters {
+public class PhoneNumberSearchFilters {
     String areaCode;
     Pattern filterPattern;
     Boolean smsEnabled;
     Boolean mmsEnabled;
     Boolean voiceEnabled;
     Boolean faxEnabled;
+    Boolean ussdEnabled;
     String nearNumber;
     String nearLatLong;
     String distance;
@@ -45,10 +114,10 @@ public class ListFilters {
     int rangeSize;
     int rangeIndex;
 
-    Boolean mobileSearch;
-    Boolean tollFreeSearch;
+    boolean mobileSearch;
+    boolean tollFreeSearch;
 
-    public ListFilters() {
+    public PhoneNumberSearchFilters() {
     }
 
     /**
@@ -58,6 +127,7 @@ public class ListFilters {
      * @param mmsEnabled
      * @param voiceEnabled
      * @param faxEnabled
+     * @param ussdEnabled
      * @param nearNumber
      * @param nearLatLong
      * @param distance
@@ -70,15 +140,16 @@ public class ListFilters {
      * @param mobileSearch
      * @param tollFreeSearch
      */
-    public ListFilters(String areaCode, Pattern filterPattern, Boolean smsEnabled, Boolean mmsEnabled, Boolean voiceEnabled,
-            Boolean faxEnabled, String nearNumber, String nearLatLong, String distance, String inPostalCode, String inRegion,
-            String inRateCenter, String inLata, int rangeSize, int rangeIndex, Boolean mobileSearch, Boolean tollFreeSearch) {
+    public PhoneNumberSearchFilters(String areaCode, Pattern filterPattern, Boolean smsEnabled, Boolean mmsEnabled, Boolean voiceEnabled,
+            Boolean faxEnabled, Boolean ussdEnabled, String nearNumber, String nearLatLong, String distance, String inPostalCode, String inRegion,
+            String inRateCenter, String inLata, int rangeSize, int rangeIndex, boolean mobileSearch, boolean tollFreeSearch) {
         this.areaCode = areaCode;
         this.filterPattern = filterPattern;
         this.smsEnabled = smsEnabled;
         this.mmsEnabled = mmsEnabled;
         this.voiceEnabled = voiceEnabled;
         this.faxEnabled = faxEnabled;
+        this.ussdEnabled = ussdEnabled;
         this.nearNumber = nearNumber;
         this.nearLatLong = nearLatLong;
         this.distance = distance;
@@ -174,6 +245,20 @@ public class ListFilters {
      */
     public void setFaxEnabled(Boolean faxEnabled) {
         this.faxEnabled = faxEnabled;
+    }
+
+    /**
+     * @return the ussdEnabled
+     */
+    public Boolean getUssdEnabled() {
+        return ussdEnabled;
+    }
+
+    /**
+     * @param ussdEnabled the ussdEnabled to set
+     */
+    public void setUssdEnabled(Boolean ussdEnabled) {
+        this.ussdEnabled = ussdEnabled;
     }
 
     /**
@@ -305,28 +390,28 @@ public class ListFilters {
     /**
      * @return the mobileSearch
      */
-    public Boolean getMobileSearch() {
+    public boolean getMobileSearch() {
         return mobileSearch;
     }
 
     /**
      * @param mobileSearch the mobileSearch to set
      */
-    public void setMobileSearch(Boolean mobileSearch) {
+    public void setMobileSearch(boolean mobileSearch) {
         this.mobileSearch = mobileSearch;
     }
 
     /**
      * @return the tollFreeSearch
      */
-    public Boolean getTollFreeSearch() {
+    public boolean getTollFreeSearch() {
         return tollFreeSearch;
     }
 
     /**
      * @param tollFreeSearch the tollFreeSearch to set
      */
-    public void setTollFreeSearch(Boolean tollFreeSearch) {
+    public void setTollFreeSearch(boolean tollFreeSearch) {
         this.tollFreeSearch = tollFreeSearch;
     }
 }

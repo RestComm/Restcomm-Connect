@@ -19,7 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.provisioning.number.api;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * <p>
@@ -113,35 +112,35 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  *
  * @author jean.deruelle@telestax.com
  */
-@Immutable
 public final class PhoneNumber {
-    private final String friendlyName;
-    private final String phoneNumber;
-    private final Integer lata;
-    private final String rateCenter;
-    private final Double latitude;
-    private final Double longitude;
-    private final String region;
-    private final Integer postalCode;
-    private final String isoCountry;
+    private String friendlyName;
+    private String phoneNumber;
+    private Integer lata;
+    private String rateCenter;
+    private Double latitude;
+    private Double longitude;
+    private String region;
+    private Integer postalCode;
+    private String isoCountry;
 
     // Capabilities
-    private final Boolean voiceCapable;
-    private final Boolean smsCapable;
-    private final Boolean mmsCapable;
-    private final Boolean faxCapable;
+    private Boolean voiceCapable;
+    private Boolean smsCapable;
+    private Boolean mmsCapable;
+    private Boolean faxCapable;
+    private Boolean ussdCapable;
 
     public PhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata, final String rateCenter,
             final Double latitude, final Double longitude, final String region, final Integer postalCode,
             final String isoCountry) {
         this(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode, isoCountry, null, null,
-                null, null);
+                null, null, null);
     }
 
     public PhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata, final String rateCenter,
             final Double latitude, final Double longitude, final String region, final Integer postalCode,
             final String isoCountry, final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable,
-            final Boolean faxCapable) {
+            final Boolean faxCapable, final Boolean ussdCapable) {
         super();
         this.friendlyName = friendlyName;
         this.phoneNumber = phoneNumber;
@@ -156,62 +155,202 @@ public final class PhoneNumber {
         this.smsCapable = smsCapable;
         this.mmsCapable = mmsCapable;
         this.faxCapable = faxCapable;
+        this.ussdCapable = ussdCapable;
     }
 
+    /**
+     * @return the friendlyName
+     */
     public String getFriendlyName() {
         return friendlyName;
     }
 
+    /**
+     * @param friendlyName the friendlyName to set
+     */
+    public void setFriendlyName(String friendlyName) {
+        this.friendlyName = friendlyName;
+    }
+
+    /**
+     * @return the phoneNumber
+     */
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
+    /**
+     * @param phoneNumber the phoneNumber to set
+     */
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    /**
+     * @return the lata
+     */
     public Integer getLata() {
         return lata;
     }
 
+    /**
+     * @param lata the lata to set
+     */
+    public void setLata(Integer lata) {
+        this.lata = lata;
+    }
+
+    /**
+     * @return the rateCenter
+     */
     public String getRateCenter() {
         return rateCenter;
     }
 
+    /**
+     * @param rateCenter the rateCenter to set
+     */
+    public void setRateCenter(String rateCenter) {
+        this.rateCenter = rateCenter;
+    }
+
+    /**
+     * @return the latitude
+     */
     public Double getLatitude() {
         return latitude;
     }
 
+    /**
+     * @param latitude the latitude to set
+     */
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    /**
+     * @return the longitude
+     */
     public Double getLongitude() {
         return longitude;
     }
 
+    /**
+     * @param longitude the longitude to set
+     */
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    /**
+     * @return the region
+     */
     public String getRegion() {
         return region;
     }
 
+    /**
+     * @param region the region to set
+     */
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    /**
+     * @return the postalCode
+     */
     public Integer getPostalCode() {
         return postalCode;
     }
 
+    /**
+     * @param postalCode the postalCode to set
+     */
+    public void setPostalCode(Integer postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    /**
+     * @return the isoCountry
+     */
     public String getIsoCountry() {
         return isoCountry;
     }
 
-    public Boolean isVoiceCapable() {
-        return this.voiceCapable;
+    /**
+     * @param isoCountry the isoCountry to set
+     */
+    public void setIsoCountry(String isoCountry) {
+        this.isoCountry = isoCountry;
     }
 
+    /**
+     * @return the voiceCapable
+     */
+    public Boolean isVoiceCapable() {
+        return voiceCapable;
+    }
+
+    /**
+     * @param voiceCapable the voiceCapable to set
+     */
+    public void setVoiceCapable(Boolean voiceCapable) {
+        this.voiceCapable = voiceCapable;
+    }
+
+    /**
+     * @return the smsCapable
+     */
     public Boolean isSmsCapable() {
         return smsCapable;
     }
 
+    /**
+     * @param smsCapable the smsCapable to set
+     */
+    public void setSmsCapable(Boolean smsCapable) {
+        this.smsCapable = smsCapable;
+    }
+
+    /**
+     * @return the mmsCapable
+     */
     public Boolean isMmsCapable() {
         return mmsCapable;
     }
 
+    /**
+     * @param mmsCapable the mmsCapable to set
+     */
+    public void setMmsCapable(Boolean mmsCapable) {
+        this.mmsCapable = mmsCapable;
+    }
+
+    /**
+     * @return the faxCapable
+     */
     public Boolean isFaxCapable() {
         return faxCapable;
     }
 
-    public PhoneNumber setFriendlyName(final String friendlyName) {
-        return new PhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode,
-                isoCountry, voiceCapable, smsCapable, mmsCapable, faxCapable);
+    /**
+     * @param faxCapable the faxCapable to set
+     */
+    public void setFaxCapable(Boolean faxCapable) {
+        this.faxCapable = faxCapable;
+    }
+
+    /**
+     * @return the ussdCapable
+     */
+    public Boolean isUssdCapable() {
+        return ussdCapable;
+    }
+
+    /**
+     * @param ussdCapable the ussdCapable to set
+     */
+    public void setUssdCapable(Boolean ussdCapable) {
+        this.ussdCapable = ussdCapable;
     }
 }

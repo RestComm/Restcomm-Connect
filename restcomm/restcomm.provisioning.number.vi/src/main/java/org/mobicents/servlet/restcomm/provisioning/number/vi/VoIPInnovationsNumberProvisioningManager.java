@@ -36,7 +36,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
-import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.mobicents.servlet.restcomm.provisioning.number.vi.converter.GetDIDListResponseConverter;
@@ -139,7 +140,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         }
     }
 
-    private List<PhoneNumber> toAvailablePhoneNumbers(final GetDIDListResponse response, ListFilters listFilters) {
+    private List<PhoneNumber> toAvailablePhoneNumbers(final GetDIDListResponse response, PhoneNumberSearchFilters listFilters) {
         Pattern searchPattern = listFilters.getFilterPattern();
         final List<PhoneNumber> numbers = new ArrayList<PhoneNumber>();
         final List<State> states = response.states();
@@ -156,7 +157,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                                         if(listFilters.getFaxEnabled() == null || (listFilters.getFaxEnabled() != null && listFilters.getFaxEnabled() == tn.t38())) {
                                             // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
                                             final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
-                                                    center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38());
+                                                    center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38(), null);
                                             numbers.add(number);
                                         }
                                     }
@@ -178,7 +179,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * java.lang.String, java.util.regex.Pattern, boolean, boolean, boolean, boolean, int, int)
      */
     @Override
-    public List<PhoneNumber> searchForNumbers(String country, ListFilters listFilters) {
+    public List<PhoneNumber> searchForNumbers(String country, PhoneNumberSearchFilters listFilters) {
         if(logger.isDebugEnabled()) {
             logger.debug("searchPattern " + listFilters.getFilterPattern());
         }
@@ -244,43 +245,37 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         return new ArrayList<PhoneNumber>();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#buyNumber(java.lang.String,
-     * java.lang.String, java.lang.String, java.lang.String, java.lang.String)
-     */
-    @Override
-    public boolean buyNumber(String country, String number, String smsHttpURL, String smsType, String voiceURL) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#updateNumber(java.lang.String,
-     * java.lang.String, java.lang.String, java.lang.String, java.lang.String)
-     */
-    @Override
-    public boolean updateNumber(String country, String number, String smsHttpURL, String smsType, String voiceURL) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#cancelNumber(java.lang.String,
-     * java.lang.String)
-     */
-    @Override
-    public boolean cancelNumber(String country, String number) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
     private String generateId() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#buyNumber(java.lang.String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters)
+     */
+    @Override
+    public boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#updateNumber(java.lang.String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters)
+     */
+    @Override
+    public boolean updateNumber(String number, PhoneNumberParameters phoneNumberParameters) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#cancelNumber(java.lang.String)
+     */
+    @Override
+    public boolean cancelNumber(String number) {
+        // TODO Auto-generated method stub
+        return false;
     }
 }

@@ -31,7 +31,7 @@ import static javax.ws.rs.core.Response.Status.*;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.provisioning.number.api.ListFilters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -58,7 +58,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
             if (rangeIndex != null && !rangeIndex.isEmpty()) {
                 rangeIndexInt = Integer.parseInt(rangeIndex);
             }
-            ListFilters listFilters = new ListFilters(areaCode, null, null,
+            PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, null,
                     null, Boolean.TRUE, null, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, false, true);
             return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
