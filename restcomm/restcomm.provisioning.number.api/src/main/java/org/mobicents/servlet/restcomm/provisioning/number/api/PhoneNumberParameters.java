@@ -30,7 +30,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  * <th align="left">Property</th>
  * <th align="left">Description</th>
  * </tr>
- * </thead> 
+ * </thead>
  * <tbody>
  * <tr>
  * <td class='notranslate' align="left">VoiceUrl</td>
@@ -50,7 +50,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">SMSMethod</td>
- * <td align="left">The method that should be used to request the SmsUrl. SS7, SMPP, SIP or SIPS supported currently. Defaults to SIP. 
+ * <td align="left">The method that should be used to request the SmsUrl. SS7, SMPP, SIP or SIPS supported currently. Defaults to SIP.
  * If SMPP or SS7 are used, the URL of the SMSC will be provided</td>
  * </tr>
  * <tr>
@@ -59,7 +59,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">UssdMethod</td>
- * <td align="left">The method that should be used to request the UssdUrl. SS7, SIP or SIPS supported currently. Defaults to SIP. 
+ * <td align="left">The method that should be used to request the UssdUrl. SS7, SIP or SIPS supported currently. Defaults to SIP.
  * If SS7 is used, the URL of the USSD will be provided</td>
  * </tr>
  * <tr>

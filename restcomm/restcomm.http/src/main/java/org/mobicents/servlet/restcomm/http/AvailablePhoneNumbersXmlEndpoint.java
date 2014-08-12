@@ -49,7 +49,8 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
             @QueryParam("MmsEnabled") String mmsEnabled, @QueryParam("VoiceEnabled") String voiceEnabled,
-            @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("NearNumber") String nearNumber,
+            @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("UssdEnabled") String ussdEnabled,
+            @QueryParam("NearNumber") String nearNumber,
             @QueryParam("NearLatLong") String nearLatLong, @QueryParam("Distance") String distance,
             @QueryParam("InPostalCode") String inPostalCode, @QueryParam("InRegion") String inRegion,
             @QueryParam("InRateCenter") String inRateCenter, @QueryParam("InLata") String inLata,
@@ -79,8 +80,12 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
             if (faxEnabled != null && !faxEnabled.isEmpty()) {
                 faxEnabledBool = Boolean.valueOf(faxEnabled);
             }
+            Boolean ussdEnabledBool = null;
+            if (ussdEnabled != null && !ussdEnabled.isEmpty()) {
+                ussdEnabledBool = Boolean.valueOf(ussdEnabled);
+            }
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
-                    mmsEnabledBool, voiceEnabledBool, faxEnabledBool, nearNumber, nearLatLong, distance, inPostalCode, inRegion,
+                    mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, nearNumber, nearLatLong, distance, inPostalCode, inRegion,
                     inRateCenter, inLata, rangeSizeInt, rangeIndexInt, false, false);
             return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
         } else {
