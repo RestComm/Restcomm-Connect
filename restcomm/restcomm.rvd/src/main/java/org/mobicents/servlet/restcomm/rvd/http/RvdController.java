@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.http;
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -19,18 +20,33 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.CallControlException;
+import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RestcommConfigNotFound;
+import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RvdErrorParsingRestcommXml;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
+import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.w3c.dom.Document;
 
 import com.google.gson.Gson;
 
@@ -141,5 +157,77 @@ public class RvdController extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
         }
     }
+
+    // **********************************
+    // *** Call control functionality ***
+    // **********************************
+
+    private String extractRecordingsUrlFromRestcommConfig(File file) throws CallControlException {
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder;
+        try {
+            docBuilder = docBuilderFactory.newDocumentBuilder();
+            Document doc = docBuilder.parse (file);
+            XPathFactory xPathfactory = XPathFactory.newInstance();
+            XPath xpath = xPathfactory.newXPath();
+            XPathExpression expr = xpath.compile("/restcomm/runtime-settings/recordings-uri/text()");
+            String recordingsUrl = (String) expr.evaluate(doc, XPathConstants.STRING);
+
+            return recordingsUrl;
+        } catch (Exception e) {
+            throw new CallControlException("Error parsing restcomm config file: " + file.getPath(), e);
+        }
+
+    }
+    /**
+     * Retrieves restcomm.xml dependent information, host ip and port
+     */
+    private ApiServerConfig getApiServerConfig( String filesystemContextPath) throws CallControlException {
+        ApiServerConfig config = new ApiServerConfig();
+
+        // Load restcomm configuration. Only the fields we are interested in. See RestcommXml model class
+        String restcommConfigPath = filesystemContextPath + "../restcomm.war/WEB-INF/conf/restcomm.xml";
+        File file = new File(restcommConfigPath);
+        if ( !file.exists() ) {
+            throw new RestcommConfigNotFound("Cannot find restcomm configuration file at: " + restcommConfigPath);
+        }
+        String recordingsUrl = extractRecordingsUrlFromRestcommConfig(file);
+
+        // Extract the settings we are interested in from the recordings url. We could also any other containing host and port information
+        URIBuilder uriBuilder;
+        try {
+            uriBuilder = new URIBuilder(recordingsUrl);
+            config.setHost( uriBuilder.getHost() );
+            config.setPort( uriBuilder.getPort() );
+            return config;
+        } catch (URISyntaxException e) {
+            throw new RvdErrorParsingRestcommXml("Error extracting host and port information from recordings-uri in restcomm.xml: " + recordingsUrl);
+        }
+    }
+
+    @GET
+    @Path("{appname}/start")
+    public Response executeAction(@PathParam("appname") String projectName ) {
+        //return Response.ok().build();
+
+        FsCallControlInfoStorage ccStorage = new FsCallControlInfoStorage(rvdContext.getStorageBase());
+        try {
+            ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
+            logger.info("using restcomm host: " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
+            CallControlInfo info = ccStorage.loadInfo(projectName);
+            return Response.ok().build();
+        } catch (CallControlException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (StorageEntityNotFound e) {
+            logger.error(e,e);
+            return Response.status(Status.NOT_FOUND).build(); // for case when the cc file does not exist
+        }
+        catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 
 }
