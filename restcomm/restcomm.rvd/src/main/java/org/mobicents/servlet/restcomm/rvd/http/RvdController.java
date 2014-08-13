@@ -40,8 +40,10 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -207,14 +209,26 @@ public class RvdController extends RestService {
 
     @GET
     @Path("{appname}/start")
-    public Response executeAction(@PathParam("appname") String projectName ) {
-        //return Response.ok().build();
+    public Response executeAction(@PathParam("appname") String projectName ) {        
+        
+        WorkspaceStorage workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), rvdContext.getMarshaler());
 
-        FsCallControlInfoStorage ccStorage = new FsCallControlInfoStorage(rvdContext.getStorageBase());
         try {
+            // Load configuration from Restcomm
             ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
             logger.info("using restcomm host: " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
-            CallControlInfo info = ccStorage.loadInfo(projectName);
+            
+            // Load CC info from project
+            CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
+            
+            // Load rvd settings
+            SettingsModel settingsModel = null;
+            if ( workspaceStorage.entityExists(".settings", "") )
+                settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
+            
+            // All required dependencies are in place. proceed with the request
+            // ...
+            
             return Response.ok().build();
         } catch (CallControlException e) {
             logger.error(e,e);
