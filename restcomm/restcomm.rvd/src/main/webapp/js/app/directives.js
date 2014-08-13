@@ -1,3 +1,20 @@
+angular.module('Rvd').directive('rvdModule', function (projectModules) {
+	return {
+		restrict: "A",
+		link: function (scope, element, attrs) {
+			//console.log("creating rvdModule directive");
+			//console.log(scope.node);
+			projectModules.addModule(scope.node);
+			
+			scope.$on('$destroy', function() {
+				//console.log("removing module");
+				//console.log(scope.node);
+				projectModules.removeModule(scope.node);
+			});
+		}
+	}
+});
+
 angular.module('Rvd').directive('stepHeading', function () {
 	return {
 		restrict: 'E',

@@ -15,6 +15,7 @@ public class ProjectState {
     private Integer activeNode;
     private Integer lastNodeId;
     private StateHeader header;
+    private ExceptionHandlingInfo exceptionHandlingInfo;
 
 
     public ProjectState() {
@@ -132,6 +133,11 @@ public class ProjectState {
     public void setHeader(StateHeader header) {
         this.header = header;
     }
+
+    public ExceptionHandlingInfo getExceptionHandlingInfo() {
+        return exceptionHandlingInfo;
+    }
+
 
 
 }
