@@ -48,7 +48,7 @@ public class SettingsRestService extends RestService {
         marshaler = new ModelMarshaler();
         //workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
     }
-    
+
 
     @POST
     public Response setSettings(@Context HttpServletRequest request) {

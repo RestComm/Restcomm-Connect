@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.http;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.List;
 
@@ -27,6 +28,7 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
@@ -43,15 +45,19 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationFrameworkException;
+import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
+import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
@@ -78,6 +84,7 @@ public class ProjectRestService extends RestService {
     private ProjectStorage projectStorage;
     private ProjectState activeProject;
     private ModelMarshaler marshaler;
+    private WorkspaceStorage workspaceStorage;
 
     RvdContext rvdContext;
 
@@ -89,6 +96,7 @@ public class ProjectRestService extends RestService {
         marshaler = rvdContext.getMarshaler();
         projectStorage = rvdContext.getProjectStorage();
         projectService = new ProjectService(rvdContext);
+        workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
     }
 
     /**
@@ -225,6 +233,43 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.BAD_REQUEST).build();
         }
     }
+
+    /**
+     * Store Call Control project information
+     */
+    @RvdAuth
+    @POST
+    @Path("{name}/cc")
+    public Response storeCcInfo(@PathParam("name") String projectName, @Context HttpServletRequest request) {
+        try {
+            String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
+            CallControlInfo ccInfo = marshaler.toModel(data, CallControlInfo.class);
+            FsCallControlInfoStorage.storeInfo( ccInfo, projectName, workspaceStorage);
+            return Response.ok().build();
+        } catch (IOException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @RvdAuth
+    @GET
+    @Path("{name}/cc")
+    public Response getCcInfo(@PathParam("name") String projectName) {
+        try {
+            CallControlInfo ccInfo = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
+            return buildOkResponse(ccInfo);
+        } catch (StorageEntityNotFound e) {
+            return Response.status(Status.NOT_FOUND).build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 
     @RvdAuth
     @PUT

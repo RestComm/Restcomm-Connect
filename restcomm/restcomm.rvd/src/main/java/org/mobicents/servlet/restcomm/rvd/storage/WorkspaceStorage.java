@@ -18,7 +18,7 @@ public class WorkspaceStorage {
         this.rootPath = rootPath;
         this.marshaler = marshaler;
     }
-    
+
     public boolean entityExists(String entityName, String relativePath) {
         if ( !relativePath.startsWith( "/") )
             relativePath = File.separator + relativePath;

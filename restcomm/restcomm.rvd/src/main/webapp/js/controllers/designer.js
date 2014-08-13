@@ -1,4 +1,4 @@
-App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -10,7 +10,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.stepService = stepService;
 	$scope.protos = protos;
 	$scope.selectedView = 'rcml';
-	$scope.settings = {}; // populate this from some resolved parameters
+	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved parameters
+	$scope.ccInfo = ccInfo;
+	console.log( ccInfo );
 	
 	// Prototype and constant data structures
 	$scope.languages = [
@@ -577,7 +579,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 				$modalInstance.close(settings);
 			})
 			.error( function () {
-				$scope.showAlert("Cannot save settings");
+				notifications.put("Cannot save settings");
 			});
 		};
 
@@ -585,10 +587,10 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 			$modalInstance.dismiss('cancel');
 		};
 		
-		$scope.showAlert = function (message) {
-			$scope.alertMessage = message;
-			$timeout( function () {$scope.alertMessage = undefined}, 3000 );
-		};
+		// watch form validation status and copy to outside scope so that the OK button (which is outside the form's scope) status can be updated
+		$scope.watchForm = function (formValid) {
+			$scope.preventSubmit = !formValid;
+		}
 	};
 	$scope.showSettingsModal = function (settings) {
 		var modalInstance = $modal.open({
@@ -605,9 +607,9 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 					if ( response.status == 404 )
 						deferred.resolve({});
 					else {
-						console.log("BEFORE reject");
+						//console.log("BEFORE reject");
 						deferred.reject();
-						console.log("AFTER reject");
+						//console.log("AFTER reject");
 					}
 				});
 				return deferred.promise;
@@ -640,3 +642,16 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		}
 	}	
 });
+designerCtrl.getCcInfo = function ($scope, $q) {
+	var deferred = $q.defer();
+	$http.get("services/projects/" + $scope.projectName + "/cc")
+	.then(function (response) {
+		deferred.resolve(response.data);
+	}, function (response) {
+		if ( response.status == 404 )
+			deferred.resolve({});
+		else
+			deferred.reject(); // TODO - add an error code or message here
+	});
+	return deferred.promise;
+}

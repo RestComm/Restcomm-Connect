@@ -13,7 +13,8 @@ App.config([ '$routeProvider', function($routeProvider) {
 	})
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
-		controller : 'designerCtrl'
+		controller : 'designerCtrl',
+		resolve: {ccInfo: designerCtrl.getCcInfo}
 	})
 	.when('/packaging/:projectName', {
 		templateUrl : 'templates/packaging/form.html',
