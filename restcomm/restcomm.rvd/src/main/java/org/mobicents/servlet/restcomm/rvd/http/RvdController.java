@@ -209,26 +209,26 @@ public class RvdController extends RestService {
 
     @GET
     @Path("{appname}/start")
-    public Response executeAction(@PathParam("appname") String projectName ) {        
-        
+    public Response executeAction(@PathParam("appname") String projectName ) {
+
         WorkspaceStorage workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), rvdContext.getMarshaler());
 
         try {
             // Load configuration from Restcomm
             ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
             logger.info("using restcomm host: " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
-            
+
             // Load CC info from project
             CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
-            
+
             // Load rvd settings
             SettingsModel settingsModel = null;
             if ( workspaceStorage.entityExists(".settings", "") )
                 settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
-            
+
             // All required dependencies are in place. proceed with the request
             // ...
-            
+
             return Response.ok().build();
         } catch (CallControlException e) {
             logger.error(e,e);

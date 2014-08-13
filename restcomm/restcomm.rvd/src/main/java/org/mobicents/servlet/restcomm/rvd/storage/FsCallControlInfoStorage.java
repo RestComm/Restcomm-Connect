@@ -10,4 +10,8 @@ public class FsCallControlInfoStorage {
         //return storageBase.loadModelFromProjectFile(projectName, "", "cc", CallControlInfo.class);
     }
 
+    public static void storeInfo(CallControlInfo info, String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        workspaceStorage.storeEntity(info, CallControlInfo.class, "cc", projectName);
+    }
+
 }
