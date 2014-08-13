@@ -3,7 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.model.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.sms.SmsStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStep;
@@ -28,7 +28,7 @@ public class ProjectState {
         StateHeader header = new StateHeader();
         header.owner = owner;
         header.projectKind = kind;
-        header.version = RvdSettings.getPackagingVersion();
+        header.version = RvdConfiguration.getPackagingVersion();
         header.startNodeName = "start";
         state.setHeader(header);
 
@@ -52,7 +52,7 @@ public class ProjectState {
         StateHeader header = new StateHeader();
         header.owner = owner;
         header.projectKind = kind;
-        header.version = RvdSettings.getPackagingVersion();
+        header.version = RvdConfiguration.getPackagingVersion();
         header.startNodeName = "start";
         state.setHeader(header);
 
@@ -76,7 +76,7 @@ public class ProjectState {
         StateHeader header = new StateHeader();
         header.owner = owner;
         header.projectKind = kind;
-        header.version = RvdSettings.getPackagingVersion();
+        header.version = RvdConfiguration.getPackagingVersion();
         header.startNodeName = "start";
         state.setHeader(header);
 

@@ -14,15 +14,15 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityException;
 
 public class AuthenticationService {
     static final Logger logger = Logger.getLogger(AuthenticationService.class.getName());
-    RvdSettings rvdSettings;
+    RvdConfiguration rvdSettings;
     HttpServletRequest request; // used to calculate Restcomm's IP
 
-    public AuthenticationService(RvdSettings rvdSettings, HttpServletRequest request) {
+    public AuthenticationService(RvdConfiguration rvdSettings, HttpServletRequest request) {
         logger.debug("Created RVD authentication service");
         this.rvdSettings = rvdSettings;
         this.request = request;

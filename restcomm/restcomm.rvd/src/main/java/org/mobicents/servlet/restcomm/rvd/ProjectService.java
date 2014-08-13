@@ -51,7 +51,7 @@ public class ProjectService {
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
 
     ProjectStorage projectStorage;
-    RvdSettings settings;
+    RvdConfiguration settings;
     RvdContext rvdContext;
 
     public ProjectService(RvdContext rvdContext) {
@@ -182,8 +182,8 @@ public class ProjectService {
 
         try {
             StateHeader header = projectStorage.loadStateHeader(projectName);
-            if ( ! header.getVersion().equals(RvdSettings.getRvdProjectVersion()) )
-                throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdSettings.getRvdProjectVersion() );
+            if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
+                throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdConfiguration.getRvdProjectVersion() );
         } catch ( BadProjectHeader e ) {
             throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
         }

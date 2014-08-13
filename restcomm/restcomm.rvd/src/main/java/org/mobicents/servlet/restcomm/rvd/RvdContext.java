@@ -11,7 +11,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 public class RvdContext {
 
     private ModelMarshaler marshaler;
-    private RvdSettings settings;
+    private RvdConfiguration settings;
     private ProjectStorage projectStorage;
     private ServletContext servletContext;
     private FsStorageBase storageBase;
@@ -19,7 +19,7 @@ public class RvdContext {
     public RvdContext(HttpServletRequest request,  ServletContext servletContext) {
         this.servletContext = servletContext;
         this.marshaler = new ModelMarshaler();
-        this.settings = RvdSettings.getInstance(servletContext);
+        this.settings = RvdConfiguration.getInstance(servletContext);
         this.storageBase = new FsStorageBase(this.settings.getWorkspaceBasePath(), marshaler);
         this.projectStorage = new FsProjectStorage(storageBase, marshaler);
     }
@@ -28,7 +28,7 @@ public class RvdContext {
         return marshaler;
     }
 
-    public RvdSettings getSettings() {
+    public RvdConfiguration getSettings() {
         return settings;
     }
 

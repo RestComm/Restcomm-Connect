@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
@@ -102,7 +102,7 @@ public class RecordStep extends Step {
         if ( restcommRecordingUrl != null ) {
             try {
                 String recordingUrl = interpreter.convertRecordingFileResourceHttp(restcommRecordingUrl, interpreter.getHttpRequest());
-                interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "RecordingUrl", recordingUrl);
+                interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "RecordingUrl", recordingUrl);
             } catch (URISyntaxException e) {
                 logger.warn("Cannot convert file URL to http URL - " + restcommRecordingUrl, e);
             }
@@ -110,11 +110,11 @@ public class RecordStep extends Step {
 
         String RecordingDuration = interpreter.getRequestParams().getFirst("RecordingDuration");
         if (RecordingDuration != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "RecordingDuration", RecordingDuration);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "RecordingDuration", RecordingDuration);
 
         String Digits = interpreter.getRequestParams().getFirst("Digits");
         if (Digits != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "Digits", Digits);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "Digits", Digits);
 
         interpreter.interpret( getNext(), null, null );
     }

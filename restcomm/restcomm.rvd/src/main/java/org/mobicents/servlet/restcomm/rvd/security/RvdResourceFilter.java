@@ -10,7 +10,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UserNotAuthenticated;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
@@ -49,7 +49,7 @@ public class RvdResourceFilter implements ResourceFilter, ContainerRequestFilter
         SecurityContext securityContext = request.getSecurityContext();
 
 
-        Cookie ticketCookie = request.getCookies().get(RvdSettings.TICKET_COOKIE_NAME);
+        Cookie ticketCookie = request.getCookies().get(RvdConfiguration.TICKET_COOKIE_NAME);
         if ( ticketCookie != null ) {
             String ticketId = ticketCookie.getValue();
             //throw new WebApplicationException();

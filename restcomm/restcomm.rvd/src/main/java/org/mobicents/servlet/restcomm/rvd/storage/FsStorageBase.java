@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
@@ -58,7 +58,7 @@ public class FsStorageBase {
 
     public void storeProjectBinaryFile(File sourceFile, String projectName, String path, String filename ) throws RvdException {
         //if (projectExists(projectName)) {
-            File destFile = new File(getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
+            File destFile = new File(getProjectBasePath(projectName) + File.separator + RvdConfiguration.PACKAGING_DIRECTORY_NAME + File.separator + "app.zip");
             try {
                 //FileUtils.moveFile(packageFile, destFile);
                 FileUtils.copyFile(sourceFile, destFile);

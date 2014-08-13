@@ -11,7 +11,7 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 
 public class ProjectValidator implements Validator {
 
@@ -19,7 +19,7 @@ public class ProjectValidator implements Validator {
     JsonSchema projectSchema;
 
     public ProjectValidator() throws ProcessingException, IOException {
-        init( RvdSettings.getRvdProjectVersion() );
+        init( RvdConfiguration.getRvdProjectVersion() );
     }
 
     public ProjectValidator(  /*, String uri,*/ String schemaVersion ) throws ProcessingException, IOException {

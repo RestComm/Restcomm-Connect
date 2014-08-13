@@ -1,6 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.packaging.model;
 
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidatableModel;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 
@@ -14,7 +14,7 @@ public class RappInfo extends ValidatableModel {
     private String name;
     private String description;
     private String appVersion;
-    private String rvdAppVersion = RvdSettings.getRvdProjectVersion();
+    private String rvdAppVersion = RvdConfiguration.getRvdProjectVersion();
     private String id;
 
     public RappInfo() {

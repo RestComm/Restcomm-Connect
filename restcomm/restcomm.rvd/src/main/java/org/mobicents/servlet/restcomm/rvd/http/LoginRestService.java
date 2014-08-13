@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.model.LoginForm;
 import org.mobicents.servlet.restcomm.rvd.security.AuthenticationService;
 import org.mobicents.servlet.restcomm.rvd.security.Ticket;
@@ -34,7 +34,7 @@ public class LoginRestService extends RestService {
 
     @Context
     ServletContext servletContext;
-    RvdSettings rvdSettings;
+    RvdConfiguration rvdSettings;
 
     @PostConstruct
     void init() {
@@ -62,7 +62,7 @@ public class LoginRestService extends RestService {
                 Ticket ticket = new Ticket(userId);
                 tickets.putTicket( ticket );
 
-                return Response.ok().cookie( new NewCookie(RvdSettings.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
+                return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
             }
             else {
                 logger.debug("Authentication error for user " + userId);
@@ -93,7 +93,7 @@ public class LoginRestService extends RestService {
                 Ticket ticket = new Ticket(credentials.getUsername());
                 tickets.putTicket( ticket );
 
-                return Response.ok().cookie( new NewCookie(RvdSettings.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
+                return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
             }
             else {
                 logger.debug("Authentication error for user " + credentials.getUsername());
@@ -107,13 +107,13 @@ public class LoginRestService extends RestService {
 
     @GET
     @Path("logout")
-    public Response logout(@CookieParam(value = RvdSettings.TICKET_COOKIE_NAME) String ticketCookieValue) {
+    public Response logout(@CookieParam(value = RvdConfiguration.TICKET_COOKIE_NAME) String ticketCookieValue) {
         TicketRepository tickets = TicketRepository.getInstance();
         logger.debug("Invalidating ticket " + ticketCookieValue);
         tickets.invalidateTicket(ticketCookieValue);
 
         // removing the cookie by setting the max-age to 0
-        return Response.ok().cookie( new NewCookie(RvdSettings.TICKET_COOKIE_NAME, "", "/restcomm-rvd/services", null, null,0, false ) ).build();
+        return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, "", "/restcomm-rvd/services", null, null,0, false ) ).build();
     }
 
 

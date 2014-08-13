@@ -34,7 +34,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
@@ -101,7 +101,7 @@ public class Interpreter {
 
     static final Logger logger = Logger.getLogger(Interpreter.class.getName());
 
-    private RvdSettings rvdSettings;
+    private RvdConfiguration rvdSettings;
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
 
@@ -204,7 +204,7 @@ public class Interpreter {
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
     }
 
-    public RvdSettings getRvdSettings() {
+    public RvdConfiguration getRvdSettings() {
         return rvdSettings;
     }
 
@@ -627,7 +627,7 @@ public class Interpreter {
 
         // append sticky parameters
         for ( String variableName : variables.keySet() ) {
-            if( variableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+            if( variableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
                 if ("".equals(query))
                     query += "?";
                 else
@@ -747,21 +747,21 @@ public class Interpreter {
      */
     public void handleStickyParameters() {
         for ( String anyVariableName : getRequestParams().keySet() ) {
-            if ( anyVariableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+            if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
                 // set up sticky variables
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(anyVariableName, variableValue );
 
                 // make local copies
                 // First, rip off the sticky_prefix
-                String localVariableName = anyVariableName.substring(RvdSettings.STICKY_PREFIX.length());
+                String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
                 getVariables().put(localVariableName, variableValue);
             }
         }
     }
 
     public void putStickyVariable(String name, String value) {
-            variables.put(RvdSettings.STICKY_PREFIX + name, value);
+            variables.put(RvdConfiguration.STICKY_PREFIX + name, value);
     }
 
     /**
@@ -773,7 +773,7 @@ public class Interpreter {
         for ( String anyVariableName : getRequestParams().keySet() ) {
             if ( validNames.contains(anyVariableName) ) {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
-                getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
+                getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
             }
         }
     }
