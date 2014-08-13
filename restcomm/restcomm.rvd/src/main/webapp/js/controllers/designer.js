@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -530,16 +530,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 				var packedStep;
 				packedStep = step.pack();
 				node.steps[j] = packedStep;
-
-				/*
-				 * if (step.kind == "play") { if (step.playType == "local")
-				 * delete step.remote; else if (step.playType == "remote")
-				 * delete step.local; } else if (step.kind == "ussdCollect") {
-				 * if (step.gatherType == "menu") delete step.collectdigits;
-				 * else if (step.gatherType == "collectdigits") delete
-				 * step.menu; }
-				 */
-				
 			}
 		}
 		state.iface.activeNode = $scope.activeNode;
@@ -547,6 +537,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		state.header.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
 		state.header.projectKind = $scope.projectKind;	
 		state.header.version = $scope.version;
+		state.exceptionHandlingInfo = $scope.exceptionHandlingInfo.pack();
 		
 		return state;
 	}
@@ -563,11 +554,54 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		}
 
 		$scope.nodes = packedState.nodes;
-		//$scope.activeNode = packedState.iface.activeNode;
 		$scope.lastNodesId = packedState.lastNodeId;
 		$scope.startNodeName = packedState.header.startNodeName;	
 		$scope.projectKind = packedState.header.projectKind;
 		$scope.version = packedState.header.version;
+		$scope.exceptionHandlingInfo = ModelBuilder.build('ExceptionHandlingInfo').init(packedState.exceptionHadlingInfo);
+		
+	}
+	
+	
+	// Exception controller & functionality
+	
+	var exceptionConfigCtrl = function ($scope, $modalInstance, projectModules) {
+		$scope.moduleSummary = projectModules.getModuleSummary();
+		$scope.exceptionMappings = [];
+		
+		
+		$scope.addExceptionMapping = function() {
+			$scope.exceptionMappings.push({exceptionName:undefined, next:undefined});
+		}
+		$scope.removeExceptionMapping = function (mapping) {
+			$scope.exceptionMappings.splice($scope.exceptionMappings.indexOf(mapping), 1);
+		}
+
+		$scope.ok = function () {
+			$modalInstance.close($scope.exceptionMappings);
+		};
+
+	  $scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	  };
+	};
+	$scope.showExceptionConfig = function () {
+		var modalInstance = $modal.open({
+		  templateUrl: 'templates/exceptionConfigModal.html',
+		  controller: exceptionConfigCtrl,
+		  size: 'lg',
+		  //resolve: {
+			//items: function () {
+			//  return $scope.items;
+			//}
+		  //}
+		});
+
+		modalInstance.result.then(function (exceptionMappings) {
+			console.log(exceptionMappings);
+		}, function () {
+		  //$log.info('Modal dismissed at: ' + new Date());
+		});
 	}
 	
 	var settingsModalCtrl = function ($scope, $timeout, $modalInstance, settings) {
@@ -655,3 +689,4 @@ designerCtrl.getCcInfo = function ($scope, $q) {
 	});
 	return deferred.promise;
 }
+
