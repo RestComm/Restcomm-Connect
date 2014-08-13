@@ -1,6 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.project;
 
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
@@ -58,8 +58,8 @@ public abstract class RvdProject {
             throw new BadProjectHeader("No header found. This is probably an old project");
 
         StateHeader header = gson.fromJson(header_element, StateHeader.class);
-        if ( ! header.getVersion().equals(RvdSettings.getRvdProjectVersion()) )
-                throw new IncompatibleProjectVersion("Error loading project. Project version: " + header.getVersion() + " - RVD project version: " + RvdSettings.getRvdProjectVersion() );
+        if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
+                throw new IncompatibleProjectVersion("Error loading project. Project version: " + header.getVersion() + " - RVD project version: " + RvdConfiguration.getRvdProjectVersion() );
 
         // Looks like a good project. Make a ProjectState object out of it
         ProjectState projectState = gson.fromJson(projectJson, ProjectState.class);

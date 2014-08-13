@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
@@ -70,7 +70,7 @@ public class GatherStep extends Step {
 
         String digitsString = interpreter.getRequestParams().getFirst("Digits");
         if ( digitsString != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "Digits", digitsString);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "Digits", digitsString);
 
         boolean valid = true;
 

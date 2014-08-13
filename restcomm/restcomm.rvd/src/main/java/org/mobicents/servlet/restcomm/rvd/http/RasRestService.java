@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
@@ -59,7 +59,7 @@ public class RasRestService extends RestService {
     @Context
     HttpServletRequest request;
 
-    private RvdSettings settings;
+    private RvdConfiguration settings;
     private ProjectStorage projectStorage;
     private FsPackagingStorage packagingStorage;
     private RasService rasService;

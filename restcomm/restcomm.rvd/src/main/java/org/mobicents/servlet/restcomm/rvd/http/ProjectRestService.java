@@ -36,7 +36,7 @@ import com.google.gson.JsonObject;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
@@ -74,7 +74,7 @@ public class ProjectRestService extends RestService {
     HttpServletRequest request;
 
     private ProjectService projectService;
-    private RvdSettings rvdSettings;
+    private RvdConfiguration rvdSettings;
     private ProjectStorage projectStorage;
     private ProjectState activeProject;
     private ModelMarshaler marshaler;
@@ -255,7 +255,7 @@ public class ProjectRestService extends RestService {
             try {
                 UpgradeService upgradeService = new UpgradeService(projectStorage);
                 upgradeService.upgradeProject(projectName);
-                logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
+                logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                 // re-build project
                 BuildService buildService = new BuildService(projectStorage);
                 buildService.buildProject(projectName, activeProject);

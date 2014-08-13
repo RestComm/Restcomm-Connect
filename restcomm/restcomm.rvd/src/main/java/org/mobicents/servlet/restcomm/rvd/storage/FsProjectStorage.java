@@ -16,7 +16,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
@@ -57,7 +57,7 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     private String getProjectWavsPath(String projectName) {
-        return storageBase.getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME;
+        return storageBase.getProjectBasePath(projectName) + File.separator + RvdConfiguration.WAVS_DIRECTORY_NAME;
     }
 
     @Override
@@ -122,7 +122,7 @@ public class FsProjectStorage implements ProjectStorage {
             File[] entries = workspaceDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
-                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(RvdSettings.PROTO_DIRECTORY_PREFIX))
+                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(RvdConfiguration.PROTO_DIRECTORY_PREFIX))
                         return true;
                     return false;
                 }
@@ -352,7 +352,7 @@ public class FsProjectStorage implements ProjectStorage {
      * @throws StorageException
      */
     private File createPackagingDir(String projectName) throws StorageException {
-        String packagingPath = storageBase.getProjectBasePath(projectName) + File.separator + RvdSettings.PACKAGING_DIRECTORY_NAME;
+        String packagingPath = storageBase.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PACKAGING_DIRECTORY_NAME;
         File packageDir = new File(packagingPath);
         if (!(packageDir.exists() && packageDir.isDirectory())) {
             if (! packageDir.mkdir() ) {
@@ -368,7 +368,7 @@ public class FsProjectStorage implements ProjectStorage {
      */
     @Override
     public InputStream getWav(String projectName, String filename) throws StorageException {
-        String wavpath = storageBase.getProjectBasePath(projectName) + File.separator + RvdSettings.WAVS_DIRECTORY_NAME + File.separator + filename;
+        String wavpath = storageBase.getProjectBasePath(projectName) + File.separator + RvdConfiguration.WAVS_DIRECTORY_NAME + File.separator + filename;
         File wavfile = new File(wavpath);
         if ( wavfile.exists() )
             try {

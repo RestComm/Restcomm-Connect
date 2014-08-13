@@ -31,7 +31,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RvdErrorParsingRestcommXml;
@@ -59,7 +59,7 @@ public class RvdController extends RestService {
     @Context
     HttpServletRequest request;
 
-    private RvdSettings rvdSettings;
+    private RvdConfiguration rvdSettings;
     private ProjectStorage projectStorage;
     private ProjectService projectService;
     private Gson gson;

@@ -1,4 +1,4 @@
-App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker) {
+App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -10,6 +10,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	$scope.stepService = stepService;
 	$scope.protos = protos;
 	$scope.selectedView = 'rcml';
+	$scope.settings = {}; // populate this from some resolved parameters
 	
 	// Prototype and constant data structures
 	$scope.languages = [
@@ -565,6 +566,61 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 		$scope.startNodeName = packedState.header.startNodeName;	
 		$scope.projectKind = packedState.header.projectKind;
 		$scope.version = packedState.header.version;
+	}
+	
+	var settingsModalCtrl = function ($scope, $timeout, $modalInstance, settings) {
+		$scope.settings = settings;
+
+		$scope.ok = function () {
+			$http.post("services/settings", settings, {headers: {'Content-Type': 'application/data'}})
+			.success( function () { 
+				$modalInstance.close(settings);
+			})
+			.error( function () {
+				$scope.showAlert("Cannot save settings");
+			});
+		};
+
+		$scope.cancel = function () {
+			$modalInstance.dismiss('cancel');
+		};
+		
+		$scope.showAlert = function (message) {
+			$scope.alertMessage = message;
+			$timeout( function () {$scope.alertMessage = undefined}, 3000 );
+		};
+	};
+	$scope.showSettingsModal = function (settings) {
+		var modalInstance = $modal.open({
+		  templateUrl: 'templates/designerSettingsModal.html',
+		  controller: settingsModalCtrl,
+		  size: 'lg',
+		  resolve: {
+			settings: function () {
+				var deferred = $q.defer()
+				$http.get("services/settings")
+				.then(function (response) {
+					deferred.resolve(response.data);
+				}, function (response) {
+					if ( response.status == 404 )
+						deferred.resolve({});
+					else {
+						console.log("BEFORE reject");
+						deferred.reject();
+						console.log("AFTER reject");
+					}
+				});
+				return deferred.promise;
+			}
+		  }
+		});
+
+		modalInstance.result.then(function (settings) {
+			console.log(settings);
+			//$scope.settings
+		}, function () {
+		  //$log.info('Modal dismissed at: ' + new Date());
+		});		
 	}
 	
 		

@@ -1,0 +1,31 @@
+<div class="modal-header">
+	<h3 class="modal-title"><i class="fa fa-cog"></i> Settings</h3>
+</div>
+<div class="modal-body">
+	
+	<p class="lead">Call control options</p>
+	<div class="help-block">Use this host and port when contacting Restcomm for call control operations such as starting a call over REST.</div>
+	<form class="form-inline">
+		<div class="form-group">
+			<div class="input-group">
+				<span class="input-group-addon">Host</span>
+				<input ng-model="settings.apiServerHost" type="text" class="form-control">
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="input-group">
+				<span class="input-group-addon">Port</span>
+				<input ng-model="settings.apiServerRestPort" type="text" class="form-control">
+			</div>	
+		</div>	
+	</form>
+	
+	
+	{{settings}}
+	
+</div>
+<div class="modal-footer">
+	<button class="btn btn-primary" ng-click="ok()">OK</button>
+	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+	<div ng-show="alertMessage">{{alertMessage}}</div>
+</div>

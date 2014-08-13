@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
@@ -96,9 +96,9 @@ public class SmsStep extends Step {
         String SmsStatus = interpreter.getRequestParams().getFirst("SmsStatus");
 
         if ( SmsSid != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsSid", SmsSid);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "SmsSid", SmsSid);
         if (SmsStatus != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsStatus", SmsStatus);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "SmsStatus", SmsStatus);
 
         interpreter.interpret( getNext(), null, null );
     }

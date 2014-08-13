@@ -12,9 +12,9 @@ import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.StreamException;
 
-public class RvdSettings {
-    static final Logger logger = Logger.getLogger(RvdSettings.class.getName());
-    private static RvdSettings instance = null;
+public class RvdConfiguration {
+    static final Logger logger = Logger.getLogger(RvdConfiguration.class.getName());
+    private static RvdConfiguration instance = null;
 
     private static final String WORKSPACE_DIRECTORY_NAME = "workspace";
     public static final String PROTO_DIRECTORY_PREFIX = "_proto";
@@ -33,14 +33,14 @@ public class RvdSettings {
     private RvdConfig rvdConfig;  // the configuration settings from rvd.xml
     private String effectiveRestcommIp; // the IP address to access .wavs and other resources from the internet. It takes into account rvd.xml and servletContext
 
-    public static RvdSettings getInstance(ServletContext servletContext) {
+    public static RvdConfiguration getInstance(ServletContext servletContext) {
         if ( instance == null ) {
-            instance = new RvdSettings(servletContext);
+            instance = new RvdConfiguration(servletContext);
         }
         return instance;
     }
 
-    private RvdSettings(ServletContext servletContext) {
+    private RvdConfiguration(ServletContext servletContext) {
         this.prototypeProjectsPath = servletContext.getRealPath(File.separator) + "protoProjects";
         String workspaceBasePath = servletContext.getRealPath(File.separator) + WORKSPACE_DIRECTORY_NAME;
 

@@ -2,7 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.upgrade;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
@@ -48,7 +48,7 @@ public class UpgradeService {
             startVersion = "rvd714"; // assume this is an rvd714 project. It could be 713 as well...
         }
 
-        if ( startVersion.equals(RvdSettings.getRvdProjectVersion()) )
+        if ( startVersion.equals(RvdConfiguration.getRvdProjectVersion()) )
             return false;
 
         logger.info("Upgrading '" + projectName + "' from version " + startVersion);
@@ -91,7 +91,7 @@ public class UpgradeService {
             try {
                 if ( upgradeProject(projectName) ) {
                     upgradedCount ++;
-                    logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
+                    logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                     try {
                         ProjectState projectState = projectStorage.loadProject(projectName);
                         buildService.buildProject(projectName, projectState);
@@ -101,9 +101,9 @@ public class UpgradeService {
                     }
                 }
             } catch (StorageException e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
+                logger.error("error upgrading project '" + projectName + "' to version " + RvdConfiguration.getRvdProjectVersion(), e );
             } catch (UpgradeException e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
+                logger.error("error upgrading project '" + projectName + "' to version " + RvdConfiguration.getRvdProjectVersion(), e );
             }
         }
         if ( upgradedCount == 0 )

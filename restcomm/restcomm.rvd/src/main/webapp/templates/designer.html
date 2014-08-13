@@ -56,6 +56,7 @@
 				<ul class="nav nav-pills pull-right">
 					<li ng-class="{active: selectedView=='rcml'}"><a ng-click="selectedView='rcml'" class="rvd-clickable-text">RCML</a></li>
 					<li ng-class="{active: selectedView=='cc'}"><a ng-click="selectedView='cc'" class="rvd-clickable-text">Call Control</a></li>
+					<li><a ng-click="showSettingsModal(settings)" class="rvd-clickable-text"><i class="fa fa-cog"></i></a></li>
 				</ul>
 			</div>
 	
@@ -82,9 +83,9 @@
 					</div>
 					<div class="input-group">
 						<span class="input-group-addon" >To</span>
-						<input type="text" class="form-control" placeholder="use this if not given in the initiating request">
+						<input type="text" class="form-control" placeholder="outgoing phonenumber to use if not given in the initiating request">
 						<span class="input-group-addon">From</span>
-						<input type="text" class="form-control" placeholder="use this if not given in the initiating request">
+						<input type="text" class="form-control" placeholder="source phonenumber to use if not given in the initiating request">
 					</div>
 				</div>
 			</div>

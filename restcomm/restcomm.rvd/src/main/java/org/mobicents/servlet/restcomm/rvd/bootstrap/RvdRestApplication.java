@@ -7,6 +7,7 @@ import org.mobicents.servlet.restcomm.rvd.http.ProjectDoesNotExistMapper;
 import org.mobicents.servlet.restcomm.rvd.http.RasRestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdController;
 import org.mobicents.servlet.restcomm.rvd.http.ProjectRestService;
+import org.mobicents.servlet.restcomm.rvd.http.SettingsRestService;
 import org.mobicents.servlet.restcomm.rvd.http.StorageExceptionMapper;
 
 import java.util.HashSet;
@@ -26,6 +27,7 @@ public class RvdRestApplication extends Application {
         classes.add(RvdController.class);
         classes.add(RasRestService.class);
         classes.add(LoginRestService.class);
+        classes.add(SettingsRestService.class);
         classes.add(ProjectDoesNotExistMapper.class);
         classes.add(StorageExceptionMapper.class);
         return classes;
