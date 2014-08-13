@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -35,6 +36,7 @@ public class SettingsRestService extends RestService {
     ServletContext servletContext;
     RvdConfiguration settings;
     ModelMarshaler marshaler;
+    WorkspaceStorage workspaceStorage;
 
     private Gson gson;
     private XStream xstream;
@@ -44,7 +46,9 @@ public class SettingsRestService extends RestService {
     void init() {
         settings = RvdConfiguration.getInstance(servletContext);
         marshaler = new ModelMarshaler();
+        //workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
     }
+    
 
     @POST
     public Response setSettings(@Context HttpServletRequest request) {

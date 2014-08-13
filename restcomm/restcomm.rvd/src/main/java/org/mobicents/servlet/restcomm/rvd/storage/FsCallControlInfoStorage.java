@@ -4,17 +4,10 @@ import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 public class FsCallControlInfoStorage {
-    private FsStorageBase storageBase;
 
-    public FsCallControlInfoStorage(FsStorageBase storageBase) {
-        super();
-        this.storageBase = storageBase;
+    public static CallControlInfo loadInfo(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        return workspaceStorage.loadEntity("cc", projectName, CallControlInfo.class);
+        //return storageBase.loadModelFromProjectFile(projectName, "", "cc", CallControlInfo.class);
     }
-
-    public CallControlInfo loadInfo(String projectName) throws StorageException {
-        return storageBase.loadModelFromProjectFile(projectName, "", "cc", CallControlInfo.class);
-    }
-
-
 
 }
