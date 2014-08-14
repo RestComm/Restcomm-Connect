@@ -1,28 +1,32 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.http.converter;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.Currency;
+import java.util.Locale;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 import com.google.gson.JsonNull;
@@ -36,6 +40,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
 public abstract class AbstractConverter implements Converter {
     protected final Configuration configuration;
@@ -92,22 +97,22 @@ public abstract class AbstractConverter implements Converter {
 
     protected void writeDateCreated(final DateTime dateCreated, final HierarchicalStreamWriter writer) {
         writer.startNode("DateCreated");
-        writer.setValue(dateCreated.toString());
+        writer.setValue(new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateCreated.toDate()));
         writer.endNode();
     }
 
     protected void writeDateCreated(final DateTime dateCreated, final JsonObject object) {
-        object.addProperty("date_created", dateCreated.toString());
+        object.addProperty("date_created", new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateCreated.toDate()));
     }
 
     protected void writeDateUpdated(final DateTime dateUpdated, final HierarchicalStreamWriter writer) {
         writer.startNode("DateUpdated");
-        writer.setValue(dateUpdated.toString());
+        writer.setValue(new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateUpdated.toDate()));
         writer.endNode();
     }
 
     protected void writeDateUpdated(final DateTime dateUpdated, final JsonObject object) {
-        object.addProperty("date_updated", dateUpdated.toString());
+        object.addProperty("date_updated", new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateUpdated.toDate()));
     }
 
     protected void writeDuration(final double duration, final HierarchicalStreamWriter writer) {
@@ -190,6 +195,8 @@ public abstract class AbstractConverter implements Converter {
         writer.startNode("SmsFallbackUrl");
         if (smsFallbackUrl != null) {
             writer.setValue(smsFallbackUrl.toString());
+        } else {
+            writer.setValue(null);
         }
         writer.endNode();
     }
@@ -222,6 +229,8 @@ public abstract class AbstractConverter implements Converter {
         writer.startNode("SmsUrl");
         if (smsUrl != null) {
             writer.setValue(smsUrl.toString());
+        } else {
+            writer.setValue(null);
         }
         writer.endNode();
     }
@@ -264,6 +273,8 @@ public abstract class AbstractConverter implements Converter {
         writer.startNode("StatusCallback");
         if (statusCallback != null) {
             writer.setValue(statusCallback.toString());
+        } else {
+            writer.setValue(null);
         }
         writer.endNode();
     }
@@ -346,6 +357,8 @@ public abstract class AbstractConverter implements Converter {
         writer.startNode("VoiceApplicationSid");
         if (voiceApplicationSid != null) {
             writer.setValue(voiceApplicationSid.toString());
+        } else {
+            writer.setValue(null);
         }
         writer.endNode();
     }
@@ -388,6 +401,8 @@ public abstract class AbstractConverter implements Converter {
         writer.startNode("VoiceFallbackUrl");
         if (voiceFallbackUri != null) {
             writer.setValue(voiceFallbackUri.toString());
+        } else {
+            writer.setValue(null);
         }
         writer.endNode();
     }
@@ -420,6 +435,8 @@ public abstract class AbstractConverter implements Converter {
         writer.startNode("VoiceUrl");
         if (voiceUrl != null) {
             writer.setValue(voiceUrl.toString());
+        } else {
+            writer.setValue(null);
         }
         writer.endNode();
     }
@@ -455,7 +472,7 @@ public abstract class AbstractConverter implements Converter {
     protected void writeVoiceCapability(final Boolean voiceCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Voice");
         if (voiceCapable == null) {
-            writer.setValue("");
+            writer.setValue("false");
         } else {
             writer.setValue(voiceCapable.toString());
         }
@@ -466,14 +483,14 @@ public abstract class AbstractConverter implements Converter {
         if (voiceCapable != null) {
             object.addProperty("voice_capable", voiceCapable);
         } else {
-            object.addProperty("voice_capable", "");
+            object.addProperty("voice_capable", "false");
         }
     }
 
     protected void writeSmsCapability(final Boolean smsCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Sms");
         if (smsCapable == null) {
-            writer.setValue("");
+            writer.setValue("false");
         } else {
             writer.setValue(smsCapable.toString());
         }
@@ -484,14 +501,14 @@ public abstract class AbstractConverter implements Converter {
         if (smsCapable != null) {
             object.addProperty("sms_capable", smsCapable);
         } else {
-            object.addProperty("sms_capable", "");
+            object.addProperty("sms_capable", "false");
         }
     }
 
     protected void writeMmsCapability(final Boolean mmsCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Mms");
         if (mmsCapable == null) {
-            writer.setValue("");
+            writer.setValue("false");
         } else {
             writer.setValue(mmsCapable.toString());
         }
@@ -502,14 +519,14 @@ public abstract class AbstractConverter implements Converter {
         if (mmsCapable != null) {
             object.addProperty("mms_capable", mmsCapable);
         } else {
-            object.addProperty("mms_capable", "");
+            object.addProperty("mms_capable", "false");
         }
     }
 
     protected void writeFaxCapability(final Boolean faxCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Fax");
         if (faxCapable == null) {
-            writer.setValue("");
+            writer.setValue("false");
         } else {
             writer.setValue(faxCapable.toString());
         }
@@ -520,7 +537,7 @@ public abstract class AbstractConverter implements Converter {
         if (faxCapable != null) {
             object.addProperty("fax_capable", faxCapable);
         } else {
-            object.addProperty("fax_capable", "");
+            object.addProperty("fax_capable", "false");
         }
     }
 }

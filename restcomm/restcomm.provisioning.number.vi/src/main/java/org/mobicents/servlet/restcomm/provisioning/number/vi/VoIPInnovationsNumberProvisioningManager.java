@@ -255,7 +255,93 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      */
     @Override
     public boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
-        // TODO Auto-generated method stub
+        // Provision the number from VoIP Innovations if they own it.
+        if (isValidDid(phoneNumber)) {
+            if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("<request id=\""+generateId()+"\">");
+                buffer.append(header);
+                buffer.append("<body>");
+                buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
+                buffer.append("<item>");
+                buffer.append("<did>").append(phoneNumber).append("</did>");
+                buffer.append("<endpointgroup>").append(endpoint).append("</endpointgroup>");
+                buffer.append("</item>");
+                buffer.append("</body>");
+                buffer.append("</request>");
+                final String body = buffer.toString();
+                final HttpPost post = new HttpPost(uri);
+                try {
+                    List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+                    parameters.add(new BasicNameValuePair("apidata", body));
+                    post.setEntity(new UrlEncodedFormEntity(parameters));
+                    final DefaultHttpClient client = new DefaultHttpClient();
+                    if(telestaxProxyEnabled) {
+                        //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                        post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                        //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                        post.addHeader("RequestType", "AssignDid");
+                        //This will let LB match the DID to a node based on the node host+port
+                        List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
+                        for (SipURI uri: uris) {
+                            post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+                        }
+                    }
+                    final HttpResponse response = client.execute(post);
+                    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                        final String content = StringUtils.toString(response.getEntity().getContent());
+                        if (content.contains("<statuscode>100</statuscode>")) {
+                            return true;
+                        }
+                    }
+                } catch (final Exception ignored) {
+                }
+            }
+        }
+
+        return false;
+    }
+
+    protected boolean isValidDid(final String did) {
+        if (did != null && !did.isEmpty()) {
+            final StringBuilder buffer = new StringBuilder();
+            buffer.append("<request id=\""+generateId()+"\">");
+            buffer.append(header);
+            buffer.append("<body>");
+            buffer.append("<requesttype>").append("queryDID").append("</requesttype>");
+            buffer.append("<item>");
+            buffer.append("<did>").append(did).append("</did>");
+            buffer.append("</item>");
+            buffer.append("</body>");
+            buffer.append("</request>");
+            final String body = buffer.toString();
+            final HttpPost post = new HttpPost(uri);
+            try {
+                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+                parameters.add(new BasicNameValuePair("apidata", body));
+                post.setEntity(new UrlEncodedFormEntity(parameters));
+                final DefaultHttpClient client = new DefaultHttpClient();
+                if(telestaxProxyEnabled) {
+                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    post.addHeader("RequestType", "IsValidDid");
+                    //This will let LB match the DID to a node based on the node host+port
+                    List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
+                    for (SipURI uri: uris) {
+                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+                    }
+                }
+                final HttpResponse response = client.execute(post);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    final String content = StringUtils.toString(response.getEntity().getContent());
+                    if (content.contains("<statusCode>100</statusCode>")) {
+                        return true;
+                    }
+                }
+            } catch (final Exception ignored) {
+            }
+        }
         return false;
     }
 
@@ -265,8 +351,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      */
     @Override
     public boolean updateNumber(String number, PhoneNumberParameters phoneNumberParameters) {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     /*
@@ -274,8 +359,49 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#cancelNumber(java.lang.String)
      */
     @Override
-    public boolean cancelNumber(String number) {
-        // TODO Auto-generated method stub
+    public boolean cancelNumber(String phoneNumber) {
+        if (!isValidDid(phoneNumber))
+            return false;
+
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            final StringBuilder buffer = new StringBuilder();
+            buffer.append("<request id=\""+generateId()+"\">");
+            buffer.append(header);
+            buffer.append("<body>");
+            buffer.append("<requesttype>").append("releaseDID").append("</requesttype>");
+            buffer.append("<item>");
+            buffer.append("<did>").append(phoneNumber).append("</did>");
+            buffer.append("</item>");
+            buffer.append("</body>");
+            buffer.append("</request>");
+            final String body = buffer.toString();
+            final HttpPost post = new HttpPost(uri);
+            try {
+                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+                parameters.add(new BasicNameValuePair("apidata", body));
+                post.setEntity(new UrlEncodedFormEntity(parameters));
+                final DefaultHttpClient client = new DefaultHttpClient();
+                if(telestaxProxyEnabled) {
+                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
+                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+                    post.addHeader("RequestType", "ReleaseDid");
+                    //This will let LB match the DID to a node based on the node host+port
+                    List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
+                    for (SipURI uri: uris) {
+                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+                    }
+                }
+                final HttpResponse response = client.execute(post);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    final String content = StringUtils.toString(response.getEntity().getContent());
+                    if (content.contains("<statuscode>100</statuscode>")) {
+                        return true;
+                    }
+                }
+            } catch (final Exception ignored) {
+            }
+        }
         return false;
     }
 }
