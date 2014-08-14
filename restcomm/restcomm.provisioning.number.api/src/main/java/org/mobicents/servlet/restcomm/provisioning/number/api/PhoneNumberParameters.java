@@ -85,6 +85,7 @@ public final class PhoneNumberParameters {
     private String ussdMethod = null;
     private String faxUrl = null;
     private String faxMethod = null;
+    private PhoneNumberType phoneNumberType = PhoneNumberType.Global;
 
     public PhoneNumberParameters() {}
 
@@ -236,5 +237,19 @@ public final class PhoneNumberParameters {
      */
     public void setFaxMethod(String faxMethod) {
         this.faxMethod = faxMethod;
+    }
+
+    /**
+     * @return the phoneNumberType
+     */
+    public PhoneNumberType getPhoneNumberType() {
+        return phoneNumberType;
+    }
+
+    /**
+     * @param phoneNumberType the phoneNumberType to set
+     */
+    public void setPhoneNumberType(PhoneNumberType phoneNumberType) {
+        this.phoneNumberType = phoneNumberType;
     }
 }

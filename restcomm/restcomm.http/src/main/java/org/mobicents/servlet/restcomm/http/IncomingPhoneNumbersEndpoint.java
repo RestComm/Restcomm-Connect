@@ -60,6 +60,7 @@ import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import com.google.gson.Gson;
@@ -195,7 +196,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getIncomingPhoneNumbers(final String accountSid, final MediaType responseType) {
+    protected Response getIncomingPhoneNumbers(final String accountSid, PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
@@ -213,7 +214,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     }
 
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+            PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
@@ -229,7 +230,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             number = number.substring(2);
-            boolean isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, getPhoneNumberParameters(data));
+            PhoneNumberParameters phoneNumberParameters = getPhoneNumberParameters(data);
+            phoneNumberParameters.setPhoneNumberType(phoneNumberType);
+            boolean isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
             if(isDidAssigned) {
                 dao.addIncomingPhoneNumber(incomingPhoneNumber);
                 if (APPLICATION_JSON_TYPE == responseType) {

@@ -26,6 +26,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -39,12 +40,12 @@ public final class IncomingPhoneNumbersJsonEndpoint extends IncomingPhoneNumbers
 
     @GET
     public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid) {
-        return getIncomingPhoneNumbers(accountSid, APPLICATION_JSON_TYPE);
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global, APPLICATION_JSON_TYPE);
     }
 
     @POST
     public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, APPLICATION_JSON_TYPE);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Global, APPLICATION_JSON_TYPE);
     }
 }
