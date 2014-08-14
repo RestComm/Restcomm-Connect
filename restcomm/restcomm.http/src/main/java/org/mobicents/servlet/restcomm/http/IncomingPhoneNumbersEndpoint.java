@@ -362,13 +362,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if(numberToRemoveFromVi.startsWith("+1")){
             numberToRemoveFromVi = numberToRemoveFromVi.replaceFirst("\\+1", "");
         }
-        releaseDid(numberToRemoveFromVi);
+        phoneNumberProvisioningManager.cancelNumber(numberToRemoveFromVi);
         dao.removeIncomingPhoneNumber(new Sid(sid));
         return noContent().build();
-    }
-
-    protected boolean releaseDid(final String did) {
-        return phoneNumberProvisioningManager.cancelNumber(did);
     }
 
     private PhoneNumberParameters getPhoneNumberParameters(MultivaluedMap<String, String> data) {
