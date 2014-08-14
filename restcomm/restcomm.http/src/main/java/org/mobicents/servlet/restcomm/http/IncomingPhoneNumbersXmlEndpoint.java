@@ -29,6 +29,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -70,13 +71,13 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @GET
     public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid) {
-        return getIncomingPhoneNumbers(accountSid, APPLICATION_XML_TYPE);
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global, APPLICATION_XML_TYPE);
     }
 
     @POST
     public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, APPLICATION_XML_TYPE);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Global, APPLICATION_XML_TYPE);
     }
 
     @Path("/{sid}.json")
@@ -105,5 +106,89 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response updateIncomingPhoneNumberAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_XML_TYPE);
+    }
+
+    // Local Numbers
+
+    @Path("/Local")
+    @GET
+    public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid) {
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Local, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/Local")
+    @POST
+    public Response putIncomingLocalPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/Local.json")
+    @GET
+    public Response getIncomingLocalPhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid) {
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Local, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/Local.json")
+    @POST
+    public Response putIncomingLocalPhoneNumberAsJSon(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, APPLICATION_JSON_TYPE);
+    }
+
+    // Toll Free Numbers
+
+    @Path("/TollFree")
+    @GET
+    public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid) {
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.TollFree, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/TollFree")
+    @POST
+    public Response putIncomingTollFreePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/TollFree.json")
+    @GET
+    public Response getIncomingTollFreePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid) {
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.TollFree, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/TollFree.json")
+    @POST
+    public Response putIncomingTollFreePhoneNumberAsJSon(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, APPLICATION_JSON_TYPE);
+    }
+
+    // Mobile Numbers
+
+    @Path("/Mobile")
+    @GET
+    public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid) {
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Mobile, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/Mobile")
+    @POST
+    public Response putIncomingMobilePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/Mobile.json")
+    @GET
+    public Response getIncomingMobilePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid) {
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Mobile, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/Mobile.json")
+    @POST
+    public Response putIncomingMobilePhoneNumberAsJSon(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, APPLICATION_JSON_TYPE);
     }
 }
