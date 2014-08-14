@@ -27,3 +27,23 @@ angular.module('Rvd').factory('ExceptionHandlingInfo', ['rvdModel', function(rvd
 
 	return ExceptionHandlingInfo;
 }]);
+
+
+angular.module('Rvd').factory('CcInfo', ['rvdModel', function(rvdModel) {
+	function CcInfo() {
+		// maybe review these undefined properties and change them to ""
+		//this.apiServer = {username:undefined,pass:undefined};
+		this.lanes = [{startPoint: {rcmlUrl:undefined, to:undefined, from:undefined}}]; 
+	}
+	CcInfo.prototype = new rvdModel();
+	CcInfo.prototype.constructor = CcInfo;
+	/*
+	CcInfo.prototype.pack = function () {
+		if ( this.defaultNext === undefined && this.exceptionMappings.length == 0 )
+			return undefined;
+		else
+			return angular.copy(this);
+	}
+	*/
+	return CcInfo;
+}]);

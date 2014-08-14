@@ -4,28 +4,38 @@
 <div class="modal-body">
 	
 	<p class="lead">Call control options</p>
-	<div class="help-block">Use this host and port when contacting Restcomm for call control operations such as starting a call over REST.</div>
-	<form class="form-inline">
-		<div class="form-group">
-			<div class="input-group">
+	
+	<form name="settingsForm">
+		<div class="help-block">Use this host and port when contacting Restcomm API Server for call control operations such as starting a call over REST.</div>
+		<div class="row form-group">
+			<div class="col-md-6 input-group">
 				<span class="input-group-addon">Host</span>
 				<input ng-model="settings.apiServerHost" type="text" class="form-control">
 			</div>
-		</div>
-		<div class="form-group">
-			<div class="input-group">
+			<div class="col-md-6 input-group">
 				<span class="input-group-addon">Port</span>
-				<input ng-model="settings.apiServerRestPort" type="text" class="form-control">
-			</div>	
-		</div>	
+				<input ng-model="settings.apiServerRestPort" ng-pattern="/^[0-9]*$/" type="text" class="form-control">
+			</div>			
+		</div>
+	
+		<div class="help-block">Credentials for accessing Restcomm API</div>
+		<div class="row form-group">
+			<div class="col-md-6 input-group">
+				<span class="input-group-addon">Username</span>
+				<input ng-model="settings.apiServerUsername" type="text" class="form-control">
+			</div>
+			<div class="col-md-6 input-group">
+				<span class="input-group-addon">Password</span>
+				<input ng-model="settings.apiServerPass" type="text" class="form-control">
+			</div>			
+		</div>
+		
+		{{watchForm(settingsForm.$valid)}}
+		
 	</form>
-	
-	
-	{{settings}}
-	
 </div>
 <div class="modal-footer">
-	<button class="btn btn-primary" ng-click="ok()">OK</button>
+	<button ng-disabled="preventSubmit" class="btn btn-primary" ng-click="ok()">OK</button>
 	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
 	<div ng-show="alertMessage">{{alertMessage}}</div>
 </div>

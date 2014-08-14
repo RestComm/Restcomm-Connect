@@ -67,30 +67,31 @@
 	
 		<div ng-show="selectedView=='cc'" class="rvd-ccview row">
 			<div class="col-md-12">
-				<div class="form-group">
+				<!--<div class="form-group">
 					<label>Api Server Crendentials</label>
 					<div class="input-group">
 						<span class="input-group-addon">Username</span>
-						<input type="text" class="form-control">
+						<input ng-model="ccInfo.username" type="text" class="form-control">
 						<span class="input-group-addon">Password</span>
-						<input type="text" class="form-control">					
+						<input ng-model="ccInfo.pass" type="text" class="form-control">					
 					</div>
-				</div>
-				<div class="bg-info">
+				</div>-->
+				<div ng-repeat="lane in ccInfo.lanes" class="bg-info">
 					<h4>Start action</h4>
 					<div class="input-group form-group">
 						<span class="input-group-addon">Application</span>
 						<select class="form-control">
-							<option value="">{{projectName}} (current)</option>
+							<option ng-model="lane.startPoint.rcmlUrl" value="">{{projectName}} (current)</option>
 						</select>
 					</div>
 					<div class="input-group">
 						<span class="input-group-addon" >To</span>
-						<input type="text" class="form-control" placeholder="outgoing phonenumber to use if not given in the initiating request">
+						<input ng-model="lane.startPoint.to" type="text" class="form-control" placeholder="outgoing phonenumber to use if not given in the initiating request">
 						<span class="input-group-addon">From</span>
-						<input type="text" class="form-control" placeholder="source phonenumber to use if not given in the initiating request">
+						<input ng-model="lane.startPoint.from" type="text" class="form-control" placeholder="source phonenumber to use if not given in the initiating request">
 					</div>
 				</div>
+				{{ccInfo}}
 			</div>
 
 		</div>

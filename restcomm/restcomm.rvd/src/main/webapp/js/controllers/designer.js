@@ -242,6 +242,14 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		return deferred.promise;
 	}
 	
+	$scope.saveCcInfo = function (projectName, ccInfo) {
+		//var deferred = $q.defer();
+		return $http.post("services/projects/" + projectName + "/cc", ccInfo, {headers: {'Content-Type': 'application/data'}});
+		//.success( function () {deferred.resolve()})
+		//.error( function () {deferred.reject("Error saving CC info")});
+		//return deferred.promise;
+	}
+	
 	$scope.openProject = function(name) {
 		$http({url: 'services/projects/' + name,
 				method: "GET"
@@ -386,6 +394,9 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		usSpinnerService.spin('spinner-save');
 		$scope.clearStepWarnings();
 		$scope.saveProject()
+		.then( function () { 
+			return $scope.saveCcInfo( $scope.projectName, ccInfo );
+		})
 		.then( function () { return $scope.buildProject() } )
 		.then(
 			function () { 
@@ -676,14 +687,15 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		}
 	}	
 });
-designerCtrl.getCcInfo = function ($scope, $q) {
+designerCtrl.getCcInfo = function ($route, $http, $q, ModelBuilder) {
 	var deferred = $q.defer();
-	$http.get("services/projects/" + $scope.projectName + "/cc")
+	$http.get("services/projects/" + $route.current.params.projectName + "/cc")
 	.then(function (response) {
-		deferred.resolve(response.data);
+		var ccInfo = ModelBuilder.build('CcInfo').init(response.data);
+		deferred.resolve(ccInfo);
 	}, function (response) {
 		if ( response.status == 404 )
-			deferred.resolve({});
+			deferred.resolve( ModelBuilder.build('CcInfo') );
 		else
 			deferred.reject(); // TODO - add an error code or message here
 	});

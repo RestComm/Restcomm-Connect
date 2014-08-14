@@ -4,10 +4,10 @@ import java.util.List;
 
 public class CallControlInfo {
 
-    public class ApiServer {
+    /*public class ApiServer {
         public String username;
         public String pass;
-    }
+    }*/
     public class Lane {
         public StartPoint startPoint;
         public List<InterruptPoint> interruptPoints;
@@ -22,6 +22,6 @@ public class CallControlInfo {
     }
     //public class EndPoint {}
 
-    public ApiServer apiServer;
+    //public ApiServer apiServer;
     public List<Lane> lanes;
 }
