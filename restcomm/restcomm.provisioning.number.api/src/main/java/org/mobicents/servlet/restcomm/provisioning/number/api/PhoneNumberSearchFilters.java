@@ -114,35 +114,14 @@ public class PhoneNumberSearchFilters {
     int rangeSize;
     int rangeIndex;
 
-    boolean mobileSearch;
-    boolean tollFreeSearch;
+    PhoneNumberType phoneNumberType;
 
     public PhoneNumberSearchFilters() {
     }
 
-    /**
-     * @param areaCode
-     * @param filterPattern
-     * @param smsEnabled
-     * @param mmsEnabled
-     * @param voiceEnabled
-     * @param faxEnabled
-     * @param ussdEnabled
-     * @param nearNumber
-     * @param nearLatLong
-     * @param distance
-     * @param inPostalCode
-     * @param inRegion
-     * @param inRateCenter
-     * @param inLata
-     * @param rangeSize
-     * @param rangeIndex
-     * @param mobileSearch
-     * @param tollFreeSearch
-     */
     public PhoneNumberSearchFilters(String areaCode, Pattern filterPattern, Boolean smsEnabled, Boolean mmsEnabled, Boolean voiceEnabled,
             Boolean faxEnabled, Boolean ussdEnabled, String nearNumber, String nearLatLong, String distance, String inPostalCode, String inRegion,
-            String inRateCenter, String inLata, int rangeSize, int rangeIndex, boolean mobileSearch, boolean tollFreeSearch) {
+            String inRateCenter, String inLata, int rangeSize, int rangeIndex, PhoneNumberType phoneNumberType) {
         this.areaCode = areaCode;
         this.filterPattern = filterPattern;
         this.smsEnabled = smsEnabled;
@@ -159,8 +138,7 @@ public class PhoneNumberSearchFilters {
         this.inLata = inLata;
         this.rangeSize = rangeSize;
         this.rangeIndex = rangeIndex;
-        this.mobileSearch = mobileSearch;
-        this.tollFreeSearch = tollFreeSearch;
+        this.phoneNumberType = phoneNumberType;
     }
 
     /**
@@ -388,30 +366,16 @@ public class PhoneNumberSearchFilters {
     }
 
     /**
-     * @return the mobileSearch
+     * @return the type of phone number to search for
      */
-    public boolean getMobileSearch() {
-        return mobileSearch;
+    public PhoneNumberType getPhoneNumberTypeSearch() {
+        return phoneNumberType;
     }
 
     /**
-     * @param mobileSearch the mobileSearch to set
+     * @param phoneNumberTypeSearch the type of phone number to search for
      */
-    public void setMobileSearch(boolean mobileSearch) {
-        this.mobileSearch = mobileSearch;
-    }
-
-    /**
-     * @return the tollFreeSearch
-     */
-    public boolean getTollFreeSearch() {
-        return tollFreeSearch;
-    }
-
-    /**
-     * @param tollFreeSearch the tollFreeSearch to set
-     */
-    public void setTollFreeSearch(boolean tollFreeSearch) {
-        this.tollFreeSearch = tollFreeSearch;
+    public void setPhoneNumberTypeSearch(PhoneNumberType phoneNumberTypeSearch) {
+        this.phoneNumberType = phoneNumberTypeSearch;
     }
 }
