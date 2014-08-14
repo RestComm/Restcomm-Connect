@@ -31,7 +31,7 @@ public class RvdConfiguration {
     private String prototypeProjectsPath;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
     private RvdConfig rvdConfig;  // the configuration settings from rvd.xml
-    private String effectiveRestcommIp; // the IP address to access .wavs and other resources from the internet. It takes into account rvd.xml and servletContext
+    //private String effectiveRestcommIp; // the IP address to access .wavs and other resources from the internet. It takes into account rvd.xml and servletContext
 
     public static RvdConfiguration getInstance(ServletContext servletContext) {
         if ( instance == null ) {
@@ -98,6 +98,21 @@ public class RvdConfiguration {
             ip = ipFromXml;
         }
         return ip;
+    }
+
+    /**
+     * Returns the IP rvd listens to for internal use. This address can be used by restcomm to access applications.
+     * A request object is required to get it. Even when this request comes from a browser, this function should report
+     * the correct IP.
+     * @param request
+     * @return
+     */
+    public String getRvdInternalIp(HttpServletRequest request) {
+        return request.getLocalAddr();
+    }
+
+    public int getRvdInternalPort(HttpServletRequest request) {
+        return request.getLocalPort();
     }
 
 }

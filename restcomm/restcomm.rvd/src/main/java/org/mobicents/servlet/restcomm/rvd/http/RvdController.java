@@ -13,6 +13,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -41,6 +42,9 @@ import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
+import org.mobicents.servlet.restcomm.rvd.serverapi.CreateCallResponse;
+import org.mobicents.servlet.restcomm.rvd.serverapi.RestcommClient;
+import org.mobicents.servlet.restcomm.rvd.serverapi.RestcommClient.RestcommClientException;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -48,6 +52,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.w3c.dom.Document;
 
 import com.google.gson.Gson;
@@ -207,9 +212,29 @@ public class RvdController extends RestService {
         }
     }
 
+    /**
+     * Runs a query on Restcomm numbers api and tries to match an application named X with its number. If any match is found it returns it
+     * @param apiHost
+     * @param apiPort
+     * @param apiUsername
+     * @param apiPort2
+     * @param projectName
+     * @return
+     */
+    /*
+    private String guessApplicationDID(String apiHost, Integer apiPort, String apiUsername, String accountSid, String projectName) {
+        URIBuilder uriBuilder = new URIBuilder().setHost(apiHost).setPort(apiPort).setPath("/restcomm/2012-04-24/Numbers.json")
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response;
+        HttpGet get = new HttpGet( url );
+        get.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(), esStep.getPassword()));
+        response = client.execute( get );
+    }
+    */
+
     @GET
     @Path("{appname}/start")
-    public Response executeAction(@PathParam("appname") String projectName ) {
+    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam ) {
 
         WorkspaceStorage workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), rvdContext.getMarshaler());
 
@@ -226,8 +251,58 @@ public class RvdController extends RestService {
             if ( workspaceStorage.entityExists(".settings", "") )
                 settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
 
-            // All required dependencies are in place. proceed with the request
+            // Setup required values depending on existing setup
+            String apiHost = settingsModel.getApiServerHost();
+            if ( RvdUtils.isEmpty(apiHost) )
+                apiHost = apiServerConfig.getHost();
+
+            Integer apiPort = settingsModel.getApiServerRestPort();
+            if ( apiPort == null )
+                apiPort = apiServerConfig.getPort();
+
+            String apiUsername = settingsModel.getApiServerUsername();
+
+            String apiPassword = settingsModel.getApiServerPass();
+
+            String rcmlUrl = info.lanes.get(0).startPoint.rcmlUrl;
+            // try to create a valid URI from it if only the application name has been given
             // ...
+            // use the existing application for RCML if none has been given
+            if ( RvdUtils.isEmpty(rcmlUrl) ) {
+                URIBuilder uriBuilder = new URIBuilder();
+                uriBuilder.setHost(request.getLocalAddr());
+                uriBuilder.setPort(request.getLocalPort());
+                uriBuilder.setScheme(request.getScheme());
+                uriBuilder.setPath("/restcomm-rvd/services/apps/" + projectName + "/controller");
+                try {
+                    rcmlUrl = uriBuilder.build().toString();
+                } catch (URISyntaxException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
+            String to = toParam;
+            if ( RvdUtils.isEmpty(to) )
+                to = info.lanes.get(0).startPoint.to;
+
+            String from = fromParam;
+            if ( RvdUtils.isEmpty(from) )
+                from = info.lanes.get(0).startPoint.from;
+            //if ( RvdUtils.isEmpty(from) )
+            //    from = guessApplicationDID(apiHost, apiPort, apiUsername, apiPort, projectName);
+
+            if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(apiUsername) || RvdUtils.isEmpty(apiPassword) || RvdUtils.isEmpty(rcmlUrl) )
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            if ( RvdUtils.isEmpty(from) || RvdUtils.isEmpty(to) )
+                return Response.status(Status.BAD_REQUEST).build();
+
+
+            RestcommClient client = new RestcommClient(apiHost, apiPort, apiUsername, apiPassword);
+            CreateCallResponse response = client.post("/restcomm/2012-04-24/Accounts/" + "ACae6e420f425248d6a26948c17a9e2acf" + "/Calls.json")
+                .addParam("From", from)
+                .addParam("To", to)
+                .addParam("Url", rcmlUrl).done(gson, CreateCallResponse.class);
 
             return Response.ok().build();
         } catch (CallControlException e) {
@@ -240,8 +315,13 @@ public class RvdController extends RestService {
         catch (StorageException e) {
             logger.error(e,e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (RestcommClientException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+
 
 
 }

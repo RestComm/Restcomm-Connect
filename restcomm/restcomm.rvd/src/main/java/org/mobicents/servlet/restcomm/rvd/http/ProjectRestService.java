@@ -261,7 +261,8 @@ public class ProjectRestService extends RestService {
     public Response getCcInfo(@PathParam("name") String projectName) {
         try {
             CallControlInfo ccInfo = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
-            return buildOkResponse(ccInfo);
+            return Response.ok(marshaler.toData(ccInfo), MediaType.APPLICATION_JSON).build();
+            //return buildOkResponse(ccInfo);
         } catch (StorageEntityNotFound e) {
             return Response.status(Status.NOT_FOUND).build();
         } catch (StorageException e) {
