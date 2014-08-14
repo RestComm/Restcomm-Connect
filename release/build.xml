@@ -811,7 +811,7 @@
             </zipfileset>
 			<zipfileset dir="${release.tomcat.dir}" prefix="TelScale-Restcomm-Tomcat7-${telscale.restcomm.release.version}"
 				excludes="**/bin/**"/>
-		</zip>checkout.telscale-sipservlets-as7.dir
+		</zip>
 	</target>
 	
 	<target name="set-time-stamp" unless="skip.timestamp">
