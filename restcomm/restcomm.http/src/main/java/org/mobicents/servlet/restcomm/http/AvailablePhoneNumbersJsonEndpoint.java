@@ -31,6 +31,7 @@ import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -83,9 +84,13 @@ public class AvailablePhoneNumbersJsonEndpoint extends AvailablePhoneNumbersEndp
             if (ussdEnabled != null && !ussdEnabled.isEmpty()) {
                 ussdEnabledBool = Boolean.valueOf(ussdEnabled);
             }
+            PhoneNumberType phoneNumberType = PhoneNumberType.Local;
+            if(!isoCountryCode.equalsIgnoreCase("US")) {
+                phoneNumberType = PhoneNumberType.Global;
+            }
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
                     mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, nearNumber, nearLatLong, distance, inPostalCode, inRegion,
-                    inRateCenter, inLata, rangeSizeInt, rangeIndexInt, false, false);
+                    inRateCenter, inLata, rangeSizeInt, rangeIndexInt, phoneNumberType);
             return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_JSON_TYPE);
         } else {
             return status(BAD_REQUEST).build();
