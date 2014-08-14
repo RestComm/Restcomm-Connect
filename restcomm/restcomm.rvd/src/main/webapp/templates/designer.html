@@ -25,9 +25,11 @@
 						</ul>
 					</li>
 					<li><a ng-click="addNode(undefined, projectKind)" class="rvd-clickable-text"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
+					<!--
 					<li>
 						<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
 					</li>
+					-->
 				</ul>
 	
 				<ul class="nav navbar-nav navbar-right">
@@ -65,34 +67,42 @@
 	
 		</div>
 	
-		<div ng-show="selectedView=='cc'" class="rvd-ccview row">
-			<div class="col-md-12">
-				<!--<div class="form-group">
-					<label>Api Server Crendentials</label>
-					<div class="input-group">
-						<span class="input-group-addon">Username</span>
-						<input ng-model="ccInfo.username" type="text" class="form-control">
-						<span class="input-group-addon">Password</span>
-						<input ng-model="ccInfo.pass" type="text" class="form-control">					
-					</div>
-				</div>-->
+		<div ng-show="selectedView=='cc'" class="rvd-ccview row center-block">
+
+			<h3>Call Control</h3>
+			<p>
+				Enabling CC will allow your application to get started over HTTP
+			</p>
+			<p>
+				<input type="checkbox" ng-model="ccEnabled"> Enable
+			</p>
+
+			<div ng-show="ccEnabled">
+				<br/>
 				<div ng-repeat="lane in ccInfo.lanes" class="bg-info">
 					<h4>Start action</h4>
-					<div class="input-group form-group">
-						<span class="input-group-addon">Application</span>
+					<div class="form-group">
+						<label>Application</label>
 						<select class="form-control">
-							<option ng-model="lane.startPoint.rcmlUrl" value="">{{projectName}} (current)</option>
+								<option ng-model="lane.startPoint.rcmlUrl" value="">{{projectName}} (current)</option>
 						</select>
 					</div>
-					<div class="input-group">
-						<span class="input-group-addon" >To</span>
-						<input ng-model="lane.startPoint.to" type="text" class="form-control" placeholder="outgoing phonenumber to use if not given in the initiating request">
-						<span class="input-group-addon">From</span>
-						<input ng-model="lane.startPoint.from" type="text" class="form-control" placeholder="source phonenumber to use if not given in the initiating request">
+					<div class="form-group row">
+						<div class="input-group col-md-6">
+							<span class="input-group-addon">To</span>
+							<input ng-model="lane.startPoint.to" type="text" class="form-control" placeholder="default destination">
+						</div>
+						<div class="input-group col-md-6">
+							<span class="input-group-addon">From</span>
+							<input ng-model="lane.startPoint.from" type="text" class="form-control" placeholder="default call source">
+						</div>	
+					</div>
+					<div class="form-group row">
+						<div class="col-md-12 help-block">Override destination and source numbers when this application starts over HTTP</div>
 					</div>
 				</div>
-				{{ccInfo}}
-			</div>
+			</div>	
+
 
 		</div>
 	
