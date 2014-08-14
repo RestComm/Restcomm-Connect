@@ -734,6 +734,7 @@
 	<target name="make-final-zip" depends="set-time-stamp">
 		<!--fixcrlf srcdir="${release.dir}/bin" includes="*.sh" eol="lf" eof="remove" /-->
 		<fixcrlf srcdir="${release.as7.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
+		<fixcrlf srcdir="${release.as7.nolce.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.eap6.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<!--zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS5-${telscale.restcomm.release.version}.zip" filesonly="false">
@@ -772,6 +773,26 @@
                 <exclude name="*.sh" />
             </zipfileset>
             <zipfileset dir="${release.as7.dir}" prefix="TelScale-Restcomm-JBoss-AS7-${telscale.restcomm.release.version}" 
+            	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
+        </zip>
+        <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-AS7-no-lce-${telscale.restcomm.release.version}.zip" filesonly="false">
+			<zipfileset dir="${release.as7.nolce.dir}/bin" filemode="755" prefix="TelScale-Restcomm-JBoss-AS7-no-lce-${telscale.restcomm.release.version}/bin" >
+		                <include name="*.sh" />
+				<include name="**/*.sh"/>
+			</zipfileset>
+			<zipfileset dir="${release.as7.nolce.dir}/bin" prefix="TelScale-Restcomm-JBoss-AS7-no-lce-${telscale.restcomm.release.version}/bin" >
+                		<exclude name="*.sh" />
+                		<exclude name="**/*.sh" />
+	               </zipfileset>
+			<zipfileset dir="${release.as7.nolce.dir}/telscale-media/telscale-media-server/bin" filemode="755" 
+				prefix="TelScale-Restcomm-JBoss-AS7-no-lce-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <include name="*.sh" />
+            </zipfileset>
+			<zipfileset dir="${release.as7.nolce.dir}/telscale-media/telscale-media-server/bin" 
+				prefix="TelScale-Restcomm-JBoss-AS7-no-lce-${telscale.restcomm.release.version}/telscale-media/telscale-media-server/bin" >
+                <exclude name="*.sh" />
+            </zipfileset>
+            <zipfileset dir="${release.as7.nolce.dir}" prefix="TelScale-Restcomm-JBoss-AS7-no-lce-${telscale.restcomm.release.version}" 
             	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
         </zip>
         <zip destfile="${base.dir}/TelScale-Restcomm-JBoss-EAP6-${telscale.restcomm.release.version}.zip" filesonly="false">
