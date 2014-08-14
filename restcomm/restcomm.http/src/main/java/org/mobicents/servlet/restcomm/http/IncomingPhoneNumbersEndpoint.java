@@ -44,6 +44,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -256,7 +257,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         boolean updated = phoneNumberProvisioningManager.updateNumber(sid, getPhoneNumberParameters(data));
         if(updated) {
-        dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
+            dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -276,78 +277,70 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     }
 
     private IncomingPhoneNumber update(final IncomingPhoneNumber incomingPhoneNumber, final MultivaluedMap<String, String> data) {
-        IncomingPhoneNumber result = incomingPhoneNumber;
         if (data.containsKey("ApiVersion")) {
-            result = result.setApiVersion(getApiVersion(data));
+            incomingPhoneNumber.setApiVersion(getApiVersion(data));
         }
         if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            incomingPhoneNumber.setFriendlyName(data.getFirst("FriendlyName"));
         }
         if (data.containsKey("VoiceUrl")) {
-            result = result.setVoiceUrl(getUrl("VoiceUrl", data));
+            incomingPhoneNumber.setVoiceUrl(getUrl("VoiceUrl", data));
         }
         if (data.containsKey("VoiceMethod")) {
-            result = result.setVoiceMethod(getMethod("VoiceMethod", data));
+            incomingPhoneNumber.setVoiceMethod(getMethod("VoiceMethod", data));
         }
         if (data.containsKey("VoiceFallbackUrl")) {
-            result = result.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+            incomingPhoneNumber.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
         }
         if (data.containsKey("VoiceFallbackMethod")) {
-            result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+            incomingPhoneNumber.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("StatusCallback")) {
-            result = result.setStatusCallback(getUrl("StatusCallback", data));
+            incomingPhoneNumber.setStatusCallback(getUrl("StatusCallback", data));
         }
         if (data.containsKey("StatusCallbackMethod")) {
-            result = result.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
+            incomingPhoneNumber.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
         }
         if (data.containsKey("VoiceCallerIdLookup")) {
-            result = result.setVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
+            incomingPhoneNumber.setHasVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
         if (data.containsKey("SmsUrl")) {
-            result = result.setSmsUrl(getUrl("SmsUrl", data));
+            incomingPhoneNumber.setSmsUrl(getUrl("SmsUrl", data));
         }
         if (data.containsKey("SmsMethod")) {
-            result = result.setSmsMethod(getMethod("SmsMethod", data));
+            incomingPhoneNumber.setSmsMethod(getMethod("SmsMethod", data));
         }
         if (data.containsKey("SmsFallbackUrl")) {
-            result = result.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
+            incomingPhoneNumber.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
         }
         if (data.containsKey("SmsFallbackMethod")) {
-            result = result.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
+            incomingPhoneNumber.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         }
         if (data.containsKey("SmsApplicationSid")) {
-            result = result.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+            incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
         }
 
         if (data.containsKey("VoiceCapable")) {
-            result = result.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
-        } else {
-            result = result.setVoiceCapable(Boolean.TRUE);
+            incomingPhoneNumber.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
         }
 
         if (data.containsKey("SmsCapable")) {
-            result = result.setSmsCapable(Boolean.parseBoolean(data.getFirst("SmsCapable")));
-        } else {
-            result = result.setSmsCapable(Boolean.FALSE);
+            incomingPhoneNumber.setSmsCapable(Boolean.parseBoolean(data.getFirst("SmsCapable")));
         }
 
         if (data.containsKey("MmsCapable")) {
-            result = result.setMmsCapable(Boolean.parseBoolean(data.getFirst("MmsCapable")));
-        } else {
-            result = result.setMmsCapable(Boolean.FALSE);
+            incomingPhoneNumber.setMmsCapable(Boolean.parseBoolean(data.getFirst("MmsCapable")));
         }
 
         if (data.containsKey("FaxCapable")) {
-            result = result.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
-        } else {
-            result = result.setFaxCapable(Boolean.FALSE);
+            incomingPhoneNumber.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
         }
 
-        return result;
+        incomingPhoneNumber.setDateUpdated(DateTime.now());
+        return incomingPhoneNumber;
     }
 
     public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
