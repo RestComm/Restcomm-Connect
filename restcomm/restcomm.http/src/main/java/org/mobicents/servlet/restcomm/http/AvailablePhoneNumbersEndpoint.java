@@ -65,10 +65,6 @@ import com.thoughtworks.xstream.XStream;
 public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
-    protected Configuration configuration;
-    protected Configuration phoneNumberProvisioningConfiguration;
-    protected Configuration telestaxProxyConfiguration;
-    protected Configuration activeConfiguration;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
     private DaoManager daos;
     private XStream xstream;
@@ -83,22 +79,28 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration.subset("runtime-settings"));
-        phoneNumberProvisioningConfiguration = configuration.subset("phone-number-provisioning");
-        telestaxProxyConfiguration = configuration.subset("runtime-settings").subset("telestax-proxy");
 
-        final String phoneNumberProvisioningManagerClass = configuration.getString("phone-number-provisioning[@class]");
-        phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) new ObjectFactory(getClass().getClassLoader())
-                .getObjectInstance(phoneNumberProvisioningManagerClass);
-        ContainerConfiguration containerConfiguration = new ContainerConfiguration(getOutboundInterfaces());
-        phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration, containerConfiguration);
+        phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
+        if(phoneNumberProvisioningManager == null) {
+            final String phoneNumberProvisioningManagerClass = configuration.getString("phone-number-provisioning[@class]");
+            Configuration phoneNumberProvisioningConfiguration = configuration.subset("phone-number-provisioning");
+            Configuration telestaxProxyConfiguration = configuration.subset("runtime-settings").subset("telestax-proxy");
+
+            phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) new ObjectFactory(getClass().getClassLoader())
+                    .getObjectInstance(phoneNumberProvisioningManagerClass);
+            ContainerConfiguration containerConfiguration = new ContainerConfiguration(getOutboundInterfaces());
+            phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration, containerConfiguration);
+            context.setAttribute("phoneNumberProvisioningManager", phoneNumberProvisioningManager);
+        }
 
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
-        xstream.registerConverter(new AvailablePhoneNumberConverter(activeConfiguration));
-        xstream.registerConverter(new AvailablePhoneNumberListConverter(activeConfiguration));
-        xstream.registerConverter(new RestCommResponseConverter(activeConfiguration));
+        xstream.registerConverter(new AvailablePhoneNumberConverter(configuration));
+        xstream.registerConverter(new AvailablePhoneNumberListConverter(configuration));
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
         final GsonBuilder builder = new GsonBuilder();
         builder.setPrettyPrinting();
+//        builder.serializeNulls();
         gson = builder.create();
     }
 

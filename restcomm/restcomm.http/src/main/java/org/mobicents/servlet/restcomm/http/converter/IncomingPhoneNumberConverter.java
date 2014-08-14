@@ -108,6 +108,8 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
         writer.startNode("SmsApplicationSid");
         if (smsApplicationSid != null) {
             writer.setValue(smsApplicationSid.toString());
+        } else {
+            writer.setValue(null);
         }
         writer.endNode();
     }
