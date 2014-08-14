@@ -543,6 +543,12 @@ textarea.medium {
 	margin-left: 10px;
 }
 
+.rvd-ccview {
+	width: 500px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 
 /* ------------------ #/packaging/ view -------------------- */
 .rvd-packaging .col-md-4 .rvd-appversion {
