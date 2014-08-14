@@ -472,7 +472,7 @@ public abstract class AbstractConverter implements Converter {
     protected void writeVoiceCapability(final Boolean voiceCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Voice");
         if (voiceCapable == null) {
-            writer.setValue("false");
+            writer.setValue(Boolean.FALSE.toString());
         } else {
             writer.setValue(voiceCapable.toString());
         }
@@ -483,14 +483,14 @@ public abstract class AbstractConverter implements Converter {
         if (voiceCapable != null) {
             object.addProperty("voice_capable", voiceCapable);
         } else {
-            object.addProperty("voice_capable", "false");
+            object.addProperty("voice_capable", Boolean.FALSE);
         }
     }
 
     protected void writeSmsCapability(final Boolean smsCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Sms");
         if (smsCapable == null) {
-            writer.setValue("false");
+            writer.setValue(Boolean.FALSE.toString());
         } else {
             writer.setValue(smsCapable.toString());
         }
@@ -501,14 +501,14 @@ public abstract class AbstractConverter implements Converter {
         if (smsCapable != null) {
             object.addProperty("sms_capable", smsCapable);
         } else {
-            object.addProperty("sms_capable", "false");
+            object.addProperty("sms_capable", Boolean.FALSE);
         }
     }
 
     protected void writeMmsCapability(final Boolean mmsCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Mms");
         if (mmsCapable == null) {
-            writer.setValue("false");
+            writer.setValue(Boolean.FALSE.toString());
         } else {
             writer.setValue(mmsCapable.toString());
         }
@@ -519,14 +519,14 @@ public abstract class AbstractConverter implements Converter {
         if (mmsCapable != null) {
             object.addProperty("mms_capable", mmsCapable);
         } else {
-            object.addProperty("mms_capable", "false");
+            object.addProperty("mms_capable", Boolean.FALSE);
         }
     }
 
     protected void writeFaxCapability(final Boolean faxCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Fax");
         if (faxCapable == null) {
-            writer.setValue("false");
+            writer.setValue(Boolean.FALSE.toString());
         } else {
             writer.setValue(faxCapable.toString());
         }
@@ -537,7 +537,7 @@ public abstract class AbstractConverter implements Converter {
         if (faxCapable != null) {
             object.addProperty("fax_capable", faxCapable);
         } else {
-            object.addProperty("fax_capable", "false");
+            object.addProperty("fax_capable", Boolean.FALSE);
         }
     }
 }

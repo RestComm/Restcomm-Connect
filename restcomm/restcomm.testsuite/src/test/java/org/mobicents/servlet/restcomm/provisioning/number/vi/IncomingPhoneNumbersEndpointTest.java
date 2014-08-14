@@ -481,6 +481,76 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(clientResponse.getStatus() == 204);
     }
     
+    /*
+     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#instance-post-example-1
+     * Set the VoiceUrl and SmsUrl on a phone number
+     */
+    @Test
+    public void testUpdatePhoneNumberSuccess() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4206902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4206902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("4206902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+14206902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        System.out.println(jsonResponse.toString());
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
+        
+        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        formData = new MultivaluedMapImpl();
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
+        formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
+        formData.add("VoiceMethod", "POST");
+        formData.add("SMSMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        jsonResponse = parser.parse(response).getAsJsonObject();
+        System.out.println(jsonResponse.toString());
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
+    }
+    
     @Deployment(name = "AvailablePhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
