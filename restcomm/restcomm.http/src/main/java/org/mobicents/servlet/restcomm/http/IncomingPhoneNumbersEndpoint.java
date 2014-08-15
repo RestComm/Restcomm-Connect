@@ -83,6 +83,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
+    PhoneNumberParameters phoneNumberParameters;
     private IncomingPhoneNumbersDao dao;
     protected AccountsDao accountsDao;
     private XStream xstream;
@@ -112,6 +113,16 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration, containerConfiguration);
             context.setAttribute("phoneNumberProvisioningManager", phoneNumberProvisioningManager);
         }
+        Configuration callbackUrlsConfiguration = configuration.subset("phone-number-provisioning").subset("callback-urls");
+        phoneNumberParameters = new PhoneNumberParameters(
+                callbackUrlsConfiguration.getString("voice[@url]"),
+                callbackUrlsConfiguration.getString("voice[@method]"), false,
+                callbackUrlsConfiguration.getString("sms[@url]"),
+                callbackUrlsConfiguration.getString("sms[@method]"),
+                callbackUrlsConfiguration.getString("fax[@url]"),
+                callbackUrlsConfiguration.getString("fax[@method]"),
+                callbackUrlsConfiguration.getString("ussd[@url]"),
+                callbackUrlsConfiguration.getString("ussd[@method]"));
 
         final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
@@ -235,7 +246,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             number = number.substring(2);
-            PhoneNumberParameters phoneNumberParameters = getPhoneNumberParameters(data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
             boolean isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
             if(isDidAssigned) {
@@ -259,7 +269,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        boolean updated = phoneNumberProvisioningManager.updateNumber(sid, getPhoneNumberParameters(data));
+        boolean updated = phoneNumberProvisioningManager.updateNumber(sid, phoneNumberParameters);
         if(updated) {
             dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
             if (APPLICATION_JSON_TYPE == responseType) {
@@ -362,15 +372,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         phoneNumberProvisioningManager.cancelNumber(numberToRemoveFromVi);
         dao.removeIncomingPhoneNumber(new Sid(sid));
         return noContent().build();
-    }
-
-    private PhoneNumberParameters getPhoneNumberParameters(MultivaluedMap<String, String> data) {
-        PhoneNumberParameters phoneNumberParameters = new PhoneNumberParameters();
-//        phoneNumberParameters.setVoiceUrl(data.getFirst("VoiceUrl"));
-//        phoneNumberParameters.setVoiceMethod(data.getFirst("VoiceMethod"));
-//        phoneNumberParameters.setSmsUrl(data.getFirst("SmsUrl"));
-//        phoneNumberParameters.setSmsMethod(data.getFirst("VoiceUrl"));
-        return phoneNumberParameters;
     }
 
     @SuppressWarnings("unchecked")

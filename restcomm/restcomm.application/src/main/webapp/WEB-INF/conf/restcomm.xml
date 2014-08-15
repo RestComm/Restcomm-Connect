@@ -111,6 +111,16 @@
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
 	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+		<callback-urls>
+			<!-- URL (host:port) and method (SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<voice url="" method=""/>
+			<!-- URL (host:port) and method (SS7, SMPP, SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<sms url="" method=""/>
+			<!-- URL (host:port) and method (SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<fax url="" method=""/>
+			<!-- URL (host:port) and method (SS7, SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<ussd url="" method=""/>
+		</callback-urls>
 		<voip-innovations>
 			<login></login>
 			<password></password>
