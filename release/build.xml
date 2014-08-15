@@ -14,7 +14,7 @@
         <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm" />
         <property name="restcomm.docs.as7.nolce.dir" location="${release.as7.nolce.dir}/docs/restcomm" />
         <property name="restcomm.docs.eap6.dir" location="${release.eap6.dir}/docs/restcomm" />
-	<!--property name="checkout.dir" value="${base.dir}/checkout" />	
+	<!--<property name="checkout.dir" value="${base.dir}/checkout" />	
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
 	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" /-->
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
@@ -288,7 +288,7 @@
         <target name="extract-telscale-sipservlets-as7-nolce" depends="get-telscale-sipservlets-as7-nolce,extract-hsqldb">
                 <delete dir="${checkout.telscale-sipservlets-as7.nolce.dir}" failonerror="false" />
                 <unzip src="${telscale-sipservlets.as7.nolce.distro.zip.path}" dest="${release.as7.nolce.dir}">
-                        <mapper type="glob" from="TelScale-SIP-Servlets-no-lce-${telscale-sipservlets-as7.version}-jboss-as-7.2.0.Final/*" to="*"/>
+                        <mapper type="glob" from="TelScale-SIP-Servlets-${telscale-sipservlets-as7.version}-jboss-as-7.2.0.Final/*" to="*"/>
                 </unzip>
         </target>
 
