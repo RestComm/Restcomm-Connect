@@ -1,4 +1,8 @@
 /*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2013, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation; either version 2.1 of
@@ -35,6 +39,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 @NotThreadSafe
 public abstract class AbstractEndpoint {

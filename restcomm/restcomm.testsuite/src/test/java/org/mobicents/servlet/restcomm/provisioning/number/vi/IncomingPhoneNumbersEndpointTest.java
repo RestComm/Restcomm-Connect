@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -549,6 +550,363 @@ public class IncomingPhoneNumbersEndpointTest {
         jsonResponse = parser.parse(response).getAsJsonObject();
         System.out.println(jsonResponse.toString());
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
+    }
+    
+    /*
+     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-1
+     */
+    @Test
+    public void testAccountAssociatedPhoneNumbers() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+        
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+14216902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        System.out.println(jsonResponse.toString());
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
+        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+        
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+15216902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My 2nd Company Line");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        jsonResponse = parser.parse(response).getAsJsonObject();
+        String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        webResource = jerseyClient.resource(provisioningURL);
+//        formData = new MultivaluedMapImpl();
+//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
+        clientResponse = webResource.
+//                queryParams(formData).
+                accept("application/json").get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+        
+        System.out.println(jsonArray + " \n " + jsonArray.size());
+        
+        assertTrue(jsonArray.size() >= 21);
+        System.out.println("testAccountAssociatedPhoneNumbers:" + (jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString()));
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
+    }
+    
+    /*
+     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-2
+     */
+    @Test
+    public void testAccountAssociatedPhoneNumbersFilter() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+14216902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        System.out.println(jsonResponse.toString());
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
+        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+        
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+15216902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My 2nd Company Line");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        jsonResponse = parser.parse(response).getAsJsonObject();
+        String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        webResource = jerseyClient.resource(provisioningURL);
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+15216902867");
+        clientResponse = webResource.queryParams(formData).accept("application/json").get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+        
+        System.out.println(jsonArray + " \n " + jsonArray.size());
+        
+        assertTrue(jsonArray.size() == 1);
+        System.out.println((jsonArray.get(0).getAsJsonObject().toString()));
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(0).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
+    }
+    
+    /*
+     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-3
+     * Return the set of all phone numbers containing the digits 867.
+     */
+    @Test
+    public void testAccountAssociatedPhoneNumbersSecondFilter() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("4216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("5216902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+14216902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        System.out.println(jsonResponse.toString());
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
+        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+        
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+15216902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My 2nd Company Line");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        jsonResponse = parser.parse(response).getAsJsonObject();
+        String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        webResource = jerseyClient.resource(provisioningURL);
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "867");
+        clientResponse = webResource.queryParams(formData).accept("application/json").get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+        
+        System.out.println(jsonArray + " \n " + jsonArray.size());
+        
+        assertTrue(jsonArray.size() >= 2);
+        System.out.println((jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString()));
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
     }
     
     @Deployment(name = "AvailablePhoneNumbersEndpointTest", managed = true, testable = false)
