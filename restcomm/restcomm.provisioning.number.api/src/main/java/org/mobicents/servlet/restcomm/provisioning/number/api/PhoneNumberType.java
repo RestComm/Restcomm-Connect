@@ -22,6 +22,15 @@
 package org.mobicents.servlet.restcomm.provisioning.number.api;
 
 /**
+ * The differnt types of Phone Numbers :
+ *
+ * <ul>
+ *  <li>Global : International numbers</li>
+ *  <li>Local : US Local numbers</li>
+ *  <li>TollFree : Toll Free numbers</li>
+ *  <li>Mobile : mobile numbers</li>
+ * </ul>
+ *
  * @author jean.deruelle@telestax.com
  *
  */

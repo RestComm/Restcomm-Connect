@@ -24,7 +24,17 @@ import java.util.List;
 import org.apache.commons.configuration.Configuration;
 
 /**
- * API for plugging Phone Number Provisioning Providers
+ * <p>Interface for plugging Phone Number Provisioning Providers.</p>
+ *
+ * <p>Its init method will be called on startup to initialize and pass the parameters found in restcomm.xml phone-number-provisioning tag as an Apache Commons Configuration Object</p>
+ * <p>the following methods will be called by RestComm during runtime</p>
+ * <ul>
+ *  <li>searchForNumbers : when a user is searching for a number to provision</li>
+ *  <li>buyNumber : when a user is purchasing a number</li>
+ *  <li>updateNumber : when a user is updating the properties/callback URLs of an already purchased number</li>
+ *  <li>cancelNumber : when a user is cancelling a number</li>
+ * </ul>
+ *
  * @author jean.deruelle@telestax.com
  */
 public interface PhoneNumberProvisioningManager {
@@ -50,7 +60,7 @@ public interface PhoneNumberProvisioningManager {
     /**
      * Purchase a given phone number previously searched through {@link #searchForNumbers(String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters) searchForNumbers} method.
      *
-     * @param number An available phone number - defined as msisdn Ex: 34911067000 returned from
+     * @param phoneNumber An available phone number - defined as msisdn Ex: 34911067000 returned from
      *        {@link #searchForNumbers(String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters) searchForNumbers} method.
      * @param phoneNumberParameters parameters set on the phone number purchase so the Provider knows where to route incoming messages (be it voice or SMS, MMS, USSD)
      * @return true if the number was bought successfully, false otherwise.
