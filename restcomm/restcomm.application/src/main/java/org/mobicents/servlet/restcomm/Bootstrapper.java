@@ -1,11 +1,5 @@
 package org.mobicents.servlet.restcomm;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -18,16 +12,20 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
-
 import org.apache.log4j.Logger;
-
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.loader.ObjectFactory;
+import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
-import org.mobicents.servlet.restcomm.loader.ObjectFactory;
-import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -138,7 +136,10 @@ public final class Bootstrapper extends SipServlet {
         }
         context.setAttribute(MediaGateway.class.getName(), gateway);
         Version.printVersion();
+        Ping ping = new Ping(xml, context);
+        ping.sendPing();
     }
+
 
     private DaoManager storage(final Configuration configuration, final ClassLoader loader) throws ObjectInstantiationException {
         final String classpath = configuration.getString("dao-manager[@class]");
