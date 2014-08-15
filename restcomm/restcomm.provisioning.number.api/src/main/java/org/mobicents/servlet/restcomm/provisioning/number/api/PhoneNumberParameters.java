@@ -34,7 +34,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  * <tbody>
  * <tr>
  * <td class='notranslate' align="left">VoiceUrl</td>
- * <td align="left">The URL in protocol:host:port format that the DID provider should request when somebody dials the new phone number.</td>
+ * <td align="left">The URL in host:port format that the DID provider should request when somebody dials the new phone number.</td>
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">VoiceMethod</td>
@@ -46,7 +46,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">SmsUrl</td>
- * <td align="left">The URL in protocol:host:port format (SIP, SMPP, or SS7 MAP) that the DID provider should request when somebody sends an SMS to the phone number.</td>
+ * <td align="left">The URL in host:port format (SIP, SMPP, or SS7 MAP) that the DID provider should request when somebody sends an SMS to the phone number.</td>
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">SMSMethod</td>
@@ -55,7 +55,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">UssdUrl</td>
- * <td align="left">The URL in protocol:host:port format that the DID provider should request when somebody sends a USSD message to the phone number.</td>
+ * <td align="left">The URL in host:port format that the DID provider should request when somebody sends a USSD message to the phone number.</td>
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">UssdMethod</td>
@@ -64,7 +64,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">FaxUrl</td>
- * <td align="left">The URL in protocol:host:port format that the DID provider should request when somebody sends a Fax message to the phone number.</td>
+ * <td align="left">The URL in host:port format that the DID provider should request when somebody sends a Fax message to the phone number.</td>
  * </tr>
  * <tr>
  * <td class='notranslate' align="left">FaxMethod</td>

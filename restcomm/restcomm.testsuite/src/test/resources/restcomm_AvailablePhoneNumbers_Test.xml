@@ -111,6 +111,12 @@
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
 	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+		<callback-urls>
+			<voice url="localhost:5080" method="SIP"/>
+			<sms url="localhost:5080" method="SIP"/>
+			<fax url="localhost:5080" method="SIP"/>
+			<ussd url="localhost:5080" method="SIP"/>
+		</callback-urls>
 		<voip-innovations>
 			<login></login>
 			<password></password>
