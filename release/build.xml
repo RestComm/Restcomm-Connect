@@ -380,6 +380,9 @@
         <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm.dir}/restcomm.docs">
                 <arg line="${release.build.goals} -Ptelscale" />
         </exec>
+	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api">
+                <arg line="javadoc:javadoc" />
+        </exec>
 	</target>
 
 	<target name="build-telscale-restcomm-ui">
@@ -706,10 +709,22 @@
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
+		<mkdir dir="${restcomm.docs.dir}/phone-number-provisioning-javadocs"/>
+		<copy todir="${restcomm.docs.dir}/phone-number-provisioning-javadocs" failonerror="true">
+		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+		                <include name="**/*" />
+		        </fileset>
+		</copy>
 		<!--docs tomcat-->
 		<mkdir dir="${restcomm.docs.tomcat.dir}"/>
 		<copy todir="${restcomm.docs.tomcat.dir}" failonerror="true">
 		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+		                <include name="**/*" />
+		        </fileset>
+		</copy>
+		<mkdir dir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs"/>
+		<copy todir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs" failonerror="true">
+		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
@@ -720,7 +735,12 @@
                                 <include name="**/*" />
                         </fileset>
                 </copy>
-
+		<mkdir dir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs"/>
+		<copy todir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs" failonerror="true">
+		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+		                <include name="**/*" />
+		        </fileset>
+		</copy>
                 <!--docs JBoss EAP6-->
                 <mkdir dir="${restcomm.docs.eap6.dir}"/>
                 <copy todir="${restcomm.docs.eap6.dir}" failonerror="true">
@@ -728,6 +748,13 @@
                                 <include name="**/*" />
                         </fileset>
                 </copy>
+		<mkdir dir="${restcomm.docs.eap6.dir}/phone-number-provisioning-javadocs"/>
+		<copy todir="${restcomm.docs.eap6.dir}/phone-number-provisioning-javadocs" failonerror="true">
+		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+		                <include name="**/*" />
+		        </fileset>
+		</copy>
+
     </target>
 	
 	
