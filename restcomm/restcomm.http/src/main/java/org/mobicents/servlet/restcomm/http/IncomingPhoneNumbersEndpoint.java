@@ -50,6 +50,7 @@ import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -197,13 +198,16 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getIncomingPhoneNumbers(final String accountSid, PhoneNumberType phoneNumberType, final MediaType responseType) {
+    protected Response getIncomingPhoneNumbers(final String accountSid, final String phoneNumberFilter, final String friendlyNameFilter,
+            PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbers(new Sid(accountSid));
+        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter);
+        final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(incomingPhoneNumbers), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {

@@ -1,4 +1,8 @@
 /*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2013, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation; either version 2.1 of
@@ -19,10 +23,12 @@ package org.mobicents.servlet.restcomm.dao;
 import java.util.List;
 
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author jean.deruelle@telestax.com
  */
 public interface IncomingPhoneNumbersDao {
     void addIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
@@ -30,6 +36,8 @@ public interface IncomingPhoneNumbersDao {
     IncomingPhoneNumber getIncomingPhoneNumber(Sid sid);
 
     List<IncomingPhoneNumber> getIncomingPhoneNumbers(Sid accountSid);
+
+    List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter incomingPhoneNumberFilter);
 
     IncomingPhoneNumber getIncomingPhoneNumber(String phoneNumber);
 
