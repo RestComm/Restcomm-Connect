@@ -69,7 +69,7 @@
 	
 		<div ng-show="selectedView=='cc'" class="rvd-ccview row center-block">
 
-			<h3>Call Control</h3>
+			<h2 class="page-header">Call Control <small><i class="fa fa-gears pull-right"></i></small> <i class="fa fa-phone pull-right"></i> </h2>
 			<p>
 				Enabling CC will allow your application to get started over HTTP
 			</p>
@@ -78,16 +78,40 @@
 			</p>
 
 			<div ng-show="ccEnabled">
-				<br/>
+
 				<div ng-repeat="lane in ccInfo.lanes" class="bg-info">
-					<h4>Start action</h4>
+					
+					<div class="form-group">
+						<h3 class="lead">Start action</h3>
+
+						<p>Use this url to start this application using a simple GET request. A outgoing call will be made to the destination number specified and the RCML part of this application will run.</p>
+						<p><code>http://[RvdHost]:[RvdPort]/restcomm-rvd/services/apps/{{projectName}}/start</code></p>
+					</div>
+					
+					<div class="form-group">
+						<h4>Call destination and origin</h4>
+						<p class="help-block">Add <em>from</em> and <em>to</em> paremeters to set the destination and originating numbers for the outgoing call.</p>
+						<p><code>http://[RvdHost]:[RvdPort]/restcomm-rvd/services/apps/{{projectName}}/start<strong>&from=12345&amp;to=5555</strong></code></p>
+					</div>
+					
+					<div class="form-group">
+						<h4>Additional parameters</h4>
+						<p class="help-block">Additional parameters can be added to the above url. They will be available as <em>application scoped</em> RVD variables</p>
+						<p>
+							<code>http://[RvdHost]:[RvdPort]/restcomm-rvd/services/apps/{{projectName}}/start&amp;from=12345<strong>&amp;param1=foo&amp;param2=bar</strong></code>
+						</p>
+					</div>
+					<!--
 					<div class="form-group">
 						<label>Application</label>
 						<select class="form-control">
 								<option ng-model="lane.startPoint.rcmlUrl" value="">{{projectName}} (current)</option>
 						</select>
 					</div>
-					<div class="form-group row">
+					-->
+					<div class="form-group">
+						<h4>Default values</h4>
+						<p class="help-block">Provide defaults for destination and originating number URL parameters</p>
 						<div class="input-group col-md-6">
 							<span class="input-group-addon">To</span>
 							<input ng-model="lane.startPoint.to" type="text" class="form-control" placeholder="default destination">
@@ -97,12 +121,16 @@
 							<input ng-model="lane.startPoint.from" type="text" class="form-control" placeholder="default call source">
 						</div>	
 					</div>
-					<div class="form-group row">
-						<div class="col-md-12 help-block">Override destination and source numbers when this application starts over HTTP</div>
-					</div>
+					<br/>
+					<br/>
+					<br/>
+					<br/>
+
+
+					
 				</div>
 			</div>	
-
+ 
 
 		</div>
 	
