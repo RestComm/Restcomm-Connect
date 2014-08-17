@@ -14,4 +14,8 @@ public class FsCallControlInfoStorage {
         workspaceStorage.storeEntity(info, CallControlInfo.class, "cc", projectName);
     }
 
+    public static void clearInfo(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        workspaceStorage.removeEntity("cc", projectName);
+    }
+
 }

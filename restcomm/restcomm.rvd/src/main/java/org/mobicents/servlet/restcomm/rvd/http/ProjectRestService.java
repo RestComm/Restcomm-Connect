@@ -244,7 +244,11 @@ public class ProjectRestService extends RestService {
         try {
             String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
             CallControlInfo ccInfo = marshaler.toModel(data, CallControlInfo.class);
-            FsCallControlInfoStorage.storeInfo( ccInfo, projectName, workspaceStorage);
+            if ( ccInfo != null )
+                FsCallControlInfoStorage.storeInfo( ccInfo, projectName, workspaceStorage);
+            else
+                FsCallControlInfoStorage.clearInfo(projectName, workspaceStorage);
+
             return Response.ok().build();
         } catch (IOException e) {
             logger.error(e,e);

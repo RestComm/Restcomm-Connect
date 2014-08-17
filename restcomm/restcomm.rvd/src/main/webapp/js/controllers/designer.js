@@ -11,7 +11,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.protos = protos;
 	$scope.selectedView = 'rcml';
 	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved parameters
-	$scope.ccInfo = ccInfo;
 	console.log( ccInfo );
 	
 	// Prototype and constant data structures
@@ -244,7 +243,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	
 	$scope.saveCcInfo = function (projectName, ccInfo) {
 		//var deferred = $q.defer();
-		return $http.post("services/projects/" + projectName + "/cc", ccInfo, {headers: {'Content-Type': 'application/data'}});
+		return $http.post("services/projects/" + projectName + "/cc", $scope.ccInfo, {headers: {'Content-Type': 'application/data'}});
 		//.success( function () {deferred.resolve()})
 		//.error( function () {deferred.reject("Error saving CC info")});
 		//return deferred.promise;
@@ -670,6 +669,46 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		});		
 	}
 	
+	
+	
+	// Call Control functionality
+	var ccInfoBackup = null;
+	$scope.ccInfo = ccInfo;
+	
+	function callControlIsEnabled() {
+		if ( $scope.ccInfo === null || $scope.ccInfo === undefined )
+			return false;
+		return true;
+	}
+	function enableCallControl() {
+		if ( !callControlIsEnabled() ) {
+			$scope.ccEnabled = true;
+			if( ccInfoBackup )
+				$scope.ccInfo = ccInfoBackup;
+			else
+				$scope.ccInfo = ModelBuilder.build('CcInfo');
+		}
+	}
+	function disableCallControl() {
+		if ( callControlIsEnabled() ) {
+			ccInfoBackup = $scope.ccInfo;
+			$scope.ccInfo = null;
+			$scope.ccEnabled = false;
+		}
+	}
+	function toggleCallControl() {
+		if ( callControlIsEnabled() )
+			disableCallControl();
+		else
+			enableCallControl();
+	}
+	$scope.ccEnabled = callControlIsEnabled();
+	
+	$scope.toggleCallControl = toggleCallControl;
+	$scope.enableCallControl = enableCallControl;
+	$scope.disableCallControl = disableCallControl;
+	
+	
 		
 	// Run the following after all initialization are complete
 	
@@ -695,7 +734,8 @@ designerCtrl.getCcInfo = function ($route, $http, $q, ModelBuilder) {
 		deferred.resolve(ccInfo);
 	}, function (response) {
 		if ( response.status == 404 )
-			deferred.resolve( ModelBuilder.build('CcInfo') );
+			//deferred.resolve( ModelBuilder.build('CcInfo') );
+			deferred.resolve( null );
 		else
 			deferred.reject(); // TODO - add an error code or message here
 	});

@@ -64,6 +64,14 @@ public class WorkspaceStorage {
         }
     }
 
+    public void removeEntity(String entityName, String relativePath) {
+        if ( !relativePath.startsWith("/") )
+            relativePath = "/" + relativePath;
+        String pathname = rootPath + relativePath + File.separator + entityName;
+        File file = new File(pathname);
+        FileUtils.deleteQuietly(file);
+    }
+
 
     public void storeFile( Object item, Class<?> itemClass, File file) throws StorageException {
         String data;
