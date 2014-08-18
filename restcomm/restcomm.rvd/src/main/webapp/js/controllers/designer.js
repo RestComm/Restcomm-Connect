@@ -708,6 +708,15 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.enableCallControl = enableCallControl;
 	$scope.disableCallControl = disableCallControl;
 	
+	function getRvdHost() {
+		return $location.host();
+	}
+	function getRvdPort() {
+		return $location.port();
+	}
+	$scope.getRvdHost = getRvdHost;
+	$scope.getRvdPort = getRvdPort;
+	
 	
 		
 	// Run the following after all initialization are complete
