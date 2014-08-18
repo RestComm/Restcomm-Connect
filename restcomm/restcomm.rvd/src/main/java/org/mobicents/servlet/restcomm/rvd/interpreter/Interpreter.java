@@ -256,9 +256,9 @@ public class Interpreter {
             logger.debug("override default target to " + targetParam);
         }
 
-        handleStickyParameters();
         processBootstrapParameters();
         processRequestParameters();
+        //handleStickyParameters(); // create local copies of sticky_* parameters
 
         response = interpret(targetParam, null, null);
         return response;
@@ -742,9 +742,11 @@ public class Interpreter {
         return httpResource;
     }
     /**
+     * Make 'local copies' of sticky_*  parameters passed in the URL.
      * Propagate existing sticky variables by putting them in the variables array. Whoever creates an action link from now on should take them into account
      * also make a local copy of them without the sticky_ prefix so that they can be accessed as ordinary module variables
      */
+    /*
     public void handleStickyParameters() {
         for ( String anyVariableName : getRequestParams().keySet() ) {
             if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
@@ -759,14 +761,15 @@ public class Interpreter {
             }
         }
     }
+    */
 
     public void putStickyVariable(String name, String value) {
             variables.put(RvdConfiguration.STICKY_PREFIX + name, value);
     }
 
     /**
-     * Create rvd variables out of Restcomm request parameters such as 'CallSid', 'AccountSid' etc. Use the 'core_'
-     * prefix in their names.
+     * Create rvd variables out of parameters passed in the URL. Restcomm request parameters such as 'CallSid', 'AccountSid' etc. are prefixed with the 'core_'
+     * prefix in their names. Also, sticky_* prefixed parameters have their local copied variables created as well.
      */
     private void processRequestParameters() {
         Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
@@ -774,6 +777,20 @@ public class Interpreter {
             if ( validNames.contains(anyVariableName) ) {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
+            } else
+            if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
+                // set up sticky variables
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(anyVariableName, variableValue );
+
+                // make local copies
+                // First, rip off the sticky_prefix
+                String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
+                getVariables().put(localVariableName, variableValue);
+            } else {
+                //for the rest of the parameters simply create a variable with the same name
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(anyVariableName, variableValue );
             }
         }
     }

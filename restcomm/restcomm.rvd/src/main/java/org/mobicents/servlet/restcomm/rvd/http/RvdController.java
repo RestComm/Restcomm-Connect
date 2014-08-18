@@ -234,7 +234,7 @@ public class RvdController extends RestService {
 
     @GET
     @Path("{appname}/start")
-    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam ) {
+    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @Context UriInfo ui ) {
 
         WorkspaceStorage workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), rvdContext.getMarshaler());
 
@@ -281,6 +281,21 @@ public class RvdController extends RestService {
                     e.printStackTrace();
                 }
             }
+            // Add user supplied params to rcmlUrl
+            try {
+                URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
+                MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
+                for ( String paramName : requestParams.keySet() ) {
+                    // skip builtin parameters supplied by restcomm
+                    if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
+                        if ( !("From".equals(paramName) || "To".equals(paramName) || "Url".equals(paramName ) ) )  // filter out params for the executeAction() itself. Pass only parameters intended for the rcml application.
+                                uriBuilder.addParameter(paramName, requestParams.getFirst(paramName));
+                }
+                rcmlUrl = uriBuilder.build().toString();
+            } catch (URISyntaxException e) {
+                throw new CallControlException("Error copying user supplied parameters to rcml url", e);
+            }
+
 
             String to = toParam;
             if ( RvdUtils.isEmpty(to) )
