@@ -2,6 +2,9 @@ package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -26,12 +29,14 @@ public class RvdConfiguration {
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
     public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
+    private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"})); // the names of the parameters supplied by restcomm request when starting an application
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
     private RvdConfig rvdConfig;  // the configuration settings from rvd.xml
     //private String effectiveRestcommIp; // the IP address to access .wavs and other resources from the internet. It takes into account rvd.xml and servletContext
+
 
     public static RvdConfiguration getInstance(ServletContext servletContext) {
         if ( instance == null ) {
@@ -114,5 +119,11 @@ public class RvdConfiguration {
     public int getRvdInternalPort(HttpServletRequest request) {
         return request.getLocalPort();
     }
+
+    public static Set<String> getRestcommParameterNames() {
+        return restcommParameterNames;
+    }
+
+
 
 }
