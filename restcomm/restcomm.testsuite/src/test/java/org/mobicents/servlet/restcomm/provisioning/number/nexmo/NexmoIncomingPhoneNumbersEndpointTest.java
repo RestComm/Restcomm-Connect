@@ -18,7 +18,7 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.provisioning.number.vi;
+package org.mobicents.servlet.restcomm.provisioning.number.nexmo;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
@@ -59,8 +59,8 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
  */
 
 @RunWith(Arquillian.class)
-public class IncomingPhoneNumbersEndpointTest {
-    private final static Logger logger = Logger.getLogger(IncomingPhoneNumbersEndpointTest.class.getName());
+public class NexmoIncomingPhoneNumbersEndpointTest {
+    private final static Logger logger = Logger.getLogger(NexmoIncomingPhoneNumbersEndpointTest.class.getName());
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
@@ -91,7 +91,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -99,7 +99,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -122,7 +122,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         System.out.println(jsonResponse.toString());
         
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
     }
     
     /*
@@ -138,7 +138,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -146,7 +146,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -182,7 +182,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -190,7 +190,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -213,7 +213,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         System.out.println(jsonResponse.toString());
         
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultLocalPurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultLocalPurchaseNumber));
     }
     
     /*
@@ -229,7 +229,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -237,7 +237,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -273,7 +273,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -281,7 +281,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -304,7 +304,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         System.out.println(jsonResponse.toString());
         
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultTollFreePurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultTollFreePurchaseNumber));
     }
     
     /*
@@ -320,7 +320,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -328,7 +328,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -364,7 +364,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -372,7 +372,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -395,7 +395,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         System.out.println(jsonResponse.toString());
         
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultMobilePurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultMobilePurchaseNumber));
     }
     
     /*
@@ -411,7 +411,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -419,7 +419,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -456,7 +456,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -464,7 +464,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -472,7 +472,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -493,7 +493,7 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         System.out.println(jsonResponse.toString());
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
         
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
@@ -514,7 +514,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -522,7 +522,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -530,7 +530,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -551,7 +551,7 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         System.out.println(jsonResponse.toString());
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
         
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
@@ -569,7 +569,7 @@ public class IncomingPhoneNumbersEndpointTest {
         parser = new JsonParser();
         jsonResponse = parser.parse(response).getAsJsonObject();
         System.out.println(jsonResponse.toString());
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
     }
     
     /*
@@ -583,7 +583,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -591,7 +591,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -599,7 +599,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -607,7 +607,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -615,7 +615,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -623,7 +623,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -644,7 +644,7 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         System.out.println(jsonResponse.toString());
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         
         formData = new MultivaluedMapImpl();
@@ -679,7 +679,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         assertTrue(jsonArray.size() >= 21);
         System.out.println("testAccountAssociatedPhoneNumbers:" + (jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString()));
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
         
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
@@ -703,7 +703,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -711,7 +711,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -719,7 +719,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -727,7 +727,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -735,7 +735,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -743,7 +743,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -764,7 +764,7 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         System.out.println(jsonResponse.toString());
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         
         formData = new MultivaluedMapImpl();
@@ -797,7 +797,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         assertTrue(jsonArray.size() == 1);
         System.out.println((jsonArray.get(0).getAsJsonObject().toString()));
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(0).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(0).getAsJsonObject().toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
         
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
@@ -822,7 +822,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -830,7 +830,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -838,7 +838,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -846,7 +846,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
@@ -854,7 +854,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("releaseDID"))
@@ -862,7 +862,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -883,7 +883,7 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         System.out.println(jsonResponse.toString());
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         
         formData = new MultivaluedMapImpl();
@@ -916,7 +916,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         assertTrue(jsonArray.size() >= 2);
         System.out.println((jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString()));
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
         
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
@@ -929,7 +929,7 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(clientResponse.getStatus() == 204);
     }
     
-    @Deployment(name = "IncomingPhoneNumbersEndpointTest", managed = true, testable = false)
+    @Deployment(name = "NexmoIncomingPhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         logger.info("version");
