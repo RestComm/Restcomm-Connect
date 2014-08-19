@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
 import org.mobicents.servlet.restcomm.rvd.serverapi.CreateCallResponse;
@@ -72,6 +73,9 @@ public class RvdController extends RestService {
     private Gson gson;
     private RvdContext rvdContext;
 
+    private WorkspaceStorage workspaceStorage;
+    private ModelMarshaler marshaler;
+
 
 
     @PostConstruct
@@ -81,6 +85,9 @@ public class RvdController extends RestService {
         rvdSettings = rvdContext.getSettings();
         projectStorage = rvdContext.getProjectStorage();
         projectService = new ProjectService(rvdContext);
+
+        this.marshaler = rvdContext.getMarshaler();
+        this.workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
     }
 
     private Response runInterpreter( String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
@@ -90,7 +97,7 @@ public class RvdController extends RestService {
                 return Response.status(Status.NOT_FOUND).build();
 
             String targetParam = requestParams.getFirst("target");
-            Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams);
+            Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams, workspaceStorage);
             rcmlResponse = interpreter.interpret();
 
         } catch ( RvdException e ) {

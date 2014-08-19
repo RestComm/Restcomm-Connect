@@ -30,6 +30,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
@@ -40,7 +41,9 @@ import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
@@ -65,15 +68,22 @@ public class RasRestService extends RestService {
     private RasService rasService;
     private ProjectService projectService;
     private RvdContext rvdContext;
+    private WorkspaceStorage workspaceStorage;
+    private ModelMarshaler marshaler;
 
     @PostConstruct
     void init() {
         rvdContext = new RvdContext(request, servletContext);
         settings = rvdContext.getSettings();
+
+        marshaler = rvdContext.getMarshaler();
+        workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
+
+
         projectStorage = rvdContext.getProjectStorage();
         packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
 
-        rasService = new RasService(rvdContext);
+        rasService = new RasService(rvdContext, workspaceStorage);
         projectService = new ProjectService(rvdContext);
     }
 
@@ -209,7 +219,7 @@ public class RasRestService extends RestService {
     public Response listRapps(@Context HttpServletRequest request) {
         try {
             List<String> projectNames = projectStorage.listProjectNames();
-            List<RappItem> rapps = projectStorage.listRapps(projectNames);
+            List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
@@ -306,18 +316,30 @@ public class RasRestService extends RestService {
     @POST
     @Path("apps/{name}/bootstrap")
     public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
-        logger.info("saving bootstrap parameters for app '" + projectName + "'");
+        //logger.info("saving bootstrap parameters for app '" + projectName + "'");
         try {
             String bootstrapInfo;
             bootstrapInfo = IOUtils.toString(request.getInputStream());
 
-            projectStorage.storeBootstrapInfo(bootstrapInfo, projectName);
+            FsProjectStorage.storeBootstrapInfo(bootstrapInfo, projectName, workspaceStorage);
             return buildOkResponse();
 
         } catch (StorageException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
         } catch (IOException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new RvdException("Error reading from request stream", e));
+        }
+    }
+
+    @GET
+    @Path("apps/{name}/bootstrap")
+    public Response getBootstrap(@PathParam("name") String projectName) {
+        try {
+            String bootstrapInfo = FsProjectStorage.loadBootstrapInfo(projectName, workspaceStorage);
+            return Response.ok(bootstrapInfo, MediaType.APPLICATION_JSON).build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
         }
     }
 

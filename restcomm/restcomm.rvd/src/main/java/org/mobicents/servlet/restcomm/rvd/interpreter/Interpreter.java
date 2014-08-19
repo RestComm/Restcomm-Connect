@@ -43,6 +43,7 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServ
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceError;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
@@ -84,7 +85,9 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageC
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
@@ -105,6 +108,9 @@ public class Interpreter {
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
 
+    private WorkspaceStorage workspaceStorage;
+    private ModelMarshaler marshaler;
+
     private XStream xstream;
     private Gson gson;
     private String targetParam;
@@ -120,13 +126,15 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(RvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
+    public Interpreter(RvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
         this.rvdSettings = rvdContext.getSettings();
         this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
         this.targetParam = targetParam;
         this.appName = appName;
         this.requestParams = requestParams;
+        this.workspaceStorage = workspaceStorage;
+        this.marshaler = rvdContext.getMarshaler();
 
         this.contextPath = httpRequest.getContextPath();
         init();
@@ -803,10 +811,12 @@ public class Interpreter {
      */
     private void processBootstrapParameters() throws StorageException {
 
-        if ( ! projectStorage.hasBootstrapInfo(appName) )
+        if ( ! FsProjectStorage.hasBootstrapInfo(appName, workspaceStorage) )
             return; // nothing to do
 
-        JsonElement rootElement = projectStorage.loadBootstrapInfo(appName);
+         String data = FsProjectStorage.loadBootstrapInfo(appName,workspaceStorage);
+         JsonElement rootElement = gson.toJsonTree(data);
+
 
         if ( rootElement.isJsonObject() ) {
             JsonObject rootObject = rootElement.getAsJsonObject();
