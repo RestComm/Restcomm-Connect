@@ -815,8 +815,8 @@ public class Interpreter {
             return; // nothing to do
 
          String data = FsProjectStorage.loadBootstrapInfo(appName,workspaceStorage);
-         JsonElement rootElement = gson.toJsonTree(data);
-
+         JsonParser parser = new JsonParser();
+         JsonElement rootElement = parser.parse(data);
 
         if ( rootElement.isJsonObject() ) {
             JsonObject rootObject = rootElement.getAsJsonObject();
