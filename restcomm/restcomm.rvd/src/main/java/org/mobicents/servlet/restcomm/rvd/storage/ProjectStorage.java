@@ -11,11 +11,8 @@ import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
-import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
-
-import com.google.gson.JsonElement;
 
 
 public interface ProjectStorage {
@@ -27,14 +24,14 @@ public interface ProjectStorage {
     List<String> listProjectNames() throws StorageException;
 
     // Bootstrap parameters
-    void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException;
-    boolean hasBootstrapInfo(String projectName);
-    JsonElement loadBootstrapInfo(String projectName) throws StorageException;
+    //void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException;
+    //boolean hasBootstrapInfo(String projectName);
+    //JsonElement loadBootstrapInfo(String projectName) throws StorageException;
 
     // Rapp
     void storeRapp(Rapp rapp, String projectName) throws StorageException;
     Rapp loadRapp(String projectName) throws StorageException;
-    List<RappItem> listRapps(List<String> projectNames) throws StorageException;
+    //List<RappItem> listRapps(List<String> projectNames) throws StorageException;
 
     // Higher level
     String getAvailableProjectName(String projectName) throws StorageException;

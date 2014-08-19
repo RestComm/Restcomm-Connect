@@ -20,8 +20,10 @@ import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RasException;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
@@ -46,14 +48,18 @@ public class RasService {
     ProjectStorage projectStorage;
     FsPackagingStorage packagingStorage;
     FsStorageBase storageBase;
+
     ModelMarshaler marshaler;
+    WorkspaceStorage workspaceStorage;
 
 
-    public RasService(RvdContext rvdContext) {
+    public RasService(RvdContext rvdContext, WorkspaceStorage workspaceStorage) {
         this.storageBase = rvdContext.getStorageBase();
         this.marshaler = rvdContext.getMarshaler();
         this.projectStorage = rvdContext.getProjectStorage();
         this.packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
+
+        this.workspaceStorage = workspaceStorage;
 
     }
 
@@ -152,7 +158,8 @@ public class RasService {
         RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
 
         // Make sure no such restcomm app already exists (single instance limitation)
-        List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
+        //List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
+        List<RappItem> rappItems = FsProjectStorage.listRapps( projectStorage.listProjectNames(), workspaceStorage );
         for ( RappItem rappItem : rappItems )
             if ( rappItem.rappInfo.getId() != null && rappItem.rappInfo.getId().equals(info.getId()) )
                 throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.rappInfo.getId() + "  already exists. Cannot import " + info.getName() + " app");

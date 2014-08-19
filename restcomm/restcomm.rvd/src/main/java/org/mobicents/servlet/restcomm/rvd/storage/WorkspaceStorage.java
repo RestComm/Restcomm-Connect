@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
+import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -82,6 +83,42 @@ public class WorkspaceStorage {
         } catch (IOException e) {
             throw new StorageException("Error creating file in storage: " + file, e);
         }
+    }
+
+    public String loadEntityString(String entityName, String relativePath) throws StorageException {
+        if ( !relativePath.startsWith( "/") )
+            relativePath = File.separator + relativePath;
+
+        String pathname = rootPath + relativePath + File.separator + entityName;
+
+        File file = new File(pathname);
+        if ( !file.exists() )
+            throw new StorageEntityNotFound("File " + file.getPath() + " does not exist");
+
+        String data;
+        try {
+            data = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+            return data;
+        } catch (IOException e) {
+            throw new StorageException("Error loading file " + file.getPath(), e);
+        }
+    }
+
+    public void storeEntityString(String entityString, String entityName, String relativePath) throws StorageException {
+        if ( !relativePath.startsWith("/") )
+            relativePath = "/" + relativePath;
+
+        String pathname = rootPath + relativePath + File.separator + entityName;
+        File file = new File(pathname);
+        try {
+            FileUtils.writeStringToFile(file, entityString, "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException("Error creating file in storage: " + file, e);
+        }
+    }
+
+    public static void storeInfo(CallControlInfo info, String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        workspaceStorage.storeEntity(info, CallControlInfo.class, "cc", projectName);
     }
 
 

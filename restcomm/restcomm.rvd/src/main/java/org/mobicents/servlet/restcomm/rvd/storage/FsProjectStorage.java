@@ -443,19 +443,35 @@ public class FsProjectStorage implements ProjectStorage {
         throw new StorageException("Can't find an available project name for base name '" + projectName + "'");
     }
 
+    /*
     public void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException {
         storageBase.storeProjectFile(bootstrapInfo, projectName, ".", "bootstrap");
     }
+    */
 
+    /*
     public boolean hasBootstrapInfo(String projectName) {
         return storageBase.projectFileExists(projectName, ".", "bootstrap");
     }
+    */
 
-    public JsonElement loadBootstrapInfo(String projectName) throws StorageException {
+    /*public JsonElement loadBootstrapInfo(String projectName) throws StorageException {
         String data = storageBase.loadProjectFile(projectName, ".", "bootstrap");
         JsonParser parser = new JsonParser();
         JsonElement rootElement = parser.parse(data);
         return rootElement;
+    }*/
+
+    public static String loadBootstrapInfo(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        return workspaceStorage.loadEntityString("bootstrap", projectName);
+    }
+
+    public static void storeBootstrapInfo(String bootstrapInfo, String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        workspaceStorage.storeEntityString(bootstrapInfo, "bootstrap", projectName);
+    }
+
+    public static boolean hasBootstrapInfo(String projectName, WorkspaceStorage workspaceStorage) {
+        return workspaceStorage.entityExists("bootstrap", projectName);
     }
 
 
@@ -484,21 +500,23 @@ public class FsProjectStorage implements ProjectStorage {
      * @return
      * @throws StorageException
      */
-    public List<RappItem> listRapps(List<String> projectNames) throws StorageException {
+    public static List<RappItem> listRapps(List<String> projectNames, WorkspaceStorage workspaceStorage) throws StorageException {
         //List<String> projectNames = storageBase.listProjectNames();
         List<RappItem> rapps = new ArrayList<RappItem>();
         for (String projectName : projectNames) {
-            if ( storageBase.projectFileExists(projectName, "ras", "rapp") ) {
+            //if ( storageBase.projectFileExists(projectName, "ras", "rapp") ) {
+            if ( workspaceStorage.entityExists("rapp", projectName + "/ras") ) {
                 RappItem item = new RappItem();
                 item.setProjectName(projectName);
 
                 // load info from rapp file
-                Rapp rapp = storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
+                //Rapp rapp = storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
+                Rapp rapp = workspaceStorage.loadEntity("rapp", projectName+"/ras", Rapp.class);
                 item.setRappInfo(rapp.getInfo());
 
                 // app status
                 boolean installedStatus = true;
-                boolean configuredStatus = hasBootstrapInfo(projectName);
+                boolean configuredStatus = FsProjectStorage.hasBootstrapInfo(projectName, workspaceStorage);
                 boolean activeStatus = installedStatus && configuredStatus;
                 RappStatus[] statuses = new RappStatus[3];
                 statuses[0] = RappStatus.Installed; // always set
@@ -511,4 +529,6 @@ public class FsProjectStorage implements ProjectStorage {
         }
         return rapps;
     }
+
+
 }
