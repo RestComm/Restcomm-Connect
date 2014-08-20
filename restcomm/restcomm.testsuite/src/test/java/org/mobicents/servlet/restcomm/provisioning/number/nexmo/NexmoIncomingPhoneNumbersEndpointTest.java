@@ -80,13 +80,17 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
     
     /*
-     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-     * Purchases a new phone number for your account. If a phone number is found for your request, 
-     * Twilio will add it to your account and bill you for the first month's cost of the phone number. 
+     * https://docs.nexmo.com/index.php/developer-api/number-buy
      */
     @Test
     public void testPurchasePhoneNumberSuccess() {
         stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/US/14156902867.*"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
@@ -117,809 +121,164 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
     }
     
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-//     * Purchases a new phone number for your account.
-//     * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
-//     */
-//    @Test
-//    public void testPurchasePhoneNumberNoPhoneNumberFound() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14156902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 400);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        String jsonResponse = parser.parse(response).getAsString();
-//        assertTrue(jsonResponse.toString().equalsIgnoreCase("21452"));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-//     * Purchases a new phone number for your account. If a phone number is found for your request, 
-//     * Twilio will add it to your account and bill you for the first month's cost of the phone number. 
-//     */
-//    @Test
-//    public void testPurchaseLocalPhoneNumberSuccess() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4166902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4166902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14166902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        
-//        System.out.println(jsonResponse.toString());
-//        
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultLocalPurchaseNumber));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-//     * Purchases a new phone number for your account.
-//     * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
-//     */
-//    @Test
-//    public void testPurchaseLocalPhoneNumberNoPhoneNumberFound() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14156902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 400);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        String jsonResponse = parser.parse(response).getAsString();
-//        assertTrue(jsonResponse.toString().equalsIgnoreCase("21452"));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-//     * Purchases a new phone number for your account. If a phone number is found for your request, 
-//     * Twilio will add it to your account and bill you for the first month's cost of the phone number. 
-//     */
-//    @Test
-//    public void testPurchaseTollFreePhoneNumberSuccess() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4176902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4176902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/TollFree.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14176902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        
-//        System.out.println(jsonResponse.toString());
-//        
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultTollFreePurchaseNumber));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-//     * Purchases a new phone number for your account.
-//     * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
-//     */
-//    @Test
-//    public void testPurchaseTollFreePhoneNumberNoPhoneNumberFound() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/TollFree.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14156902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 400);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        String jsonResponse = parser.parse(response).getAsString();
-//        assertTrue(jsonResponse.toString().equalsIgnoreCase("21452"));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-//     * Purchases a new phone number for your account. If a phone number is found for your request, 
-//     * Twilio will add it to your account and bill you for the first month's cost of the phone number. 
-//     */
-//    @Test
-//    public void testPurchaseMobilePhoneNumberSuccess() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4186902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4186902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Mobile.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14186902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        
-//        System.out.println(jsonResponse.toString());
-//        
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultMobilePurchaseNumber));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
-//     * Purchases a new phone number for your account.
-//     * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
-//     */
-//    @Test
-//    public void testPurchaseMobilePhoneNumberNoPhoneNumberFound() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Mobile.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14156902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 400);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        String jsonResponse = parser.parse(response).getAsString();
-//        assertTrue(jsonResponse.toString().equalsIgnoreCase("21452"));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#instance-delete
-//     * Release this phone number from your account. Twilio will no longer answer calls to this number, and you will stop being billed the monthly phone number fee. The phone number will eventually be recycled and potentially given to another customer, so use with care. If you make a mistake, contact us. We may be able to give you the number back.
-//     * 
-//     * If successful, returns an HTTP 204 response with no body.
-//     */
-//    @Test
-//    public void testDeletePhoneNumberSuccess() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4196902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4196902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("4196902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14196902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        System.out.println(jsonResponse.toString());
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
-//        
-//        String phoneNumberSid = jsonResponse.get("sid").getAsString();
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 204);
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#instance-post-example-1
-//     * Set the VoiceUrl and SmsUrl on a phone number
-//     */
-//    @Test
-//    public void testUpdatePhoneNumberSuccess() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4206902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4206902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("4206902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14206902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        System.out.println(jsonResponse.toString());
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
-//        
-//        String phoneNumberSid = jsonResponse.get("sid").getAsString();
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        formData = new MultivaluedMapImpl();
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
-//        formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
-//        formData.add("VoiceMethod", "POST");
-//        formData.add("SMSMethod", "GET");
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        parser = new JsonParser();
-//        jsonResponse = parser.parse(response).getAsJsonObject();
-//        System.out.println(jsonResponse.toString());
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-1
-//     */
-//    @Test
-//    public void testAccountAssociatedPhoneNumbers() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//        
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14216902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        System.out.println(jsonResponse.toString());
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
-//        String phoneNumberSid = jsonResponse.get("sid").getAsString();
-//        
-//        formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+15216902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My 2nd Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        parser = new JsonParser();
-//        jsonResponse = parser.parse(response).getAsJsonObject();
-//        String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        webResource = jerseyClient.resource(provisioningURL);
-////        formData = new MultivaluedMapImpl();
-////        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
-//        clientResponse = webResource.
-////                queryParams(formData).
-//                accept("application/json").get(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        parser = new JsonParser();
-//        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
-//        
-//        System.out.println(jsonArray + " \n " + jsonArray.size());
-//        
-//        assertTrue(jsonArray.size() >= 21);
-//        System.out.println("testAccountAssociatedPhoneNumbers:" + (jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString()));
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 204);
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 204);
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-2
-//     */
-//    @Test
-//    public void testAccountAssociatedPhoneNumbersFilter() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14216902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        System.out.println(jsonResponse.toString());
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
-//        String phoneNumberSid = jsonResponse.get("sid").getAsString();
-//        
-//        formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+15216902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My 2nd Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        parser = new JsonParser();
-//        jsonResponse = parser.parse(response).getAsJsonObject();
-//        String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+15216902867");
-//        clientResponse = webResource.queryParams(formData).accept("application/json").get(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        parser = new JsonParser();
-//        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
-//        
-//        System.out.println(jsonArray + " \n " + jsonArray.size());
-//        
-//        assertTrue(jsonArray.size() == 1);
-//        System.out.println((jsonArray.get(0).getAsJsonObject().toString()));
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(0).getAsJsonObject().toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 204);
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 204);
-//    }
-//    
-//    /*
-//     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-3
-//     * Return the set of all phone numbers containing the digits 867.
-//     */
-//    @Test
-//    public void testAccountAssociatedPhoneNumbersSecondFilter() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("4216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("queryDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("assignDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("releaseDID"))
-//                .withRequestBody(containing("5216902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-//        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-//
-//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
-//
-//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+14216902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        JsonParser parser = new JsonParser();
-//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        System.out.println(jsonResponse.toString());
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
-//        String phoneNumberSid = jsonResponse.get("sid").getAsString();
-//        
-//        formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "+15216902867");
-//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-//        formData.add("FriendlyName", "My 2nd Company Line");
-//        formData.add("VoiceMethod", "GET");
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        parser = new JsonParser();
-//        jsonResponse = parser.parse(response).getAsJsonObject();
-//        String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        formData = new MultivaluedMapImpl();
-//        formData.add("PhoneNumber", "867");
-//        clientResponse = webResource.queryParams(formData).accept("application/json").get(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 200);
-//        response = clientResponse.getEntity(String.class);
-//        System.out.println(response);
-//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-//        parser = new JsonParser();
-//        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
-//        
-//        System.out.println(jsonArray + " \n " + jsonArray.size());
-//        
-//        assertTrue(jsonArray.size() >= 2);
-//        System.out.println((jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString()));
-//        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 204);
-//        
-//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
-//        webResource = jerseyClient.resource(provisioningURL);
-//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-//        assertTrue(clientResponse.getStatus() == 204);
-//    }
+    /*
+     * https://docs.nexmo.com/index.php/developer-api/number-cancel
+     */
+    @Test
+    public void testDeletePhoneNumberSuccess() {
+        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/ES/34911067000"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/ES/34911067000.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/ES/34911067000"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+34911067000");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        
+        System.out.println(jsonResponse.toString());
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
+        
+        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
+    }
+    
+    /*
+     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
+     * Purchases a new phone number for your account.
+     * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
+     */
+    @Test
+    public void testPurchasePhoneNumberNoPhoneNumberFound() {
+        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902868"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+14156902860");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 400);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        String jsonResponse = parser.parse(response).getAsString();
+        assertTrue(jsonResponse.toString().equalsIgnoreCase("21452"));
+    }
+
+    /*
+     * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#instance-post-example-1
+     * Set the VoiceUrl and SmsUrl on a phone number
+     * 
+     * https://docs.nexmo.com/index.php/developer-api/number-update
+     */
+    @Test
+    public void testUpdatePhoneNumberSuccess() {
+        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/FR/33911067000"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/FR/33911067000"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+33911067000");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        
+        System.out.println(jsonResponse.toString());
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
+
+        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        formData = new MultivaluedMapImpl();
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
+        formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
+        formData.add("VoiceMethod", "POST");
+        formData.add("SMSMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        jsonResponse = parser.parse(response).getAsJsonObject();
+        System.out.println(jsonResponse.toString());
+        assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
+        
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
+    }
     
     @Deployment(name = "NexmoIncomingPhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
