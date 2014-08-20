@@ -28,11 +28,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.nexmo;
  */
 public class NexmoIncomingPhoneNumbersEndpointTestUtils {
     public static String purchaseNumberSuccessResponse = 
-            "<response id=\"cf1d26d08aa642abb5f729b5a14c26a0\"><header><sessionid>a13b72c3ca20dc2174f9fb964bbc0111</sessionid></header>"
-            + "<body><did><TN>4156902867</TN><status>Assigned to endpoint '11858' rewritten as '+14156902867' Tier 0</status><statuscode>100</statuscode><refid></refid><cnam>0</cnam><tier>0</tier></did></body></response>";
-    public static String queryDIDSuccessResponse = 
-            "<response id=\"fab0fc4b6b094e61b06be40171911c65\"><header><sessionid>1857a2fc18c50e5f423292ce493fb34c</sessionid></header>"
-            + "<body><did><tn>4156902867</tn><status>Number currently assigned to you with refid '' rewritten as '+14156902867' to endpoint '11858'</status><availability>assigned</availability><endpoint>11858</endpoint><rewrite>+14156902867</rewrite><statusCode>100</statusCode><refid></refid><cnam>0</cnam><tier>0</tier><t38>1</t38><cnamStorageActive>0</cnamStorageActive><cnamStorageAvailability>1</cnamStorageAvailability><registered911>0</registered911><registered411>0</registered411></did></body></response>";
+            "";
     public static String deleteNumberSuccessResponse = 
             "<response id=\"9680e514f9fb4fbd852651cefe9f4e58\"><header><sessionid>fcb4bae9401df4d88bbb1f37f55042b9</sessionid></header>"
             + "<body><did><TN>4196902867</TN><status>Released</status><statuscode>100</statuscode></did></body></response>";

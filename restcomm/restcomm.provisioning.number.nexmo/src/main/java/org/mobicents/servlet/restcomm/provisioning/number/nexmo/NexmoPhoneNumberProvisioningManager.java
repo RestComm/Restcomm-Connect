@@ -27,6 +27,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
@@ -39,6 +40,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
@@ -50,7 +52,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
 
     protected Boolean telestaxProxyEnabled;
     protected String uri, apiKey, apiSecret;
-    protected String searchURI;
+    protected String searchURI, buyURI, updateURI, cancelURI;
     protected Configuration activeConfiguration;
     protected ContainerConfiguration containerConfiguration;
 
@@ -80,6 +82,9 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             activeConfiguration = nexmoConfiguration;
         }
         searchURI = uri + "/number/search/" + apiKey + "/" + apiSecret + "/";
+        buyURI = uri + "/number/buy/" + apiKey + "/" + apiSecret + "/";
+        updateURI = uri + "/number/update/" + apiKey + "/" + apiSecret + "/";
+        cancelURI = uri + "/number/cancel/" + apiKey + "/" + apiSecret + "/";
     }
 
     private String getFriendlyName(final String number, String countryCode) {
@@ -213,7 +218,50 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
 
     @Override
     public boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
-        // TODO Auto-generated method stub
+        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+        String country = null;
+        try {
+            // phone must begin with '+'
+            com.google.i18n.phonenumbers.Phonenumber.PhoneNumber numberProto = phoneUtil.parse(phoneNumber, "US");
+            int countryCode = numberProto.getCountryCode();
+            country = phoneUtil.getRegionCodeForCountryCode(countryCode);
+        } catch (NumberParseException e) {
+            if(logger.isDebugEnabled())
+                logger.debug("problem parsing phone number " + phoneNumber, e);
+            return false;
+        }
+        String queryUri = null;
+        if(phoneNumber.startsWith("+")) {
+            queryUri = buyURI + country + "/" + phoneNumber.substring(1, phoneNumber.length());
+        } else {
+            queryUri = buyURI + country + "/" + phoneNumber;
+        }
+
+        final HttpPost post = new HttpPost(queryUri);
+        try {
+
+            final DefaultHttpClient client = new DefaultHttpClient();
+//                if (telestaxProxyEnabled) {
+//                    // This will work as a flag for LB that this request will need to be modified and proxied to VI
+//                    get.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
+//                    // This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+//                    get.addHeader("RequestType", "GetAvailablePhoneNumbersByAreaCode");
+//                    //This will let LB match the DID to a node based on the node host+port
+//                    for (SipURI uri: containerConfiguration.getOutboundInterfaces()) {
+//                        get.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+//                    }
+//                }
+            final HttpResponse response = client.execute(post);
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                return true;
+            } else {
+                if(logger.isDebugEnabled())
+                    logger.debug("Couldn't buy Phone Number " + phoneNumber + ". Response status was: "+response.getStatusLine().getStatusCode());
+            }
+        } catch (final Exception e) {
+            logger.warn("Couldn't reach uri for getting Phone Numbers" + uri, e);
+        }
+
         return false;
     }
 
