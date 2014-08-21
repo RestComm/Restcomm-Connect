@@ -13,22 +13,18 @@
             <dd>
                 <input id="new-number-number" class="form-control" ng-model="newNumber.phone_number" type="tel" placeholder="eg: 305 543987012" popover-placement="bottom" popover-trigger="focus" popover="The phone number you want to purchase. The number should be formatted starting with a '+' followed by the country code and the number in E.164 format."/>
             </dd>
-            <dt style="height: 20px;">&nbsp;</dt><dd style="height: 20px;"><div class="text-muted"><small class="text-bottom">OR</small></div></dd>
-            <dt>Area Code</dt>
+            <dt style="height: 20px;">&nbsp;</dt><dd style="height: 20px;"><div class="text-muted"><small class="text-bottom">OR Search For Phone Numbers to Purchase</small></div></dd>
+            <dt>Country</dt>
             <dd>
+            	<input id="countryCode" name="countryCode" class="form-control" ng-model="newNumber.countryCode" maxlength="2" placeholder="US" value="US" popover-placement="top" popover-trigger="focus" popover="A 2 letter ISO_3166-1_alpha-2 Country code" onchange="countryCodeChange()"/>
+            </dd>                
+            <dt id="areaCodeOptionsName">Area Code</dt>
+            <dd id="areaCodeOptionsForm">
                 <div  class="form-inline">
                     <div class="form-group col-md-5">
-                        <!--
-                        <div class="input-group">
-                            <input id="new-number-areacode" class="form-control" ng-model="newNumber.area_code" maxlength="3" type="tel" placeholder="eg: 305" popover-placement="top" popover-trigger="focus" popover="A three digit, US area code in which you'd like a new incoming phone number." />
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button" ng-disabled="!newNumber.area_code" ng-click="findNumbers(newNumber.area_code)"><i class="fa fa-search"></i></button>
-                            </span>
-                        </div>
-                        -->
                         <div class="input-group">
                             <div class="dropdown">
-                                <button class="btn btn-default dropdown-toggle" style="width: 100px;" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                            	<button class="btn btn-default dropdown-toggle" style="width: 100px;" type="button" id="dropdownMenu1" data-toggle="dropdown">
                                     {{newNumber.area_code && newNumber.area_code || "Area Code"}} <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownMenu2">
@@ -340,15 +336,18 @@
                                     <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 307">307</a></li>
                                 </ul>
                             </div>
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button" ng-disabled="!newNumber.area_code" ng-click="findNumbers(newNumber.area_code)"><i class="fa fa-search"></i></button>
-                            </span>
                         </div>
                     </div>
-                    <div class="form-group" style="margin-left: 20px;">
+                </div>
+            </dd>
+            <dt>
+	          	<button class="btn btn-default" type="button" ng-click="findNumbers(newNumber.area_code, newNumber.countryCode)"><i class="fa fa-search"></i></button>
+			</dt>
+            <dd>
+            	<div class="form-group" style="margin-left: 20px;">
                         <div class="btn-group">
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                                <span ng-show="!availableNumbers">Enter Area Code to search...</span>
+                                <span ng-show="!availableNumbers">Resulting Numbers to search...</span>
                                 <span ng-show="searching"><i class="fa fa-spinner fa-spin"></i> Searching...</span>
                                 <span ng-show="availableNumbers.length == 0 && !searching">Not Available</span>
                                 <span ng-show="availableNumbers.length > 0 && !newNumber.phone_number">Select number <span class="caret"></span></span>
@@ -363,7 +362,6 @@
                             </ul>
                         </div>
                     </div>
-                </div>
             </dd>
             <!--
             <select class="form-control" ng-model="newNumber.phone_number" ng-show="availableNumbers.length > 0">
