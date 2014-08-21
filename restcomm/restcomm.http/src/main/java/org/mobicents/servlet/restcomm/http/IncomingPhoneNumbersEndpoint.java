@@ -268,7 +268,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        boolean updated = phoneNumberProvisioningManager.updateNumber(sid, phoneNumberParameters);
+        boolean updated = phoneNumberProvisioningManager.updateNumber(incomingPhoneNumber.getPhoneNumber(), phoneNumberParameters);
         if(updated) {
             dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
             if (APPLICATION_JSON_TYPE == responseType) {
