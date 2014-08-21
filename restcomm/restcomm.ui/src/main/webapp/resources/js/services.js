@@ -457,11 +457,36 @@ rcServices.factory('RCommApps', function($resource) {
   return $resource('/restcomm-rvd/services/manager/projects/list');
 });
 
+rcServices.factory('RCommAvailableNumbersNonUS', function($resource) {
+  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format',
+    {
+      accountSid: '@accountSid',
+      countryCode: '@countryCode',
+      format:'json'
+    },
+    {
+      view: {
+        method: 'GET',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+      },
+      test: {
+        method: 'GET',
+        url: '/restcomm-management/numbers.json'
+      },
+      delete: {
+        method:'DELETE',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+      }
+    }
+  );
+});
+
 rcServices.factory('RCommAvailableNumbers', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/US/Local.:format?AreaCode=:areaCode',
+  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format?AreaCode=:areaCode',
     {
       accountSid: '@accountSid',
       areaCode: '@areaCode',
+      countryCode: '@countryCode',
       format:'json'
     },
     {
