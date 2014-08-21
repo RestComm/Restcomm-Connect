@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.provisioning.number.nexmo;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -29,7 +30,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
@@ -223,7 +223,12 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
         String country = null;
         try {
             // phone must begin with '+'
-            com.google.i18n.phonenumbers.Phonenumber.PhoneNumber numberProto = phoneUtil.parse(phoneNumber, "US");
+            com.google.i18n.phonenumbers.Phonenumber.PhoneNumber numberProto = null;
+            if(phoneNumber.startsWith("+")) {
+                numberProto = phoneUtil.parse(phoneNumber, "US");
+            } else {
+                numberProto = phoneUtil.parse("+" + phoneNumber, "US");
+            }
             int countryCode = numberProto.getCountryCode();
             country = phoneUtil.getRegionCodeForCountryCode(countryCode);
         } catch (NumberParseException e) {
@@ -254,50 +259,73 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
 //                }
             final HttpResponse response = client.execute(post);
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                if(response.getEntity() != null) {
-                    EntityUtils.consume(response.getEntity());
-                }
-                String updateUri = null;
-                if(phoneNumber.startsWith("+")) {
-                    updateUri = updateURI + country + "/" + phoneNumber.substring(1, phoneNumber.length());
-                } else {
-                    updateUri = updateURI + country + "/" + phoneNumber;
-                }
-                if(phoneNumberParameters.getVoiceUrl() != null || phoneNumberParameters.getSmsUrl() != null) {
-                    updateUri = updateUri + "?";
-                    if(phoneNumberParameters.getSmsUrl() != null && phoneNumberParameters.getVoiceUrl() != null) {
-                        updateUri = updateUri + "voiceCallBackValue=" + phoneNumberParameters.getVoiceUrl() + "&voiceCallbackType=SIP" +
-                                "&moHttpUrl=" + phoneNumberParameters.getSmsUrl() + "&moSmppSysType=Inbound";
-                    } else if(phoneNumberParameters.getVoiceUrl() != null) {
-                        updateUri = updateUri + "voiceCallBackValue=" + phoneNumberParameters.getVoiceUrl() + "&voiceCallbackType=SIP";
-                    } else {
-                        updateUri = updateUri + "moHttpUrl=" + phoneNumberParameters.getSmsUrl() + "&moSmppSysType=Inbound";
-                    }
-                }
-                final HttpPost updatePost = new HttpPost(updateUri);
-                final HttpResponse updateResponse = client.execute(updatePost);
-                if (updateResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    return true;
-                } else {
-                    if(logger.isDebugEnabled())
-                        logger.debug("Couldn't update Phone Number " + phoneNumber + ". Response status was: "+response.getStatusLine().getStatusCode());
-                    // we still return true as the phone number was bought
-                    return true;
-                }
+                updateNumber(phoneNumber, phoneNumberParameters);
+                // we always return true as the phone number was bought
+                return true;
             } else {
                 if(logger.isDebugEnabled())
-                    logger.debug("Couldn't buy Phone Number " + phoneNumber + ". Response status was: "+response.getStatusLine().getStatusCode());
+                    logger.debug("Couldn't buy Phone Number " + phoneNumber + ". Response status was: "+ response.getStatusLine().getStatusCode());
             }
         } catch (final Exception e) {
-            logger.warn("Couldn't reach uri for getting Phone Numbers" + uri, e);
+            logger.warn("Couldn't reach uri for buying Phone Numbers" + uri, e);
         }
 
         return false;
     }
 
     @Override
-    public boolean updateNumber(String number, PhoneNumberParameters phoneNumberParameters) {
-        return true;
+    public boolean updateNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+        String country = null;
+        try {
+            // phone must begin with '+'
+            com.google.i18n.phonenumbers.Phonenumber.PhoneNumber numberProto = null;
+            if(phoneNumber.startsWith("+")) {
+                numberProto = phoneUtil.parse(phoneNumber, "US");
+            } else {
+                numberProto = phoneUtil.parse("+" + phoneNumber, "US");
+            }
+            int countryCode = numberProto.getCountryCode();
+            country = phoneUtil.getRegionCodeForCountryCode(countryCode);
+        } catch (NumberParseException e) {
+            if(logger.isDebugEnabled())
+                logger.debug("problem parsing phone number " + phoneNumber, e);
+            return false;
+        }
+        String updateUri = null;
+        if(phoneNumber.startsWith("+")) {
+            updateUri = updateURI + country + "/" + phoneNumber.substring(1, phoneNumber.length());
+        } else {
+            updateUri = updateURI + country + "/" + phoneNumber;
+        }
+        try {
+            if(phoneNumberParameters.getVoiceUrl() != null || phoneNumberParameters.getSmsUrl() != null) {
+                updateUri = updateUri + "?";
+                if(phoneNumberParameters.getSmsUrl() != null && !phoneNumberParameters.getSmsUrl().isEmpty()
+                        && phoneNumberParameters.getVoiceUrl() != null && !phoneNumberParameters.getVoiceUrl().isEmpty()) {
+                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip" +
+                            "&moHttpUrl=" + phoneNumberParameters.getSmsUrl() + "&moSmppSysType=inbound";
+                } else if(phoneNumberParameters.getVoiceUrl() != null && !phoneNumberParameters.getVoiceUrl().isEmpty()) {
+                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip";
+                } else {
+                    updateUri = updateUri + "moHttpUrl=" + URLEncoder.encode(phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=inbound";
+                }
+            }
+            final HttpPost updatePost = new HttpPost(updateUri);
+            final DefaultHttpClient client = new DefaultHttpClient();
+
+            final HttpResponse updateResponse = client.execute(updatePost);
+            if (updateResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                return true;
+            } else {
+                if(logger.isDebugEnabled())
+                    logger.debug("Couldn't update Phone Number " + phoneNumber + ". Response status was: "+ updateResponse.getStatusLine().getStatusCode());
+                return false;
+            }
+        } catch (final Exception e) {
+            logger.warn("Couldn't reach uri for update Phone Numbers" + uri, e);
+        }
+        return false;
     }
 
     @Override
@@ -306,7 +334,12 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
         String country = null;
         try {
             // phone must begin with '+'
-            com.google.i18n.phonenumbers.Phonenumber.PhoneNumber numberProto = phoneUtil.parse(phoneNumber, "US");
+            com.google.i18n.phonenumbers.Phonenumber.PhoneNumber numberProto = null;
+            if(phoneNumber.startsWith("+")) {
+                numberProto = phoneUtil.parse(phoneNumber, "US");
+            } else {
+                numberProto = phoneUtil.parse("+" + phoneNumber, "US");
+            }
             int countryCode = numberProto.getCountryCode();
             country = phoneUtil.getRegionCodeForCountryCode(countryCode);
         } catch (NumberParseException e) {
@@ -340,10 +373,10 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
                 return true;
             } else {
                 if(logger.isDebugEnabled())
-                    logger.debug("Couldn't buy Phone Number " + phoneNumber + ". Response status was: "+response.getStatusLine().getStatusCode());
+                    logger.debug("Couldn't cancel Phone Number " + phoneNumber + ". Response status was: "+response.getStatusLine().getStatusCode());
             }
         } catch (final Exception e) {
-            logger.warn("Couldn't reach uri for getting Phone Numbers" + uri, e);
+            logger.warn("Couldn't reach uri for cancelling Phone Numbers" + uri, e);
         }
 
         return false;
