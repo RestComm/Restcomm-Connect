@@ -255,6 +255,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      */
     @Override
     public boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+        phoneNumber = phoneNumber.substring(2);
         // Provision the number from VoIP Innovations if they own it.
         if (isValidDid(phoneNumber)) {
             if (phoneNumber != null && !phoneNumber.isEmpty()) {
