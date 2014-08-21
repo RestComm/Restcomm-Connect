@@ -22,7 +22,8 @@ public class RvdResourceFilterFactory implements ResourceFilterFactory {
         List<ResourceFilter> filters = new ArrayList<ResourceFilter>();
 
         if ( method.getMethod().getAnnotation(RvdAuth.class) != null ) {
-            filters.add(new RvdResourceFilter() );
+            filters.add(new AutheticationFilter() );
+            filters.add(new SessionKeepAliveFilter());
             //logger.info("RvdAuth annotation FOUND");
         }
         // apply filter only to the project manager services
