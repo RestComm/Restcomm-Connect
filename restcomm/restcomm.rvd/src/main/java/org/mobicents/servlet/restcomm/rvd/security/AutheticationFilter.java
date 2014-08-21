@@ -20,10 +20,10 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 import com.sun.jersey.spi.container.ResourceFilter;
 
-public class RvdResourceFilter implements ResourceFilter, ContainerRequestFilter {
-    static final Logger logger = Logger.getLogger(RvdResourceFilter.class.getName());
+public class AutheticationFilter implements ResourceFilter, ContainerRequestFilter {
+    static final Logger logger = Logger.getLogger(AutheticationFilter.class.getName());
 
-    public RvdResourceFilter() {
+    public AutheticationFilter() {
         // TODO Auto-generated constructor stub
     }
 
@@ -40,6 +40,7 @@ public class RvdResourceFilter implements ResourceFilter, ContainerRequestFilter
     @Override
     public ContainerRequest filter(ContainerRequest request) {
 
+        //logger.info("Running AutheticationFilter");
         //String path = request.getPath();
         //URI baseuri = request.getBaseUri();
         //Principal principal = request.getUserPrincipal();
@@ -66,6 +67,8 @@ public class RvdResourceFilter implements ResourceFilter, ContainerRequestFilter
                 logger.debug("granted access to request with ticket id" + ticketId);
                 return request;
             }
+            // Since access was not granted, this is probably an bad cookie. Remove it from the request so that it won't be renewed from the SessionKeepAliveFilter
+            request.getCookies().remove(RvdConfiguration.TICKET_COOKIE_NAME);
         }
 
         //return request;

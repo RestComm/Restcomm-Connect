@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.model.LoginForm;
 import org.mobicents.servlet.restcomm.rvd.security.AuthenticationService;
+import org.mobicents.servlet.restcomm.rvd.security.SecurityUtils;
 import org.mobicents.servlet.restcomm.rvd.security.Ticket;
 import org.mobicents.servlet.restcomm.rvd.security.TicketRepository;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityException;
@@ -62,7 +63,7 @@ public class LoginRestService extends RestService {
                 Ticket ticket = new Ticket(userId);
                 tickets.putTicket( ticket );
 
-                return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
+                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket.getTicketId()) ).build();
             }
             else {
                 logger.debug("Authentication error for user " + userId);
