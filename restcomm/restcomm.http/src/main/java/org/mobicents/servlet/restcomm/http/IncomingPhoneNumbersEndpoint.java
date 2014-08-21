@@ -245,7 +245,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(e164(number));
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
-            number = number.substring(2);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
             boolean isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
             if(isDidAssigned) {
