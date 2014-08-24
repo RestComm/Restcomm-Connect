@@ -2,6 +2,7 @@
 ##
 ## Description: Configures RestComm
 ## Author: Henrique Rosa (henrique.rosa@telestax.com)
+## Author: Pavel Slegr (pavel.slegr@telestax.com)
 ##
 
 # VARIABLES
@@ -38,35 +39,51 @@ configJavaOpts() {
 
 ## Description: Updates RestComm configuration file
 ## Parameters : 1.Private IP
-## 				2.Public IP
+## 		2.Public IP
 configRestcomm() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	bind_address="$1"
 	static_address="$2"
 	outbound_ip="$3"
+
+	if [ "$ACTIVE_PROXY" == "true" ]; then
+			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
+			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
+			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$bind_address<\/external-ip>|" \
+			-e "s|<external-address>.*<\/external-address>|<external-address>$PUBLIC_IP<\/external-address>|" \
+			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$PUBLIC_IP<\/external-address>|" \
+			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$bind_address:8080\/restcomm\/audio<\/prompts-uri>|" \
+			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$bind_address:8080\/restcomm\/cache<\/cache-uri>|" \
+			-e "s|<normalize-numbers-for-outbound-calls>.*|<normalize-numbers-for-outbound-calls>true|" \
+			-e "s|<recordings-uri>.*|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings|" \
+			-e "s|<error-dictionary-uri>.*|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors|" \
+			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
 	
-	if [ -n "$static_address" ]; then 
-		sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-	        -e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-	        -e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-	        -e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
-	        -e "s|<external-address>.*<\/external-address>|<external-address>$static_address<\/external-address>|" \
-	        -e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$static_address<\/external-address>|" \
-	        -e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$static_address:8080\/restcomm\/audio<\/prompts-uri>|" \
-	        -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$static_address:8080\/restcomm\/cache<\/cache-uri>|" \
-	        -e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$static_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
-	        -e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$static_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
-		-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
-	else
-		sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-	        -e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-	        -e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
-	        -e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
-	        -e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$bind_address:8080\/restcomm\/audio<\/prompts-uri>|" \
-	        -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$bind_address:8080\/restcomm\/cache<\/cache-uri>|" \
-	        -e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
-	        -e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
-		-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
+	else 
+		if [ -n "$static_address" ]; then 
+			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
+			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
+			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
+			-e "s|<external-address>.*<\/external-address>|<external-address>$static_address<\/external-address>|" \
+			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$static_address<\/external-address>|" \
+			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$static_address:8080\/restcomm\/audio<\/prompts-uri>|" \
+			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$static_address:8080\/restcomm\/cache<\/cache-uri>|" \
+			-e "s|<recordings-uri>.*|<recordings-uri>http:\/\/$static_address:8080\/restcomm\/recordings|" \
+			-e "s|<error-dictionary-uri>.*|<error-dictionary-uri>http:\/\/$static_address:8080\/restcomm\/errors|" \
+			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
+		else
+			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
+			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+			-e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
+			-e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
+			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$bind_address:8080\/restcomm\/audio<\/prompts-uri>|" \
+			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$bind_address:8080\/restcomm\/cache<\/cache-uri>|" \
+			-e "s|<recordings-uri>.*|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings|" \
+			-e "s|<error-dictionary-uri>.*|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors|" \
+			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
+		fi
 	fi
 	mv $FILE.bak $FILE
 	echo 'Updated RestComm configuration'
@@ -165,6 +182,57 @@ configMobicentsProperties() {
 	echo "Updated mobicents-dar properties"
 }
 
+## Description: Configures TeteStax Proxy
+## Parameters : 1.Enabled
+##              2.login
+##              3.password
+## 		4.Endpoint
+## 		5.Proxy IP
+configTelestaxProxy() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	enabled="$1"
+	if [ "$enabled" == "true" ]; then
+		sed -e "/<telestax-proxy>/ {
+			N; s|<enabled>.*</enabled>|<enabled>$1</enabled>|
+		N; s|<login>.*</login>|<login>$2</login>|
+		N; s|<password>.*</password>|<password>$3</password>|
+		N; s|<endpoint>.*</endpoint>|<endpoint>$4</endpoint>|
+		N; s|<uri>.*</uri>|<uri>http:\/\/$5:2080</uri>|
+		}" $FILE > $FILE.bak
+	
+		mv $FILE.bak $FILE
+		echo 'Configured TeteStax Proxy'
+	fi
+}
+
+
+## Description: Configures Media Server Manager
+## Parameters : 1.Enabled
+## 		2.private IP
+## 		3.public IP
+
+configMediaServerManager() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	enabled="$1"
+	bind_address="$2"
+	public_ip="$3"
+	
+	if [ "$enabled" == "true" ]; then
+		sed -e "/<mgcp-server class=\"org.mobicents.servlet.restcomm.mgcp.MediaGateway\">/ {
+			N
+			N; s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|
+			N; s|<local-port>.*</local-port>|<local-port>2727</local-port>|
+			N; s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|
+			N; s|<remote-port>.*</remote-port>|<remote-port>2427</remote-port>|
+			N; s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|
+			N; s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$public_ip</external-address>|
+		}" $FILE > $FILE.bak
+	
+		mv $FILE.bak $FILE
+		echo 'Configured Media Server Manager'
+	fi
+}
+
 # MAIN
 echo 'Configuring RestComm...'
 #configJavaOpts
@@ -174,4 +242,6 @@ configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
+configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP"
+configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$PUBLIC_IP"
 echo 'Configured RestComm!'
