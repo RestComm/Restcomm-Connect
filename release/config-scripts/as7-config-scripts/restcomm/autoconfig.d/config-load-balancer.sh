@@ -2,6 +2,7 @@
 ##
 ## Description: Configures SIP Load Balancer
 ## Author     : Henrique Rosa (henrique.rosa@telestax.com)
+## Author     : Pavel Slegr (pavel.slegr@telestax.com)
 ##
 
 ## FUNCTIONS
@@ -17,16 +18,26 @@ configLoadBalancer() {
 configSipStack() {
 	lb_file="$RESTCOMM_HOME/standalone/configuration/mss-sip-stack.properties"
 	bind_address="$1"
-	
-	if [[ "$RUN_MODE" == *"-lb" ]]; then
+	proxy_address="$2"
+
+	if [ "$ACTIVE_PROXY" == "true" ]; then
 		sed -e 's|^#org.mobicents.ha.javax.sip.BALANCERS=|org.mobicents.ha.javax.sip.BALANCERS=|' \
-		    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$bind_address:5065|" \
+		  -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$proxy_address:5065\norg.mobicents.ha.javax.sip.REACHABLE_CHECK=false|" \
 		    $lb_file > $lb_file.bak
-		echo 'Activated Load Balancer on SIP stack configuration file'
+		echo 'Activated Telestax Proxy on SIP stack configuration file'
 	else
-		sed -e 's|^org.mobicents.ha.javax.sip.BALANCERS=|#org.mobicents.ha.javax.sip.BALANCERS=|' \
-			$lb_file > $lb_file.bak
-		echo 'Deactivated Load Balancer on SIP stack configuration file'
+
+	
+		if [[ "$RUN_MODE" == *"-lb" ]]; then
+			sed -e 's|^#org.mobicents.ha.javax.sip.BALANCERS=|org.mobicents.ha.javax.sip.BALANCERS=|' \
+			    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$bind_address:5065|" \
+			    $lb_file > $lb_file.bak
+			echo 'Activated Load Balancer on SIP stack configuration file'
+		else
+			sed -e 's|^org.mobicents.ha.javax.sip.BALANCERS=|#org.mobicents.ha.javax.sip.BALANCERS=|' \
+				$lb_file > $lb_file.bak
+			echo 'Deactivated Load Balancer on SIP stack configuration file'
+		fi
 	fi
 	mv $lb_file.bak $lb_file
 }
@@ -56,6 +67,6 @@ configStandalone() {
 
 ## MAIN
 configLogs
-configLoadBalancer "$BIND_ADDRESS"
-configSipStack "$BIND_ADDRESS"
+configLoadBalancer "$BIND_ADDRESS" 
+configSipStack "$BIND_ADDRESS" "$PROXY_PRIVATE_IP"
 configStandalone
