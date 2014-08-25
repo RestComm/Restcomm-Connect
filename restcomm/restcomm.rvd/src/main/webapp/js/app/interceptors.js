@@ -1,13 +1,13 @@
 var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('UnauthorizedResponseInterceptor', ['$q', '$location', '$rootScope', function($q, $location, $rootScope) {
     var responseInterceptor = {
         responseError: function(response) {
-        	console.log("run UnauthorizedResponseInterceptor");
-        	console.log(response);
+        	//console.log("run UnauthorizedResponseInterceptor");
+        	//console.log(response);
         	
         	if (response.status === 401) {
 				if ( response.data && response.data.exception ) {
 					var exceptionName = response.data.exception.className;
-					console.log("exceptionName " + exceptionName);
+					//console.log("exceptionName " + exceptionName);
 					if ( exceptionName == 'UserNotAuthenticated' ) {
 						$location.path("/login");
 						return $q.reject(response);

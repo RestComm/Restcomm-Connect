@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
@@ -94,6 +95,7 @@ public class RasRestService extends RestService {
      * @param projectName
      * @return
      */
+    @RvdAuth
     @GET
     @Path("/packaging/app")
     @Produces(MediaType.APPLICATION_JSON)
@@ -125,6 +127,7 @@ public class RasRestService extends RestService {
      * @param projectName
      * @return
      */
+    @RvdAuth
     @POST
     @Path("/packaging/app/save")
     public Response saveApp(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
@@ -158,6 +161,7 @@ public class RasRestService extends RestService {
     }
 
     @GET
+    @RvdAuth
     @Path("/packaging/app/prepare")
     @Produces(MediaType.APPLICATION_JSON)
     public Response preparePackage(@QueryParam("name") String projectName) {
@@ -184,6 +188,7 @@ public class RasRestService extends RestService {
      * @return
      */
     @GET
+    @RvdAuth
     @Path("/packaging/binary/info")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBinaryStatus(@QueryParam("name") String projectName) {
@@ -194,6 +199,7 @@ public class RasRestService extends RestService {
     }
 
     @GET
+    @RvdAuth
     @Path("/packaging/download")
     public Response downloadPackage(@QueryParam("name") String projectName) {
         logger.debug("downloading app zip for project " + projectName);

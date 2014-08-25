@@ -43,3 +43,27 @@ angular.module('Rvd').service('projectModules', [function () {
 	
 	return serviceInstance;
 }]);
+
+angular.module('Rvd').service('authentication', ['$browser', '$q', function ($browser, $q) {
+	var serviceInstance = {};
+	
+	serviceInstance.looksAuthenticated = function () {
+		var currentCookies = $browser.cookies();
+		if ( !currentCookies.rvdticket )
+			return false;
+		return true;
+	}
+	
+	serviceInstance.authResolver = function() {
+		//var deferred = $q.defer();
+		if ( !this.looksAuthenticated() ) {
+			console.log("authResolver: not authenticated");
+			$location.path("/login");
+		}	
+		//return deferred.promise;
+	}
+	
+	return serviceInstance;
+	
+	
+}]);

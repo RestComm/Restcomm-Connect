@@ -1,7 +1,7 @@
 var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' ,'angularSpinner','basicDragdrop']);
 var rvdMod = App;
 
-App.config([ '$routeProvider', function($routeProvider) {
+App.config([ '$routeProvider',  function($routeProvider) {
 	
 	$routeProvider.when('/project-manager/:projectKind', {
 		templateUrl : 'templates/projectManager.html',
@@ -9,7 +9,8 @@ App.config([ '$routeProvider', function($routeProvider) {
 	})
 	.when('/home', {
 		templateUrl : 'templates/home.html',
-		controller : 'homeCtrl'
+		controller : 'homeCtrl',
+		//resolve: {auth: authentication.authResolver}
 	})
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
@@ -42,7 +43,44 @@ App.config([ '$routeProvider', function($routeProvider) {
 		redirectTo : '/home'
 	});
 
-} ]);
+}])
+.run( function ($rootScope, $browser, $location) {
+	// redirect to /login if no rvdticket is there
+	/*$rootScope.$on("$locationChangeStart", function(event, next, current) {
+		var currentCookies = $browser.cookies();
+		if ( !currentCookies.rvdticket )
+			$location.path("/login");
+	});
+	*/
+	
+});
+
+myApp.provider('authentication', function AuthenticationProvider() {
+  var useTinfoilShielding = false;
+
+  this.useTinfoilShielding = function(value) {
+    useTinfoilShielding = !!value;
+  };
+  
+  function Authentication ($browser) {
+	  this.looksAuthenticated = function($browser) {
+		var currentCookies = $browser.cookies();
+		if ( !currentCookies.rvdticket )
+			return true;
+		else
+			return false
+	  }
+	  
+	  return this;
+  }
+
+  this.$get = ["$browser", function unicornLauncherFactory($browser) {
+
+    // let's assume that the UnicornLauncher constructor was also changed to
+    // accept and use the useTinfoilShielding argument
+    return new Authentication($browser);
+  }];
+});
 
 
 

@@ -1,5 +1,5 @@
 App.controller('AppCtrl', function ($rootScope) {
-	console.log("Started AppCtrl");
+	//console.log("Started AppCtrl");
 	$rootScope.$on("$routeChangeError", function(event, current, previous, rejection) {
         //console.log(event);
         console.log('on $routeChangeError');
@@ -18,7 +18,7 @@ App.controller('AppCtrl', function ($rootScope) {
 
 var loginCtrl = angular.module('Rvd')
 .controller('loginCtrl', ['$scope', '$http', 'notifications', '$location', function ($scope, $http, notifications, $location) {
-	console.log("run loginCtrl ");
+//	console.log("run loginCtrl ");
 	
 	$scope.doLogin = function (username, password) {
 		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
