@@ -12,7 +12,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -67,7 +66,7 @@ public class LoginRestService extends RestService {
             }
             else {
                 logger.debug("Authentication error for user " + userId);
-                return Response.status(Status.UNAUTHORIZED).build();
+                return Response.status(Status.UNAUTHORIZED).cookie( SecurityUtils.createTicketCookie("") ).build();
             }
         } catch (RvdSecurityException e) {
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, null);
@@ -94,7 +93,8 @@ public class LoginRestService extends RestService {
                 Ticket ticket = new Ticket(credentials.getUsername());
                 tickets.putTicket( ticket );
 
-                return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
+                //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
+                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket.getTicketId()) ).build();
             }
             else {
                 logger.debug("Authentication error for user " + credentials.getUsername());
@@ -114,7 +114,8 @@ public class LoginRestService extends RestService {
         tickets.invalidateTicket(ticketCookieValue);
 
         // removing the cookie by setting the max-age to 0
-        return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, "", "/restcomm-rvd/services", null, null,0, false ) ).build();
+        //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, "", "/restcomm-rvd/services", null, null,0, false ) ).build();
+        return Response.ok().cookie( SecurityUtils.createTicketCookie("") ).build();
     }
 
 
