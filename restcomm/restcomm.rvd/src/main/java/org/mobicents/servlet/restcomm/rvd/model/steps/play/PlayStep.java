@@ -27,7 +27,8 @@ public class PlayStep extends Step {
         String url = "";
         if ("local".equals(playType))
             //url = interpreter.getContextPath() + "/" + interpreter.getRvdSettings().getWorkspaceBasePath() + "/" + interpreter.getAppName() + "/" + RvdSettings.WAVS_DIRECTORY_NAME + "/" + local.wavLocalFilename;
-            url = interpreter.getContextPath() + "/services/manager/projects/getwav?name=" + interpreter.getAppName() + "&filename=" + local.wavLocalFilename;
+            //url = interpreter.getContextPath() + "/services/manager/projects/getwav?name=" + interpreter.getAppName() + "&filename=" + local.wavLocalFilename;
+            url = interpreter.getContextPath() + "/services/manager/projects/" + interpreter.getAppName() + "/wavs/" + local.wavLocalFilename;
         else
             url = interpreter.populateVariables(remote.wavUrl);
 
