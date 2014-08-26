@@ -507,6 +507,24 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
+    
+    /*
+     * Return a wav file from the project. It's the same as getWav() but it has the Query parameters converted to Path parameters
+     */
+    @GET
+    @Path("{name}/wavs/{filename}.wav")
+    public Response getWavNoQueryParams(@PathParam("name") String projectName, @PathParam("filename") String filename ) {
+       InputStream wavStream;
+        try {
+            wavStream = projectStorage.getWav(projectName, filename + ".wav" );
+            return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename).build();
+        } catch (WavItemDoesNotExist e) {
+            return Response.status(Status.NOT_FOUND).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        } catch (StorageException e) {
+            //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+        }
+    }
 
     @RvdAuth
     @POST
