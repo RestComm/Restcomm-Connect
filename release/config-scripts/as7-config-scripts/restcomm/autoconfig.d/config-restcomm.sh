@@ -164,8 +164,7 @@ configAcapela() {
 configVoiceRSS() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	
-	sed -e "/<speech-synthesizer class=\"org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer\">/ {
-		N
+	sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
 		N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
 	}" $FILE > $FILE.bak
 	
