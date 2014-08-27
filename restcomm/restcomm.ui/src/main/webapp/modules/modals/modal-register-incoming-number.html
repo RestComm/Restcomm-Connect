@@ -16,7 +16,8 @@
             <dt style="height: 20px;">&nbsp;</dt><dd style="height: 20px;"><div class="text-muted"><small class="text-bottom">OR Search For Phone Numbers to Purchase</small></div></dd>
             <dt>Country</dt>
             <dd>
-            	<select id="countryCode" name="countryCode" class="form-control" ng-model="newNumber.countryCode" onchange="countryCodeChange()">
+            	<input id="countryCode" name="countryCode" class="form-control" ng-model="newNumber.countryCode" maxlength="2" placeholder="US" value="US" popover-placement="top" popover-trigger="focus" popover="A 2 letter ISO_3166-1_alpha-2 Country code" onchange="countryCodeChange()"/>
+            	<!--select id="countryCode" name="countryCode" class="form-control" ng-model="newNumber.countryCode" onchange="countryCodeChange()">
 					<!--option value="AF">Afghanistan</option>
 					<option value="AX">Åland Islands</option>
 					<option value="AL">Albania</option>
@@ -249,9 +250,9 @@
 					<option value="TC">Turks and Caicos Islands</option>
 					<option value="TV">Tuvalu</option>
 					<option value="UG">Uganda</option>
-					<option value="UA">Ukraine</option-->
+					<option value="UA">Ukraine</option>
 					<option value="US" selected>United States</option>
-					<!--option value="AE">United Arab Emirates</option>
+					<option value="AE">United Arab Emirates</option>
 					<option value="GB">United Kingdom</option>
 					<option value="UM">United States Minor Outlying Islands</option>
 					<option value="UY">Uruguay</option>
@@ -265,8 +266,8 @@
 					<option value="EH">Western Sahara</option>
 					<option value="YE">Yemen</option>
 					<option value="ZM">Zambia</option>
-					<option value="ZW">Zimbabwe</option-->
-				</select>
+					<option value="ZW">Zimbabwe</option>
+				</select-->
             </dd>                
             <dt id="areaCodeOptionsName">Area Code</dt>
             <dd id="areaCodeOptionsForm">
