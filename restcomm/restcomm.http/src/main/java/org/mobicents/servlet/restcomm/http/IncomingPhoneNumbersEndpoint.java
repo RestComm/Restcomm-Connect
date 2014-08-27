@@ -170,14 +170,13 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    private String e164(final String number) {
+    private String e164(String number) throws NumberParseException {
         final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
-        try {
-            final PhoneNumber result = numbersUtil.parse(number, "US");
-            return numbersUtil.format(result, PhoneNumberFormat.E164);
-        } catch (final NumberParseException ignored) {
-            return number;
+        if(!number.startsWith("+")) {
+            number = "+" + number;
         }
+        final PhoneNumber result = numbersUtil.parse(number, "US");
+        return numbersUtil.format(result, PhoneNumberFormat.E164);
     }
 
     private String getFriendlyName(final String phoneNumber, final MultivaluedMap<String, String> data) {
@@ -242,11 +241,21 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         String number = data.getFirst("PhoneNumber");
-        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(e164(number));
+        // cater to SIP numbers
+        boolean isRealNumber = true;
+        try {
+            number = e164(number);
+        } catch (NumberParseException e) {
+            isRealNumber = false;
+        }
+        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(number);
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
-            boolean isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+            boolean isDidAssigned = true;
+            if(isRealNumber) {
+                isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+            }
             if(isDidAssigned) {
                 dao.addIncomingPhoneNumber(incomingPhoneNumber);
                 if (APPLICATION_JSON_TYPE == responseType) {
@@ -268,7 +277,18 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        boolean updated = phoneNumberProvisioningManager.updateNumber(incomingPhoneNumber.getPhoneNumber(), phoneNumberParameters);
+        String number = incomingPhoneNumber.getPhoneNumber();
+        // cater to SIP numbers
+        boolean isRealNumber = true;
+        try {
+            number = e164(number);
+        } catch (NumberParseException e) {
+            isRealNumber = false;
+        }
+        boolean updated = true;
+        if(isRealNumber) {
+            updated = phoneNumberProvisioningManager.updateNumber(incomingPhoneNumber.getPhoneNumber(), phoneNumberParameters);
+        }
         if(updated) {
             dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
             if (APPLICATION_JSON_TYPE == responseType) {
@@ -363,12 +383,17 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        final String number = incomingPhoneNumber.getPhoneNumber();
-        String numberToRemoveFromVi = number;
-        if(numberToRemoveFromVi.startsWith("+1")){
-            numberToRemoveFromVi = numberToRemoveFromVi.replaceFirst("\\+1", "");
+        String number = incomingPhoneNumber.getPhoneNumber();
+        // cater to SIP numbers
+        boolean isRealNumber = true;
+        try {
+            number = e164(number);
+        } catch (NumberParseException e) {
+            isRealNumber = false;
         }
-        phoneNumberProvisioningManager.cancelNumber(numberToRemoveFromVi);
+        if(isRealNumber) {
+            phoneNumberProvisioningManager.cancelNumber(number);
+        }
         dao.removeIncomingPhoneNumber(new Sid(sid));
         return noContent().build();
     }

@@ -361,6 +361,12 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      */
     @Override
     public boolean cancelNumber(String phoneNumber) {
+        String numberToRemoveFromVi = phoneNumber;
+        if(numberToRemoveFromVi.startsWith("+1")){
+            numberToRemoveFromVi = numberToRemoveFromVi.replaceFirst("\\+1", "");
+        }
+        phoneNumber = numberToRemoveFromVi;
+
         if (!isValidDid(phoneNumber))
             return false;
 
