@@ -155,6 +155,10 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   $scope.findNumbers = function(areaCode, countryCode) {
     $scope.searching = true;
     $scope.availableNumbers = null;
+    if(countryCode == null || countryCode === "" || countryCode.length == 0 || countryCode.length == 1) {
+		document.getElementById("countryCode").value = "US";
+		countryCode = "US";
+	}
     if(countryCode !== "US") {
     	$scope.availableNumbers = RCommAvailableNumbersNonUS.query({accountSid: $scope.sid, countryCode: countryCode});
     } else {
@@ -205,7 +209,7 @@ function countryCodeChange() {
 	var countryCodeValue = document.getElementById("countryCode").value;
 	if(countryCodeValue == null || countryCodeValue === "" || countryCodeValue.length == 0 || countryCodeValue.length == 1) {
 		document.getElementById("countryCode").value = "US";
-		countryCodeValue = "US"
+		countryCodeValue = "US";
 	}
 	if(countryCodeValue !== "US") {
 		document.getElementById("areaCodeOptionsName").style.visibility = 'hidden';
