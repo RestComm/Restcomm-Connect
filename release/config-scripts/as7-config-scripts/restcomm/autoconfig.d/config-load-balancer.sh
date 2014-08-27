@@ -20,10 +20,21 @@ configSipStack() {
 	bind_address="$1"
 	proxy_address="$2"
 
+	if grep -q "org.mobicents.ha.javax.sip.REACHABLE_CHECK" "$lb_file";
+	then
+	    echo "reachable check property found"
+	else
+	    echo "adding org.mobicents.ha.javax.sip.REACHABLE_CHECK into mss-sip-stack.properties"
+            echo "#org.mobicents.ha.javax.sip.REACHABLE_CHECK=" >> $lb_file
+	fi
+
 	if [ "$ACTIVE_PROXY" == "true" ]; then
 		sed -e 's|^#org.mobicents.ha.javax.sip.BALANCERS=|org.mobicents.ha.javax.sip.BALANCERS=|' \
-		  -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$proxy_address:5065\norg.mobicents.ha.javax.sip.REACHABLE_CHECK=false|" \
+		    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$proxy_addres:5065|" \
+   		    -e 's|^#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \
+		    -e "s|org.mobicents.ha.javax.sip.REACHABLE_CHECK=.*|org.mobicents.ha.javax.sip.REACHABLE_CHECK=false|" \
 		    $lb_file > $lb_file.bak
+
 		echo 'Activated Telestax Proxy on SIP stack configuration file'
 	else
 
@@ -35,6 +46,7 @@ configSipStack() {
 			echo 'Activated Load Balancer on SIP stack configuration file'
 		else
 			sed -e 's|^org.mobicents.ha.javax.sip.BALANCERS=|#org.mobicents.ha.javax.sip.BALANCERS=|' \
+			    -e 's|^org.mobicents.ha.javax.sip.REACHABLE_CHECK=|#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \
 				$lb_file > $lb_file.bak
 			echo 'Deactivated Load Balancer on SIP stack configuration file'
 		fi
