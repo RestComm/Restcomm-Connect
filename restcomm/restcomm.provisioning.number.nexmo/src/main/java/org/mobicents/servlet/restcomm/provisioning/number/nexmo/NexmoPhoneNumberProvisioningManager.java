@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.nexmo;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
@@ -380,5 +381,17 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
         }
 
         return false;
+    }
+
+    @Override
+    public List<String> getAvailableCountries() {
+        List<String> countries = new ArrayList<String>();
+        String[] locales = Locale.getISOCountries();
+
+        for (String countryCode : locales) {
+            countries.add(countryCode);
+        }
+
+        return countries;
     }
 }

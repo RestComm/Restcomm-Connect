@@ -80,6 +80,32 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
     
     /*
+     * Check the list of available Countries
+     */
+    @Test
+    public void testGetAvailableCountries() {
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/AvailableCountries.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.accept("application/json").get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+        
+        System.out.println(jsonResponse.toString());
+        System.out.println(jsonResponse.size());
+        
+        assertTrue(jsonResponse.size() == 249);
+    }
+    
+    /*
      * https://docs.nexmo.com/index.php/developer-api/number-buy
      */
     @Test

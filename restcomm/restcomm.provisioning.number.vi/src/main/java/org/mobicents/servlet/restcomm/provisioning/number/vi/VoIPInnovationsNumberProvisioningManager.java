@@ -411,4 +411,11 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         }
         return false;
     }
+
+    @Override
+    public List<String> getAvailableCountries() {
+        List<String> countries = new ArrayList<String>();
+        countries.add("US");
+        return countries;
+    }
 }

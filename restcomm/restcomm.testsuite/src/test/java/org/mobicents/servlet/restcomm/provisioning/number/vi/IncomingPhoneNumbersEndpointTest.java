@@ -79,6 +79,34 @@ public class IncomingPhoneNumbersEndpointTest {
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
     
     /*
+     * Check the list of available Countries
+     */
+    @Test
+    public void testGetAvailableCountries() {
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/AvailableCountries.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.accept("application/json").get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+        
+        System.out.println(jsonResponse.toString());
+        
+        assertTrue(jsonResponse.size() == 1);
+        System.out.println(jsonResponse.get(0).getAsString());
+        assertTrue(jsonResponse.get(0).getAsString().equals("US"));
+    }
+    
+    
+    /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
      * Purchases a new phone number for your account. If a phone number is found for your request, 
      * Twilio will add it to your account and bill you for the first month's cost of the phone number. 
