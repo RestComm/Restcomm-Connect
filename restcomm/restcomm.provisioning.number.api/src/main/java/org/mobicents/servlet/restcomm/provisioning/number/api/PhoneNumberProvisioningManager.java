@@ -84,4 +84,11 @@ public interface PhoneNumberProvisioningManager {
      * @return true if the number was cancelled successfully, false otherwise.
      */
     boolean cancelNumber(String number);
+
+    /**
+     * Returns the list of supported countries by the phone number provider
+     *
+     * @return a list of 2 letters Country Code as defined per http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2, representing all countries where a number can be bought or searched in.
+     */
+    List<String> getAvailableCountries();
 }

@@ -31,6 +31,7 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -54,6 +55,8 @@ import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesConverter;
+import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesList;
 import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverter;
 import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -134,6 +137,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
         xstream.registerConverter(new IncomingPhoneNumberListConverter(configuration));
+        xstream.registerConverter(new AvailableCountriesConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
@@ -205,6 +209,27 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             } else {
                 return null;
             }
+        }
+    }
+
+    protected Response getAvailableCountries(final String accountSid, final MediaType responseType) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        List<String> countries = phoneNumberProvisioningManager.getAvailableCountries();
+        if(countries == null) {
+            countries = new ArrayList<String>();
+            countries.add("US");
+        }
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(countries), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new AvailableCountriesList(countries));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
         }
     }
 

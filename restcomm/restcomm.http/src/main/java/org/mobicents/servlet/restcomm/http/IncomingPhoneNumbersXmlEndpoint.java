@@ -74,6 +74,18 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
         return getIncomingPhoneNumber(accountSid, sid, APPLICATION_XML_TYPE);
     }
 
+    @Path("/AvailableCountries.json")
+    @GET
+    public Response getAvailableCountriesAsJson(@PathParam("accountSid") final String accountSid) {
+        return getAvailableCountries(accountSid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/AvailableCountries")
+    @GET
+    public Response getAvailableCountriesAsXml(@PathParam("accountSid") final String accountSid) {
+        return getAvailableCountries(accountSid, APPLICATION_XML_TYPE);
+    }
+
     @GET
     public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,
             @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
