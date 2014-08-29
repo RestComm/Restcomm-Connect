@@ -56,8 +56,8 @@ configRestcomm() {
 			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$bind_address:8080\/restcomm\/audio<\/prompts-uri>|" \
 			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$bind_address:8080\/restcomm\/cache<\/cache-uri>|" \
 			-e "s|<normalize-numbers-for-outbound-calls>.*|<normalize-numbers-for-outbound-calls>true|" \
-			-e "s|<recordings-uri>.*|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings|" \
-			-e "s|<error-dictionary-uri>.*|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors|" \
+			-e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
+			-e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
 			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
 	
 	else 
@@ -70,8 +70,8 @@ configRestcomm() {
 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$static_address<\/external-address>|" \
 			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$static_address:8080\/restcomm\/audio<\/prompts-uri>|" \
 			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$static_address:8080\/restcomm\/cache<\/cache-uri>|" \
-			-e "s|<recordings-uri>.*|<recordings-uri>http:\/\/$static_address:8080\/restcomm\/recordings|" \
-			-e "s|<error-dictionary-uri>.*|<error-dictionary-uri>http:\/\/$static_address:8080\/restcomm\/errors|" \
+			-e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$static_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
+			-e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$static_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
 			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
 		else
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
@@ -80,8 +80,8 @@ configRestcomm() {
 			-e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
 			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http:\/\/$bind_address:8080\/restcomm\/audio<\/prompts-uri>|" \
 			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$bind_address:8080\/restcomm\/cache<\/cache-uri>|" \
-			-e "s|<recordings-uri>.*|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings|" \
-			-e "s|<error-dictionary-uri>.*|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors|" \
+			-e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$bind_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
+			-e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
 			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_ip<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
 		fi
 	fi
