@@ -118,6 +118,7 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 	                    {name:'ar',text: 'Saudi-Arabia Arabic'},
 	                    {name:'ca',text: 'Spain Catalan'}, 
 	                    {name:'sv',text: 'Swedish'},
+	                    {name:'th',text: 'Thai'},
 	                    {name:'tr',text: 'Turkish'}
 	                    
 	                   ];
