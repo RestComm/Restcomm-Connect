@@ -1762,7 +1762,7 @@ Before you can send an USSD message you must first configure the restcomm.xml wi
 			<tbody>
 				<row>
 					<entry>Language</entry>
-					<entry>bf, bp, en, en-gb,cf, cs, dan, fi es, fr, de, el, it, nl, no, pl, pt, ru, ar, ca, sv, tr</entry>
+					<entry>bf, bp, en, en-gb,cf, cs, dan, fi es, fr, de, el, it, nl, no, pl, pt, ru, ar, ca, sv, th, tr</entry>
 					<entry>en</entry>
 				</row>
 			</tbody>
