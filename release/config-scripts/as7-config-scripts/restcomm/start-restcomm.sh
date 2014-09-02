@@ -99,10 +99,11 @@ LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 
 echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
+source $BASEDIR/restcomm.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
-NET_INTERFACE='eth0'
+#NET_INTERFACE=''
 STATIC_ADDRESS=''
 BIND_ADDRESS=''
 
@@ -134,16 +135,23 @@ do
 done
 
 # validate network interface and extract network properties
-NET_INTERFACES=$(ifconfig | expand | cut -c1-8 | sort | uniq -u | awk -F: '{print $1;}')
-if [[ -z $(echo $NET_INTERFACES | sed -n "/$NET_INTERFACE/p") ]]; then
-	echo "The network interface $NET_INTERFACE is not available or does not exist."
-	echo "The list of available interfaces is: $NET_INTERFACES"
-	exit 1
+if [[ -z "$NET_INTERFACE" ]]; then
+echo "Looking for the appropriate interface"
+	NET_INTERFACES=$(ifconfig | expand | cut -c1-8 | sort | uniq -u | awk -F: '{print $1;}')
+	if [[ -z $(echo $NET_INTERFACES | sed -n "/$NET_INTERFACE/p") ]]; then
+		echo "The network interface $NET_INTERFACE is not available or does not exist."
+		echo "The list of available interfaces is: $NET_INTERFACES"
+		exit 1
+	fi
 fi
 
 # load network properties for chosen interface
-source $BASEDIR/utils/read-network-props.sh "$NET_INTERFACE"
+if [[ -z "$PRIVATE_IP" || -z "$SUBNET_MASK" || -z "$NETWORK" || -z "$BROADCAST_ADDRESS" ]]; then
+echo "Looking for the IP Address, subnet, network and broadcast_address"
+	source $BASEDIR/utils/read-network-props.sh "$NET_INTERFACE"
+fi
 BIND_ADDRESS="$PRIVATE_IP"
+
 
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	STATIC_ADDRESS=$BIND_ADDRESS
