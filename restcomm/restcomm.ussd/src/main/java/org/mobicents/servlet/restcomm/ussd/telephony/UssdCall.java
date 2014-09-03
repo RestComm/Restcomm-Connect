@@ -147,6 +147,7 @@ public class UssdCall extends UntypedActor  {
         transitions.add(new Transition(dialing, completed));
         transitions.add(new Transition(ringing, inProgress));
         transitions.add(new Transition(inProgress, processingUssdMessage));
+        transitions.add(new Transition(inProgress, completed));
         transitions.add(new Transition(processingUssdMessage, ready));
         transitions.add(new Transition(processingUssdMessage, inProgress));
         transitions.add(new Transition(processingUssdMessage, completed));
