@@ -136,6 +136,7 @@ done
 
 # validate network interface and extract network properties
 if [[ -z "$NET_INTERFACE" ]]; then
+NET_INTERFACE='eth0'
 echo "Looking for the appropriate interface"
 	NET_INTERFACES=$(ifconfig | expand | cut -c1-8 | sort | uniq -u | awk -F: '{print $1;}')
 	if [[ -z $(echo $NET_INTERFACES | sed -n "/$NET_INTERFACE/p") ]]; then
