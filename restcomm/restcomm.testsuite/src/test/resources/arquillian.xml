@@ -9,7 +9,7 @@
 			<property name="workDir">work</property>
 			<property name="bindHttpPort">8080</property>
 			<property name="unpackArchive">true</property>
-			<property name="sipConnectors">:5080</property>
+			<property name="sipConnectors">:5080,:5080/TCP</property>
 			<property name="bindAddress">127.0.0.1</property>
 			<property name="sipApplicationRouterProviderClassName">org.mobicents.servlet.sip.router.DefaultApplicationRouterProvider</property>
 		</configuration>
