@@ -105,6 +105,7 @@ public class UssdCall extends UntypedActor  {
     private String name;
     private SipURI from;
     private SipURI to;
+    private String transport;
     private String username;
     private String password;
     private CreateCall.Type type;
@@ -462,6 +463,7 @@ public class UssdCall extends UntypedActor  {
             name = request.name();
             from = request.from();
             to = request.to();
+            transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
             apiVersion = request.apiVersion();
             accountId = request.accountId();
             username = request.username();
@@ -541,6 +543,9 @@ public class UssdCall extends UntypedActor  {
             if (to.getPort() > -1) {
                 buffer.append(":").append(to.getPort());
             }
+            if (!transport.equalsIgnoreCase("udp")) {
+                buffer.append(";transport=").append(transport);
+            }
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute("UssdCall","true");
@@ -548,6 +553,11 @@ public class UssdCall extends UntypedActor  {
             if(ussdInterpreter != null)
                 application.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
             outgoingInvite = factory.createRequest(application, "INVITE", from, to);
+            if (!transport.equalsIgnoreCase("udp")) {
+                ((SipURI)outgoingInvite.getRequestURI()).setTransportParam(transport);
+                ((SipURI)outgoingInvite.getFrom().getURI()).setTransportParam(transport);
+                ((SipURI)outgoingInvite.getTo().getURI()).setTransportParam(transport);
+            }
             outgoingInvite.pushRoute(uri);
 
             if (headers != null) {
