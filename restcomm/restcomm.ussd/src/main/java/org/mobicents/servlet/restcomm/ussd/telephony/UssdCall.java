@@ -275,6 +275,8 @@ public class UssdCall extends UntypedActor  {
             lastResponse = response;
             if(response.getStatus() == SipServletResponse.SC_OK && response.getRequest().getMethod().equalsIgnoreCase("INVITE")){
                 response.createAck().send();
+            } if(response.getStatus() == SipServletResponse.SC_OK && response.getRequest().getMethod().equalsIgnoreCase("BYE")){
+                fsm.transition(message, completed);
             }
         } else if (UssdRestcommResponse.class.equals(klass)) {
             //If direction is outbound, get the message and create the Invite
@@ -404,6 +406,8 @@ public class UssdCall extends UntypedActor  {
             }
             request.setContent(ussdRequest.createUssdPayload().toString().trim(), ussdContentType);
 
+            logger.info("Prepared request: \n"+request);
+
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
             if (realInetUri != null) {
                 logger.info("Using the real ip address of the sip client " + realInetUri.toString()
@@ -423,7 +427,19 @@ public class UssdCall extends UntypedActor  {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("At Completed STATE! Updating CDR");
+            logger.info("Completing the call");
+            if (invite != null) {
+                invite.getSession().invalidate();
+            }
+            if (outgoingInvite != null) {
+                outgoingInvite.getSession().invalidate();
+            }
+            // Notify the observers.
+            external = CallStateChanged.State.COMPLETED;
+            final CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
             if (outgoingCallRecord != null && direction.contains("outbound")) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.COMPLETED.name());
                 final DateTime now = DateTime.now();
@@ -432,6 +448,7 @@ public class UssdCall extends UntypedActor  {
                 outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
                 callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+            logger.info("Call completed");
         }
     }
 
