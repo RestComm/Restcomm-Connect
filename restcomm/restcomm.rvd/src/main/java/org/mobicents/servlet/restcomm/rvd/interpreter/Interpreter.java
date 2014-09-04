@@ -523,7 +523,7 @@ public class Interpreter {
             }
         }
 
-        Pattern pattern = Pattern.compile("\\$([A-Za-z]+[A-Za-z0-9_-]*)");
+        Pattern pattern = Pattern.compile("\\$([A-Za-z]+[A-Za-z0-9_]*)");
         Matcher matches = pattern.matcher(sourceText);
 
         int searchStart = 0;
