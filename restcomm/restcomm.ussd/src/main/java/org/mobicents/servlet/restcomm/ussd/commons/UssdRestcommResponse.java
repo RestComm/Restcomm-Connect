@@ -156,4 +156,12 @@ public class UssdRestcommResponse {
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
     }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "UssdRestCommResponse :"+message+" messageType: "+messageType.name()+" isFinalMessage: "+isFinalMessage;
+    }
 }
