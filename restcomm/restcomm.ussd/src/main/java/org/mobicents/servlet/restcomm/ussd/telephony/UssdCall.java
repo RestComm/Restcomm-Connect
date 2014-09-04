@@ -275,7 +275,7 @@ public class UssdCall extends UntypedActor  {
             lastResponse = response;
             if(response.getStatus() == SipServletResponse.SC_OK && response.getRequest().getMethod().equalsIgnoreCase("INVITE")){
                 response.createAck().send();
-            } if(response.getStatus() == SipServletResponse.SC_OK && (response.getRequest().getMethod().equalsIgnoreCase("BYE"))) {
+            } if(response.getStatus() == SipServletResponse.SC_OK && response.getRequest().getMethod().equalsIgnoreCase("BYE")){
                 fsm.transition(message, completed);
             }
         } else if (UssdRestcommResponse.class.equals(klass)) {
