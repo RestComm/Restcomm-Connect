@@ -450,6 +450,10 @@ public class UssdInterpreter extends UntypedActor {
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 logger.info("CallStateChanged.State.BUSY");
             }
+//            else if (CallStateChanged.State.COMPLETED == event.state()) {
+//                logger.info("CallStateChanged.State.Completed");
+//                fsm.transition(message, finished);
+//            }
         } else if (CallResponse.class.equals(klass)) {
             if (acquiringCallInfo.equals(state)) {
                 @SuppressWarnings("unchecked")
@@ -765,7 +769,7 @@ public class UssdInterpreter extends UntypedActor {
                 ussdRestcommResponse.setMessage(ussdText.toString());
 
                 logger.info("UssdMessage prepared, hasCollect: " + hasCollect);
-                logger.debug("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
+                logger.info("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
 
                 if (callInfo.direction().equalsIgnoreCase("inbound")) {
                     // USSD PULL
@@ -790,6 +794,7 @@ public class UssdInterpreter extends UntypedActor {
                         }
                     }
                 }
+                logger.info("UssdRestcommResponse message prepared: "+ussdRestcommResponse);
                 ussdCall.tell(ussdRestcommResponse, source);
             }
         }
@@ -910,6 +915,19 @@ public class UssdInterpreter extends UntypedActor {
 
     @Override
     public void postStop() {
+        logger.info("UssdInterpreter postStop");
+        if (ussdCall != null)
+            getContext().stop(ussdCall);
+        if (outboundCall != null)
+            getContext().stop(outboundCall);
+        if (downloader != null)
+            getContext().stop(downloader);
+        if (parser != null)
+            getContext().stop(parser);
+        if (mailer != null)
+            getContext().stop(mailer);
+
+        context().stop(self());
         super.postStop();
     }
 
