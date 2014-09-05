@@ -613,6 +613,18 @@ App.controller('designerCtrl', function($scope, $q, $routeParams, $location, ste
 					else
 					if (step.gatherType == "collectdigits")
 						delete step.menu;
+					
+					// check nested "play's"
+					for (var k=0; k<step.steps.length; k++) {
+						var nestedStep = step.steps[k];
+						if (nestedStep.kind == "play") {
+							if (nestedStep.playType == "local")
+								delete nestedStep.remote;
+							else if (nestedStep.kind == "remote")
+								delete nestedStep.local;	
+						}
+					}
+					
 				} else
 				if (step.kind == "play") {
 					if (step.playType == "local")
