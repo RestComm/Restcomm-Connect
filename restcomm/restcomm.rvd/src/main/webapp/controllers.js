@@ -1,9 +1,12 @@
-App.controller('AppCtrl', function ($rootScope) {
-	//console.log("Started AppCtrl");
+App.controller('AppCtrl', function ($rootScope, $location) {
 	$rootScope.$on("$routeChangeError", function(event, current, previous, rejection) {
-        //console.log(event);
-        console.log('on $routeChangeError');
-        $rootScope.rvdError = rejection;
+        //console.log('on $routeChangeError');
+        if ( rejection == "AUTHENTICATION_ERROR" ) {
+			console.log("AUTHENTICATION_ERROR");
+			$location.path("/login");
+		} else {
+			$rootScope.rvdError = rejection;
+		}
     });
     
     $rootScope.$on("resourceNotFound", function(p1, p2) {
@@ -34,7 +37,7 @@ var loginCtrl = angular.module('Rvd')
 }]);
 
 
-App.controller('homeCtrl', function ($scope) {
+App.controller('homeCtrl', function ($scope, authInfo) {
 });
 
 

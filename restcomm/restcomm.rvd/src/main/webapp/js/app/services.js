@@ -45,22 +45,27 @@ angular.module('Rvd').service('projectModules', [function () {
 }]);
 
 angular.module('Rvd').service('authentication', ['$browser', '$q', function ($browser, $q) {
+	//console.log("Creating authentication service");
 	var serviceInstance = {};
 	
 	serviceInstance.looksAuthenticated = function () {
 		var currentCookies = $browser.cookies();
+		//console.log("checking $browser cookies...");
+		//console.log( currentCookies );
+
 		if ( !currentCookies.rvdticket )
 			return false;
 		return true;
 	}
 	
 	serviceInstance.authResolver = function() {
-		//var deferred = $q.defer();
+		var deferred = $q.defer();
 		if ( !this.looksAuthenticated() ) {
-			console.log("authResolver: not authenticated");
-			$location.path("/login");
-		}	
-		//return deferred.promise;
+			deferred.reject("AUTHENTICATION_ERROR");
+		} else {
+			deferred.resolve({status:"authenticated"});
+		}
+		return deferred.promise;
 	}
 	
 	return serviceInstance;
