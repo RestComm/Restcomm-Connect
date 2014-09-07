@@ -5,35 +5,48 @@ App.config([ '$routeProvider',  function($routeProvider) {
 	
 	$routeProvider.when('/project-manager/:projectKind', {
 		templateUrl : 'templates/projectManager.html',
-		controller : 'projectManagerCtrl'
+		controller : 'projectManagerCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})
 	.when('/home', {
 		templateUrl : 'templates/home.html',
 		controller : 'homeCtrl',
-		//resolve: {auth: authentication.authResolver}
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
 		controller : 'designerCtrl',
-		resolve: {ccInfo: designerCtrl.getCcInfo}
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();},
+			ccInfo: designerCtrl.getCcInfo
+		}
 	})
 	.when('/packaging/:projectName', {
 		templateUrl : 'templates/packaging/form.html',
 		controller : 'packagingCtrl',
 		resolve: {
-			rappWrap: function(RappService) {
-				return RappService.getRapp();
-			}
+			rappWrap: function(RappService) {return RappService.getRapp();},
+			authInfo: function (authentication) {return authentication.authResolver();}
 		}
 	})
 	.when('/packaging/:projectName/download', {
 		templateUrl : 'templates/packaging/download.html',
 		controller : 'packagingDownloadCtrl',
-		resolve: { binaryInfo: packagingDownloadCtrl.getBinaryInfo }
+		resolve: { 
+			binaryInfo: packagingDownloadCtrl.getBinaryInfo,
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})	
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
-		controller : 'upgradeCtrl'
+		controller : 'upgradeCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})
 	.when('/login', {
 		templateUrl : 'templates/login.html',
@@ -43,45 +56,7 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		redirectTo : '/home'
 	});
 
-}])
-.run( function ($rootScope, $browser, $location) {
-	// redirect to /login if no rvdticket is there
-	/*$rootScope.$on("$locationChangeStart", function(event, next, current) {
-		var currentCookies = $browser.cookies();
-		if ( !currentCookies.rvdticket )
-			$location.path("/login");
-	});
-	*/
-	
-});
-
-myApp.provider('authentication', function AuthenticationProvider() {
-  var useTinfoilShielding = false;
-
-  this.useTinfoilShielding = function(value) {
-    useTinfoilShielding = !!value;
-  };
-  
-  function Authentication ($browser) {
-	  this.looksAuthenticated = function($browser) {
-		var currentCookies = $browser.cookies();
-		if ( !currentCookies.rvdticket )
-			return true;
-		else
-			return false
-	  }
-	  
-	  return this;
-  }
-
-  this.$get = ["$browser", function unicornLauncherFactory($browser) {
-
-    // let's assume that the UnicornLauncher constructor was also changed to
-    // accept and use the useTinfoilShielding argument
-    return new Authentication($browser);
-  }];
-});
-
+}]);
 
 
 App.factory('stepService', ['protos', function(protos) {
