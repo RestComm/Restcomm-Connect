@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial timeLimit="10" timeout="10">
+	  <Sip username="alice" password="1234">sip:alice@127.0.0.1:5091?mycustomheader=foo&myotherheader=bar</Sip>
+	</Dial>
+</Response>

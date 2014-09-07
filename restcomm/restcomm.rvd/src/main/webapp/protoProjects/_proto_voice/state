@@ -1,0 +1,35 @@
+{
+  "header": {
+  	"projectKind": "voice",
+  	"startNodeName": "start",
+  	"version": "1.0"
+  },
+  "lastStepId": 3,
+  "lastNodeId": 0,
+  "nodes": [
+    {
+      "name": "start",
+      "kind": "voice",
+      "label": "Welcome",
+      "steps": [
+        {
+          "kind": "say",
+          "label": "say",
+          "title": "say",
+          "phrase": "Welcome to Restcomm Visual Designer",
+          "iface": {
+            "optionsVisible": false
+          },
+          "name": "step1"
+        }
+      ],
+      "iface": {
+        "edited": false,
+        "editLabel": false
+      }
+    }
+  ],
+  "iface": {
+	  "activeNode": 0
+  }
+}

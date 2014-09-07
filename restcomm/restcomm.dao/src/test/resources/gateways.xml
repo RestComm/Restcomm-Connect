@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.GatewaysDao">
+  <insert id="addGateway" parameterType="map">
+    INSERT INTO "restcomm_gateways" ("sid", "date_created", "date_updated", "friendly_name", "password", "proxy", "register", "user_name", "ttl",
+    "uri") VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{password}, #{proxy}, #{register}, #{user_name}, #{ttl}, #{uri});
+  </insert>
+  
+  <select id="getGateway" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_gateways" WHERE "sid"=#{sid};
+  </select>
+  
+  <select id="getGateways" resultType="hashmap">
+    SELECT * FROM "restcomm_gateways";
+  </select>
+  
+  <delete id="removeGateway" parameterType="string">
+    DELETE FROM "restcomm_gateways" WHERE "sid"=#{sid};
+  </delete>
+  
+  <update id="updateGateway" parameterType="map">
+    UPDATE "restcomm_gateways" SET "date_updated"=#{date_updated}, "friendly_name"=#{friendly_name}, "password"=#{password},
+    "proxy"=#{proxy}, "register"=#{register}, "user_name"=#{user_name}, "ttl"=#{ttl} WHERE "sid"=#{sid};
+  </update>
+</mapper>

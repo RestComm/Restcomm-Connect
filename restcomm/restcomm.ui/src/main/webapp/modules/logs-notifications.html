@@ -1,0 +1,78 @@
+<rc-logs-pills></rc-logs-pills>
+
+<rc-page-title icon="file-text-o" title="LOGS" sub-title="NOTIFICATIONS"></rc-page-title>
+
+<div class="row">
+    <div class="col-md-12">
+        <div ng-show="notificationsLogsList.length > 0" class="record-filter-div pull-right">
+            <form class="form-inline" role="form">
+            <div class="form-inline">
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">Date</span>
+                        <input type="date" class="input-sm form-control" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-2">
+                    <div class="input-group">
+                        <span class="input-group-addon">Code</span>
+                        <input type="number" class="input-sm form-control" placeholder="Error Code" ng-model="query.error_code" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">URL</span>
+                        <input type="text" class="input-sm form-control" placeholder="Request URL" ng-model="query.request_url" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-addon">Text</span>
+                        <input type="text" class="input-sm form-control" placeholder="Message Text" ng-model="query.message_text" ng-change="filter()" />
+                    </div>
+                </div>
+                <button class="btn btn-default hidden" disabled><i class="fa fa-filter"></i> Filter</button>
+            </div>
+            </form>
+        </div>
+
+        <div ng-hide="(notificationsLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
+            <h2><i class="fa fa-exclamation-circle"></i> No notifications<span ng-show="notificationsLogsList.length == 0"></span><span ng-show="notificationsLogsList.length > 0"> matching query</span>. <small>You must be doing it right!</small></h2>
+        </div>
+
+        <table ng-show="(notificationsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
+            <thead>
+            <th class="width-15pc">DATE</th>
+            <th class="width-5pc">TYPE</th>
+            <th class="width-5pc">CODE</th>
+            <th class="width-10pc">CALL</th>
+            <th class="width-20pc">TEXT</th>
+            </thead>
+            <tbody>
+            <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:'date_created':true) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+                <td><a href="" ng-click="showNotificationDetailsModal(notification)">{{ notification.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
+                <td><div class="text-center" tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-remove-sign' : 'fa fa-warning'"></i></div></td>
+                <td><div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div></td>
+                <td><div class="text-center"><a href="#/logs/calls/{{ notification.call_sid }}">{{ notification.call_sid }}</a></div></td>
+                <td><div class="text-center" title="{{ notification.message_text }}">{{ (notification.message_text | limitTo: 35) + '...' }}</div></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <td><small class="pull-left">{{ filtered.length }} Notification{{ filtered.length == 1 ? "" : "s" }}</small></td>
+            <td colspan=3>
+                <form class="form-inline text-center">
+                    <h6>Items / Page</h6>
+                    <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                    </div>
+                </form>
+            </td>
+            <td colspan="99">
+                <pagination class="pagination pagination-sm pull-right" total-items="notificationsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+            </td>
+            </tfoot>
+        </table>
+    </div>
+</div>

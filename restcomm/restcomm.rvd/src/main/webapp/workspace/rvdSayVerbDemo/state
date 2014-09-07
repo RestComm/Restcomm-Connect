@@ -1,0 +1,1 @@
+{"header":{"startNodeName":"start","projectKind":"voice","version":"1.0"},"iface":{"activeNode":0},"lastStepId":3,"nodes":[{"name":"start","label":"Welcome","kind":"voice","iface":{},"steps":[{"name":"step1","kind":"say","label":"say","title":"say","phrase":"Welcome to Telestax Restcom Visual Designer Demo","iface":{"showWarning":false}}]}],"lastNodeId":0}

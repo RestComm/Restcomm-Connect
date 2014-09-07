@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-	<Say>Hello World</Say>
-    <Dial>
-        <Uri>sip:georgeClient@127.0.0.1:5060</Uri>
-    </Dial>
-</Response>

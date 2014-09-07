@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Gather>
+	  <Pause length="1" />
+	  <Play>audio/beep.wav</Play>
+	  <Say>Beep!</Say>
+	</Gather>
+</Response>

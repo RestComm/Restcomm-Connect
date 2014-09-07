@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Hangup step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["hungup"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+	
+		"iface": {"type": "object"}
+	},
+	"required": ["name","kind","label","title"]
+}
+

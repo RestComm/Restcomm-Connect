@@ -1,0 +1,25 @@
+<form name="form" novalidate>
+	<div class="input-group input-group-sm form-group">
+		<span class="input-group-addon">{{extractorModelExpression(extractorModel)}}</span>
+		
+		<select ng-show='extractorModel.lastOperation != null' ng-change='resetOperation(extractorModel.lastOperation)' ng-model='extractorModel.lastOperation.kind' ng-options='operationKind as operationKind for operationKind in accessOperationKinds' class="form-control input-sm" required></select>
+
+		<span ng-if='extractorModel.lastOperation.kind=="object"' class="input-group-addon"></span>
+		<select ng-if='extractorModel.lastOperation.kind=="object"' ng-change='extractorModel.lastOperation.property=""' ng-model='extractorModel.lastOperation.action' ng-options='objectAction as objectAction for objectAction in objectActions' class="form-control input-sm" required></select>
+		<span ng-if='extractorModel.lastOperation.action=="propertyNamed"' class="input-group-addon"></span>
+		<input ng-if='extractorModel.lastOperation.action=="propertyNamed"' name='property'  ng-model='extractorModel.lastOperation.property' placeholder='type the object property to access' class="form-control" required></input>
+
+		<span ng-if='extractorModel.lastOperation.kind=="array"' class="input-group-addon"></span>
+		<select ng-if='extractorModel.lastOperation.kind=="array"' ng-change='extractorModel.lastOperation.position=""'  ng-model='extractorModel.lastOperation.action' ng-options='arrayAction as arrayAction for arrayAction in arrayActions' class="form-control input-sm" required></select>
+		<span ng-if='extractorModel.lastOperation.action=="itemAtPosition"' class="input-group-addon"></span>
+		<input ng-if='extractorModel.lastOperation.action=="itemAtPosition"' type='number' name='position' ng-model='extractorModel.lastOperation.position' placeholder='type array item index'  class="form-control" required></input>
+												
+	</div>
+	<!-- <div class="validation-error" ng-show="form.property.$error.required">property required</div>
+	<div class="validation-error" ng-show="form.position.$error.required">item position required</div>
+	-->
+
+	<button ng-show='extractorModel.lastOperation != null && !isTerminal(extractorModel.lastOperation.kind)' ng-disabled='form.$invalid' ng-click="addOperation(extractorModel)" type="button" class="btn btn-primary btn-xs pull-right"><span>Add operation</span></button>
+	<button ng-show='isTerminal(extractorModel.lastOperation.kind)' ng-click="doneAddingOperations(extractorModel)" type="button" class="btn btn-primary btn-xs pull-right"><span>Done</span></button>
+	<button ng-show='extractorModel.accessOperations.length > 0' ng-click='popOperation(extractorModel)' type='button' class="btn btn-xs pull-right"><i  class="fa fa-undo" ></i></button>
+</form>

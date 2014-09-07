@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is free software; you can redistribute it and/or modify it under 
+	the terms of the GNU Lesser General Public License as published by the Free 
+	Software Foundation; either version 2.1 of the License, or (at your option) 
+	any later version. This software is distributed in the hope that it will 
+	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
+	Public License for more details. You should have received a copy of the GNU 
+	Lesser General Public License along with this software; if not, write to 
+	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
+	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
+<!-- The Speech Synthesizer is responsible for turning text in to speech 
+	for play back by the media gateway. -->
+<speech-synthesizer
+	class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+	<service-root>http://api.voicerss.org</service-root>
+	<apikey>c58e134224704b0182f2e2eaef59f8d8</apikey>
+	<languages>
+		<catalan>ca-es</catalan>
+		<chinese-china>zh-cn</chinese-china>
+		<chinese-hongkong>zh-hk</chinese-hongkong>
+		<chinese-taiwan>zh-tw</chinese-taiwan>
+		<danish>da-dk</danish>
+		<dutch>nl-nl</dutch>
+		<english-australia>en-au</english-australia>
+		<english-canada>en-ca</english-canada>
+		<english-greatbritain>en-gb</english-greatbritain>
+		<english-india>en-in</english-india>
+		<english-us>en-us</english-us>
+		<finish>fi-fi</finish>
+		<french-canada>fr-ca</french-canada>
+		<french-france>fr-fr</french-france>
+		<german>de-de</german>
+		<italian>it-it</italian>
+		<japanese>ja-jp</japanese>
+		<korean>ko-kr</korean>
+		<norwegian>nb-no</norwegian>				
+		<polish>pl-pl</polish>
+		<portuguese-brasil>pt-br</portuguese-brasil>
+		<portuguese-portugal>pt-pt</portuguese-portugal>
+		<russian>ru-ru</russian>
+		<spanish-mexico>es-mx</spanish-mexico>
+		<spanish-spain>es-es</spanish-spain>
+		<swedish>sv-se</swedish>	
+	</languages>
+</speech-synthesizer>

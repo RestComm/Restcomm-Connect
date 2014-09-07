@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-	<Say>Welcome</Say>
-	<Dial callerId="+13055872294"><Conference>ConferenceRoom</Conference></Dial>
-</Response>

@@ -1,0 +1,36 @@
+{
+  "header": {
+  	"projectKind": "ussd",
+  	"startNodeName": "start",
+  	"version": "1.0"
+  },
+  "lastNodeId": 1,
+  "lastStepId": 1,
+  "nodes": [
+    {
+      "kind": "ussd",
+      "name": "start",
+      "label": "Welcome",
+      "steps": [
+        {
+          "kind": "ussdSay",
+          "label": "USSD Message",
+          "title": "USSD Message",
+          "text": "Welcome to Restcomm Visual Designer",
+          "language": null,
+          "iface": {
+            "showWarning": false
+          },
+          "name": "step1"
+        }
+      ],
+      "iface": {
+        "edited": false,
+        "editLabel": false
+      }
+    }
+  ],
+  "iface": {
+	  "activeNode": 0
+  }
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao">
+  <insert id="addIncomingPhoneNumber" parameterType="map">
+    INSERT INTO "restcomm_incoming_phone_numbers" ("sid", "date_created", "date_updated", "friendly_name", "account_sid", "phone_number", "api_version",
+    "voice_caller_id_lookup", "voice_url", "voice_method", "voice_fallback_url", "voice_fallback_method", "status_callback", "status_callback_method",
+    "voice_application_sid", "sms_url", "sms_method", "sms_fallback_url", "sms_fallback_method", "sms_application_sid", "uri") VALUES(#{sid},
+    #{date_created}, #{date_updated}, #{friendly_name}, #{account_sid}, #{phone_number}, #{api_version}, #{voice_caller_id_lookup},
+    #{voice_url}, #{voice_method}, #{voice_fallback_url}, #{voice_fallback_method}, #{status_callback}, #{status_callback_method},
+    #{voice_application_sid}, #{sms_url}, #{sms_method}, #{sms_fallback_url}, #{sms_fallback_method}, #{sms_application_sid}, #{uri});
+  </insert>
+  
+  <select id="getIncomingPhoneNumber" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "sid"=#{sid};
+  </select>
+  
+  <select id="getIncomingPhoneNumberByValue" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number"=#{phone_number};
+  </select>
+  
+  <select id="getIncomingPhoneNumbers" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{account_sid};
+  </select>
+  
+  <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_incoming_phone_numbers WHERE account_sid=#{accountSid}
+    <if test="friendlyName != null">
+			AND friendly_name=#{friendlyName}
+	</if>
+	<if test="phoneNumber != null">
+			AND phone_number like #{phoneNumber}
+	</if>
+  </select>
+  
+  <delete id="removeIncomingPhoneNumber" parameterType="string">
+    DELETE FROM "restcomm_incoming_phone_numbers" WHERE "sid"=#{sid};
+  </delete>
+  
+  <delete id="removeIncomingPhoneNumbers" parameterType="string">
+    DELETE FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{account_sid};
+  </delete>
+  
+  <update id="updateIncomingPhoneNumber" parameterType="map">
+    UPDATE "restcomm_incoming_phone_numbers" SET "friendly_name"=#{friendly_name}, "voice_caller_id_lookup"=#{voice_caller_id_lookup}, "voice_url"=#{voice_url},
+    "voice_method"=#{voice_method}, "voice_fallback_url"=#{voice_fallback_url}, "voice_fallback_method"=#{voice_fallback_method}, "status_callback"=#{status_callback},
+    "status_callback_method"=#{status_callback_method}, "voice_application_sid"=#{voice_application_sid}, "sms_url"=#{sms_url}, "sms_method"=#{sms_method},
+    "sms_fallback_url"=#{sms_fallback_url}, "sms_fallback_method"=#{sms_fallback_method}, "sms_application_sid"=#{sms_application_sid} WHERE "sid"=#{sid};
+  </update>
+</mapper>

@@ -1,0 +1,78 @@
+<rc-logs-pills></rc-logs-pills>
+
+<rc-page-title icon="file-text-o" title="LOGS" sub-title="TRANSCRIPTIONS"></rc-page-title>
+
+<div class="row">
+    <div class="col-md-12">
+        <div ng-show="transcriptionsLogsList.length > 0" class="pull-right record-filter-div">
+            <form class="form-inline" role="form">
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">From</span>
+                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="query.from" ng-change="filter()" disabled />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="query.to" ng-change="filter()" disabled />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">Date</span>
+                        <input type="date" class="input-sm form-control" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">Text</span>
+                        <input type="text" class="input-sm form-control" placeholder="Transcription Text" ng-model="query.transcription_text" ng-change="filter()" />
+                    </div>
+                </div>
+                <button class="btn btn-default hidden" disabled><i class="fa fa-filter"></i> Filter</button>
+            </form>
+        </div>
+
+        <div ng-hide="(transcriptionsLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
+            <h2><i class="fa fa-exclamation-circle"></i> No transcriptions<span ng-show="transcriptionsLogsList.length == 0"></span><span ng-show="transcriptionsLogsList.length > 0"> matching query</span>. <small>Confirm there's paper in the tray!</small></h2>
+        </div>
+
+        <table ng-show="(transcriptionsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
+            <thead>
+            <th class="width-20pc">DATE</th>
+            <th class="width-10pc">STATUS</th>
+            <th class="width-10pc">DURATION</th>
+            <th class="width-15pc">RECORDING</th>
+            <th class="width-30pc">TEXT</th>
+            <!--<th class="width-5pc">&nbsp;</th>-->
+            </thead>
+            <tbody>
+            <tr ng-repeat="transcription in filtered = (transcriptionsLogsList | filter:query | orderBy:'date_created':true) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+                <td><a href="" ng-click="showTranscriptionDetailsModal(transcription)">{{ transcription.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
+                <td><div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div></td>
+                <td><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
+                <td><div class="text-center"><a href="#/restcomm-management/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
+                <td><div class="text-center" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
+                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-print" tooltip="Export"></i></a></div></td>-->
+            </tr>
+            </tbody>
+            <tfoot>
+            <td><small class="pull-left">{{ filtered.length }} Transcription{{ filtered.length == 1 ? "" : "s" }}</small></td>
+            <td colspan=3>
+                <form class="form-inline text-center">
+                    <h6>Items / Page</h6>
+                    <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
+                        <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                        <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                        <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                    </div>
+                </form>
+            </td>
+            <td colspan="99">
+                <pagination class="pagination pagination-sm pull-right" total-items="transcriptionsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+            </td>
+            </tfoot>
+        </table>
+    </div>
+</div>

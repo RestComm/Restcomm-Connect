@@ -1,0 +1,51 @@
+<rc-numbers-pills></rc-numbers-pills>
+
+<rc-page-title icon="phone" title="NUMBERS" sub-title="RESTCOMM NUMBERS"></rc-page-title>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="pull-left">
+            <button class="btn btn-primary" ng-click="showRegisterIncomingNumberModal()"><i class="fa fa-plus"></i> Register Number</button>
+        </div>
+
+        <div ng-show="numbersList.length > 0"><rc-list-filter filter="query.phone_number"></rc-list-filter></div>
+
+        <div ng-hide="(numbersList | filter:query).length > 0" class="jumbotron no-records-alert">
+            <h2><i class="fa fa-exclamation-circle"></i> No incoming numbers <span ng-show="numbersList.length == 0">registered</span> <span ng-show="numbersList.length > 0">matching query</span>. <small>Register one now!</small></h2>
+        </div>
+
+        <table ng-show="(numbersList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
+            <thead>
+                <th class="width-20pc">NUMBER</th>
+                <th class="width-20pc" colspan="2">NAME</th>
+                <th>FEATURES</th>
+                <th class="width-10pc">&nbsp;</th>
+            </thead>
+            <tbody>
+            <tr ng-repeat="pn in filtered = (numbersList | filter:query)">
+                <td><h4 class="text-center"><a href="#/numbers/incoming/{{pn.sid}}">{{ pn.phone_number  }}</a></h4></td>
+                <td>
+                    <h5 class="text-center" ng-hide="editingFriendlyName == pn.phone_number">{{ pn.friendly_name  }} </h5>
+                    <h5 class="text-center col-md-10" ng-show="editingFriendlyName == pn.phone_number"><input type="text" class="form-control input-sm" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus /></h5>
+                </td>
+                <td><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
+                <td>
+                    <span ng-show="{{ pn.voice_url.length > 0  }}"><i class="fa fa-microphone available-feature"></i> <small> {{ pn.voice_url  }}</small></span>
+                    <span class="opacity30" ng-hide="{{ pn.voice_url.length > 0  }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
+                    <br>
+                    <span ng-show="{{ pn.sms_url.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ pn.sms_url  }}</small></span>
+                    <span class="opacity30" ng-hide="{{ pn.sms_url.length > 0  }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>
+                    <br>
+                    <!--
+                    <span ng-show="{{ $index % 4 == 1  }}"><span class="available-feature"><strong>#</strong></span> <small> {{ pn.voice_url.substring(0, pn.voice_url.indexOf("demos/") + 6) }}ussd/ussd-menu.xml </small></span>
+                    <span class="opacity30" ng-hide="{{ $index % 4 == 1  }}"><span class="unavailable-feature"><strong>#</strong></span> <small> http://www.restcomm.org/demo/ussd/</small></span>
+                    -->
+                </td>
+                <td class="text-right">
+                    <div class="btn-delete-div"><button class="btn btn-danger" ng-click="confirmNumberDelete(pn)">Delete</button></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

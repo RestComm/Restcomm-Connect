@@ -1,0 +1,78 @@
+<rc-logs-pills></rc-logs-pills>
+
+<rc-page-title icon="file-text-o" title="LOGS" sub-title="RECORDINGS"></rc-page-title>
+
+<div class="row">
+    <div class="col-md-12">
+        <div ng-show="recordingsLogsList.length > 0" class="record-filter-div pull-right">
+            <form class="form-inline" role="form">
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">From</span>
+                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="query.from" ng-change="filter()" disabled />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="query.to" ng-change="filter()" disabled />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">Date</span>
+                        <input type="date" class="input-sm form-control" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">Call</span>
+                        <input type="text" class="input-sm form-control" placeholder="Call SID" ng-model="query.call_sid" ng-change="filter()" />
+                    </div>
+                </div>
+                <button class="btn btn-default btn-sm hidden" disabled><i class="fa fa-filter"></i> Filter</button>
+            </form>
+        </div>
+
+        <div ng-hide="(recordingsLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
+            <h2><i class="fa fa-exclamation-circle"></i> No recordings<span ng-show="recordingsLogsList.length == 0"></span><span ng-show="recordingsLogsList.length > 0"> matching query</span>. <small>Ask the NSA for some!</small></h2>
+        </div>
+
+        <table ng-show="(recordingsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
+            <thead>
+            <th class="width-25pc">DATE</th>
+            <th class="width-10pc">FROM</th>
+            <th class="width-10pc">TO</th>
+            <th class="width-15pc">DURATION</th>
+            <th class="width-30pc">CALL</th>
+            <th class="width-5pc">&nbsp;</th>
+            </thead>
+            <tbody>
+            <tr ng-repeat="recording in filtered = (recordingsLogsList | filter:query | orderBy:'date_created':true) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+                <td><a href="" ng-click="showRecordingDetailsModal(recording)">{{ recording.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
+                <td><div>{{ recording.from ? recording.from : '&lt;caller&gt;' }}</div></td>
+                <td><div>{{ recording.to ? recording.to : '&lt;callee&gt;' }}</div></td>
+                <td><div class="text-center">{{ recording.duration ? (recording.duration + "s") : '. . .' }}</div></td>
+                <td><div class="text-center"><a href="#/logs/calls/{{ recording.call_sid }}">{{ recording.call_sid }}</a></div></td>
+                <td><div class="text-center"><a href="/restcomm/recordings/{{ recording.sid }}.wav" target="_blank" tooltip="Download"><i class="fa fa-download"></i></a></div></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <td><small class="pull-left">{{ filtered.length }} Messages{{ filtered.length == 1 ? "" : "s" }}</small></td>
+            <td colspan=3>
+                <form class="form-inline text-center">
+                    <h6>Items / Page</h6>
+                    <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                    </div>
+                </form>
+            </td>
+            <td colspan="99">
+                <pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="recordingsLogsList.length" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+            </td>
+            </tfoot>
+        </table>
+    </div>
+</div>

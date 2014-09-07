@@ -1,0 +1,666 @@
+<div class="modal-header">
+    <h3 class="no-margins"><i class="fa fa-phone"></i> Register Number</h3>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal">
+        <dl class="dl-horizontal form-dl">
+            <dt>Account SID</dt>
+            <dd>
+                <input type="text" class="form-control input-xlarge" id="new-number-account-sid" ng-model="sid" placeholder="Account SID" disabled />
+            </dd>
+            <!--<hr class="small" />-->
+            <dt>Phone Number</dt>
+            <dd>
+                <input id="new-number-number" class="form-control" ng-model="newNumber.phone_number" type="tel" placeholder="eg: 305 543987012" popover-placement="bottom" popover-trigger="focus" popover="The phone number you want to purchase. The number should be formatted starting with a '+' followed by the country code and the number in E.164 format."/>
+            </dd>
+            <dt style="height: 20px;">&nbsp;</dt><dd style="height: 20px;"><div class="text-muted"><small class="text-bottom">OR Search For Phone Numbers to Purchase</small></div></dd>
+            <dt>Country</dt>
+            <dd>
+            	<input id="countryCode" name="countryCode" class="form-control" ng-model="newNumber.countryCode" maxlength="2" placeholder="US" value="US" popover-placement="top" popover-trigger="focus" popover="A 2 letter ISO_3166-1_alpha-2 Country code" onchange="countryCodeChange()"/>
+            	<!--select id="countryCode" name="countryCode" class="form-control" ng-model="newNumber.countryCode" onchange="countryCodeChange()">
+					<!--option value="AF">Afghanistan</option>
+					<option value="AX">Åland Islands</option>
+					<option value="AL">Albania</option>
+					<option value="DZ">Algeria</option>
+					<option value="AS">American Samoa</option>
+					<option value="AD">Andorra</option>
+					<option value="AO">Angola</option>
+					<option value="AI">Anguilla</option>
+					<option value="AQ">Antarctica</option>
+					<option value="AG">Antigua and Barbuda</option>
+					<option value="AR">Argentina</option>
+					<option value="AM">Armenia</option>
+					<option value="AW">Aruba</option>
+					<option value="AU">Australia</option>
+					<option value="AT">Austria</option>
+					<option value="AZ">Azerbaijan</option>
+					<option value="BS">Bahamas</option>
+					<option value="BH">Bahrain</option>
+					<option value="BD">Bangladesh</option>
+					<option value="BB">Barbados</option>
+					<option value="BY">Belarus</option>
+					<option value="BE">Belgium</option>
+					<option value="BZ">Belize</option>
+					<option value="BJ">Benin</option>
+					<option value="BM">Bermuda</option>
+					<option value="BT">Bhutan</option>
+					<option value="BO">Bolivia, Plurinational State of</option>
+					<option value="BQ">Bonaire, Sint Eustatius and Saba</option>
+					<option value="BA">Bosnia and Herzegovina</option>
+					<option value="BW">Botswana</option>
+					<option value="BV">Bouvet Island</option>
+					<option value="BR">Brazil</option>
+					<option value="IO">British Indian Ocean Territory</option>
+					<option value="BN">Brunei Darussalam</option>
+					<option value="BG">Bulgaria</option>
+					<option value="BF">Burkina Faso</option>
+					<option value="BI">Burundi</option>
+					<option value="KH">Cambodia</option>
+					<option value="CM">Cameroon</option>
+					<option value="CA">Canada</option>
+					<option value="CV">Cape Verde</option>
+					<option value="KY">Cayman Islands</option>
+					<option value="CF">Central African Republic</option>
+					<option value="TD">Chad</option>
+					<option value="CL">Chile</option>
+					<option value="CN">China</option>
+					<option value="CX">Christmas Island</option>
+					<option value="CC">Cocos (Keeling) Islands</option>
+					<option value="CO">Colombia</option>
+					<option value="KM">Comoros</option>
+					<option value="CG">Congo</option>
+					<option value="CD">Congo, the Democratic Republic of the</option>
+					<option value="CK">Cook Islands</option>
+					<option value="CR">Costa Rica</option>
+					<option value="CI">Côte d'Ivoire</option>
+					<option value="HR">Croatia</option>
+					<option value="CU">Cuba</option>
+					<option value="CW">Curaçao</option>
+					<option value="CY">Cyprus</option>
+					<option value="CZ">Czech Republic</option>
+					<option value="DK">Denmark</option>
+					<option value="DJ">Djibouti</option>
+					<option value="DM">Dominica</option>
+					<option value="DO">Dominican Republic</option>
+					<option value="EC">Ecuador</option>
+					<option value="EG">Egypt</option>
+					<option value="SV">El Salvador</option>
+					<option value="GQ">Equatorial Guinea</option>
+					<option value="ER">Eritrea</option>
+					<option value="EE">Estonia</option>
+					<option value="ET">Ethiopia</option>
+					<option value="FK">Falkland Islands (Malvinas)</option>
+					<option value="FO">Faroe Islands</option>
+					<option value="FJ">Fiji</option>
+					<option value="FI">Finland</option>
+					<option value="FR">France</option>
+					<option value="GF">French Guiana</option>
+					<option value="PF">French Polynesia</option>
+					<option value="TF">French Southern Territories</option>
+					<option value="GA">Gabon</option>
+					<option value="GM">Gambia</option>
+					<option value="GE">Georgia</option>
+					<option value="DE">Germany</option>
+					<option value="GH">Ghana</option>
+					<option value="GI">Gibraltar</option>
+					<option value="GR">Greece</option>
+					<option value="GL">Greenland</option>
+					<option value="GD">Grenada</option>
+					<option value="GP">Guadeloupe</option>
+					<option value="GU">Guam</option>
+					<option value="GT">Guatemala</option>
+					<option value="GG">Guernsey</option>
+					<option value="GN">Guinea</option>
+					<option value="GW">Guinea-Bissau</option>
+					<option value="GY">Guyana</option>
+					<option value="HT">Haiti</option>
+					<option value="HM">Heard Island and McDonald Islands</option>
+					<option value="VA">Holy See (Vatican City State)</option>
+					<option value="HN">Honduras</option>
+					<option value="HK">Hong Kong</option>
+					<option value="HU">Hungary</option>
+					<option value="IS">Iceland</option>
+					<option value="IN">India</option>
+					<option value="ID">Indonesia</option>
+					<option value="IR">Iran, Islamic Republic of</option>
+					<option value="IQ">Iraq</option>
+					<option value="IE">Ireland</option>
+					<option value="IM">Isle of Man</option>
+					<option value="IL">Israel</option>
+					<option value="IT">Italy</option>
+					<option value="JM">Jamaica</option>
+					<option value="JP">Japan</option>
+					<option value="JE">Jersey</option>
+					<option value="JO">Jordan</option>
+					<option value="KZ">Kazakhstan</option>
+					<option value="KE">Kenya</option>
+					<option value="KI">Kiribati</option>
+					<option value="KP">Korea, Democratic People's Republic of</option>
+					<option value="KR">Korea, Republic of</option>
+					<option value="KW">Kuwait</option>
+					<option value="KG">Kyrgyzstan</option>
+					<option value="LA">Lao People's Democratic Republic</option>
+					<option value="LV">Latvia</option>
+					<option value="LB">Lebanon</option>
+					<option value="LS">Lesotho</option>
+					<option value="LR">Liberia</option>
+					<option value="LY">Libya</option>
+					<option value="LI">Liechtenstein</option>
+					<option value="LT">Lithuania</option>
+					<option value="LU">Luxembourg</option>
+					<option value="MO">Macao</option>
+					<option value="MK">Macedonia, the former Yugoslav Republic of</option>
+					<option value="MG">Madagascar</option>
+					<option value="MW">Malawi</option>
+					<option value="MY">Malaysia</option>
+					<option value="MV">Maldives</option>
+					<option value="ML">Mali</option>
+					<option value="MT">Malta</option>
+					<option value="MH">Marshall Islands</option>
+					<option value="MQ">Martinique</option>
+					<option value="MR">Mauritania</option>
+					<option value="MU">Mauritius</option>
+					<option value="YT">Mayotte</option>
+					<option value="MX">Mexico</option>
+					<option value="FM">Micronesia, Federated States of</option>
+					<option value="MD">Moldova, Republic of</option>
+					<option value="MC">Monaco</option>
+					<option value="MN">Mongolia</option>
+					<option value="ME">Montenegro</option>
+					<option value="MS">Montserrat</option>
+					<option value="MA">Morocco</option>
+					<option value="MZ">Mozambique</option>
+					<option value="MM">Myanmar</option>
+					<option value="NA">Namibia</option>
+					<option value="NR">Nauru</option>
+					<option value="NP">Nepal</option>
+					<option value="NL">Netherlands</option>
+					<option value="NC">New Caledonia</option>
+					<option value="NZ">New Zealand</option>
+					<option value="NI">Nicaragua</option>
+					<option value="NE">Niger</option>
+					<option value="NG">Nigeria</option>
+					<option value="NU">Niue</option>
+					<option value="NF">Norfolk Island</option>
+					<option value="MP">Northern Mariana Islands</option>
+					<option value="NO">Norway</option>
+					<option value="OM">Oman</option>
+					<option value="PK">Pakistan</option>
+					<option value="PW">Palau</option>
+					<option value="PS">Palestinian Territory, Occupied</option>
+					<option value="PA">Panama</option>
+					<option value="PG">Papua New Guinea</option>
+					<option value="PY">Paraguay</option>
+					<option value="PE">Peru</option>
+					<option value="PH">Philippines</option>
+					<option value="PN">Pitcairn</option>
+					<option value="PL">Poland</option>
+					<option value="PT">Portugal</option>
+					<option value="PR">Puerto Rico</option>
+					<option value="QA">Qatar</option>
+					<option value="RE">Réunion</option>
+					<option value="RO">Romania</option>
+					<option value="RU">Russian Federation</option>
+					<option value="RW">Rwanda</option>
+					<option value="BL">Saint Barthélemy</option>
+					<option value="SH">Saint Helena, Ascension and Tristan da Cunha</option>
+					<option value="KN">Saint Kitts and Nevis</option>
+					<option value="LC">Saint Lucia</option>
+					<option value="MF">Saint Martin (French part)</option>
+					<option value="PM">Saint Pierre and Miquelon</option>
+					<option value="VC">Saint Vincent and the Grenadines</option>
+					<option value="WS">Samoa</option>
+					<option value="SM">San Marino</option>
+					<option value="ST">Sao Tome and Principe</option>
+					<option value="SA">Saudi Arabia</option>
+					<option value="SN">Senegal</option>
+					<option value="RS">Serbia</option>
+					<option value="SC">Seychelles</option>
+					<option value="SL">Sierra Leone</option>
+					<option value="SG">Singapore</option>
+					<option value="SX">Sint Maarten (Dutch part)</option>
+					<option value="SK">Slovakia</option>
+					<option value="SI">Slovenia</option>
+					<option value="SB">Solomon Islands</option>
+					<option value="SO">Somalia</option>
+					<option value="ZA">South Africa</option>
+					<option value="GS">South Georgia and the South Sandwich Islands</option>
+					<option value="SS">South Sudan</option>
+					<option value="ES">Spain</option>
+					<option value="LK">Sri Lanka</option>
+					<option value="SD">Sudan</option>
+					<option value="SR">Suriname</option>
+					<option value="SJ">Svalbard and Jan Mayen</option>
+					<option value="SZ">Swaziland</option>
+					<option value="SE">Sweden</option>
+					<option value="CH">Switzerland</option>
+					<option value="SY">Syrian Arab Republic</option>
+					<option value="TW">Taiwan, Province of China</option>
+					<option value="TJ">Tajikistan</option>
+					<option value="TZ">Tanzania, United Republic of</option>
+					<option value="TH">Thailand</option>
+					<option value="TL">Timor-Leste</option>
+					<option value="TG">Togo</option>
+					<option value="TK">Tokelau</option>
+					<option value="TO">Tonga</option>
+					<option value="TT">Trinidad and Tobago</option>
+					<option value="TN">Tunisia</option>
+					<option value="TR">Turkey</option>
+					<option value="TM">Turkmenistan</option>
+					<option value="TC">Turks and Caicos Islands</option>
+					<option value="TV">Tuvalu</option>
+					<option value="UG">Uganda</option>
+					<option value="UA">Ukraine</option>
+					<option value="US" selected>United States</option>
+					<option value="AE">United Arab Emirates</option>
+					<option value="GB">United Kingdom</option>
+					<option value="UM">United States Minor Outlying Islands</option>
+					<option value="UY">Uruguay</option>
+					<option value="UZ">Uzbekistan</option>
+					<option value="VU">Vanuatu</option>
+					<option value="VE">Venezuela, Bolivarian Republic of</option>
+					<option value="VN">Viet Nam</option>
+					<option value="VG">Virgin Islands, British</option>
+					<option value="VI">Virgin Islands, U.S.</option>
+					<option value="WF">Wallis and Futuna</option>
+					<option value="EH">Western Sahara</option>
+					<option value="YE">Yemen</option>
+					<option value="ZM">Zambia</option>
+					<option value="ZW">Zimbabwe</option>
+				</select-->
+            </dd>                
+            <dt id="areaCodeOptionsName">Area Code</dt>
+            <dd id="areaCodeOptionsForm">
+                <div  class="form-inline">
+                    <div class="form-group col-md-5">
+                        <div class="input-group">
+                            <div class="dropdown">
+                            	<button class="btn btn-default dropdown-toggle" style="width: 100px;" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                                    {{newNumber.area_code && newNumber.area_code || "Area Code"}} <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownMenu2">
+                                    <li role="presentation" class="dropdown-header">Alabama</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 205">205</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 251">251</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 256">256</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 334">334</a></li>
+                                    <li role="presentation" class="dropdown-header">Alaska</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 907">907</a></li>
+                                    <li role="presentation" class="dropdown-header">Arizona</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 480">480</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 520">520</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 602">602</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 623">623</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 928">928</a></li>
+                                    <li role="presentation" class="dropdown-header">Arkansas</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 501">501</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 870">870</a></li>
+                                    <li role="presentation" class="dropdown-header">California</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 209">209</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 213">213</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 310">310</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 323">323</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 408">408</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 415">415</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 510">510</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 530">530</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 559">559</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 562">562</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 619">619</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 626">626</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 650">650</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 661">661</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 707">707</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 714">714</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 760">760</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 805">805</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 818">818</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 831">831</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 858">858</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 909">909</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 916">916</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 925">925</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 949">949</a></li>
+                                    <li role="presentation" class="dropdown-header">Colorado</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 303">303</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 719">719</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 720">720</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 970">970</a></li>
+                                    <li role="presentation" class="dropdown-header">Connecticut</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 203">203</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 860">860</a></li>
+                                    <li role="presentation" class="dropdown-header">Delaware</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 302">302</a></li>
+                                    <li role="presentation" class="dropdown-header">Florida</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 305">305</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 321">321</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 352">352</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 386">386</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 407">407</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 561">561</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 727">727</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 754">754</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 772">772</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 786">786</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 813">813</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 850">850</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 863">863</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 904">904</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 941">941</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 954">954</a></li>
+                                    <li role="presentation" class="dropdown-header">Georgia
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 229">229</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 404">404</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 478">478</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 678">678</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 706">706</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 770">770</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 912">912</a></li>
+                                    <li role="presentation" class="dropdown-header">Hawaii</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 808">808</a></li>
+                                    <li role="presentation" class="dropdown-header">Idaho</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 208">208</a></li>
+                                    <li role="presentation" class="dropdown-header">Illinois</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 217">217</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 309">309</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 312">312</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 618">618</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 630">630</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 708">708</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 773">773</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 815">815</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 847">847</a></li>
+                                    <li role="presentation" class="dropdown-header">Indiana</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 219">219</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 260">260</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 317">317</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 574">574</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 765">765</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 812">812</a></li>
+                                    <li role="presentation" class="dropdown-header">Iowa</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 319">319</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 515">515</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 563">563</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 641">641</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 712">712</a></li>
+                                    <li role="presentation" class="dropdown-header">Kansas</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 316">316</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 620">620</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 785">785</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 913">913</a></li>
+                                    <li role="presentation" class="dropdown-header">Kentucky</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 270">270</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 502">502</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 606">606</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 859">859</a></li>
+                                    <li role="presentation" class="dropdown-header">Louisiana</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 225">225</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 318">318</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 337">337</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 504">504</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 985">985</a></li>
+                                    <li role="presentation" class="dropdown-header">Maine</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 207">207</a></li>
+                                    <li role="presentation" class="dropdown-header">Maryland</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 240">240</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 301">301</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 410">410</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 443">443</a></li>
+                                    <li role="presentation" class="dropdown-header">Massachusetts</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 339">339</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 351">351</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 413">413</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 508">508</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 617">617</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 774">774</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 781">781</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 857">857</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 978">978</a></li>
+                                    <li role="presentation" class="dropdown-header">Michigan</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 231">231</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 248">248</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 269">269</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 313">313</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 517">517</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 586">586</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 616">616</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 734">734</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 810">810</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 906">906</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 989">989</a></li>
+                                    <li role="presentation" class="dropdown-header">Minnesota</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 218">218</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 320">320</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 507">507</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 612">612</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 651">651</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 763">763</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 952">952</a></li>
+                                    <li role="presentation" class="dropdown-header">Mississippi</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 228">228</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 601">601</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 662">662</a></li>
+                                    <li role="presentation" class="dropdown-header">Missouri</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 314">314</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 417">417</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 573">573</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 636">636</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 660">660</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 816">816</a></li>
+                                    <li role="presentation" class="dropdown-header">Montana</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 406">406</a></li>
+                                    <li role="presentation" class="dropdown-header">Nebraska</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 308">308</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 402">402</a></li>
+                                    <li role="presentation" class="dropdown-header">Nevada</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 702">702</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 775">775</a></li>
+                                    <li role="presentation" class="dropdown-header">New Hampshire</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 603">603</a></li>
+                                    <li role="presentation" class="dropdown-header">New Jersey</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 201">201</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 609">609</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 732">732</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 856">856</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 908">908</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 973">973</a></li>
+                                    <li role="presentation" class="dropdown-header">New Mexico</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 505">505</a></li>
+                                    <li role="presentation" class="dropdown-header">New York</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 212">212</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 315">315</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 347">347</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 516">516</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 518">518</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 607">607</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 631">631</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 646">646</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 716">716</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 718">718</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 845">845</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 914">914</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 917">917</a></li>
+                                    <li role="presentation" class="dropdown-header">North Carolina</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 252">252</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 336">336</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 704">704</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 828">828</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 910">910</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 919">919</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 980">980</a></li>
+                                    <li role="presentation" class="dropdown-header">North Dakota</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 701">701</a></li>
+                                    <li role="presentation" class="dropdown-header">Ohio</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 216">216</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 234">234</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 330">330</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 419">419</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 440">440</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 513">513</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 614">614</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 740">740</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 937">937</a></li>
+                                    <li role="presentation" class="dropdown-header">Oklahoma</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 405">405</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 580">580</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 918">918</a></li>
+                                    <li role="presentation" class="dropdown-header">Oregon</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 503">503</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 541">541</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 971">971</a></li>
+                                    <li role="presentation" class="dropdown-header">Pennsylvania</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 215">215</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 267">267</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 412">412</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 484">484</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 570">570</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 610">610</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 717">717</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 724">724</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 814">814</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 878">878</a></li>
+                                    <li role="presentation" class="dropdown-header">Rhode Island</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 401">401</a></li>
+                                    <li role="presentation" class="dropdown-header">South Carolina</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 803">803</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 843">843</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 864">864</a></li>
+                                    <li role="presentation" class="dropdown-header">South Dakota</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 605">605</a></li>
+                                    <li role="presentation" class="dropdown-header">Tennessee</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 423">423</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 615">615</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 731">731</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 865">865</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 901">901</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 931">931</a></li>
+                                    <li role="presentation" class="dropdown-header">Texas</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 210">210</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 214">214</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 254">254</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 281">281</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 361">361</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 409">409</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 469">469</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 512">512</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 682">682</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 713">713</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 806">806</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 817">817</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 830">830</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 832">832</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 903">903</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 915">915</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 936">936</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 940">940</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 956">956</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 972">972</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 979">979</a></li>
+                                    <li role="presentation" class="dropdown-header">Utah</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 435">435</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 801">801</a></li>
+                                    <li role="presentation" class="dropdown-header">Vermont</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 802">802</a></li>
+                                    <li role="presentation" class="dropdown-header">Virginia</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 276">276</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 434">434</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 540">540</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 571">571</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 703">703</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 757">757</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 804">804</a></li>
+                                    <li role="presentation" class="dropdown-header">Washington</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 206">206</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 253">253</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 360">360</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 425">425</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 509">509</a></li>
+                                    <li role="presentation" class="dropdown-header">West Virginia</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 304">304</a></li>
+                                    <li role="presentation" class="dropdown-header">Wisconsin</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 262">262</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 414">414</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 608">608</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 715">715</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 920">920</a></li>
+                                    <li role="presentation" class="dropdown-header">Wyoming</li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = 307">307</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </dd>
+            <dt>
+	          	<button class="btn btn-default" type="button" ng-click="findNumbers(newNumber.area_code, newNumber.countryCode)"><i class="fa fa-search"></i></button>
+			</dt>
+            <dd>
+            	<div class="form-group" style="margin-left: 20px;">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                <span ng-show="!availableNumbers">Resulting Numbers to search...</span>
+                                <span ng-show="searching"><i class="fa fa-spinner fa-spin"></i> Searching...</span>
+                                <span ng-show="availableNumbers.length == 0 && !searching">Not Available</span>
+                                <span ng-show="availableNumbers.length > 0 && !newNumber.phone_number">Select number <span class="caret"></span></span>
+                                <span ng-show="availableNumbers.length > 0 && newNumber.phone_number">{{newNumber.friendly_name}} <span class="caret"></span></span>
+                            </button>
+                            <ul class="dropdown-menu scrollable-menu" role="menu">
+                                <li ng-repeat="number in availableNumbers">
+                                    <a href="" ng-click="newNumber.phone_number = number.phoneNumber; newNumber.friendly_name = number.friendlyName">
+                                        {{number.friendlyName}} <span class="fa fa-phone" ng-show="number.voiceCapable" tooltip="Voice" tooltip-placement="bottom"></span> <span class="fa fa-print" ng-show="number.faxCapable" tooltip="Fax" tooltip-placement="bottom"></span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+            </dd>
+            <!--
+            <select class="form-control" ng-model="newNumber.phone_number" ng-show="availableNumbers.length > 0">
+                <option ng-repeat="number in availableNumbers" value="{{number.phoneNumber}}">{{number.friendlyName}} <i class="fa fa-envelope"></i> </option>
+            </select>
+            -->
+        </dl>
+        <div class="text-right">
+            <button type="button" ng-click="isCollapsed = !isCollapsed" class="btn btn-default btn-sm"><i class="fa fa-ellipsis-h"></i> Optional Parameters</legend></button>
+        </div>
+        <div collapse="isCollapsed">
+            <hr />
+            <dl class="dl-horizontal form-dl">
+                <dt>Friendly Name</dt>
+                <dd class="form-inline">
+                    <input type="text" class="form-control input-large" id="new-number-friendly-name" placeholder="Hot Line Number" ng-model="newNumber.friendly_name" />
+                </dd>
+            </dl>
+            <h4>Voice</h4>
+            <dl class="dl-horizontal form-dl">
+                <dt>Voice Request URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newNumber.voice_method" url-var="newNumber.voice_url" apps="availableApps"></rc-endpoint-url>
+                </dd>
+                <dt>Voice Fallback URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newNumber.voice_fallback_method" url-var="newNumber.voice_fallback_url" apps="availableApps"></rc-endpoint-url>
+                </dd>
+                <dt>Status Callback URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newNumber.status_callback_method" url-var="newNumber.status_callback_url"></rc-endpoint-url>
+                </dd>
+            </dl>
+            <h4>SMS Messaging</h4>
+            <dl class="dl-horizontal form-dl">
+                <dt>SMS Request URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newNumber.sms_method" url-var="newNumber.sms_url" apps="availableApps"></rc-endpoint-url>
+                </dd>
+                <dt>SMS Fallback URL</dt>
+                <dd>
+                    <rc-endpoint-url method-var="newNumber.sms_fallback_method" url-var="newNumber.sms_fallback_url" apps="availableApps"></rc-endpoint-url>
+                </dd>
+            </dl>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default cancel" ng-click="closeRegisterIncomingNumber()">Cancel</button>
+    <button class="btn btn-primary" ng-click="registerIncomingNumber(newNumber)">Register</button>
+</div>

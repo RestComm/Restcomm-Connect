@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Gather action="gather-action-finish.xml">
+	  <Pause length="1" />
+	  <Play>audio/beep.wav</Play>
+	</Gather>
+</Response>

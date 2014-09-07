@@ -1,0 +1,161 @@
+<div class='alert-container'>
+	<!-- navigation bar for errors -->
+	<nav ng-show='projectError' class="navbar navbar-default" role="navigation">
+		<div ng-switch on="projectError.className" class="collapse navbar-collapse navbar-ex1-collapse">
+			<div ng-switch-when='ProjectDoesNotExist' class='navbar-text navbar-rvd-centered'>
+				Project <em>{{projectName}}</em> not  found. <a href="#">View available projects</a>
+			</div>
+			<div ng-switch-default class='navbar-text navbar-rvd-centered'>
+				Unknown error. <a href="#">View available projects</a>
+			</div>			
+		</div>
+	</nav>
+
+	<div ng-hide='projectError'>	
+	
+		<nav  class="navbar navbar-default" role="navigation">
+			<div class="collapse navbar-collapse navbar-ex1-collapse">
+	
+				<ul class="nav navbar-nav">
+					<li><span class='navbar-text'><i class='fa fa-share'></i>
+							<em>Startup module</em></span></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{nodeNamed(startNodeName).label}} <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+						</ul>
+					</li>
+					<li><a ng-click="addNode(undefined, projectKind)" class="rvd-clickable-text"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
+				</ul>
+	
+				<ul class="nav navbar-nav navbar-right">
+					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i class='fa fa-save'></i>&nbsp; Save <span class='spinner-save' us-spinner='spinnerSettings' spinner-key="spinner-save"></span></a></li>
+					<li class='rvd-appurl' ng-show="startNodeSet()"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
+					<li><a href="#/project-manager/{{projectKind ? projectKind : 'voice'}}"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
+				</ul>
+			</div>
+		</nav>
+		
+		<div class='rvd-alerts'>
+			<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert(alert)">{{alert.msg}}</alert>
+		</div>
+		
+		<div class='row'>
+			<div class='col-md-2'>
+				<div ng-show="nodeNamed(startNodeName)==null" class='rvd-subheader-message'>
+					<span class="validation-error">No <em>Startup module</em> is set</span>
+				</div>
+			</div>
+			<div class='col-md-8'>
+			</div>
+	
+		</div>
+	
+		<div class="row">
+	
+			<!-- Left menu -->
+			<div class="col-md-2">
+	
+				<div ng-show='!projectKind || projectKind=="voice"' class='form-group'>
+					<div basic-draggable drop-target='.steps' class="verb-button button-play label label-primary rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-externalService label label-primary rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-reject label label-primary rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</div>
+					
+					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-pause label label-primary rvd-pickable"><i class='fa fa-pause'></i> &nbsp;Pause</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-record label label-primary rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;Record</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-fax label label-primary rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
+				</div>			
+				<div ng-show='projectKind=="ussd"' class='form-group'>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;Language</div>
+					<div basic-draggable drop-target='.ussd-collect-messages,.steps' class="label label-primary verb-button button-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+				</div>
+				<div ng-show='projectKind=="sms"' class='form-group'>
+					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
+				</div>				
+			
+				<div ng-show='projectKind=="voice"'>
+					<h5 class='text-center'><strong>Audio resources</strong></h5>
+					
+					<div class='drop-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
+						<div class="drop-prompt">Drop new audio resources here</div>
+					</div>
+					<div ng-file-drop-available="dropSupported=true" ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+					
+					<div class='text-left more-audio-resources'>
+						<a class='rvd-clickable' ng-show='!showAudioResources' ng-click='showAudioResources = true'>More...</a>
+					</div>
+					
+					<div ng-show='showAudioResources'>									
+						<div class='row' ng-repeat='wavItem in wavList'>
+							<div ng-show='!wavItem.viewMode'>
+								<div class='col-md-10 ellipsis' tooltip='{{wavItem.filename}}' tooltip-popup-delay="1000" tooltip-trigger="mouseenter">{{wavItem.filename}}</div>
+								<div class='col-md-1'>
+									<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
+								</div>
+							</div>
+								
+							<div class="col-md-12 text-center confirm-delete " ng-show="wavItem.viewMode=='confirm-delete'">
+								<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
+								<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>
+							</div>						
+							
+						</div>
+						<a class='rvd-clickable' ng-click="showAudioResources = false"><i class="fa fa-angle-double-up" ></i></a>
+					</div>	
+
+						
+				</div>
+			</div>
+	
+			<!-- Workspace on the right -->
+			<div class="col-md-10">
+				<div class="editor">
+					<div class="panel-body editor">
+						<ul class="nav nav-tabs">
+							<!-- tabs -->
+							<li ng-repeat='node in nodes'
+								ng-class="{active:isActiveNode(node)}"><span
+								ng-click='setActiveNode(node)' href="#" class='navtab'
+								tooltip='{{node.name}}'> <span
+									ng-show='!node.iface.editLabel'> <!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
+										<a ng-click='editLabelIfSelected(node)'>{{node.label}}</a>
+										&nbsp;&nbsp;&nbsp;<i ng-click='removeNode($index)'
+										ng-show="isActiveNode(node)"
+										class='fa fa-trash-o rvd-clickable'></i>
+								</span>
+									<div ng-show='node.iface.editLabel'>
+										<input type='text' ng-model='node.label'
+											ng-focus='node.iface.editLabel'
+											ng-focus-lost="node.iface.editLabel=!node.iface.editLabel" />
+										&nbsp;
+									</div>
+							</span></li>
+						</ul>
+	
+						<div class="rvd-node" ng-repeat="node in nodes"
+							ng-show="isActiveNode(node)">
+							
+							<ng-include src="'templates/modules/' + node.kind + 'Module.html'"></ng-include>
+							
+						</div>
+	
+					</div>
+				</div>
+			</div>
+	
+	
+		</div>
+	
+	</div>
+</div>
+

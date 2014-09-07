@@ -1,0 +1,88 @@
+<rc-numbers-pills></rc-numbers-pills>
+
+<rc-page-title icon="phone" title="{{ numberDetails.phone_number }}" sub-title="{{ numberDetails.friendly_name }}"></rc-page-title>
+
+<div class="well well-sm">
+    <h3 class="text-muted details-header">Voice</h3>
+    <fieldset>
+        <label class="pull-left" for="voice-url">
+            <h4 class="account-detail-field-name">Voice Request URL</h4>
+        </label>
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="availableApps"></rc-endpoint-url>
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="voice-fallback-url">
+            <h4 class="account-detail-field-name">Voice Fallback URL</h4>
+        </label>
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="numberDetails.voice_fallback_method" url-var="numberDetails.voice_fallback_url" apps="availableApps"></rc-endpoint-url>
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="status-callback-url">
+            <h4 class="account-detail-field-name">Status Callback URL</h4>
+        </label>
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="numberDetails.status_callback_method" url-var="numberDetails.status_callback"></rc-endpoint-url>
+        </span>
+    </fieldset>
+</div>
+<div class="well well-sm">
+    <h3 class="text-muted details-header">SMS</h3>
+    <fieldset>
+        <label class="pull-left" for="sms-url">
+            <h4 class="account-detail-field-name">SMS Request URL</h4>
+        </label>
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="availableApps"></rc-endpoint-url>
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="sms-fallback-url">
+            <h4 class="account-detail-field-name">SMS Fallback URL</h4>
+        </label>
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="numberDetails.sms_fallback_method" url-var="numberDetails.sms_fallback_url" apps="availableApps"></rc-endpoint-url>
+        </span>
+    </fieldset>
+</div>
+<div class="well well-sm">
+    <h3 class="text-muted details-header">USSD</h3>
+    <fieldset>
+        <label class="pull-left" for="ussd-url">
+            <h4 class="account-detail-field-name">USSD Request URL</h4>
+        </label>
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="numberDetails.ussd_method" url-var="numberDetails.ussd_url"></rc-endpoint-url>
+        </span>
+    </fieldset>
+    <br>
+    <fieldset>
+        <label class="pull-left" for="ussd-fallback-url">
+            <h4 class="account-detail-field-name">USSD Fallback URL</h4>
+        </label>
+        <span class="col-md-9 pull-right">
+            <rc-endpoint-url method-var="numberDetails.ussd_fallback_method" url-var="numberDetails.ussd_fallback_url"></rc-endpoint-url>
+        </span>
+    </fieldset>
+</div>
+<div class="well well-sm">
+    <h3 class="text-muted details-header">MISC</h3>
+    <fieldset>
+        <label class="checkbox pull-left">
+            <input type=checkbox ng-model="numberDetails.voice_caller_id_lookup"><h4 class="no-top-margin inline">Caller ID Lookup <small><i class="fa fa-info-sign inline" tooltip="Uses CNAM database lookup to find Caller ID"></i></small></h4>
+        </label>
+    </fieldset>
+</div>
+<div class="">
+    <span class="pull-right">
+        <a href="#/numbers" class="btn btn-default">Close</a>
+        <button class="btn btn-primary" ng-click="updateIncomingNumber(numberDetails)">Save Changes</button>
+    </span>
+    <button class="btn btn-danger" ng-click="confirmNumberDelete(numberDetails)">Release Number</button>
+</div>

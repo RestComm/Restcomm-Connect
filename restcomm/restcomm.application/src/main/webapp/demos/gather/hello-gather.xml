@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Gather action="/restcomm/demos/gather/gather.jsp" method="GET" timeout="5" finishOnKey="*">
+        <Play>/restcomm/audio/demo-prompt.wav</Play>
+        <Say>please enter a digit and press star</Say>
+	</Gather>
+    <Say>You did not enter a valid digit</Say>
+	<Say>Gather ended with no DTMF</Say>
+</Response>

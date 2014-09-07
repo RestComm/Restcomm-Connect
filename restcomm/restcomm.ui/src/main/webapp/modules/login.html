@@ -1,0 +1,87 @@
+<div class="row">
+    <div class="text-center"><img src="resources/img/restcomm-logo.png" />&nbsp;&nbsp;&nbsp;<img src="resources/img/restcomm-letters.png" /><hr></div>
+</div>
+<div class="row">
+    <div class="col-md-8 col-md-offset-2 well well-large" ng-class="{'shake animated': loginFailed}" ng-hide="updatePassword">
+        <legend>Login</legend>
+        <form name="loginForm" class="form-horizontal" ng-submit="login()">
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="inputHost">Host</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span class="input-group-addon"><i class="fa fa-cogs"></i> </span><input id="inputHost" type="text" class="form-control" placeholder="Host" value="{{credentials.host}}" ng-model="credentials.host" disabled required />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="inputAccSID">Email <span class="text-muted">/</span> Account SID</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span class="input-group-addon"><i class="fa fa-user"></i> </span><input id="inputAccSID" type="text" class="form-control" placeholder="Email or Account SID" ng-model="credentials.sid" required autofocus />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="inputAuthToken">Password</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="inputAuthToken" type="password" class="form-control" placeholder="Password" ng-model="credentials.token" required />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="controls">
+                    <label class="col-md-4 col-lg-offset-4 pull-right checkbox">
+                        <input type="checkbox" name="remember" checked><small> Remember Me</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <!--<button class="btn btn-inverse btn-mini" type="button" onclick="autofill();"><i class="fa fa-key"></i> Admin</button>-->
+                <div class="controls pull-right">
+                    <button class="btn btn-default" type="reset">Clear</button>
+                    <button class="btn btn-primary">Login</button>
+                </div>
+            </div>
+            <div>
+                <alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-8 col-md-offset-2 well well-large" ng-show="updatePassword">
+        <legend>Update Password</legend>
+        <form name="updatePassForm" class="form-horizontal" ng-submit="update()">
+            <div class="control-group text-center">
+                <i class="fa fa-warning fa-3x"></i>
+                <h4>Hello <em>{{credentials.sid}}</em>, since this is the first time logging in to RestComm, you are required to update your password.</h4>
+            </div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="newPassword">New Password</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="newPassword" type="password" class="col-md-3 form-control" placeholder="Password" ng-model="newPassword" required />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="confPassword">Confirm Password</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="confPassword" type="password" class="col-md-3 form-control" placeholder="Confirm Password" ng-model="confPassword" required password-match="newPassword" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="controls pull-right">
+                    <button class="btn btn-danger" ng-disabled="updatePassForm.$invalid">Update</button>
+                </div>
+            </div>
+            <div>
+                <alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial timeLimit="10" timeout="10">
+	  <Client>alice</Client>
+	</Dial>
+</Response>

@@ -1,0 +1,45 @@
+<rc-numbers-pills></rc-numbers-pills>
+
+<rc-page-title icon="phone" title="NUMBERS" sub-title="SIP CLIENTS"></rc-page-title>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="pull-left">
+            <button class="btn btn-primary" ng-click="showRegisterSIPClientModal()"><i class="fa fa-plus"></i> Register SIP Client</button>
+        </div>
+
+        <div ng-show="clientsList.length > 0"><rc-list-filter filter="query.login"></rc-list-filter></div>
+
+        <div ng-hide="(clientsList | filter:query).length > 0" class="jumbotron no-records-alert">
+            <h2><i class="fa fa-exclamation-circle"></i> No SIP clients <span ng-show="clientsList.length == 0">registered</span><span ng-show="clientsList.length > 0">matching query</span>. <small>Register one now!</small></h2>
+        </div>
+
+        <table ng-show="(clientsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
+            <thead>
+                <th class="width-20pc">SIP HANDLE</th>
+                <th class="width-20pc" colspan="2">NAME</th>
+                <th>FEATURES</th>
+                <th class="width-10pc">&nbsp;</th>
+            </thead>
+            <tbody>
+            <tr ng-repeat="sc in filtered = (clientsList | filter:query)">
+                <td><h4 class="text-center"><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></h4></td>
+                <td><h5 class="text-center" ng-hide="editingFriendlyName == sc.login">{{ sc.friendly_name  }} </h5>
+                    <h5 class="text-center" ng-show="editingFriendlyName == sc.login"><input type="text" class="input-small" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus /></h5>
+                </td>
+                <td><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login"></i></h5></td>
+                <td>
+                    <span ng-show="{{ sc.voice_url.length > 0  }}"><i class="fa fa-microphone available-feature"></i> <small> {{ sc.voice_url  }}</small></span>
+                    <span class="opacity30" ng-hide="{{ sc.voice_url.length > 0  }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
+                    <br>
+                    <span ng-show="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ sc.sms_url  }}</small></span>
+                    <span class="opacity30" ng-hide="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>
+                </td>
+                <td class="text-right">
+                    <div class="btn-delete-div"><button class="btn btn-danger" ng-click="confirmClientDelete(sc)">Delete</button></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

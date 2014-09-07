@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Make sure you change the username, ipaddress and port of the SIP URI before executing this application -->
+<Response>
+	<Dial timeLimit="10" timeout="10">
+	  <Sip>sip:username@ipaddress:port</Sip>
+	</Dial>
+</Response>

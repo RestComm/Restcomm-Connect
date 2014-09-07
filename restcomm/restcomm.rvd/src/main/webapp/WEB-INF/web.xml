@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	id="WebApp_ID" version="2.5">
+	<display-name>RVD</display-name>
+
+	<servlet>
+		<servlet-name>RVD Initialization Servlet</servlet-name>
+		<servlet-class>org.mobicents.servlet.restcomm.rvd.bootstrap.RvdInitializationServlet</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>RVD Services</servlet-name>
+		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<!-- automatic package scanning for some reason does not work with Jersey 
+			in JBoss -->
+		<!-- <init-param> <param-name>com.sun.jersey.config.property.packages</param-name> 
+			<param-value>org.mobicents.servlet.restcomm.rvd</param-value> </init-param> -->
+		<!-- In order to add a resource class add it manually from Application 
+			class specified below -->
+		<init-param>
+			<param-name>javax.ws.rs.Application</param-name>
+			<param-value>org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	
+	<servlet-mapping>
+		<servlet-name>RVD Services</servlet-name>
+		<url-pattern>/services/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Disable JBoss RESTeasy JAX-RS implementation as it conflicts with Jersey -->
+	<context-param>
+		<param-name>resteasy.scan</param-name>
+		<param-value>false</param-value>
+	</context-param>
+	<context-param>
+		<param-name>resteasy.scan.providers</param-name>
+		<param-value>false</param-value>
+	</context-param>
+	<context-param>
+		<param-name>resteasy.scan.resources</param-name>
+		<param-value>false</param-value>
+	</context-param>
+
+
+
+
+
+</web-app>

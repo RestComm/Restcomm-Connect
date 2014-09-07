@@ -1,0 +1,795 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.telestax.servlet</groupId>
+	<artifactId>restcomm</artifactId>
+	<version>7.2.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>RestComm</name>
+	<description>A unified communications platform for web developers.</description>
+	<url>http://www.restcomm.org</url>
+
+	<developers>
+		<developer>
+			<id>thomas</id>
+			<name>Thomas Quintana</name>
+			<email>thomas.quintana@telestax.com</email>
+			<organization>TeleStax, Inc.</organization>
+			<organizationUrl>http://www.telestax.com/</organizationUrl>
+			<roles>
+				<role>RestComm Project Lead</role>
+			</roles>
+			<timezone>0</timezone>
+		</developer>
+		<developer>
+			<id>jean.deruelle</id>
+			<name>Jean Deruelle</name>
+			<email>jean.deruelle@telestax.com</email>
+			<organization>TeleStax, Inc</organization>
+			<organizationUrl>http://www.telestax.com/</organizationUrl>
+			<roles>
+				<role>SIP Servlets Project Lead</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<id>george.vagenas</id>
+			<name>George Vagenas</name>
+			<email>george.vagenas@telestax.com</email>
+			<organization>TeleStax, Inc</organization>
+			<organizationUrl>http://www.telestax.com/</organizationUrl>
+			<roles>
+				<role>SIP Testing Project Lead</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+	<licenses>
+		<license>
+			<name>GNU Affero General Public License</name>
+			<url>http://www.gnu.org/licenses/agpl-3.0.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
+		<developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
+		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<distributionManagement>
+		<repository>
+			<id>telscale-releases-repository</id>
+			<name>TelScale Releases Repository</name>
+			<url>http://telestax.artifactoryonline.com/telestax/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>telscale-snapshots-repository</id>
+			<name>TelScale Snapshots Repository</name>
+			<url>http://telestax.artifactoryonline.com/telestax/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<properties>
+		<scala-lang.version>2.10.1</scala-lang.version>
+		<akka.version>2.1.2</akka.version>
+		<guava.version>14.0.1</guava.version>
+		<log4j.version>1.2.16</log4j.version>
+		<slf4j.version>1.5.5</slf4j.version>
+		<commons-configuration.version>1.7</commons-configuration.version>
+		<commons-io.version>2.4</commons-io.version>
+		<jain.sdp.version>1.0</jain.sdp.version>
+		<jain.mgcp.version>1.0</jain.mgcp.version>
+		<mobicents.mgcp.impl.version>3.0.0.Final</mobicents.mgcp.impl.version>
+		<javamail.version>1.4</javamail.version>
+		<servletapi.version>2.5</servletapi.version>
+		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
+		<sipservletapi.version>2.1.547</sipservletapi.version>
+		<staxapi.version>1.0.1</staxapi.version>
+		<staximpl.version>1.2.0</staximpl.version>
+		<servlet-api.version>7.0.50</servlet-api.version>
+		<shirocore.version>1.2.0</shirocore.version>
+		<shiroweb.version>1.2.0</shiroweb.version>
+		<jersey.version>1.13</jersey.version>
+		<httpclient.version>4.2.5</httpclient.version>
+		<gson.version>2.1</gson.version>
+		<xstream.version>1.4.2</xstream.version>
+		<mongodb.version>2.7.2</mongodb.version>
+		<mybatis.version>3.2.2</mybatis.version>
+		<jodatime.version>2.0</jodatime.version>
+		<libphonenumber.version>4.3</libphonenumber.version>
+		<junit.version>4.10</junit.version>
+		<scalatest.version>1.9.1</scalatest.version>
+		<hsqldb.version>1.8.0.10</hsqldb.version>
+		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
+		<sip-ri.version>1.2.222</sip-ri.version>
+		<arquillian.version>1.0.3.Final</arquillian.version>
+		<mss.arquillian.version>1.0.0-CR1</mss.arquillian.version>
+		<mss.shrinkwrap.version>1.0.0-CR1</mss.shrinkwrap.version>
+		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
+		<sipunit.version>2.0.0</sipunit.version>
+		<!--tomcat.version>6.0.35</tomcat.version -->
+		<tomcat7.version>7.0.50</tomcat7.version>
+		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
+		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
+		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
+	</properties>
+	<modules>
+		<!-- <module>restcomm.docs</module> -->
+		<module>restcomm.application</module>
+		<module>restcomm.commons</module>
+		<module>restcomm.dao</module>
+		<module>restcomm.asr</module>
+		<module>restcomm.mgcp</module>
+		<module>restcomm.fax</module>
+		<module>restcomm.sms.api</module>
+		<module>restcomm.telephony.api</module>
+		<module>restcomm.interpreter</module>
+		<module>restcomm.http</module>
+		<module>restcomm.sms</module>
+		<module>restcomm.provisioning.number.api</module>
+		<module>restcomm.provisioning.number.vi</module>
+		<module>restcomm.provisioning.number.nexmo</module>
+		<module>restcomm.telephony</module>
+		<module>restcomm.tts.api</module>
+		<module>restcomm.tts.voicerss</module>
+		<module>restcomm.testsuite</module>
+		<module>restcomm.ussd</module>
+		<module>restcomm.ui</module>
+		<module>restcomm.rvd</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Utilities -->
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>${guava.version}</version>
+			</dependency>
+
+			<!-- Message Passing -->
+			<dependency>
+				<groupId>org.scala-lang</groupId>
+				<artifactId>scala-library</artifactId>
+				<version>${scala-lang.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.typesafe.akka</groupId>
+				<artifactId>akka-actor_2.10</artifactId>
+				<version>${akka.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.typesafe.akka</groupId>
+				<artifactId>akka-slf4j_2.10</artifactId>
+				<version>${akka.version}</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>${log4j.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-configuration</groupId>
+				<artifactId>commons-configuration</artifactId>
+				<version>${commons-configuration.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>javax.sdp</groupId>
+				<artifactId>nist-sdp</artifactId>
+				<version>${jain.sdp.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>jain</groupId>
+				<artifactId>jain-mgcp-ri</artifactId>
+				<version>${jain.mgcp.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mobicents.media.client</groupId>
+				<artifactId>mgcp-driver</artifactId>
+				<version>${mobicents.mgcp.impl.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>javax.mail</groupId>
+				<artifactId>mail</artifactId>
+				<version>${javamail.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>javax.servlet</groupId>
+				<artifactId>javax.servlet-api</artifactId>
+				<version>3.0.1</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mobicents.servlet.sip</groupId>
+				<artifactId>sip-servlets-spec</artifactId>
+				<version>${sipservletapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
+				<version>${servlet-api.version}</version> </dependency -->
+
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-core</artifactId>
+				<version>${shirocore.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-web</artifactId>
+				<version>${shiroweb.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-server</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-client</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>stax</groupId>
+				<artifactId>stax-api</artifactId>
+				<version>${staxapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>stax</groupId>
+				<artifactId>stax</artifactId>
+				<version>${staximpl.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclient.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.code.gson</groupId>
+				<artifactId>gson</artifactId>
+				<version>${gson.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.thoughtworks.xstream</groupId>
+				<artifactId>xstream</artifactId>
+				<version>${xstream.version}</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongo-java-driver</artifactId>
+				<version>${mongodb.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mybatis</groupId>
+				<artifactId>mybatis</artifactId>
+				<version>${mybatis.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>joda-time</groupId>
+				<artifactId>joda-time</artifactId>
+				<version>${jodatime.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.googlecode.libphonenumber</groupId>
+				<artifactId>libphonenumber</artifactId>
+				<version>${libphonenumber.version}</version>
+			</dependency>
+			<!-- Testing -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.scalatest</groupId>
+				<artifactId>scalatest_2.9.1</artifactId>
+				<version>${scalatest.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>com.typesafe.akka</groupId>
+				<artifactId>akka-testkit_2.10</artifactId>
+				<version>${akka.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.tomcat</groupId>
+				<artifactId>tomcat-coyote</artifactId>
+				<version>${tomcat7.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.tomcat</groupId>
+				<artifactId>tomcat-jasper</artifactId>
+				<version>${tomcat7.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>javax.sip</groupId>
+				<artifactId>jain-sip-ri</artifactId>
+				<version>${sip-ri.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mobicents.servlet.sip.containers</groupId>
+				<artifactId>sip-servlets-catalina-7</artifactId>
+				<version>${sipservletapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mobicents.servlet.sip.containers</groupId>
+				<artifactId>sip-servlets-tomcat-7</artifactId>
+				<version>${sipservletapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mobicents.servlet.sip</groupId>
+				<artifactId>sip-servlets-application-router</artifactId>
+				<version>${sipservletapi.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>${hsqldb.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.mobicents.arquillian.container</groupId>
+				<artifactId>mss-tomcat-embedded-7</artifactId>
+				<version>${mss.arquillian.version}</version>
+				<scope>test</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>com.telscale.licensing</groupId>
+						<artifactId>lce-core</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jboss.arquillian.junit</groupId>
+				<artifactId>arquillian-junit-container</artifactId>
+				<version>${arquillian.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jboss.shrinkwrap.resolver</groupId>
+				<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+				<version>${shrinkwrap.resolver.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jboss.shrinkwrap.resolver</groupId>
+				<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+				<version>${shrinkwrap.resolver.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.cafesip.sipunit</groupId>
+				<artifactId>sipunit</artifactId>
+				<version>${sipunit.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mobicents</groupId>
+				<artifactId>checkstyle</artifactId>
+				<version>${mobicents.checkstyle.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>att</groupId>
+				<artifactId>naturalvoices</artifactId>
+				<version>5.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Testing -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_2.9.1</artifactId>
+			<version>${scalatest.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-testkit_2.10</artifactId>
+			<version>${akka.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-coyote</artifactId>
+			<version>${tomcat7.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jasper</artifactId>
+			<version>${tomcat7.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.sip</groupId>
+			<artifactId>jain-sip-ri</artifactId>
+			<version>${sip-ri.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-tomcat-7</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>sip-servlets-application-router</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>${hsqldb.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.arquillian.container</groupId>
+			<artifactId>mss-tomcat-embedded-7</artifactId>
+			<version>${mss.arquillian.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.arquillian.junit</groupId>
+			<artifactId>arquillian-junit-container</artifactId>
+			<version>${arquillian.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+			<version>${shrinkwrap.resolver.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+			<version>${shrinkwrap.resolver.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.cafesip.sipunit</groupId>
+			<artifactId>sipunit</artifactId>
+			<version>${sipunit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents</groupId>
+			<artifactId>checkstyle</artifactId>
+			<version>${mobicents.checkstyle.version}</version>
+		</dependency>
+
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
+			<version>5.1</version> </dependency -->
+	</dependencies>
+
+	<build>
+		<finalName>restcomm</finalName>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<compilerArguments>
+						<g />
+					</compilerArguments>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.8</version>
+				<configuration>
+					<useProjectReferences>true</useProjectReferences>
+				</configuration>
+			</plugin>
+			<!-- Checkstyle -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>${checkstyle.plugin.version}</version>
+				<configuration>
+					<configLocation>/checkstyle/checkstyle.xml</configLocation>
+					<consoleOutput>true</consoleOutput>
+					<failsOnError>true</failsOnError>
+					<useFile />
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.mobicents</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>${mobicents.checkstyle.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>check-style</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>checkstyle</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.17</version>
+					<configuration>
+						<argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
+						<excludes>
+							<exclude>**/ClientDialTest.java</exclude>
+							<exclude>**/ClientsEndpointTest.java</exclude>
+						</excludes>
+						<forkCount>1</forkCount>
+						<reuseForks>false</reuseForks>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>docs</id>
+			<modules>
+				<module>restcomm.docs</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>set-git-hash</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>buildnumber-maven-plugin</artifactId>
+						<version>1.0</version>
+						<executions>
+							<execution>
+								<phase>validate</phase>
+								<goals>
+									<goal>create</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>maven-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-release-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>generate-javadoc</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.7</version>
+						<configuration>
+							<nohelp>true</nohelp>
+						</configuration>
+						<executions>
+							<execution>
+								<id>attach-javadoc</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>install</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<repositories>
+		<repository>
+			<id>mobicents-public-repository-group</id>
+			<name>Mobicens Public Maven Repository Group</name>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>jboss-public-repository-group</id>
+			<name>JBoss Public Maven Repository Group</name>
+			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+
+		<!-- Local repository for the ATT TTS Java wrapper library -->
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
+			</repository> -->
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mobicents-public-repository-group</id>
+			<name>Mobicens Public Maven Repository Group</name>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>jboss-public-repository-group</id>
+			<name>JBoss Public Maven Repository Group</name>
+			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>
