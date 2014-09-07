@@ -29,7 +29,7 @@ Documentation
 
 Issue Tracking and Roadmap
 ========
-Coming shortly
+[Issue Tracker](https://github.com/Mobicents/RestComm/issues)
 
 Questions ?
 ========
