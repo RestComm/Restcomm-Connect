@@ -4,26 +4,58 @@ App.config([ '$routeProvider', function($routeProvider) {
 	
 	$routeProvider.when('/project-manager/:projectKind', {
 		templateUrl : 'templates/projectManager.html',
-		controller : 'projectManagerCtrl'
+		controller : 'projectManagerCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})
 	.when('/home', {
 		templateUrl : 'templates/home.html',
-		controller : 'homeCtrl'
+		controller : 'homeCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
-		controller : 'designerCtrl'
+		controller : 'designerCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();},
+			ccInfo: designerCtrl.getCcInfo
+		}
 	})
+	.when('/packaging/:projectName', {
+		templateUrl : 'templates/packaging/form.html',
+		controller : 'packagingCtrl',
+		resolve: {
+			rappWrap: function(RappService) {return RappService.getRapp();},
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
+	})
+	.when('/packaging/:projectName/download', {
+		templateUrl : 'templates/packaging/download.html',
+		controller : 'packagingDownloadCtrl',
+		resolve: { 
+			binaryInfo: packagingDownloadCtrl.getBinaryInfo,
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
+	})	
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
-		controller : 'upgradeCtrl'
-	})	
+		controller : 'upgradeCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
+	})
+	.when('/login', {
+		templateUrl : 'templates/login.html',
+		controller : 'loginCtrl'
+	})
 	.otherwise({
 		redirectTo : '/home'
 	});
 
-} ]);
-
+}]);
 
 
 App.factory('stepService', ['protos', function(protos) {
