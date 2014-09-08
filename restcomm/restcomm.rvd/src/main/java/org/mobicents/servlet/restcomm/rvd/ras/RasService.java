@@ -34,6 +34,7 @@ import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationExc
 import com.google.gson.Gson;
 import com.thoughtworks.xstream.XStream;
 
+
 import java.util.List;
 import java.util.UUID;
 /**
@@ -159,7 +160,7 @@ public class RasService {
 
         // Make sure no such restcomm app already exists (single instance limitation)
         //List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
-        List<RappItem> rappItems = FsProjectStorage.listRapps( projectStorage.listProjectNames(), workspaceStorage );
+        List<RappItem> rappItems = FsProjectStorage.listRapps( FsProjectStorage.listProjectNames(workspaceStorage), workspaceStorage );
         for ( RappItem rappItem : rappItems )
             if ( rappItem.rappInfo.getId() != null && rappItem.rappInfo.getId().equals(info.getId()) )
                 throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.rappInfo.getId() + "  already exists. Cannot import " + info.getName() + " app");

@@ -24,6 +24,14 @@ public class RvdContext {
         this.projectStorage = new FsProjectStorage(storageBase, marshaler);
     }
 
+//    public Interpreter createInterpreter(String appName, MultivaluedMap<String, String> requestParams) {
+//       throw new UnsupportedOperationException("You'll need a ProjectAwareRvdContext to use an interpreter");
+//    }
+
+    public ProjectLogger getProjectLogger() {
+        throw new UnsupportedOperationException("You'll need a ProjectAwareRvdContext to use ProjectLogger");
+    }
+
     public ModelMarshaler getMarshaler() {
         return marshaler;
     }
@@ -43,6 +51,4 @@ public class RvdContext {
     public FsStorageBase getStorageBase() {
         return storageBase;
     }
-
-
 }
