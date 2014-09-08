@@ -10,7 +10,8 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.stepService = stepService;
 	$scope.protos = protos;
 	$scope.selectedView = 'rcml';
-	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved parameters
+	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved
+							// parameters
 	console.log( ccInfo );
 	
 	// Prototype and constant data structures
@@ -243,13 +244,13 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	}
 	
 	$scope.saveCcInfo = function (projectName, ccInfo) {
-		//var deferred = $q.defer();
+		// var deferred = $q.defer();
 		return $http.post("services/projects/" + projectName + "/cc", $scope.ccInfo, {headers: {'Content-Type': 'application/data'}});
-		//.success( function () {deferred.resolve()})
-		//.error( function () {deferred.reject("Error saving CC info")});
-		//return deferred.promise;
+		// .success( function () {deferred.resolve()})
+		// .error( function () {deferred.reject("Error saving CC info")});
+		// return deferred.promise;
 	}
-	
+
 	$scope.openProject = function(name) {
 		$http({url: 'services/projects/' + name,
 				method: "GET"
@@ -601,17 +602,17 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		  templateUrl: 'templates/exceptionConfigModal.html',
 		  controller: exceptionConfigCtrl,
 		  size: 'lg',
-		  //resolve: {
-			//items: function () {
-			//  return $scope.items;
-			//}
-		  //}
+		  // resolve: {
+			// items: function () {
+			// return $scope.items;
+			// }
+		  // }
 		});
 
 		modalInstance.result.then(function (exceptionMappings) {
 			console.log(exceptionMappings);
 		}, function () {
-		  //$log.info('Modal dismissed at: ' + new Date());
+		  // $log.info('Modal dismissed at: ' + new Date());
 		});
 	}
 	
@@ -632,7 +633,8 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			$modalInstance.dismiss('cancel');
 		};
 		
-		// watch form validation status and copy to outside scope so that the OK button (which is outside the form's scope) status can be updated
+		// watch form validation status and copy to outside scope so that the OK
+		// button (which is outside the form's scope) status can be updated
 		$scope.watchForm = function (formValid) {
 			$scope.preventSubmit = !formValid;
 		}
@@ -652,9 +654,9 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 					if ( response.status == 404 )
 						deferred.resolve({});
 					else {
-						//console.log("BEFORE reject");
+						// console.log("BEFORE reject");
 						deferred.reject();
-						//console.log("AFTER reject");
+						// console.log("AFTER reject");
 					}
 				});
 				return deferred.promise;
@@ -664,9 +666,9 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 		modalInstance.result.then(function (settings) {
 			console.log(settings);
-			//$scope.settings
+			// $scope.settings
 		}, function () {
-		  //$log.info('Modal dismissed at: ' + new Date());
+		  // $log.info('Modal dismissed at: ' + new Date());
 		});		
 	}
 	
@@ -744,7 +746,7 @@ designerCtrl.getCcInfo = function ($route, $http, $q, ModelBuilder) {
 		deferred.resolve(ccInfo);
 	}, function (response) {
 		if ( response.status == 404 )
-			//deferred.resolve( ModelBuilder.build('CcInfo') );
+			// deferred.resolve( ModelBuilder.build('CcInfo') );
 			deferred.resolve( null );
 		else
 			deferred.reject(); // TODO - add an error code or message here

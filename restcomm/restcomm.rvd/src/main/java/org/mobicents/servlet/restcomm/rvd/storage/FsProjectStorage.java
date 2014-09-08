@@ -27,6 +27,7 @@ import org.mobicents.servlet.restcomm.rvd.ras.RappItem.RappStatus;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
@@ -112,11 +113,14 @@ public class FsProjectStorage implements ProjectStorage {
         return false;
     }
 
-    @Override
-    public List<String> listProjectNames() throws BadWorkspaceDirectoryStructure {
+    public static boolean projectExists(String projectName, WorkspaceStorage workspaceStorage) {
+        return workspaceStorage.entityExists(projectName, "");
+    }
+
+    public static List<String> listProjectNames(WorkspaceStorage workspaceStorage) throws BadWorkspaceDirectoryStructure {
         List<String> items = new ArrayList<String>();
 
-        File workspaceDir = new File(storageBase.getWorkspaceBasePath() );
+        File workspaceDir = new File(workspaceStorage.rootPath );
         if (workspaceDir.exists()) {
 
             File[] entries = workspaceDir.listFiles(new FileFilter() {
@@ -381,6 +385,14 @@ public class FsProjectStorage implements ProjectStorage {
 
     }
 
+    public static InputStream getWav(String projectName, String filename, WorkspaceStorage workspaceStorage) throws StorageException {
+        try {
+            return workspaceStorage.loadStream(RvdConfiguration.WAVS_DIRECTORY_NAME + File.separator + filename, projectName);
+        } catch (StorageEntityNotFound e) {
+            throw new WavItemDoesNotExist("Wav file does not exist - " + filename, e);
+        }
+    }
+
     @Override
     public void createProjectSlot(String projectName) throws StorageException {
         if ( projectExists(projectName) )
@@ -442,25 +454,6 @@ public class FsProjectStorage implements ProjectStorage {
 
         throw new StorageException("Can't find an available project name for base name '" + projectName + "'");
     }
-
-    /*
-    public void storeBootstrapInfo(String bootstrapInfo, String projectName) throws StorageException {
-        storageBase.storeProjectFile(bootstrapInfo, projectName, ".", "bootstrap");
-    }
-    */
-
-    /*
-    public boolean hasBootstrapInfo(String projectName) {
-        return storageBase.projectFileExists(projectName, ".", "bootstrap");
-    }
-    */
-
-    /*public JsonElement loadBootstrapInfo(String projectName) throws StorageException {
-        String data = storageBase.loadProjectFile(projectName, ".", "bootstrap");
-        JsonParser parser = new JsonParser();
-        JsonElement rootElement = parser.parse(data);
-        return rootElement;
-    }*/
 
     public static String loadBootstrapInfo(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
         return workspaceStorage.loadEntityString("bootstrap", projectName);
@@ -529,6 +522,8 @@ public class FsProjectStorage implements ProjectStorage {
         }
         return rapps;
     }
+
+
 
 
 }

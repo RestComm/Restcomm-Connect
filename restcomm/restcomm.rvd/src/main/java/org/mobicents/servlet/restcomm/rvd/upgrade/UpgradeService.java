@@ -5,7 +5,9 @@ import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.NoUpgradePathException;
@@ -18,9 +20,11 @@ public class UpgradeService {
     static final Logger logger = Logger.getLogger(UpgradeService.class.getName());
 
     private ProjectStorage projectStorage;
+    private WorkspaceStorage workspaceStorage;
 
-    public UpgradeService(ProjectStorage projectStorage) {
+    public UpgradeService(ProjectStorage projectStorage, WorkspaceStorage workspaceStorage) {
         this.projectStorage = projectStorage;
+        this.workspaceStorage = workspaceStorage;
     }
 
     //public UpgradeService(String otherWorkspaceLocation) {
@@ -87,7 +91,7 @@ public class UpgradeService {
     public void upgradeWorkspace() throws StorageException {
         BuildService buildService = new BuildService(projectStorage);
         int upgradedCount = 0;
-        for ( String projectName : projectStorage.listProjectNames() ) {
+        for ( String projectName : FsProjectStorage.listProjectNames(workspaceStorage) ) {
             try {
                 if ( upgradeProject(projectName) ) {
                     upgradedCount ++;

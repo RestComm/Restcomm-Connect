@@ -33,8 +33,9 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdContext;
+import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.ProjectLogger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
@@ -107,6 +108,23 @@ public class Interpreter {
     private RvdConfiguration rvdSettings;
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
+    private ProjectLogger projectLogger;
+
+    public ProjectLogger getProjectLogger() {
+        return projectLogger;
+    }
+
+    public void setProjectLogger(ProjectLogger projectLogger) {
+        this.projectLogger = projectLogger;
+    }
+
+    public void setRvdSettings(RvdConfiguration rvdSettings) {
+        this.rvdSettings = rvdSettings;
+    }
+
+    public void setProjectStorage(ProjectStorage projectStorage) {
+        this.projectStorage = projectStorage;
+    }
 
     private WorkspaceStorage workspaceStorage;
     private ModelMarshaler marshaler;
@@ -126,15 +144,17 @@ public class Interpreter {
     private List<NodeName> nodeNames;
 
 
-    public Interpreter(RvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
+    public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
         this.rvdSettings = rvdContext.getSettings();
         this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
-        this.targetParam = targetParam;
+        this.targetParam = requestParams.getFirst("target");
+        //this.targetParam = targetParam;
         this.appName = appName;
         this.requestParams = requestParams;
         this.workspaceStorage = workspaceStorage;
         this.marshaler = rvdContext.getMarshaler();
+        this.projectLogger = rvdContext.getProjectLogger();
 
         this.contextPath = httpRequest.getContextPath();
         init();
@@ -439,6 +459,7 @@ public class Interpreter {
 
                 logger.info("Requesting from url: " + url);
                 logger.debug("Requesting from url: " + url);
+                projectLogger.log("Requesting from url: " + url).tag("app",appName).tag("ES").tag("REQUEST").done();
                 if ( "POST".equals(esStep.getMethod()) ) {
                     HttpPost post = new HttpPost(url);
                     List <NameValuePair> values = new ArrayList <NameValuePair>();
@@ -473,6 +494,7 @@ public class Interpreter {
                     String entity_string = EntityUtils.toString(entity);
                     //logger.info("ES: Received " + entity_string.length() + " bytes");
                     //logger.debug("ES Response: " + entity_string);
+                    projectLogger.log(entity_string).tag("app",appName).tag("ES").tag("RESPONSE").done();
                     response_element = parser.parse(entity_string);
                 }
 

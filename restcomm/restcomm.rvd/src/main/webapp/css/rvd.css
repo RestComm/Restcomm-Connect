@@ -526,6 +526,7 @@ textarea.medium {
 	height: 150px;
 }
 
+<<<<<<< HEAD
 /* ------------------ #/designer --------------------------- */
 .rvd-designer .rvd-menu {
 	margin-bottom: 9px;
@@ -550,6 +551,8 @@ textarea.medium {
 }
 
 
+=======
+>>>>>>> ts720_rvd_issue419_application_logging
 /* ------------------ #/packaging/ view -------------------- */
 .rvd-packaging .col-md-4 .rvd-appversion {
 	width: 200px;
