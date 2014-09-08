@@ -505,7 +505,7 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     /*
      * Return a wav file from the project. It's the same as getWav() but it has the Query parameters converted to Path parameters
      */
