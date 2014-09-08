@@ -112,7 +112,7 @@ public class RvdController extends RestService {
 
         } catch ( RvdException e ) {
             logger.error(e.getMessage(), e);
-            rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("[EXCEPTION]").done();
+            rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
             rcmlResponse = "<Response><Hangup/></Response>";
         }
 
