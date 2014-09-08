@@ -213,6 +213,25 @@
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
 		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
 
+	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
+		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+	
+	<!-- Copy Admin UI -->
+        <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
+        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+
+	<!-- Copy RVD -->
+        <!--<copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
+		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+                        <include name="**/*" />
+                </fileset> 
+        </copy>-->
+	<copy tofile="${release.tomcat.dir}/webapps/restcomm-rvd.war" failonerror="true"
+		file="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
+
+	<!--Copy Rvd ES Demo-->	
+	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo.war" failonerror="true"
+		file="${basedir}/RvdExternalServicesDemo.war"/>
 	<!-- Copy Config scripts -->
 	<!--copy toDir="${release.tomcat.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
