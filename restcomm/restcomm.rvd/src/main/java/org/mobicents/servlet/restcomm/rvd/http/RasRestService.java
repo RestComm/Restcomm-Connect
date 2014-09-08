@@ -85,7 +85,7 @@ public class RasRestService extends RestService {
         packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
 
         rasService = new RasService(rvdContext, workspaceStorage);
-        projectService = new ProjectService(rvdContext);
+        projectService = new ProjectService(rvdContext,workspaceStorage);
     }
 
     /**
@@ -224,7 +224,7 @@ public class RasRestService extends RestService {
     @Path("apps")
     public Response listRapps(@Context HttpServletRequest request) {
         try {
-            List<String> projectNames = projectStorage.listProjectNames();
+            List<String> projectNames = FsProjectStorage.listProjectNames(workspaceStorage);
             List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
@@ -266,8 +266,12 @@ public class RasRestService extends RestService {
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
                         String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser );
+//<<<<<<< HEAD
                         ProjectState projectState = projectStorage.loadProject(effectiveProjectName);
                         buildService.buildProject(effectiveProjectName, projectState);
+/*=======
+                        buildService.buildProject(effectiveProjectName);
+>>>>>>> ts720_rvd_issue419_application_logging*/
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);
@@ -322,7 +326,6 @@ public class RasRestService extends RestService {
     @POST
     @Path("apps/{name}/bootstrap")
     public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
-        //logger.info("saving bootstrap parameters for app '" + projectName + "'");
         try {
             String bootstrapInfo;
             bootstrapInfo = IOUtils.toString(request.getInputStream());

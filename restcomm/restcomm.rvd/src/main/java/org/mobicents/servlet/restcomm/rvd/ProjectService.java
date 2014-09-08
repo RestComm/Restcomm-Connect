@@ -22,8 +22,10 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
@@ -53,12 +55,14 @@ public class ProjectService {
     ProjectStorage projectStorage;
     RvdConfiguration settings;
     RvdContext rvdContext;
+    WorkspaceStorage workspaceStorage;
 
-    public ProjectService(RvdContext rvdContext) {
+    public ProjectService(RvdContext rvdContext, WorkspaceStorage workspaceStorage) {
         this.rvdContext = rvdContext;
         this.servletContext = rvdContext.getServletContext();
         this.projectStorage = rvdContext.getProjectStorage();
         this.settings = rvdContext.getSettings();
+        this.workspaceStorage = workspaceStorage;
     }
 
 
@@ -108,7 +112,7 @@ public class ProjectService {
     public List<ProjectItem> getAvailableProjects() throws StorageException {
 
         List<ProjectItem> items = new ArrayList<ProjectItem>();
-        for (String entry : projectStorage.listProjectNames() ) {
+        for (String entry : FsProjectStorage.listProjectNames(workspaceStorage) ) {
 
             String kind = "voice";
             try {
@@ -141,7 +145,7 @@ public class ProjectService {
     public List<ProjectItem> getAvailableProjectsByOwner(String ownerFilter) throws StorageException {
 
         List<ProjectItem> items = new ArrayList<ProjectItem>();
-        for (String entry : projectStorage.listProjectNames() ) {
+        for (String entry : FsProjectStorage.listProjectNames(workspaceStorage) ) {
 
             String kind = "voice";
             String owner = null;

@@ -95,8 +95,8 @@ public class ProjectRestService extends RestService {
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         projectStorage = rvdContext.getProjectStorage();
-        projectService = new ProjectService(rvdContext);
         workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
+        projectService = new ProjectService(rvdContext,workspaceStorage);
     }
 
     /**
@@ -275,7 +275,6 @@ public class ProjectRestService extends RestService {
         }
     }
 
-
     @RvdAuth
     @PUT
     @Path("{name}/rename")
@@ -303,7 +302,7 @@ public class ProjectRestService extends RestService {
         // TODO IMPORTANT!!! sanitize the project name!!
         if ( !RvdUtils.isEmpty(projectName) ) {
             try {
-                UpgradeService upgradeService = new UpgradeService(projectStorage);
+                UpgradeService upgradeService = new UpgradeService(projectStorage,workspaceStorage);
                 upgradeService.upgradeProject(projectName);
                 logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                 // re-build project
@@ -375,7 +374,6 @@ public class ProjectRestService extends RestService {
 
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
-
                         String effectiveProjectName = projectService.importProjectFromArchive(item.openStream(), item.getName());
                         //buildService.buildProject(effectiveProjectName);
 

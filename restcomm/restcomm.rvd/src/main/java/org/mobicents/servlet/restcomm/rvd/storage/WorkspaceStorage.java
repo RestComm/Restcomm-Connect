@@ -1,7 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd.storage;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
@@ -46,6 +49,19 @@ public class WorkspaceStorage {
             return instance;
         } catch (IOException e) {
             throw new StorageException("Error loading file " + file.getPath(), e);
+        }
+    }
+
+    public InputStream loadStream(String entityName, String relativePath) throws StorageException {
+        if ( !relativePath.startsWith( "/") )
+            relativePath = File.separator + relativePath;
+        String pathname = rootPath + relativePath + File.separator + entityName;
+
+        File file = new File(pathname);
+        try {
+            return new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            throw new StorageEntityNotFound("File " + file.getPath() + " does not exist");
         }
     }
 
