@@ -196,6 +196,7 @@ public class UssdInterpreter extends UntypedActor {
         transitions.add(new Transition(ready, preparingMessage));
         transitions.add(new Transition(preparingMessage, downloadingRcml));
         transitions.add(new Transition(preparingMessage, processingInfoRequest));
+        transitions.add(new Transition(preparingMessage, finished));
         transitions.add(new Transition(processingInfoRequest, preparingMessage));
         transitions.add(new Transition(processingInfoRequest, ready));
         transitions.add(new Transition(processingInfoRequest, finished));
