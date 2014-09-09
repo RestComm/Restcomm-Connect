@@ -1,0 +1,490 @@
+<!-- Use the  Trace Viewer in src/tools/tracesviewer to view this  trace  
+Here are the stack configuration properties 
+javax.sip.IP_ADDRESS= null
+javax.sip.STACK_NAME= UAC_tcp_5090
+javax.sip.ROUTER_PATH= null
+javax.sip.OUTBOUND_PROXY= 10.239.23.200:5080/tcp
+-->
+<description
+ logDescription="UAC_tcp_5090"
+ name="UAC_tcp_5090"
+ auxInfo="null"/>
+ 
+<message
+from="10.239.23.200:5090" 
+to="10.239.23.200:5080" 
+time="1409821871053"
+isSender="true" 
+transactionId="z9hg4bk-353432-cdbca7e776d4e32bcd2f61e5e02c6f70" 
+callId="65f96558d7acfb5925b99dc8ef80890a@10.239.23.200" 
+firstLine="INVITE sip:*5555@10.239.23.200:5080 SIP/2.0" 
+>
+<![CDATA[INVITE sip:*5555@10.239.23.200:5080 SIP/2.0
+Call-ID: 65f96558d7acfb5925b99dc8ef80890a@10.239.23.200
+CSeq: 1 INVITE
+From: <sip:bob@10.239.23.200:5090>;tag=402974152
+To: <sip:*5555@10.239.23.200:5080>
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353432-cdbca7e776d4e32bcd2f61e5e02c6f70
+Max-Forwards: 70
+Contact: <sip:bob@10.239.23.200:5090;transport=tcp;lr>
+Route: <sip:10.239.23.200:5080;lr;transport=tcp>
+Content-Type: application/vnd.3gpp.ussd+xml
+Content-Length: 126
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5080" 
+to="10.239.23.200:5090" 
+time="1409821871113"
+isSender="false" 
+transactionId="z9hg4bk-353432-cdbca7e776d4e32bcd2f61e5e02c6f70" 
+callId="65f96558d7acfb5925b99dc8ef80890a@10.239.23.200" 
+firstLine="SIP/2.0 180 Ringing" 
+>
+<![CDATA[SIP/2.0 180 Ringing
+To: <sip:*5555@10.239.23.200:5080>;tag=49621423_9f2e52f4_57a5b08a_cb849b20-2f60-4e6e-bcf9-526bfd1c7bb0
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353432-cdbca7e776d4e32bcd2f61e5e02c6f70;rport=42581
+CSeq: 1 INVITE
+Call-ID: 65f96558d7acfb5925b99dc8ef80890a@10.239.23.200
+From: <sip:bob@10.239.23.200:5090>;tag=402974152
+Server: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Contact: <sip:10.239.23.200:5080;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5080" 
+to="10.239.23.200:5090" 
+time="1409821871127"
+isSender="false" 
+transactionId="z9hg4bk-353432-cdbca7e776d4e32bcd2f61e5e02c6f70" 
+callId="65f96558d7acfb5925b99dc8ef80890a@10.239.23.200" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+To: <sip:*5555@10.239.23.200:5080>;tag=49621423_9f2e52f4_57a5b08a_cb849b20-2f60-4e6e-bcf9-526bfd1c7bb0
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353432-cdbca7e776d4e32bcd2f61e5e02c6f70;rport=42581
+CSeq: 1 INVITE
+Call-ID: 65f96558d7acfb5925b99dc8ef80890a@10.239.23.200
+From: <sip:bob@10.239.23.200:5090>;tag=402974152
+Server: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Contact: <sip:10.239.23.200:5080;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5090" 
+to="10.239.23.200:5080" 
+time="1409821871243"
+isSender="true" 
+transactionId="z9hg4bk-353432-0b0c75d3a9a6c133978c1a927403d78c" 
+callId="65f96558d7acfb5925b99dc8ef80890a@10.239.23.200" 
+firstLine="ACK sip:10.239.23.200:5080;transport=tcp SIP/2.0" 
+>
+<![CDATA[ACK sip:10.239.23.200:5080;transport=tcp SIP/2.0
+Call-ID: 65f96558d7acfb5925b99dc8ef80890a@10.239.23.200
+CSeq: 1 ACK
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353432-0b0c75d3a9a6c133978c1a927403d78c
+From: <sip:bob@10.239.23.200:5090>;tag=402974152
+To: <sip:*5555@10.239.23.200:5080>;tag=49621423_9f2e52f4_57a5b08a_cb849b20-2f60-4e6e-bcf9-526bfd1c7bb0
+Max-Forwards: 70
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:58945" 
+to="10.239.23.200:5090" 
+time="1409821871290"
+isSender="false" 
+transactionId="z9hg4bkcb849b20-2f60-4e6e-bcf9-526bfd1c7bb0_57a5b08a_9905835a-2fcb-4981-a490-0543b1525ef6" 
+callId="65f96558d7acfb5925b99dc8ef80890a@10.239.23.200" 
+firstLine="BYE sip:bob@10.239.23.200:5090;transport=tcp;lr SIP/2.0" 
+>
+<![CDATA[BYE sip:bob@10.239.23.200:5090;transport=tcp;lr SIP/2.0
+CSeq: 1 BYE
+From: <sip:*5555@10.239.23.200:5080>;tag=49621423_9f2e52f4_57a5b08a_cb849b20-2f60-4e6e-bcf9-526bfd1c7bb0
+To: <sip:bob@10.239.23.200:5090>;tag=402974152
+Call-ID: 65f96558d7acfb5925b99dc8ef80890a@10.239.23.200
+Max-Forwards: 70
+User-Agent: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Via: SIP/2.0/TCP 10.239.23.200:5080;branch=z9hG4bKcb849b20-2f60-4e6e-bcf9-526bfd1c7bb0_57a5b08a_9905835a-2fcb-4981-a490-0543b1525ef6;rport=58945
+Content-Type: application/vnd.3gpp.ussd+xml
+Content-Length: 231
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5090" 
+to="10.239.23.200:5080" 
+time="1409821871323"
+isSender="true" 
+transactionId="z9hg4bkcb849b20-2f60-4e6e-bcf9-526bfd1c7bb0_57a5b08a_9905835a-2fcb-4981-a490-0543b1525ef6" 
+callId="65f96558d7acfb5925b99dc8ef80890a@10.239.23.200" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+To: <sip:bob@10.239.23.200:5090>;tag=402974152
+Via: SIP/2.0/TCP 10.239.23.200:5080;branch=z9hG4bKcb849b20-2f60-4e6e-bcf9-526bfd1c7bb0_57a5b08a_9905835a-2fcb-4981-a490-0543b1525ef6;rport=58945
+CSeq: 1 BYE
+Call-ID: 65f96558d7acfb5925b99dc8ef80890a@10.239.23.200
+From: <sip:*5555@10.239.23.200:5080>;tag=49621423_9f2e52f4_57a5b08a_cb849b20-2f60-4e6e-bcf9-526bfd1c7bb0
+Content-Length: 0
+
+]]>
+</message>
+
+<!-- Use the  Trace Viewer in src/tools/tracesviewer to view this  trace  
+Here are the stack configuration properties 
+javax.sip.IP_ADDRESS= null
+javax.sip.STACK_NAME= UAC_tcp_5090
+javax.sip.ROUTER_PATH= null
+javax.sip.OUTBOUND_PROXY= 10.239.23.200:5080/tcp
+-->
+<description
+ logDescription="UAC_tcp_5090"
+ name="UAC_tcp_5090"
+ auxInfo="null"/>
+ 
+<message
+from="10.239.23.200:5090" 
+to="10.239.23.200:5080" 
+time="1409832016860"
+isSender="true" 
+transactionId="z9hg4bk-343731-9217f4e33fca7a3ddd74fb7ad514eaf8" 
+callId="dafde40651a15de91d155cb8d05558d8@10.239.23.200" 
+firstLine="INVITE sip:*5555@10.239.23.200:5080 SIP/2.0" 
+>
+<![CDATA[INVITE sip:*5555@10.239.23.200:5080 SIP/2.0
+Call-ID: dafde40651a15de91d155cb8d05558d8@10.239.23.200
+CSeq: 1 INVITE
+From: <sip:bob@10.239.23.200:5090>;tag=828859143
+To: <sip:*5555@10.239.23.200:5080>
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-343731-9217f4e33fca7a3ddd74fb7ad514eaf8
+Max-Forwards: 70
+Contact: <sip:bob@10.239.23.200:5090;transport=tcp;lr>
+Route: <sip:10.239.23.200:5080;lr;transport=tcp>
+Content-Type: application/vnd.3gpp.ussd+xml
+Content-Length: 126
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5080" 
+to="10.239.23.200:5090" 
+time="1409832017055"
+isSender="false" 
+transactionId="z9hg4bk-343731-9217f4e33fca7a3ddd74fb7ad514eaf8" 
+callId="dafde40651a15de91d155cb8d05558d8@10.239.23.200" 
+firstLine="SIP/2.0 180 Ringing" 
+>
+<![CDATA[SIP/2.0 180 Ringing
+To: <sip:*5555@10.239.23.200:5080>;tag=83184681_3ea36414_57a5b08a_9d9b8081-2c19-4501-b996-c38e9688e8b1
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-343731-9217f4e33fca7a3ddd74fb7ad514eaf8;rport=47714
+CSeq: 1 INVITE
+Call-ID: dafde40651a15de91d155cb8d05558d8@10.239.23.200
+From: <sip:bob@10.239.23.200:5090>;tag=828859143
+Server: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Contact: <sip:10.239.23.200:5080;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5080" 
+to="10.239.23.200:5090" 
+time="1409832017067"
+isSender="false" 
+transactionId="z9hg4bk-343731-9217f4e33fca7a3ddd74fb7ad514eaf8" 
+callId="dafde40651a15de91d155cb8d05558d8@10.239.23.200" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+To: <sip:*5555@10.239.23.200:5080>;tag=83184681_3ea36414_57a5b08a_9d9b8081-2c19-4501-b996-c38e9688e8b1
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-343731-9217f4e33fca7a3ddd74fb7ad514eaf8;rport=47714
+CSeq: 1 INVITE
+Call-ID: dafde40651a15de91d155cb8d05558d8@10.239.23.200
+From: <sip:bob@10.239.23.200:5090>;tag=828859143
+Server: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Contact: <sip:10.239.23.200:5080;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5090" 
+to="10.239.23.200:5080" 
+time="1409832017188"
+isSender="true" 
+transactionId="z9hg4bk-343731-75378e070c747f18be9e195c79374ac5" 
+callId="dafde40651a15de91d155cb8d05558d8@10.239.23.200" 
+firstLine="ACK sip:10.239.23.200:5080;transport=tcp SIP/2.0" 
+>
+<![CDATA[ACK sip:10.239.23.200:5080;transport=tcp SIP/2.0
+Call-ID: dafde40651a15de91d155cb8d05558d8@10.239.23.200
+CSeq: 1 ACK
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-343731-75378e070c747f18be9e195c79374ac5
+From: <sip:bob@10.239.23.200:5090>;tag=828859143
+To: <sip:*5555@10.239.23.200:5080>;tag=83184681_3ea36414_57a5b08a_9d9b8081-2c19-4501-b996-c38e9688e8b1
+Max-Forwards: 70
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:59338" 
+to="10.239.23.200:5090" 
+time="1409832017428"
+isSender="false" 
+transactionId="z9hg4bk9d9b8081-2c19-4501-b996-c38e9688e8b1_57a5b08a_71d760cf-f4d2-449e-b976-4136bb1b77aa" 
+callId="dafde40651a15de91d155cb8d05558d8@10.239.23.200" 
+firstLine="BYE sip:bob@10.239.23.200:5090;transport=tcp;lr SIP/2.0" 
+>
+<![CDATA[BYE sip:bob@10.239.23.200:5090;transport=tcp;lr SIP/2.0
+CSeq: 1 BYE
+From: <sip:*5555@10.239.23.200:5080>;tag=83184681_3ea36414_57a5b08a_9d9b8081-2c19-4501-b996-c38e9688e8b1
+To: <sip:bob@10.239.23.200:5090>;tag=828859143
+Call-ID: dafde40651a15de91d155cb8d05558d8@10.239.23.200
+Max-Forwards: 70
+User-Agent: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Via: SIP/2.0/TCP 10.239.23.200:5080;branch=z9hG4bK9d9b8081-2c19-4501-b996-c38e9688e8b1_57a5b08a_71d760cf-f4d2-449e-b976-4136bb1b77aa;rport=59338
+Content-Type: application/vnd.3gpp.ussd+xml
+Content-Length: 231
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5090" 
+to="10.239.23.200:5080" 
+time="1409832017458"
+isSender="true" 
+transactionId="z9hg4bk9d9b8081-2c19-4501-b996-c38e9688e8b1_57a5b08a_71d760cf-f4d2-449e-b976-4136bb1b77aa" 
+callId="dafde40651a15de91d155cb8d05558d8@10.239.23.200" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+To: <sip:bob@10.239.23.200:5090>;tag=828859143
+Via: SIP/2.0/TCP 10.239.23.200:5080;branch=z9hG4bK9d9b8081-2c19-4501-b996-c38e9688e8b1_57a5b08a_71d760cf-f4d2-449e-b976-4136bb1b77aa;rport=59338
+CSeq: 1 BYE
+Call-ID: dafde40651a15de91d155cb8d05558d8@10.239.23.200
+From: <sip:*5555@10.239.23.200:5080>;tag=83184681_3ea36414_57a5b08a_9d9b8081-2c19-4501-b996-c38e9688e8b1
+Content-Length: 0
+
+]]>
+</message>
+
+<!-- Use the  Trace Viewer in src/tools/tracesviewer to view this  trace  
+Here are the stack configuration properties 
+javax.sip.IP_ADDRESS= null
+javax.sip.STACK_NAME= UAC_tcp_5090
+javax.sip.ROUTER_PATH= null
+javax.sip.OUTBOUND_PROXY= 10.104.240.110:5080/tcp
+-->
+<description
+ logDescription="UAC_tcp_5090"
+ name="UAC_tcp_5090"
+ auxInfo="null"/>
+ 
+<message
+from="10.239.23.200:5090" 
+to="10.104.240.110:5080" 
+time="1409842009442"
+isSender="true" 
+transactionId="z9hg4bk-313939-b1d80d0b5e480e00ca263bd19bcc947a" 
+callId="7b5a1f0ac70fdfa6609e1ff01b543bed@10.239.23.200" 
+firstLine="INVITE sip:*5555@10.104.240.110:5080 SIP/2.0" 
+>
+<![CDATA[INVITE sip:*5555@10.104.240.110:5080 SIP/2.0
+Call-ID: 7b5a1f0ac70fdfa6609e1ff01b543bed@10.239.23.200
+CSeq: 1 INVITE
+From: <sip:bob@10.239.23.200:5090>;tag=1157104583
+To: <sip:*5555@10.104.240.110:5080>
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-313939-b1d80d0b5e480e00ca263bd19bcc947a
+Max-Forwards: 70
+Contact: <sip:bob@10.239.23.200:5090;transport=tcp;lr>
+Route: <sip:10.104.240.110:5080;lr;transport=tcp>
+Content-Type: application/vnd.3gpp.ussd+xml
+Content-Length: 126
+
+]]>
+</message>
+
+<message
+from="10.104.240.110:5080" 
+to="10.239.23.200:5090" 
+time="1409842009500"
+isSender="false" 
+transactionId="z9hg4bk-313939-b1d80d0b5e480e00ca263bd19bcc947a" 
+callId="7b5a1f0ac70fdfa6609e1ff01b543bed@10.239.23.200" 
+firstLine="SIP/2.0 404 Not found" 
+>
+<![CDATA[SIP/2.0 404 Not found
+To: <sip:*5555@10.104.240.110:5080>;tag=51748697_df0c3af3_57a5b08a_13baff24-4022-4790-8c24-42569497d0bc
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-313939-b1d80d0b5e480e00ca263bd19bcc947a;rport=42044
+CSeq: 1 INVITE
+Call-ID: 7b5a1f0ac70fdfa6609e1ff01b543bed@10.239.23.200
+From: <sip:bob@10.239.23.200:5090>;tag=1157104583
+Server: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Contact: <sip:10.104.240.110:5080;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5090" 
+to="10.104.240.110:5080" 
+time="1409842009505"
+isSender="true" 
+transactionId="z9hg4bk-313939-b1d80d0b5e480e00ca263bd19bcc947a" 
+callId="7b5a1f0ac70fdfa6609e1ff01b543bed@10.239.23.200" 
+firstLine="ACK sip:*5555@10.104.240.110:5080 SIP/2.0" 
+>
+<![CDATA[ACK sip:*5555@10.104.240.110:5080 SIP/2.0
+Call-ID: 7b5a1f0ac70fdfa6609e1ff01b543bed@10.239.23.200
+Max-Forwards: 70
+From: <sip:bob@10.239.23.200:5090>;tag=1157104583
+To: <sip:*5555@10.104.240.110:5080>;tag=51748697_df0c3af3_57a5b08a_13baff24-4022-4790-8c24-42569497d0bc
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-313939-b1d80d0b5e480e00ca263bd19bcc947a
+CSeq: 1 ACK
+Route: <sip:10.104.240.110:5080;lr;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<!-- Use the  Trace Viewer in src/tools/tracesviewer to view this  trace  
+Here are the stack configuration properties 
+javax.sip.IP_ADDRESS= null
+javax.sip.STACK_NAME= UAC_tcp_5090
+javax.sip.ROUTER_PATH= null
+javax.sip.OUTBOUND_PROXY= 10.104.240.110:5080/tcp
+-->
+<description
+ logDescription="UAC_tcp_5090"
+ name="UAC_tcp_5090"
+ auxInfo="null"/>
+ 
+<message
+from="10.239.23.200:5090" 
+to="10.104.240.110:5080" 
+time="1409842057559"
+isSender="true" 
+transactionId="z9hg4bk-353931-e1d2749953f2423becafbc7b1a60f5fd" 
+callId="110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200" 
+firstLine="INVITE sip:*114*110#@10.104.240.110:5080 SIP/2.0" 
+>
+<![CDATA[INVITE sip:*114*110#@10.104.240.110:5080 SIP/2.0
+Call-ID: 110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200
+CSeq: 1 INVITE
+From: <sip:bob@10.239.23.200:5090>;tag=945054549
+To: <sip:*114*110#@10.104.240.110:5080>
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353931-e1d2749953f2423becafbc7b1a60f5fd
+Max-Forwards: 70
+Contact: <sip:bob@10.239.23.200:5090;transport=tcp;lr>
+Route: <sip:10.104.240.110:5080;lr;transport=tcp>
+Content-Type: application/vnd.3gpp.ussd+xml
+Content-Length: 126
+
+]]>
+</message>
+
+<message
+from="10.104.240.110:5080" 
+to="10.239.23.200:5090" 
+time="1409842057609"
+isSender="false" 
+transactionId="z9hg4bk-353931-e1d2749953f2423becafbc7b1a60f5fd" 
+callId="110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200" 
+firstLine="SIP/2.0 180 Ringing" 
+>
+<![CDATA[SIP/2.0 180 Ringing
+To: <sip:*114*110#@10.104.240.110:5080>;tag=67253303_df0c3af3_57a5b08a_a074bbf2-3be7-49eb-a07a-3a3315dd2cf0
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353931-e1d2749953f2423becafbc7b1a60f5fd;rport=38878
+CSeq: 1 INVITE
+Call-ID: 110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200
+From: <sip:bob@10.239.23.200:5090>;tag=945054549
+Server: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Contact: <sip:10.104.240.110:5080;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.104.240.110:5080" 
+to="10.239.23.200:5090" 
+time="1409842057623"
+isSender="false" 
+transactionId="z9hg4bk-353931-e1d2749953f2423becafbc7b1a60f5fd" 
+callId="110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+To: <sip:*114*110#@10.104.240.110:5080>;tag=67253303_df0c3af3_57a5b08a_a074bbf2-3be7-49eb-a07a-3a3315dd2cf0
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353931-e1d2749953f2423becafbc7b1a60f5fd;rport=38878
+CSeq: 1 INVITE
+Call-ID: 110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200
+From: <sip:bob@10.239.23.200:5090>;tag=945054549
+Server: TelScale Sip Servlets 7.0.2-SNAPSHOT
+Contact: <sip:10.104.240.110:5080;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5090" 
+to="10.104.240.110:5080" 
+time="1409842057743"
+isSender="true" 
+transactionId="z9hg4bk-353931-6822e0b85f0e9b333ecfc7eb6b8bbdbb" 
+callId="110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200" 
+firstLine="ACK sip:10.104.240.110:5080;transport=tcp SIP/2.0" 
+>
+<![CDATA[ACK sip:10.104.240.110:5080;transport=tcp SIP/2.0
+Call-ID: 110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200
+CSeq: 1 ACK
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353931-6822e0b85f0e9b333ecfc7eb6b8bbdbb
+From: <sip:bob@10.239.23.200:5090>;tag=945054549
+To: <sip:*114*110#@10.104.240.110:5080>;tag=67253303_df0c3af3_57a5b08a_a074bbf2-3be7-49eb-a07a-3a3315dd2cf0
+Max-Forwards: 70
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.239.23.200:5090" 
+to="10.104.240.110:5080" 
+time="1409842087756"
+isSender="true" 
+transactionId="z9hg4bk-353931-9525c0ef32889aa6780ea40d4b2c4352" 
+callId="110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200" 
+firstLine="BYE sip:10.104.240.110:5080;transport=tcp SIP/2.0" 
+>
+<![CDATA[BYE sip:10.104.240.110:5080;transport=tcp SIP/2.0
+Via: SIP/2.0/TCP 10.239.23.200:5090;branch=z9hG4bK-353931-9525c0ef32889aa6780ea40d4b2c4352
+CSeq: 2 BYE
+From: <sip:bob@10.239.23.200:5090>;tag=945054549
+To: <sip:*114*110#@10.104.240.110:5080>;tag=67253303_df0c3af3_57a5b08a_a074bbf2-3be7-49eb-a07a-3a3315dd2cf0
+Call-ID: 110579d3d6840a7e5c6f2744dd15d08f@10.239.23.200
+Max-Forwards: 70
+Content-Length: 0
+
+]]>
+</message>
+
