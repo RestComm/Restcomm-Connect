@@ -1,0 +1,18 @@
+<div class="step ussdLanguage-step panel panel-rvdstep">
+	<div class="panel-heading">
+			<step-heading></step-heading>
+	</div>
+
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+		<div class="row">
+			<div class="col-md-12 form-group">				
+				<form name="form" novalidate>
+					<select ng-model='step.language' null-if-empty ng-options='language.name as language.text for language in languages'  id="languageSelect" class="form-control say-language-dropdown" >
+						<option value=""></option>
+					</select>
+				</form>
+				
+			</div>
+		</div>
+	</div>
+</div>

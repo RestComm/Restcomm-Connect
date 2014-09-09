@@ -46,8 +46,9 @@ public class BuildService {
      * @throws IOException
      * @throws StorageException
      */
-    public void buildProject(String projectName) throws StorageException {
-        ProjectState projectState = gson.fromJson(projectStorage.loadProjectState(projectName), ProjectState.class);
+    public void buildProject(String projectName, ProjectState projectState) throws StorageException {
+
+        //ProjectState projectState = gson.fromJson(projectStorage.loadProjectState(projectName), ProjectState.class);
         ProjectOptions projectOptions = new ProjectOptions();
 
         // Save general purpose project information
@@ -66,7 +67,7 @@ public class BuildService {
         // Save the nodename-node-label mapping
         //File outFile = new File(projectPath + "data/" + "project");
         //FileUtils.writeStringToFile(outFile, gson.toJson(projectOptions), "UTF-8");
-        projectStorage.storeProjectOptions(projectName, gson.toJson(projectOptions));
+        projectStorage.storeProjectOptions(projectName, projectOptions);
     }
 
     /**
