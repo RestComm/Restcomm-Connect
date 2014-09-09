@@ -25,7 +25,7 @@ Downloads
 
 Documentation
 ========
-[RestComm Documentation is available here!](https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US/html_single/index.html) or contained in the download binary
+Read the [Online RestComm Documentation](http://docs.telestax.com/) or it is also contained in the download binary
 
 Issue Tracking and Roadmap
 ========
