@@ -103,10 +103,12 @@ public class UssdPullTest {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseBob == Response.TRYING);
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        } else {
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        }
         
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
