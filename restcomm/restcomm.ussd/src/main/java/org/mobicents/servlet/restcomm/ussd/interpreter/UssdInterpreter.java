@@ -930,8 +930,6 @@ public class UssdInterpreter extends UntypedActor {
             getContext().stop(parser);
         if (mailer != null)
             getContext().stop(mailer);
-
-        context().stop(self());
         super.postStop();
     }
 
