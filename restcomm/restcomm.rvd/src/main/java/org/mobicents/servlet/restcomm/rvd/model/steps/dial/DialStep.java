@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
-import org.mobicents.servlet.restcomm.rvd.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
@@ -54,16 +54,11 @@ public class DialStep extends Step {
         if ( RvdUtils.isEmpty(nextModule) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
-        String publicRecordingUrl = interpreter.getRequestParams().getFirst("PublicRecordingUrl");
-        if ( publicRecordingUrl != null ) {
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "PublicRecordingUrl", publicRecordingUrl);
-        }
-
         String restcommRecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
         if ( restcommRecordingUrl != null ) {
             try {
                 String recordingUrl = interpreter.convertRecordingFileResourceHttp(restcommRecordingUrl, interpreter.getHttpRequest());
-                interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "RecordingUrl", recordingUrl);
+                interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "RecordingUrl", recordingUrl);
             } catch (URISyntaxException e) {
                 logger.warn("Cannot convert file URL to http URL - " + restcommRecordingUrl, e);
             }
@@ -71,17 +66,17 @@ public class DialStep extends Step {
 
         String DialCallStatus = interpreter.getRequestParams().getFirst("DialCallStatus");
         if ( DialCallStatus != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallStatus", DialCallStatus);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "DialCallStatus", DialCallStatus);
 
         String DialCallSid = interpreter.getRequestParams().getFirst("DialCallSid");
         if ( DialCallSid != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallSid", DialCallSid);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "DialCallSid", DialCallSid);
 
         String DialCallDuration = interpreter.getRequestParams().getFirst("DialCallDuration");
         if ( DialCallDuration != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "DialCallDuration", DialCallDuration);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "DialCallDuration", DialCallDuration);
 
-        interpreter.interpret( nextModule, null );
+        interpreter.interpret( nextModule, null, null );
     }
 
 }

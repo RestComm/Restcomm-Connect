@@ -2,10 +2,12 @@ package org.mobicents.servlet.restcomm.rvd.upgrade;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.NoUpgradePathException;
@@ -18,14 +20,16 @@ public class UpgradeService {
     static final Logger logger = Logger.getLogger(UpgradeService.class.getName());
 
     private ProjectStorage projectStorage;
+    private WorkspaceStorage workspaceStorage;
 
-    public UpgradeService(ProjectStorage projectStorage) {
+    public UpgradeService(ProjectStorage projectStorage, WorkspaceStorage workspaceStorage) {
         this.projectStorage = projectStorage;
+        this.workspaceStorage = workspaceStorage;
     }
 
-    public UpgradeService(String otherWorkspaceLocation) {
-        this.projectStorage = new FsProjectStorage(otherWorkspaceLocation, null);
-    }
+    //public UpgradeService(String otherWorkspaceLocation) {
+    //    this.projectStorage = new FsProjectStorage(otherWorkspaceLocation, null);
+    //}
 
     /**
      * Upgrades a project to current RVD supported version
@@ -48,7 +52,7 @@ public class UpgradeService {
             startVersion = "rvd714"; // assume this is an rvd714 project. It could be 713 as well...
         }
 
-        if ( startVersion.equals(RvdSettings.getRvdProjectVersion()) )
+        if ( startVersion.equals(RvdConfiguration.getRvdProjectVersion()) )
             return false;
 
         logger.info("Upgrading '" + projectName + "' from version " + startVersion);
@@ -87,24 +91,23 @@ public class UpgradeService {
     public void upgradeWorkspace() throws StorageException {
         BuildService buildService = new BuildService(projectStorage);
         int upgradedCount = 0;
-        for ( String projectName : projectStorage.listProjectNames() ) {
+        for ( String projectName : FsProjectStorage.listProjectNames(workspaceStorage) ) {
             try {
                 if ( upgradeProject(projectName) ) {
                     upgradedCount ++;
-                    logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
+                    logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                     try {
-                        buildService.buildProject(projectName);
+                        ProjectState projectState = projectStorage.loadProject(projectName);
+                        buildService.buildProject(projectName, projectState);
                         logger.info("project '" + projectName + "' built");
                     } catch (StorageException e) {
                         logger.warn("error building upgraded project '" + projectName + "'", e);
                     }
                 }
             } catch (StorageException e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
+                logger.error("error upgrading project '" + projectName + "' to version " + RvdConfiguration.getRvdProjectVersion(), e );
             } catch (UpgradeException e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
-            } catch (Exception e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
+                logger.error("error upgrading project '" + projectName + "' to version " + RvdConfiguration.getRvdProjectVersion(), e );
             }
         }
         if ( upgradedCount == 0 )
