@@ -198,6 +198,7 @@ public class UssdInterpreter extends UntypedActor {
         transitions.add(new Transition(preparingMessage, processingInfoRequest));
         transitions.add(new Transition(processingInfoRequest, preparingMessage));
         transitions.add(new Transition(processingInfoRequest, ready));
+        transitions.add(new Transition(processingInfoRequest, finished));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -447,6 +448,7 @@ public class UssdInterpreter extends UntypedActor {
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
                 logger.info("CallStateChanged.State.NO_ANSWER OR  CallStateChanged.State.COMPLETED OR CallStateChanged.State.FAILED");
+                fsm.transition(message, finished);
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 logger.info("CallStateChanged.State.BUSY");
             }
@@ -910,6 +912,7 @@ public class UssdInterpreter extends UntypedActor {
                 }
                 callback();
             }
+            context().stop(self());
         }
     }
 
@@ -926,8 +929,6 @@ public class UssdInterpreter extends UntypedActor {
             getContext().stop(parser);
         if (mailer != null)
             getContext().stop(mailer);
-
-        context().stop(self());
         super.postStop();
     }
 
