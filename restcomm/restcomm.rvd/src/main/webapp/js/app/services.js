@@ -145,3 +145,36 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 	
 	return service;
 }]);
+
+
+angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams', 'notifications', function ($http,$q,$routeParams,notifications) {
+	var service = {};
+	service.retrieve = function () {
+		var deferred = $q.defer();
+		$http({method:'GET', url:'services/apps/'+$routeParams.projectName+'/log'})
+		.success(function (data,status) {
+			console.log('retrieved log data');
+			deferred.resolve(data);
+		})
+		.error(function (data,status) {
+			deferred.reject();
+		});
+		return deferred.promise;
+	}
+	service.reset = function () {
+		var deferred = $q.defer();
+		$http({method:'DELETE', url:'services/apps/'+$routeParams.projectName+'/log'})
+		.success(function (data,status) {
+			console.log('reset log data');
+			notifications.put({type:'success',message:$routeParams.projectName+' log reset'});
+			deferred.resolve();
+		})
+		.error(function (data,status) {
+			notifications.put({type:'danger',message:'Cannot reset '+$routeParams.projectName+' log'});
+			deferred.reject();
+		});
+		return deferred.promise;		
+	}
+	
+	return service;
+}]); 

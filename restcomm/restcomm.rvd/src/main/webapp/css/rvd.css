@@ -562,6 +562,10 @@ textarea.medium {
 
 /* ----------------- #/login view -------------------------- */
 
+/* ----------------- #/designer/_/log view ----------------- */
+#rvd-log-textarea {
+	height: 300px;
+}
 
 /* ----------------- index.html ---------------------------- */
 .notifications-wrapper {
