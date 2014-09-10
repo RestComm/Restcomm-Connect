@@ -89,7 +89,7 @@ public class UpgradeService {
      * @throws StorageException
      */
     public void upgradeWorkspace() throws StorageException {
-        BuildService buildService = new BuildService(projectStorage);
+        BuildService buildService = new BuildService(workspaceStorage);
         int upgradedCount = 0;
         for ( String projectName : FsProjectStorage.listProjectNames(workspaceStorage) ) {
             try {

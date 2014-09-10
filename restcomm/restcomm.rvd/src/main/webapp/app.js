@@ -22,7 +22,8 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		controller : 'designerCtrl',
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
-			ccInfo: designerCtrl.getCcInfo
+			ccInfo: designerCtrl.getCcInfo,
+			projectSettings: function (projectSettingsService) {return projectSettingsService.retrieve();}
 		}
 	})
 	.when('/packaging/:projectName', {

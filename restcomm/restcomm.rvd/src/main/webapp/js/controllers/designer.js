@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder, projectSettingsService) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -639,6 +639,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			$scope.preventSubmit = !formValid;
 		}
 	};
+	
 	$scope.showSettingsModal = function (settings) {
 		var modalInstance = $modal.open({
 		  templateUrl: 'templates/designerSettingsModal.html',
@@ -720,7 +721,21 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.getRvdHost = getRvdHost;
 	$scope.getRvdPort = getRvdPort;
 	
-	
+ 	
+	// Application logging
+	$scope.showProjectSettings = function (projectName) {
+		projectSettingsService.showModal(projectName);
+	}
+/*	
+	function enableLogging(project) {
+		project.header.logging = {};
+	}
+	function disableLogging(project) {
+		project.header.logging = undefined;
+	}
+	$scope.enableLogging = enableLogging;
+	$scope.disableLogging = disableLogging;
+*/	
 		
 	// Run the following after all initialization are complete
 	

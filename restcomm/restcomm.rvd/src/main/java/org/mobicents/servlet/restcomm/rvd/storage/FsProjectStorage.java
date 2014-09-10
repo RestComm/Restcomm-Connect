@@ -41,6 +41,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
 
 public class FsProjectStorage implements ProjectStorage {
     static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
@@ -62,17 +63,6 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     @Override
-    public ProjectOptions loadProjectOptions(String projectName) throws StorageException {
-        ProjectOptions projectOptions = storageBase.loadModelFromProjectFile(projectName, "data", "project", ProjectOptions.class);
-        return projectOptions;
-    }
-
-    @Override
-    public void storeProjectOptions(String projectName, ProjectOptions projectOptions) throws StorageException {
-        storageBase.storeFileToProject(projectOptions, ProjectOptions.class, projectName, "data", "project");
-    }
-
-    @Override
     public void storeProjectState(String projectName, File sourceStateFile) throws StorageException {
         String destFilepath = storageBase.getProjectBasePath(projectName) + File.separator + "state";
         try {
@@ -91,18 +81,6 @@ public class FsProjectStorage implements ProjectStorage {
         } catch (IOException e) {
             throw new StorageException("Error loading project state file - " + filepath , e);
         }
-    }
-
-
-    @Override
-    public void storeNodeStep(String projectName, String nodeName, String stepName, String content) throws StorageException {
-        String filepath = storageBase.getProjectBasePath(projectName) + File.separator + "data/" + nodeName + "." + stepName;
-        try {
-            FileUtils.writeStringToFile(new File(filepath), content, "UTF-8");
-        } catch (IOException e) {
-            throw new StorageException("Error writing module step file - " + filepath , e);
-        }
-
     }
 
     @Override
@@ -323,21 +301,6 @@ public class FsProjectStorage implements ProjectStorage {
     }
 
     @Override
-    public void storeNodeStepnames(String projectName, Node node) throws StorageException {
-        List<String> stepnames = new ArrayList<String>();
-        for ( Step step : node.getSteps() ) {
-            stepnames.add(step.getName());
-        }
-        storageBase.storeFileToProject(stepnames, new TypeToken<List<String>>(){}.getType(), projectName, "data", node.getName() + ".node");
-    }
-
-    @Override
-    public List<String> loadNodeStepnames(String projectName, String nodeName) throws StorageException {
-        List<String> stepnames = storageBase.loadModelFromProjectFile(projectName, "data", nodeName + ".node", new TypeToken<List<String>>(){}.getType());
-        return stepnames;
-    }
-
-    @Override
     public void backupProjectState(String projectName) throws StorageException {
         File sourceStateFile = new File(storageBase.getWorkspaceBasePath()  + File.separator + projectName + File.separator + "state");
         File backupStateFile = new File(storageBase.getWorkspaceBasePath()  + File.separator + projectName + File.separator + "state" + ".old");
@@ -523,7 +486,40 @@ public class FsProjectStorage implements ProjectStorage {
         return rapps;
     }
 
+    public static ProjectOptions loadProjectOptions(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        ProjectOptions projectOptions = workspaceStorage.loadEntity("project", projectName+"/data", ProjectOptions.class);
+        return projectOptions;
+    }
 
+    public static void storeProjectOptions(ProjectOptions projectOptions, String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        workspaceStorage.storeEntity(projectOptions, ProjectOptions.class, "project", projectName+"/data");
+    }
 
+    public static void storeNodeStepnames(Node node, String projectName, WorkspaceStorage storage) throws StorageException {
+        List<String> stepnames = new ArrayList<String>();
+        for ( Step step : node.getSteps() ) {
+            stepnames.add(step.getName());
+        }
+        storage.storeEntity(stepnames, node.getName()+".node", projectName+"/data");
+    }
+
+    public static List<String> loadNodeStepnames(String projectName, String nodeName, WorkspaceStorage storage) throws StorageException {
+        List<String> stepnames = storage.loadEntity(nodeName+".node", projectName+"/data", new TypeToken<List<String>>(){}.getType());
+        return stepnames;
+    }
+
+    public static void storeNodeStep(Step step, Node node, String projectName, WorkspaceStorage storage) throws StorageException {
+        storage.storeEntity(step, node.getName()+"."+step.getName(), projectName+"/data/");
+    }
+
+    public static ProjectSettings loadProjectSettings(String projectName, WorkspaceStorage storage) throws StorageException {
+        return storage.loadEntity("settings", projectName, ProjectSettings.class);
+    }
+
+    public static void storeProjectSettings(ProjectSettings projectSettings, String projectName, WorkspaceStorage storage) throws StorageException {
+        storage.storeEntity(projectSettings, "settings", projectName);
+    }
 
 }
+
+

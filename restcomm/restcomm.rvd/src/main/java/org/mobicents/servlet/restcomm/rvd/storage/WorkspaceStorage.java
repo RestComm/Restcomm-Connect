@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
@@ -52,6 +53,27 @@ public class WorkspaceStorage {
         }
     }
 
+    public <T> T loadEntity(String entityName, String relativePath, Type gsonType) throws StorageException {
+        // make sure relativePaths (path within the workspace) start with "/"
+        if ( !relativePath.startsWith( "/") )
+            relativePath = File.separator + relativePath;
+
+        String pathname = rootPath + relativePath + File.separator + entityName;
+
+        File file = new File(pathname);
+        if ( !file.exists() )
+            throw new StorageEntityNotFound("File " + file.getPath() + " does not exist");
+
+        String data;
+        try {
+            data = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+            T instance = marshaler.toModel(data, gsonType);
+            return instance;
+        } catch (IOException e) {
+            throw new StorageException("Error loading file " + file.getPath(), e);
+        }
+    }
+
     public InputStream loadStream(String entityName, String relativePath) throws StorageException {
         if ( !relativePath.startsWith( "/") )
             relativePath = File.separator + relativePath;
@@ -74,6 +96,20 @@ public class WorkspaceStorage {
         String pathname = rootPath + relativePath + File.separator + entityName;
         File file = new File(pathname);
         String data = marshaler.getGson().toJson(entity, entityClass);
+        try {
+            FileUtils.writeStringToFile(file, data, "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException("Error creating file in storage: " + file, e);
+        }
+    }
+
+    public void storeEntity(Object entity, String entityName, String relativePath ) throws StorageException {
+        if ( !relativePath.startsWith("/") )
+            relativePath = "/" + relativePath;
+
+        String pathname = rootPath + relativePath + File.separator + entityName;
+        File file = new File(pathname);
+        String data = marshaler.getGson().toJson(entity);
         try {
             FileUtils.writeStringToFile(file, data, "UTF-8");
         } catch (IOException e) {
