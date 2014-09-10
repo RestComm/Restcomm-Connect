@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -391,16 +392,18 @@ public class RvdController extends RestService {
                 //response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
                 //response.setDateHeader("Expires", 0);
             } catch (FileNotFoundException e) {
-                return Response.ok().build(); // nothing to return. There is no log file
+                return Response.status(Status.NOT_FOUND).build(); // nothing to return. There is no log file
             }
+        } catch (StorageEntityNotFound e) {
+            return Response.status(Status.NOT_FOUND).build();
         } catch (StorageException e1) {
-            // !!! return hangup!!!
+            logger.error(e1,e1);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GET
-    @Path("{appname}/log/reset")
+    @DELETE
+    @Path("{appname}/log")
     public Response resetAppLog(@PathParam("appname") String appName) {
         ProjectAwareRvdContext rvdContext;
         try {

@@ -53,6 +53,10 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		templateUrl : 'templates/login.html',
 		controller : 'loginCtrl'
 	})
+	.when('/designer/:projectName/log', {
+		templateUrl : 'templates/projectLog.html',
+		controller : 'projectLogCtrl'
+	})	
 	.otherwise({
 		redirectTo : '/home'
 	});
