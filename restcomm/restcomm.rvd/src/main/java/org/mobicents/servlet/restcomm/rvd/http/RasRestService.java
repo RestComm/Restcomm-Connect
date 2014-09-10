@@ -245,7 +245,7 @@ public class RasRestService extends RestService {
     public Response newRasApp(@PathParam("name") String projectNameOverride, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
-        BuildService buildService = new BuildService(projectStorage);
+        BuildService buildService = new BuildService(workspaceStorage);
         String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
 
 
