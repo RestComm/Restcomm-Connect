@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder, projectSettingsService) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder, projectSettingsService) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -51,40 +51,21 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
 	
-	
 	$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds
 							// of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
 	$scope.wavList = [];
-	
-	// Project management
-	$scope.projectList = [];
-	
-	$scope.spinnerSettings = {
-		radius: 4,
-		lines: 7,
-		length: 5,
-		width: 3,
-	};
-	
+		
 	// Some constants to be moved elsewhere = TODO
 	$scope.yesNoBooleanOptions = [{caption:"Yes", value:true}, {caption:"No", value:false}];
 	$scope.nullValue = null;
 	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
-	// console.log("projectController stepService: " + stepService.stepNames );
-
-
-	// Functionality
-	// ------------------
-
 	$scope.loseFocus = function () {
 		// console.log('lost focus');
 	}
-	
-	
-	
+		
 	// nodes
 	$scope.nodeNamed = function (name) {
 		for ( var i=0; i<$scope.nodes.length; i++ ) {
@@ -392,7 +373,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 	
 	$scope.onSavePressed = function() {
-		usSpinnerService.spin('spinner-save');
+		$scope.saveSpinnerShown = true;
 		$scope.clearStepWarnings();
 		$scope.saveProject()
 		.then( function () { 
@@ -401,19 +382,21 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		.then( function () { return $scope.buildProject() } )
 		.then(
 			function () { 
-				$scope.addAlert("Project saved", 'success');
+				notifications.put({type:"success", message:"Project saved"});
 				console.log("Project saved and built");
 			}, 
 			function (reason) { 
 				if ( reason.type == 'saveError' ) {
 					console.log("Error saving project");
-					if (reason.data.serverError.className == 'IncompatibleProjectVersion')
-						$scope.addAlert("Error saving project. Project version is incompatible with current RVD version", 'danger');
-					else
-						$scope.addAlert("Error saving project", 'danger');
+					if (reason.data.serverError.className == 'IncompatibleProjectVersion') {
+						notifications.put({type:"danger", message:"Error saving project. Project version is incompatible with current RVD version"});
+					}
+					else {
+						notifications.put({type:"danger", message:"Error saving project"});
+					}
 				} else if ( reason.type == 'validationError') {
 					console.log("Validation error");
-					$scope.addAlert("Project saved with validation errors", 'warning');
+					notifications.put({type:"warning", message:"Project saved with validation errors"});
 					var r = /^\/nodes\/([0-9]+)\/steps\/([0-9]+)$/;
 					for (var i=0; i < reason.data.errorItems.length; i++) {
 						var failurePath = reason.data.errorItems[i].failurePath;
@@ -427,8 +410,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			} 
 		)
 		.finally(function () {
-			usSpinnerService.stop('spinner-save');
-			// console.log('save finished');
+			$scope.saveSpinnerShown = false;
 		});
 		// .then( function () { console.log('project saved and built')});
 	}
@@ -438,21 +420,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		$scope.refreshWavList($scope.projectName);
 	});
 	
-	$scope.alerts = [];
-	$scope.addAlert = function(msg, type) {
-	  var alert = null;
-	  if (typeof type !== 'undefined')
-		  alert = {type: type, msg: msg};
-	  else
-		  alert = {msg: msg};
-	  
-	  $scope.alerts.push(alert);
-	  $timeout( function () { $scope.closeAlert(alert); }, 3000);
-	};
-
-	$scope.closeAlert = function(alert) {
-	  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
-	};
 	
 	$scope.clearStepWarnings = function () {
 		for ( var i=0; i<$scope.nodes.length; i++ ) {
