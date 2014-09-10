@@ -1,0 +1,43 @@
+	<div class="step say-step panel panel-rvdstep">
+		<div class="panel-heading">
+			<step-heading><small>{{step.phrase.length > 40 ? step.phrase.substring(0, 40) + "..." : step.phrase.substring(0, 40) }}</small></step-heading>
+		</div>
+		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+			<div class="row">
+				<div class="col-lg-12 col-md-12">
+					<div class="form-group">
+						<!--<label for="phraseTextInput">Phrase</label>-->
+						<span class="help-block">Text &nbsp;<i class="fa fa-info-circle rvd-clickable" popover='Type the text that will be read to the user. Prepend variables names with a dollar sign e.g. "$variablename"' popover-placement='top'></i></span>
+						<!--<input ng-model='step.phrase' type="text" id="phraseTextInput" class="small form-control" placeholder="say something..." tooltip="The text that will be read to the user" required>-->
+						<textarea ng-model='step.phrase' class="form-control"></textarea>	
+					</div>
+				</div>
+			</div>
+					
+
+			<i ng-click='step.iface.optionsVisible = !step.iface.optionsVisible' class='fa fa-cog rvd-clickable' ng-class="{'rvd-active': step.iface.optionsVisible }"></i>
+			<div collapse='!step.iface.optionsVisible' class='row'>
+				<br/>
+				<div class="col-lg-12">
+					<div class="input-group form-group pull-left language">
+						<span class="input-group-addon ">Language</span>
+						<select ng-model='step.language' auto-clear ng-options='language.name as language.text for language in languages'  id="languageSelect" class="form-control say-language-dropdown" >
+							<option value=""></option>
+						</select>
+					</div>
+					<div class="btn-toolbar voice" role="toolbar">
+					  <span class="btn-group">
+						<button ng-click='step.voice="man"' ng-class="{active:step.voice=='man'}"  type="button" class="btn btn-default"><i class='fa fa-male'></i></button>
+						<button ng-click='step.voice="woman"' ng-class="{active:step.voice=='woman'}" type="button" class="btn btn-default"><i class='fa fa-female'></i></button>
+					  </span>
+					</div>
+					<div class="input-group form-group loop">
+						<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="How many times the text will be repeated. Default is '1'. '0' will loop until the call is hang up.">Loop</span>
+						<input ng-model='step.loop' auto-clear type='number' class='form-control' placeholder='1' />
+					</div>
+				</div>
+			</div>
+
+			
+		</div>
+	</div>

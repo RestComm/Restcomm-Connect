@@ -1,0 +1,49 @@
+<div class="step fax-step panel panel-rvdstep">
+	<div class="panel-heading">
+			<step-heading></step-heading>	</div>
+
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+		<div class='row form-group'>
+			<div class='col-md-12'>
+				<span class="help-block">Fax content &nbsp;<i class="fa fa-info-circle rvd-clickable" popover='Type the fax content as text. Prepend variables with a dollar sign like "$variablename"' popover-placement='top'></i></span>
+				<textarea ng-model='step.text' class="form-control"></textarea>	
+			</div>
+		</div>
+		<div class="row">
+			<div class='col-md-4'>
+				<div class="input-group form-group input-group-sm">
+					<span class="input-group-addon">To<!-- &nbsp; <i class="fa fa-info-circle rvd-clickable" popover='The phone number of the recipient. When sending a fax during an incoming call, it defaults to the caller. When sending an fax during an outgoing call, it defaults to the called party.' popover-placement='top'></i> --></span>
+					<input type='text' name='to' auto-clear ng-model='step.to' class="form-control"></input>
+				</div>
+				<div class="input-group form-group input-group-sm">
+					<span class="input-group-addon">From<!-- &nbsp; <i class="fa fa-info-circle rvd-clickable" popover='The phone number of the sender. When sending a fax during an incoming call, it defaults to the calling party. When sending a fax during an outgoing call, it defaults to the called party' popover-placement='top'></i>--></span>
+					<input type='text' name='from' auto-clear ng-model='step.from' class="form-control"></input>
+				</div>			
+			</div>
+			<div class='col-md-8'>
+					<!-- <span class="help-block">After processing this step</span> -->
+					<div class="input-group form-group input-group-sm">
+						<span class="input-group-addon help-tooltip" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Choose the module to continue to after the fax has been enqueued. "FaxStatus" and "FaxSid" variables will be available. Leave it blank to continue to the next step.'>Continue to</span>
+						<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+							<option value=""></option>
+						</select>
+						<!-- 
+						<span class='input-group-addon'>method</span>
+						<select name="method" ng-model='step.method'  class="form-control">
+							<option value=""></option>
+							<option value="GET">GET</option>
+							<option value="POST">POST</option>
+						</select>
+						 -->
+					</div>
+					<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+					
+
+					<div class="input-group form-group input-group-sm">
+						<span class="input-group-addon help-tooltip" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Type a URL to get notified about the fax sending final status. A POST request will be made with parameters "FaxStatus" and "FaxSid"'>Status callback</span>
+						<input type='text' name='statusCallback' auto-clear ng-model='step.statusCallback' class="form-control" placeholder='http://...'></input>
+					</div>
+
+		</div>
+	</div>
+</div>

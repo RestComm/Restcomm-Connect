@@ -8,7 +8,8 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.server.NodeName;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.Gson;
@@ -24,17 +25,15 @@ public class BuildService {
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
 
     protected Gson gson;
-    private ProjectStorage projectStorage;
+    private WorkspaceStorage workspaceStorage;
 
-    public BuildService(ProjectStorage projectStorage) {
+    public BuildService(WorkspaceStorage workspaceStorage) {
+        this.workspaceStorage = workspaceStorage;
         // Parse the big project state object into a nice dto model
         gson = new GsonBuilder()
                 .registerTypeAdapter(Step.class, new StepJsonDeserializer())
                 .registerTypeAdapter(Step.class, new StepJsonSerializer())
-                //.registerTypeAdapter(DialNoun.class, new DialNounJsonDeserializer())  // put these inside StepJsonDeserializer. Since DialNoun deserialization is part of StepDeserialization process
-                //.registerTypeAdapter(DialNoun.class, new DialNounJsonSerializer())    // ...
                 .create();
-        this.projectStorage = projectStorage;
     }
 
     /**
@@ -46,8 +45,7 @@ public class BuildService {
      * @throws IOException
      * @throws StorageException
      */
-    public void buildProject(String projectName) throws StorageException {
-        ProjectState projectState = gson.fromJson(projectStorage.loadProjectState(projectName), ProjectState.class);
+    public void buildProject(String projectName, ProjectState projectState) throws StorageException {
         ProjectOptions projectOptions = new ProjectOptions();
 
         // Save general purpose project information
@@ -63,10 +61,10 @@ public class BuildService {
         }
 
         projectOptions.setDefaultTarget(projectState.getHeader().getStartNodeName());
+        //if ( projectState.getHeader().getLogging() != null )
+        //    projectOptions.setLogging(true);
         // Save the nodename-node-label mapping
-        //File outFile = new File(projectPath + "data/" + "project");
-        //FileUtils.writeStringToFile(outFile, gson.toJson(projectOptions), "UTF-8");
-        projectStorage.storeProjectOptions(projectName, gson.toJson(projectOptions));
+        FsProjectStorage.storeProjectOptions(projectOptions, projectName, workspaceStorage);
     }
 
     /**
@@ -81,11 +79,11 @@ public class BuildService {
 
         // TODO sanitize node name!
 
-        projectStorage.storeNodeStepnames(projectName, node);
+        FsProjectStorage.storeNodeStepnames(node, projectName, workspaceStorage);
         // process the steps one-by-one
         for (Step step : node.getSteps()) {
             logger.debug("Building step " + step.getKind() + " - " + step.getName() );
-            projectStorage.storeNodeStep(projectName, node.getName(), step.getName(), gson.toJson(step));
+            FsProjectStorage.storeNodeStep(step, node, projectName, workspaceStorage);
         }
     }
 }
