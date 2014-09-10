@@ -1,4 +1,4 @@
-<div class='alert-container'>
+<div class='rvd-designer alert-container'>
 	<!-- navigation bar for errors -->
 	<nav ng-show='projectError' class="navbar navbar-default" role="navigation">
 		<div ng-switch on="projectError.className" class="collapse navbar-collapse navbar-ex1-collapse">
@@ -12,8 +12,7 @@
 	</nav>
 
 	<div ng-hide='projectError'>	
-	
-		<nav  class="navbar navbar-default" role="navigation">
+		<nav  class="rvd-menu navbar navbar-default" role="navigation">
 			<div class="collapse navbar-collapse navbar-ex1-collapse">
 	
 				<ul class="nav navbar-nav">
@@ -26,39 +25,56 @@
 						</ul>
 					</li>
 					<li><a ng-click="addNode(undefined, projectKind)" class="rvd-clickable-text"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
+					<!--
+					<li>
+						<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
+					</li>
+					-->
 				</ul>
 	
 				<ul class="nav navbar-nav navbar-right">
-					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i class='fa fa-save'></i>&nbsp; Save <span class='spinner-save' us-spinner='spinnerSettings' spinner-key="spinner-save"></span></a></li>
+					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">Web Trigger</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Export <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href='#/packaging/{{projectName}}'><i class='fa fa-shopping-cart'></i>&nbsp;&nbsp;&nbsp;Application Store</a></li>
+							<li><a href="/restcomm-rvd/services/projects/{{projectName}}/archive"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;zip file</a></li>
+						</ul>
+					</li>
+					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; Save</a></li>
 					<li class='rvd-appurl' ng-show="startNodeSet()"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
-					<li><a href="#/project-manager/{{projectKind ? projectKind : 'voice'}}"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
+					<li><a href="#/project-manager/{{projectKind ? projectKind : 'voice'}}" title="Close {{projectName}}"><i class='fa fa-power-off'></i>&nbsp;</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Settings"><i class="fa fa-cog"></i> <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">Project Settings</a></li>
+							<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li>
+							<li><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text">Application log</a></li>
+						</ul>
+					</li>
 				</ul>
 			</div>
 		</nav>
 		
-		<div class='rvd-alerts'>
-			<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert(alert)">{{alert.msg}}</alert>
-		</div>
-		
-		<div class='row'>
+		<div class='row rvd-submenu'>
 			<div class='col-md-2'>
 				<div ng-show="nodeNamed(startNodeName)==null" class='rvd-subheader-message'>
 					<span class="validation-error">No <em>Startup module</em> is set</span>
 				</div>
 			</div>
-			<div class='col-md-8'>
+			<div class='col-md-10 rvd-view-selector'>
 			</div>
 	
 		</div>
 	
-		<div class="row">
+		<div class="rvd-rcmlview row">
 	
 			<!-- Left menu -->
 			<div class="col-md-2">
 	
 				<div ng-show='!projectKind || projectKind=="voice"' class='form-group'>
 					<div basic-draggable drop-target='.steps' class="verb-button button-play label label-primary rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
+					<div basic-draggable drop-target='.steps' drag-model='protos.stepProto.say' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>					
 					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>					
 					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>					
@@ -103,8 +119,7 @@
 									<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
 								</div>
 							</div>
-								
-							<div class="col-md-12 text-center confirm-delete " ng-show="wavItem.viewMode=='confirm-delete'">
+							<div class="col-md-12 text-center delete-confirmation " ng-show="wavItem.viewMode=='confirm-delete'">
 								<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
 								<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>
 							</div>						
@@ -152,6 +167,12 @@
 					</div>
 				</div>
 			</div>
+			
+			<!-- 
+			<div ng-controller="exceptionConfigCtrl">
+				<a ng-click="openExceptionModel()">Show exceptions</a>
+			</div>
+			 -->
 	
 	
 		</div>

@@ -5,9 +5,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 
@@ -17,12 +20,14 @@ public class RvdInitializationServlet extends HttpServlet {
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        super.init(config);
+        super.init(config) ;
         logger.info("Initializing RVD");
-
-        RvdSettings settings = RvdSettings.getInstance(config.getServletContext());
-        ProjectStorage projectStorage = new FsProjectStorage(settings);
-        UpgradeService upgradeService = new UpgradeService(projectStorage);
+        RvdConfiguration settings = RvdConfiguration.getInstance(config.getServletContext());
+        ModelMarshaler marshaler = new ModelMarshaler();
+        FsStorageBase storageBase = new FsStorageBase(settings.getWorkspaceBasePath(), marshaler);
+        ProjectStorage projectStorage = new FsProjectStorage(storageBase, marshaler);
+        WorkspaceStorage workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
+        UpgradeService upgradeService = new UpgradeService(projectStorage, workspaceStorage);
 
         try {
             upgradeService.upgradeWorkspace();

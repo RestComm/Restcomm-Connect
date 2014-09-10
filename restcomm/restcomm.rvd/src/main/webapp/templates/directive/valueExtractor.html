@@ -1,8 +1,8 @@
 <form name="form" novalidate>
 	<div class="input-group input-group-sm form-group">
-		<span class="input-group-addon">{{extractorModelExpression(extractorModel)}}</span>
+		<span class="input-group-addon">{{extractorModel.extractorModelExpression()}}</span>
 		
-		<select ng-show='extractorModel.lastOperation != null' ng-change='resetOperation(extractorModel.lastOperation)' ng-model='extractorModel.lastOperation.kind' ng-options='operationKind as operationKind for operationKind in accessOperationKinds' class="form-control input-sm" required></select>
+		<select ng-show='extractorModel.lastOperation != null' ng-change='extractorModel.lastOperation.action=""' ng-model='extractorModel.lastOperation.kind' ng-options='operationKind as operationKind for operationKind in accessOperationKinds' class="form-control input-sm" required></select>
 
 		<span ng-if='extractorModel.lastOperation.kind=="object"' class="input-group-addon"></span>
 		<select ng-if='extractorModel.lastOperation.kind=="object"' ng-change='extractorModel.lastOperation.property=""' ng-model='extractorModel.lastOperation.action' ng-options='objectAction as objectAction for objectAction in objectActions' class="form-control input-sm" required></select>
@@ -19,7 +19,7 @@
 	<div class="validation-error" ng-show="form.position.$error.required">item position required</div>
 	-->
 
-	<button ng-show='extractorModel.lastOperation != null && !isTerminal(extractorModel.lastOperation.kind)' ng-disabled='form.$invalid' ng-click="addOperation(extractorModel)" type="button" class="btn btn-primary btn-xs pull-right"><span>Add operation</span></button>
-	<button ng-show='isTerminal(extractorModel.lastOperation.kind)' ng-click="doneAddingOperations(extractorModel)" type="button" class="btn btn-primary btn-xs pull-right"><span>Done</span></button>
-	<button ng-show='extractorModel.accessOperations.length > 0' ng-click='popOperation(extractorModel)' type='button' class="btn btn-xs pull-right"><i  class="fa fa-undo" ></i></button>
+	<button ng-show='extractorModel.lastOperation != null && !extractorModel.isTerminal(extractorModel.lastOperation.kind)' ng-disabled='form.$invalid' ng-click="extractorModel.addOperation()" type="button" class="btn btn-primary btn-xs pull-right"><span>Add operation</span></button>
+	<button ng-show='extractorModel.isTerminal(extractorModel.lastOperation.kind)' ng-click="extractorModel.doneAddingOperations()" type="button" class="btn btn-primary btn-xs pull-right"><span>Done</span></button>
+	<button ng-show='extractorModel.accessOperations.length > 0' ng-click='extractorModel.popOperation()' type='button' class="btn btn-xs pull-right"><i  class="fa fa-undo" ></i></button>
 </form>

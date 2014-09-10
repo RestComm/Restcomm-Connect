@@ -1,4 +1,3 @@
-
 <rvd>
 	<!--  A path to the projects' workspace. Both absolute and relative paths are supported. Relative paths
 	are related RVD web application context. Namely $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/.
@@ -10,7 +9,8 @@
 		Relative path example:
 			workspace
 	-->
-	<workspaceLocation>workspace</workspaceLocation>	
+	<workspaceLocation>workspace</workspaceLocation>
+	
 	<!-- Use a fixed ip address on the URL resources generated such as links to recorded .wav files etc. If not defined,
 		the destination ip of the request made by Restcomm to the RVD controller will be used. 
 	 -->

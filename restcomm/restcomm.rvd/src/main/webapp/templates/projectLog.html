@@ -1,0 +1,9 @@
+<h1>Application log <small>{{projectName}}</small></h1>
+<hr>
+<div class="form-group">
+	<textarea ng-model="logData" id="rvd-log-textarea" class="form-control"></textarea>
+</div>
+<div>
+	<button ng-click="retrieveLog()" ntype="button" class="btn btn-primary">Reload</button>
+	<button ng-click="resetLog()" type="button" class="btn">Reset</button>
+</div>

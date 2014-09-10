@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, usSpinnerService, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -10,8 +10,8 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.stepService = stepService;
 	$scope.protos = protos;
 	$scope.selectedView = 'rcml';
-	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved parameters
-	console.log( ccInfo );
+	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved
+							// parameters
 	
 	// Prototype and constant data structures
 	$scope.languages = [
@@ -50,40 +50,21 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
 	
-	
 	$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds
 							// of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
 	$scope.wavList = [];
-	
-	// Project management
-	$scope.projectList = [];
-	
-	$scope.spinnerSettings = {
-		radius: 4,
-		lines: 7,
-		length: 5,
-		width: 3,
-	};
-	
+		
 	// Some constants to be moved elsewhere = TODO
 	$scope.yesNoBooleanOptions = [{caption:"Yes", value:true}, {caption:"No", value:false}];
 	$scope.nullValue = null;
 	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
-	// console.log("projectController stepService: " + stepService.stepNames );
-
-
-	// Functionality
-	// ------------------
-
 	$scope.loseFocus = function () {
 		// console.log('lost focus');
 	}
-	
-	
-	
+		
 	// nodes
 	$scope.nodeNamed = function (name) {
 		for ( var i=0; i<$scope.nodes.length; i++ ) {
@@ -230,26 +211,17 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 				headers: {'Content-Type': 'application/data'}
 		})
 		.success(function (data, status, headers, config) {
-			if ( data == "" || data.success ) {
+			if (data.rvdStatus == 'OK' )
 				deferred.resolve('Project saved');
-			} else {
-				deferred.reject({type:'validationError', data:data});			
-			}
+			else
+				deferred.reject(data);			
 		 }).error(function (data, status, headers, config) {
-			 deferred.reject({type:'saveError', data:data});
+			 deferred.reject(data);
 		 });	
 		
 		return deferred.promise;
 	}
-	
-	$scope.saveCcInfo = function (projectName, ccInfo) {
-		//var deferred = $q.defer();
-		return $http.post("services/projects/" + projectName + "/cc", $scope.ccInfo, {headers: {'Content-Type': 'application/data'}});
-		//.success( function () {deferred.resolve()})
-		//.error( function () {deferred.reject("Error saving CC info")});
-		//return deferred.promise;
-	}
-	
+
 	$scope.openProject = function(name) {
 		$http({url: 'services/projects/' + name,
 				method: "GET"
@@ -391,43 +363,41 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 	
 	$scope.onSavePressed = function() {
-		usSpinnerService.spin('spinner-save');
+		$scope.saveSpinnerShown = true;
 		$scope.clearStepWarnings();
 		$scope.saveProject()
-		.then( function () { 
-			return $scope.saveCcInfo( $scope.projectName, ccInfo );
-		})
 		.then( function () { return $scope.buildProject() } )
 		.then(
 			function () { 
-				$scope.addAlert("Project saved", 'success');
+				notifications.put({type:"success", message:"Project saved"});
 				console.log("Project saved and built");
 			}, 
 			function (reason) { 
-				if ( reason.type == 'saveError' ) {
-					console.log("Error saving project");
-					if (reason.data.serverError.className == 'IncompatibleProjectVersion')
-						$scope.addAlert("Error saving project. Project version is incompatible with current RVD version", 'danger');
-					else
-						$scope.addAlert("Error saving project", 'danger');
-				} else if ( reason.type == 'validationError') {
+				if ( reason.exception.className == 'ValidationException' ) {
 					console.log("Validation error");
-					$scope.addAlert("Project saved with validation errors", 'warning');
+					notifications.put({type:"warning", message:"Project saved with validation errors"});
 					var r = /^\/nodes\/([0-9]+)\/steps\/([0-9]+)$/;
-					for (var i=0; i < reason.data.errorItems.length; i++) {
-						var failurePath = reason.data.errorItems[i].failurePath;
-						m = r.exec( reason.data.errorItems[i].failurePath );
+					var errorItems = reason.exception.jsonSchemaReport.errorItems;
+					for (var i=0; i < errorItems.length; i++) {
+						var failurePath = errorItems[i].failurePath;
+						m = r.exec( errorItems[i].failurePath );
 						if ( m != null ) {
 							console.log("warning in module " + $scope.nodes[ m[1] ].name + " step " + $scope.nodes[ m[1] ].steps[m[2]].name);
 							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
 					}
-				} else { console.log("Unknown error");}
+				} else
+				if ( reason.exception.className == 'IncompatibleProjectVersion' ) {
+					console.log("error saving project - Project version is incompatible with current RVD version");
+					notifications.put({type:"danger", message:"Error saving project. Project version is incompatible with current RVD version"});
+				} else {
+					console.log("error saving project");
+					notifications.put({type:"danger", message:"Error saving project"});
+				}
 			} 
 		)
 		.finally(function () {
-			usSpinnerService.stop('spinner-save');
-			// console.log('save finished');
+			$scope.saveSpinnerShown = false;
 		});
 		// .then( function () { console.log('project saved and built')});
 	}
@@ -437,21 +407,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		$scope.refreshWavList($scope.projectName);
 	});
 	
-	$scope.alerts = [];
-	$scope.addAlert = function(msg, type) {
-	  var alert = null;
-	  if (typeof type !== 'undefined')
-		  alert = {type: type, msg: msg};
-	  else
-		  alert = {msg: msg};
-	  
-	  $scope.alerts.push(alert);
-	  $timeout( function () { $scope.closeAlert(alert); }, 3000);
-	};
-
-	$scope.closeAlert = function(alert) {
-	  $scope.alerts.splice($scope.alerts.indexOf(alert),1);
-	};
 	
 	$scope.clearStepWarnings = function () {
 		for ( var i=0; i<$scope.nodes.length; i++ ) {
@@ -601,17 +556,17 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		  templateUrl: 'templates/exceptionConfigModal.html',
 		  controller: exceptionConfigCtrl,
 		  size: 'lg',
-		  //resolve: {
-			//items: function () {
-			//  return $scope.items;
-			//}
-		  //}
+		  // resolve: {
+			// items: function () {
+			// return $scope.items;
+			// }
+		  // }
 		});
 
 		modalInstance.result.then(function (exceptionMappings) {
 			console.log(exceptionMappings);
 		}, function () {
-		  //$log.info('Modal dismissed at: ' + new Date());
+		  // $log.info('Modal dismissed at: ' + new Date());
 		});
 	}
 	
@@ -632,11 +587,13 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			$modalInstance.dismiss('cancel');
 		};
 		
-		// watch form validation status and copy to outside scope so that the OK button (which is outside the form's scope) status can be updated
+		// watch form validation status and copy to outside scope so that the OK
+		// button (which is outside the form's scope) status can be updated
 		$scope.watchForm = function (formValid) {
 			$scope.preventSubmit = !formValid;
 		}
 	};
+	
 	$scope.showSettingsModal = function (settings) {
 		var modalInstance = $modal.open({
 		  templateUrl: 'templates/designerSettingsModal.html',
@@ -652,9 +609,9 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 					if ( response.status == 404 )
 						deferred.resolve({});
 					else {
-						//console.log("BEFORE reject");
+						// console.log("BEFORE reject");
 						deferred.reject();
-						//console.log("AFTER reject");
+						// console.log("AFTER reject");
 					}
 				});
 				return deferred.promise;
@@ -664,61 +621,22 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 		modalInstance.result.then(function (settings) {
 			console.log(settings);
-			//$scope.settings
+			// $scope.settings
 		}, function () {
-		  //$log.info('Modal dismissed at: ' + new Date());
+		  // $log.info('Modal dismissed at: ' + new Date());
 		});		
 	}
-	
-	
-	
-	// Call Control functionality
-	var ccInfoBackup = null;
-	$scope.ccInfo = ccInfo;
-	
-	function callControlIsEnabled() {
-		if ( $scope.ccInfo === null || $scope.ccInfo === undefined )
-			return false;
-		return true;
+		
+	// Web Trigger
+	$scope.showWebTrigger = function (projectName) {
+		webTriggerService.showModal(projectName);
 	}
-	function enableCallControl() {
-		if ( !callControlIsEnabled() ) {
-			$scope.ccEnabled = true;
-			if( ccInfoBackup )
-				$scope.ccInfo = ccInfoBackup;
-			else
-				$scope.ccInfo = ModelBuilder.build('CcInfo');
-		}
-	}
-	function disableCallControl() {
-		if ( callControlIsEnabled() ) {
-			ccInfoBackup = $scope.ccInfo;
-			$scope.ccInfo = null;
-			$scope.ccEnabled = false;
-		}
-	}
-	function toggleCallControl() {
-		if ( callControlIsEnabled() )
-			disableCallControl();
-		else
-			enableCallControl();
-	}
-	$scope.ccEnabled = callControlIsEnabled();
 	
-	$scope.toggleCallControl = toggleCallControl;
-	$scope.enableCallControl = enableCallControl;
-	$scope.disableCallControl = disableCallControl;
-	
-	function getRvdHost() {
-		return $location.host();
+ 	
+	// Application logging
+	$scope.showProjectSettings = function (projectName) {
+		projectSettingsService.showModal(projectName);
 	}
-	function getRvdPort() {
-		return $location.port();
-	}
-	$scope.getRvdHost = getRvdHost;
-	$scope.getRvdPort = getRvdPort;
-	
-	
 		
 	// Run the following after all initialization are complete
 	
@@ -736,19 +654,5 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		}
 	}	
 });
-designerCtrl.getCcInfo = function ($route, $http, $q, ModelBuilder) {
-	var deferred = $q.defer();
-	$http.get("services/projects/" + $route.current.params.projectName + "/cc")
-	.then(function (response) {
-		var ccInfo = ModelBuilder.build('CcInfo').init(response.data);
-		deferred.resolve(ccInfo);
-	}, function (response) {
-		if ( response.status == 404 )
-			//deferred.resolve( ModelBuilder.build('CcInfo') );
-			deferred.resolve( null );
-		else
-			deferred.reject(); // TODO - add an error code or message here
-	});
-	return deferred.promise;
-}
+
 

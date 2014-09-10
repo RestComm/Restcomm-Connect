@@ -1,11 +1,16 @@
 package org.mobicents.servlet.restcomm.rvd.upgrade;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.NoUpgradePathException;
@@ -18,19 +23,40 @@ public class UpgradeService {
     static final Logger logger = Logger.getLogger(UpgradeService.class.getName());
 
     private ProjectStorage projectStorage;
+    private WorkspaceStorage workspaceStorage;
 
-    public UpgradeService(ProjectStorage projectStorage) {
+    public UpgradeService(ProjectStorage projectStorage, WorkspaceStorage workspaceStorage) {
         this.projectStorage = projectStorage;
+        this.workspaceStorage = workspaceStorage;
     }
 
-    public UpgradeService(String otherWorkspaceLocation) {
-        this.projectStorage = new FsProjectStorage(otherWorkspaceLocation, null);
+    /**
+     * Checks whether a runtime able to handle (open without upgrading) referenceProjectVersion can also handle checkedProjectVersion
+     * @param referenceProjectVersion
+     * @param checkedProjectVesion
+     * @return
+     * @throws InvalidProjectVersion
+     */
+    public static boolean checkBackwardCompatible(String referenceProjectVersion, String checkedProjectVesion) throws InvalidProjectVersion {
+        if ( "1.1".equals(referenceProjectVersion) ) {
+            if ( "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion) )
+                return true;
+            else
+                return false;
+        } else
+        if ( "1.0".equals(referenceProjectVersion) ) {
+            if ("1.0".equals(checkedProjectVesion))
+                return true;
+            else
+                return false;
+        } else
+            throw new InvalidProjectVersion("Invalid version identifier: " + referenceProjectVersion);
     }
 
     /**
      * Upgrades a project to current RVD supported version
      * @param projectName
-     * @return Boolean value indicating if the project was upgraded or not. i.e. false for projects already upgraded, true for projects that were indeed upgraded
+     * @return false for projects already upgraded or older supported projects. true for projects that were indeed upgraded
      * @throws StorageException
      * @throws UpgradeException
      */
@@ -48,8 +74,12 @@ public class UpgradeService {
             startVersion = "rvd714"; // assume this is an rvd714 project. It could be 713 as well...
         }
 
-        if ( startVersion.equals(RvdSettings.getRvdProjectVersion()) )
+        if ( startVersion.equals(RvdConfiguration.getRvdProjectVersion()) )
             return false;
+        if ( checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), startVersion) ) {
+            //logger.warn("Project '" + projectName + "' is old but compatible. No need to upgrade.");
+            return false;
+        }
 
         logger.info("Upgrading '" + projectName + "' from version " + startVersion);
 
@@ -85,32 +115,42 @@ public class UpgradeService {
      * @throws StorageException
      */
     public void upgradeWorkspace() throws StorageException {
-        BuildService buildService = new BuildService(projectStorage);
+        BuildService buildService = new BuildService(workspaceStorage);
         int upgradedCount = 0;
-        for ( String projectName : projectStorage.listProjectNames() ) {
+        int uptodateCount = 0;
+        int failedCount = 0;
+
+        List<String> projectNames = FsProjectStorage.listProjectNames(workspaceStorage);
+        for ( String projectName : projectNames ) {
             try {
                 if ( upgradeProject(projectName) ) {
                     upgradedCount ++;
-                    logger.info("project '" + projectName + "' upgraded to version " + RvdSettings.getRvdProjectVersion() );
+                    logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                     try {
-                        buildService.buildProject(projectName);
+                        ProjectState projectState = FsProjectStorage.loadProject(projectName, workspaceStorage);
+                        buildService.buildProject(projectName, projectState);
                         logger.info("project '" + projectName + "' built");
                     } catch (StorageException e) {
                         logger.warn("error building upgraded project '" + projectName + "'", e);
                     }
-                }
+                } else
+                    uptodateCount ++;
             } catch (StorageException e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
+                failedCount ++;
+                logger.error("error upgrading project '" + projectName + "' to version " + RvdConfiguration.getRvdProjectVersion(), e );
             } catch (UpgradeException e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
-            } catch (Exception e) {
-                logger.error("error upgrading project '" + projectName + "' to version " + RvdSettings.getRvdProjectVersion(), e );
+                failedCount ++;
+                logger.error("error upgrading project '" + projectName + "' to version " + RvdConfiguration.getRvdProjectVersion(), e );
             }
         }
-        if ( upgradedCount == 0 )
-            logger.info("All RVD projects are up-to-date" );
-        else
-            logger.info("" + upgradedCount + " RVD project upgraded");
+        if ( failedCount > 0 )
+            logger.info("" + failedCount + " RVD projects failed upgrade");
+        if ( upgradedCount > 0 )
+            logger.info("" + upgradedCount + " RVD projects upgraded");
+        if ( projectNames.size() > 0 && failedCount == 0)
+            logger.info("--- All RVD projects are up to date");
+        //if ( upgradedCount  0 && projectNames.size() > 0 )
+          //  logger.info("All RVD projects are up-to-date" );
     }
 
 

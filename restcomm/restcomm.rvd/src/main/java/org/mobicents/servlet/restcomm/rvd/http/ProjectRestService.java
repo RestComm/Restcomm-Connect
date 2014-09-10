@@ -43,19 +43,22 @@ import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
-import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationFrameworkException;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -95,8 +98,8 @@ public class ProjectRestService extends RestService {
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         projectStorage = rvdContext.getProjectStorage();
-        projectService = new ProjectService(rvdContext);
         workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
+        projectService = new ProjectService(rvdContext,workspaceStorage);
     }
 
     /**
@@ -110,7 +113,7 @@ public class ProjectRestService extends RestService {
     void assertProjectAvailable(String projectName) throws StorageException, ProjectDoesNotExist {
         if (! projectStorage.projectExists(projectName))
             throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
-        ProjectState project = projectStorage.loadProject(projectName);
+        ProjectState project = FsProjectStorage.loadProject(projectName, workspaceStorage);
         if ( project.getHeader().getOwner() != null ) {
             // needs further checking
             if ( securityContext.getUserPrincipal() != null ) {
@@ -164,9 +167,9 @@ public class ProjectRestService extends RestService {
 
         try {
             ProjectState projectState = projectService.createProject(name, kind, loggedUser.getName());
-            BuildService buildService = new BuildService(projectStorage);
+            BuildService buildService = new BuildService(workspaceStorage);
             buildService.buildProject(name, projectState);
-        } catch (ProjectDirectoryAlreadyExists e) {
+        } catch (ProjectAlreadyExists e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.CONFLICT).build();
         } catch (StorageException e) {
@@ -204,29 +207,27 @@ public class ProjectRestService extends RestService {
         if (projectName != null && !projectName.equals("")) {
             logger.info("savingProject " + projectName);
             try {
-                ProjectState existingProject = projectStorage.loadProject(projectName);
+                ProjectState existingProject = FsProjectStorage.loadProject(projectName, workspaceStorage);
                 Principal loggedUser = securityContext.getUserPrincipal();
                 if (loggedUser.getName().equals(existingProject.getHeader().getOwner())  ||  existingProject.getHeader().getOwner() == null ) {
                     projectService.updateProject(request, projectName, existingProject);
-                    return Response.ok().build();
+                    return buildOkResponse();
                 } else {
                     throw new WebApplicationException(Response.Status.UNAUTHORIZED);
                 }
-            } catch (StorageException e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            } catch (ValidationFrameworkException e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (ValidationException e) {
-                Gson gson = new Gson();
-                return Response.ok(gson.toJson(e.getValidationResult()), MediaType.APPLICATION_JSON).build();
+                RvdResponse rvdResponse = new RvdResponse().setValidationException(e);
+                return Response.status(Status.OK).entity(rvdResponse.asJson()).build();
+                //return buildInvalidResponse(Status.OK, RvdResponse.Status.INVALID,e);
+                //Gson gson = new Gson();
+                //return Response.ok(gson.toJson(e.getValidationResult()), MediaType.APPLICATION_JSON).build();
             } catch (IncompatibleProjectVersion e) {
                 logger.error(e);
                 return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
+            } catch (RvdException e) {
+                logger.error(e.getMessage(), e);
+                return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+                //return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             }
         } else {
             logger.warn("Empty project name specified for updating");
@@ -275,7 +276,6 @@ public class ProjectRestService extends RestService {
         }
     }
 
-
     @RvdAuth
     @PUT
     @Path("{name}/rename")
@@ -303,11 +303,11 @@ public class ProjectRestService extends RestService {
         // TODO IMPORTANT!!! sanitize the project name!!
         if ( !RvdUtils.isEmpty(projectName) ) {
             try {
-                UpgradeService upgradeService = new UpgradeService(projectStorage);
+                UpgradeService upgradeService = new UpgradeService(projectStorage,workspaceStorage);
                 upgradeService.upgradeProject(projectName);
                 logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                 // re-build project
-                BuildService buildService = new BuildService(projectStorage);
+                BuildService buildService = new BuildService(workspaceStorage);
                 buildService.buildProject(projectName, activeProject);
                 logger.info("project '" + projectName + "' built");
                 return Response.ok().build();
@@ -339,6 +339,7 @@ public class ProjectRestService extends RestService {
     }
 
     @GET
+    @RvdAuth
     @Path("{name}/archive")
     public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
         logger.debug("downloading raw archive for project " + projectName);
@@ -375,7 +376,6 @@ public class ProjectRestService extends RestService {
 
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
-
                         String effectiveProjectName = projectService.importProjectFromArchive(item.openStream(), item.getName());
                         //buildService.buildProject(effectiveProjectName);
 
@@ -531,7 +531,7 @@ public class ProjectRestService extends RestService {
     @Path("{name}/build")
     public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
         assertProjectAvailable(name);
-        BuildService buildService = new BuildService(projectStorage);
+        BuildService buildService = new BuildService(workspaceStorage);
         try {
             buildService.buildProject(name, activeProject);
             return Response.ok().build();
@@ -540,5 +540,41 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
+    }
+
+    @RvdAuth
+    @POST
+    @Path("{name}/settings")
+    public Response saveProjectSettings(@PathParam("name") String name) {
+        logger.info("saving project settings for " + name);
+        String data;
+        try {
+            data = IOUtils.toString(request.getInputStream());
+            ProjectSettings projectSettings = marshaler.toModel(data, ProjectSettings.class);
+            FsProjectStorage.storeProjectSettings(projectSettings, name, workspaceStorage);
+            return Response.ok().build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (IOException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+
+    }
+
+    @RvdAuth
+    @GET
+    @Path("{name}/settings")
+    public Response getProjectSettings(@PathParam("name") String name) {
+        try {
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(name, workspaceStorage);
+            return Response.ok(marshaler.toData(projectSettings)).build();
+        } catch (StorageEntityNotFound e) {
+            return Response.status(Status.NOT_FOUND).build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
