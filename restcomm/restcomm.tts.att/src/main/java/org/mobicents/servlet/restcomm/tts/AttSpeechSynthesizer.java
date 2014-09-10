@@ -78,6 +78,7 @@ public final class AttSpeechSynthesizer extends UntypedActor {
                     sender.tell(new SpeechSynthesizerResponse<URI>(uri), self);
                 }
             } catch (final Exception exception) {
+                logger.error("There was an exception while trying to synthesize message: "+exception);
                 if (sender != null) {
                     sender.tell(new SpeechSynthesizerResponse<URI>(exception), self);
                 }
