@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder, projectSettingsService) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder, projectSettingsService, webTriggerService) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -642,7 +642,9 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	
 	
 	
-	// Call Control functionality
+	// Call Control/Web Trigger functionality
+
+	
 	var ccInfoBackup = null;
 	$scope.ccInfo = ccInfo;
 	
@@ -688,21 +690,16 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.getRvdHost = getRvdHost;
 	$scope.getRvdPort = getRvdPort;
 	
+	// Web Trigger
+	$scope.showWebTrigger = function (projectName) {
+		webTriggerService.showModal(projectName);
+	}
+	
  	
 	// Application logging
 	$scope.showProjectSettings = function (projectName) {
 		projectSettingsService.showModal(projectName);
 	}
-/*	
-	function enableLogging(project) {
-		project.header.logging = {};
-	}
-	function disableLogging(project) {
-		project.header.logging = undefined;
-	}
-	$scope.enableLogging = enableLogging;
-	$scope.disableLogging = disableLogging;
-*/	
 		
 	// Run the following after all initialization are complete
 	
