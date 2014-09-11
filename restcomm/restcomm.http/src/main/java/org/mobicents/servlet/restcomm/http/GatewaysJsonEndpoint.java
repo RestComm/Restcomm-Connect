@@ -24,6 +24,7 @@ import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -32,7 +33,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Management/Gateways.json")
+@Path("/Accounts/{accountSid}/Management/Gateways.json")
 @ThreadSafe
 public class GatewaysJsonEndpoint extends GatewaysEndpoint {
     public GatewaysJsonEndpoint() {
@@ -40,12 +41,12 @@ public class GatewaysJsonEndpoint extends GatewaysEndpoint {
     }
 
     @GET
-    public Response getClients() {
-        return getGateways(APPLICATION_JSON_TYPE);
+    public Response getGateways(@PathParam("accountSid") final String accountSid) {
+        return getGateways(accountSid, APPLICATION_JSON_TYPE);
     }
 
     @POST
-    public Response putClient(final MultivaluedMap<String, String> data) {
-        return putGateway(data, APPLICATION_JSON_TYPE);
+    public Response putGateway(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putGateway(accountSid, data, APPLICATION_JSON_TYPE);
     }
 }
