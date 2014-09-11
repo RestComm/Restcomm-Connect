@@ -327,6 +327,8 @@ public class RvdController extends RestService {
                 URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
                 MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
                 for ( String paramName : requestParams.keySet() ) {
+                    if ( "token".equals(paramName) )
+                        continue; // skip token parameter since it is used by this service for authentication and is not intented to get passed to the RVD application
                     // skip builtin parameters supplied by restcomm
                     if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
                         if ( !("From".equals(paramName) || "To".equals(paramName) || "Url".equals(paramName ) ) )  // filter out params for the executeAction() itself. Pass only parameters intended for the rcml application.

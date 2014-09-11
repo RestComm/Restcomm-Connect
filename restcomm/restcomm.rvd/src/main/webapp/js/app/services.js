@@ -171,7 +171,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		return deferred.promise;
 	}
 	
-	function webTriggerModalCtrl ($scope, ccInfo, projectName, $modalInstance, notifications) {
+	function webTriggerModalCtrl ($scope, ccInfo, projectName, $modalInstance, notifications, $location) {
 		console.log("in webTriggerModalCtrl");
 				
 		$scope.save = function (name, data) {
@@ -188,8 +188,14 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		$scope.enableWebTrigger = function () {
 			if ($scope.ccInfo == null)
 				$scope.ccInfo = createCcInfo();
-		}		
-		
+		}	
+		$scope.getRvdHost = function() {
+			return $location.host();
+		}
+		$scope.getRvdPort = function() {
+			return $location.port();
+		}
+			
 		function createCcInfo() {
 			return {lanes:[{startPoint:{to:"",from:""}}]};
 		}
