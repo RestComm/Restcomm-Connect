@@ -248,10 +248,11 @@ label {
 	min-height: 500px;
 }
 
+/*
 .rvd-spinner {
 	min-height: 400px;
 }
-
+*/
 
 
 .rvd-project-item {
@@ -574,6 +575,19 @@ textarea.medium {
     width: 100%;
     z-index: 2000;
     top: 60px;
+}
+
+/* ------------------ global formatting -------------------- */
+.rvd-spacer5 {
+	height: 5px;
+}
+
+.rvd-spacer10 {
+	margin-top: 10px;
+}
+
+.rvd-spacer20 {
+	margin-top: 20px;
 }
 
 

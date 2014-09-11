@@ -24,4 +24,5 @@ public class CallControlInfo {
 
     //public ApiServer apiServer;
     public List<Lane> lanes;
+    public String accessToken;
 }
