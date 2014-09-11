@@ -76,6 +76,7 @@ public final class ProxyManagerProxy extends SipServlet {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         manager = manager(config, factory, storage, address);
+        context.setAttribute(ProxyManager.class.getName(), manager);
     }
 
     private ActorRef manager(final ServletConfig configuration, final SipFactory factory, final DaoManager storage,

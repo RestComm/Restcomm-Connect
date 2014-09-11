@@ -1,9 +1,17 @@
 package org.mobicents.servlet.restcomm.http;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+
 import java.net.URI;
 import java.util.List;
-
-import static javax.ws.rs.core.MediaType.*;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -11,13 +19,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
@@ -32,7 +33,14 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.GatewayConverter;
 import org.mobicents.servlet.restcomm.http.converter.GatewayListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.telephony.RegisterGateway;
 import org.mobicents.servlet.restcomm.util.StringUtils;
+
+import akka.actor.ActorRef;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 
 @ThreadSafe
 public class GatewaysEndpoint extends AbstractEndpoint {
@@ -43,6 +51,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
+    private ActorRef proxyManager;
 
     public GatewaysEndpoint() {
         super();
@@ -66,6 +75,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new GatewayListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+        proxyManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.proxy.ProxyManager");
     }
 
     private Gateway createFrom(final MultivaluedMap<String, String> data) {
@@ -92,8 +102,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    protected Response getGateway(final String sid, final MediaType responseType) {
-        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+    protected Response getGateway(final String accountSid, final String sid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         } catch (final AuthorizationException exception) {
@@ -114,8 +123,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getGateways(final MediaType responseType) {
-        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+    protected Response getGateways(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         } catch (final AuthorizationException exception) {
@@ -132,8 +140,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response putGateway(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+    protected Response putGateway(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways");
         } catch (final AuthorizationException exception) {
@@ -146,6 +153,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         }
         final Gateway gateway = createFrom(data);
         dao.addGateway(gateway);
+        proxyManager.tell(new RegisterGateway(gateway), null);
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(gateway);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -156,18 +164,18 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response updateGateway(final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+    protected Response updateGateway(final String accountSid, final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Gateway gateway = dao.getGateway(new Sid(sid));
+        Gateway gateway = dao.getGateway(new Sid(sid));
         if (gateway == null) {
             return status(NOT_FOUND).build();
         } else {
             dao.updateGateway(update(gateway, data));
+            gateway = dao.getGateway(new Sid(sid));
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(gateway);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
