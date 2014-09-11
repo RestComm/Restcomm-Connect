@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ccInfo, ModelBuilder, projectSettingsService, webTriggerService) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -12,7 +12,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.selectedView = 'rcml';
 	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved
 							// parameters
-	console.log( ccInfo );
 	
 	// Prototype and constant data structures
 	$scope.languages = [
@@ -223,14 +222,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		
 		return deferred.promise;
 	}
-	
-	$scope.saveCcInfo = function (projectName, ccInfo) {
-		// var deferred = $q.defer();
-		return $http.post("services/projects/" + projectName + "/cc", $scope.ccInfo, {headers: {'Content-Type': 'application/data'}});
-		// .success( function () {deferred.resolve()})
-		// .error( function () {deferred.reject("Error saving CC info")});
-		// return deferred.promise;
-	}
 
 	$scope.openProject = function(name) {
 		$http({url: 'services/projects/' + name,
@@ -376,9 +367,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		$scope.saveSpinnerShown = true;
 		$scope.clearStepWarnings();
 		$scope.saveProject()
-		.then( function () { 
-			return $scope.saveCcInfo( $scope.projectName, ccInfo );
-		})
 		.then( function () { return $scope.buildProject() } )
 		.then(
 			function () { 
@@ -639,57 +627,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		  // $log.info('Modal dismissed at: ' + new Date());
 		});		
 	}
-	
-	
-	
-	// Call Control/Web Trigger functionality
-
-	
-	var ccInfoBackup = null;
-	$scope.ccInfo = ccInfo;
-	
-	function callControlIsEnabled() {
-		if ( $scope.ccInfo === null || $scope.ccInfo === undefined )
-			return false;
-		return true;
-	}
-	function enableCallControl() {
-		if ( !callControlIsEnabled() ) {
-			$scope.ccEnabled = true;
-			if( ccInfoBackup )
-				$scope.ccInfo = ccInfoBackup;
-			else
-				$scope.ccInfo = ModelBuilder.build('CcInfo');
-		}
-	}
-	function disableCallControl() {
-		if ( callControlIsEnabled() ) {
-			ccInfoBackup = $scope.ccInfo;
-			$scope.ccInfo = null;
-			$scope.ccEnabled = false;
-		}
-	}
-	function toggleCallControl() {
-		if ( callControlIsEnabled() )
-			disableCallControl();
-		else
-			enableCallControl();
-	}
-	$scope.ccEnabled = callControlIsEnabled();
-	
-	$scope.toggleCallControl = toggleCallControl;
-	$scope.enableCallControl = enableCallControl;
-	$scope.disableCallControl = disableCallControl;
-	
-	function getRvdHost() {
-		return $location.host();
-	}
-	function getRvdPort() {
-		return $location.port();
-	}
-	$scope.getRvdHost = getRvdHost;
-	$scope.getRvdPort = getRvdPort;
-	
+		
 	// Web Trigger
 	$scope.showWebTrigger = function (projectName) {
 		webTriggerService.showModal(projectName);
@@ -717,19 +655,5 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		}
 	}	
 });
-designerCtrl.getCcInfo = function ($route, $http, $q, ModelBuilder) {
-	var deferred = $q.defer();
-	$http.get("services/projects/" + $route.current.params.projectName + "/cc")
-	.then(function (response) {
-		var ccInfo = ModelBuilder.build('CcInfo').init(response.data);
-		deferred.resolve(ccInfo);
-	}, function (response) {
-		if ( response.status == 404 )
-			// deferred.resolve( ModelBuilder.build('CcInfo') );
-			deferred.resolve( null );
-		else
-			deferred.reject(); // TODO - add an error code or message here
-	});
-	return deferred.promise;
-}
+
 

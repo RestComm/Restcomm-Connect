@@ -12,16 +12,19 @@
 		<div class="form-group">
 			<h5><strong>Web Trigger URL</strong></h5>
 			<div>
-				<i>http://{{getRvdHost()}}:{{getRvdPort()}}/restcomm-rvd/services/apps/{{projectName}}/start?from=12345&amp;to=+1231231231</i>
+				<i>http://{{getRvdHost()}}:{{getRvdPort()}}/restcomm-rvd/services/apps/{{projectName}}/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span></i>
 			</div>
 			<div class="help-block">
-				<small>Note that <i>from</i> and <i>to</i> URL parameters can be omitted if <i>fallback</i> values have been defined. Also, additional parameters can be appended to the url. They will be available as <em>application scoped</em> RVD variables when the application starts</small>
+				<small>Note that <code>from</code> and <code>to</code> URL parameters can be omitted if <i>fallback</i> values have been defined. Also, additional parameters can be appended to the url. They will be available as <em>application scoped</em> RVD variables when the application starts</small>
 			</div>			
 		</div>
 		<div class="rvd-spacer20"></div>
 		
 		<div class="form-group">
-			<h5><strong>Protect your Web Trigger url with an access token</strong></h5>
+			<h5><strong>Access token</strong></h5>
+			<div class="help-block">
+				Protect your Web Trigger URL with an access token. If set, make sure you provide the same <code>token</code> parameter when making the HTTP call. Leave it blank to allow free access.
+			</div>
 			<div class="input-group">
 				<span class="input-group-addon">Access token</span>
 				<input ng-model="ccInfo.accessToken" type="text" class="form-control">
