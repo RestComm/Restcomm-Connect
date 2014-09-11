@@ -100,7 +100,7 @@ public class RvdController extends RestService {
         } catch ( RvdException e ) {
             logger.error(e.getMessage(), e);
             rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
-            rcmlResponse = "<Response><Hangup/></Response>";
+            rcmlResponse = Interpreter.rcmlOnException();
         }
 
 
@@ -148,8 +148,8 @@ public class RvdController extends RestService {
 
             return runInterpreter(rvdContext, appname, httpRequest, requestParams);
         } catch (StorageException e) {
-            // !!! return hangup!!!
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            logger.error(e,e);
+            return Response.ok(Interpreter.rcmlOnException(), MediaType.APPLICATION_XML).build();
         }
     }
 
@@ -168,8 +168,8 @@ public class RvdController extends RestService {
 
             return runInterpreter(rvdContext, appname, httpRequest, requestParams);
         } catch (StorageException e) {
-            // !!! return hangup!!!
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            logger.error(e,e);
+            return Response.ok(Interpreter.rcmlOnException(), MediaType.APPLICATION_XML).build();
         }
     }
 
@@ -192,7 +192,7 @@ public class RvdController extends RestService {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
             }
         } catch (StorageException e1) {
-            // !!! return hangup!!!
+            logger.error(e1,e1);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }

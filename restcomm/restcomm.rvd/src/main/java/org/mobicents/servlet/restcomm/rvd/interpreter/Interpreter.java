@@ -144,6 +144,9 @@ public class Interpreter {
     private Map<String, String> variables = new HashMap<String, String>();
     private List<NodeName> nodeNames;
 
+    public static String rcmlOnException() {
+        return "<Response><Hangup/></Response>";
+    }
 
     public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
         this.rvdContext = rvdContext;

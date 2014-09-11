@@ -4,6 +4,12 @@ public class ProjectSettings {
 
     Boolean logging;
 
+    public static ProjectSettings createDefault() {
+        ProjectSettings instance = new ProjectSettings();
+        instance.logging = false;
+        return instance;
+    }
+
     public ProjectSettings() {
         // TODO Auto-generated constructor stub
     }
