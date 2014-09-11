@@ -39,6 +39,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RvdErrorParsingRestcommXml;
+import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.UnauthorizedCallControlAccess;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
@@ -71,9 +72,7 @@ public class RvdController extends RestService {
     HttpServletRequest request;
 
     private RvdConfiguration rvdSettings;
-    //private ProjectStorage projectStorage;
     private ProjectService projectService;
-    //private Gson gson;
     private RvdContext rvdContext;
 
     private WorkspaceStorage workspaceStorage;
@@ -267,16 +266,21 @@ public class RvdController extends RestService {
 
     @GET
     @Path("{appname}/start")
-    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @Context UriInfo ui ) {
-
-        WorkspaceStorage workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), rvdContext.getMarshaler());
-        
+    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui ) {
+        ProjectAwareRvdContext rvdContext;
         try {
+            rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
+            init(rvdContext);
+
             // Load CC info from project
             CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
-            
-            
-            
+
+            // If an access token is present in the project make sure it matches the one in the url
+            if (info.accessToken != null ) {
+                if ( !info.accessToken.equals(accessToken) )
+                    throw new UnauthorizedCallControlAccess("Access restricted to application " + projectName + " for client " + request.getRemoteAddr());
+            }
+
             // Load configuration from Restcomm
             ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
             logger.info("using restcomm host: " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
@@ -357,6 +361,9 @@ public class RvdController extends RestService {
                 .addParam("Url", rcmlUrl).done(marshaler.getGson(), CreateCallResponse.class);
 
             return Response.ok().build();
+        } catch (UnauthorizedCallControlAccess e) {
+            logger.warn(e,e);
+            return Response.status(Status.UNAUTHORIZED).build();
         } catch (CallControlException e) {
             logger.error(e,e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
