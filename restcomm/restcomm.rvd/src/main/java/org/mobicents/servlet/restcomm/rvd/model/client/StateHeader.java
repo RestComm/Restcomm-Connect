@@ -44,4 +44,8 @@ public class StateHeader {
     public void setOwner(String owner2) {
         this.owner = owner2;
     }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
 }

@@ -43,8 +43,8 @@ import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
-import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationFrameworkException;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
@@ -112,7 +112,7 @@ public class ProjectRestService extends RestService {
     void assertProjectAvailable(String projectName) throws StorageException, ProjectDoesNotExist {
         if (! projectStorage.projectExists(projectName))
             throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
-        ProjectState project = projectStorage.loadProject(projectName);
+        ProjectState project = FsProjectStorage.loadProject(projectName, workspaceStorage);
         if ( project.getHeader().getOwner() != null ) {
             // needs further checking
             if ( securityContext.getUserPrincipal() != null ) {
@@ -206,7 +206,7 @@ public class ProjectRestService extends RestService {
         if (projectName != null && !projectName.equals("")) {
             logger.info("savingProject " + projectName);
             try {
-                ProjectState existingProject = projectStorage.loadProject(projectName);
+                ProjectState existingProject = FsProjectStorage.loadProject(projectName, workspaceStorage);
                 Principal loggedUser = securityContext.getUserPrincipal();
                 if (loggedUser.getName().equals(existingProject.getHeader().getOwner())  ||  existingProject.getHeader().getOwner() == null ) {
                     projectService.updateProject(request, projectName, existingProject);
@@ -214,21 +214,16 @@ public class ProjectRestService extends RestService {
                 } else {
                     throw new WebApplicationException(Response.Status.UNAUTHORIZED);
                 }
-            } catch (StorageException e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            } catch (ValidationFrameworkException e) {
-                logger.error(e.getMessage(), e);
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (ValidationException e) {
                 Gson gson = new Gson();
                 return Response.ok(gson.toJson(e.getValidationResult()), MediaType.APPLICATION_JSON).build();
             } catch (IncompatibleProjectVersion e) {
                 logger.error(e);
                 return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
+            } catch (RvdException e) {
+                logger.error(e.getMessage(), e);
+                return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+                //return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             }
         } else {
             logger.warn("Empty project name specified for updating");
