@@ -61,8 +61,8 @@ public class BuildService {
         }
 
         projectOptions.setDefaultTarget(projectState.getHeader().getStartNodeName());
-        if ( projectState.getHeader().getLogging() != null )
-            projectOptions.setLogging(true);
+        //if ( projectState.getHeader().getLogging() != null )
+        //    projectOptions.setLogging(true);
         // Save the nodename-node-label mapping
         FsProjectStorage.storeProjectOptions(projectOptions, projectName, workspaceStorage);
     }

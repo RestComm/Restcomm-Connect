@@ -9,7 +9,7 @@ public class StateHeader {
     String startNodeName;
     String version;
     String owner; // the Restcomm user id that owns the project or null if it has no owner at all. Added in 7.1.6 release
-    Logging logging;
+    //Logging logging; - moved to the separate 'settings' file
     public StateHeader() {
     }
 
@@ -44,9 +44,4 @@ public class StateHeader {
     public void setOwner(String owner2) {
         this.owner = owner2;
     }
-
-    public Logging getLogging() {
-        return logging;
-    }
-
 }
