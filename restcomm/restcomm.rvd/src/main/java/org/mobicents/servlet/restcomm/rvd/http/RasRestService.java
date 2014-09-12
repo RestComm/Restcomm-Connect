@@ -266,12 +266,8 @@ public class RasRestService extends RestService {
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
                         String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser );
-//<<<<<<< HEAD
-                        ProjectState projectState = projectStorage.loadProject(effectiveProjectName);
+                        ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
                         buildService.buildProject(effectiveProjectName, projectState);
-/*=======
-                        buildService.buildProject(effectiveProjectName);
->>>>>>> ts720_rvd_issue419_application_logging*/
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);

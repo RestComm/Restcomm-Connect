@@ -211,13 +211,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 				headers: {'Content-Type': 'application/data'}
 		})
 		.success(function (data, status, headers, config) {
-			if ( data == "" || data.success ) {
+			if (data.rvdStatus == 'OK' )
 				deferred.resolve('Project saved');
-			} else {
-				deferred.reject({type:'validationError', data:data});			
-			}
+			else
+				deferred.reject(data);			
 		 }).error(function (data, status, headers, config) {
-			 deferred.reject({type:'saveError', data:data});
+			 deferred.reject(data);
 		 });	
 		
 		return deferred.promise;
@@ -374,27 +373,26 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 				console.log("Project saved and built");
 			}, 
 			function (reason) { 
-				if ( reason.type == 'saveError' ) {
-					console.log("Error saving project");
-					if (reason.data.serverError.className == 'IncompatibleProjectVersion') {
-						notifications.put({type:"danger", message:"Error saving project. Project version is incompatible with current RVD version"});
-					}
-					else {
-						notifications.put({type:"danger", message:"Error saving project"});
-					}
-				} else if ( reason.type == 'validationError') {
+				if ( reason.exception.className == 'ValidationException' ) {
 					console.log("Validation error");
 					notifications.put({type:"warning", message:"Project saved with validation errors"});
 					var r = /^\/nodes\/([0-9]+)\/steps\/([0-9]+)$/;
-					for (var i=0; i < reason.data.errorItems.length; i++) {
-						var failurePath = reason.data.errorItems[i].failurePath;
-						m = r.exec( reason.data.errorItems[i].failurePath );
+					for (var i=0; i < reason.errorItems.length; i++) {
+						var failurePath = reason.errorItems[i].failurePath;
+						m = r.exec( reason.errorItems[i].failurePath );
 						if ( m != null ) {
 							console.log("warning in module " + $scope.nodes[ m[1] ].name + " step " + $scope.nodes[ m[1] ].steps[m[2]].name);
 							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
 					}
-				} else { console.log("Unknown error");}
+				} else
+				if ( reason.exception.className == 'IncompatibleProjectVersion' ) {
+					console.log("error saving project - Project version is incompatible with current RVD version");
+					notifications.put({type:"danger", message:"Error saving project. Project version is incompatible with current RVD version"});
+				} else {
+					console.log("error saving project");
+					notifications.put({type:"danger", message:"Error saving project"});
+				}
 			} 
 		)
 		.finally(function () {

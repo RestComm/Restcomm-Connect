@@ -10,6 +10,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
+import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
@@ -31,6 +32,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirecto
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 
@@ -180,13 +182,14 @@ public class ProjectService {
         return items;
     }
 
-    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException, IncompatibleProjectVersion {
+    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException, IncompatibleProjectVersion, InvalidProjectVersion {
         if ( !projectExists(projectName) )
             throw new ProjectDoesNotExist();
 
         try {
             StateHeader header = projectStorage.loadStateHeader(projectName);
-            if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
+            //if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
+            if ( ! UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(),header.getVersion() )  )
                 throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdConfiguration.getRvdProjectVersion() );
         } catch ( BadProjectHeader e ) {
             throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
@@ -214,27 +217,43 @@ public class ProjectService {
             state = ProjectState.createEmptySms(owner);
 
         projectStorage.createProjectSlot(projectName);
-        projectStorage.storeProject(projectName, state, true);
+        //projectStorage.storeProject(projectName, state, true);
+        FsProjectStorage.storeProject(true, state, projectName, workspaceStorage);
         return state;
     }
 
-    public void updateProject(HttpServletRequest request, String projectName, ProjectState existingProject) throws IOException, StorageException, ValidationFrameworkException, ValidationException, IncompatibleProjectVersion {
-        String stateData = IOUtils.toString(request.getInputStream());
+    /**
+     * Runs project validation on the request body. Throws ValidationException for normal validation errors. Returns the state loaded from the request in case it is needed or further processing
+     * @param request
+     * @return
+     * @throws RvdException
+     */
+    public String validateProject(HttpServletRequest request) throws RvdException {
+        String stateData;
         try {
-            // first validate
+            stateData = IOUtils.toString(request.getInputStream());
             ProjectValidator validator = new ProjectValidator();
             ValidationResult result = validator.validate(stateData);
             if (!result.isSuccess())
                 throw new ValidationException(result);
-            // then save
-            ProjectState state = rvdContext.getMarshaler().toModel(stateData, ProjectState.class);
-            // preserve project owner
-            state.getHeader().setOwner(existingProject.getHeader().getOwner());
-            projectStorage.storeProject(projectName, state, false);
+            return stateData;
+        } catch (IOException e) {
+            throw new RvdException("Internal error while validating raw project",e);
         } catch (ProcessingException e) {
-            throw new ValidationFrameworkException("Internal validation error", e);
+            throw new ValidationFrameworkException("Error while validating raw project",e);
         }
+    }
 
+    public void updateProject(HttpServletRequest request, String projectName, ProjectState existingProject) throws RvdException {
+        String stateData = validateProject(request);
+        // then save
+        ProjectState state = rvdContext.getMarshaler().toModel(stateData, ProjectState.class);
+        // Make sure the current RVD project version is set
+        state.getHeader().setVersion(settings.getRvdProjectVersion());
+        // preserve project owner
+        state.getHeader().setOwner(existingProject.getHeader().getOwner());
+        //projectStorage.storeProject(projectName, state, false);
+        FsProjectStorage.storeProject(false, state, projectName, workspaceStorage);
     }
 
     public void renameProject(String projectName, String newProjectName) throws ProjectDoesNotExist, StorageException {

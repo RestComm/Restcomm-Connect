@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -368,34 +367,6 @@ public class FsProjectStorage implements ProjectStorage {
 
     }
 
-    @Override
-    public
-    ProjectState loadProject(String name) throws StorageException {
-        String stateData = storageBase.loadProjectFile(name, ".", "state");
-        return marshaler.toModel(stateData, ProjectState.class);
-    }
-
-    @Override
-    public
-    void storeProject(String name, ProjectState projectState, boolean firstTime) throws StorageException {
-        String stateData = marshaler.toData(projectState);
-        String destFilepath = storageBase.getProjectBasePath(name) + File.separator + "state";
-        try {
-            FileUtils.writeStringToFile(new File(destFilepath), stateData, Charset.forName("UTF-8"));
-            if ( firstTime)
-                buildDirStructure(projectState, name);
-        } catch (IOException e) {
-            throw new StorageException("Error storing state for project '" + name + "'", e );
-        }
-    }
-
-    private void buildDirStructure(ProjectState state, String name) {
-        if ("voice".equals(state.getHeader().getProjectKind()) ) {
-            File wavsDir = new File( storageBase.getProjectBasePath(name) + File.separator + "wavs" );
-            wavsDir.mkdir();
-        }
-    }
-
     /**
      * Returns an non-existing project name based on the given one. Ideally it returns the same name. If null or blank
      * project name given the 'Untitled' name is tried.
@@ -519,6 +490,49 @@ public class FsProjectStorage implements ProjectStorage {
     public static void storeProjectSettings(ProjectSettings projectSettings, String projectName, WorkspaceStorage storage) throws StorageException {
         storage.storeEntity(projectSettings, "settings", projectName);
     }
+
+    /*
+    @Override
+    public
+    ProjectState loadProject(String name) throws StorageException {
+        String stateData = storageBase.loadProjectFile(name, ".", "state");
+        return marshaler.toModel(stateData, ProjectState.class);
+    }
+    */
+    public static ProjectState loadProject(String projectName, WorkspaceStorage storage) throws StorageException {
+        return storage.loadEntity("state", projectName, ProjectState.class);
+    }
+
+    private static void buildDirStructure(ProjectState state, String name, WorkspaceStorage storage) {
+        if ("voice".equals(state.getHeader().getProjectKind()) ) {
+            File wavsDir = new File(  storage.rootPath + "/" + name + "/" + "wavs" );
+            wavsDir.mkdir();
+        }
+    }
+
+    /*
+    @Override
+    public
+    void storeProject(String name, ProjectState projectState, boolean firstTime) throws StorageException {
+        String stateData = marshaler.toData(projectState);
+        String destFilepath = storageBase.getProjectBasePath(name) + File.separator + "state";
+        try {
+            FileUtils.writeStringToFile(new File(destFilepath), stateData, Charset.forName("UTF-8"));
+            if ( firstTime)
+                buildDirStructure(projectState, name);
+        } catch (IOException e) {
+            throw new StorageException("Error storing state for project '" + name + "'", e );
+        }
+    }
+    */
+    public static void storeProject(boolean firstTime, ProjectState state, String projectName, WorkspaceStorage storage) throws StorageException {
+        storage.storeEntity(state, "state", projectName);
+        if (firstTime)
+            buildDirStructure(state, projectName, storage);
+
+    }
+
+
 
 }
 

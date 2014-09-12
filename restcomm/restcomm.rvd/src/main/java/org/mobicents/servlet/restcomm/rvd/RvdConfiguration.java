@@ -23,7 +23,7 @@ public class RvdConfiguration {
     public static final String PROTO_DIRECTORY_PREFIX = "_proto";
 
     public static final String WAVS_DIRECTORY_NAME = "wavs";
-    private static final String RVD_PROJECT_VERSION = "1.0"; // version for rvd project syntax
+    private static final String RVD_PROJECT_VERSION = "1.1"; // version for rvd project syntax
     private static final String PACKAGING_VERSION = "1.0";
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
