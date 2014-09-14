@@ -493,18 +493,21 @@ public class Interpreter {
                         throw new RemoteServiceError("Service " + url + " failed with: " + response.getStatusLine() +". Throwing an error since no 'On Remote Exception' has been defined.");
                 }
 
-                // Build a JsonElement from the response
-               HttpEntity entity = response.getEntity();
-                if ( entity != null ) {
-                    JsonParser parser = new JsonParser();
-                    String entity_string = EntityUtils.toString(entity);
-                    //logger.info("ES: Received " + entity_string.length() + " bytes");
-                    //logger.debug("ES Response: " + entity_string);
-                    if ( rvdContext.getProjectSettings().getLogging() )
-                        projectLogger.log(entity_string).tag("app",appName).tag("ES").tag("RESPONSE").done();
-                    response_element = parser.parse(entity_string);
-                }
-
+                // Parse the response if (a) there are assignments or (b) there is dynamic or mapped routing
+                if ( esStep.getAssignments() != null && esStep.getAssignments().size() > 0
+                        || esStep.getDoRouting() && ("responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) ) {
+                    HttpEntity entity = response.getEntity();
+                    if ( entity != null ) {
+                        JsonParser parser = new JsonParser();
+                        String entity_string = EntityUtils.toString(entity);
+                        //logger.info("ES: Received " + entity_string.length() + " bytes");
+                        //logger.debug("ES Response: " + entity_string);
+                        if ( rvdContext.getProjectSettings().getLogging() )
+                            projectLogger.log(entity_string).tag("app",appName).tag("ES").tag("RESPONSE").done();
+                        response_element = parser.parse(entity_string);
+                    }
+                } else
+                    logger.debug("ES: No parsing will be done to the response");
 
                 // *** Determine what to do next. Find the next module name or whether to continue in the current module ***
 
