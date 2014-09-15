@@ -210,7 +210,7 @@ public class ProjectRestService extends RestService {
                 Principal loggedUser = securityContext.getUserPrincipal();
                 if (loggedUser.getName().equals(existingProject.getHeader().getOwner())  ||  existingProject.getHeader().getOwner() == null ) {
                     projectService.updateProject(request, projectName, existingProject);
-                    return Response.ok().build();
+                    return buildOkResponse();
                 } else {
                     throw new WebApplicationException(Response.Status.UNAUTHORIZED);
                 }

@@ -14,9 +14,7 @@
 		"maxLength": {"type": "integer", "minimum":1},
 		"transcribe": { "type": "boolean" },
 		"transcribeCallback": {"type": "string"},
-		"playBeep": { "type": "boolean" },
-			
-		"iface": {"type": "object"}
+		"playBeep": { "type": "boolean" }
 	},
 	"required": ["name","kind","label","title","next"]	
 }

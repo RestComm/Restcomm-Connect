@@ -12,9 +12,7 @@
 		"to": {"type": "string"},
 		"from": {"type": "string"},
 		"method": {"enum": ["GET","POST"]},
-		"statusCallback": {"type": "string"},
-		
-		"iface": {"type": "object"}
+		"statusCallback": {"type": "string"}
 	},
 	"required": ["name","kind","label","title","text"]	
 }

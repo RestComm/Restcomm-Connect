@@ -12,9 +12,7 @@
 		"from" : {"type": "string"},
 		"next": { "$ref": "rvdproject-schema.json#/nullOrString" },
 		"method": {"enum": ["GET","POST"]},
-		"statusCallback": {"type": "string"},
-			
-		"iface": {"type": "object"}
+		"statusCallback": {"type": "string"}
 	},
 	"required": ["name","kind","label","title","text"]	
 }

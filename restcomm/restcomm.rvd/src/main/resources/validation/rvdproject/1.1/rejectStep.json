@@ -7,9 +7,7 @@
 		"kind": {"enum": ["reject"]},
 		"label": {"type": "string"},
 		"title": {"type": "string"},
-		"reason": {"enum": ["busy","rejected"]},
-
-		"iface": {"type": "object"}
+		"reason": {"enum": ["busy","rejected"]}
 	},
 	"required": ["name","kind","label","title"]
 }

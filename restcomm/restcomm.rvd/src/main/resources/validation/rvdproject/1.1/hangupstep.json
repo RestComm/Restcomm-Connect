@@ -6,9 +6,7 @@
 		"name":{"type": "string"},
 		"kind": {"enum": ["hungup"]},
 		"label": {"type": "string"},
-		"title": {"type": "string"},
-	
-		"iface": {"type": "object"}
+		"title": {"type": "string"}
 	},
 	"required": ["name","kind","label","title"]
 }

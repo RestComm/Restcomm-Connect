@@ -49,10 +49,7 @@
 				"next": {"type": "string", "minLength": 1 }
 			},
 			"required": ["collectVariable","next"]
-		},
-		
-		
-		"iface": {"type": "object"}
+		}
 	},
 	"required": ["name","kind","label","title","method","steps","gatherType"]
 

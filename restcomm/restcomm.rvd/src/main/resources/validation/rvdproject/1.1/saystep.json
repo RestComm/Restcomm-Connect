@@ -10,9 +10,7 @@
 		"phrase": {"type": "string"},
 		"voice": {"type": "string"},
 		"language": {"type": "string"},
-		"loop": {"type": "integer"},
-	
-		"iface": {"type": "object"}
+		"loop": {"type": "integer"}
 	},
 	"required": ["name","kind","label","title","phrase"]
 }
