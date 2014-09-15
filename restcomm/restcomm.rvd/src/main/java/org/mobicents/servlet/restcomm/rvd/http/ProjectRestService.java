@@ -338,6 +338,7 @@ public class ProjectRestService extends RestService {
     }
 
     @GET
+    @RvdAuth
     @Path("{name}/archive")
     public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
         logger.debug("downloading raw archive for project " + projectName);
