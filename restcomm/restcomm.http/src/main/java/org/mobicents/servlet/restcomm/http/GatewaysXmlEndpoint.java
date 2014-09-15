@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.http;
 
@@ -36,15 +39,14 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Management/Gateways")
+@Path("/Accounts/{accountSid}/Management/Gateways")
 @ThreadSafe
 public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
     public GatewaysXmlEndpoint() {
         super();
     }
 
-    private Response deleteGateway(final String sid) {
-        final Sid accountSid = Sid.generate(Sid.Type.INVALID);
+    private Response deleteGateway(final String accountSid, final String sid) {
         try {
             secure(super.accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
         } catch (final AuthorizationException exception) {
@@ -56,59 +58,59 @@ public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
 
     @Path("/{sid}.json")
     @DELETE
-    public Response deleteGatewayAsJson(@PathParam("sid") final String sid) {
-        return deleteGateway(sid);
+    public Response deleteGatewayAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return deleteGateway(accountSid, sid);
     }
 
     @Path("/{sid}")
     @DELETE
-    public Response deleteGatewayAsXml(@PathParam("sid") final String sid) {
-        return deleteGateway(sid);
+    public Response deleteGatewayAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return deleteGateway(accountSid, sid);
     }
 
     @Path("/{sid}.json")
     @GET
-    public Response getGatewayAsJson(@PathParam("sid") final String sid) {
-        return getGateway(sid, APPLICATION_JSON_TYPE);
+    public Response getGatewayAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getGateway(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
     @GET
-    public Response getGatewayAsXml(@PathParam("sid") final String sid) {
-        return getGateway(sid, APPLICATION_XML_TYPE);
+    public Response getGatewayAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getGateway(accountSid, sid, APPLICATION_XML_TYPE);
     }
 
     @GET
-    public Response getGateways() {
-        return getGateways(APPLICATION_XML_TYPE);
+    public Response getGatewaysList(@PathParam("accountSid") final String accountSid) {
+        return getGateways(accountSid, APPLICATION_XML_TYPE);
     }
 
     @POST
-    public Response putGateway(final MultivaluedMap<String, String> data) {
-        return putGateway(data, APPLICATION_XML_TYPE);
+    public Response createGateway(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putGateway(accountSid, data, APPLICATION_XML_TYPE);
     }
 
     @Path("/{sid}.json")
     @POST
-    public Response updateGatewayAsJsonPost(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(sid, data, APPLICATION_JSON_TYPE);
+    public Response updateGatewayAsJsonPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}.json")
     @PUT
-    public Response updateGatewayAsJsonPut(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(sid, data, APPLICATION_JSON_TYPE);
+    public Response updateGatewayAsJsonPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
     @POST
-    public Response updateGatewayAsXmlPost(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(sid, data, APPLICATION_XML_TYPE);
+    public Response updateGatewayAsXmlPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
 
     @Path("/{sid}")
     @PUT
-    public Response updateGatewayAsXmlPut(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(sid, data, APPLICATION_XML_TYPE);
+    public Response updateGatewayAsXmlPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateGateway(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
 }

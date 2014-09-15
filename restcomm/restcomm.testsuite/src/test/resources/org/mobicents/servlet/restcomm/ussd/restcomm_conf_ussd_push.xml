@@ -65,6 +65,7 @@
 		<!-- TelScale USSD Gateway -->
 		<ussd-gateway>
 			<ussd-gateway-uri>127.0.0.1:5090</ussd-gateway-uri>
+			<!-- If needed to set TCP transport <ussd-gateway-uri>127.0.0.1:5090;transport=tcp</ussd-gateway-uri> -->
 			<ussd-gateway-user></ussd-gateway-user>
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>

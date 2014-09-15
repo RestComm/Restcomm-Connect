@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
@@ -64,13 +65,13 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
-            <version>${sipservletapi.version}</version>
+			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
+			<artifactId>javax.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
@@ -125,6 +126,24 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.sms.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.number.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.number.vi</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.number.nexmo</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
@@ -209,12 +228,15 @@
 								<phase>package</phase>
 								<configuration>
 									<tasks>
-										<copy verbose="true" todir="${JBOSS_HOME}/standalone/deployments/${project.build.finalName}.${project.packaging}">			
-											<fileset dir="${project.build.directory}/${project.build.finalName}">
+										<copy verbose="true"
+											todir="${JBOSS_HOME}/standalone/deployments/${project.build.finalName}.${project.packaging}">
+											<fileset
+												dir="${project.build.directory}/${project.build.finalName}">
 												<include name="**/*" />
 											</fileset>
 										</copy>
-										<touch file="${JBOSS_HOME}/standalone/deployments/${project.build.finalName}.${project.packaging}.dodeploy" />										
+										<touch
+											file="${JBOSS_HOME}/standalone/deployments/${project.build.finalName}.${project.packaging}.dodeploy" />
 									</tasks>
 								</configuration>
 								<goals>
@@ -259,7 +281,9 @@
 								<phase>package</phase>
 								<configuration>
 									<tasks>
-										<copy verbose="true" file="${project.build.directory}/${project.build.finalName}.${project.packaging}" tofile="${CATALINA_HOME}/webapps/${project.artifactId}.${project.packaging}" />
+										<copy verbose="true"
+											file="${project.build.directory}/${project.build.finalName}.${project.packaging}"
+											tofile="${CATALINA_HOME}/webapps/${project.artifactId}.${project.packaging}" />
 									</tasks>
 								</configuration>
 								<goals>

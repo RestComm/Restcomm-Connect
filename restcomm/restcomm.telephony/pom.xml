@@ -1,20 +1,21 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.telestax.servlet</groupId>
-    <artifactId>restcomm</artifactId>
-    <version>7.2.0-TelScale-SNAPSHOT</version>
-  </parent>
-  
-  <artifactId>restcomm.telephony</artifactId>
-  <name>restcomm.telephony</name>
-  
-  <properties>
-    <runtime.restcomm.version>${project.version}</runtime.restcomm.version>
-  </properties>
-  
-  <dependencies>
-  		<dependency>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm</artifactId>
+		<version>7.2.0-TelScale-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>restcomm.telephony</artifactId>
+	<name>restcomm.telephony</name>
+
+	<properties>
+		<runtime.restcomm.version>${project.version}</runtime.restcomm.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
@@ -23,38 +24,38 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.googlecode.libphonenumber</groupId>
 			<artifactId>libphonenumber</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
 		</dependency>
-		
+
 		<dependency>
-  			<groupId>com.typesafe.akka</groupId>
-  			<artifactId>akka-actor_2.10</artifactId>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor_2.10</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-slf4j_2.10</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
@@ -63,16 +64,16 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
-            <version>${sipservletapi.version}</version>
+			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
+			<artifactId>javax.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.sdp</groupId>
 			<artifactId>nist-sdp</artifactId>
@@ -91,28 +92,28 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.mgcp</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.sms</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.telephony.api</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.interpreter</artifactId>
@@ -127,60 +128,60 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	
+
 	<build>
-      <plugins>
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.5</version>
-          <executions>
-            <execution>
-              <id>copy-resources</id>
-              <!-- here the phase you need -->
-              <phase>process-resources</phase>
-              <goals>
-                <goal>copy-resources</goal>
-              </goals>
-              <configuration>
-                <outputDirectory>${basedir}/target/classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
-                <resources>          
-                  <resource>
-                    <directory>src/main/resources/org/mobicents/servlet/restcomm/telephony</directory>
-                    <includes>
-                      <include>version.properties</include>
-                    </includes>
-                    <filtering>true</filtering>
-                  </resource>
-                </resources>              
-              </configuration>            
-            </execution>
-            <execution>
-              <id>copy-test-resources</id>
-              <!-- here the phase you need -->
-              <phase>process-test-resources</phase>
-              <goals>
-                <goal>copy-resources</goal>
-              </goals>
-              <configuration>
-                <outputDirectory>${basedir}/target/test-classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
-                <resources>          
-                  <resource>
-                    <directory>src/main/resources/org/mobicents/servlet/restcomm/telephony</directory>
-                    <includes>
-                      <include>version.properties</include>
-                    </includes>
-                    <filtering>true</filtering>
-                  </resource>
-                </resources>              
-              </configuration>            
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-surefire-plugin</artifactId>
-		</plugin>
-      </plugins>
-    </build>
-        
+		<plugins>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.5</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<!-- here the phase you need -->
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/resources/org/mobicents/servlet/restcomm/telephony</directory>
+									<includes>
+										<include>version.properties</include>
+									</includes>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-test-resources</id>
+						<!-- here the phase you need -->
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/test-classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/resources/org/mobicents/servlet/restcomm/telephony</directory>
+									<includes>
+										<include>version.properties</include>
+									</includes>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>

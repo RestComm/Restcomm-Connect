@@ -23,10 +23,12 @@
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
+		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings
+		</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors</error-dictionary-uri>
+		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors
+		</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -36,8 +38,10 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) when creating an outbound call -->
-		<normalize-numbers-for-outbound-calls>false</normalize-numbers-for-outbound-calls>
+		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
+			when creating an outbound call -->
+		<normalize-numbers-for-outbound-calls>false
+		</normalize-numbers-for-outbound-calls>
 		<!--If set to TRUE Restcomm will use the From address of initial call as 
 			caller-id for calls created with Dial Number. Caller A (callerId A) dials 
 			DID XYZ that is bind to RCML that Dials Number 4321. If from-address-to-proxied-calls 
@@ -53,7 +57,8 @@
 			<!-- Parameters for fallback outbound proxy. -->
 			<fallback-outbound-proxy-user></fallback-outbound-proxy-user>
 			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
-			<fallback-outbound-proxy-uri>127.0.0.1:5090</fallback-outbound-proxy-uri>
+			<fallback-outbound-proxy-uri>127.0.0.1:5090
+			</fallback-outbound-proxy-uri>
 
 			<!-- Allow fallback to backup proxy -->
 			<allow-fallback>false</allow-fallback>
@@ -63,6 +68,14 @@
 			<!-- Allow fallback to Primary proxy in case backup proxy fails also -->
 			<allow-fallback-to-primary>true</allow-fallback-to-primary>
 		</outbound-proxy>
+
+		<telestax-proxy>
+			<enabled>false</enabled>
+			<login>restcomm</login>
+			<password>restcomm</password>
+			<endpoint>restcomm_instance_id</endpoint>
+			<uri>http://127.0.0.1:2080</uri>
+		</telestax-proxy>
 
 		<!-- TelScale USSD Gateway -->
 		<ussd-gateway>
@@ -97,12 +110,24 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
-	<voip-innovations>
-		<login></login>
-		<password></password>
-		<endpoint></endpoint>
-		<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
-	</voip-innovations>
+	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+		<callback-urls>
+			<!-- URL (host:port) and method (SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<voice url="" method=""/>
+			<!-- URL (host:port) and method (SS7, SMPP, SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<sms url="" method=""/>
+			<!-- URL (host:port) and method (SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<fax url="" method=""/>
+			<!-- URL (host:port) and method (SS7, SIP or SIPS) to where a DID for voice should forward the calls  -->
+			<ussd url="" method=""/>
+		</callback-urls>
+		<voip-innovations>
+			<login></login>
+			<password></password>
+			<endpoint></endpoint>
+			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
+		</voip-innovations>	
+	</phone-number-provisioning>
 
 	<smtp>
 		<host></host>
@@ -110,8 +135,10 @@
 		<password></password>
 	</smtp>
 
-	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
-		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
+	<dao-manager
+		class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
+		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml
+		</configuration-file>
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
@@ -131,7 +158,8 @@
 		the maximum amount of time to wait for a response from the media server before 
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
-		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MediaGateway" name="Mobicents Media Server">
+		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MediaGateway"
+			name="Mobicents Media Server">
 			<local-address>127.0.0.1</local-address>
 			<local-port>2727</local-port>
 			<remote-address>127.0.0.1</remote-address>
@@ -184,7 +212,8 @@
 		</spanish> <swedish> <female>elin8k</female> <male>emil8k</male> </swedish> 
 		<turkish> <female>ipek8k</female> <male></male> </turkish> </speakers> </speech-synthesizer> -->
 
-	<speech-synthesizer class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+	<speech-synthesizer
+		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
 		<apikey></apikey>
 		<languages>

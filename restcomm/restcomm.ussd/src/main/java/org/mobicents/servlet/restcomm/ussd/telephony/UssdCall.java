@@ -1,22 +1,21 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.ussd.telephony;
 
@@ -106,6 +105,7 @@ public class UssdCall extends UntypedActor  {
     private String name;
     private SipURI from;
     private SipURI to;
+    private String transport;
     private String username;
     private String password;
     private CreateCall.Type type;
@@ -148,6 +148,7 @@ public class UssdCall extends UntypedActor  {
         transitions.add(new Transition(dialing, completed));
         transitions.add(new Transition(ringing, inProgress));
         transitions.add(new Transition(inProgress, processingUssdMessage));
+        transitions.add(new Transition(inProgress, completed));
         transitions.add(new Transition(processingUssdMessage, ready));
         transitions.add(new Transition(processingUssdMessage, inProgress));
         transitions.add(new Transition(processingUssdMessage, completed));
@@ -274,6 +275,8 @@ public class UssdCall extends UntypedActor  {
             lastResponse = response;
             if(response.getStatus() == SipServletResponse.SC_OK && response.getRequest().getMethod().equalsIgnoreCase("INVITE")){
                 response.createAck().send();
+            } if(response.getStatus() == SipServletResponse.SC_OK && (response.getRequest().getMethod().equalsIgnoreCase("BYE"))) {
+                fsm.transition(message, completed);
             }
         } else if (UssdRestcommResponse.class.equals(klass)) {
             //If direction is outbound, get the message and create the Invite
@@ -403,6 +406,8 @@ public class UssdCall extends UntypedActor  {
             }
             request.setContent(ussdRequest.createUssdPayload().toString().trim(), ussdContentType);
 
+            logger.info("Prepared request: \n"+request);
+
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
             if (realInetUri != null) {
                 logger.info("Using the real ip address of the sip client " + realInetUri.toString()
@@ -422,7 +427,19 @@ public class UssdCall extends UntypedActor  {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("At Completed STATE! Updating CDR");
+            logger.info("Completing the call");
+            if (invite != null) {
+                invite.getSession().invalidate();
+            }
+            if (outgoingInvite != null) {
+                outgoingInvite.getSession().invalidate();
+            }
+            // Notify the observers.
+            external = CallStateChanged.State.COMPLETED;
+            final CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
             if (outgoingCallRecord != null && direction.contains("outbound")) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.COMPLETED.name());
                 final DateTime now = DateTime.now();
@@ -431,6 +448,7 @@ public class UssdCall extends UntypedActor  {
                 outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
                 callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+            logger.info("Call completed");
         }
     }
 
@@ -445,6 +463,7 @@ public class UssdCall extends UntypedActor  {
             name = request.name();
             from = request.from();
             to = request.to();
+            transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
             apiVersion = request.apiVersion();
             accountId = request.accountId();
             username = request.username();
@@ -524,6 +543,9 @@ public class UssdCall extends UntypedActor  {
             if (to.getPort() > -1) {
                 buffer.append(":").append(to.getPort());
             }
+            if (!transport.equalsIgnoreCase("udp")) {
+                buffer.append(";transport=").append(transport);
+            }
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute("UssdCall","true");
@@ -531,6 +553,11 @@ public class UssdCall extends UntypedActor  {
             if(ussdInterpreter != null)
                 application.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
             outgoingInvite = factory.createRequest(application, "INVITE", from, to);
+            if (!transport.equalsIgnoreCase("udp")) {
+                ((SipURI)outgoingInvite.getRequestURI()).setTransportParam(transport);
+                ((SipURI)outgoingInvite.getFrom().getURI()).setTransportParam(transport);
+                ((SipURI)outgoingInvite.getTo().getURI()).setTransportParam(transport);
+            }
             outgoingInvite.pushRoute(uri);
 
             if (headers != null) {
@@ -555,5 +582,13 @@ public class UssdCall extends UntypedActor  {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
         }
+    }
+
+    /* (non-Javadoc)
+     * @see akka.actor.UntypedActor#postStop()
+     */
+    @Override
+    public void postStop() {
+        super.postStop();
     }
 }

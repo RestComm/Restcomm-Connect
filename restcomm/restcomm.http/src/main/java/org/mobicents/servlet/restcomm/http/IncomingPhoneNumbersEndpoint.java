@@ -1,20 +1,72 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.http;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.noContent;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipURI;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.shiro.authz.AuthorizationException;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
+import org.mobicents.servlet.restcomm.entities.RestCommResponse;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesConverter;
+import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesList;
+import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverter;
+import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberListConverter;
+import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.loader.ObjectFactory;
+import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
+import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -24,159 +76,69 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.thoughtworks.xstream.XStream;
 
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.shiro.authz.AuthorizationException;
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
-import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
-import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
-import org.mobicents.servlet.restcomm.entities.RestCommResponse;
-import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverter;
-import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberListConverter;
-import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
-import org.mobicents.servlet.restcomm.util.StringUtils;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com
+ * @author jean.deruelle@telestax.com
  */
 @NotThreadSafe
 public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
-    protected Configuration configuration;
-    protected IncomingPhoneNumbersDao dao;
-    protected Gson gson;
-    protected XStream xstream;
+    protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
+    PhoneNumberParameters phoneNumberParameters;
+    private IncomingPhoneNumbersDao dao;
     protected AccountsDao accountsDao;
-
-    private String header;
+    private XStream xstream;
+    protected Gson gson;
 
     public IncomingPhoneNumbersEndpoint() {
         super();
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws ObjectInstantiationException {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        final Configuration runtime = configuration.subset("runtime-settings");
-        super.init(runtime);
+        super.init(configuration.subset("runtime-settings"));
         dao = storage.getIncomingPhoneNumbersDao();
         accountsDao = storage.getAccountsDao();
-        final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(runtime);
+
+        phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
+        if(phoneNumberProvisioningManager == null) {
+            final String phoneNumberProvisioningManagerClass = configuration.getString("phone-number-provisioning[@class]");
+            Configuration phoneNumberProvisioningConfiguration = configuration.subset("phone-number-provisioning");
+            Configuration telestaxProxyConfiguration = configuration.subset("runtime-settings").subset("telestax-proxy");
+
+            phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) new ObjectFactory(getClass().getClassLoader())
+                    .getObjectInstance(phoneNumberProvisioningManagerClass);
+            ContainerConfiguration containerConfiguration = new ContainerConfiguration(getOutboundInterfaces());
+            phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration, containerConfiguration);
+            context.setAttribute("phoneNumberProvisioningManager", phoneNumberProvisioningManager);
+        }
+        Configuration callbackUrlsConfiguration = configuration.subset("phone-number-provisioning").subset("callback-urls");
+        phoneNumberParameters = new PhoneNumberParameters(
+                callbackUrlsConfiguration.getString("voice[@url]"),
+                callbackUrlsConfiguration.getString("voice[@method]"), false,
+                callbackUrlsConfiguration.getString("sms[@url]"),
+                callbackUrlsConfiguration.getString("sms[@method]"),
+                callbackUrlsConfiguration.getString("fax[@url]"),
+                callbackUrlsConfiguration.getString("fax[@method]"),
+                callbackUrlsConfiguration.getString("ussd[@url]"),
+                callbackUrlsConfiguration.getString("ussd[@method]"));
+
+        final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
+        builder.serializeNulls();
         builder.registerTypeAdapter(IncomingPhoneNumber.class, converter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new IncomingPhoneNumberListConverter(runtime));
-        xstream.registerConverter(new RestCommResponseConverter(runtime));
-        final Configuration vi = configuration.subset("voip-innovations");
-        header = header(vi.getString("login"), vi.getString("password"));
-    }
-
-    private String header(final String login, final String password) {
-        final StringBuilder buffer = new StringBuilder();
-        buffer.append("<header><sender>");
-        buffer.append("<login>").append(login).append("</login>");
-        buffer.append("<password>").append(password).append("</password>");
-        buffer.append("</sender></header>");
-        return buffer.toString();
-    }
-
-    protected boolean assignDid(final String did) {
-        if (did != null && !did.isEmpty()) {
-            final Configuration vi = configuration.subset("voip-innovations");
-            final StringBuilder buffer = new StringBuilder();
-            buffer.append("<request id=\"\">");
-            buffer.append(header);
-            buffer.append("<body>");
-            buffer.append("<requesttype>").append("assignDID").append("</requesttype>");
-            buffer.append("<item>");
-            buffer.append("<did>").append(did).append("</did>");
-            buffer.append("<endpointgroup>").append(vi.getString("endpoint")).append("</endpointgroup>");
-            buffer.append("</item>");
-            buffer.append("</body>");
-            buffer.append("</request>");
-            final String body = buffer.toString();
-            final HttpPost post = new HttpPost(vi.getString("uri"));
-            try {
-                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-                parameters.add(new BasicNameValuePair("apidata", body));
-                post.setEntity(new UrlEncodedFormEntity(parameters));
-                final DefaultHttpClient client = new DefaultHttpClient();
-                final HttpResponse response = client.execute(post);
-                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    final String content = StringUtils.toString(response.getEntity().getContent());
-                    if (content.contains("<statuscode>100</statuscode>")) {
-                        return true;
-                    }
-                }
-            } catch (final Exception ignored) {
-            }
-        }
-        return false;
-    }
-
-    protected boolean isValidDid(final String did) {
-        if (did != null && !did.isEmpty()) {
-            final StringBuilder buffer = new StringBuilder();
-            buffer.append("<request id=\"\">");
-            buffer.append(header);
-            buffer.append("<body>");
-            buffer.append("<requesttype>").append("queryDID").append("</requesttype>");
-            buffer.append("<item>");
-            buffer.append("<did>").append(did).append("</did>");
-            buffer.append("</item>");
-            buffer.append("</body>");
-            buffer.append("</request>");
-            final String body = buffer.toString();
-            final Configuration vi = configuration.subset("voip-innovations");
-            final HttpPost post = new HttpPost(vi.getString("uri"));
-            try {
-                List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-                parameters.add(new BasicNameValuePair("apidata", body));
-                post.setEntity(new UrlEncodedFormEntity(parameters));
-                final DefaultHttpClient client = new DefaultHttpClient();
-                final HttpResponse response = client.execute(post);
-                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    final String content = StringUtils.toString(response.getEntity().getContent());
-                    if (content.contains("<statusCode>100</statusCode>")) {
-                        return true;
-                    }
-                }
-            } catch (final Exception ignored) {
-            }
-        }
-        return false;
+        xstream.registerConverter(new IncomingPhoneNumberListConverter(configuration));
+        xstream.registerConverter(new AvailableCountriesConverter(configuration));
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
     private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -207,19 +169,18 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
-                .append("/IncomingPhoneNumbers/").append(sid.toString());
+        .append("/IncomingPhoneNumbers/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
     }
 
-    private String e164(final String number) {
+    private String e164(String number) throws NumberParseException {
         final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
-        try {
-            final PhoneNumber result = numbersUtil.parse(number, "US");
-            return numbersUtil.format(result, PhoneNumberFormat.E164);
-        } catch (final NumberParseException ignored) {
-            return number;
+        if(!number.startsWith("+")) {
+            number = "+" + number;
         }
+        final PhoneNumber result = numbersUtil.parse(number, "US");
+        return numbersUtil.format(result, PhoneNumberFormat.E164);
     }
 
     private String getFriendlyName(final String phoneNumber, final MultivaluedMap<String, String> data) {
@@ -251,13 +212,37 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getIncomingPhoneNumbers(final String accountSid, final MediaType responseType) {
+    protected Response getAvailableCountries(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbers(new Sid(accountSid));
+        List<String> countries = phoneNumberProvisioningManager.getAvailableCountries();
+        if(countries == null) {
+            countries = new ArrayList<String>();
+            countries.add("US");
+        }
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(countries), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new AvailableCountriesList(countries));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
+
+    protected Response getIncomingPhoneNumbers(final String accountSid, final String phoneNumberFilter, final String friendlyNameFilter,
+            PhoneNumberType phoneNumberType, final MediaType responseType) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter);
+        final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(incomingPhoneNumbers), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {
@@ -269,7 +254,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     }
 
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+            PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
@@ -281,24 +266,32 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         String number = data.getFirst("PhoneNumber");
-        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(e164(number));
+        // cater to SIP numbers
+        boolean isRealNumber = true;
+        try {
+            number = e164(number);
+        } catch (NumberParseException e) {
+            isRealNumber = false;
+        }
+        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(number);
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
-            dao.addIncomingPhoneNumber(incomingPhoneNumber);
-            number = number.substring(2);
-            // Provision the number from VoIP Innovations if they own it.
-            if (isValidDid(number)) {
-                assignDid(number);
+            phoneNumberParameters.setPhoneNumberType(phoneNumberType);
+            boolean isDidAssigned = true;
+            if(isRealNumber) {
+                isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+            }
+            if(isDidAssigned) {
+                dao.addIncomingPhoneNumber(incomingPhoneNumber);
+                if (APPLICATION_JSON_TYPE == responseType) {
+                    return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
+                } else if (APPLICATION_XML_TYPE == responseType) {
+                    final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
+                    return ok(xstream.toXML(response), APPLICATION_XML).build();
+                }
             }
         }
-        if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
-            return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else {
-            return null;
-        }
+        return status(BAD_REQUEST).entity("21452").build();
     }
 
     public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
@@ -309,95 +302,130 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
-        if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
-            return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else {
-            return null;
+        String number = incomingPhoneNumber.getPhoneNumber();
+        // cater to SIP numbers
+        boolean isRealNumber = true;
+        try {
+            number = e164(number);
+        } catch (NumberParseException e) {
+            isRealNumber = false;
         }
+        boolean updated = true;
+        if(isRealNumber) {
+            updated = phoneNumberProvisioningManager.updateNumber(incomingPhoneNumber.getPhoneNumber(), phoneNumberParameters);
+        }
+        if(updated) {
+            dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
+            }
+        }
+        return status(BAD_REQUEST).entity("21452").build();
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
-        if (!data.containsKey("PhoneNumber")) {
+        if (!data.containsKey("PhoneNumber") && !data.containsKey("AreaCode")) {
             throw new NullPointerException("Phone number can not be null.");
         }
     }
 
     private IncomingPhoneNumber update(final IncomingPhoneNumber incomingPhoneNumber, final MultivaluedMap<String, String> data) {
-        IncomingPhoneNumber result = incomingPhoneNumber;
         if (data.containsKey("ApiVersion")) {
-            result = result.setApiVersion(getApiVersion(data));
+            incomingPhoneNumber.setApiVersion(getApiVersion(data));
         }
         if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            incomingPhoneNumber.setFriendlyName(data.getFirst("FriendlyName"));
         }
         if (data.containsKey("VoiceUrl")) {
-            result = result.setVoiceUrl(getUrl("VoiceUrl", data));
+            incomingPhoneNumber.setVoiceUrl(getUrl("VoiceUrl", data));
         }
         if (data.containsKey("VoiceMethod")) {
-            result = result.setVoiceMethod(getMethod("VoiceMethod", data));
+            incomingPhoneNumber.setVoiceMethod(getMethod("VoiceMethod", data));
         }
         if (data.containsKey("VoiceFallbackUrl")) {
-            result = result.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+            incomingPhoneNumber.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
         }
         if (data.containsKey("VoiceFallbackMethod")) {
-            result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+            incomingPhoneNumber.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("StatusCallback")) {
-            result = result.setStatusCallback(getUrl("StatusCallback", data));
+            incomingPhoneNumber.setStatusCallback(getUrl("StatusCallback", data));
         }
         if (data.containsKey("StatusCallbackMethod")) {
-            result = result.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
+            incomingPhoneNumber.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
         }
         if (data.containsKey("VoiceCallerIdLookup")) {
-            result = result.setVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
+            incomingPhoneNumber.setHasVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
         if (data.containsKey("SmsUrl")) {
-            result = result.setSmsUrl(getUrl("SmsUrl", data));
+            incomingPhoneNumber.setSmsUrl(getUrl("SmsUrl", data));
         }
         if (data.containsKey("SmsMethod")) {
-            result = result.setSmsMethod(getMethod("SmsMethod", data));
+            incomingPhoneNumber.setSmsMethod(getMethod("SmsMethod", data));
         }
         if (data.containsKey("SmsFallbackUrl")) {
-            result = result.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
+            incomingPhoneNumber.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
         }
         if (data.containsKey("SmsFallbackMethod")) {
-            result = result.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
+            incomingPhoneNumber.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         }
         if (data.containsKey("SmsApplicationSid")) {
-            result = result.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+            incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
         }
 
         if (data.containsKey("VoiceCapable")) {
-            result = result.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
-        } else {
-            result = result.setVoiceCapable(Boolean.TRUE);
+            incomingPhoneNumber.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
         }
 
         if (data.containsKey("SmsCapable")) {
-            result = result.setSmsCapable(Boolean.parseBoolean(data.getFirst("SmsCapable")));
-        } else {
-            result = result.setSmsCapable(Boolean.FALSE);
+            incomingPhoneNumber.setSmsCapable(Boolean.parseBoolean(data.getFirst("SmsCapable")));
         }
 
         if (data.containsKey("MmsCapable")) {
-            result = result.setMmsCapable(Boolean.parseBoolean(data.getFirst("MmsCapable")));
-        } else {
-            result = result.setMmsCapable(Boolean.FALSE);
+            incomingPhoneNumber.setMmsCapable(Boolean.parseBoolean(data.getFirst("MmsCapable")));
         }
 
         if (data.containsKey("FaxCapable")) {
-            result = result.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
-        } else {
-            result = result.setFaxCapable(Boolean.FALSE);
+            incomingPhoneNumber.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
         }
 
-        return result;
+        incomingPhoneNumber.setDateUpdated(DateTime.now());
+        return incomingPhoneNumber;
+    }
+
+    public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        String number = incomingPhoneNumber.getPhoneNumber();
+        // cater to SIP numbers
+        boolean isRealNumber = true;
+        try {
+            number = e164(number);
+        } catch (NumberParseException e) {
+            isRealNumber = false;
+        }
+        if(isRealNumber) {
+            phoneNumberProvisioningManager.cancelNumber(number);
+        }
+        dao.removeIncomingPhoneNumber(new Sid(sid));
+        return noContent().build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<SipURI> getOutboundInterfaces() {
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
+        return uris;
     }
 }
