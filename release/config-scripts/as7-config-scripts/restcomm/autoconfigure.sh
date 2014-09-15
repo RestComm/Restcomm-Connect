@@ -6,7 +6,7 @@
 BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 
 # load configuration values
-source $BASEDIR/restcomm.conf
+#source $BASEDIR/restcomm.conf
 
 echo ''
 echo 'RestComm automatic configuration started:'

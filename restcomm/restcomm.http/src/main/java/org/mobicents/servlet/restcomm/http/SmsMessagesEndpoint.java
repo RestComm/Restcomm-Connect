@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.http;
 
@@ -34,7 +37,9 @@ import com.thoughtworks.xstream.XStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Currency;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -203,6 +208,14 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         final String sender = data.getFirst("From");
         final String recipient = data.getFirst("To");
         final String body = data.getFirst("Body");
+        ConcurrentHashMap<String, String> customRestOutgoingHeaderMap = new ConcurrentHashMap<String, String>();
+        Iterator<String> iter = data.keySet().iterator();
+        while (iter.hasNext()) {
+            String name = iter.next();
+            if (name.startsWith("X-")){
+                customRestOutgoingHeaderMap.put(name, data.getFirst(name));
+            }
+        }
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
             Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(), expires);
@@ -220,7 +233,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
                     final ActorRef observer = observer();
                     session.tell(new Observe(observer), observer);
                     session.tell(new SmsSessionAttribute("record", record), null);
-                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body);
+                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body, customRestOutgoingHeaderMap);
                     session.tell(request, null);
                     if (APPLICATION_JSON_TYPE == responseType) {
                         return ok(gson.toJson(record), APPLICATION_JSON).build();

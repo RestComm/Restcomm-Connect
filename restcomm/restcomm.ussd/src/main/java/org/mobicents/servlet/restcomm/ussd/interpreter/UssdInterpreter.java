@@ -1,22 +1,21 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 
 package org.mobicents.servlet.restcomm.ussd.interpreter;
@@ -197,8 +196,10 @@ public class UssdInterpreter extends UntypedActor {
         transitions.add(new Transition(ready, preparingMessage));
         transitions.add(new Transition(preparingMessage, downloadingRcml));
         transitions.add(new Transition(preparingMessage, processingInfoRequest));
+        transitions.add(new Transition(preparingMessage, finished));
         transitions.add(new Transition(processingInfoRequest, preparingMessage));
         transitions.add(new Transition(processingInfoRequest, ready));
+        transitions.add(new Transition(processingInfoRequest, finished));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -448,9 +449,14 @@ public class UssdInterpreter extends UntypedActor {
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
                 logger.info("CallStateChanged.State.NO_ANSWER OR  CallStateChanged.State.COMPLETED OR CallStateChanged.State.FAILED");
+                fsm.transition(message, finished);
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 logger.info("CallStateChanged.State.BUSY");
             }
+//            else if (CallStateChanged.State.COMPLETED == event.state()) {
+//                logger.info("CallStateChanged.State.Completed");
+//                fsm.transition(message, finished);
+//            }
         } else if (CallResponse.class.equals(klass)) {
             if (acquiringCallInfo.equals(state)) {
                 @SuppressWarnings("unchecked")
@@ -766,7 +772,7 @@ public class UssdInterpreter extends UntypedActor {
                 ussdRestcommResponse.setMessage(ussdText.toString());
 
                 logger.info("UssdMessage prepared, hasCollect: " + hasCollect);
-                logger.debug("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
+                logger.info("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
 
                 if (callInfo.direction().equalsIgnoreCase("inbound")) {
                     // USSD PULL
@@ -791,6 +797,7 @@ public class UssdInterpreter extends UntypedActor {
                         }
                     }
                 }
+                logger.info("UssdRestcommResponse message prepared: "+ussdRestcommResponse);
                 ussdCall.tell(ussdRestcommResponse, source);
             }
         }
@@ -906,11 +913,23 @@ public class UssdInterpreter extends UntypedActor {
                 }
                 callback();
             }
+            context().stop(self());
         }
     }
 
     @Override
     public void postStop() {
+        logger.info("UssdInterpreter postStop");
+        if (ussdCall != null)
+            getContext().stop(ussdCall);
+        if (outboundCall != null)
+            getContext().stop(outboundCall);
+        if (downloader != null)
+            getContext().stop(downloader);
+        if (parser != null)
+            getContext().stop(parser);
+        if (mailer != null)
+            getContext().stop(mailer);
         super.postStop();
     }
 

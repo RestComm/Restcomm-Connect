@@ -1,20 +1,77 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.interpreter;
+
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.http.Header;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.message.BasicNameValuePair;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
+import org.mobicents.servlet.restcomm.entities.Notification;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.SmsMessage;
+import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
+import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
+import org.mobicents.servlet.restcomm.fsm.Action;
+import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
+import org.mobicents.servlet.restcomm.fsm.State;
+import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.http.client.Downloader;
+import org.mobicents.servlet.restcomm.http.client.DownloaderResponse;
+import org.mobicents.servlet.restcomm.http.client.HttpRequestDescriptor;
+import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
+import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
+import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
+import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
+import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
+import org.mobicents.servlet.restcomm.sms.GetLastSmsRequest;
+import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
+import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
+import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
+import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
+import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -28,56 +85,6 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.message.BasicNameValuePair;
-
-import org.joda.time.DateTime;
-
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
-import org.mobicents.servlet.restcomm.entities.Notification;
-import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.entities.SmsMessage;
-import static org.mobicents.servlet.restcomm.entities.SmsMessage.*;
-import org.mobicents.servlet.restcomm.fsm.Action;
-import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
-import org.mobicents.servlet.restcomm.fsm.State;
-import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.http.client.Downloader;
-import org.mobicents.servlet.restcomm.http.client.DownloaderResponse;
-import org.mobicents.servlet.restcomm.http.client.HttpRequestDescriptor;
-import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
-import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
-import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
-import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
-import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
-import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
-import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
-import org.mobicents.servlet.restcomm.sms.GetLastSmsRequest;
-import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
-import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
-import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
-import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
-import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -129,6 +136,8 @@ public final class SmsInterpreter extends UntypedActor {
     private ActorRef parser;
     private Tag verb;
     private boolean normalizeNumber;
+    private ConcurrentHashMap<String, String> customHttpHeaderMap = new ConcurrentHashMap<String, String>();
+    private ConcurrentHashMap<String, String> customRequestHeaderMap;
 
     public SmsInterpreter(final ActorRef service, final Configuration configuration, final DaoManager storage,
             final Sid accountId, final String version, final URI url, final String method, final URI fallbackUrl,
@@ -255,7 +264,7 @@ public final class SmsInterpreter extends UntypedActor {
         if (response != null) {
             builder.setResponseHeaders(response.getHeadersAsString());
             final String type = response.getContentType();
-            if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
+            if (type != null && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
                 try {
                     builder.setResponseBody(response.getContentAsString());
                 } catch (final IOException exception) {
@@ -282,6 +291,7 @@ public final class SmsInterpreter extends UntypedActor {
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringLastSmsRequest);
         } else if (SmsSessionRequest.class.equals(klass)) {
+            customRequestHeaderMap = ((SmsSessionRequest)message).headers();
             fsm.transition(message, downloadingRcml);
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
@@ -358,8 +368,17 @@ public final class SmsInterpreter extends UntypedActor {
         parameters.add(new BasicNameValuePair("From", from));
         final String to = format(initialSessionRequest.to());
         parameters.add(new BasicNameValuePair("To", to));
-        final String body = initialSessionRequest.body().trim();
+        final String body = initialSessionRequest.body();
         parameters.add(new BasicNameValuePair("Body", body));
+
+        //Issue https://telestax.atlassian.net/browse/RESTCOMM-517. If Request contains custom headers pass them to the HTTP server.
+        if(customRequestHeaderMap != null && !customRequestHeaderMap.isEmpty()){
+            Iterator<String> iter = customRequestHeaderMap.keySet().iterator();
+            while(iter.hasNext()){
+                String headerName = iter.next();
+                parameters.add(new BasicNameValuePair("SipHeader_" + headerName, customRequestHeaderMap.remove(headerName)));
+            }
+        }
         return parameters;
     }
 
@@ -542,6 +561,7 @@ public final class SmsInterpreter extends UntypedActor {
                 if ((type != null && content != null) && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
                     parser = parser(content);
                 } else {
+                    logger.info("DownloaderResponse getContentType is null: "+response);
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);
@@ -559,6 +579,12 @@ public final class SmsInterpreter extends UntypedActor {
                 }
             }
             // Ask the parser for the next action to take.
+            Header[] headers = response.getHeaders();
+            for(Header header: headers) {
+                if (header.getName().startsWith("X-")) {
+                    customHttpHeaderMap.put(header.getName(), header.getValue());
+                }
+            }
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);
         }
@@ -744,7 +770,7 @@ public final class SmsInterpreter extends UntypedActor {
                 // Store the sms record in the sms session.
                 session.tell(new SmsSessionAttribute("record", record), source);
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body);
+                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, customHttpHeaderMap);
                 session.tell(sms, source);
                 sessions.put(sid, session);
             }

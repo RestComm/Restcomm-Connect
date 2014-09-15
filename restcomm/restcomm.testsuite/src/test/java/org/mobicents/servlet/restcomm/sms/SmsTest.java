@@ -1,33 +1,37 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.sms;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import gov.nist.javax.sip.header.SIPHeader;
 
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.ListIterator;
 
 import javax.sip.address.SipURI;
+import javax.sip.header.Header;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
@@ -86,6 +90,7 @@ public class SmsTest {
     private String dialSendSMS2_Greek = "sip:+12223334447@127.0.0.1:5080";
     private String dialSendSMS2_Greek_Huge = "sip:+12223334448@127.0.0.1:5080";
     private String dialSendSMS3 = "sip:+12223334446@127.0.0.1:5080";
+    private String dialSendSMSwithCustomHeaders = "sip:+12223334449@127.0.0.1:5080";
 
     private String greekHugeMessage = "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
             + "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
@@ -271,6 +276,55 @@ public class SmsTest {
         aliceCall.sendMessageResponse(200, "OK-From-Alice", 3600);
     }
 
+    @Test
+    public void TestIncomingSmsSendToNumber1313WithCustomHeaders() throws ParseException, InterruptedException {
+        String myFirstHeaderName = "X-Custom-Header-1";
+        String myFirstHeaderValue = "X Custom Header Value 1";
+        
+        String mySecondHeaderName = "X-Custom-Header-2";
+        String mySecondHeaderValue = "X Custom Header Value 2";
+        
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:1313@127.0.0.1:5091", 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForMessage();
+        
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        
+        ArrayList<Header> additionalHeaders = new ArrayList<Header>();
+        Header header1 = bobSipStack.getHeaderFactory().createHeader(myFirstHeaderName, myFirstHeaderValue);
+        Header header2 = bobSipStack.getHeaderFactory().createHeader(mySecondHeaderName, mySecondHeaderValue);
+        additionalHeaders.add(header1);
+        additionalHeaders.add(header2);
+        
+        bobCall.initiateOutgoingMessage(bobContact, dialSendSMSwithCustomHeaders, null, additionalHeaders, null, "Hello from Bob!");
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.ACCEPTED);
+
+        //Restcomm receives the SMS message from Bob, matches the DID with an RCML application, and executes it.
+        //The new RCML application sends an SMS to Alice with body "Hello World!"
+        
+        assertTrue(aliceCall.waitForMessage(5 * 1000));
+        Request receivedRequest = aliceCall.getLastReceivedMessageRequest();
+        String msgReceived = new String(receivedRequest.getRawContent());
+        assertTrue("Hello World!".equals(msgReceived));
+
+        SIPHeader myFirstHeader = (SIPHeader)receivedRequest.getHeader(myFirstHeaderName);
+        assertTrue(myFirstHeader != null);
+        assertTrue(myFirstHeader.getValue().equalsIgnoreCase(myFirstHeaderValue));
+        
+        SIPHeader mySecondHeader = (SIPHeader)receivedRequest.getHeader(mySecondHeaderName);
+        assertTrue(mySecondHeader != null);
+        assertTrue(mySecondHeader.getHeaderValue().equalsIgnoreCase(mySecondHeaderValue));
+        
+        aliceCall.sendMessageResponse(200, "OK-From-Alice", 3600);
+    }
+    
     
     @Deployment(name = "SmsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
@@ -279,11 +333,14 @@ public class SmsTest {
         final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
+        restcommArchive.addClass(SmsRcmlServlet.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+        archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web_for_SmsTest.xml", "web.xml");
         archive.addAsWebInfResource("restcomm_SmsTest.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_SmsTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("send-sms-test.xml");

@@ -55,7 +55,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, RCommAvailableNumbersNonUS, Notifications) {
 
   // are we editing details...
   if($scope.phoneSid = $routeParams.phoneSid) {
@@ -152,9 +152,18 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
 
   $scope.searching = false;
 
-  $scope.findNumbers = function(areaCode) {
+  $scope.findNumbers = function(areaCode, countryCode) {
     $scope.searching = true;
-    $scope.availableNumbers = RCommAvailableNumbers.query({accountSid: $scope.sid, areaCode: areaCode});
+    $scope.availableNumbers = null;
+    if(countryCode == null || countryCode === "" || countryCode.length == 0 || countryCode.length == 1) {
+		document.getElementById("countryCode").value = "US";
+		countryCode = "US";
+	}
+    if(countryCode !== "US") {
+    	$scope.availableNumbers = RCommAvailableNumbersNonUS.query({accountSid: $scope.sid, countryCode: countryCode});
+    } else {
+    	$scope.availableNumbers = RCommAvailableNumbers.query({accountSid: $scope.sid, countryCode: countryCode, areaCode: areaCode});
+    }
     $scope.availableNumbers.$promise.then(
       //success
       function(value){
@@ -195,3 +204,18 @@ var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notific
       }
     });
 };
+
+function countryCodeChange() {
+	var countryCodeValue = document.getElementById("countryCode").value;
+	if(countryCodeValue == null || countryCodeValue === "" || countryCodeValue.length == 0 || countryCodeValue.length == 1) {
+		document.getElementById("countryCode").value = "US";
+		countryCodeValue = "US";
+	}
+	if(countryCodeValue !== "US") {
+		document.getElementById("areaCodeOptionsName").style.visibility = 'hidden';
+		document.getElementById("areaCodeOptionsForm").style.visibility = 'hidden';
+	} else {
+		document.getElementById("areaCodeOptionsName").style.visibility = 'visible';
+		document.getElementById("areaCodeOptionsForm").style.visibility = 'visible';
+	}
+}

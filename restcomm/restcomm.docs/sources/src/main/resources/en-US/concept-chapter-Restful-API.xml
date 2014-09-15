@@ -492,6 +492,140 @@ curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0352491
 
 		</section>
 	</section>
+	
+		<section>
+		<title>Gateways</title>
+		<para>The Gateways subresources let you create sip accounts that Restcomm will use to register itself to the Gateway and receive incoming traffic.
+			</para>
+		<formalpara>
+			<title>Gatewat List Resource URI</title>
+			<para>/2012-04-24/Accounts/{AccountSid}/Management/Gateways</para>
+		</formalpara>
+		<formalpara>
+			<title>Register Restcomm instance to a SIP Gateway.</title>
+			<para>You might need to register Restcomm instnace to a SIP Gateway and receive incoming traffic from that gateway. 
+			For that you need to use Gateway REST endpoint</para>
+		</formalpara>
+		<table frame='all'>
+			<title>Resource Properties</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Property</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>FriendlyName</entry>
+						<entry>A friendly version of the gateway.</entry>
+					</row>
+					<row>
+						<entry>UserName</entry>
+						<entry>The username that will be used to register to this gateway</entry>
+					</row>
+					<row>
+						<entry>Password</entry>
+						<entry>The password that will be used to register to this gateway</entry>
+					</row>
+					<row>
+						<entry>Proxy</entry>
+						<entry>The proxy address of the gateway</entry>
+					</row>
+					<row>
+						<entry>Register</entry>
+						<entry>Boolean flag to register or not the gateway</entry>
+					</row>
+					<row>
+						<entry>TTL</entry>
+						<entry>Time to live for the Register</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+
+		<section>
+			<title>Supported Operations</title>
+			<formalpara>
+				<title>HTTP GET</title>
+				<para>Returns the representation of a Gateway
+					resource, including the properties above. </para>
+				<para>Resource URI:  </para>
+				<para>/2010-04-01/Accounts/{AccountSid}/Management/Gateways/{GatewaySid}</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP POST</title>
+				<para>Creates a new Gateway
+					resource and returns the representation of the resource, including the properties above. </para>
+				<para>Resource URI:  </para>
+				<para>/2010-04-01/Accounts/{AccountSid}/Management/Gateways</para>
+			</formalpara>
+			<formalpara>
+				<title>HTTP POST/PUT</title>
+				<para>Update a Gateway
+					resource and returns the representation of the resource, including the properties above. </para>
+				<para>Resource URI:  </para>
+				<para>/2010-04-01/Accounts/{AccountSid}/Management/Gateways/{GatewaySid}</para>
+			</formalpara>			
+			<formalpara>
+				<title>HTTP DELETE</title>
+				<para>Deletes a Gateway resource. </para>
+				<para>Resource URI:  </para>
+				<para>/2010-04-01/Accounts/{AccountSid}/Management/Gateways/{GatewaySid}</para>
+			</formalpara>
+			</section>
+
+			<section>
+			<title>Examples</title>
+			<formalpara>
+				<title>Create a new Gateway</title>
+			<programlisting>
+<![CDATA[
+
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways -d "FriendlyName=mygateway" -d "UserName=username" -d "Password=password" -d "Proxy=my.gateway.com" -d "Register=true" -d "TTL=3600"
+
+]]>
+			</programlisting>
+			</formalpara>
+
+			<formalpara>
+				<title>Get a list of available Gateways</title>
+			<programlisting>
+<![CDATA[
+
+curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways
+
+]]>
+			</programlisting>
+			</formalpara>
+
+			<formalpara>
+				<title>Update an existing Gateway</title>
+			<programlisting>
+<![CDATA[
+
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways/GW106bc6f34bd24790a435eaeccc1aed72 -d "FriendlyName=MyGatewayNewName" -d "UserName=newUserName"
+
+]]>
+			</programlisting>
+			</formalpara>
+			
+			<formalpara>
+				<title>Delete an existing Gateway</title>
+			<programlisting>
+<![CDATA[
+
+curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways/GW1cffb069192a45f2b5f5af2e76489550
+
+]]>
+			</programlisting>
+			</formalpara>
+
+		</section>
+	</section>
+	
 	<section>
 		<title>Clients</title>
 		<para>An Client instance resource represents a user agent registered
@@ -2216,11 +2350,23 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 								<entry>The text of the message you want to send, limited to 160
 									characters.</entry>
 							</row>
+							<row>
+								<entry>Custom headers X- (optional)</entry>
+								<entry>Optionally you can provide as many custom headers as you
+									wish. The custom headers must start with X-,
+									for example "X-MyCustom-Header=My custom header value"</entry>
+							</row>
 						</tbody>
 					</tgroup>
 				</table>
 
 
+				<note>
+					<title>Using custom headers</title>
+					<para>
+						These additional headers will be part of the SIP MESSAGE that Restcomm will create and dispatch to the SMS Aggregator.
+					</para>
+				</note>
 
 				<note>
 					<title>Using SMS and making DID calls</title>
@@ -2260,6 +2406,14 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 				<programlisting>
 <![CDATA[
 curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
+
+]]>
+				</programlisting>
+
+				<para>To send the same SMS but this time also provide some additional headers:</para>
+				<programlisting>
+<![CDATA[
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm" -d "X-MyCustomHeader-1=Value1" -d "X-MyCustomHeader-2=Value2" 
 
 ]]>
 				</programlisting>
@@ -2698,26 +2852,27 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 		</section>
 	</section>
 
-<section id="ussdpush-api">
+	<section id="ussdpush-api">
 		<title>UssdPush</title>
-		<para>A UssdPush resource represents a message sent from Restcomm to a USSD gateway.</para>
+		<para>A UssdPush resource represents a message sent from Restcomm to a
+			USSD gateway.</para>
 		<formalpara>
 			<title>UssdPush Resource URI</title>
 			<para>/2012-04-24/Accounts/{AccountSid}/UssdPush</para>
 		</formalpara>
-	<section>
+		<section>
 			<title>Supported Operations</title>
-				<formalpara>
+			<formalpara>
 				<title>HTTP POST</title>
 				<para>Sends a Ussd message to the configured USSD Gataeway</para>
-				</formalpara>
+			</formalpara>
 
-	</section>
-	
-	<formalpara>
+		</section>
+
+		<formalpara>
 			<title>Example of UssdPush</title>
 
-	   <programlisting role="XML">
+			<programlisting role="XML">
 
 		<![CDATA[
 
@@ -2740,7 +2895,7 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 			</programlisting>
 
-	</formalpara>
-</section>
+		</formalpara>
+	</section>
 
 </chapter>

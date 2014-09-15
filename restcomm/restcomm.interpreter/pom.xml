@@ -1,156 +1,157 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.telestax.servlet</groupId>
-    <artifactId>restcomm</artifactId>
-    <version>7.2.0-TelScale-SNAPSHOT</version>
-  </parent>
-  
-  <artifactId>restcomm.interpreter</artifactId>
-  <name>restcomm.interpreter</name>
-  
-  <dependencies>
- 	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-api</artifactId>
-	</dependency>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm</artifactId>
+		<version>7.2.0-TelScale-SNAPSHOT</version>
+	</parent>
 
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-log4j12</artifactId>
-	</dependency>
-	
-	<dependency>
-		<groupId>log4j</groupId>
-		<artifactId>log4j</artifactId>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.googlecode.libphonenumber</groupId>
-		<artifactId>libphonenumber</artifactId>
-	</dependency>
-	
-	<dependency>
-		<groupId>commons-configuration</groupId>
-		<artifactId>commons-configuration</artifactId>
-	</dependency>
-	
-	<dependency>
-		<groupId>org.scala-lang</groupId>
-		<artifactId>scala-library</artifactId>
-	</dependency>
-	
-	<dependency>
- 			<groupId>com.typesafe.akka</groupId>
- 			<artifactId>akka-actor_2.10</artifactId>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.typesafe.akka</groupId>
-		<artifactId>akka-slf4j_2.10</artifactId>
-	</dependency>
+	<artifactId>restcomm.interpreter</artifactId>
+	<name>restcomm.interpreter</name>
 
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.commons</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
+	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
 
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.dao</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.asr</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.fax</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.sms.api</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.tts.api</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+		</dependency>
 
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.tts.acapela</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.tts.voicerss</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.telephony.api</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm.http</artifactId>
-		<version>${project.version}</version>
-		<scope>provided</scope>
-	</dependency>
+		<dependency>
+			<groupId>com.googlecode.libphonenumber</groupId>
+			<artifactId>libphonenumber</artifactId>
+		</dependency>
 
-    <dependency>
-        <groupId>org.mobicents.servlet.sip</groupId>
-        <artifactId>sip-servlets-spec</artifactId>
-        <version>${sipservletapi.version}</version>
-        <scope>provided</scope>
-    </dependency>
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+		</dependency>
 
-    <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>servlet-api</artifactId>
-        <scope>provided</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+		</dependency>
 
-	<dependency>
-		<groupId>junit</groupId>
-		<artifactId>junit</artifactId>
-		<scope>test</scope>
-	</dependency>
-	
-	<dependency>
-		<groupId>org.scalatest</groupId>
-		<artifactId>scalatest_2.9.1</artifactId>
-		<scope>test</scope>
-	</dependency>
-		
-	<dependency>
-		<groupId>com.typesafe.akka</groupId>
-		<artifactId>akka-testkit_2.10</artifactId>
-		<scope>test</scope>
-	</dependency>
-	
-</dependencies>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor_2.10</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-slf4j_2.10</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.asr</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.fax</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.sms.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.acapela</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.voicerss</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.telephony.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.http</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>sip-servlets-spec</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_2.9.1</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-testkit_2.10</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
 </project>
