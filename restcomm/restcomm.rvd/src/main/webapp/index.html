@@ -51,6 +51,7 @@
 		</div>
 	</div>	
 
+
 	<div class="container">
 
 		<div ng-if="rvdError" class="">
@@ -58,14 +59,7 @@
 				{{rvdError.message}}
 			</div>
 		</div>
-		<div ng-hide="rvdError" ng-view></div>	
-		
-		<!-- 
-		<div class="row" ng-show="appView == 'spinner'">
-			<div class='rvd-spinner' us-spinner="{radius:30, width:8, length: 16}">
-			</div>
-		</div>
-		 -->
+		<div ng-hide="rvdError" ng-view></div>			
 		<hr>
 		
 	</div>
@@ -73,7 +67,7 @@
 		
 	<script src="js/jquery-1.11.0.min.js"></script>
 	<script src="js/jquery-ui-1.10.3.custom.js"></script>
-	<script src="js/spin.min.js"></script>
+	<!-- <script src="js/spin.min.js"></script> -->
 	
 	<script src="js/upload/angular-file-upload-shim.min.js"></script>
 	<script src="js/angular-1.2.4.min.js"></script>
@@ -81,7 +75,7 @@
 	<script src="js/angular-route.js"></script>
 	<!-- <script src="js/angular-cookies.min.js"></script> -->
 	<script src="js/angular-dragdrop.js"></script>
-	<script src="js/angular-spinner.js"></script>
+	<!-- <script src="js/angular-spinner.js"></script> -->
 	<script src="js/angular-flash.min.js"></script>
 	<script src="js/sortable.js"></script>
     <script src="js/ui-bootstrap-tpls-0.10.0.js"></script>

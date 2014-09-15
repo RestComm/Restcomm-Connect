@@ -40,5 +40,21 @@ var loginCtrl = angular.module('Rvd')
 App.controller('homeCtrl', function ($scope, authInfo) {
 });
 
-
+angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'projectLogService', function ($scope, $routeParams, projectLogService) {
+	console.log('in projectLogCtrl');
+	$scope.projectName = $routeParams.projectName;
+	$scope.logData = '';
+	
+	function retrieveLog() {
+		projectLogService.retrieve().then(function (logData) {$scope.logData = logData;})
+	}
+	$scope.retrieveLog = retrieveLog;
+	
+	function resetLog() {
+		projectLogService.reset().then(function () {$scope.logData = "";});
+	}
+	$scope.resetLog = resetLog;
+	
+	retrieveLog($scope.projectName);
+}]);
 

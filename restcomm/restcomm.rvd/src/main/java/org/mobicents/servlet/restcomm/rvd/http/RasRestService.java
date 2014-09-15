@@ -150,7 +150,7 @@ public class RasRestService extends RestService {
             logger.error(returnedError,returnedError);
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, returnedError);
         } catch (RvdValidationException e) {
-            return buildInvalidResponce(Status.OK, RvdResponse.Status.INVALID, e.getReport());
+            return buildInvalidResponse(Status.OK, RvdResponse.Status.INVALID, e.getReport());
         } catch (StorageException e) {
             logger.error(e,e);
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
@@ -245,7 +245,7 @@ public class RasRestService extends RestService {
     public Response newRasApp(@PathParam("name") String projectNameOverride, @Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
-        BuildService buildService = new BuildService(projectStorage);
+        BuildService buildService = new BuildService(workspaceStorage);
         String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
 
 
@@ -266,12 +266,8 @@ public class RasRestService extends RestService {
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
                         String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser );
-//<<<<<<< HEAD
-                        ProjectState projectState = projectStorage.loadProject(effectiveProjectName);
+                        ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
                         buildService.buildProject(effectiveProjectName, projectState);
-/*=======
-                        buildService.buildProject(effectiveProjectName);
->>>>>>> ts720_rvd_issue419_application_logging*/
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);

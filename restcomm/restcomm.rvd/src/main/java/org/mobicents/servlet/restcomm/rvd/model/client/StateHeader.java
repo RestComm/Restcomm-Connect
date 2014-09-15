@@ -1,10 +1,15 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
 public class StateHeader {
+    // application logging settings for this project. If not null logging is enabled.
+    // We are using an object instead of a boolean to easily add properties in the future
+    public static class Logging {}
+
     String projectKind;
     String startNodeName;
     String version;
     String owner; // the Restcomm user id that owns the project or null if it has no owner at all. Added in 7.1.6 release
+    //Logging logging; - moved to the separate 'settings' file
     public StateHeader() {
     }
 
@@ -40,4 +45,7 @@ public class StateHeader {
         this.owner = owner2;
     }
 
+    public void setVersion(String version) {
+        this.version = version;
+    }
 }

@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -38,6 +39,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RvdErrorParsingRestcommXml;
+import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.UnauthorizedCallControlAccess;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
@@ -70,9 +72,7 @@ public class RvdController extends RestService {
     HttpServletRequest request;
 
     private RvdConfiguration rvdSettings;
-    //private ProjectStorage projectStorage;
     private ProjectService projectService;
-    //private Gson gson;
     private RvdContext rvdContext;
 
     private WorkspaceStorage workspaceStorage;
@@ -83,22 +83,9 @@ public class RvdController extends RestService {
         this.rvdContext = rvdContext;
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
-        workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
+        workspaceStorage = rvdContext.getWorkspaceStorage();
         projectService = new ProjectService(rvdContext, workspaceStorage);
     }
-
-
-    /*@PostConstruct
-    void init() {
-        gson = new Gson();
-        rvdContext = new ProjectAwareRvdContext(request, servletContext);
-        rvdSettings = rvdContext.getSettings();
-        projectStorage = rvdContext.getProjectStorage();
-        projectService = new ProjectService(rvdContext);
-
-        this.marshaler = rvdContext.getMarshaler();
-        this.workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
-    }*/
 
     private Response runInterpreter( ProjectAwareRvdContext rvdContext, String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
         String rcmlResponse;
@@ -113,7 +100,7 @@ public class RvdController extends RestService {
         } catch ( RvdException e ) {
             logger.error(e.getMessage(), e);
             rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
-            rcmlResponse = "<Response><Hangup/></Response>";
+            rcmlResponse = Interpreter.rcmlOnException();
         }
 
 
@@ -150,14 +137,20 @@ public class RvdController extends RestService {
     @Path("{appname}/controller")
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, @Context UriInfo ui) {
-        ProjectAwareRvdContext rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
-        init(rvdContext);
-        logger.info("Received Restcomm GET request");
-        logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
-        //logger.info("Using restcommPublicIP: " + rvdSettings.getEffectiveRestcommIp(httpRequest));
-        MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
+        ProjectAwareRvdContext rvdContext;
+        try {
+            rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
 
-        return runInterpreter(rvdContext, appname, httpRequest, requestParams);
+            init(rvdContext);
+            logger.info("Received Restcomm GET request");
+            logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+            MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
+
+            return runInterpreter(rvdContext, appname, httpRequest, requestParams);
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.ok(Interpreter.rcmlOnException(), MediaType.APPLICATION_XML).build();
+        }
     }
 
     @POST
@@ -165,30 +158,42 @@ public class RvdController extends RestService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        ProjectAwareRvdContext rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
-        init(rvdContext);
-        logger.info("Received Restcomm POST request");
-        logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
-        logger.debug("POST Params: " + requestParams.toString());
+        ProjectAwareRvdContext rvdContext;
+        try {
+            rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
+            init(rvdContext);
+            logger.info("Received Restcomm POST request");
+            logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+            logger.debug("POST Params: " + requestParams.toString());
 
-        return runInterpreter(rvdContext, appname, httpRequest, requestParams);
+            return runInterpreter(rvdContext, appname, httpRequest, requestParams);
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.ok(Interpreter.rcmlOnException(), MediaType.APPLICATION_XML).build();
+        }
     }
 
     @GET
     @Path("{appname}/resources/{filename}")
     public Response getWav(@PathParam("appname") String projectName, @PathParam("filename") String filename ) {
-        ProjectAwareRvdContext rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
-        init(rvdContext);
-        InputStream wavStream;
-
+        ProjectAwareRvdContext rvdContext;
         try {
-            wavStream = FsProjectStorage.getWav(projectName, filename, workspaceStorage);
-            return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename).build();
-        } catch (WavItemDoesNotExist e) {
-            return Response.status(Status.NOT_FOUND).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
-        } catch (StorageException e) {
-            //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+            rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
+            init(rvdContext);
+            InputStream wavStream;
+
+            try {
+                wavStream = FsProjectStorage.getWav(projectName, filename, workspaceStorage);
+                return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename).build();
+            } catch (WavItemDoesNotExist e) {
+                return Response.status(Status.NOT_FOUND).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+            } catch (StorageException e) {
+                //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
+            }
+        } catch (StorageException e1) {
+            logger.error(e1,e1);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -261,17 +266,26 @@ public class RvdController extends RestService {
 
     @GET
     @Path("{appname}/start")
-    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @Context UriInfo ui ) {
-
-        WorkspaceStorage workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), rvdContext.getMarshaler());
-
+    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui ) {
+        ProjectAwareRvdContext rvdContext;
         try {
+            rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
+            init(rvdContext);
+
+            // Load CC info from project
+            CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
+
+            // If an access token is present in the project make sure it matches the one in the url
+            if (info.accessToken != null ) {
+                if ( !info.accessToken.equals(accessToken) )
+                    throw new UnauthorizedCallControlAccess("Access restricted to application " + projectName + " for client " + request.getRemoteAddr());
+            }
+
             // Load configuration from Restcomm
             ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
             logger.info("using restcomm host: " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
 
-            // Load CC info from project
-            CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
+
 
             // Load rvd settings
             SettingsModel settingsModel = null;
@@ -313,6 +327,8 @@ public class RvdController extends RestService {
                 URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
                 MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
                 for ( String paramName : requestParams.keySet() ) {
+                    if ( "token".equals(paramName) )
+                        continue; // skip token parameter since it is used by this service for authentication and is not intented to get passed to the RVD application
                     // skip builtin parameters supplied by restcomm
                     if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
                         if ( !("From".equals(paramName) || "To".equals(paramName) || "Url".equals(paramName ) ) )  // filter out params for the executeAction() itself. Pass only parameters intended for the rcml application.
@@ -347,6 +363,9 @@ public class RvdController extends RestService {
                 .addParam("Url", rcmlUrl).done(marshaler.getGson(), CreateCallResponse.class);
 
             return Response.ok().build();
+        } catch (UnauthorizedCallControlAccess e) {
+            logger.warn(e,e);
+            return Response.status(Status.UNAUTHORIZED).build();
         } catch (CallControlException e) {
             logger.error(e,e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -369,30 +388,45 @@ public class RvdController extends RestService {
     @GET
     @Path("{appname}/log")
     public Response appLog(@PathParam("appname") String appName) {
-        ProjectAwareRvdContext rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
-        //init(new ProjectAwareRvdContext(appName, request, servletContext));
-        InputStream logStream;
+        ProjectAwareRvdContext rvdContext;
         try {
-            logStream = new FileInputStream(rvdContext.getProjectLogger().getLogFilePath());
-            return Response.ok(logStream, "text/plain")
-                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                    .header("Pragma", "no-cache")
-                    .build();
+            rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
 
-            //response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
-            //response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
-            //response.setDateHeader("Expires", 0);
-        } catch (FileNotFoundException e) {
-            return Response.ok().build(); // nothing to return. There is no log file
+            //init(new ProjectAwareRvdContext(appName, request, servletContext));
+            InputStream logStream;
+            try {
+                logStream = new FileInputStream(rvdContext.getProjectLogger().getLogFilePath());
+                return Response.ok(logStream, "text/plain")
+                        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                        .header("Pragma", "no-cache")
+                        .build();
+
+                //response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+                //response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+                //response.setDateHeader("Expires", 0);
+            } catch (FileNotFoundException e) {
+                return Response.status(Status.NOT_FOUND).build(); // nothing to return. There is no log file
+            }
+        } catch (StorageEntityNotFound e) {
+            return Response.status(Status.NOT_FOUND).build();
+        } catch (StorageException e1) {
+            logger.error(e1,e1);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GET
-    @Path("{appname}/log/reset")
+    @DELETE
+    @Path("{appname}/log")
     public Response resetAppLog(@PathParam("appname") String appName) {
-        ProjectAwareRvdContext rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
-        rvdContext.getProjectLogger().reset();
-        return Response.ok().build();
+        ProjectAwareRvdContext rvdContext;
+        try {
+            rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
+            rvdContext.getProjectLogger().reset();
+            return Response.ok().build();
+        } catch (StorageException e) {
+            // !!! return hangup!!!
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }

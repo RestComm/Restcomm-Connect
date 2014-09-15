@@ -2,16 +2,22 @@ package org.mobicents.servlet.restcomm.rvd.http;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.ExceptionResult;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 
 import com.google.gson.Gson;
 
+/**
+ * A generic response model object
+ * @author "Tsakiridis Orestis"
+ *
+ */
 public class RvdResponse {
 
     public enum Status { OK, INVALID, ERROR }
     Status rvdStatus; // ok - invalid - error
     ExceptionResult exception;
-    ValidationReport report;
+    ValidationReport report; // this may be reduntant data since there is always such a field inside ExceptionResult-exception
     Object payload; // for OK responses that are meant for data retrieval
 
     public RvdResponse() {
@@ -24,6 +30,14 @@ public class RvdResponse {
 
     public RvdResponse setStatus(Status status) {
         rvdStatus = status;
+        return this;
+    }
+
+    public RvdResponse setValidationException(ValidationException e) {
+        if (e != null) {
+            this.exception = new ExceptionResult( e.getClass().getSimpleName(), e.getMessage(), e.getValidationResult());
+            rvdStatus = Status.INVALID;
+        }
         return this;
     }
 

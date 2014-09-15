@@ -172,8 +172,8 @@ public class RasService {
         // add project state
         ProjectState projectState = storageBase.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
         projectState.getHeader().setOwner(null); // RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
-        projectStorage.storeProject(newProjectName, projectState, true);
-        //projectStorage.storeProjectState(newProjectName, new File(tempDir.getPath() + "/app/rvd/state" ));
+        FsProjectStorage.storeProject(true, projectState, newProjectName,workspaceStorage);
+        //projectStorage.storeProject(newProjectName, projectState, true);
 
         // and wav files one-by-one (if any)
         File wavDir = new File(tempDir.getPath() + "/app/rvd/wavs");

@@ -7,6 +7,7 @@ public class ProjectOptions {
 
     private String defaultTarget;
     private List<NodeName> nodeNames = new ArrayList<NodeName>();
+    private Boolean logging;
 
     public String getDefaultTarget() {
         return defaultTarget;
@@ -21,5 +22,13 @@ public class ProjectOptions {
 
     public void setNodeNames(List<NodeName> nodeNames) {
         this.nodeNames = nodeNames;
+    }
+
+    public Boolean getLogging() {
+        return logging;
+    }
+
+    public void setLogging(Boolean logging) {
+        this.logging = logging;
     }
 }
