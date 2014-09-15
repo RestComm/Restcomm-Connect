@@ -109,6 +109,7 @@ public class Interpreter {
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
     private ProjectLogger projectLogger;
+    private ProjectAwareRvdContext rvdContext;
 
     public ProjectLogger getProjectLogger() {
         return projectLogger;
@@ -143,8 +144,12 @@ public class Interpreter {
     private Map<String, String> variables = new HashMap<String, String>();
     private List<NodeName> nodeNames;
 
+    public static String rcmlOnException() {
+        return "<Response><Hangup/></Response>";
+    }
 
     public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
+        this.rvdContext = rvdContext;
         this.rvdSettings = rvdContext.getSettings();
         this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
@@ -273,7 +278,7 @@ public class Interpreter {
     public String interpret() throws RvdException {
         String response = null;
 
-        ProjectOptions projectOptions = projectStorage.loadProjectOptions(appName);
+        ProjectOptions projectOptions = FsProjectStorage.loadProjectOptions(appName, workspaceStorage); //rvdContext.getRuntimeProjectOptions();
         nodeNames = projectOptions.getNodeNames();
 
         if (targetParam == null || "".equals(targetParam)) {
@@ -327,7 +332,7 @@ public class Interpreter {
 
             if (rcmlModel == null )
                 rcmlModel = new RcmlResponse();
-            List<String> nodeStepnames = projectStorage.loadNodeStepnames(appName, target.getNodename());
+            List<String> nodeStepnames = FsProjectStorage.loadNodeStepnames(appName, target.getNodename(), workspaceStorage);
 
             // if no starting step has been specified in the target, use the first step of the node as default
             if (target.getStepname() == null && !nodeStepnames.isEmpty())
@@ -459,7 +464,8 @@ public class Interpreter {
 
                 logger.info("Requesting from url: " + url);
                 logger.debug("Requesting from url: " + url);
-                projectLogger.log("Requesting from url: " + url).tag("app",appName).tag("ES").tag("REQUEST").done();
+                if ( rvdContext.getProjectSettings().getLogging() )
+                    projectLogger.log("Requesting from url: " + url).tag("app",appName).tag("ES").tag("REQUEST").done();
                 if ( "POST".equals(esStep.getMethod()) ) {
                     HttpPost post = new HttpPost(url);
                     List <NameValuePair> values = new ArrayList <NameValuePair>();
@@ -487,17 +493,21 @@ public class Interpreter {
                         throw new RemoteServiceError("Service " + url + " failed with: " + response.getStatusLine() +". Throwing an error since no 'On Remote Exception' has been defined.");
                 }
 
-                // Build a JsonElement from the response
-               HttpEntity entity = response.getEntity();
-                if ( entity != null ) {
-                    JsonParser parser = new JsonParser();
-                    String entity_string = EntityUtils.toString(entity);
-                    //logger.info("ES: Received " + entity_string.length() + " bytes");
-                    //logger.debug("ES Response: " + entity_string);
-                    projectLogger.log(entity_string).tag("app",appName).tag("ES").tag("RESPONSE").done();
-                    response_element = parser.parse(entity_string);
-                }
-
+                // Parse the response if (a) there are assignments or (b) there is dynamic or mapped routing
+                if ( esStep.getAssignments() != null && esStep.getAssignments().size() > 0
+                        || esStep.getDoRouting() && ("responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) ) {
+                    HttpEntity entity = response.getEntity();
+                    if ( entity != null ) {
+                        JsonParser parser = new JsonParser();
+                        String entity_string = EntityUtils.toString(entity);
+                        //logger.info("ES: Received " + entity_string.length() + " bytes");
+                        //logger.debug("ES Response: " + entity_string);
+                        if ( rvdContext.getProjectSettings().getLogging() )
+                            projectLogger.log(entity_string).tag("app",appName).tag("ES").tag("RESPONSE").done();
+                        response_element = parser.parse(entity_string);
+                    }
+                } else
+                    logger.debug("ES: No parsing will be done to the response");
 
                 // *** Determine what to do next. Find the next module name or whether to continue in the current module ***
 

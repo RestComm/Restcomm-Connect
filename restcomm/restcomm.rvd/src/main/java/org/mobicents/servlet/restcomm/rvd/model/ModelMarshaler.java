@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.model;
 
+import java.lang.reflect.Type;
+
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
 
@@ -21,6 +23,11 @@ public class ModelMarshaler {
 
     public <T> T toModel( String jsonData, Class<T> modelClass ) {
         T instance = gsonUtil.fromJson(jsonData, modelClass);
+        return instance;
+    }
+
+    public <T> T toModel( String jsonData, Type gsonType ) {
+        T instance = gsonUtil.fromJson(jsonData, gsonType);
         return instance;
     }
 

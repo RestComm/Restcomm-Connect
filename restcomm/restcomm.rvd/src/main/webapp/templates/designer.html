@@ -33,6 +33,7 @@
 				</ul>
 	
 				<ul class="nav navbar-nav navbar-right">
+					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">Web Trigger</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Export <b class="caret"></b></a>
 						<ul class="dropdown-menu">
@@ -40,16 +41,20 @@
 							<li><a href="/restcomm-rvd/services/projects/{{projectName}}/archive"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;zip file</a></li>
 						</ul>
 					</li>
-					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i class='fa fa-save'></i>&nbsp; Save <span class='spinner-save' us-spinner='spinnerSettings' spinner-key="spinner-save"></span></a></li>
+					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; Save</a></li>
 					<li class='rvd-appurl' ng-show="startNodeSet()"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
-					<li><a href="#/project-manager/{{projectKind ? projectKind : 'voice'}}"><i class='fa fa-power-off'></i>&nbsp; Close <em>{{projectName}}</em></a></li>
+					<li><a href="#/project-manager/{{projectKind ? projectKind : 'voice'}}" title="Close {{projectName}}"><i class='fa fa-power-off'></i>&nbsp;</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Settings"><i class="fa fa-cog"></i> <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">Project Settings</a></li>
+							<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li>
+							<li><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text">Application log</a></li>
+						</ul>
+					</li>
 				</ul>
 			</div>
 		</nav>
-		
-		<div class='rvd-alerts'>
-			<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert(alert)">{{alert.msg}}</alert>
-		</div>
 		
 		<div class='row rvd-submenu'>
 			<div class='col-md-2'>
@@ -58,83 +63,11 @@
 				</div>
 			</div>
 			<div class='col-md-10 rvd-view-selector'>
-				<ul class="nav nav-pills pull-right">
-					<li ng-class="{active: selectedView=='rcml'}"><a ng-click="selectedView='rcml'" class="rvd-clickable-text">RCML</a></li>
-					<li ng-class="{active: selectedView=='cc'}"><a ng-click="selectedView='cc'" class="rvd-clickable-text">Call Control</a></li>
-					<li><a ng-click="showSettingsModal(settings)" class="rvd-clickable-text"><i class="fa fa-cog"></i></a></li>
-				</ul>
 			</div>
 	
 		</div>
 	
-		<div ng-show="selectedView=='cc'" class="rvd-ccview row center-block">
-
-			<h2 class="page-header">Call Control <small><i class="fa fa-gears pull-right"></i></small> <i class="fa fa-phone pull-right"></i> </h2>
-			<p>
-				Enabling CC will allow your application to get started over HTTP
-			</p>
-			<p>
-				<input type="checkbox" ng-model="ccEnabled" ng-click="toggleCallControl()"> Enable
-			</p>
-
-			<div ng-show="ccEnabled">
-
-				<div ng-repeat="lane in ccInfo.lanes" class="bg-info">
-					
-					<div class="form-group">
-						<h3 class="lead">Start action</h3>
-
-						<p>Use this url to start this application using a simple GET request. A outgoing call will be made to the destination number specified and the RCML part of this application will run.</p>
-						<p><code>http://{{getRvdHost()}}:{{getRvdPort()}}/restcomm-rvd/services/apps/{{projectName}}/start</code></p>
-					</div>
-					
-					<div class="form-group">
-						<h4>Call destination and origin</h4>
-						<p class="help-block">Add <em>from</em> and <em>to</em> paremeters to set the destination and originating numbers for the outgoing call.</p>
-						<p><code>http://{{getRvdHost()}}:{{getRvdPort()}}/restcomm-rvd/services/apps/{{projectName}}/start<strong>?from=12345&amp;to=client:bob</strong></code></p>
-					</div>
-					
-					<div class="form-group">
-						<h4>Additional parameters</h4>
-						<p class="help-block">Additional parameters can be added to the above url. They will be available as <em>application scoped</em> RVD variables</p>
-						<p>
-							<code>http://{{getRvdHost()}}:{{getRvdPort()}}/restcomm-rvd/services/apps/{{projectName}}/start?from=12345<strong>&amp;param1=foo&amp;param2=bar</strong></code>
-						</p>
-					</div>
-					<!--
-					<div class="form-group">
-						<label>Application</label>
-						<select class="form-control">
-								<option ng-model="lane.startPoint.rcmlUrl" value="">{{projectName}} (current)</option>
-						</select>
-					</div>
-					-->
-					<div class="form-group">
-						<h4>Default values</h4>
-						<p class="help-block">Provide defaults for destination and originating number URL parameters</p>
-						<div class="input-group col-md-6">
-							<span class="input-group-addon">To</span>
-							<input ng-model="lane.startPoint.to" type="text" class="form-control" placeholder="default destination">
-						</div>
-						<div class="input-group col-md-6">
-							<span class="input-group-addon">From</span>
-							<input ng-model="lane.startPoint.from" type="text" class="form-control" placeholder="default call source">
-						</div>	
-					</div>
-					<br/>
-					<br/>
-					<br/>
-					<br/>
-
-
-					
-				</div>
-			</div>	
- 
-
-		</div>
-	
-		<div ng-show="selectedView=='rcml'" class="rvd-rcmlview row">
+		<div class="rvd-rcmlview row">
 	
 			<!-- Left menu -->
 			<div class="col-md-2">

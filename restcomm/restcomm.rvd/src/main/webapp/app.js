@@ -1,4 +1,4 @@
-var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' ,'angularSpinner','basicDragdrop']);
+var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','basicDragdrop']);
 var rvdMod = App;
 
 App.config([ '$routeProvider',  function($routeProvider) {
@@ -22,7 +22,7 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		controller : 'designerCtrl',
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
-			ccInfo: designerCtrl.getCcInfo
+			projectSettings: function (projectSettingsService) {return projectSettingsService.retrieve();}
 		}
 	})
 	.when('/packaging/:projectName', {
@@ -52,6 +52,10 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		templateUrl : 'templates/login.html',
 		controller : 'loginCtrl'
 	})
+	.when('/designer/:projectName/log', {
+		templateUrl : 'templates/projectLog.html',
+		controller : 'projectLogCtrl'
+	})	
 	.otherwise({
 		redirectTo : '/home'
 	});
