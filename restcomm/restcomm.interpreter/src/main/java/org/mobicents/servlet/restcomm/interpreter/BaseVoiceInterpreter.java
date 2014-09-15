@@ -230,6 +230,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The RCML parser.
     ActorRef parser;
     Tag verb;
+    Tag gatherVerb;
+    Boolean processingGather;
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
@@ -321,6 +323,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(finishRecording, hangingUp));
         transitions.add(new Transition(processingGatherChildren, processingGatherChildren));
         transitions.add(new Transition(processingGatherChildren, gathering));
+        transitions.add(new Transition(processingGatherChildren, synthesizing));
         transitions.add(new Transition(processingGatherChildren, hangingUp));
         transitions.add(new Transition(gathering, finishGathering));
         transitions.add(new Transition(gathering, hangingUp));
@@ -1149,6 +1152,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+            if (gatherVerb == null)
+                    gatherVerb = verb;
+            processingGather = true;
             final Class<?> klass = message.getClass();
             final NotificationsDao notifications = storage.getNotificationsDao();
             if (SpeechSynthesizerResponse.class.equals(klass)) {
@@ -1245,8 +1251,12 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         }
                         String text = child.text();
                         if (text != null && !text.isEmpty()) {
-                            final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
-                            synthesizer.tell(synthesize, source);
+//                            final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
+//                            synthesizer.tell(synthesize, source);
+//                            break;
+                            String hash = hash(child);
+                            DiskCacheRequest request = new DiskCacheRequest(hash);
+                            cache.tell(request, source);
                             break;
                         }
                     } else if (pause.equals(child.name())) {
@@ -1287,6 +1297,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 // Start gathering.
                 if (gatherChildren.isEmpty()) {
+                    verb = gatherVerb;
                     final StartGathering start = StartGathering.instance();
                     source.tell(start, source);
                 }

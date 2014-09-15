@@ -478,17 +478,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (SpeechSynthesizerResponse.class.equals(klass)) {
             if (acquiringSynthesizerInfo.equals(state)) {
                 fsm.transition(message, acquiringCallInfo);
+            } else if (processingGatherChildren.equals(state) || processingGather) {
+                final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
+                if (response.succeeded()) {
+                    fsm.transition(message, processingGatherChildren);
+                } else {
+                    fsm.transition(message, hangingUp);
+                }
             } else if (synthesizing.equals(state)) {
                 final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
                 if (response.succeeded()) {
                     fsm.transition(message, caching);
-                } else {
-                    fsm.transition(message, hangingUp);
-                }
-            } else if (processingGatherChildren.equals(state)) {
-                final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
-                if (response.succeeded()) {
-                    fsm.transition(message, processingGatherChildren);
                 } else {
                     fsm.transition(message, hangingUp);
                 }
@@ -645,7 +645,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (logger.isDebugEnabled()) {
                     logger.debug("DiskCacheResponse is " + response.toString());
                 }
-                if (checkingCache.equals(state)) {
+                if (checkingCache.equals(state) || processingGatherChildren.equals(state)) {
                     fsm.transition(message, synthesizing);
                 } else {
                     fsm.transition(message, hangingUp);
