@@ -377,9 +377,10 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 					console.log("Validation error");
 					notifications.put({type:"warning", message:"Project saved with validation errors"});
 					var r = /^\/nodes\/([0-9]+)\/steps\/([0-9]+)$/;
-					for (var i=0; i < reason.errorItems.length; i++) {
-						var failurePath = reason.errorItems[i].failurePath;
-						m = r.exec( reason.errorItems[i].failurePath );
+					var errorItems = reason.exception.jsonSchemaReport.errorItems;
+					for (var i=0; i < errorItems.length; i++) {
+						var failurePath = errorItems[i].failurePath;
+						m = r.exec( errorItems[i].failurePath );
 						if ( m != null ) {
 							console.log("warning in module " + $scope.nodes[ m[1] ].name + " step " + $scope.nodes[ m[1] ].steps[m[2]].name);
 							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;

@@ -16,10 +16,15 @@ public class RestService {
         return Response.status(httpStatus).entity(rvdResponse.asJson()).build();
     }
 
-    Response buildInvalidResponce(Response.Status httpStatus, RvdResponse.Status rvdStatus, ValidationReport report ) {
+    Response buildInvalidResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, ValidationReport report ) {
         RvdResponse rvdResponse = new RvdResponse(rvdStatus).setReport(report);
         return Response.status(httpStatus).entity(rvdResponse.asJson()).build();
     }
+
+    //Response buildInvalidResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, RvdException exception ) {
+    //    RvdResponse rvdResponse = new RvdResponse(rvdStatus).setException(exception);
+    //    return Response.status(httpStatus).entity(rvdResponse.asJson()).build();
+    //}
 
     Response buildOkResponse() {
         RvdResponse rvdResponse = new RvdResponse( RvdResponse.Status.OK );

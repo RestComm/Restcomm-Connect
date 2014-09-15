@@ -1,10 +1,20 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-	"title": "RVD project 1.0",
-	"description": "Specification for RVD 7.1.5",
+	"title": "RVD project 1.1",
+	"description": "Specification for RVD 7.2.0",
 	"rvdproject": {
 		"type": "object",
 		"properties": {
+			"header": {
+				"type":"object",
+				"uniqueItems": true,
+				"properties": {
+					"startNodeName": {"type": "string"},
+					"projectKind": {"type": "string"},
+					"version": {"type": "string"},
+					"owner": {"type": "string"}
+				}
+			},
 			"nodes": {
 				"type": "array",
 				"items": {
@@ -14,6 +24,7 @@
 					"properties": {
 						"name": {"type": "string"},
 						"label": {"type": "string"},
+						"kind": {"type": "string"}, 
 						"steps": {
 							"type": "array",
 							"items": {
@@ -36,8 +47,7 @@
 									{ "$ref": "ussdLanguageStep.json" }
 								]
 							}
-						},
-						"iface": {"type": "object"}
+						}
 					},
 					"required": ["name","label","steps"]
 				}

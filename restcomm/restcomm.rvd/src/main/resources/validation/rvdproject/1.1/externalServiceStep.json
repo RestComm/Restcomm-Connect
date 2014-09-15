@@ -30,10 +30,21 @@
 			}
 		},
 		"doRouting": {"type":"boolean"},
-	
-		"iface": {"type": "object"}
+		"nextType": {"enum": ["fixed","responseBased","mapped"]},
+		"routeMappings": {
+			"type":"array",
+			"items": {
+				"type":"object",
+				"properties": {
+					"value": {"type":"string", "minLength":1},
+					"next": {"type":"string", "minLength":1}
+				},
+				"required": ["value","next"]
+			}
+		},
+		"exceptionNext": {"type": "string"}
 	},
-	"required": ["name","kind","label","title","url","urlParams","assignments","doRouting"],
+	"required": ["name","kind","label","title","url","doRouting"],
 	
 	"definitions":{
 		"urlParam": {
