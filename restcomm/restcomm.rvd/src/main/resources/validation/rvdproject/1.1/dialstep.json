@@ -24,10 +24,7 @@
 				]
 			}
 		},
-		"nextModule": {"type":"string"},
-
-	
-		"iface": {"type": "object"}
+		"nextModule": {"type":"string"}
 	},
 	"required": ["name","kind","label","title","dialNouns"],
 	
@@ -38,8 +35,7 @@
 				"dialType": {"enum":["number"]},
 				"destination":{"type":"string"},
 				"sendDigits": { "type": "string", "minLength":1 },
-				"beforeConnectModule":{ "type": "string", "minLength":1 },
-				"iface": {"type": "object"}
+				"beforeConnectModule":{ "type": "string", "minLength":1 }
 			},
 			"required":["dialType","destination"],
 			"additionalProperties": false
@@ -48,8 +44,7 @@
 			"type":"object",
 			"properties": {
 				"dialType": {"enum":["client"]},
-				"destination":{"type":"string"},
-				"iface": {"type": "object"}
+				"destination":{"type":"string"}
 			},
 			"required": ["dialType","destination"],
 			"additionalProperties": false
@@ -67,9 +62,7 @@
 				"waitUrl": { "type":"string", "minLength":1 },
 				"waitModule": {"type": "string", "minLength":1},
 				"waitMethod": {"enum":["GET","POST"]},
-				"maxParticipants": {"type":"integer"},
-				
-				"iface": {"type": "object"}
+				"maxParticipants": {"type":"integer"}
 			},
 			"required": ["dialType","destination"],
 			"additionalProperties": false
@@ -78,8 +71,7 @@
 			"type":"object",
 			"properties": {
 				"dialType": {"enum":["sipuri"]},
-				"destination":{"type":"string"},
-				"iface": {"type": "object"}
+				"destination":{"type":"string"}
 			},
 			"required": ["dialType","destination"],
 			"additionalProperties": false

@@ -13,9 +13,7 @@
 				{"type":"null"},
 				{"enum":["GET","POST"]}
 			]
-		},
-	
-		"iface": {"type": "object"}
+		}
 	},
 	"required": ["name","kind","label","title","url","method"]
 }

@@ -8,9 +8,7 @@
 		"label": {"type": "string"},
 		"title": {"type": "string"},
 		"text": {"type": "string"},
-		"language": {"type": ["string","null"]},
-	
-		"iface": {"type": "object"}
+		"language": {"type": ["string","null"]}
 	},
 	"required": ["name","kind","label","title","text"]
 }
