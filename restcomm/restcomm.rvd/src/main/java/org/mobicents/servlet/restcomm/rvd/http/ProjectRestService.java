@@ -215,8 +215,11 @@ public class ProjectRestService extends RestService {
                     throw new WebApplicationException(Response.Status.UNAUTHORIZED);
                 }
             } catch (ValidationException e) {
-                Gson gson = new Gson();
-                return Response.ok(gson.toJson(e.getValidationResult()), MediaType.APPLICATION_JSON).build();
+                RvdResponse rvdResponse = new RvdResponse().setValidationException(e);
+                return Response.status(Status.OK).entity(rvdResponse.asJson()).build();
+                //return buildInvalidResponse(Status.OK, RvdResponse.Status.INVALID,e);
+                //Gson gson = new Gson();
+                //return Response.ok(gson.toJson(e.getValidationResult()), MediaType.APPLICATION_JSON).build();
             } catch (IncompatibleProjectVersion e) {
                 logger.error(e);
                 return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();

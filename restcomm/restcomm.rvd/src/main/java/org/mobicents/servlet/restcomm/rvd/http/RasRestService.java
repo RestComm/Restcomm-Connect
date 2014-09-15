@@ -150,7 +150,7 @@ public class RasRestService extends RestService {
             logger.error(returnedError,returnedError);
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, returnedError);
         } catch (RvdValidationException e) {
-            return buildInvalidResponce(Status.OK, RvdResponse.Status.INVALID, e.getReport());
+            return buildInvalidResponse(Status.OK, RvdResponse.Status.INVALID, e.getReport());
         } catch (StorageException e) {
             logger.error(e,e);
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
