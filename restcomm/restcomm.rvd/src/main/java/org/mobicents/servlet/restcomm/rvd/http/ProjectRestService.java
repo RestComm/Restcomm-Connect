@@ -58,6 +58,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -168,7 +169,7 @@ public class ProjectRestService extends RestService {
             ProjectState projectState = projectService.createProject(name, kind, loggedUser.getName());
             BuildService buildService = new BuildService(workspaceStorage);
             buildService.buildProject(name, projectState);
-        } catch (ProjectDirectoryAlreadyExists e) {
+        } catch (ProjectAlreadyExists e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.CONFLICT).build();
         } catch (StorageException e) {
