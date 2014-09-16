@@ -44,19 +44,68 @@ angular.module('Rvd').service('projectModules', [function () {
 	return serviceInstance;
 }]);
 
-angular.module('Rvd').service('authentication', ['$browser', '$q', function ($browser, $q) {
+angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', function ($http, $browser, $q) {
 	//console.log("Creating authentication service");
 	var serviceInstance = {};
+	var authInfo = {};
+	
+	function refresh() {
+		authInfo.rvdticket = $browser.cookies().rvdticket;
+	}
+	
+	/*serviceInstance.getTicket = function () {
+		refresh();
+		return authInfo.rvdticket;
+	}*/
+	
+	function doLogin(username, password) {
+		var deferred = $q.defer();
+		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
+		.success ( function () {
+			console.log("login successful");
+			deferred.resolve();
+		})
+		.error( function (data, status) {
+			console.log("error logging in");
+			deferred.reject(data);
+		});
+		return deferred.promise;
+	}
+	serviceInstance.doLogin = doLogin;
+	
+	function doLogout() {
+		var deferred = $q.defer();
+		$http({	url:'services/auth/logout', method:'GET'})
+		.success ( function () {
+			console.log("logged out");
+			deferred.resolve();
+		})
+		.error( function (data, status) {
+			console.log("error logging out");
+			deferred.reject(data);
+		});		
+		return deferred.promise;
+	}
+	serviceInstance.doLogout = doLogout;
+	
+	serviceInstance.getAuthInfo = function () {
+		return authInfo;
+	}
+	
+	serviceInstance.clearTicket = function () {
+		console.log("clearing tickect cookie");
+		$browser.cookies().rvdticket = undefined;
+		authInfo.rvdticket = undefined;
+	}
 	
 	serviceInstance.looksAuthenticated = function () {
-		var currentCookies = $browser.cookies();
-		//console.log("checking $browser cookies...");
-		//console.log( currentCookies );
-
-		if ( !currentCookies.rvdticket )
+		refresh();
+		if ( !authInfo.rvdticket )
 			return false;
 		return true;
 	}
+	
+	
 	
 	serviceInstance.authResolver = function() {
 		var deferred = $q.defer();
