@@ -61,11 +61,11 @@ public class LoginRestService extends RestService {
                 Ticket ticket = new Ticket(userId);
                 tickets.putTicket( ticket );
 
-                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket.getTicketId()) ).build();
+                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket) ).build();
             }
             else {
                 logger.debug("Authentication error for user " + userId);
-                return Response.status(Status.UNAUTHORIZED).cookie( SecurityUtils.createTicketCookie("") ).build();
+                return Response.status(Status.UNAUTHORIZED).cookie( SecurityUtils.createTicketCookie(null) ).build();
             }
         } catch (RvdSecurityException e) {
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, null);
@@ -93,7 +93,7 @@ public class LoginRestService extends RestService {
                 tickets.putTicket( ticket );
 
                 //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
-                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket.getTicketId()) ).build();
+                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket) ).build();
             }
             else {
                 logger.debug("Authentication error for user " + credentials.getUsername());
@@ -114,7 +114,7 @@ public class LoginRestService extends RestService {
 
         // removing the cookie by setting the max-age to 0
         //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, "", "/restcomm-rvd/services", null, null,0, false ) ).build();
-        return Response.ok().cookie( SecurityUtils.createTicketCookie("") ).build();
+        return Response.ok().cookie( SecurityUtils.createTicketCookie(null) ).build();
     }
 
 

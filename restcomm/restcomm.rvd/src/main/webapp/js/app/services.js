@@ -50,13 +50,14 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 	var authInfo = {};
 	
 	function refresh() {
-		authInfo.rvdticket = $browser.cookies().rvdticket;
-	}
-	
-	/*serviceInstance.getTicket = function () {
-		refresh();
-		return authInfo.rvdticket;
-	}*/
+		authInfo.rvdticket = undefined;
+		authInfo.username = undefined;
+		var matches = RegExp( "^([^:]+)\:(.*)$" ).exec( $browser.cookies().rvdticket );
+		if (matches != null) {
+			authInfo.rvdticket = matches[2];
+			authInfo.username = matches[1];
+		}
+	}	
 	
 	function doLogin(username, password) {
 		var deferred = $q.defer();
@@ -93,9 +94,9 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 	}
 	
 	serviceInstance.clearTicket = function () {
-		console.log("clearing tickect cookie");
 		$browser.cookies().rvdticket = undefined;
 		authInfo.rvdticket = undefined;
+		authInfo.username = undefined;
 	}
 	
 	serviceInstance.looksAuthenticated = function () {
