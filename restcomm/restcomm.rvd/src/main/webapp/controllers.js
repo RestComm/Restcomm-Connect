@@ -20,19 +20,26 @@ App.controller('AppCtrl', function ($rootScope, $location) {
 });
 
 var loginCtrl = angular.module('Rvd')
-.controller('loginCtrl', ['$scope', '$http', 'notifications', '$location', function ($scope, $http, notifications, $location) {
+.controller('loginCtrl', ['authentication', '$scope', '$http', 'notifications', '$location', function (authentication, $scope, $http, notifications, $location) {
 //	console.log("run loginCtrl ");
+	authentication.clearTicket();
 	
 	$scope.doLogin = function (username, password) {
-		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
+		authentication.doLogin(username,password).then(function () {
+			$location.path("/home");
+		}, function () {
+			notifications.put({message:"Login failed", type:"danger"});
+		})
+		
+		/*$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
 		.success ( function () {
 			console.log("login successful");
-			$location.path("/home");
+			
 		})
 		.error( function () {
 			console.log("error logging in");
 			notifications.put({message:"Login failed", type:"danger"});
-		});
+		});*/
 	}
 }]);
 
@@ -58,3 +65,17 @@ angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'p
 	retrieveLog($scope.projectName);
 }]);
 
+App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', function ($scope, authentication, $location) {
+	$scope.authInfo = authentication.getAuthInfo();
+	//$scope.username = authentication.getTicket(); //"Testuser@test.com";
+	
+	function logout() {
+		console.log("logging out");
+		authentication.doLogout().then(function () {
+			$location.path("/login");
+		}, function () {
+			$location.path("/login");
+		});
+	}
+	$scope.logout = logout;
+}]);

@@ -9,6 +9,7 @@ var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('Unauthorize
 					var exceptionName = response.data.exception.className;
 					//console.log("exceptionName " + exceptionName);
 					if ( exceptionName == 'UserNotAuthenticated' ) {
+						//authentication.clearTicket();
 						$location.path("/login");
 						return $q.reject(response);
 					}
