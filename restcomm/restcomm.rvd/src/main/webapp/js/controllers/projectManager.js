@@ -1,4 +1,4 @@
-App.controller('projectManagerCtrl', function (notifications, $scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
+App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
@@ -31,7 +31,7 @@ App.controller('projectManagerCtrl', function (notifications, $scope, $http, $lo
 			if (status == 409) {
 				console.log("project already exists");
 				//$scope.notifications.unshift({message:"A Voice, SMS or USSD project  with that name already exists" });
-				notifications.put({'danger','A Voice, SMS or USSD project  with that name already exists in the workspace.'});
+				notifications.put({type:'danger',message:'A Voice, SMS or USSD project  with that name already exists in the workspace.'});
 				//$timeout(function () {
 				//	$scope.notifications.pop(); 
 				//}, 5000);
