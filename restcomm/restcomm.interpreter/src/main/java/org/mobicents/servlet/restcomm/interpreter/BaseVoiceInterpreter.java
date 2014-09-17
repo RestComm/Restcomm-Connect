@@ -231,7 +231,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     ActorRef parser;
     Tag verb;
     Tag gatherVerb;
-    Boolean processingGather;
+    Boolean processingGather = false;
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
@@ -1034,7 +1034,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
 
             Map<String, String> details = getSynthesizeDetails(verb);
-            if (details != null && !details.isEmpty()) {
+            if (details != null && !details.isEmpty() && details.get("text") != null) {
                 String voice = details.get("voice");
                 String language = details.get("language");
                 String text = details.get("text");
