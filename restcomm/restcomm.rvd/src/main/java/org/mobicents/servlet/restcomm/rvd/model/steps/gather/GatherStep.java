@@ -22,6 +22,7 @@ public class GatherStep extends Step {
     private Integer numDigits;
     private List<Step> steps;
     private Validation validation;
+    private Step invalidMessage;
     private Menu menu;
     private Collectdigits collectdigits;
     private String gatherType;
@@ -40,7 +41,6 @@ public class GatherStep extends Step {
         private String next;
     }
     public final class Validation {
-        private Step messageStep;
         private String userPattern;
         private String regexPattern;
     }
@@ -138,7 +138,7 @@ public class GatherStep extends Step {
         }
 
         if ( !valid ) { // this should always be true
-            interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null, (validation != null  && validation.messageStep != null ) ? validation.messageStep : null);
+            interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null, ( invalidMessage != null ) ? invalidMessage : null);
         }
     }
 }
