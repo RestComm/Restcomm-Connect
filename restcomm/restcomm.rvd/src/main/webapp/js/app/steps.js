@@ -113,7 +113,7 @@ angular.module('Rvd')
 		this.finishOnKey = undefined;
 		this.numDigits = undefined;
 		this.steps = [];
-		this.validation = {messageStep: new sayModel(), pattern: "", iface:{userPattern:'', userPatternType:"One of"}};
+		this.validation = {messageStep: new sayModel(), userPattern: "", regexPattern: undefined};
 		this.gatherType = "menu";
 		this.menu = {mappings:[] }; //{digits:1, next:"welcome.step1"}
 		this.collectdigits = {collectVariable:'',next:'', scope:"module"};
@@ -136,10 +136,10 @@ angular.module('Rvd')
 		return this;
 	}
 	GatherModel.prototype.validate = function() {
-		if (!this.validation)
-				this.validation = {messageStep: new sayModel(), pattern: "", iface:{userPattern:'', userPatternType:"One of"}};
-		if (!this.validation.iface || angular.equals({},this.validation.iface) )
-			this.validation.iface = {userPattern:this.validation.pattern, userPatternType:"Regex"};
+		if (!this.validation || (!this.validation.userPattern && !this.validation.regexPattern))
+			this.validation = {messageStep: new sayModel(), userPattern: "", regexPattern: undefined};
+		if (!this.validation.messageStep)
+			this.validation.messageStep = new sayModel();
 		if (!this.menu)
 			this.menu = {mappings:[] };
 		if (!this.collectdigits)
@@ -153,6 +153,10 @@ angular.module('Rvd')
 		else
 		if (clone.gatherType == "collectdigits")
 			delete clone.menu;
+		if (!clone.validation.userPattern && !clone.validation.regexPattern)
+			delete clone.validation;
+		if (clone.validation && clone.validation.messageStep.phrase == "")
+			delete clone.validation.messageStep;
 		for (var i=0; i<clone.steps.length; i++) {
 			var step;
 			if (clone.steps[i].kind == 'say')
