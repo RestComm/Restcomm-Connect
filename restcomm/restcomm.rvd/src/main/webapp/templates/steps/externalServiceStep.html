@@ -59,9 +59,9 @@
                             <p>
                                 All variables variables created this way will be available for use in this module (or the next if a 'fixed' routing decision is made).
                             </p>
-                            <h6><strong>Dynamic routing</strong></h6>
+                            <h6><strong>Dynamic/Mapped routing</strong></h6>
                             <p>
-                            	If dynamic routing is enabled you can limit the scope of an RVD variable to a single module by choosing it from the 'Module scope' dropdown. Leave it blank to execute the assignment for all modules. 
+                            	If dynamic or mapped routing is enabled you can limit the scope of an RVD variable to a single module by choosing it from the 'Module scope' dropdown. Leave it blank to execute the assignment for all modules. 
                             </p>
                             <div class="wellinfo-rollup"><i ng-click='step.iface.helpCollapsed = !step.iface.helpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
                          </div> 
@@ -174,7 +174,7 @@
 								 -->
 								<div class="row form-group">
 									<div class="input-group col-md-12">
-										<span class="input-group-addon">On Remote Error</span>
+										<span class="input-group-addon help-tooltip" title="Route to this module if an HTTP error code is returned">On Remote Error</span>
 										<module-picker ng-model='step.exceptionNext'></module-picker>
 									</div>
 								</div>																
