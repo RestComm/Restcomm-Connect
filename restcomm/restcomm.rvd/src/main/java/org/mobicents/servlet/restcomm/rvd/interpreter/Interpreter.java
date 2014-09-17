@@ -533,7 +533,7 @@ public class Interpreter {
                         }
                     }
                     // if no next route has been found throw an error
-                    if ( RvdUtils.isEmpty(next) ) {
+                    if ( "fixed".equals(esStep.getNextType()) && RvdUtils.isEmpty(next) ) {
                         throw new InterpreterException("No valid module could be found for ES routing"); // use a general exception for now.
                         //next = esStep.getDefaultNext();
                         //if ( RvdUtils.isEmpty(next) )
