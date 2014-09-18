@@ -15,55 +15,6 @@
 	/*height: 20px;*/
 }
 
-.editor .panel-heading {
-	padding: 5px 10px;
-}
-
-.header .cogs {
-	font-size: 41px;
-}
-
-.editor {
-	min-height: 580px;
-	background-color: rgb(240, 240, 240);
-}
-
-.toggle_step:hover {
-	opacity:0.6;
-}
-
-.step.panel {
-	margin-bottom: 5px;
-}
-
-.node-bootstrap {
-	margin-bottom: 15px;
-	text-align: right;
-}
-
-.node-bootstrap textarea {
-	margin-top: 10px;
-	height: 170px;
-}
-
-.collapse-button {
-	font-size: 21px;
-	font-weight: bold;
-}
-
-.container {
-	margin-top: 85px;
-	/*min-height: 500px;*/
-}
-
-.panel-rvdstep > .panel-heading {
-	background-color: #f0f0f0;
-}
-
-.panel-rvdstep {
-	/*border: none;*/
-	box-shadow: 1px 1px 1px 1px #ccc;
-}
 
 label {
 	font-weight: normal;
@@ -519,6 +470,78 @@ textarea.medium {
 	margin-left: auto;
 	margin-right: auto;
 }
+
+
+/* ------------------ #/designer --------------------------- */
+.editor .panel-heading {
+	padding: 5px 10px;
+}
+
+.header .cogs {
+	font-size: 41px;
+}
+
+.editor {
+	min-height: 580px;
+	background-color: rgb(240, 240, 240);
+}
+
+.toggle_step:hover {
+	opacity:0.6;
+}
+
+.step.panel {
+	margin-bottom: 5px;
+}
+
+.node-bootstrap {
+	margin-bottom: 15px;
+	text-align: right;
+}
+
+.node-bootstrap textarea {
+	margin-top: 10px;
+	height: 170px;
+}
+
+.collapse-button {
+	font-size: 21px;
+	font-weight: bold;
+}
+
+.container {
+	margin-top: 85px;
+	/*min-height: 500px;*/
+}
+
+.panel-rvdstep > .panel-heading {
+	background-color: #f0f0f0;
+}
+
+.panel-rvdstep {
+	/*border: none;*/
+	box-shadow: 1px 1px 1px 1px #ccc;
+}
+
+.editor .nav > li > a {
+	padding: 7px 15px;
+	margin-right:5px;
+}
+
+.editor .nav .caret {
+	border-top-color: white;
+}
+
+.editor .top-menu .btn-primary:hover {
+	background-color: #428BCA;
+	opacity: 0.8;
+}
+
+.editor .top-menu .btn-primary:focus {
+	background-color: #428BCA;
+	opacity: 0.8;
+}
+
 
 /* ------------------ #/packaging/ view -------------------- */
 .rvd-packaging .col-md-4 .rvd-appversion {
