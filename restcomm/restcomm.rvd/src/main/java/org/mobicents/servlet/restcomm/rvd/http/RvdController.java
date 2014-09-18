@@ -40,7 +40,6 @@ import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.CallControlExce
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RvdErrorParsingRestcommXml;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.UnauthorizedCallControlAccess;
-import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
@@ -98,9 +97,10 @@ public class RvdController extends RestService {
             Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams, workspaceStorage);
             rcmlResponse = interpreter.interpret();
 
-        } catch ( RvdException e ) {
+        } catch ( Exception e ) {
             logger.error(e.getMessage(), e);
-            rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
+            if ( rvdContext.getProjectSettings().getLogging() )
+                rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
             rcmlResponse = Interpreter.rcmlOnException();
         }
 

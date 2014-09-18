@@ -319,6 +319,8 @@ public class Interpreter {
     public String interpret(String targetParam, RcmlResponse rcmlModel, Step prependStep ) throws InterpreterException, StorageException {
 
         logger.debug("starting interpeter for " + targetParam);
+        if ( rvdContext.getProjectSettings().getLogging() )
+            projectLogger.log("Running target: " + targetParam).tag("app",appName).done();
 
         target = Interpreter.parseTarget(targetParam);
 
