@@ -21,7 +21,7 @@ Ready to take Restcomm for a spin? [TRY IT NOW](https://aws.amazon.com/marketpla
 Downloads
 ========
 
-[Get the latest release!](https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/)
+[Get the latest release!](https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/) or [TRY IT NOW](https://aws.amazon.com/marketplace/pp/B00FFHJ6SU) on Amazon Marketplace. It only takes a few minutes to set it up and running.
 
 Documentation
 ========
