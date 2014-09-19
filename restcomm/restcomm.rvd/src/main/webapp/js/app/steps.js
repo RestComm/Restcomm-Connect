@@ -147,7 +147,7 @@ angular.module('Rvd')
 			this.collectdigits = {collectVariable:'',next:'', scope:"module"};
 	}
 	GatherModel.prototype.pack = function () {
-		console.log("gatherModel:pack() - " + this.name);
+		//console.log("gatherModel:pack() - " + this.name);
 		var clone = angular.copy(this);
 		if (clone.gatherType == "menu")
 			delete clone.collectdigits;
@@ -307,7 +307,7 @@ angular.module('Rvd')
 		return this;
 	}
 	EsValueExtractor.prototype.addOperation = function () {
-		console.log("adding operation");
+		//console.log("adding operation");
 		this.lastOperation.fixed = true;
 		this.lastOperation.expression = this.operationExpression( this.lastOperation );
 		this.accessOperations.push(this.lastOperation);
@@ -567,7 +567,7 @@ angular.module('Rvd')
 			this.collectdigits = {collectVariable:null,next:'', scope:"module"};
 	}
 	UssdCollectModel.prototype.pack = function () {
-		console.log("ussdCollectModel:pack() - " + this.name);
+		//console.log("ussdCollectModel:pack() - " + this.name);
 		var clone = angular.copy(this);
 		if (clone.gatherType == "menu")
 			delete clone.collectdigits;

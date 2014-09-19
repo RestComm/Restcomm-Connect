@@ -10,11 +10,11 @@
 		<div class="row form-group">
 			<div class="col-md-6 input-group">
 				<span class="input-group-addon">Host</span>
-				<input ng-model="settings.apiServerHost" type="text" class="form-control">
+				<input ng-model="settings.apiServerHost" auto-clear type="text" class="form-control">
 			</div>
 			<div class="col-md-6 input-group">
 				<span class="input-group-addon">Port</span>
-				<input ng-model="settings.apiServerRestPort" ng-pattern="/^[0-9]*$/" type="number" class="form-control">
+				<input ng-model="settings.apiServerRestPort" auto-clear ng-pattern="/^[0-9]*$/" type="number" class="form-control">
 			</div>			
 		</div>
 	
