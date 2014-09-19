@@ -63,6 +63,12 @@ public class Ticket {
         this.timeLastAccessed = timeLastAccessed;
     }
 
+    @Override
+    public String toString() {
+        return "[userId: " + userId + ",ticketId: " + ticketId + ",timeCreated: " + timeCreated + ", timeLastAccessed: " + timeLastAccessed + "]";
+    }
 
-
+    public void accessedNow() {
+        timeLastAccessed = new Date();
+    }
 }

@@ -30,11 +30,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		 .error(function (data, status, headers, config) {
 			if (status == 409) {
 				console.log("project already exists");
-				//$scope.notifications.unshift({message:"A Voice, SMS or USSD project  with that name already exists" });
-				notifications.put({type:'danger',message:'A Voice, SMS or USSD project  with that name already exists in the workspace.'});
-				//$timeout(function () {
-				//	$scope.notifications.pop(); 
-				//}, 5000);
+				notifications.put({type:'danger',message:'A Voice, SMS or USSD project  with that name already exists in the workspace (maybe it belongs to another user).'});
 			}
 		 });
 	}

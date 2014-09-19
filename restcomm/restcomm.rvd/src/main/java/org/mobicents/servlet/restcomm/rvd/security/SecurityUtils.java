@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.security;
 import javax.ws.rs.core.NewCookie;
 
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.security.exceptions.InvalidTicketCookie;
 
 public class SecurityUtils {
 
@@ -20,6 +21,22 @@ public class SecurityUtils {
             return new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, "", "/restcomm-rvd", null, null,1800, false );
         else
             return new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getUserId() + ":" + ticket.getTicketId(), "/restcomm-rvd", null, null,1800, false );
+    }
+
+    public static String getUsernameFromTicketCookie(String ticketCookie) throws InvalidTicketCookie {
+        String[] ticketParts = ticketCookie.split(":");
+        if ( ticketParts.length == 2 ) {
+            return ticketParts[0];
+        } else
+            throw new InvalidTicketCookie("Ivalid ticket cookie: " + ticketCookie);
+    }
+
+    public static String getTicketIdFromTicketCookie(String ticketCookie) throws InvalidTicketCookie {
+        String[] ticketParts = ticketCookie.split(":");
+        if ( ticketParts.length == 2 ) {
+            return ticketParts[1];
+        } else
+            throw new InvalidTicketCookie("Ivalid ticket cookie: " + ticketCookie);
     }
 
 }
