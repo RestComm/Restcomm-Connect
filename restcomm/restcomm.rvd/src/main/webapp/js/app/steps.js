@@ -355,6 +355,9 @@ angular.module('Rvd')
 			this.lastOperation.fixed = false;
 		}
 	}	
+	EsValueExtractor.prototype.setLastOperationKind = function (kind) {
+		this.lastOperation = angular.copy(accessOperationProtos[kind]);
+	}
 	return EsValueExtractor;
 }])
 
