@@ -43,7 +43,7 @@ public class DialStep extends Step {
 
         rcmlStep.timeout = timeout == null ? null : timeout.toString();
         rcmlStep.timeLimit = (timeLimit == null ? null : timeLimit.toString());
-        rcmlStep.callerId = callerId;
+        rcmlStep.callerId = interpreter.populateVariables(callerId);
         rcmlStep.record = record;
 
         return rcmlStep;
