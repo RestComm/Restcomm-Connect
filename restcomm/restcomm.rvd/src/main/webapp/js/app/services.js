@@ -124,7 +124,7 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 }]);
 
 angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', function ($http,$q,$modal) {
-	console.log("Creating projectSettigsService");
+	//console.log("Creating projectSettigsService");
 	var service = {};
 	service.retrieve = function (name) {
 		var deferred = $q.defer();
@@ -148,12 +148,12 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 	}
 	
 	function projectSettingsModelCtrl ($scope, projectSettings, projectName, $modalInstance, notifications) {
-		console.log("in projectSettingsModelCtrl");
+		//console.log("in projectSettingsModelCtrl");
 		$scope.projectSettings = projectSettings;
 		$scope.projectName = projectName;
 		
 		$scope.save = function (name, data) {
-			console.log("saving projectSettings for " + name);
+			//console.log("saving projectSettings for " + name);
 			service.save(name, data).then(
 				function () {$modalInstance.close()}, 
 				function () {notifications.put("Error saving project settings")}
@@ -189,7 +189,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 			});
 
 			modalInstance.result.then(function (projectSettings) {
-				console.log(projectSettings);
+				//console.log(projectSettings);
 			}, function () {});	
 	}
 	
@@ -198,7 +198,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 
 
 angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', function ($http,$q,$modal) {
-	console.log("Creating webTriggerService");
+	//console.log("Creating webTriggerService");
 	var service = {};
 	service.retrieve = function (name) {
 		var deferred = $q.defer();
@@ -222,10 +222,10 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 	}
 	
 	function webTriggerModalCtrl ($scope, ccInfo, projectName, $modalInstance, notifications, $location) {
-		console.log("in webTriggerModalCtrl");
+		//console.log("in webTriggerModalCtrl");
 				
 		$scope.save = function (name, data) {
-			console.log("saving ccInfo for " + name);
+			//console.log("saving ccInfo for " + name);
 			service.save(name, data).then(
 				function () {$modalInstance.close()}, 
 				function () {notifications.put("Error saving project ccInfo")}
