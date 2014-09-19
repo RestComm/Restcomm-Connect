@@ -61,16 +61,18 @@ public class AutheticationFilter implements ResourceFilter, ContainerRequestFilt
                 //throw new WebApplicationException();
                 //String ticketId = "111"; // simulate retrieving ticketId from a header
 
-                logger.debug("Received a request with ticket " + rawTicket);
+                //logger.debug("Received a request with ticket " + rawTicket);
 
                 TicketRepository tickets =  TicketRepository.getInstance();
+                tickets.remindStaleTicketRemoval();
                 Ticket ticket = tickets.findTicket(ticketId);
                 if ( ticket != null ) {
                     if ( ticket.getUserId() != null && ticket.getUserId().equals(ticketUsername) ) {
+                        ticket.accessedNow();
                         RvdUser user = new RvdUser(ticket.getUserId());
                         securityContext = new RvdSecurityContext(user);
                         request.setSecurityContext(securityContext);
-                        logger.debug("granted access to request with ticket id" + ticketId);
+                        //logger.debug("granted access to request with ticket id" + ticketId);
                         return request;
                     }
                 }
