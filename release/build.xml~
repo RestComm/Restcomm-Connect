@@ -214,20 +214,20 @@
 		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
 
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
 	
 	<!-- Copy Admin UI -->
         <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 
 	<!-- Copy RVD -->
         <!--<copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset> 
         </copy>-->
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm-rvd.war" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
+		file="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
 
 	<!--Copy Rvd ES Demo-->	
 	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo.war" failonerror="true"
@@ -262,12 +262,12 @@
 	
 	<!-- Copy Admin UI -->
         <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
 
 	<!-- Copy RVD -->
         <copy todir="${release.as7.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset> 
         </copy>
