@@ -13,7 +13,7 @@
         <property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
 	
 	<!--mobicents binaries versions-->
-	<property name="sipservlets-build" value="547"/>
+	<property name="sipservlets-build" value="548"/>
         <property name="mobicents-sipservlets-as7.version" value="2.1.${sipservlets-build}" />
 	<!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
 	<property name="mobicents-media.version" value="3.0.0.FINAL" />
