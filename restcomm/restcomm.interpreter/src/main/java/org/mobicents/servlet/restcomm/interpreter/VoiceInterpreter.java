@@ -546,8 +546,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
+                if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
+                    fsm.transition(message, finishDialing );
+                } else
                 // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
-                if ((bridged.equals(state) || forking.equals(state)) && (sender == outboundCall || outboundCall == null)) {
+                if ( forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                     fsm.transition(message, finishDialing );
                 } else if (creatingRecording.equals(state)) {
                     //Ask callMediaGroup to stop recording so we have the recording file available
@@ -1649,6 +1652,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final State state = fsm.state();
 
             if (message instanceof ReceiveTimeout) {
+                logger.info("Received timeout, will cancel calls");
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
@@ -1657,7 +1661,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         branch.tell(new Cancel(), source);
                         callManager.tell(new DestroyCall(branch), source);
                     }
-                    dialBranches = null;
+                    final GetNextVerb next = GetNextVerb.instance();
+                    parser.tell(next, source);
+                    dialChildren = null;
+                    outboundCall = null;
                     return;
                 } else if (bridged.equals(state)) {
                     outboundCall.tell(new Hangup(), source);
