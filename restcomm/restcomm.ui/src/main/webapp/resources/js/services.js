@@ -457,7 +457,7 @@ rcServices.factory('RCommApps', function($resource) {
 	  return $resource('/restcomm-rvd/services/apps');
 });
 
-rcServices.factory('RCommAvailableNumbersNonUS', function($resource) {
+rcServices.factory('RCommAvailableNumbers', function($resource) {
   return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format',
     {
       accountSid: '@accountSid',
@@ -465,42 +465,21 @@ rcServices.factory('RCommAvailableNumbersNonUS', function($resource) {
       format:'json'
     },
     {
-      view: {
+      getCountries: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+        isArray: true,
+        url: '/restcomm-management/resources/json/countries.:format'
       },
-      test: {
+      getAreaCodes: {
         method: 'GET',
-        url: '/restcomm-management/numbers.json'
+        isArray: true,
+        url: '/restcomm-management/resources/json/area-codes.:format'
       },
-      delete: {
-        method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
-      }
-    }
-  );
-});
-
-rcServices.factory('RCommAvailableNumbers', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format?AreaCode=:areaCode',
-    {
-      accountSid: '@accountSid',
-      areaCode: '@areaCode',
-      countryCode: '@countryCode',
-      format:'json'
-    },
-    {
-      view: {
+      getAvailableCountries: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
-      },
-      test: {
-        method: 'GET',
-        url: '/restcomm-management/numbers.json'
-      },
-      delete: {
-        method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+        isArray: true,
+        //url: '/restcomm-management/resources/json/available.:format'
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/AvailableCountries.:format'
       }
     }
   );
