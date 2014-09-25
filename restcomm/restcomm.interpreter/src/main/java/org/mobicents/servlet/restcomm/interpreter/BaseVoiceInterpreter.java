@@ -1170,12 +1170,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     gatherPrompts = new ArrayList<URI>();
                     gatherChildren = new ArrayList<Tag>(verb.children());
                 } else if (DiskCacheResponse.class.equals(klass)) {
+                    if (gatherPrompts == null)
+                        gatherPrompts = new ArrayList<URI>();
+                    if (gatherChildren == null)
+                        gatherChildren = new ArrayList<Tag>(verb.children());
                     final DiskCacheResponse response = (DiskCacheResponse) message;
                     final URI uri = response.get();
-                    final Tag child = gatherChildren.remove(0);
+                    Tag child = null;
+                    if (!gatherChildren.isEmpty())
+                        child = gatherChildren.remove(0);
                     // Parse the loop attribute.
                     int loop = 1;
-                    final Attribute attribute = child.attribute("loop");
+                    Attribute attribute = null;
+                    if (child != null)
+                        attribute = child.attribute("loop");
                     if (attribute != null) {
                         final String number = attribute.value();
                         if (number != null && !number.isEmpty()) {
