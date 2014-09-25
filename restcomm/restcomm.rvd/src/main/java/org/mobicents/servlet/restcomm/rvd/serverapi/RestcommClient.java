@@ -84,14 +84,16 @@ public class RestcommClient {
                     HttpGet get = new HttpGet( uri );
                     get.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(client.username, client.password));
                     apiResponse = client.apacheClient.execute( get );
-
                     try {
-                        //apiResponse.getStatusLine()
-                        // suppose everything is ok
+                        if ( apiResponse.getStatusLine().getStatusCode() != 200 ) {
+                            String response_string = IOUtils.toString(apiResponse.getEntity().getContent());
+                            throw new RestcommClientException("Error " + apiResponse.getStatusLine().getStatusCode() + " running REST GET request: " + apiResponse.getStatusLine().getReasonPhrase() + " - Response body: " + response_string );
+                        }
+
                         return gson.fromJson( new InputStreamReader(apiResponse.getEntity().getContent()), resultClass );
 
                     } finally {
-                       // apiResponse.close();
+                        apiResponse.close();
                     }
                 } else
                 if ( "POST".equals(method) ) {
@@ -105,10 +107,10 @@ public class RestcommClient {
                     post.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(client.username, client.password) );
                     apiResponse = client.apacheClient.execute(post);
                     try {
-                        if ( apiResponse.getStatusLine().getStatusCode() != 200 )
-                            throw new RestcommClientException("ApiServer could not create the call: " + apiResponse.getStatusLine().getReasonPhrase() );
-                        //apiResponse.getStatusLine()
-                        // suppose everything is ok
+                        if ( apiResponse.getStatusLine().getStatusCode() != 200 ) {
+                            String response_string = IOUtils.toString(apiResponse.getEntity().getContent());
+                            throw new RestcommClientException("ApiServer could not create the call: " + apiResponse.getStatusLine().getReasonPhrase() + " - Response body: " +  response_string);
+                        }
                         String content = IOUtils.toString(apiResponse.getEntity().getContent());
 
                         //return gson.fromJson( new InputStreamReader(apiResponse.getEntity().getContent()), resultClass );

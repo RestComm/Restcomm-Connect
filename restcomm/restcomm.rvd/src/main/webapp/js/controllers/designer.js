@@ -331,7 +331,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	}
 	
 	$scope.addStep = function (classAttribute,pos,listmodel) {
-		console.log("Adding step ");
+		//console.log("Adding step ");
 		r = RegExp("button-([^ ]+)");
 		m = r.exec( classAttribute );
 		if ( m != null ) {
@@ -350,7 +350,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	}
 	
 	$scope.removeStep = function (step,node_steps,steps) {
-		console.log("Removing step");
+		//console.log("Removing step");
 		var container;
 		if ( typeof steps != 'undefined')
 			container = steps;
@@ -403,7 +403,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	}
 	
 	$scope.$on('wavfileDeleted', function (event,data) {
-		console.log("caught event wavfileDeleted");
+		//console.log("caught event wavfileDeleted");
 		$scope.refreshWavList($scope.projectName);
 	});
 	
@@ -568,64 +568,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		}, function () {
 		  // $log.info('Modal dismissed at: ' + new Date());
 		});
-	}
-	
-	var settingsModalCtrl = function ($scope, $timeout, $modalInstance, settings) {
-		$scope.settings = settings;
-
-		$scope.ok = function () {
-			$http.post("services/settings", settings, {headers: {'Content-Type': 'application/data'}})
-			.success( function () { 
-				$modalInstance.close(settings);
-			})
-			.error( function () {
-				notifications.put("Cannot save settings");
-			});
-		};
-
-		$scope.cancel = function () {
-			$modalInstance.dismiss('cancel');
-		};
-		
-		// watch form validation status and copy to outside scope so that the OK
-		// button (which is outside the form's scope) status can be updated
-		$scope.watchForm = function (formValid) {
-			$scope.preventSubmit = !formValid;
-		}
-	};
-	
-	$scope.showSettingsModal = function (settings) {
-		var modalInstance = $modal.open({
-		  templateUrl: 'templates/designerSettingsModal.html',
-		  controller: settingsModalCtrl,
-		  size: 'lg',
-		  resolve: {
-			settings: function () {
-				var deferred = $q.defer()
-				$http.get("services/settings")
-				.then(function (response) {
-					deferred.resolve(response.data);
-				}, function (response) {
-					if ( response.status == 404 )
-						deferred.resolve({});
-					else {
-						// console.log("BEFORE reject");
-						deferred.reject();
-						// console.log("AFTER reject");
-					}
-				});
-				return deferred.promise;
-			}
-		  }
-		});
-
-		modalInstance.result.then(function (settings) {
-			console.log(settings);
-			// $scope.settings
-		}, function () {
-		  // $log.info('Modal dismissed at: ' + new Date());
-		});		
-	}
+	}	
 		
 	// Web Trigger
 	$scope.showWebTrigger = function (projectName) {

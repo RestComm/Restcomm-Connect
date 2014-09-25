@@ -7,6 +7,11 @@ public class SettingsModel {
     private String apiServerUsername;
     private String apiServerPass;
 
+
+    public static SettingsModel createDefault() {
+        return new SettingsModel(null, null);
+    }
+
     public SettingsModel(String apiServerHost, Integer apiServerRestPort) {
         super();
         this.apiServerHost = apiServerHost;
