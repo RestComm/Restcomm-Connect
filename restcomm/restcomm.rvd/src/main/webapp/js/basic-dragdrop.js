@@ -26,8 +26,8 @@ angular.module('basicDragdrop', [])
 			}*/
 			
 			scope.removeItem = function (item) {
-				console.log('closing panel: ' + scope.listModel.indexOf(item) );
-				console.log(item);
+				//console.log('closing panel: ' + scope.listModel.indexOf(item) );
+				//console.log(item);
 				scope.listModel.splice(scope.listModel.indexOf(item),1);
 			}
 
@@ -61,7 +61,7 @@ angular.module('basicDragdrop', [])
                     ui.item.remove();
                     //scope.itemAdded({item:ui.item,pos:drop_index,listmodel:scope.listModel});
                     var expression = attrs.itemAdded + "('" + ui.item.attr("class") + "'," + drop_index + ", listModel" + ")";
-                    console.log("addItem expression: " + expression);
+                    //console.log("addItem expression: " + expression);
                     scope.$eval( expression );
                 }
             });
@@ -93,15 +93,15 @@ angular.module('basicDragdrop', [])
             });
             
             element.bind('dragstart', function (event, ui)  {
-				console.log("started dragging" );
+				//console.log("started dragging" );
 				var dragModel = attrs.class;
 				if ( attrs.dragModel ) {
-					console.log("setting dragModel to " + attrs.dragModel);
+					//console.log("setting dragModel to " + attrs.dragModel);
 					dragModel = scope.$eval(attrs.dragModel);
 					console.log( dragModel );
 				}
 				var dragId = dragService.newDrag(dragModel);
-				console.log( "created new drag: " + dragId );
+				//console.log( "created new drag: " + dragId );
 			});
         }
     };

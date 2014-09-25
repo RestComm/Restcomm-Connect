@@ -15,22 +15,9 @@
 		<nav  class="rvd-menu navbar navbar-default" role="navigation">
 			<div class="collapse navbar-collapse navbar-ex1-collapse">
 	
-				<ul class="nav navbar-nav">
-					<li><span class='navbar-text'><i class='fa fa-share'></i>
-							<em>Startup module</em></span></li>
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{nodeNamed(startNodeName).label}} <b class="caret"></b></a>
-						<ul class="dropdown-menu">
-							<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
-						</ul>
-					</li>
-					<li><a ng-click="addNode(undefined, projectKind)" class="rvd-clickable-text"><i class='fa fa-file-o'></i>&nbsp; New Module</a></li>
-					<!--
-					<li>
-						<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
-					</li>
-					-->
-				</ul>
+				<div class="navbar-header">
+					<a class="navbar-brand">{{projectName}}</a>
+				</div>
 	
 				<ul class="nav navbar-nav navbar-right">
 					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">Web Trigger</a></li>
@@ -48,7 +35,7 @@
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Settings"><i class="fa fa-cog"></i> <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">Project Settings</a></li>
-							<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li>
+							<!--<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li> -->
 							<li><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text">Application log</a></li>
 						</ul>
 					</li>
@@ -56,15 +43,7 @@
 			</div>
 		</nav>
 		
-		<div class='row rvd-submenu'>
-			<div class='col-md-2'>
-				<div ng-show="nodeNamed(startNodeName)==null" class='rvd-subheader-message'>
-					<span class="validation-error">No <em>Startup module</em> is set</span>
-				</div>
-			</div>
-			<div class='col-md-10 rvd-view-selector'>
-			</div>
-	
+		<div class='row rvd-submenu'>	
 		</div>
 	
 		<div class="rvd-rcmlview row">
@@ -136,6 +115,32 @@
 			<div class="col-md-10">
 				<div class="editor">
 					<div class="panel-body editor">
+						<!--<ul class="nav nav-pills">
+						
+						</ul>-->
+						<div class="row">
+							<div class="col-md-12 form-group">
+								<ul class="top-menu nav nav-pills">
+									<li class="dropdown">
+										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown">Startup module - <strong>{{nodeNamed(startNodeName).label}}</strong>	 <span class="caret"></span></a>
+										<ul class="dropdown-menu">
+											<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+										</ul>
+									</li>
+									<li><a ng-click="addNode(undefined, projectKind)" class="btn-primary rvd-clickable-text"><i class='fa fa-plus'></i>&nbsp; New Module</a></li>
+									<!--
+									<li>
+										<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
+									</li>
+									-->
+								</ul>
+				<div ng-show="nodeNamed(startNodeName)==null" class='rvd-subheader-message'>
+					<span class="validation-error">No <em>Startup module</em> is set</span>
+				</div>
+							</div>
+						</div>
+						
+						
 						<ul class="nav nav-tabs">
 							<!-- tabs -->
 							<li ng-repeat='node in nodes'

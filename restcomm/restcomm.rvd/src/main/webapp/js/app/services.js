@@ -44,19 +44,69 @@ angular.module('Rvd').service('projectModules', [function () {
 	return serviceInstance;
 }]);
 
-angular.module('Rvd').service('authentication', ['$browser', '$q', function ($browser, $q) {
+angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', function ($http, $browser, $q) {
 	//console.log("Creating authentication service");
 	var serviceInstance = {};
+	var authInfo = {};
+	
+	function refresh() {
+		authInfo.rvdticket = undefined;
+		authInfo.username = undefined;
+		var matches = RegExp( "^([^:]+)\:(.*)$" ).exec( $browser.cookies().rvdticket );
+		if (matches != null) {
+			authInfo.rvdticket = matches[2];
+			authInfo.username = matches[1];
+		}
+	}	
+	
+	function doLogin(username, password) {
+		var deferred = $q.defer();
+		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
+		.success ( function () {
+			console.log("login successful");
+			deferred.resolve();
+		})
+		.error( function (data, status) {
+			console.log("error logging in");
+			deferred.reject(data);
+		});
+		return deferred.promise;
+	}
+	serviceInstance.doLogin = doLogin;
+	
+	function doLogout() {
+		var deferred = $q.defer();
+		$http({	url:'services/auth/logout', method:'GET'})
+		.success ( function () {
+			console.log("logged out");
+			deferred.resolve();
+		})
+		.error( function (data, status) {
+			console.log("error logging out");
+			deferred.reject(data);
+		});		
+		return deferred.promise;
+	}
+	serviceInstance.doLogout = doLogout;
+	
+	serviceInstance.getAuthInfo = function () {
+		return authInfo;
+	}
+	
+	serviceInstance.clearTicket = function () {
+		$browser.cookies().rvdticket = undefined;
+		authInfo.rvdticket = undefined;
+		authInfo.username = undefined;
+	}
 	
 	serviceInstance.looksAuthenticated = function () {
-		var currentCookies = $browser.cookies();
-		//console.log("checking $browser cookies...");
-		//console.log( currentCookies );
-
-		if ( !currentCookies.rvdticket )
+		refresh();
+		if ( !authInfo.rvdticket )
 			return false;
 		return true;
 	}
+	
+	
 	
 	serviceInstance.authResolver = function() {
 		var deferred = $q.defer();
@@ -74,7 +124,7 @@ angular.module('Rvd').service('authentication', ['$browser', '$q', function ($br
 }]);
 
 angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', function ($http,$q,$modal) {
-	console.log("Creating projectSettigsService");
+	//console.log("Creating projectSettigsService");
 	var service = {};
 	service.retrieve = function (name) {
 		var deferred = $q.defer();
@@ -98,12 +148,12 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 	}
 	
 	function projectSettingsModelCtrl ($scope, projectSettings, projectName, $modalInstance, notifications) {
-		console.log("in projectSettingsModelCtrl");
+		//console.log("in projectSettingsModelCtrl");
 		$scope.projectSettings = projectSettings;
 		$scope.projectName = projectName;
 		
 		$scope.save = function (name, data) {
-			console.log("saving projectSettings for " + name);
+			//console.log("saving projectSettings for " + name);
 			service.save(name, data).then(
 				function () {$modalInstance.close()}, 
 				function () {notifications.put("Error saving project settings")}
@@ -139,7 +189,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 			});
 
 			modalInstance.result.then(function (projectSettings) {
-				console.log(projectSettings);
+				//console.log(projectSettings);
 			}, function () {});	
 	}
 	
@@ -148,7 +198,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 
 
 angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', function ($http,$q,$modal) {
-	console.log("Creating webTriggerService");
+	//console.log("Creating webTriggerService");
 	var service = {};
 	service.retrieve = function (name) {
 		var deferred = $q.defer();
@@ -172,10 +222,10 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 	}
 	
 	function webTriggerModalCtrl ($scope, ccInfo, projectName, $modalInstance, notifications, $location) {
-		console.log("in webTriggerModalCtrl");
+		//console.log("in webTriggerModalCtrl");
 				
 		$scope.save = function (name, data) {
-			console.log("saving ccInfo for " + name);
+			//console.log("saving ccInfo for " + name);
 			service.save(name, data).then(
 				function () {$modalInstance.close()}, 
 				function () {notifications.put("Error saving project ccInfo")}

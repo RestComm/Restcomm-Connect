@@ -1,11 +1,11 @@
-App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
+App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
 	
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd' && $scope.projectKind != 'sms')
 		$scope.projectKind = 'voice';
 	$scope.error = undefined; 
-	$scope.notifications = [];
+	//$scope.notifications = [];
 
 	
 	$scope.refreshProjectList = function() {
@@ -30,10 +30,7 @@ App.controller('projectManagerCtrl', function ($scope, $http, $location, $routeP
 		 .error(function (data, status, headers, config) {
 			if (status == 409) {
 				console.log("project already exists");
-				$scope.notifications.unshift({message:"A Voice, SMS or USSD project  with that name already exists" });
-				$timeout(function () {
-					$scope.notifications.pop(); 
-				}, 5000);
+				notifications.put({type:'danger',message:'A Voice, SMS or USSD project  with that name already exists in the workspace (maybe it belongs to another user).'});
 			}
 		 });
 	}

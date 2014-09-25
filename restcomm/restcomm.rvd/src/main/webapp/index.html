@@ -24,20 +24,31 @@
 
 
 <body> 
-	<div class="navbar navbar-inverse navbar-fixed-top bs-docs-nav">
-		<div class="navbar-header">
-			<span class='navbar-brand'>
-				<img src='images/telestax-logo-dark.png' class='navbar-telestax' />
-			</span>
-			
-			<span class='navbar-rvd'>
-				<img  src="images/restcomm-logo.png" />
-				<span class='navbar-text'>RESTCOMM visual service designer</span>
-			</span>
-			
-			
-		</div>
-	</div>
+	
+	<div class="navbar navbar-inverse navbar-fixed-top" role="navigation" ng-controller="mainMenuCtrl">
+		<div class="container-fluid">
+				<div class="navbar-header">
+					<span class="navbar-brand"><img class="rvd-telestax-image" src="images/telestax-logo-dark.png"/> <img src="images/restcomm-logo.png" class="rvd-phone-image" /> RESTCOMM visual service designer</span>
+				</div>
+				<nav class="collabse navbar-collapse" role="navigation">
+					<ul class="nav navbar-nav navbar-right">
+						<li ng-if="authInfo.rvdticket" class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{authInfo.username}} <b class="caret"></b></a>
+							<ul id="rightMenu" class="dropdown-menu pull-right">
+								<li>
+									<a class="rvd-clickable-text" ng-click="logout()"><i class="fa fa-sign-out"></i>Sign Out</a>
+								</li>
+							</ul>
+						</li>
+						<li ng-if="authInfo.rvdticket">
+							<a class="rvd-clickable-text" ng-click="showSettingsModal()" title="IDE Settings"><i class="fa fa-gear"></i></a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+	</div>	
+	
+	
 	
 	<div class="notifications-wrapper" ng-show="notifications.data.length > 0">
 		<div ng-repeat="notification in notifications.data">

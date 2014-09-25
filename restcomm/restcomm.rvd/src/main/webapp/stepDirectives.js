@@ -9,31 +9,32 @@ angular.module('Rvd')
 				else
 					scope.step = new gatherModel();
 				
-				function updatePattern(scope) {
-					if ( scope.step.validation.iface.userPattern == '' )
-						scope.step.validation.pattern = '';
+				
+				function getEffectiveValidationType() {
+					if ( scope.step.validation.userPattern != undefined )
+						return "One of";
 					else
-					//if ( scope.step.validation.iface.userPatternType == 'Any of')
-					//		scope.step.validation.pattern = '^[' + scope.step.validation.iface.userPattern + ']*$';
-					//else
-					if ( scope.step.validation.iface.userPatternType == 'Regex')
-						scope.step.validation.pattern = scope.step.validation.iface.userPattern;
-					else
-					if ( scope.step.validation.iface.userPatternType == 'One of')
-						scope.step.validation.pattern = '^[' + scope.step.validation.iface.userPattern + ']$';
+						return "Regex"
 				}
+				scope.getEffectiveValidationType = getEffectiveValidationType;
 				
-				scope.$watch('step.validation.iface.userPatternType',function (newValue, oldValue) {
-					if ( newValue != oldValue )
-						updatePattern(scope);
-				});
+				function setValidationTypeOneOf() {
+					if ( getEffectiveValidationType() != "One of" ) {
+						scope.step.validation.userPattern = "";
+						scope.step.validation.regexPattern = undefined;
+					}
+				}
+				scope.setValidationTypeOneOf = setValidationTypeOneOf;
 				
-				scope.$watch('step.validation.iface.userPattern',function (newValue, oldValue) {
-					if ( newValue != oldValue )
-						updatePattern(scope);
-				});
+				function setValidationTypeRegex() {
+					if ( getEffectiveValidationType() != "Regex" ) {
+						scope.step.validation.userPattern = undefined;
+						scope.step.validation.regexPattern = "";
+					}
+				}		
+				scope.setValidationTypeRegex = 	setValidationTypeRegex;
 				
-			}
+		}
 	}
 })
 ;
