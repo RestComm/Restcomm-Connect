@@ -93,7 +93,7 @@ public class AvailablePhoneNumbersEndpointTest {
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","501").accept("application/json")
+        ClientResponse clientResponse = webResource.queryParam("areaCode","501").accept("application/json")
                 .get(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
@@ -201,7 +201,7 @@ public class AvailablePhoneNumbersEndpointTest {
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","501").queryParam("InRegion","AR").accept("application/json")
+        ClientResponse clientResponse = webResource.queryParam("areaCode","501").queryParam("InRegion","AR").accept("application/json")
                 .get(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
