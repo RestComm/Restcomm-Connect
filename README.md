@@ -27,6 +27,10 @@ Documentation
 ========
 Read the [Online RestComm Documentation](http://docs.telestax.com/) or it is also contained in the download binary
 
+Want to Contribute ? 
+========
+[See our Contributors Guide](https://github.com/Mobicents/RestComm/wiki/Contribute-to-RestComm)
+
 Issue Tracking and Roadmap
 ========
 [Issue Tracker](https://github.com/Mobicents/RestComm/issues)
