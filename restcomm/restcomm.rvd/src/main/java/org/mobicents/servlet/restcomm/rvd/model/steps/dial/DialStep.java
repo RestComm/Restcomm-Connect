@@ -23,7 +23,7 @@ public class DialStep extends Step {
     private Integer timeLimit;
     private String callerId;
     private String nextModule;
-    private String record;
+    private Boolean record;
 
     public RcmlDialStep render(Interpreter interpreter) throws InterpreterException {
         RcmlDialStep rcmlStep = new RcmlDialStep();
