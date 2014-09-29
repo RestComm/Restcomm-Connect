@@ -54,6 +54,11 @@ public class DialStep extends Step {
         if ( RvdUtils.isEmpty(nextModule) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
+        String publicRecordingUrl = interpreter.getRequestParams().getFirst("PublicRecordingUrl");
+        if ( publicRecordingUrl != null ) {
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "PublicRecordingUrl", publicRecordingUrl);
+        }
+
         String restcommRecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
         if ( restcommRecordingUrl != null ) {
             try {
