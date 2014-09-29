@@ -12,5 +12,5 @@ public class RcmlDialStep extends RcmlStep {
     String timeout;
     String timeLimit;
     String callerId;
-    String record;
+    Boolean record;
 }
