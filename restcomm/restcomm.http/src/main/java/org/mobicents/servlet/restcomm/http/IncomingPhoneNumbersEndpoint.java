@@ -71,6 +71,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
@@ -180,7 +181,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             number = "+" + number;
         }
         final PhoneNumber result = numbersUtil.parse(number, "US");
-        return numbersUtil.format(result, PhoneNumberFormat.E164);
+        if (numbersUtil.isValidNumber(result)) {
+            return numbersUtil.format(result, PhoneNumberFormat.E164);
+        } else {
+            throw new NumberParseException(ErrorType.NOT_A_NUMBER, "This is not a valid number");
+        }
     }
 
     private String getFriendlyName(final String phoneNumber, final MultivaluedMap<String, String> data) {
