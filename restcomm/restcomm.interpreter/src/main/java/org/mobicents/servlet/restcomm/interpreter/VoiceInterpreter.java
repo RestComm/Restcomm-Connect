@@ -652,7 +652,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (Tag.class.equals(klass)) {
-            final Tag verb = (Tag) message;
+//            final Tag verb = (Tag) message;
+            verb = (Tag) message;
             if (CallStateChanged.State.RINGING == callState) {
                 if (reject.equals(verb.name())) {
                     fsm.transition(message, rejecting);
