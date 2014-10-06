@@ -711,6 +711,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             // fsm.transition(message, synthesizing);
                             fsm.transition(message, checkingCache);
                         } else if (gather.equals(verb.name())) {
+                            gatherVerb = verb;
                             fsm.transition(message, processingGatherChildren);
                         } else if (pause.equals(verb.name())) {
                             fsm.transition(message, pausing);
