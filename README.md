@@ -29,7 +29,7 @@ Read the [Online RestComm Documentation](http://docs.telestax.com/) or it is als
 
 Want to Contribute ? 
 ========
-[See our Contributors Guide](https://github.com/Mobicents/RestComm/wiki/Contribute-to-RestComm)
+[See our Contributors Guide](https://github.com/Mobicents/RestComm/wiki/Contribute-to-RestComm) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/)
 
 Issue Tracking and Roadmap
 ========
