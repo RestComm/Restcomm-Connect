@@ -1431,6 +1431,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
             }
+            logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);
