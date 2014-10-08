@@ -1152,8 +1152,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            if (gatherVerb == null)
-                    gatherVerb = verb;
             processingGather = true;
             final Class<?> klass = message.getClass();
             final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1305,7 +1303,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 // Start gathering.
                 if (gatherChildren.isEmpty()) {
-                    verb = gatherVerb;
+                    if (gatherVerb != null)
+                        verb = gatherVerb;
                     final StartGathering start = StartGathering.instance();
                     source.tell(start, source);
                 }
@@ -1432,6 +1431,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
             }
+            logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);
