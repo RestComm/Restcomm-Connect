@@ -1370,10 +1370,10 @@ public final class Call extends UntypedActor {
     private final class AuditingRemoteConnection extends AbstractAction {
 
         // Maximum number of attempts
-        private final int MAX_ATTEMPTS = 10;
+        private final int MAX_ATTEMPTS = 50;
 
         // Waiting time (in milliseconds) between attempts
-        private final int ATTEMPT_WAIT = 200;
+        private final int ATTEMPT_WAIT = 300;
         private final FiniteDuration duration = new FiniteDuration(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
 
         // Number of current attempts between calls.
