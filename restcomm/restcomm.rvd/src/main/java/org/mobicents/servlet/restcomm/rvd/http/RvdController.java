@@ -213,7 +213,7 @@ public class RvdController extends RestService {
             XPathExpression expr = xpath.compile("/restcomm/runtime-settings/recordings-uri/text()");
             String recordingsUrl = (String) expr.evaluate(doc, XPathConstants.STRING);
 
-            return recordingsUrl;
+            return recordingsUrl.trim();
         } catch (Exception e) {
             throw new CallControlException("Error parsing restcomm config file: " + file.getPath(), e);
         }
