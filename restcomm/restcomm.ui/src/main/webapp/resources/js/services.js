@@ -54,11 +54,16 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
         success(function(data, status, headers, config) {
           if (status == 200) {
             //if(data.date_created && data.date_created == data.date_updated) {
-            if(data.status && data.status == 'uninitialized') {
-              cacheSession(data, true);
-            }
-            else {
-              cacheSession(data, false);
+            if(data.status) {
+              if(data.status == 'uninitialized') {
+                cacheSession(data, true);
+              }
+              else if(data.status == 'suspended') {
+                // no-op
+              }
+              else if (data.status == 'active') {
+                cacheSession(data, false);
+              }
             }
           }
           else {
@@ -449,5 +454,41 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 });
 
 rcServices.factory('RCommApps', function($resource) {
-  return $resource('/restcomm-rvd/services/manager/projects/list');
+	  return $resource('/restcomm-rvd/services/apps');
+});
+
+rcServices.factory('RCommAvailableNumbers', function($resource) {
+  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format',
+    {
+      accountSid: '@accountSid',
+      countryCode: '@countryCode',
+      format:'json'
+    },
+    {
+      getCountries: {
+        method: 'GET',
+        isArray: true,
+        url: '/restcomm-management/resources/json/countries.:format'
+      },
+      getAreaCodes: {
+        method: 'GET',
+        isArray: true,
+        url: '/restcomm-management/resources/json/area-codes.:format'
+      },
+      getAvailableCountries: {
+        method: 'GET',
+        isArray: true,
+        //url: '/restcomm-management/resources/json/available.:format'
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/AvailableCountries.:format'
+      }
+    }
+  );
+});
+
+rcServices.factory('RCommJMX', function($resource) {
+  return $resource('/jolokia/:op/:path',
+    {
+      op: 'read'
+    }
+  );
 });

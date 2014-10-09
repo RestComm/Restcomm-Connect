@@ -1,31 +1,21 @@
 package org.mobicents.servlet.restcomm.rvd;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
+import org.apache.commons.io.FileUtils;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
-import java.io.File;
-
-@RunWith(Arquillian.class)
+//@RunWith(Arquillian.class)
 public class BuildServiceTest {
     
     private String testTempDirectory;
     
-    @Deployment
+    //@Deployment
     public static WebArchive createDeployment() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class);
         archive.addClass(BuildService.class);
@@ -41,12 +31,13 @@ public class BuildServiceTest {
         return archive;    
     }
 
-    @Before public void  setup() {        
+    //@Before 
+    public void  setup() {        
         testTempDirectory = FileUtils.getTempDirectoryPath() + File.separator + "rvdtest-" + Long.toString(System.nanoTime());                
         new File( testTempDirectory).mkdir();
     }
     
-    @Test
+    //@Test
     public void testBuildProject() throws Exception {
         /*
         BuildService buildService = new BuildService();
@@ -63,7 +54,8 @@ public class BuildServiceTest {
         */
     }
     
-    @After public void teardown() throws IOException {
+    //@After 
+    public void teardown() throws IOException {
         FileUtils.deleteDirectory( new File(testTempDirectory));
     }
 

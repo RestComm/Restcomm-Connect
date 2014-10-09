@@ -1,7 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.storage.exceptions;
 
 
-public class ProjectDirectoryAlreadyExists extends StorageException {
+public class ProjectDirectoryAlreadyExists extends ProjectAlreadyExists {
 
     public ProjectDirectoryAlreadyExists() {
         super();

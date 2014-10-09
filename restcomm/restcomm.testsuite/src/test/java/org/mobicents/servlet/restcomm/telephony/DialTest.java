@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import gov.nist.javax.sip.message.MessageExt;
 
-import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 
@@ -29,7 +28,7 @@ import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
@@ -561,14 +560,14 @@ public class DialTest {
         }
         
         bobCall.listenForMessage();
-        assertTrue(bobCall.waitForMessage(30 * 1000));
+        assertTrue(bobCall.waitForMessage(60 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
         
         Thread.sleep(3000);
         
-        final String deploymentUrl = "http://127.0.0.1:8080/restcomm.application-"+this.version+"/";
+        final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue("7.0".equalsIgnoreCase(recordings.get("duration").getAsString()));
@@ -1120,63 +1119,11 @@ public class DialTest {
     @Deployment(name = "DialTest", managed = false, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        final WebArchive archive = ShrinkWrapMaven.resolver()
+        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
+        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
-        JavaArchive dependency = ShrinkWrapMaven.resolver().resolve("commons-configuration:commons-configuration:jar:1.7")
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("jain:jain-mgcp-ri:jar:1.0").withoutTransitivity()
-                .asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("org.mobicents.media.client:mgcp-driver:jar:3.0.0.Final")
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("joda-time:joda-time:jar:2.0").withoutTransitivity()
-                .asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.iSpeech:iSpeech:jar:1.0.1").withoutTransitivity()
-                .asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.dao:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.asr:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.fax:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.tts.acapela:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.tts.api:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.mgcp:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.http:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.interpreter:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.sms.api:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.sms:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.telephony.api:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.telephony:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
+        archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");

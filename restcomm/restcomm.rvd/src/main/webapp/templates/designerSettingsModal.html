@@ -1,0 +1,41 @@
+<div class="modal-header">
+	<h3 class="modal-title"><i class="fa fa-cog"></i> Settings</h3>
+</div>
+<div class="modal-body">
+	
+	<p class="lead">Restcomm API</p>
+	
+	<form name="settingsForm">
+		<div class="help-block">Override default host and port when contacting Restcomm API Server. Leave blank if RVD is on the same machine as Restcomm.</div>
+		<div class="row form-group">
+			<div class="col-md-6 input-group">
+				<span class="input-group-addon">Host</span>
+				<input ng-model="settings.apiServerHost" auto-clear type="text" class="form-control">
+			</div>
+			<div class="col-md-6 input-group">
+				<span class="input-group-addon">Port</span>
+				<input ng-model="settings.apiServerRestPort" auto-clear ng-pattern="/^[0-9]*$/" type="number" class="form-control">
+			</div>			
+		</div>
+	
+		<div class="help-block">Credentials for accessing Restcomm API. You should provide these if <i>Web Trigger</i> is enabled.</div>
+		<div class="row form-group">
+			<div class="col-md-6 input-group">
+				<span class="input-group-addon">Username</span>
+				<input ng-model="settings.apiServerUsername" type="text" class="form-control">
+			</div>
+			<div class="col-md-6 input-group">
+				<span class="input-group-addon">Password</span>
+				<input ng-model="settings.apiServerPass" type="text" class="form-control">
+			</div>			
+		</div>
+		
+		{{watchForm(settingsForm.$valid)}}
+		
+	</form>
+</div>
+<div class="modal-footer">
+	<button ng-disabled="preventSubmit" class="btn btn-primary" ng-click="ok()">OK</button>
+	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+	<div ng-show="alertMessage">{{alertMessage}}</div>
+</div>

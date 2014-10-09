@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.interpreter;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,23 +19,32 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 
+import java.net.URLEncoder;
+
 import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.ProjectLogger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ESRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UndefinedTarget;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.InvalidAccessOperationAction;
-import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.ReferencedModuleDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceError;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.StepJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.client.UrlParam;
@@ -53,6 +64,7 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.dial.SipuriNounConverter;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.Assignment;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.es.RouteMapping;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ValueExtractor;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStepConverter;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.RcmlFaxStep;
@@ -74,23 +86,49 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageC
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.xstream.XStream;
+
 
 public class Interpreter {
 
-    static final Logger logger = Logger.getLogger(BuildService.class.getName());
+    static final Logger logger = Logger.getLogger(Interpreter.class.getName());
 
+    private RvdConfiguration rvdSettings;
     private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
+    private ProjectLogger projectLogger;
+    private ProjectAwareRvdContext rvdContext;
+
+    public ProjectLogger getProjectLogger() {
+        return projectLogger;
+    }
+
+    public void setProjectLogger(ProjectLogger projectLogger) {
+        this.projectLogger = projectLogger;
+    }
+
+    public void setRvdSettings(RvdConfiguration rvdSettings) {
+        this.rvdSettings = rvdSettings;
+    }
+
+    public void setProjectStorage(ProjectStorage projectStorage) {
+        this.projectStorage = projectStorage;
+    }
+
+    private WorkspaceStorage workspaceStorage;
+    private ModelMarshaler marshaler;
 
     private XStream xstream;
     private Gson gson;
@@ -106,14 +144,22 @@ public class Interpreter {
     private Map<String, String> variables = new HashMap<String, String>();
     private List<NodeName> nodeNames;
 
+    public static String rcmlOnException() {
+        return "<Response><Hangup/></Response>";
+    }
 
-    public Interpreter(ProjectStorage projectStorage, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        this.projectStorage = projectStorage;
+    public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
+        this.rvdContext = rvdContext;
+        this.rvdSettings = rvdContext.getSettings();
+        this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
-        this.targetParam = targetParam;
+        this.targetParam = requestParams.getFirst("target");
+        //this.targetParam = targetParam;
         this.appName = appName;
-        //this.requestParameters = RvdUtils.reduceHttpRequestParameterMap(httpRequest.getParameterMap());
         this.requestParams = requestParams;
+        this.workspaceStorage = workspaceStorage;
+        this.marshaler = rvdContext.getMarshaler();
+        this.projectLogger = rvdContext.getProjectLogger();
 
         this.contextPath = httpRequest.getContextPath();
         init();
@@ -191,6 +237,10 @@ public class Interpreter {
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();
     }
 
+    public RvdConfiguration getRvdSettings() {
+        return rvdSettings;
+    }
+
     public String getAppName() {
         return appName;
     }
@@ -225,35 +275,29 @@ public class Interpreter {
     }
 
 
-    public String interpret() throws StorageException {
-        //String projectfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data" + File.separator + "project"));
-        String projectfile_json = projectStorage.loadProjectOptions(appName);
-        ProjectOptions projectOptions = gson.fromJson(projectfile_json, new TypeToken<ProjectOptions>() {
-        }.getType());
+    public String interpret() throws RvdException {
+        String response = null;
+
+        ProjectOptions projectOptions = FsProjectStorage.loadProjectOptions(appName, workspaceStorage); //rvdContext.getRuntimeProjectOptions();
         nodeNames = projectOptions.getNodeNames();
 
-        String response = null;
-        try {
-            if (targetParam == null || "".equals(targetParam)) {
-                // No target has been specified. Load the default from project file
-                targetParam = projectOptions.getDefaultTarget();
-                if (targetParam == null)
-                    throw new UndefinedTarget();
-                logger.debug("override default target to " + targetParam);
-            }
-
-            handleStickyParameters();
-            processRequestParameters();
-
-
-            response = interpret(targetParam, null);
-        } catch (InterpreterException e) {
-            logger.error(e.getMessage(), e);
-            response = "<Response><Hangup/></Response>";
+        if (targetParam == null || "".equals(targetParam)) {
+            // No target has been specified. Load the default from project file
+            targetParam = projectOptions.getDefaultTarget();
+            if (targetParam == null)
+                throw new UndefinedTarget();
+            logger.debug("override default target to " + targetParam);
         }
 
+        processBootstrapParameters();
+        processRequestParameters();
+        //handleStickyParameters(); // create local copies of sticky_* parameters
+
+        response = interpret(targetParam, null, null);
         return response;
     }
+
+
 
 
 
@@ -272,9 +316,11 @@ public class Interpreter {
     }
 
 
-    public String interpret(String targetParam, RcmlResponse rcmlModel ) throws InterpreterException, StorageException {
+    public String interpret(String targetParam, RcmlResponse rcmlModel, Step prependStep ) throws InterpreterException, StorageException {
 
         logger.debug("starting interpeter for " + targetParam);
+        if ( rvdContext.getProjectSettings().getLogging() )
+            projectLogger.log("Running target: " + targetParam).tag("app",appName).done();
 
         target = Interpreter.parseTarget(targetParam);
 
@@ -288,14 +334,18 @@ public class Interpreter {
 
             if (rcmlModel == null )
                 rcmlModel = new RcmlResponse();
-            //String nodefile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
-            String nodefile_json = projectStorage.loadNodeStepnames(appName, target.getNodename());//FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/" + target.getNodename() + ".node"));
-            List<String> nodeStepnames = gson.fromJson(nodefile_json, new TypeToken<List<String>>() {
-            }.getType());
+            List<String> nodeStepnames = FsProjectStorage.loadNodeStepnames(appName, target.getNodename(), workspaceStorage);
 
             // if no starting step has been specified in the target, use the first step of the node as default
             if (target.getStepname() == null && !nodeStepnames.isEmpty())
                 target.setStepname(nodeStepnames.get(0));
+
+            // Prepend step if required. Usually used for error messages
+            if ( prependStep != null ) {
+                RcmlStep rcmlStep = prependStep.render(this);
+                logger.debug("Prepending say step: " + rcmlStep );
+                rcmlModel.steps.add( rcmlStep );
+            }
 
             boolean startstep_found = false;
             for (String stepname : nodeStepnames) {
@@ -309,7 +359,7 @@ public class Interpreter {
                     String rerouteTo = processStep(step); // is meaningful only for some of the steps like ExternalService steps
                     // check if we have to break the currently rendered module
                     if ( rerouteTo != null )
-                        return interpret(rerouteTo, rcmlModel);
+                        return interpret(rerouteTo, rcmlModel, null);
                     // otherwise continue rendering the current module
                     RcmlStep rcmlStep = step.render(this);
                     if ( rcmlStep != null)
@@ -373,22 +423,22 @@ public class Interpreter {
      * If the step is executable (like ExternalService) it is executed
      * @param step
      * @return String The module name to continue rendering with
+     * @throws IOException
+     * @throws ClientProtocolException
      */
     private String processStep(Step step) throws InterpreterException {
         if (step.getClass().equals(ExternalServiceStep.class)) {
-
+            ExternalServiceStep esStep = (ExternalServiceStep) step;
+            String next = null;
             try {
 
-                ExternalServiceStep esStep = (ExternalServiceStep) step;
-
-                CloseableHttpClient client = HttpClients.createDefault();
-                //String url = populateVariables(esStep.getUrl());
+                // *** Build the request uri ***
 
                 URI url;
                 try {
-                    URIBuilder uri_builder = new URIBuilder(esStep.getUrl());
+                    URIBuilder uri_builder = new URIBuilder(populateVariables(esStep.getUrl()) ); // supports RVD variable expansion
                     if (uri_builder.getHost() == null ) {
-                        logger.info("External Service: Relative url is used. Will override from http request to RVD controller");
+                        logger.debug("External Service: Relative url is used. Will override from http request to RVD controller");
                         // if this is a relative url fill in missing fields from the request
                         uri_builder.setScheme(httpRequest.getScheme());
                         uri_builder.setHost(httpRequest.getServerName());
@@ -397,79 +447,156 @@ public class Interpreter {
                             uri_builder.setPath("/" + uri_builder.getPath());
                     }
 
-                    for ( UrlParam urlParam : esStep.getUrlParams() ) {
-                        uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
-                    }
+                    if ( esStep.getMethod() == null || "GET".equals(esStep.getMethod()) )
+                        for ( UrlParam urlParam : esStep.getUrlParams() )
+                            uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
+
                     url = uri_builder.build();
                 } catch (URISyntaxException e) {
                     throw new ErrorParsingExternalServiceUrl( "URL: " + esStep.getUrl(), e);
                 }
 
-                logger.info( "External Service: Requesting from url: " + url);
-                HttpGet get = new HttpGet( url );
-                CloseableHttpResponse response = client.execute( get );
 
-                JsonParser parser = new JsonParser();
+                // *** Make the request and get a status code and a response. Build a JsonElement from the response  ***
 
-                try {
-                    HttpEntity entity = response.getEntity();
-                    if ( entity != null ) {
-                        String entity_string = EntityUtils.toString(entity);
-                        JsonElement response_element = parser.parse(entity_string);
+                CloseableHttpClient client = HttpClients.createDefault();
+                CloseableHttpResponse response;
+                int statusCode;
+                JsonElement response_element = null;
 
-                        String nextModuleName = null;
-                        //boolean dynamicRouting = false;
-                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
-                            //dynamicRouting = true;
-                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
-                            nextModuleName = getNodeNameByLabel( moduleLabel );
-                            if ( nextModuleName == null )
-                                throw new ReferencedModuleDoesNotExist("No module found with label '" + moduleLabel + "'");
+                logger.info("Requesting from url: " + url);
+                logger.debug("Requesting from url: " + url);
+                if ( rvdContext.getProjectSettings().getLogging() )
+                    projectLogger.log("Requesting from url: " + url).tag("app",appName).tag("ES").tag("REQUEST").done();
+                if ( "POST".equals(esStep.getMethod()) ) {
+                    HttpPost post = new HttpPost(url);
+                    List <NameValuePair> values = new ArrayList <NameValuePair>();
+                    for ( UrlParam urlParam : esStep.getUrlParams() )
+                        values.add(new BasicNameValuePair(urlParam.getName(), urlParam.getValue()));
+                    post.setEntity(new UrlEncodedFormEntity(values));
+                    post.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(), esStep.getPassword()));
+                    response = client.execute( post );
+                } else
+                if ( esStep.getMethod() == null || esStep.getMethod().equals("GET") ) {
+                    HttpGet get = new HttpGet( url );
+                    get.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(), esStep.getPassword()));
+                    response = client.execute( get );
+                } else
+                    throw new InterpreterException("Unknonwn HTTP method specified: " + esStep.getMethod() );
 
-                            logger.debug( "Dynamic routing enabled. Chosen target: " + nextModuleName);
-                            for ( Assignment assignment : esStep.getAssignments() ) {
-                                logger.debug("working on variable " + assignment.getDestVariable() );
-                                logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
-                                if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(nextModuleName) ) {
-                                    String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
-                                    variables.put(assignment.getDestVariable(), value );
-                                } else
-                                    logger.debug("skipped assignment to " + assignment.getDestVariable() );
-                            }
-                        }  else {
-                            for ( Assignment assignment : esStep.getAssignments() ) {
-                                logger.debug("working on variable " + assignment.getDestVariable() );
-                                String value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
-                                variables.put(assignment.getDestVariable(), value );
-                            }
+                statusCode = response.getStatusLine().getStatusCode();
 
-                        }
-                        logger.debug("variables after processing ExternalService step: " + variables.toString() );
-                        if ( esStep.getDoRouting() ) {
-                            String next = "";
-                            if ( "fixed".equals( esStep.getNextType() ) )
-                                next = esStep.getNext();
-                            else
-                            if ( "responseBased".equals( esStep.getNextType() ))
-                                next = nextModuleName;
-                            if ( "".equals(next) )
-                                throw new ReferencedModuleDoesNotExist("No module specified for ES routing");
-                            return next;
-                        }
-                    }
-                } catch (JsonSyntaxException e) {
-                    throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
-                } finally {
-                    response.close();
+                // In  case of error in the service no need to proceed. Just continue the "onException" module if set
+                if ( statusCode >= 400 && statusCode < 600 ) {
+                    logger.info("Remote service failed with: " + response.getStatusLine());
+                    if ( ! RvdUtils.isEmpty(esStep.getExceptionNext()) )
+                        return esStep.getExceptionNext();
+                    else
+                        throw new RemoteServiceError("Service " + url + " failed with: " + response.getStatusLine() +". Throwing an error since no 'On Remote Exception' has been defined.");
                 }
 
-            }
-            catch (IOException e) {
+                // Parse the response if (a) there are assignments or (b) there is dynamic or mapped routing
+                if ( esStep.getAssignments() != null && esStep.getAssignments().size() > 0
+                        || esStep.getDoRouting() && ("responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) ) {
+                    HttpEntity entity = response.getEntity();
+                    if ( entity != null ) {
+                        JsonParser parser = new JsonParser();
+                        String entity_string = EntityUtils.toString(entity);
+                        //logger.info("ES: Received " + entity_string.length() + " bytes");
+                        //logger.debug("ES Response: " + entity_string);
+                        if ( rvdContext.getProjectSettings().getLogging() )
+                            projectLogger.log(entity_string).tag("app",appName).tag("ES").tag("RESPONSE").done();
+                        response_element = parser.parse(entity_string);
+                    }
+                } else
+                    logger.debug("ES: No parsing will be done to the response");
+
+                // *** Determine what to do next. Find the next module name or whether to continue in the current module ***
+
+                if ( esStep.getDoRouting() ) {
+                    if ( "fixed".equals( esStep.getNextType() ) )
+                        next = esStep.getNext();
+                    else
+                    if ( "responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) {
+                        String nextValue = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+
+                        if ( "responseBased".equals(esStep.getNextType()) ) {
+                            next = getNodeNameByLabel( nextValue );
+                        } else
+                        if ( "mapped".equals(esStep.getNextType()) ) {
+                            if ( esStep.getRouteMappings() != null ) {
+                                for ( RouteMapping mapping : esStep.getRouteMappings() ) {
+                                    if ( nextValue != null && nextValue.equals(mapping.getValue()) ) {
+                                        next = mapping.getNext();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // if no next route has been found throw an error
+                    if ( "fixed".equals(esStep.getNextType()) && RvdUtils.isEmpty(next) ) {
+                        throw new InterpreterException("No valid module could be found for ES routing"); // use a general exception for now.
+                        //next = esStep.getDefaultNext();
+                        //if ( RvdUtils.isEmpty(next) )
+                        //    throw new ReferencedModuleDoesNotExist("No module specified for ES routing and no default route exists either");
+                        //logger.debug("No valid route returned. Will use default route: " + next );
+                    }
+                    logger.info( "Routing enabled. Chosen target: " + next);
+                }
+
+
+                // *** Perform the assignments ***
+
+                try {
+                    if ( esStep.getDoRouting() && ("responseBased".equals(esStep.getNextType()) || "mapped".equals(esStep.getNextType())) ) {
+                        for ( Assignment assignment : esStep.getAssignments() ) {
+                            logger.debug("working on variable " + assignment.getDestVariable() );
+                            logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
+                            if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(next) ) {
+                                String value = null;
+                                try {
+                                    value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                                } catch ( BadExternalServiceResponse e ) {
+                                    logger.error("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response");
+                                    throw e;
+                                }
+
+                                if ( "application".equals(assignment.getScope()) )
+                                    putStickyVariable(assignment.getDestVariable(), value);
+                                variables.put(assignment.getDestVariable(), value );
+                            } else
+                                logger.debug("skipped assignment to " + assignment.getDestVariable() );
+                        }
+                    }  else {
+                        for ( Assignment assignment : esStep.getAssignments() ) {
+                            logger.debug("working on variable " + assignment.getDestVariable() );
+                            String value = null;
+                            try {
+                                value = evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
+                            } catch ( BadExternalServiceResponse e ) {
+                                logger.error("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response");
+                                throw e;
+                            }
+
+                            if ( "application".equals(assignment.getScope()) )
+                                putStickyVariable(assignment.getDestVariable(), value);
+
+                            variables.put(assignment.getDestVariable(), value );
+                        }
+                    }
+                    logger.debug("variables after processing ExternalService step: " + variables.toString() );
+                } catch (JsonSyntaxException e) {
+                    throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
+                }
+
+            } catch (IOException e) {
                 throw new ESRequestException("Error processing ExternalService step " + step.getName(), e);
             }
+            return next;
 
+        } // if (step.getClass().equals(ExternalServiceStep.class))
 
-        }
         return null;
     }
 
@@ -478,6 +605,8 @@ public class Interpreter {
      * expressions with their corresponding values from interpreter's variables map
      */
     public String populateVariables(String sourceText) {
+        if ( sourceText == null )
+            return sourceText;
 
         // This class serves strictly the purposes of the following algorithm
         final class VariableInText {
@@ -490,7 +619,7 @@ public class Interpreter {
             }
         }
 
-        Pattern pattern = Pattern.compile("\\$([A-Za-z]+[A-Za-z0-9_-]*)");
+        Pattern pattern = Pattern.compile("\\$([A-Za-z]+[A-Za-z0-9_]*)");
         Matcher matches = pattern.matcher(sourceText);
 
         int searchStart = 0;
@@ -525,17 +654,37 @@ public class Interpreter {
                 query += "?";
             else
                 query += "&";
-            query += key + "=" + pairs.get(key);
+
+            String encodedValue = "";
+            String value = pairs.get(key);
+            if ( value != null )
+                try {
+                    encodedValue = URLEncoder.encode( value, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    logger.warn("Error encoding RVD variable " + key + ": " + value, e);
+                }
+
+            query += key + "=" + encodedValue;
         }
 
         // append sticky parameters
         for ( String variableName : variables.keySet() ) {
-            if( variableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+            if( variableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
                 if ("".equals(query))
                     query += "?";
                 else
                     query += "&";
-                query += variableName + "=" + variables.get(variableName);
+
+                String encodedValue = "";
+                String value = variables.get(variableName);
+                if ( value != null )
+                    try {
+                        encodedValue = URLEncoder.encode( value, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        logger.warn("Error encoding RVD variable " + variableName + ": " + value, e);
+                    }
+
+                query += variableName + "=" + encodedValue;
             }
         }
 
@@ -625,7 +774,9 @@ public class Interpreter {
             int filenameBeforeStartPos = fileResource.lastIndexOf('/');
             if ( filenameBeforeStartPos != -1 ) {
                 wavFilename = fileResource.substring(filenameBeforeStartPos+1);
-                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                String hostname = rvdSettings.getEffectiveRestcommIp(request);
+                //URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(hostname).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
                 httpResource = httpUriBuilder.build().toString();
             }
         }
@@ -633,35 +784,107 @@ public class Interpreter {
         return httpResource;
     }
     /**
+     * Make 'local copies' of sticky_*  parameters passed in the URL.
      * Propagate existing sticky variables by putting them in the variables array. Whoever creates an action link from now on should take them into account
      * also make a local copy of them without the sticky_ prefix so that they can be accessed as ordinary module variables
      */
+    /*
     public void handleStickyParameters() {
         for ( String anyVariableName : getRequestParams().keySet() ) {
-            if ( anyVariableName.startsWith(RvdSettings.STICKY_PREFIX) ) {
+            if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
                 // set up sticky variables
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(anyVariableName, variableValue );
 
                 // make local copies
                 // First, rip off the sticky_prefix
-                String localVariableName = anyVariableName.substring(RvdSettings.STICKY_PREFIX.length());
+                String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
                 getVariables().put(localVariableName, variableValue);
             }
         }
     }
+    */
+
+    public void putStickyVariable(String name, String value) {
+            variables.put(RvdConfiguration.STICKY_PREFIX + name, value);
+    }
 
     /**
-     * Create rvd variables out of Restcomm request parameters such as 'CallSid', 'AccountSid' etc. Use the 'core_'
-     * prefix in their names.
+     * Create rvd variables out of parameters passed in the URL. Restcomm request parameters such as 'CallSid', 'AccountSid' etc. are prefixed with the 'core_'
+     * prefix in their names. Also, sticky_* prefixed parameters have their local copied variables created as well.
      */
     private void processRequestParameters() {
-        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","CallStatus","ApiVersion","Direction","CallerName"}));
+        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
         for ( String anyVariableName : getRequestParams().keySet() ) {
             if ( validNames.contains(anyVariableName) ) {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
-                getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
+                getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
+            } else
+            if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
+                // set up sticky variables
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(anyVariableName, variableValue );
+
+                // make local copies
+                // First, rip off the sticky_prefix
+                String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
+                getVariables().put(localVariableName, variableValue);
+            } else {
+                //for the rest of the parameters simply create a variable with the same name
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(anyVariableName, variableValue );
             }
         }
     }
+
+    /** Add bootstrap parameters to the variables array. Usually these are used in application downloaded
+     * from the app store.
+     * @throws StorageException
+     *
+     *
+     */
+    private void processBootstrapParameters() throws StorageException {
+
+        if ( ! FsProjectStorage.hasBootstrapInfo(appName, workspaceStorage) )
+            return; // nothing to do
+
+         String data = FsProjectStorage.loadBootstrapInfo(appName,workspaceStorage);
+         JsonParser parser = new JsonParser();
+         JsonElement rootElement = parser.parse(data);
+
+        if ( rootElement.isJsonObject() ) {
+            JsonObject rootObject = rootElement.getAsJsonObject();
+            for ( Entry<String, JsonElement> entry : rootObject.entrySet() ) {
+                String name = entry.getKey();
+                JsonElement valueElement = entry.getValue();
+                String value;
+                if ( valueElement.isJsonPrimitive() && valueElement.getAsJsonPrimitive().isString() ) {
+                    value = valueElement.getAsJsonPrimitive().getAsString();
+                    getVariables().put(name, value);
+                    logger.debug("Loaded bootstrap parameter: " + name + " - " + value);
+                } else
+                    logger.warn("Warning. Not-string bootstrap value found for parameter: " + name);
+            }
+        }
+    }
+
+    /*
+     *  JsonParser parser = new JsonParser();
+
+                try {
+                    HttpEntity entity = response.getEntity();
+                    if ( entity != null ) {
+                        String entity_string = EntityUtils.toString(entity);
+                        logger.info("ES: Received " + entity_string.length() + " bytes");
+                        logger.debug("ES Response: " + entity_string);
+                        JsonElement response_element = parser.parse(entity_string);
+
+                        String nextModuleName = null;
+                        //boolean dynamicRouting = false;
+                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
+                            //dynamicRouting = true;
+                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
+                            nextModuleNam
+                         */
+
 }

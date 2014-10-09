@@ -25,6 +25,16 @@
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{account_sid};
   </select>
   
+  <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_incoming_phone_numbers WHERE account_sid=#{accountSid}
+    <if test="friendlyName != null">
+			AND friendly_name=#{friendlyName}
+	</if>
+	<if test="phoneNumber != null">
+			AND phone_number like #{phoneNumber}
+	</if>
+  </select>
+  
   <delete id="removeIncomingPhoneNumber" parameterType="string">
     DELETE FROM "restcomm_incoming_phone_numbers" WHERE "sid"=#{sid};
   </delete>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<UssdCollect action="http://127.0.0.1:8080/restcomm.application-7.1.5-TelScale-SNAPSHOT/ussd-rcml.xml">
+	<UssdCollect action="http://127.0.0.1:8080/restcomm/ussd-rcml.xml">
 		<UssdMessage>Please press</UssdMessage>
 		<UssdMessage>1 For option1</UssdMessage>
 		<UssdMessage>2 For option2</UssdMessage>

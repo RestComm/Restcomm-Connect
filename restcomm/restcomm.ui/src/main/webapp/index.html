@@ -6,7 +6,9 @@
         <link rel="icon" type="image/png" href="resources/img/favicon.png">
         <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css" />
         <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css" />
+        <link rel="stylesheet" href="lib/bootstrap-multiselect/css/bootstrap-multiselect.css" />
         <link rel="stylesheet" href="lib/animate/animate.css" />
+        <link rel="stylesheet" href="lib/world-flags/stylesheets/flags16.css" />
         <link rel="stylesheet" href="resources/css/restcomm.css" />
         <style type="text/css">
 
@@ -89,11 +91,17 @@
 
         <!-- Angular does some things with CSS so it's good to load this in the head -->
         <script type="text/javascript" src="lib/jquery/jquery.js"></script>
+        <script type="text/javascript" src="lib/file-upload/angular-file-upload-shim.min.js"></script>
         <script type="text/javascript" src="lib/angular/angular.min.js"></script>
+        <script type="text/javascript" src="lib/file-upload/angular-file-upload.min.js"></script>
         <script type="text/javascript" src="lib/angular-route/angular-route.min.js"></script>
         <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
+        <script type="text/javascript" src="lib/underscore/underscore.js"></script>
+        <script type="text/javascript" src="lib/underscore/underscore.string.js"></script>
         <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="lib/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
         <script type="text/javascript" src="lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+        <script type="text/javascript" src="lib/ng-password-strength/js/ng-password-strength.js"></script>
         <script type="text/javascript" src="lib/http-auth-interceptor/http-auth-interceptor.js"></script>
 
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
@@ -110,6 +118,7 @@
         <script type="text/javascript" src="resources/js/controllers/numbers-incoming.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-outgoing.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/rappmanager.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
         <script type="text/javascript" src="resources/js/directives.js"></script>
@@ -132,6 +141,7 @@
                         <div class="navbar-header">
                             <span class="navbar-brand"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
                         </div>
+                        <i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
                         <div class="navbar-collapse collapse">
                             <div ng-show="auth.isLoggedIn()">
                             <ul class="nav navbar-nav">
@@ -144,17 +154,22 @@
                                 <li class="divider-vertical"></li>
                                 <!--<li><a ng-click="testNotifications()"><i class="fa fa-flag-checkered"></i> Notification</a></li>-->
                                 <!--<li class="divider-vertical"></li>-->
-                                <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="fa fa-sitemap"></i> RVD</a></li>
+                                <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="fa fa-pencil"></i> Visual Designer</a></li>
                                 <li class="divider-vertical"></li>
+                                <!-- 
+                                <li><a ng-href="#/ras/" ><i class="fa fa-shopping-cart"></i> Restcomm Apps</a></li>
+                                <li class="divider-vertical"></li>  
+                                -->                              
                                 <!--<li><a ng-href="#/providers"><i class="fa fa-cogs"></i> Providers</a></li>-->
                                 <!--<li class="divider-vertical"></li>-->
                                 <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
                                 <!--<li class="divider-vertical"></li>-->
                             </ul>
+                            <!--<i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>-->
                             <ul class="nav navbar-nav pull-right">
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ auth.getLoggedUser() }} <b class="caret"></b></a>
-                                    <ul id="rightMenu" class="dropdown-menu">
+                                    <ul id="rightMenu" class="dropdown-menu pull-right">
                                         <li><a href="#/profile/{{ auth.getAccountSid() }}"><i class="fa fa-cog"></i> Account Settings</a></li>
                                         <li class="divider"></li>
                                         <li class="navbar-header text-muted" style="margin-left: 10px;">Sub Accounts</li>

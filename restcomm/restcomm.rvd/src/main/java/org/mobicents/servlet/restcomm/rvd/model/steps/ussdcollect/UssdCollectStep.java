@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
@@ -56,7 +56,7 @@ public class UssdCollectStep extends Step {
         return rcml;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
-        logger.debug("UssdCollect handler");
+        logger.info("UssdCollect handler");
         if ("menu".equals(gatherType)) {
 
             boolean handled = false;
@@ -69,12 +69,12 @@ public class UssdCollectStep extends Step {
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
                     // seems we found out menu selection
                     logger.debug("seems we found our menu selection");
-                    interpreter.interpret(mapping.next,null);
+                    interpreter.interpret(mapping.next,null,null);
                     handled = true;
                 }
             }
             if (!handled) {
-                interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null);
+                interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null,null);
             }
         }
         if ("collectdigits".equals(gatherType)) {
@@ -89,12 +89,12 @@ public class UssdCollectStep extends Step {
             if ( "application".equals(collectdigits.scope) ) {
                 logger.debug("'" + variableName + "' is application scoped");
                 // if it is, create a sticky_* variable named after it
-                interpreter.getVariables().put(RvdSettings.STICKY_PREFIX + variableName, variableValue);
+                interpreter.getVariables().put(RvdConfiguration.STICKY_PREFIX + variableName, variableValue);
             }
             // in any case initialize the module-scoped variable
             interpreter.getVariables().put(variableName, variableValue);
 
-            interpreter.interpret(collectdigits.next,null);
+            interpreter.interpret(collectdigits.next,null,null);
         }
     }
 }

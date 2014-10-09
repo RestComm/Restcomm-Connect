@@ -3,7 +3,7 @@
 <div class="row">
     <div class="col-md-3">
         <div class="tabbable tabs-left">
-            <ul class="nav nav-tabs" style="margin: 0;" >
+            <ul class="nav nav-tabs" style="margin: 0; width: 100%;" >
                 <li ng-repeat-start="acc in accounts" class="disabled" ng-show="$index == 1"><a>SUB ACCOUNTS</a></li>
                 <li ng-repeat-end ng-class="acc.sid == account.sid ? 'active grey-tab' : ''"><a href="#/profile/{{acc.sid}}" ng-class="$first ? 'fa fa-link' : ''"> {{ acc.friendly_name }}</a></li>
             </ul>
@@ -43,7 +43,9 @@
                     <h5 class="no-margins">Password</h5>
                 </label>
                 <div class="col-md-4">
-                    <input id="newPassword" name="newPassword" type="password" class="form-control" placeholder="New Password" ng-model="newPassword" />
+                    <style type="text/css">div.password-strength span { right: 20px !important; }</style>
+                    <div ng-show="newPassword" class="col-md-12 password-strength" ng-password-strength="newPassword" style="padding: inherit;"></div>
+                    <input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newPassword}" placeholder="New Password" ng-model="newPassword" />
                 </div>
                 <div class="col-md-4">
                     <input id="passwordConfirmation" name="newPassword2" type="password" class="form-control" placeholder="Confirm New Password" ng-model="newPassword2" />
@@ -79,7 +81,7 @@
         </form>
 
         <div class="">
-            <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="accountChanged" ng-disabled="!accountValid">Save</button>
+            <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="accountChanged" ng-disabled="(newPassword && pwdStrength < 50) || !accountValid">Save</button>
             <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="accountChanged">Reset Changes</button>
             <button class="btn btn-danger pull-left disabled">Delete Account</button>
         </div>

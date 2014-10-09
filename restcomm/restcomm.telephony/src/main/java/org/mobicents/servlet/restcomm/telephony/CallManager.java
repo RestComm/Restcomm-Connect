@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.telephony;
 
@@ -285,7 +288,7 @@ public final class CallManager extends UntypedActor {
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String formatedPhone = null;
         try {
-        formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
         } catch (Exception e) {}
         try {
             // Try to find an application defined for the phone number.
@@ -394,6 +397,7 @@ public final class CallManager extends UntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+        logger.debug("######### CallManager new message received, message instanceof : "+klass+" from sender : "+sender.getClass());
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
@@ -460,6 +464,18 @@ public final class CallManager extends UntypedActor {
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
         }
+        //        else {
+        //            SipSession sipSession = request.getSession();
+        //            SipApplicationSession sipAppSession = request.getApplicationSession();
+        //            if(sipSession.getInvalidateWhenReady()){
+        //                logger.info("Invalidating sipSession: "+sipSession.getId());
+        //                sipSession.invalidate();
+        //            }
+        //            if(sipAppSession.getInvalidateWhenReady()){
+        //                logger.info("Invalidating sipAppSession: "+sipAppSession.getId());
+        //                sipAppSession.invalidate();
+        //            }
+        //        }
     }
 
     private void execute(final Object message) {
@@ -550,7 +566,12 @@ public final class CallManager extends UntypedActor {
             case SIP: {
                 to = (SipURI) sipFactory.createURI(request.to());
                 String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
-                from = outboundInterface(transport);
+                SipURI outboundIntf = outboundInterface(transport);
+                if (request.from() == null) {
+                    from = outboundInterface(transport);
+                } else {
+                    from = sipFactory.createSipURI(request.from(), outboundIntf.getHost()+":"+outboundIntf.getPort());
+                }
                 break;
             }
         }

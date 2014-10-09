@@ -1,22 +1,21 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.ussd;
 
@@ -43,6 +42,7 @@ import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
@@ -102,10 +102,12 @@ public class UssdPullTest {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseBob == Response.TRYING);
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        } else {
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        }
         
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
@@ -208,9 +210,11 @@ public class UssdPullTest {
     @Deployment(name = "UssdPullTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        final WebArchive archive = ShrinkWrapMaven.resolver()
+        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
+        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
+        archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");

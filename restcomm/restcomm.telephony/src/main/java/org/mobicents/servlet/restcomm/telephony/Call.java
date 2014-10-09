@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.telephony;
 
@@ -114,7 +117,6 @@ import akka.event.LoggingAdapter;
  * @author gvagenas@telestax.com (George Vagenas)
  */
 public final class Call extends UntypedActor {
-
     // Define possible directions.
     private static final String INBOUND = "inbound";
     private static final String OUTBOUND_API = "outbound-api";
@@ -270,7 +272,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(auditingRemoteConnection, auditingRemoteConnection));
         transitions.add(new Transition(auditingRemoteConnection, closingRemoteConnection));
         transitions.add(new Transition(dialing, busy));
-//        transitions.add(new Transition(dialing, failingBusy));
+        // transitions.add(new Transition(dialing, failingBusy));
         transitions.add(new Transition(dialing, canceling));
         transitions.add(new Transition(dialing, failingNoAnswer));
         transitions.add(new Transition(dialing, ringing));
@@ -345,8 +347,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from,
-                to, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, lastResponse);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -369,7 +370,7 @@ public final class Call extends UntypedActor {
         // and store it to the sip session to be used as request uri later
         String realIP = message.getInitialRemoteAddr();
         Integer realPort = message.getInitialRemotePort();
-        if (realPort == null)
+        if (realPort == null || realPort == -1)
             realPort = 5060;
 
         final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
@@ -442,6 +443,7 @@ public final class Call extends UntypedActor {
     private void stopRecordingCall() throws UnsupportedAudioFileException, IOException {
         logger.info("Stop recording call");
         if (group != null) {
+            recording = false;
             group.tell(new Stop(), null);
             Double duration = WavUtils.getAudioDuration(recordingUri);
             if (duration.equals(0.0)) {
@@ -455,7 +457,8 @@ public final class Call extends UntypedActor {
             builder.setDuration(duration);
             builder.setApiVersion(runtimeSettings.getString("api-version"));
             StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
+            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                    .append(accountId.toString());
             buffer.append("/Recordings/").append(recordingSid.toString());
             builder.setUri(URI.create(buffer.toString()));
             final Recording recording = builder.build();
@@ -474,7 +477,7 @@ public final class Call extends UntypedActor {
         final ActorRef sender = sender();
         final State state = fsm.state();
         logger.info("********** Call's Current State: \"" + state.toString());
-        logger.info("********** Call Processing Message: \"" + klass.getName());
+        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : "+sender.getClass());
 
         if (Observe.class.equals(klass)) {
             observe(message);
@@ -490,9 +493,9 @@ public final class Call extends UntypedActor {
             fsm.transition(message, acquiringMediaGatewayInfo);
         } else if (Reject.class.equals(klass)) {
             fsm.transition(message, busy);
-        } else if(JoinComplete.class.equals(klass)) {
+        } else if (JoinComplete.class.equals(klass)) {
             if (sender.equals(outboundCall)) {
-                JoinComplete joinComplete = (JoinComplete)message;
+                JoinComplete joinComplete = (JoinComplete) message;
                 outboundCallBridgeEndpoint = joinComplete.endpoint();
                 final Join join = new Join(outboundCallBridgeEndpoint, ConnectionMode.SendRecv);
                 group.tell(join, null);
@@ -510,7 +513,7 @@ public final class Call extends UntypedActor {
             recording = true;
             startRecordingCall();
         } else if (StopRecordingCall.class.equals(klass)) {
-            if(recording) {
+            if (recording) {
                 StopRecordingCall stopRecoringdCall = (StopRecordingCall) message;
                 if (runtimeSettings == null)
                     this.runtimeSettings = stopRecoringdCall.getRuntimeSetting();
@@ -629,7 +632,7 @@ public final class Call extends UntypedActor {
                 case SipServletResponse.SC_BUSY_HERE:
                 case SipServletResponse.SC_BUSY_EVERYWHERE: {
                     sendCallInfoToObservers();
-                    if(dialing.equals(state)){
+                    if (dialing.equals(state)) {
                         break;
                     } else {
                         fsm.transition(message, failingBusy);
@@ -770,7 +773,7 @@ public final class Call extends UntypedActor {
 
     @SuppressWarnings("unchecked")
     private String patch(final String contentType, final byte[] data, final String externalIp) throws UnknownHostException,
-    SdpException {
+            SdpException {
         final String text = new String(data);
         String patchedSdp = null;
         if (contentType.equalsIgnoreCase("application/sdp")) {
@@ -871,6 +874,7 @@ public final class Call extends UntypedActor {
             username = request.username();
             password = request.password();
             type = request.type();
+            recordsDao = request.getDaoManager().getCallDetailRecordsDao();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
@@ -901,31 +905,36 @@ public final class Call extends UntypedActor {
             }
 
             if (recordsDao != null) {
-                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                builder.setSid(id);
-                builder.setDateCreated(created);
-                builder.setAccountSid(accountId);
-                builder.setTo(to.getUser());
-                builder.setCallerName(name);
-                String fromString = from.getUser() != null ? from.getUser() : "rcml app";
-                builder.setFrom(fromString);
-                // builder.setForwardedFrom(callInfo.forwardedFrom());
-                // builder.setPhoneNumberSid(phoneId);
-                builder.setStatus(external.name());
-                builder.setDirection("outbound-api");
-                builder.setApiVersion(apiVersion);
-                builder.setPrice(new BigDecimal("0.00"));
-                // TODO implement currency property to be read from Configuration
-                builder.setPriceUnit(Currency.getInstance("USD"));
-                final StringBuilder buffer = new StringBuilder();
-                buffer.append("/").append(apiVersion).append("/Accounts/");
-                buffer.append(accountId.toString()).append("/Calls/");
-                buffer.append(id.toString());
-                final URI uri = URI.create(buffer.toString());
-                builder.setUri(uri);
-
-                outgoingCallRecord = builder.build();
-                recordsDao.addCallDetailRecord(outgoingCallRecord);
+                CallDetailRecord cdr = recordsDao.getCallDetailRecord(id);
+                if (cdr == null) {
+                    final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                    builder.setSid(id);
+                    builder.setDateCreated(created);
+                    builder.setAccountSid(accountId);
+                    builder.setTo(to.getUser());
+                    builder.setCallerName(name);
+                    String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
+                    builder.setFrom(fromString);
+                    // builder.setForwardedFrom(callInfo.forwardedFrom());
+                    // builder.setPhoneNumberSid(phoneId);
+                    builder.setStatus(external.name());
+                    builder.setDirection("outbound-api");
+                    builder.setApiVersion(apiVersion);
+                    builder.setPrice(new BigDecimal("0.00"));
+                    // TODO implement currency property to be read from Configuration
+                    builder.setPriceUnit(Currency.getInstance("USD"));
+                    final StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(apiVersion).append("/Accounts/");
+                    buffer.append(accountId.toString()).append("/Calls/");
+                    buffer.append(id.toString());
+                    final URI uri = URI.create(buffer.toString());
+                    builder.setUri(uri);
+                    builder.setCallPath(self().path().toString());
+                    outgoingCallRecord = builder.build();
+                    recordsDao.addCallDetailRecord(outgoingCallRecord);
+                } else {
+                    cdr.setStatus(external.name());
+                }
             }
 
         }
@@ -1101,16 +1110,16 @@ public final class Call extends UntypedActor {
                 // Check if we have to record the call
             }
             // Start recording if RecordingType.RECORD_FROM_RINGING
-            //            if (recordingType != null && recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING)) {
-            //                if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
-            //                    logger.info("Starting recording call with recording type: " + recordingType.toString());
-            //                    logger.info("Telling initial call to start recording");
-            //                    initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
-            //                } else {
-            //                    logger.info("Starting recording call with recording type: " + recordingType.toString());
-            //                    startRecordingCall();
-            //                }
-            //            }
+            // if (recordingType != null && recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING)) {
+            // if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
+            // logger.info("Starting recording call with recording type: " + recordingType.toString());
+            // logger.info("Telling initial call to start recording");
+            // initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
+            // } else {
+            // logger.info("Starting recording call with recording type: " + recordingType.toString());
+            // startRecordingCall();
+            // }
+            // }
             // Notify the observers.
             external = CallStateChanged.State.RINGING;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1295,11 +1304,16 @@ public final class Call extends UntypedActor {
                 gateway.tell(new DestroyConnection(remoteConn), source);
                 remoteConn = null;
             }
+
+            invite.createResponse(503, "Problem to setup services").send();
             // Explicitly invalidate the application session.
-            if (invite.getSession().isValid())
-                invite.getSession().invalidate();
-            if (invite.getApplicationSession().isValid())
-                invite.getApplicationSession().invalidate();
+            if (invite.getSession().isValid()) {
+                invite.getSession().setInvalidateWhenReady(true);
+            }
+            if (invite.getApplicationSession().isValid()) {
+                invite.getApplicationSession().setInvalidateWhenReady(true);
+            }
+
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1345,17 +1359,17 @@ public final class Call extends UntypedActor {
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
 
-                //                // Check if we have to record the call
-                //                if (recordingType.equals(CreateCall.RecordingType.RECORD_FROM_ANSWER)) {
-                //                    if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
-                //                        logger.info("Starting recording call with recording type: " + recordingType.toString());
-                //                        logger.info("Telling initial call to start recording");
-                //                        initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
-                //                    } else {
-                //                        logger.info("Starting recording call with recording type: " + recordingType.toString());
-                //                        startRecordingCall();
-                //                    }
-                //                }
+                // // Check if we have to record the call
+                // if (recordingType.equals(CreateCall.RecordingType.RECORD_FROM_ANSWER)) {
+                // if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
+                // logger.info("Starting recording call with recording type: " + recordingType.toString());
+                // logger.info("Telling initial call to start recording");
+                // initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
+                // } else {
+                // logger.info("Starting recording call with recording type: " + recordingType.toString());
+                // startRecordingCall();
+                // }
+                // }
             }
 
             final String externalIp = invite.getInitialRemoteAddr();
@@ -1467,7 +1481,8 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+            if (outgoingCallRecord != null && direction.contains("outbound")
+                    && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setStartTime(now);
@@ -1479,6 +1494,7 @@ public final class Call extends UntypedActor {
 
     /**
      * Patches an SDP description by trimming and making sure it ends with a new line.
+     *
      * @param sdpDescription The SDP description to be patched.
      * @return The patched SDP description
      * @author hrosa
@@ -1615,11 +1631,16 @@ public final class Call extends UntypedActor {
                 }
 
                 bye.send();
+
+                if (recording) {
+                    logger.info("Call - Will stop recording now");
+                    stopRecordingCall();
+                }
             } else if (message instanceof SipServletRequest) {
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
                 okay.send();
-                if(recording){
+                if (recording) {
                     logger.info("Call - Will stop recording now");
                     stopRecordingCall();
                 }
@@ -1647,6 +1668,7 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+            logger.info("Completing Call");
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
                 remoteConn = null;
@@ -1675,6 +1697,10 @@ public final class Call extends UntypedActor {
                 final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
                 outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                logger.debug("Start: " + outgoingCallRecord.getStartTime());
+                logger.debug("End: " + outgoingCallRecord.getEndTime());
+                logger.debug("Duration: " + seconds);
+                logger.debug("Just updated CDR for completed call");
             }
         }
     }

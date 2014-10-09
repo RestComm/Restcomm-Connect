@@ -1,0 +1,204 @@
+	<div class="step externalService-step panel panel-rvdstep">
+		<div class="panel-heading">
+			<step-heading title="step.url"><small>{{step.url.length > 80 ? step.url.substring(0, 80) + "..." : step.url.substring(0, 80) }}</small></step-heading>
+		</div>
+		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+			<div class="row">
+				<div class="col-md-12">
+				
+                    <div class="service-url-wrap">
+                    	<div class="row">
+	                    	<form class='form-group' name='form'>
+	                    		<div class="col-md-12">
+			                        <div class="input-group">
+			                            <span class="input-group-addon help-tooltip" tooltip='Specify the extrernal service URL. Avoid passing query parameters directly and use "Add URL parameter" button below.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Service Url</span>
+			                            <input name="url" ng-model='step.url' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="http://" required></input>
+			                            
+			                            <span ng-show="step.iface.advancedShown" class="input-group-addon">Method</span>
+		                        		<select ng-show="step.iface.advancedShown" ng-model='step.method' class="form-control">
+											<option value='GET'>GET</option>
+											<option value='POST'>POST</option>
+										</select>
+		                        		<span ng-show="step.iface.advancedShown" class="input-group-addon help-tooltip" tooltip='Username for BASIC HTTP authentication. Leave it blank if no authentication is used.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Username</span>
+		                        		<input ng-show="step.iface.advancedShown"  name="username" ng-model='step.username' class="form-control" type="text"></input>
+		                        		<span ng-show="step.iface.advancedShown" class="input-group-addon help-tooltip" tooltip='Password for BASIC HTTP authentication. Leave it blank if no authentication is used.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>Password</span>
+		                        		<input ng-show="step.iface.advancedShown" name="password" ng-model='step.password' class="form-control" type="text"></input>
+		                        		<span class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>		
+			                            
+			                        </div>
+			                        <div class="validation-error"  ng-show="form.url.$invalid">Specify a valid URL that returns JSON</div>
+		                        </div>
+		                    </form>
+		                </div>
+                        
+                        <div class='row'>
+                            <div ng-repeat='urlParam in step.urlParams' class="col-md-5">
+                                <div  class="input-group input-group-sm form-group">
+                                    <span class="input-group-addon">Name</span>
+                                    <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
+                                    <span class="input-group-addon">Value</span>
+                                    <input ng-model='urlParam.value' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
+                                    <span ng-click='removeUrlParam(step,urlParam)' class="input-group-addon fa fa-times rvd-clickable"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button ng-click="addUrlParam(step)" type="button" class="btn btn-xs"><span>Add URL parameter</span></button>  &nbsp; <i class="fa fa-info-circle rvd-clickable" popover="Add a name-value query parameter. Use '$variable' values to pass RVD variables" popover-placement='top'></i>
+                     </div>
+                        
+					<h4>Assign response to variables <i ng-click='step.iface.helpCollapsed = !step.iface.helpCollapsed' class="fa fa-info-circle rvd-clickable"></i></h4>
+                    <div collapse="!step.iface.helpCollapsed">
+                        <div class="well">
+                            <p>Assign JSON response fields to RVD variables to access the data returned from RVD components. Create an assignment for each separate piece of information you need.</p>
+                            <p>For each assignment:</p>
+                            <ul>
+                                <li>Fill in the "Assign to" field with the name of the RVD variable you want to create.</li>
+                                <li>Click "Add operation" to add one or more access operations until you drill down to the JSON member variable you need. For objects use the 'propertyNamed' action to access a specific property. For arrays use the 'itemAtPosition' action to access the N'th array element.</li>
+                                <li>The last operation should be 'value'. Don't forget to press 'Done' when done.</li>
+                                <li>Undo your mistakes with the circular arrow button.</li>
+                            </ul>
+                            <p>
+                                All variables variables created this way will be available for use in this module (or the next if a 'fixed' routing decision is made).
+                            </p>
+                            <h6><strong>Dynamic/Mapped routing</strong></h6>
+                            <p>
+                            	If dynamic or mapped routing is enabled you can limit the scope of an RVD variable to a single module by choosing it from the 'Module scope' dropdown. Leave it blank to execute the assignment for all modules. 
+                            </p>
+                            <div class="wellinfo-rollup"><i ng-click='step.iface.helpCollapsed = !step.iface.helpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
+                         </div> 
+                    </div>
+					
+					<div class='row form-group'>
+						<div class='col-md-2'>
+							<button ng-click="step.addAssignment()" type="button" class="btn btn-primary btn-sm"><span>Add assignment</span></button>
+						</div>
+					</div>
+					
+					<div ng-repeat="assignment in step.assignments" class="assignment form-group">
+						<div class="row">
+							<div class="col-md-5">
+								<div class="input-group input-group-sm form-group">
+									<span class="input-group-addon">Assign to</span>
+									<input ng-model='assignment.destVariable' type="text" class="form-control" placeholder='type variable name' required></input>
+									<span class="input-group-addon">Scope</span>
+									<select ng-model='assignment.scope' class="form-control">
+										<option value='module'>module</option>
+										<option value='application'>application</option>
+									</select>
+								</div>
+								
+								<div ng-class='{"rvd-disabled":!(step.doRouting && (step.nextType=="responseBased" || step.nextType=="mapped"))}' class="input-group input-group-sm form-group">
+									<span class="input-group-addon">Module scope</span>
+									<select sync-model ng-disabled='!(step.doRouting && (step.nextType=="responseBased" || step.nextType=="mapped"))'  ng-model='assignment.moduleNameScope' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix">
+										<option value="">-- All --</option>
+									</select>  
+								</div>	
+								
+							</div>
+							
+							<div class="col-md-6">
+							<value-extractor extractor-model='assignment.valueExtractor'></value-extractor>
+							</div>
+							<div class="col-md-1">
+								<span ng-click='removeAssignment(step,assignment)' class="fa fa-times text-muted remove-button rvd-clickable"></span>
+							</div>
+						</div>
+					</div>
+					
+
+				
+					<h4>Make a routing decision <i ng-click='step.iface.routingHelpCollapsed = !step.iface.routingHelpCollapsed' class="fa fa-info-circle rvd-clickable"></i></h4>
+                    <div collapse="!step.iface.routingHelpCollapsed">
+                        <div class="well">
+                            <p>Check "Continue to" checkbox below to change call flow after the external service has responded:</p>
+                            <ul>
+                            	<li>Select 'fixed' to use a hardcoded module setting.</li>
+                                <li>Select 'dynamic' to route to a module specified in the service response. In your service implementation use the label of the module (the caption on module's the tab) to indicate your choice. Notice 'Module scope' option is enabled for each assignment. You can then select a module from the dropdown list to execute the assignment for this module only. Leave it blank to execute it for all module routes.</li>
+                                <li>Select 'mapped' to create mappings from values returned in your response to destination modules. The 'Module Scope' behaviour described in 'dynamic' applies here too.</li>
+                                <li>Leave "Continue to" unchecked if you don't want to change the call flow at this point.</li>
+                            </ul>
+                            <div class="wellinfo-rollup"><i ng-click='step.iface.routingHelpCollapsed = !step.iface.routingHelpCollapsed' class="fa fa-angle-double-up rvd-clickable"></i></div>
+                         </div> 
+                    </div>		
+                    			
+					<div class="row">
+						<div class="col-md-6">
+                            <div class="input-group input-group-sm routing-decision-controls form-group">
+                                <span class="input-group-addon">
+									<input ng-model='step.doRouting' type="checkbox">
+								</span>
+                                
+								<span ng-class="{'text-muted': !step.doRouting}"  ng-model='step.next' class="input-group-addon">Continue to</span>
+								<span ng-if='step.doRouting' class="input-group-addon">
+									<span>fixed &nbsp;</span>
+									<input ng-model='step.nextType' value='fixed' type="radio">
+								</span>
+								<span ng-if='step.doRouting' class="input-group-addon">
+									<span>dynamic &nbsp;</span>
+									<input ng-model='step.nextType' value='responseBased' type="radio">
+								</span>								
+								<span ng-if='step.doRouting' class="input-group-addon">
+									<span>mapped &nbsp;</span>
+									<input ng-model='step.nextType' value='mapped' type="radio">
+								</span>
+                                
+								<!-- this is just a placeholder -->
+								<input ng-hide='step.doRouting' ng-disabled='true' class="form-control height-fix">
+							</div>
+							<div>
+								<div class="form-group">
+									<button ng-show="step.nextType=='mapped'" ng-click="step.addRouteMapping()" type="button" class="btn btn-primary btn-sm"><span>Add mapping</span></button>
+								</div>
+								<div ng-repeat="mapping in step.routeMappings" ng-show="step.nextType=='mapped'" class="row route-mapping" >
+									<div class="input-group input-group-sm form-group col-md-11">
+										<span class="input-group-addon">Value</span>
+										<input ng-model="mapping.value" class="form-control" required>
+										<span class="input-group-addon">Continue to</span>
+										<!--<select ng-model="mapping.next" sync-modules="" ng-options="target.name as target.label for target in getAllTargets()" class="form-control" style="min-width:140px;"></select>-->
+										<select sync-modules name='next' ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
+											<option value=""></option>
+										</select> 										
+										
+									</div>
+									<div class="col-md-1">
+										<span ng-click="step.removeRouteMapping(mapping)" class="fa fa-times text-muted remove-button rvd-clickable"></span>
+									</div>
+								</div>
+								<br ng-show="step.doRouting && (step.nextType=='mapped' || step.nextType=='responseBased')">
+								<!-- 
+								<div class="row form-group" ng-show="step.doRouting && (step.nextType=='mapped' || step.nextType=='responseBased')">
+									<div class="input-group col-md-12">
+										<span class="input-group-addon">Default route</span>
+										<module-picker ng-model='step.defaultNext'></module-picker>
+									</div>
+								</div>
+								 -->
+								<div class="row form-group">
+									<div class="input-group col-md-12">
+										<span class="input-group-addon help-tooltip" title="Route to this module if an HTTP error code is returned">On Remote Error</span>
+										<module-picker ng-model='step.exceptionNext'></module-picker>
+									</div>
+								</div>																
+							</div>
+													
+						</div>
+                        <div class='col-md-6'>
+                        	<form name='form'>
+                        		<div  ng-if='step.doRouting && step.nextType=="fixed"'>
+									<select sync-model name='next' ng-if='step.doRouting && step.nextType=="fixed"'  ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control height-fix" required>
+										<option value=""></option>
+									</select>   
+									<div class="validation-error"  ng-if="form.next.$invalid">Choose target module</div>
+								</div>                         
+                                <value-extractor ng-if='step.doRouting && (step.nextType=="responseBased" || step.nextType=="mapped")' extractor-model='step.nextValueExtractor'></value-extractor>
+                            </form>
+                        </div>
+					</div>
+					<div class='row'>
+					</div>
+					
+				
+				</div>
+			</div>
+					
+		</div>
+	</div>

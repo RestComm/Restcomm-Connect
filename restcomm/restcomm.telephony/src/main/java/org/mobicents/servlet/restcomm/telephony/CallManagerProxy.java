@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.telephony;
 
@@ -28,8 +31,11 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSessionEvent;
+import javax.servlet.sip.SipSessionListener;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.ussd.telephony.UssdCallManager;
@@ -43,8 +49,10 @@ import akka.actor.UntypedActorFactory;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener {
+public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener, SipSessionListener {
     private static final long serialVersionUID = 1L;
+
+    private static final Logger logger = Logger.getLogger(CallManagerProxy.class);
 
     private ActorSystem system;
     private ActorRef manager;
@@ -149,7 +157,8 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
-        // Nothing to do.
+        logger.info("SipApplicationSessionEvent received. Invalidating the sipApplicationSession: "+event.getApplicationSession().getId());
+        event.getApplicationSession().invalidate();
     }
 
     private boolean isUssdMessage(SipServletMessage message) {
@@ -167,5 +176,21 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
             }
         }
         return isUssd;
+    }
+
+    @Override
+    public void sessionCreated(SipSessionEvent se) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void sessionDestroyed(SipSessionEvent se) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void sessionReadyToInvalidate(SipSessionEvent event) {
+        logger.info("SipSessionEvent received. Invalidating the sipSession: "+event.getSession().getId());
+        event.getSession().invalidate();
     }
 }

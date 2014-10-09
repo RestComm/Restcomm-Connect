@@ -1,0 +1,45 @@
+<div>
+
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="collapse navbar-collapse navbar-ex1-collapse">
+			<div ng-show="upgradeStatus=='pending'" class='navbar-text navbar-rvd-centered'>
+				Retrieving project status...
+			</div>
+			<div ng-show="upgradeStatus=='needsUpgrade'" class='navbar-text navbar-rvd-centered'>
+				Project <em>{{projectName}}</em> was created using a different version of RVD. <a class="rvd-clickable-text" ng-click="onUpgradePressed(projectName)">Upgrade</a> or <a href="#">view available projects</a>
+			</div>
+			<div ng-show="upgradeStatus=='alreadyUpgraded'" class='navbar-text navbar-rvd-centered'>
+				Project  <em>{{projectName}}</em> is already upgraded. <a href="#/designer/{{projectName}}">Open</a> it or <a href="#">view available projects</a>
+			</div>
+			<div ng-show="upgradeStatus=='upgradeError'" class='navbar-text navbar-rvd-centered'>
+				Error upgrading <em>{{projectName}}</em>. <a href="#">View available projects</a>
+			</div>	
+		</div>
+	</nav>
+
+	<div class="row">
+		<div class="col-md-3 col-centered">
+			<!--<h3 class="text-center">Existing projects</h3> -->
+			<!-- 
+			<br/><br/>
+			<div class="row">
+				<div class="col-md-6 text-center">
+					<a href="#/project-manager/voice">
+						<div><i class="fa fa-volume-down project-kind-thumb"></i></div>
+						<div>Voice</div>
+					</a>
+				</div>
+				<div class="col-md-6 text-center">
+					<a href="#/project-manager/ussd">
+						<div><i class="fa fa-sitemap project-kind-thumb"></i></div>
+						<div>USSD</div>
+					</a>
+				</div>
+			</div>
+			 -->
+		</div>
+	</div>
+	<br/><br/><br/><br/>
+
+
+</div>

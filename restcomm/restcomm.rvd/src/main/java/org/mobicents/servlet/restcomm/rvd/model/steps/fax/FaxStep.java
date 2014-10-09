@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.RvdSettings;
-import org.mobicents.servlet.restcomm.rvd.RvdUtils;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
@@ -79,7 +79,7 @@ public class FaxStep extends Step {
         return rcmlStep;
     }
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
-        logger.debug("handling fax action");
+        logger.info("handling fax action");
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 
@@ -87,10 +87,10 @@ public class FaxStep extends Step {
         String FaxStatus = interpreter.getRequestParams().getFirst("FaxStatus");  //.getHttpRequest().getParameter("FaxStatus");
 
         if ( FaxSid != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsSid", FaxSid);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "FaxSid", FaxSid);
         if (FaxStatus != null )
-            interpreter.getVariables().put(RvdSettings.CORE_VARIABLE_PREFIX + "SmsStatus", FaxStatus);
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "FaxStatus", FaxStatus);
 
-        interpreter.interpret( getNext(), null );
+        interpreter.interpret( getNext(), null, null );
     }
 }

@@ -2,14 +2,11 @@ package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.junit.runner.RunWith;
 
 //@RunWith(Arquillian.class)
 public class RvdControllerTest {

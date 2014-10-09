@@ -7,6 +7,22 @@
 	<title>Revision History</title>
 	<simpara>
 		<revhistory>
+		
+		<revision>
+				<revnumber>2.1</revnumber>
+				<date>Tuesday 27 2014</date>
+				<author>
+					<firstname>Charles</firstname>
+					<surname>Roufay</surname>
+					<email>charles.roufay@telestax.com</email>
+				</author>
+				<revdescription>
+					<simplelist>
+						<member>Update doc with RestComm USSD Integration and new RVD features</member>
+					</simplelist>
+				</revdescription>
+			</revision>
+		
 <revision>
 				<revnumber>2.0</revnumber>
 				<date>Friday Sep 2013</date>

@@ -1,48 +1,49 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.telestax.servlet</groupId>
-    <artifactId>restcomm</artifactId>
-    <version>7.1.5-TelScale-SNAPSHOT</version>
-  </parent>
-  <artifactId>restcomm.telephony.api</artifactId>
-  <name>restcomm.telephony.api</name>
-  
-  <dependencies>
-  
-  <dependency>
-	<groupId>org.mobicents.servlet.sip</groupId>
-	<artifactId>sip-servlets-spec</artifactId>
-      <version>${sipservletapi.version}</version>
-	<scope>provided</scope>
-  </dependency>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm</artifactId>
+		<version>7.2.0-TelScale-SNAPSHOT</version>
+	</parent>
+	<artifactId>restcomm.telephony.api</artifactId>
+	<name>restcomm.telephony.api</name>
 
-  <dependency>
-	<groupId>javax.servlet</groupId>
-	<artifactId>servlet-api</artifactId>
-	<scope>provided</scope>
-  </dependency>
-  
-  <dependency>
-	<groupId>com.telestax.servlet</groupId>
-	<artifactId>restcomm.commons</artifactId>
-	<version>${project.version}</version>
-	<scope>provided</scope>
-  </dependency>
-	
-  <dependency>
-	<groupId>com.telestax.servlet</groupId>
-	<artifactId>restcomm.dao</artifactId>
-	<version>${project.version}</version>
-	<scope>provided</scope>
-  </dependency>
-		
-  <dependency>
-	<groupId>com.telestax.servlet</groupId>
-	<artifactId>restcomm.mgcp</artifactId>
-	<version>${project.version}</version>
-	<scope>provided</scope>
-  </dependency>
-  
-  </dependencies>
+	<dependencies>
+
+		<dependency>
+			<groupId>org.mobicents.servlet.sip</groupId>
+			<artifactId>sip-servlets-spec</artifactId>
+			<version>${sipservletapi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mgcp</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+	</dependencies>
 </project>
