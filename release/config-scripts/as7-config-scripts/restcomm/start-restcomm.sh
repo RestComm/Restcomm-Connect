@@ -37,11 +37,7 @@ startRestcomm() {
 			echo "Using IP Address: $BIND_ADDRESS"
 			;;
 		*)
-			# start restcomm on standalone mode
-			chmod +x $RESTCOMM_HOME/bin/standalone.sh
-			screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address
-			echo 'TelScale RestComm started running on standalone mode. Screen session: restcomm.'
-			echo "Using IP Address: $BIND_ADDRESS"
+			startRestComm 'standalone' $bind_address
 			;;
 	esac
 
@@ -99,11 +95,10 @@ LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 
 echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
-source $BASEDIR/restcomm.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
-#NET_INTERFACE=''
+NET_INTERFACE='eth0'
 STATIC_ADDRESS=''
 BIND_ADDRESS=''
 
@@ -135,24 +130,16 @@ do
 done
 
 # validate network interface and extract network properties
-if [[ -z "$NET_INTERFACE" ]]; then
-NET_INTERFACE='eth0'
-echo "Looking for the appropriate interface"
-	NET_INTERFACES=$(ifconfig | expand | cut -c1-8 | sort | uniq -u | awk -F: '{print $1;}')
-	if [[ -z $(echo $NET_INTERFACES | sed -n "/$NET_INTERFACE/p") ]]; then
-		echo "The network interface $NET_INTERFACE is not available or does not exist."
-		echo "The list of available interfaces is: $NET_INTERFACES"
-		exit 1
-	fi
+NET_INTERFACES=$(ifconfig | expand | cut -c1-8 | sort | uniq -u | awk -F: '{print $1;}')
+if [[ -z $(echo $NET_INTERFACES | sed -n "/$NET_INTERFACE/p") ]]; then
+	echo "The network interface $NET_INTERFACE is not available or does not exist."
+	echo "The list of available interfaces is: $NET_INTERFACES"
+	exit 1
 fi
 
 # load network properties for chosen interface
-if [[ -z "$PRIVATE_IP" || -z "$SUBNET_MASK" || -z "$NETWORK" || -z "$BROADCAST_ADDRESS" ]]; then
-echo "Looking for the IP Address, subnet, network and broadcast_address"
-	source $BASEDIR/utils/read-network-props.sh "$NET_INTERFACE"
-fi
+source $BASEDIR/utils/read-network-props.sh "$NET_INTERFACE"
 BIND_ADDRESS="$PRIVATE_IP"
-
 
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	STATIC_ADDRESS=$BIND_ADDRESS
