@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.telephony;
 
@@ -79,7 +82,6 @@ public final class MediaGroup extends UntypedActor {
     private final MediaSession session;
     private ActorRef link;
     private ActorRef ivr;
-    private ActorRef recordCallIvr;
     private boolean ivrInUse;
     // Runtime stuff.
     private final List<ActorRef> observers;
@@ -200,6 +202,7 @@ public final class MediaGroup extends UntypedActor {
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
+        final ActorRef sender = sender();
         if (Observe.class.equals(klass)) {
             observe(message);
         } else if (StopObserving.class.equals(klass)) {
@@ -261,6 +264,10 @@ public final class MediaGroup extends UntypedActor {
             } else if (IvrEndpointResponse.class.equals(klass)) {
                 notification(message);
             }
+        } else if (ivrInUse) {
+            if (Stop.class.equals(klass)) {
+                stop();
+            }
         }
     }
 
@@ -277,6 +284,7 @@ public final class MediaGroup extends UntypedActor {
         builder.setRecordingLength(request.length());
         builder.setEndInputKey(request.endInputKey());
         builder.setRecordingId(request.destination());
+        stop();
         ivr.tell(builder.build(), self);
         ivrInUse = true;
     }
@@ -457,14 +465,6 @@ public final class MediaGroup extends UntypedActor {
                 gateway.tell(new DestroyLink(internalLink), source);
                 internalLink = null;
             }
-            if (internalLinkEndpoint != null) {
-                gateway.tell(new DestroyEndpoint(internalLinkEndpoint), source);
-                internalLinkEndpoint = null;
-            }
-            if (ivr != null) {
-                gateway.tell(new DestroyEndpoint(ivr), source);
-                ivr = null;
-            }
             // Notify the observers.
             final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
             for (final ActorRef observer : observers) {
@@ -489,14 +489,6 @@ public final class MediaGroup extends UntypedActor {
 
     @Override
     public void postStop() {
-        if (link != null) {
-            gateway.tell(new DestroyLink(link), null);
-            link = null;
-        }
-        if (internalLink != null) {
-            gateway.tell(new DestroyLink(internalLink), null);
-            internalLink = null;
-        }
         if (internalLinkEndpoint != null) {
             gateway.tell(new DestroyEndpoint(internalLinkEndpoint), null);
             internalLinkEndpoint = null;

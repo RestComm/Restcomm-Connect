@@ -1,22 +1,21 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag. 
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 
 package org.mobicents.servlet.restcomm.telephony;
@@ -43,7 +42,7 @@ import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
@@ -201,6 +200,7 @@ public class DialActionTest {
 
         assertTrue(data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("failed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
 
@@ -275,6 +275,7 @@ public class DialActionTest {
 
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -349,6 +350,7 @@ public class DialActionTest {
 
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -424,6 +426,7 @@ public class DialActionTest {
         assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -494,6 +497,7 @@ public class DialActionTest {
 
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("no_answer"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
@@ -563,6 +567,7 @@ public class DialActionTest {
         
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
+        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("busy"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
 
@@ -585,63 +590,11 @@ public class DialActionTest {
     @Deployment(name = "DialAction", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        final WebArchive archive = ShrinkWrapMaven.resolver()
+        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
+        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
-        JavaArchive dependency = ShrinkWrapMaven.resolver().resolve("commons-configuration:commons-configuration:jar:1.7")
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("jain:jain-mgcp-ri:jar:1.0").withoutTransitivity()
-                .asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("org.mobicents.media.client:mgcp-driver:jar:3.0.0.Final")
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("joda-time:joda-time:jar:2.0").withoutTransitivity()
-                .asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.iSpeech:iSpeech:jar:1.0.1").withoutTransitivity()
-                .asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.commons:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.dao:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.asr:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.fax:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.tts.acapela:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.tts.api:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.mgcp:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.http:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.interpreter:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.sms.api:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.sms:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.telephony.api:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
-        dependency = ShrinkWrapMaven.resolver().resolve("com.telestax.servlet:restcomm.telephony:jar:" + version)
-                .withoutTransitivity().asSingle(JavaArchive.class);
-        archive.addAsLibrary(dependency);
+        archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");

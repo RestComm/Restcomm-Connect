@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
@@ -208,6 +211,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The call recording stuff.
     Sid recordingSid = null;
     URI recordingUri = null;
+    URI publicRecordingUri = null;
     // Information to reach the application that will be executed
     // by this interpreter.
     Sid accountId;
@@ -226,6 +230,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The RCML parser.
     ActorRef parser;
     Tag verb;
+    Tag gatherVerb;
+    Boolean processingGather = false;
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
@@ -317,6 +323,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(finishRecording, hangingUp));
         transitions.add(new Transition(processingGatherChildren, processingGatherChildren));
         transitions.add(new Transition(processingGatherChildren, gathering));
+        transitions.add(new Transition(processingGatherChildren, synthesizing));
         transitions.add(new Transition(processingGatherChildren, hangingUp));
         transitions.add(new Transition(gathering, finishGathering));
         transitions.add(new Transition(gathering, hangingUp));
@@ -1027,7 +1034,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
 
             Map<String, String> details = getSynthesizeDetails(verb);
-            if (details != null && !details.isEmpty()) {
+            if (details != null && !details.isEmpty() && details.get("text") != null) {
                 String voice = details.get("voice");
                 String language = details.get("language");
                 String text = details.get("text");
@@ -1145,6 +1152,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+            processingGather = true;
             final Class<?> klass = message.getClass();
             final NotificationsDao notifications = storage.getNotificationsDao();
             if (SpeechSynthesizerResponse.class.equals(klass)) {
@@ -1160,12 +1168,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     gatherPrompts = new ArrayList<URI>();
                     gatherChildren = new ArrayList<Tag>(verb.children());
                 } else if (DiskCacheResponse.class.equals(klass)) {
+                    if (gatherPrompts == null)
+                        gatherPrompts = new ArrayList<URI>();
+                    if (gatherChildren == null)
+                        gatherChildren = new ArrayList<Tag>(verb.children());
                     final DiskCacheResponse response = (DiskCacheResponse) message;
                     final URI uri = response.get();
-                    final Tag child = gatherChildren.remove(0);
+                    Tag child = null;
+                    if (!gatherChildren.isEmpty())
+                        child = gatherChildren.remove(0);
                     // Parse the loop attribute.
                     int loop = 1;
-                    final Attribute attribute = child.attribute("loop");
+                    Attribute attribute = null;
+                    if (child != null)
+                        attribute = child.attribute("loop");
                     if (attribute != null) {
                         final String number = attribute.value();
                         if (number != null && !number.isEmpty()) {
@@ -1241,8 +1257,12 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         }
                         String text = child.text();
                         if (text != null && !text.isEmpty()) {
-                            final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
-                            synthesizer.tell(synthesize, source);
+//                            final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
+//                            synthesizer.tell(synthesize, source);
+//                            break;
+                            String hash = hash(child);
+                            DiskCacheRequest request = new DiskCacheRequest(hash);
+                            cache.tell(request, source);
                             break;
                         }
                     } else if (pause.equals(child.name())) {
@@ -1283,6 +1303,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 // Start gathering.
                 if (gatherChildren.isEmpty()) {
+                    if (gatherVerb != null)
+                        verb = gatherVerb;
                     final StartGathering start = StartGathering.instance();
                     source.tell(start, source);
                 }
@@ -1409,6 +1431,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
             }
+            logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);
@@ -1481,11 +1504,17 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // Start recording.
             recordingSid = Sid.generate(Sid.Type.RECORDING);
             String path = configuration.subset("runtime-settings").getString("recordings-path");
+            String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
             if (!path.endsWith("/")) {
                 path += "/";
             }
+            if (!httpRecordingUri.endsWith("/")) {
+                httpRecordingUri += "/";
+            }
             path += recordingSid.toString() + ".wav";
+            httpRecordingUri += recordingSid.toString() + ".wav";
             recordingUri = URI.create(path);
+            publicRecordingUri = URI.create(httpRecordingUri);
             Record record = null;
             if (playBeep) {
                 final List<URI> prompts = new ArrayList<URI>(1);
@@ -1650,8 +1679,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         }
                     }
                     // Redirect to the action url.
+                    String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
+                    if (!httpRecordingUri.endsWith("/")) {
+                        httpRecordingUri += "/";
+                    }
+                    httpRecordingUri += recordingSid.toString() + ".wav";
+                    URI publicRecordingUri = URI.create(httpRecordingUri);
                     final List<NameValuePair> parameters = parameters();
                     parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                    parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
@@ -1753,7 +1789,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             // Parse <Sms> text.
             String body = verb.text();
-            if (body == null || body.isEmpty() || body.length() > 160) {
+            if (body == null || body.isEmpty()) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 14103, body + " is an invalid SMS body.");
                 notifications.addNotification(notification);
                 sendMail(notification);
@@ -1811,7 +1847,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 // Store the sms record in the sms session.
                 session.tell(new SmsSessionAttribute("record", record), source);
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body);
+                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, null);
                 session.tell(sms, source);
                 smsSessions.put(sid, session);
             }

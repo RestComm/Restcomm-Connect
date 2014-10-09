@@ -30,7 +30,7 @@ rcMod.controller('OutgoingCtrl', function($scope, $resource, $modal, $dialog, Se
   $scope.confirmOutgoingNumberDelete = function(phone) {
     var title = 'Delete Outgoing Caller ID ' + phone.phone_number;
     var msg = 'Are you sure you want to delete outgoing number ' + phone.phone_number + ' (' + phone.friendly_name +  ') ? This action cannot be undone.';
-    var btns = [{result:'cancel', label: 'Cancel'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
+    var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
 
     $dialog.messageBox(title, msg, btns)
       .open()

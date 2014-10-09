@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.telephony.proxy;
 
@@ -27,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+
 import static javax.servlet.sip.SipServlet.*;
 
 import javax.servlet.sip.Address;
@@ -36,7 +40,9 @@ import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+
 import static javax.servlet.sip.SipServletResponse.*;
+
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
@@ -44,6 +50,7 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.entities.Gateway;
+import org.mobicents.servlet.restcomm.telephony.RegisterGateway;
 
 import scala.concurrent.duration.Duration;
 
@@ -92,7 +99,11 @@ public final class ProxyManager extends UntypedActor {
     private Address contact(final Gateway gateway, final int expires) throws ServletParseException {
         SipURI outboundInterface = null;
         if (address != null && !address.isEmpty()) {
-            outboundInterface = (SipURI) factory.createSipURI(null, address);
+            if(address.contains(":")) {
+                outboundInterface = (SipURI) factory.createSipURI(null, address);
+            } else {
+                outboundInterface = outboundInterface(address, "udp");
+            }
         } else {
             outboundInterface = outboundInterface();
         }
@@ -122,6 +133,8 @@ public final class ProxyManager extends UntypedActor {
                     update(message);
                 }
             }
+        } else if (message instanceof RegisterGateway) {
+            register(((RegisterGateway)message).getGateway());
         }
     }
 
@@ -133,6 +146,21 @@ public final class ProxyManager extends UntypedActor {
         for (final SipURI uri : uris) {
             final String transport = uri.getTransportParam();
             if ("udp".equalsIgnoreCase(transport)) {
+                result = uri;
+            }
+        }
+        return result;
+    }
+
+    private SipURI outboundInterface(String address, String transport) {
+        final ServletContext context = configuration.getServletContext();
+        SipURI result = null;
+        @SuppressWarnings("unchecked")
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
+        for (final SipURI uri : uris) {
+            final String interfaceAddress = uri.getHost();
+            final String interfaceTransport = uri.getTransportParam();
+            if (address.equalsIgnoreCase(interfaceAddress) && transport.equalsIgnoreCase(interfaceTransport)) {
                 result = uri;
             }
         }
@@ -161,7 +189,7 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private void register(final Gateway gateway) {
-        logger.info("About to register gateway: "+gateway.toString());
+        logger.info("About to register gateway: "+gateway.getFriendlyName());
         register(gateway, null, null);
     }
 
@@ -174,19 +202,19 @@ public final class ProxyManager extends UntypedActor {
             final StringBuilder buffer = new StringBuilder();
             buffer.append("sip:").append(user).append("@").append(proxy);
             final String aor = buffer.toString();
+            final int expires = (gateway.getTimeToLive() > 0 && gateway.getTimeToLive() < 3600) ? gateway.getTimeToLive() : ttl;
+            final Address contact = contact(gateway, expires);
             // Issue http://code.google.com/p/restcomm/issues/detail?id=65
             SipServletRequest register = null;
             if (response != null) {
                 final String method = response.getRequest().getMethod();
                 register = response.getSession().createRequest(method);
             } else {
-                register = factory.createRequest(application, "REGISTER", aor, aor);
+                register = factory.createRequest(application, "REGISTER", contact.toString(), aor);
             }
             if (authentication != null && response != null) {
                 register.addAuthHeader(response, authentication);
             }
-            final int expires = (gateway.getTimeToLive() > 0 && gateway.getTimeToLive() < 3600) ? gateway.getTimeToLive() : ttl;
-            final Address contact = contact(gateway, expires);
             register.addAddressHeader("Contact", contact, false);
             register.addHeader("User-Agent", ua);
             final SipURI uri = factory.createSipURI(null, proxy);

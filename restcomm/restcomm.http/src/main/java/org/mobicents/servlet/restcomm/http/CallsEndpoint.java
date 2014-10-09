@@ -1,18 +1,21 @@
 /*
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 package org.mobicents.servlet.restcomm.http;
 
@@ -43,7 +46,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-import org.joda.time.DateTime;
+//import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -292,30 +295,32 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                                     fallbackUrl, fallbackMethod, callback, callbackMethod);
                             callManager.tell(execute, null);
                             // Create a call detail record for the call.
-                            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                            builder.setSid(callInfo.sid());
-                            builder.setDateCreated(callInfo.dateCreated());
-                            builder.setAccountSid(accountId);
-                            builder.setTo(to);
-                            builder.setCallerName(callInfo.fromName());
-                            builder.setFrom(from);
-                            builder.setForwardedFrom(callInfo.forwardedFrom());
-                            builder.setStatus(callInfo.state().toString());
-                            final DateTime now = DateTime.now();
-                            builder.setStartTime(now);
-                            builder.setDirection(callInfo.direction());
-                            builder.setApiVersion(version);
-                            final StringBuilder buffer = new StringBuilder();
-                            buffer.append("/").append(version).append("/Accounts/");
-                            buffer.append(accountId.toString()).append("/Calls/");
-                            buffer.append(callInfo.sid().toString());
-                            final URI uri = URI.create(buffer.toString());
-                            builder.setUri(uri);
+//                            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+//                            builder.setSid(callInfo.sid());
+//                            builder.setDateCreated(callInfo.dateCreated());
+//                            builder.setAccountSid(accountId);
+//                            builder.setTo(to);
+//                            builder.setCallerName(callInfo.fromName());
+//                            builder.setFrom(from);
+//                            builder.setForwardedFrom(callInfo.forwardedFrom());
+//                            builder.setStatus(callInfo.state().toString());
+//                            final DateTime now = DateTime.now();
+//                            builder.setStartTime(now);
+//                            builder.setDirection(callInfo.direction());
+//                            builder.setApiVersion(version);
+//                            final StringBuilder buffer = new StringBuilder();
+//                            buffer.append("/").append(version).append("/Accounts/");
+//                            buffer.append(accountId.toString()).append("/Calls/");
+//                            buffer.append(callInfo.sid().toString());
+//                            final URI uri = URI.create(buffer.toString());
+//                            builder.setUri(uri);
 
-                            builder.setCallPath(call.path().toString());
-
-                            final CallDetailRecord cdr = builder.build();
-                            daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
+                            CallDetailRecord cdr = daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid());
+//
+//                            builder.setCallPath(call.path().toString());
+//
+//                            final CallDetailRecord cdr = builder.build();
+//                            daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
                             if (APPLICATION_JSON_TYPE == responseType) {
                                 return ok(gson.toJson(cdr), APPLICATION_JSON).build();
                             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -325,6 +330,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                             }
                         }
                     }
+                } else {
+                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " +managerResponse.error()).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();

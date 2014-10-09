@@ -3,11 +3,15 @@ package org.mobicents.servlet.restcomm.rvd.model.steps.es;
 
 public class Assignment {
     private String destVariable;
+    private String scope;
     private String moduleNameScope;
     private ValueExtractor valueExtractor;
 
     public String getDestVariable() {
         return destVariable;
+    }
+    public String getScope() {
+        return scope;
     }
     public void setDestVariable(String destVariable) {
         this.destVariable = destVariable;

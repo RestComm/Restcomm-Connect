@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.telestax.servlet</groupId>
     <artifactId>restcomm</artifactId>
-    <version>7.1.5-TelScale-SNAPSHOT</version>
+    <version>7.2.0-TelScale-SNAPSHOT</version>
   </parent>
   
   <artifactId>restcomm.mgcp</artifactId>
@@ -48,6 +48,7 @@
 		<dependency>
 			<groupId>org.mobicents.media.client</groupId>
 			<artifactId>mgcp-driver</artifactId>
+			<version>${mobicents.mgcp.impl.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>apache-xerces</groupId>

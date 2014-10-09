@@ -56,6 +56,14 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
     );
   };
 
+  $scope.showAboutModal = function () {
+    $modal.open({
+      controller: AboutModalCtrl,
+      windowClass: 'temp-modal-lg',
+      templateUrl: 'modules/modals/modal-about.html'
+    });
+  };
+
 });
 
 rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5) {
@@ -147,6 +155,8 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 // Register Account Modal
 
 var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, Notifications) {
+
+  $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
   $scope.createAccount = function(account) {
     if(account.email && account.password) {
       // Numbers.register({PhoneNumber:number.number});
@@ -156,7 +166,7 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
           EmailAddress : account.email,
           Password: account.password,
           //Role: account.role,
-          //Status: account.status,
+          Status: account.status,
           FriendlyName: account.friendlyName ? account.friendlyName : account.email
         }),
         function() { // success
@@ -176,4 +186,27 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };
+};
+
+var AboutModalCtrl = function ($scope, $modalInstance, RCommJMX) {
+
+  $scope.Math = window.Math;
+
+  $scope.getData = function() {
+    $scope.info = RCommJMX.get({path: 'java.lang:type=*'},
+      function(data){
+        $scope.OS = data.value['java.lang:type=OperatingSystem'];
+        $scope.JVM = data.value['java.lang:type=Runtime'];
+        $scope.Memory = data.value['java.lang:type=Memory'];
+        $scope.Threads = data.value['java.lang:type=Threading'];
+      },
+      function(){}
+    );
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.getData();
 };

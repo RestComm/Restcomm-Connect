@@ -3,20 +3,6 @@ package org.mobicents.servlet.restcomm.rvd;
 import java.io.File;
 import java.net.URL;
 
-import javax.ws.rs.core.MediaType;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataBodyPart;
-import com.sun.jersey.multipart.FormDataMultiPart;
-
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONObject;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.Filters;
 import org.jboss.shrinkwrap.api.GenericArchive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -24,18 +10,16 @@ import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication;
+import org.mobicents.servlet.restcomm.rvd.http.ProjectRestService;
 
-@RunWith(Arquillian.class)
+//@RunWith(Arquillian.class)
 public class RvdManagerTest {
     
-    @ArquillianResource
+    //@ArquillianResource
     URL deploymentUrl;
     
-    @Deployment (testable = false)
+    //@Deployment (testable = false)
     public static WebArchive createDeployment() {
        WebArchive archive = ShrinkWrap.create(WebArchive.class,"restcomm-rvd.war");       
        
@@ -54,7 +38,7 @@ public class RvdManagerTest {
 
        archive.setWebXML(new File("src/main/webapp/WEB-INF/web.xml"));
        archive.addClass(RvdRestApplication.class);
-       archive.addClass(RvdManager.class);
+       archive.addClass(ProjectRestService.class);
        archive.addPackage("org.mobicents.servlet.restcomm.rvd");
        archive.addPackage("org.mobicents.servlet.restcomm.rvd.exceptions");
        archive.addPackage("org.mobicents.servlet.restcomm.rvd.model.client");
@@ -82,6 +66,7 @@ public class RvdManagerTest {
     public RvdManagerTest()  {
     }
 
+    /*
     @Test
     public void testCreateValidProject() throws Exception {
         String projectName = "newProject";
@@ -263,5 +248,5 @@ public class RvdManagerTest {
         ClientResponse res = webResource.path("services/manager/projects/delete").queryParam("name", projectName).delete(ClientResponse.class);
         Assert.assertEquals(404, res.getStatus());  
     }  
-
+*/
 }

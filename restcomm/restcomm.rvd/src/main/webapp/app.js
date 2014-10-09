@@ -1,104 +1,120 @@
-var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable' ,'angularSpinner','basicDragdrop']);
+var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','basicDragdrop']);
+var rvdMod = App;
 
-App.config([ '$routeProvider', function($routeProvider) {
+App.config([ '$routeProvider',  function($routeProvider) {
 	
 	$routeProvider.when('/project-manager/:projectKind', {
 		templateUrl : 'templates/projectManager.html',
-		controller : 'projectManagerCtrl'
+		controller : 'projectManagerCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})
 	.when('/home', {
 		templateUrl : 'templates/home.html',
-		controller : 'homeCtrl'
+		controller : 'homeCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
 	})
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
-		controller : 'designerCtrl'
-	}).otherwise({
+		controller : 'designerCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();},
+			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);}
+		}
+	})
+	.when('/packaging/:projectName', {
+		templateUrl : 'templates/packaging/form.html',
+		controller : 'packagingCtrl',
+		resolve: {
+			rappWrap: function(RappService) {return RappService.getRapp();},
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
+	})
+	.when('/packaging/:projectName/download', {
+		templateUrl : 'templates/packaging/download.html',
+		controller : 'packagingDownloadCtrl',
+		resolve: { 
+			binaryInfo: packagingDownloadCtrl.getBinaryInfo,
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
+	})	
+	.when('/upgrade/:projectName', {
+		templateUrl : 'templates/upgrade.html',
+		controller : 'upgradeCtrl',
+		resolve: {
+			authInfo: function (authentication) {return authentication.authResolver();}
+		}
+	})
+	.when('/login', {
+		templateUrl : 'templates/login.html',
+		controller : 'loginCtrl'
+	})
+	.when('/designer/:projectName/log', {
+		templateUrl : 'templates/projectLog.html',
+		controller : 'projectLogCtrl'
+	})	
+	.otherwise({
 		redirectTo : '/home'
 	});
 
-} ]);
-
+}]);
 
 
 App.factory('stepService', ['protos', function(protos) {
-	//console.log("protos");
-	//console.log( protos);
 	var stepService = {
 		serviceName: 'stepService',
-		stepNames: ['say','gather','dial','redirect','hungup','externalService'],
 		lastStepId: 0,
-			
-		getMapValuesByIndex: function (map, index) {
-			var values = [];
-			for ( var i = 0; i < index.length; i ++ ) {
-				if ( typeof (map[ index[i] ]) !== 'undefined' )
-					values.push (map [index [i]]);
-			}
-			return values;
-		}, 
-		addStep: function ( steps, stepnames, kind, index ) {
-			var newstep = angular.copy(protos.stepProto[kind])
-			newstep.name = 'step' + (++this.lastStepId);
-			steps[newstep.name] = newstep;
-			stepnames.splice(index, 0, newstep.name);
-			//stepnames.push(newstep.name) ;
-		},	
-		removeStep: function (steps, stepnames, removed_step, orderedSteps ) {
-			delete steps[removed_step.name];
-			stepnames.splice( stepnames.indexOf(removed_step.name), 1 );
-			orderedSteps.length = 0; //.splice(0, orderedSteps.length, this.getMapValuesByIndex(steps, stepnames) );
-			orderedSteps.push.apply(orderedSteps, this.getMapValuesByIndex(steps, stepnames) );
-			//console.log( orderedSteps );
-		},
-		 
+			 
+		newStepName: function () {
+			return 'step' + (++this.lastStepId);
+		}		 
 	};
 	
 	return stepService;
 }]);
 
-App.factory('protos', function () {
-	var accessOperationProtos = {
-			object:{kind:'object',fixed:false, terminal:false},
-			array:{kind:'array',fixed:false, terminal:false},
-			value:{kind:'value',fixed:false, terminal:true},	
-	}
-	return { 
-		nodes: {
-				voice: {kind:'voice', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},
-				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:{}, stepnames:[], iface:{edited:false,editLabel:false}},		
+App.factory( 'dragService', [function () {
+	var dragInfo;
+	var dragId = 0;
+	var pDragActive = false;
+	var serviceInstance = {
+		newDrag: function (model) {
+			dragId ++;
+			pDragActive = true;
+			if ( typeof(model) === 'object' )
+				dragInfo = { id : dragId, model : model };
+			else
+				dragInfo = { id : dragId, class : model };
+				
+			return dragId;
 		},
-		accessOperationProtos: accessOperationProtos,
-		stepProto: {
-			// Voice
-			say: {kind:'say', label:'say', title:'say', phrase:'', voice:undefined, language:undefined, loop:undefined, iface:{}},
-			play: {kind:'play', label:'play', title:'play',loop:undefined,playType:'local',local:{wavLocalFilename:''}, remote:{wavUrl:''}, iface:{}},
-			gather: {kind:'gather', label:'gather', title:'collect', action:undefined, method:'GET', timeout:undefined, finishOnKey:undefined, numDigits:undefined, steps:{}, stepnames:[], gatherType:"menu", menu:{mappings:[] /*{digits:1, next:"welcome.step1"}*/,}, collectdigits:{collectVariable:'',next:'', scope:"module"}, iface:{}},
-			dial: {dialNouns:[], nextModule:undefined, kind:'dial',kind:'dial', label:'dial', title:'dial',action:undefined, method:undefined, timeout:undefined, timeLimit:undefined, callerId:undefined, iface:{}, record:undefined},
-			number: {kind:'number', label:'number', title:'Number', numberToCall:'', sendDigits:'', numberUrl:'', iface:{}},
-			redirect: {kind:'redirect', label:'redirect', title:'redirect', url:null,method:null,iface:{}},
-			hungup: {kind:'hungup', label:'hang up', title:'hang up',iface:{}},
-			externalService: {kind:'externalService', label:'externalService', title:'external service', url:'', urlParams:[], assignments:[], next:'', doRouting:false, nextType:'fixed', nextValueExtractor:{accessOperations:[], lastOperation: angular.copy(accessOperationProtos.object) }, iface:{}},
-			reject: {kind:'reject', label:'reject', title:'reject', reason:null,iface:{}},
-			pause: {kind:'pause', label:'pause', title:'pause', length:null, iface:{}},
-			sms: {kind:'sms', label:'sms', title:'sms', text:'', to:null, from:null, statusCallback:null,method:'GET', next:null,iface:{}},
-			record: {kind:'record', label:'record', title:'record', next:null, method:'GET', timeout:undefined, finishOnKey:undefined, maxLength:undefined, transcribe:undefined, transcribeCallback:undefined, playBeep:undefined, iface:{}},
-			fax: {kind:'fax', label:'fax', title:'fax', to:null, from:null, text:'', next:null, method:'GET', statusCallback:null,iface:{}},
-			// USSD
-			ussdSay: {kind:'ussdSay', label:'USSD Message', title:'USSD Message', text:'', language:null,iface:{}},
-			ussdCollect: {kind:'ussdCollect', label:'USSD Collect', title:'USSD Collect', gatherType:"menu", menu: {mappings:[]}, collectdigits:{collectVariable:null,next:'',scope:"module"}, text:'', language:null, messages:[], iface:{}},
-			ussdSayNested: {text:''},
-			ussdLanguage: {kind:'ussdLanguage', label:'Language', title:'Language', language:null, iface:{}},
-			
-			
+		popDrag:  function () {
+			if ( pDragActive ) {
+				var dragInfoCopy = angular.copy(dragInfo);
+				pDragActive = false;
+				return dragInfoCopy;
+			}
 		},
-		dialNounProto: {
-			number: {dialType: 'number', destination:'', sendDigits:undefined, beforeConnectModule:undefined},
-			client: {dialType: 'client', destination:''},
-			conference: {dialType: 'conference', destination:'', nextModule:undefined, muted:undefined, beep:undefined, startConferenceOnEnter:undefined, endConferenceOnExit:undefined, waitUrl:undefined, waitModule:undefined, waitMethod:undefined, maxParticipants:undefined},
-			sipuri: {dialType: 'sipuri', destination:''},
+		dragActive: function () {
+			return pDragActive; 
 		}
+		
 	};
+	return serviceInstance;
+}]);
+
+App.factory('protos', function () {
+	var protoInstance = { 
+		nodes: {
+				voice: {kind:'voice', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
+				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},		
+				sms: {kind:'sms', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
+		},
+	};
+	return protoInstance;
 });
 
 
@@ -141,101 +157,6 @@ App.directive("syncModules", function(){
 });
 
 
-App.directive('sortableSteps',function(stepService){
-  return {
-	  scope: true,	  
-	  
-    link:function(scope,el,attrs){
-		
-		if ( typeof(scope.step) === 'undefined' ) {
-			//console.log( 'PARENT SCOPE' );
-			//console.log(scope);
-			scope.steps = scope.node.steps;
-			scope.stepnames = scope.node.stepnames;
-		}
-		else {
-			//console.log( 'NESTED SCOPE' );
-			//console.log(scope);
-			scope.steps = scope.step.steps;
-			scope.stepnames = scope.step.stepnames;
-		}
-		scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-		
-		el.sortable({
-			revert: true,
-			handle: '.panel-heading',
-			//scrollSensitivity: 20,
-			tolerance: 'pointer',
-			placeholder: 'sortable-placeholder'
-		});
-		//el.disableSelection();
-      
-	  function getMapValuesByIndex(map, index) {
-			var values = [];
-			for ( var i = 0; i < index.length; i ++ ) {
-				if ( typeof (map[ index[i] ]) !== 'undefined' )
-					values.push (map [index [i]]);
-			}
-			return values;
-	  }      
-   
-      el.on( "sortbeforestop", function( event, ui ) { 
-		  
-		  //if ( $(this).hasClass('nested') != ui.item.hasClass('nested') )
-			//return;
-		  
-		  var to_index = el.children().index(ui.item);		  
-		  if ( ui.item.hasClass('verb-button') ) {
-			  // a new step should be created
-			  var r = /kind-([^ ]+)/
-			  var m = r.exec(ui.item.attr('class'));
-			  ui.item.remove();
-			  if ( m != null ) {
-				  var kind = m[1];
-				  scope.$apply( function () {
-					stepService.addStep( scope.steps, scope.stepnames, kind, to_index );
-			        scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-				  });  
-			  }
-		  } else
-		  if ( ui.item.hasClass('step') ) {
-			  // just reordering steps
-			  
-			  var from_index = scope.stepnames.indexOf( ui.item.scope().step.name );
-			  //console.log( 'inserting element from position: ' + from_index );
-			  //console.log( 'inserting element at position: ' + to_index );
-			  var temp = scope.stepnames[to_index];
-			  scope.$apply( function () {
-				scope.stepnames[to_index] = scope.stepnames[from_index];
-				scope.stepnames[from_index] = temp;
-				scope.orderedSteps = getMapValuesByIndex(scope.steps, scope.stepnames);
-			})
-		  }
-		  
-		  if ( $(this).hasClass('nested') )
-			event.stopImmediatePropagation();
-      } );
-    }
-  }
-});
-
-
-App.directive('myDraggable',function(){
-  
-  return 	{
-				link:function(scope,el,attrs){
-					el.draggable({
-						connectToSortable: attrs.myDraggable,
-						helper: "clone",
-						revert: "invalid"
-					});
-					/*el.disableSelection(); */
-				}
-			}
-  
-});
-
-
 App.directive('nullIfEmpty', [function() {
     return {
       require: 'ngModel',
@@ -261,8 +182,7 @@ App.directive('autoClear', [function() {
   }]
 );
 
-
-App.directive('valueExtractor', ['protos', function (protos) {
+App.directive('valueExtractor', ['protos','accessOperationKinds','objectActions','arrayActions', function (protos,accessOperationKinds,objectActions,arrayActions) {
 	return {
 		restrict: 'E',
 		templateUrl: 'templates/directive/valueExtractor.html',
@@ -270,86 +190,13 @@ App.directive('valueExtractor', ['protos', function (protos) {
 			extractorModel: '='
 		},
 		link: function(scope,el,attrs) {
-			//scope.extractorModel = {accessOperations:[], lastOperation: angular.copy(protos.accessOperationProtos.object) }
-			scope.accessOperationKinds = ['object', 'array', 'value'];
-			scope.objectActions = ['propertyNamed'];
-			scope.arrayActions = ['itemAtPosition'];
-			
-			scope.addOperation = function (extractorModel) {
-				console.log("adding operation");
-				extractorModel.lastOperation.fixed = true;
-				extractorModel.lastOperation.expression = scope.operationExpression( extractorModel.lastOperation );
-				extractorModel.accessOperations.push(extractorModel.lastOperation);
-				extractorModel.lastOperation = angular.copy(protos.accessOperationProtos.object)
-			}
-			scope.doneAddingOperations = function (extractorModel) {
-				scope.addOperation(extractorModel);
-				extractorModel.lastOperation = null;
-			}
-			
-			scope.popOperation = function (extractorModel) { // removes last operation
-				if ( extractorModel.accessOperations.length > 0 ) {
-					extractorModel.lastOperation = extractorModel.accessOperations.pop();
-					extractorModel.lastOperation.fixed = false;
-				}
-			}
-			
-			scope.operationExpression = function (operation) {
-				switch (operation.kind) {
-				case 'object':
-					switch (operation.action) {
-					case 'propertyNamed':
-						return "."+operation.property;
-					}
-				break;
-				case 'array':
-					switch (operation.action) {
-					case 'itemAtPosition':
-						return "[" + operation.position + "]";
-					}
-				break;
-				case 'value':
-					return " value";
-				break;
-				/*case 'float':
-					return " get Float value";
-				break;	
-				case 'boolean':
-					return " get Boolean value";
-				break;*/		
-				}
-				return "UNKNOWN";
-			}
-			
-			scope.extractorModelExpression = function (extractorModel) {
-				var expr = '';
-				for ( var i=0; i < extractorModel.accessOperations.length; i++ ) {
-					expr += scope.operationExpression(extractorModel.accessOperations[i]);
-				} 
-				return expr;
-			}
-			
-			scope.isTerminal = function (kind) {
-				if (kind == null)
-					return false;
-				return protos.accessOperationProtos[kind].terminal;
-			}
-
+			scope.accessOperationKinds = accessOperationKinds; //['object', 'array', 'value'];
+			scope.objectActions = objectActions; //['propertyNamed'];
+			scope.arrayActions = arrayActions; //['itemAtPosition'];
 		}
 	}
 }]);
 
-App.directive('modulePicker', [function () {
-	return {
-		restrict: 'E',
-		templateUrl: 'templates/directive/modulePicker.html',
-		scope: {
-			options: '=',
-		},
-		link: function (scope,el,attrs) {
-		},
-	};
-}]);
 
 App.directive('ussdModule', [function () {
 	return {
@@ -364,6 +211,31 @@ App.directive('ussdModule', [function () {
 		},
 	};
 }]);
+
+/*
+ * Adds to scope: buttonOptions, selectedOption, addedClasses
+ */
+App.directive('multibutton', function () {
+	return  {
+		restrict: 'E',
+		scope:true,
+		templateUrl: 'templates/directive/multibutton.html',
+		link: function (scope,element,attrs) {
+			scope.buttonOptions = scope.$eval(attrs.options);
+			if (scope.buttonOptions.length > 0 )
+				scope.selectedOption = scope.buttonOptions[0];
+			else
+				scope.selectedOption = "";
+			
+			scope.addedClasses = attrs.buttonClass;
+		},
+		controller: function($scope) {
+			$scope.selectOption = function(option) {
+				$scope.selectedOption = option;
+			}
+		}
+	}
+});
 
 App.filter('excludeNode', function() {
     return function(items, exclude_named) {
@@ -399,5 +271,78 @@ angular.module('ng').directive('ngFocus', function($timeout) {
      }
  };
 });
+
+/*
+ * Adds to scope: buttonOptions, selectedOption, addedClasses
+ */
+/*
+App.directive('multibutton', function () {
+	return  {
+		restrict: 'E',
+		scope:true,
+		templateUrl: 'templates/directive/multibutton.html',
+		link: function (scope,element,attrs) {
+			scope.buttonOptions = scope.$eval(attrs.options);
+			if (scope.buttonOptions.length > 0 )
+				scope.selectedOption = scope.buttonOptions[0];
+			else
+				scope.selectedOption = "";
+			
+			scope.addedClasses = attrs.buttonClass;
+		},
+		controller: function($scope) {
+			$scope.selectOption = function(option) {
+				$scope.selectedOption = option;
+			}
+		}
+	}
+});
+*/
+
+App.directive('inputGroupSelect', function () {
+	return  {
+		restrict: 'E',
+		replace: true,
+		scope:true,
+		templateUrl: 'templates/directive/inputGroupSelect.html',
+		require: 'ngModel',
+		link: function (scope,element,attrs,ctrl) {
+			
+			scope.selectOption = function(option) {
+				scope.selectedOption = option;
+				ctrl.$setViewValue(option);
+			}
+			
+			ctrl.$render = function() {
+				scope.selectedOption = ctrl.$viewValue;
+			};
+			
+			scope.buttonOptions = scope.$eval(attrs.options);
+			if (scope.buttonOptions.length > 0 )
+				scope.selectedOption = scope.buttonOptions[0];
+			else
+				scope.selectedOption = "";
+			scope.addedClasses = attrs.buttonClass;
+			scope.menuClasses = attrs.menuClass;
+		}
+	}
+});
+
+App.directive('rvdPanel', function () {
+	return {
+		transclude: true,
+		restrict: 'E',
+		scope: {
+			title:'=title',
+			closePanel:'&onClose',
+		},
+		templateUrl: 'templates/directive/rvdPanel.html',
+		link: function (scope,element,attrs) {
+			console.log("create a new panel");
+			//scope.panel = {title: 'Untitled'};
+		}
+	}
+});
+
 
 

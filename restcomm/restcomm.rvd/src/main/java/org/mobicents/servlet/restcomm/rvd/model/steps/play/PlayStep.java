@@ -1,11 +1,13 @@
 package org.mobicents.servlet.restcomm.rvd.model.steps.play;
 
+import java.net.URISyntaxException;
+
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
-import org.mobicents.servlet.restcomm.rvd.ProjectService;
 
 public class PlayStep extends Step {
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
@@ -26,11 +28,20 @@ public class PlayStep extends Step {
     public RcmlStep render(Interpreter interpreter) {
         RcmlPlayStep playStep = new RcmlPlayStep();
         String url = "";
-        if ("local".equals(playType))
-            //url = interpreter.getHttpRequest().getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + getWavLocalFilename();
-            url = interpreter.getContextPath() + "/" + ProjectService.getWorkspacedirectoryname() + "/" + interpreter.getAppName() + "/" + ProjectService.getWavsdirectoryname() + "/" + local.wavLocalFilename;
-        else
-            url = remote.wavUrl;
+        if ("local".equals(playType)) {
+            String rawurl = interpreter.getContextPath() + "/services/projects/" + interpreter.getAppName() + "/wavs/" + local.wavLocalFilename;
+            try {
+                URIBuilder uribuilder = new URIBuilder();
+                uribuilder.setPath(rawurl);
+                url = uribuilder.build().toString();
+            } catch (URISyntaxException e) {
+                logger.warn("Error parsing url for play verb: " + rawurl, e);
+                url = rawurl; // best effort
+            }
+        }
+        else {
+            url = interpreter.populateVariables(remote.wavUrl);
+        }
 
         logger.debug("play url: " + url);
         playStep.setWavurl(url);

@@ -1,0 +1,195 @@
+
+<div gather-step class="step step-gather panel panel-rvdstep step-{{step.name}}">
+		<div class="panel-heading">
+			<step-heading></step-heading>		</div>
+		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+			<div class="row">
+				<div class="col-md-6">
+					<h4>Prompt</h4>
+					<p class="text-muted">Drag <em>say</em> commands  below to prompt the user to type some digits</p>
+					<small>
+						<!-- <div class='sortable-steps nested' sortable-steps> -->
+						<div basic-sortable  list-model="step.steps" class='steps nested-steps' item-added='addStep'>
+							<div class='step' ng-repeat='step in step.steps'>
+								<div ng-switch on="step.kind">
+									<div ng-switch-when="say">
+										<ng-include src="'templates/steps/sayStep.html'"></ng-include>
+									</div>
+									<div ng-switch-when="play">
+										<ng-include src="'templates/steps/playStep.html'"></ng-include>
+									</div>																										
+								</div>
+							</div>
+						</div>
+						<!-- 
+						<div class='step' step list-model='node.steps'  ng-repeat='step in node.steps'>
+							<ng-include src="'templates/' + step.kind + 'Step.html'"></ng-include>
+						</div>
+						 -->
+						
+					</small>					
+				</div>
+				<div class="col-md-6">
+					<h4>Create a menu or collect digits</h4>
+					<div ng-show="!step.iface.advancedView">
+						<div class="form-group">
+								<input type="radio" ng-model="step.gatherType" value="menu"> Menu 
+								<input type="radio" ng-model="step.gatherType" value="collectdigits"> Collect digits
+								<!-- <input type="radio" ng-model="step.gatherType" value="custom"> Custom -->						
+						</div>
+						<div ng-show="step.gatherType=='menu'">
+							<div ng-repeat="mapping in step.menu.mappings" class='form-group row'>
+								<form name="form" novalidate>
+									<div class='col-md-4'>
+										
+											<div class="input-group input-group-sm">
+												<span class="input-group-addon">Digit</span>
+												<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="123" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits' required></input>
+											</div>
+											<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div>
+										
+	
+									</div>
+									<div class='col-md-6'>
+										<div class="input-group input-group-sm">
+											<span class="input-group-addon">Target</span>
+											<select sync-model name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
+												<option value=""></option>
+											</select>
+										</div>
+										<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
+									</div>	
+									<div class='col-md-1'>
+										<button ng-click="removeGatherMapping(step,mapping)" type="button" class="close" aria-hidden="true">&times;</button>
+									</div>
+								</form>							
+							</div>					
+							<div class="form-group">
+								<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>Add mapping</span></button>
+							</div>	
+						</div>
+						<div ng-show="step.gatherType=='collectdigits'">
+							<form name="form" novalidate>
+								<div class='form-group row'>
+									<div class='col-md-12'>
+										<div class="input-group">
+											<span class="input-group-addon">Assign to</span>
+											<input name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
+											<span class="input-group-addon">Scope</span>
+											<select ng-model='step.collectdigits.scope' class="form-control">
+												<option value='module'>module</option>
+												<option value='application'>application</option>
+											</select>
+										</div>
+										<div class="validation-error" ng-show="form.collectVariable.$invalid">Type a valid variable name</div>
+									</div>
+								</div>
+								<div class='form-group row'>
+									<div class='col-md-12'>
+										<div class="input-group">
+											<span class="input-group-addon">Continue to</span>
+											<select sync-model name='next' ng-model='step.collectdigits.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control">
+												<option value=""></option>
+											</select>
+										</div>
+										<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+									</div>
+									
+								</div>
+							</form>
+						</div>	
+						
+						<div>
+							<h4>Validation</h4>
+							<div ng-show="step.gatherType=='collectdigits'" class="form-group">
+								<div class="input-group">
+									<span class="input-group-addon help-tooltip"  tooltip='Define acceptable input by using a regex pattern. Leave blank for no validation.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>
+										Validation pattern
+									</span>
+									<input ng-if='getEffectiveValidationType()=="Regex"' ng-model='step.validation.regexPattern' class="form-control">
+									<input ng-if='getEffectiveValidationType()=="One of"' ng-model='step.validation.userPattern' class="form-control">
+									<!--<input-group-select ng-model='step.validation.iface.userPatternType' options='["One of", "Regex"]' button-class='btn-default' menu-class='pull-right'>
+									</input-group-select>-->
+									<div class="input-group-btn">
+									  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+										  {{getEffectiveValidationType()}}
+										  <span class="caret"></span>
+									  </button>
+									  <ul class="dropdown-menu pull-right" role="menu">
+										<li><a ng-click='setValidationTypeOneOf()'>One of</a></li>
+										<li><a ng-click='setValidationTypeRegex()'>Regex</a></li>
+									  </ul>
+									</div>
+								</div>
+								<!--Pattern: {{step.validation.pattern}}<br/>-->
+
+								
+								<!--<span class="help-block"><small>Effective regex: {{step.validation.pattern}}</small></span>-->
+								<!-- <span class="help-block"><small>{{step}}</small></span> -->
+							</div>
+							
+							<label>Say if invalid</label>
+							<textarea ng-model='step.invalidMessage.phrase' type="text" class="form-control" placeholder='You typed a wrong option. Please try again'></textarea>
+							<!--<div basic-droppable drop-model='step.invalidInputStep' drop-accept='.verb-button.button-say' style="width:50px; height:100px; background-color:grey;">
+							</div>-->
+						</div>
+						<!-- {{step.validation}} -->			
+						
+					</div>
+					<!-- 
+					<div ng-show="step.iface.advancedView">
+						<div class="form-group">
+							<label for="actionURL">Action URL</label>
+							<input ng-model='step.action' type="url" id="actionURL" class="form-control" placeholder="http://server/action.php" required>
+							<span class="help-block">An absolute or relative URL that will receive the digits</span>
+						</div>
+						<div class="form-group">
+							<label for="actionMethod">Method</label>
+							<select ng-model='step.method' ng-options='method for method in methods' id='actionMethod' class='form-control'></select>
+						</div>					
+					</div>
+					 -->
+					<!-- <span class="glyphicon glyphicon-wrench">&nbsp;</span><a ng-click="step.iface.advancedView = !step.iface.advancedView"><span ng-show="!step.iface.advancedView">Advanced view</span><span ng-show="step.iface.advancedView">Basic view</span></a> -->
+				</div>
+				
+			</div>
+				
+			<br/>
+			<i ng-click="step.iface.optionsVisible = !step.iface.optionsVisible" class='fa fa-cog rvd-clickable' ng-class="{'rvd-active': step.iface.optionsVisible }"></i>
+			<div ng-show="step.iface.optionsVisible">
+				<div class='row'>
+					<br/>
+					<!--
+					<div class="form-group col-lg-3">
+						<label for="gatherTimeout">Timeout</label>
+						<input ng-model='step.timeout' type="number" id="gatherTimeout" class="form-control" placeholder="5" tooltip-placement='left' tooltip='Time (in seconds) to wait for the caller to press another digit'>
+					</div>
+					-->
+					<div class="col-lg-3 input-group input-group-sm">
+					  <span class="input-group-addon">Finish on key</span>
+					  <input ng-model='step.finishOnKey' auto-clear ng-pattern='/^[0-9\#\*]$/' type="text" class="form-control" placeholder="#*123...">
+					</div>
+					
+					<!--
+					<div class="form-group col-lg-3">
+						<label for="finishOnKey">Finish on key</label>
+						<input ng-model='step.finishOnKey' id='finishOnKey' type='text' ng-pattern='/^[0-9\#\*]$/' class='form-control' tooltip="The 'finishOnKey' attribute lets you choose one value that submits the received data when entered. For example, if you set 'finishOnKey' to '#' and the user enters '1234#'">
+					</div>
+					-->
+
+					<div class="col-lg-3 input-group input-group-sm">
+					  <span class="input-group-addon">Number of digits</span>
+					  <input ng-model='step.numDigits' auto-clear ng-pattern='/^[0-9\#\*]{1,2}$/' type="number" class="form-control" placeholder="123">
+					</div>
+					<!--					
+					<div class="form-group col-lg-3">
+						<label for="numDigits">Number of digits</label>
+						<input ng-model='step.numDigits' id='numDigits' type='number' class='form-control' tooltip="The 'numDigits' attribute lets you set the number of digits you are expecting, and submits the data to the 'action' URL once the caller enters that number of digits.">
+					</div>												
+					-->
+				</div>
+			</div>
+			
+			
+	
+</div>

@@ -11,7 +11,10 @@ import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 
 public class ExternalServiceStep extends Step {
 
-    private String url;
+    private String url; // supports RVD variable expansion when executing the HTTP request
+    private String method;
+    private String username;
+    private String password;
     private List<UrlParam> urlParams;
     private List<Assignment> assignments;
     private String next;
@@ -19,6 +22,10 @@ public class ExternalServiceStep extends Step {
     private Boolean doRouting;
     private String nextType;
     private ValueExtractor nextValueExtractor;
+    private List<RouteMapping> routeMappings;
+    //private String defaultNext;
+    private String exceptionNext;
+
 
     public ValueExtractor getNextValueExtractor() {
         return nextValueExtractor;
@@ -34,6 +41,14 @@ public class ExternalServiceStep extends Step {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public List<RouteMapping> getRouteMappings() {
+        return routeMappings;
+    }
+
+    public void setRouteMappings(List<RouteMapping> routeMappings) {
+        this.routeMappings = routeMappings;
     }
 
     public List<Assignment> getAssignments() {
@@ -77,6 +92,36 @@ public class ExternalServiceStep extends Step {
     }
     public List<UrlParam> getUrlParams() {
         return this.urlParams;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+
+   /* public String getDefaultNext() {
+        return defaultNext;
+    }
+
+    public void setDefaultNext(String defaultNext) {
+        this.defaultNext = defaultNext;
+    }
+    */
+
+    public String getExceptionNext() {
+        return exceptionNext;
+    }
+
+    public void setExceptionNext(String exceptionNext) {
+        this.exceptionNext = exceptionNext;
     }
 
     @Override

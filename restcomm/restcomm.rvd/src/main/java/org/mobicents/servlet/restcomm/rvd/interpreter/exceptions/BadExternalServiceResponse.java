@@ -4,7 +4,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 
 /**
  * The response to an External Service request is invalid. Assignment expressions
- * may not be properly evaluated
+ * may not be properly evaluated. If HTTP errors are returned use the RemoteServiceError exception.
  *
  * @author "Tsakiridis Orestis"
  *
@@ -22,5 +22,11 @@ public class BadExternalServiceResponse extends InterpreterException {
         super(message);
         // TODO Auto-generated constructor stub
     }
+
+    public BadExternalServiceResponse(String message, Throwable cause) {
+        super(message, cause);
+        // TODO Auto-generated constructor stub
+    }
+
 
 }

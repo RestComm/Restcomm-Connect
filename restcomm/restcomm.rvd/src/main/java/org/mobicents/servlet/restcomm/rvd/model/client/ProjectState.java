@@ -1,7 +1,12 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.model.steps.say.SayStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.sms.SmsStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStep;
 
 public class ProjectState {
 
@@ -10,45 +15,83 @@ public class ProjectState {
     private Integer activeNode;
     private Integer lastNodeId;
     private StateHeader header;
+    private ExceptionHandlingInfo exceptionHandlingInfo;
 
 
-    public static class Node {
-        private String name;
-        private String label;
-        private Map<String, Step> steps;
-        private List<String> stepnames;
+    public ProjectState() {
+        super();
+    }
 
-        public String getName() {
-            return name;
-        }
+    public static ProjectState createEmptyVoice(String owner) {
+        String kind = "voice";
+        ProjectState state = new ProjectState();
 
-        public void setName(String name) {
-            this.name = name;
-        }
+        StateHeader header = new StateHeader();
+        header.owner = owner;
+        header.projectKind = kind;
+        header.version = RvdConfiguration.getPackagingVersion();
+        header.startNodeName = "start";
+        state.setHeader(header);
 
-        public String getLabel() {
-            return label;
-        }
+        List<Node> nodes = new ArrayList<Node>();
+        Node node = Node.createDefault("voice", "start", "Welcome");
+        SayStep step = SayStep.createDefault("step1", "Welcome to Telestax Restcom Visual Designer Demo");
+        node.getSteps().add(step);
+        nodes.add(node);
+        state.setNodes(nodes);
 
-        public void setLabel(String label) {
-            this.label = label;
-        }
+        state.setLastStepId(1);
+        state.setLastNodeId(0);
 
-        public Map<String, Step> getSteps() {
-            return steps;
-        }
+        return state;
+    }
 
-        public void setSteps(Map<String, Step> steps) {
-            this.steps = steps;
-        }
+    public static ProjectState createEmptySms(String owner) {
+        String kind = "sms";
+        ProjectState state = new ProjectState();
 
-        public List<String> getStepnames() {
-            return stepnames;
-        }
+        StateHeader header = new StateHeader();
+        header.owner = owner;
+        header.projectKind = kind;
+        header.version = RvdConfiguration.getPackagingVersion();
+        header.startNodeName = "start";
+        state.setHeader(header);
 
-        public void setStepnames(List<String> stepnames) {
-            this.stepnames = stepnames;
-        }
+        List<Node> nodes = new ArrayList<Node>();
+        Node node = Node.createDefault("sms", "start", "Welcome");
+        SmsStep step = SmsStep.createDefault("step1", "Welcome to Telestax Restcom Visual Designer");
+        node.getSteps().add(step);
+        nodes.add(node);
+        state.setNodes(nodes);
+
+        state.setLastStepId(1);
+        state.setLastNodeId(0);
+
+        return state;
+    }
+
+    public static ProjectState createEmptyUssd(String owner) {
+        String kind = "ussd";
+        ProjectState state = new ProjectState();
+
+        StateHeader header = new StateHeader();
+        header.owner = owner;
+        header.projectKind = kind;
+        header.version = RvdConfiguration.getPackagingVersion();
+        header.startNodeName = "start";
+        state.setHeader(header);
+
+        List<Node> nodes = new ArrayList<Node>();
+        Node node = Node.createDefault("ussd", "start", "Welcome");
+        UssdSayStep step = UssdSayStep.createDefault("step1", "Welcome to Telestax Restcom Visual Designer");
+        node.getSteps().add(step);
+        nodes.add(node);
+        state.setNodes(nodes);
+
+        state.setLastStepId(1);
+        state.setLastNodeId(0);
+
+        return state;
     }
 
     public Integer getLastStepId() {
@@ -86,5 +129,15 @@ public class ProjectState {
     public StateHeader getHeader() {
         return header;
     }
+
+    public void setHeader(StateHeader header) {
+        this.header = header;
+    }
+
+    public ExceptionHandlingInfo getExceptionHandlingInfo() {
+        return exceptionHandlingInfo;
+    }
+
+
 
 }

@@ -1,9 +1,7 @@
 package org.mobicents.servlet.restcomm.telephony.security;
 
-import javax.sip.*;
-import javax.sip.message.*;
-import javax.sip.header.*;
-import javax.sip.address.*;
+import javax.sip.header.AuthorizationHeader;
+import javax.sip.message.Request;
 
 public interface AuthenticationMethod {
 
