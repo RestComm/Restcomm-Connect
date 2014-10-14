@@ -720,9 +720,6 @@ public final class Call extends UntypedActor {
             group = getMediaGroup(message);
             sender.tell(new CallResponse<ActorRef>(group), self);
         } else if(AuditConnectionResponse.class.equals(klass)) {
-            // XXX restore timeout - hrosa
-//            getContext().setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
-
             AuditConnectionResponse response = (AuditConnectionResponse) message;
             int returnCode = response.getReturnCode().getValue();
             if(returnCode == ReturnCode.TRANSACTION_EXECUTED_NORMALLY) {
@@ -1383,48 +1380,42 @@ public final class Call extends UntypedActor {
 
     private final class AuditingRemoteConnection extends AbstractAction {
 
-        // Maximum number of attempts
-        private final int MAX_ATTEMPTS = 50;
+        /** Maximum number of attempts */
+        private final int MAX_ATTEMPTS = 10;
 
-        // Waiting time (in milliseconds) between attempts
-        private final int ATTEMPT_WAIT = 300;
+        /** Waiting time (in milliseconds) between attempts */
+        private final int ATTEMPT_WAIT = 100;
         private final FiniteDuration duration = new FiniteDuration(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
 
-        // Number of current attempts between calls.
-        // Cannot be greater than MAX_ATTEMPTS.
+        /** Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS. */
         private int attempts = 0;
 
+        /** Contains logic to perform the MGCP AUCX */
         private AuditWorker auditWorker;
 
         public AuditingRemoteConnection(ActorRef source) {
             super(source);
-        }
-
-        public AuditWorker getAuditWorker() {
-            if(this.auditWorker == null) {
-                this.auditWorker = new AuditWorker();
-            }
-            return auditWorker;
+            this.auditWorker = new AuditWorker();
         }
 
         @Override
         public void execute(Object message) throws Exception {
-            if(attempts > this.MAX_ATTEMPTS) {
+            this.attempts++;
+            if (attempts > this.MAX_ATTEMPTS) {
                 logger.warning("AUCX: reached max number of attempt. Closing connection.");
                 // Close remote connection if cannot audit after max number of attempts
                 fsm.transition(message, closingRemoteConnection);
             } else {
-                this.attempts++;
-
                 // Delegate AUCX work to the remote connection
                 // The Call actor will receive the MGCP response to the AUCX
-                if(this.attempts == 1) {
+                if (this.attempts == 1) {
                     // First attempt - no need to wait
                     remoteConn.tell(new InspectConnection(), self());
                 } else {
                     // Future attempts will be spaced between them for the duration of WAIT_ATTEMPTS
-                    logger.info("AUCX: issuing attempt "+attempts+" in "+ATTEMPT_WAIT+"ms.");
-                    getContext().system().scheduler().scheduleOnce(duration, getAuditWorker(), getContext().system().dispatcher());
+                    logger.info("AUCX: issuing attempt " + attempts + " in " + ATTEMPT_WAIT + "ms.");
+                    getContext().system().scheduler()
+                            .scheduleOnce(duration, this.auditWorker, getContext().system().dispatcher());
                 }
             }
         }
@@ -1619,7 +1610,11 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            if (Hangup.class.equals(klass)) {
+            /*
+             * Send BYE is a hangup indication is received OR in case of MGCP AUCX error response or
+             * when the maximum number of MGCP AUCX queries is reached.
+             */
+            if (Hangup.class.equals(klass) || AuditConnectionResponse.class.equals(klass)) {
                 final SipSession session = invite.getSession();
                 final SipServletRequest bye = session.createRequest("BYE");
 
