@@ -22,6 +22,7 @@ public class GatherStep extends Step {
     private Integer numDigits;
     private List<Step> steps;
     private Validation validation;
+    private Step invalidMessage;
     private Menu menu;
     private Collectdigits collectdigits;
     private String gatherType;
@@ -40,8 +41,8 @@ public class GatherStep extends Step {
         private String next;
     }
     public final class Validation {
-        private Step messageStep;
-        private String pattern;
+        private String userPattern;
+        private String regexPattern;
     }
 
     public RcmlGatherStep render(Interpreter interpreter) throws InterpreterException {
@@ -101,11 +102,23 @@ public class GatherStep extends Step {
 
             // validation
             boolean doValidation = false;
-            if ( validation.pattern != null && !validation.pattern.trim().equals("")) {
-                doValidation = true;
-                logger.debug("Validating '" + variableValue + "' against " + validation.pattern);
-                if ( !variableValue.matches(validation.pattern) )
-                    valid = false;
+            if ( validation != null ) {
+            //if ( validation.pattern != null && !validation.pattern.trim().equals("")) {
+                String effectivePattern = null;
+                if ( validation.userPattern != null )
+                    effectivePattern = "^[" + validation.userPattern + "]$";
+                else
+                if (validation.regexPattern != null )
+                    effectivePattern = validation.regexPattern;
+                else
+                    logger.warn("Invalid validation information in gather. Validation object exists while oth patterns are null");
+
+                if (effectivePattern != null ) {
+                    doValidation = true;
+                    logger.debug("Validating '" + variableValue + "' against " + effectivePattern);
+                    if ( !variableValue.matches(effectivePattern) )
+                        valid = false;
+                }
             }
 
             if ( doValidation && !valid ) {
@@ -125,7 +138,7 @@ public class GatherStep extends Step {
         }
 
         if ( !valid ) { // this should always be true
-            interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null, (validation != null) ? validation.messageStep : null);
+            interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null, ( invalidMessage != null ) ? invalidMessage : null);
         }
     }
 }

@@ -403,3 +403,29 @@ ul#rightMenu > li i {
     max-height: 200px;
     overflow-x: hidden;
 }
+
+.password-transparent {
+    opacity: 0.5;
+}
+
+.password-strength {
+    position: absolute;
+    left: 0;
+    padding: 0 0 0 34px;
+    width: 100%;
+}
+
+.password-strength-modal {
+    position: absolute;
+    width: 63%;
+    padding: 0;
+}
+
+.password-strength > div, .password-strength-modal > div {
+    background-color: transparent;
+    border: 0px;
+}
+
+.password-strength > div > div {
+    padding-top: 7px;
+}

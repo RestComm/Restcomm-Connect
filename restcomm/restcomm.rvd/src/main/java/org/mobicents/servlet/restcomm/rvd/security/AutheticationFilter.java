@@ -52,20 +52,30 @@ public class AutheticationFilter implements ResourceFilter, ContainerRequestFilt
 
         Cookie ticketCookie = request.getCookies().get(RvdConfiguration.TICKET_COOKIE_NAME);
         if ( ticketCookie != null ) {
-            String ticketId = ticketCookie.getValue();
-            //throw new WebApplicationException();
-            //String ticketId = "111"; // simulate retrieving ticketId from a header
+            String rawTicket = ticketCookie.getValue();
+            String[] ticketParts = rawTicket.split(":");
 
-            logger.debug("Received a request with ticket Id " + ticketId);
+            if ( ticketParts.length == 2 ) {
+                String ticketUsername = ticketParts[0];
+                String ticketId = ticketParts[1];
+                //throw new WebApplicationException();
+                //String ticketId = "111"; // simulate retrieving ticketId from a header
 
-            TicketRepository tickets =  TicketRepository.getInstance();
-            Ticket ticket = tickets.findTicket(ticketId);
-            if ( ticket != null ) {
-                RvdUser user = new RvdUser(ticket.getUserId());
-                securityContext = new RvdSecurityContext(user);
-                request.setSecurityContext(securityContext);
-                logger.debug("granted access to request with ticket id" + ticketId);
-                return request;
+                //logger.debug("Received a request with ticket " + rawTicket);
+
+                TicketRepository tickets =  TicketRepository.getInstance();
+                tickets.remindStaleTicketRemoval();
+                Ticket ticket = tickets.findTicket(ticketId);
+                if ( ticket != null ) {
+                    if ( ticket.getUserId() != null && ticket.getUserId().equals(ticketUsername) ) {
+                        ticket.accessedNow();
+                        RvdUser user = new RvdUser(ticket.getUserId());
+                        securityContext = new RvdSecurityContext(user);
+                        request.setSecurityContext(securityContext);
+                        //logger.debug("granted access to request with ticket id" + ticketId);
+                        return request;
+                    }
+                }
             }
             // Since access was not granted, this is probably an bad cookie. Remove it from the request so that it won't be renewed from the SessionKeepAliveFilter
             request.getCookies().remove(RvdConfiguration.TICKET_COOKIE_NAME);

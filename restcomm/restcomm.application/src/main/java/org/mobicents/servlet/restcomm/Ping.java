@@ -49,6 +49,9 @@ public class Ping {
     private Configuration configuration;
     private ServletContext context;
     private Timer timer;
+    private Timer subsequentTimer;
+    private boolean subsequentTimerIsSet = false;
+    private PingTask ping;
 
     Ping(Configuration configuration, ServletContext context){
         this.configuration = configuration;
@@ -58,7 +61,7 @@ public class Ping {
     public void sendPing(){
         boolean daemon = true;
         timer = new Timer(daemon);
-        PingTask ping = new PingTask(configuration);
+        ping = new PingTask(configuration);
         timer.schedule(ping, 0, 60000);
     }
 
@@ -73,6 +76,8 @@ public class Ping {
         public void run() {
             Configuration proxyConf = configuration.subset("runtime-settings").subset("telestax-proxy");
             Boolean proxyEnabled = proxyConf.getBoolean("enabled");
+            Configuration mediaConf = configuration.subset("media-server-manager").subset("mgcp-server");
+            String publicIpAddress = mediaConf.getString("external-address");
             if (proxyEnabled) {
                 String proxyUri = proxyConf.getString("uri");
                 String username = proxyConf.getString("login");
@@ -106,11 +111,20 @@ public class Ping {
                     for (SipURI uri: uris) {
                         post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
                     }
-
+                    if (publicIpAddress != null || !publicIpAddress.equalsIgnoreCase("")) {
+                        post.addHeader("PublicIpAddress",publicIpAddress);
+                    }
                     final HttpResponse response = client.execute(post);
                     if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                         logger.info("Ping to Telestax Proxy was successfully sent");
                         timer.cancel();
+                        if (!subsequentTimerIsSet) {
+                            logger.info("Will set subsequent timer");
+                            boolean daemon = true;
+                            subsequentTimer = new Timer(daemon);
+                            subsequentTimer.schedule(ping, 1800000, 1800000);
+                            subsequentTimerIsSet = true;
+                        }
                         return;
                     } else {
                         logger.error("Ping to Telestax Proxy was sent, but there was a problem. Response status line: "+response.getStatusLine());

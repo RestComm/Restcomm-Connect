@@ -59,6 +59,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
@@ -243,6 +244,7 @@ public final class Call extends UntypedActor {
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, queued));
         transitions.add(new Transition(uninitialized, ringing));
+        transitions.add(new Transition(uninitialized, failing));
         transitions.add(new Transition(queued, canceled));
         transitions.add(new Transition(queued, acquiringMediaGatewayInfo));
         transitions.add(new Transition(queued, closingRemoteConnection));
@@ -290,6 +292,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(inProgress, closingInternalLink));
         transitions.add(new Transition(inProgress, closingRemoteConnection));
         transitions.add(new Transition(inProgress, acquiringMediaGatewayInfo));
+        transitions.add(new Transition(inProgress, failed));
         transitions.add(new Transition(acquiringInternalLink, closingRemoteConnection));
         transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
         transitions.add(new Transition(initializingInternalLink, closingRemoteConnection));
@@ -1003,6 +1006,12 @@ public final class Call extends UntypedActor {
             invite.addHeader("X-RestComm-CallSid", id.toString());
             final SipSession session = invite.getSession();
             session.setHandler("CallManager");
+            //Issue: https://telestax.atlassian.net/browse/RESTCOMM-608
+            //If this is a call to Restcomm client or SIP URI bypass LB
+            if (type.equals(CreateCall.Type.CLIENT) || type.equals(CreateCall.Type.SIP)) {
+                ((SipSessionExt)session).setBypassLoadBalancer(true);
+                ((SipSessionExt)session).setBypassProxy(true);
+            }
             String offer = null;
             if (gatewayInfo.useNat()) {
                 final String externalIp = gatewayInfo.externalIP().getHostAddress();
