@@ -23,7 +23,7 @@ public class DialStep extends Step {
     private Integer timeLimit;
     private String callerId;
     private String nextModule;
-    private String record;
+    private Boolean record;
 
     public RcmlDialStep render(Interpreter interpreter) throws InterpreterException {
         RcmlDialStep rcmlStep = new RcmlDialStep();
@@ -43,7 +43,7 @@ public class DialStep extends Step {
 
         rcmlStep.timeout = timeout == null ? null : timeout.toString();
         rcmlStep.timeLimit = (timeLimit == null ? null : timeLimit.toString());
-        rcmlStep.callerId = callerId;
+        rcmlStep.callerId = interpreter.populateVariables(callerId);
         rcmlStep.record = record;
 
         return rcmlStep;
@@ -53,6 +53,11 @@ public class DialStep extends Step {
         logger.info("handling dial action");
         if ( RvdUtils.isEmpty(nextModule) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
+
+        String publicRecordingUrl = interpreter.getRequestParams().getFirst("PublicRecordingUrl");
+        if ( publicRecordingUrl != null ) {
+            interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "PublicRecordingUrl", publicRecordingUrl);
+        }
 
         String restcommRecordingUrl = interpreter.getRequestParams().getFirst("RecordingUrl");
         if ( restcommRecordingUrl != null ) {

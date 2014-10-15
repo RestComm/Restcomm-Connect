@@ -1152,8 +1152,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            if (gatherVerb == null)
-                    gatherVerb = verb;
             processingGather = true;
             final Class<?> klass = message.getClass();
             final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1170,12 +1168,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     gatherPrompts = new ArrayList<URI>();
                     gatherChildren = new ArrayList<Tag>(verb.children());
                 } else if (DiskCacheResponse.class.equals(klass)) {
+                    if (gatherPrompts == null)
+                        gatherPrompts = new ArrayList<URI>();
+                    if (gatherChildren == null)
+                        gatherChildren = new ArrayList<Tag>(verb.children());
                     final DiskCacheResponse response = (DiskCacheResponse) message;
                     final URI uri = response.get();
-                    final Tag child = gatherChildren.remove(0);
+                    Tag child = null;
+                    if (!gatherChildren.isEmpty())
+                        child = gatherChildren.remove(0);
                     // Parse the loop attribute.
                     int loop = 1;
-                    final Attribute attribute = child.attribute("loop");
+                    Attribute attribute = null;
+                    if (child != null)
+                        attribute = child.attribute("loop");
                     if (attribute != null) {
                         final String number = attribute.value();
                         if (number != null && !number.isEmpty()) {
@@ -1297,7 +1303,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 // Start gathering.
                 if (gatherChildren.isEmpty()) {
-                    verb = gatherVerb;
+                    if (gatherVerb != null)
+                        verb = gatherVerb;
                     final StartGathering start = StartGathering.instance();
                     source.tell(start, source);
                 }
@@ -1424,6 +1431,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
             }
+            logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);

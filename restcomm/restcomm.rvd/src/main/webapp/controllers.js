@@ -10,7 +10,7 @@ App.controller('AppCtrl', function ($rootScope, $location) {
     });
     
     $rootScope.$on("resourceNotFound", function(p1, p2) {
-    	console.log("resourceNotFound event caught");
+    	//console.log("resourceNotFound event caught");
     	$rootScope.rvdError = {message: "The requested resource was not found. Sorry about that."};
     });
     
@@ -20,19 +20,26 @@ App.controller('AppCtrl', function ($rootScope, $location) {
 });
 
 var loginCtrl = angular.module('Rvd')
-.controller('loginCtrl', ['$scope', '$http', 'notifications', '$location', function ($scope, $http, notifications, $location) {
+.controller('loginCtrl', ['authentication', '$scope', '$http', 'notifications', '$location', function (authentication, $scope, $http, notifications, $location) {
 //	console.log("run loginCtrl ");
+	authentication.clearTicket();
 	
 	$scope.doLogin = function (username, password) {
-		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
+		authentication.doLogin(username,password).then(function () {
+			$location.path("/home");
+		}, function () {
+			notifications.put({message:"Login failed", type:"danger"});
+		})
+		
+		/*$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
 		.success ( function () {
 			console.log("login successful");
-			$location.path("/home");
+			
 		})
 		.error( function () {
 			console.log("error logging in");
 			notifications.put({message:"Login failed", type:"danger"});
-		});
+		});*/
 	}
 }]);
 
@@ -41,7 +48,7 @@ App.controller('homeCtrl', function ($scope, authInfo) {
 });
 
 angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'projectLogService', function ($scope, $routeParams, projectLogService) {
-	console.log('in projectLogCtrl');
+	//console.log('in projectLogCtrl');
 	$scope.projectName = $routeParams.projectName;
 	$scope.logData = '';
 	
@@ -58,3 +65,78 @@ angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'p
 	retrieveLog($scope.projectName);
 }]);
 
+App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal','$q', '$http', function ($scope, authentication, $location, $modal, $q, $http) {
+	$scope.authInfo = authentication.getAuthInfo();
+	//$scope.username = authentication.getTicket(); //"Testuser@test.com";
+	
+	function logout() {
+		console.log("logging out");
+		authentication.doLogout().then(function () {
+			$location.path("/login");
+		}, function () {
+			$location.path("/login");
+		});
+	}
+	$scope.logout = logout;
+	
+	function settingsModalCtrl ($scope, $timeout, $modalInstance, settings) {
+		$scope.settings = settings;
+
+		$scope.ok = function () {
+			$http.post("services/settings", settings, {headers: {'Content-Type': 'application/data'}})
+			.success( function () { 
+				$modalInstance.close(settings);
+			})
+			.error( function () {
+				notifications.put("Cannot save settings");
+			});
+		};
+
+		$scope.cancel = function () {
+			$modalInstance.dismiss('cancel');
+		};
+		
+		// watch form validation status and copy to outside scope so that the OK
+		// button (which is outside the form's scope) status can be updated
+		$scope.watchForm = function (formValid) {
+			$scope.preventSubmit = !formValid;
+		}
+	};
+	
+	$scope.showSettingsModal = function (settings) {
+		var modalInstance = $modal.open({
+		  templateUrl: 'templates/designerSettingsModal.html',
+		  controller: settingsModalCtrl,
+		  size: 'lg',
+		  resolve: {
+			settings: function () {
+				var deferred = $q.defer()
+				$http.get("services/settings")
+				.then(function (response) {
+					deferred.resolve(response.data);
+				}, function (response) {
+					if ( response.status == 404 )
+						deferred.resolve({});
+					else {
+						// console.log("BEFORE reject");
+						deferred.reject();
+						// console.log("AFTER reject");
+					}
+				});
+				return deferred.promise;
+			}
+		  }
+		});
+
+		modalInstance.result.then(function (settings) {
+			//console.log(settings);
+			// $scope.settings
+		}, function () {
+		  // $log.info('Modal dismissed at: ' + new Date());
+		});		
+	}
+	
+	
+	
+	
+}]);

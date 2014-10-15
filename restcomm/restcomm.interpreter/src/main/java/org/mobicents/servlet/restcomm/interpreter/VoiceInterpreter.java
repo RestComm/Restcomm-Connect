@@ -655,7 +655,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (Tag.class.equals(klass)) {
-            final Tag verb = (Tag) message;
+//            final Tag verb = (Tag) message;
+            verb = (Tag) message;
             if (CallStateChanged.State.RINGING == callState) {
                 if (reject.equals(verb.name())) {
                     fsm.transition(message, rejecting);
@@ -675,6 +676,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // fsm.transition(message, synthesizing);
                 fsm.transition(message, checkingCache);
             } else if (gather.equals(verb.name())) {
+                gatherVerb = verb;
                 fsm.transition(message, processingGatherChildren);
             } else if (pause.equals(verb.name())) {
                 fsm.transition(message, pausing);
@@ -712,6 +714,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             // fsm.transition(message, synthesizing);
                             fsm.transition(message, checkingCache);
                         } else if (gather.equals(verb.name())) {
+                            gatherVerb = verb;
                             fsm.transition(message, processingGatherChildren);
                         } else if (pause.equals(verb.name())) {
                             fsm.transition(message, pausing);
