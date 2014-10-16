@@ -1654,18 +1654,23 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
 
+            Attribute attribute = verb.attribute("action");
+
             if (message instanceof ReceiveTimeout) {
                 logger.info("Received timeout, will cancel calls");
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
                     for (final ActorRef branch : dialBranches) {
-                        executeDialAction(message, branch);
                         branch.tell(new Cancel(), source);
                         callManager.tell(new DestroyCall(branch), source);
                     }
-                    final GetNextVerb next = GetNextVerb.instance();
-                    parser.tell(next, source);
+                    if (attribute != null) {
+                        executeDialAction(message, null);
+                    } else {
+                        final GetNextVerb next = GetNextVerb.instance();
+                        parser.tell(next, source);
+                    }
                     dialChildren = null;
                     outboundCall = null;
                     return;
@@ -1681,7 +1686,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 call.tell(new Hangup(), self());
             }
 
-            Attribute attribute = verb.attribute("action");
             if (attribute != null) {
                 logger.info("Executing Dial Action url");
                 if (outboundCall != null) {
