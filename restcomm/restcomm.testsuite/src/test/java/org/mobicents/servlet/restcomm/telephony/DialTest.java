@@ -920,9 +920,9 @@ public class DialTest {
         assertTrue(aliceCall.listenForCancel());
         assertTrue(henriqueCall.listenForCancel());
         
-        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
-        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
-        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(20 * 1000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(20 * 1000);
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(20 * 1000);
         assertNotNull(georgeCancelTransaction);
         assertNotNull(aliceCancelTransaction);
         assertNotNull(henriqueCancelTransaction);
