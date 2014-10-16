@@ -1,4 +1,3 @@
-
 #! /bin/bash
 ##
 ## Description: Starts RestComm with auto-configuration.
