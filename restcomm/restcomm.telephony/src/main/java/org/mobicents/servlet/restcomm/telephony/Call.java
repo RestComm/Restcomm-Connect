@@ -278,8 +278,10 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(ringing, updatingRemoteConnection));
         transitions.add(new Transition(ringing, acquiringMediaGatewayInfo));
         transitions.add(new Transition(ringing, failingBusy));
+        transitions.add(new Transition(ringing, failingNoAnswer));
         transitions.add(new Transition(ringing, closingRemoteConnection));
         transitions.add(new Transition(failingNoAnswer, noAnswer));
+        transitions.add(new Transition(failingNoAnswer, canceling));
         transitions.add(new Transition(failingBusy, busy));
         transitions.add(new Transition(canceling, canceled));
         transitions.add(new Transition(updatingRemoteConnection, inProgress));
@@ -557,7 +559,7 @@ public final class Call extends UntypedActor {
                 fsm.transition(message, inProgress);
             }
         } else if (Cancel.class.equals(klass)) {
-            if (openingRemoteConnection.equals(state) || dialing.equals(state) || ringing.equals(state)) {
+            if (openingRemoteConnection.equals(state) || dialing.equals(state) || ringing.equals(state) || failingNoAnswer.equals(state)) {
                 fsm.transition(message, canceling);
             }
         } else if (LinkStateChanged.class.equals(klass)) {
@@ -582,7 +584,11 @@ public final class Call extends UntypedActor {
                 }
             }
         } else if (message instanceof ReceiveTimeout) {
-            fsm.transition(message, failingNoAnswer);
+            if (ringing.equals(state)) {
+                fsm.transition(message, failingNoAnswer);
+            } else {
+                logger.info("Timeout received. Sender: "+sender.path().toString()+" State: "+state+" Direction: "+direction+" From: "+from+" To: "+to);
+                }
         } else if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
@@ -1047,9 +1053,12 @@ public final class Call extends UntypedActor {
                     invite.getSession().setAttribute("realInetUri", initialInetUri);
 
             } else if (message instanceof SipServletResponse) {
-                final UntypedActorContext context = getContext();
-                context.setReceiveTimeout(Duration.Undefined());
-                // Check if we have to record the call
+                //Timeout still valid in case we receive a 180, we don't know if the
+                //call will be eventually answered.
+                //Issue 585: https://telestax.atlassian.net/browse/RESTCOMM-585
+
+//                final UntypedActorContext context = getContext();
+//                context.setReceiveTimeout(Duration.Undefined());
             }
             // Start recording if RecordingType.RECORD_FROM_RINGING
             // if (recordingType != null && recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING)) {
@@ -1083,8 +1092,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            if (dialing.equals(state)
-                    || (ringing.equals(state) && OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction))) {
+            if (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
                 final SipServletRequest cancel = invite.createCancel();
@@ -1145,6 +1153,11 @@ public final class Call extends UntypedActor {
     private final class FailingNoAnswer extends Failing {
         public FailingNoAnswer(final ActorRef source) {
             super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            logger.info("Call moves to failing state because no answer");
         }
     }
 
@@ -1277,7 +1290,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            if (dialing.equals(state)) {
+            if (dialing.equals(state) || ringing.equals(state)) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
             }
