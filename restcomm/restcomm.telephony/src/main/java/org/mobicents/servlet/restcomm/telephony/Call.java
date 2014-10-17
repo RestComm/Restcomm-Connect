@@ -1384,7 +1384,7 @@ public final class Call extends UntypedActor {
         private final int MAX_ATTEMPTS = 10;
 
         /** Waiting time (in milliseconds) between attempts */
-        private final int ATTEMPT_WAIT = 100;
+        private final int ATTEMPT_WAIT = 200;
         private final FiniteDuration duration = new FiniteDuration(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
 
         /** Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS. */
