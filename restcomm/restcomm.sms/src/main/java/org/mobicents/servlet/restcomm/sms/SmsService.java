@@ -65,6 +65,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 public final class SmsService extends UntypedActor {
     private final ActorSystem system;
     private final Configuration configuration;
+    private boolean authenticateUsers = true;
     private final ServletConfig servletConfig;
     private final SipFactory sipFactory;
     private final DaoManager storage;
@@ -78,6 +79,8 @@ public final class SmsService extends UntypedActor {
         super();
         this.system = system;
         this.configuration = configuration;
+        final Configuration runtime = configuration.subset("runtime-settings");
+        this.authenticateUsers = runtime.getBoolean("authenticate");
         this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
         this.sipFactory = factory;
         this.storage = storage;
@@ -99,7 +102,8 @@ public final class SmsService extends UntypedActor {
         // Make sure we force clients to authenticate.
         if (client != null) {
             // Make sure we force clients to authenticate.
-            if (!CallControlHelper.checkAuthentication(request, storage)) {
+            if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
+                    && !CallControlHelper.checkAuthentication(request, storage)) {
                 // Since the client failed to authenticate, we will ignore the message and not process further
                 return;
             }
