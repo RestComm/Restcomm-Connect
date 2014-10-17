@@ -342,6 +342,10 @@ public final class CallManager extends UntypedActor {
             if (number == null) {
                 number = numbers.getIncomingPhoneNumber(phone);
             }
+            if(number == null) {
+                // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
+                number = numbers.getIncomingPhoneNumber("*");
+            }
             if (number != null) {
                 final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
