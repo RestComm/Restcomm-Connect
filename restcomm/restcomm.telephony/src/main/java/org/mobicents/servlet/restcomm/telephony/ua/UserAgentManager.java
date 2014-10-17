@@ -44,6 +44,7 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -66,13 +67,17 @@ import akka.event.LoggingAdapter;
  */
 public final class UserAgentManager extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    private final ServletConfig configuration;
+    private final ServletConfig servletConfig;
+    private boolean authenticateUsers = true;
     private final SipFactory factory;
     private final DaoManager storage;
 
-    public UserAgentManager(final ServletConfig configuration, final SipFactory factory, final DaoManager storage) {
+    public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
         super();
-        this.configuration = configuration;
+//        this.configuration = configuration;
+        this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
+        final Configuration runtime = configuration.subset("runtime-settings");
+        this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
         this.storage = storage;
         final ActorContext context = context();
@@ -133,11 +138,15 @@ public final class UserAgentManager extends UntypedActor {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
             if ("REGISTER".equalsIgnoreCase(method)) {
-                final String authorization = request.getHeader("Proxy-Authorization");
-                if (authorization != null && permitted(authorization, method)) {
-                    register(message);
+                if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
+                    final String authorization = request.getHeader("Proxy-Authorization");
+                    if (authorization != null && permitted(authorization, method)) {
+                        register(message);
+                    } else {
+                        authenticate(message);
+                    }
                 } else {
-                    authenticate(message);
+                    register(message);
                 }
             }
         } else if (message instanceof SipServletResponse) {
@@ -209,7 +218,7 @@ public final class UserAgentManager extends UntypedActor {
     }
 
     private SipURI outboundInterface(String toTransport) {
-        final ServletContext context = configuration.getServletContext();
+        final ServletContext context = servletConfig.getServletContext();
         SipURI result = null;
         @SuppressWarnings("unchecked")
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
