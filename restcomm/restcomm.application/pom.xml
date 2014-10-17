@@ -212,7 +212,6 @@
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>1.8.0.10</version>
-			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>

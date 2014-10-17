@@ -116,6 +116,7 @@ public final class CallManager extends UntypedActor {
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo;
+    private boolean authenticateUsers;
 
     private AtomicInteger numberOfFailedCalls;
     private AtomicBoolean useFallbackProxy;
@@ -158,6 +159,7 @@ public final class CallManager extends UntypedActor {
             mediaExternalIp = myHostIp;
 
         this.useTo = runtime.getBoolean("use-to");
+        this.authenticateUsers = runtime.getBoolean("authenticate");
 
         this.primaryProxyUri = outboundProxyConfig.getString("outbound-proxy-uri");
         this.primaryProxyUsername = outboundProxyConfig.getString("outbound-proxy-user");
@@ -244,7 +246,8 @@ public final class CallManager extends UntypedActor {
         final Client client = clients.getClient(fromUser);
         if (client != null) {
             // Make sure we force clients to authenticate.
-            if (CallControlHelper.checkAuthentication(request, storage)) {
+            if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
+                    || CallControlHelper.checkAuthentication(request, storage)) {
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
