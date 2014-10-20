@@ -154,6 +154,12 @@
 			<version>${project.version}</version>
 		</dependency>
 
+        <dependency>
+            <groupId>com.telestax.servlet</groupId>
+            <artifactId>restcomm.provisioning.number.bandwidth</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.telephony</artifactId>
