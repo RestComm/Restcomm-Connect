@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -58,7 +59,9 @@ public class ProjectLogger {
     }
 
     public void done() {
+        Date date = new Date();
         StringBuffer buffer = new StringBuffer();
+        buffer.append("[" + date.toString() + "]");
         for ( String tag : tags ) {
             if (tag == null)
                 break;

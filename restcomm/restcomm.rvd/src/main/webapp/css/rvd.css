@@ -15,69 +15,6 @@
 	/*height: 20px;*/
 }
 
-.editor .panel-heading {
-	padding: 5px 10px;
-}
-
-.header .cogs {
-	font-size: 41px;
-}
-
-.editor {
-	min-height: 580px;
-	background-color: rgb(240, 240, 240);
-}
-
-.toggle_step:hover {
-	opacity:0.6;
-}
-
-.step.panel {
-	margin-bottom: 5px;
-}
-
-.node-bootstrap {
-	margin-bottom: 15px;
-	text-align: right;
-}
-
-.node-bootstrap textarea {
-	margin-top: 10px;
-	height: 170px;
-}
-
-.collapse-button {
-	font-size: 21px;
-	font-weight: bold;
-}
-
-
-.navbar-telestax {
-	/*margin-top: 10px;*/
-}
-
-.navbar-rvd {
-	font-size: 21px;
-}
-.navbar-rvd img {
-	height: 25px;
-	margin-top: 18px;
-	float: left;
-}
-
-.container {
-	margin-top: 85px;
-	/*min-height: 500px;*/
-}
-
-.panel-rvdstep > .panel-heading {
-	background-color: #f0f0f0;
-}
-
-.panel-rvdstep {
-	/*border: none;*/
-	box-shadow: 1px 1px 1px 1px #ccc;
-}
 
 label {
 	font-weight: normal;
@@ -233,27 +170,9 @@ label {
 	margin-bottom: 5px;
 }
 
-/*
-.sortable-steps {
-	min-height: 300px;
-	padding-bottom: 50px;
-}
-
-.sortable-steps.nested {
-	min-height: 50px;
-	padding-bottom: 5px;
-}*/
-
 .step-list {
 	min-height: 500px;
 }
-
-/*
-.rvd-spinner {
-	min-height: 400px;
-}
-*/
-
 
 .rvd-project-item {
 	margin-bottom:4px;
@@ -439,6 +358,7 @@ li.verb {
     margin: 0 auto;
 }
 
+/*
 .navbar-header {
 	float: none;
 }
@@ -551,6 +471,78 @@ textarea.medium {
 	margin-right: auto;
 }
 
+
+/* ------------------ #/designer --------------------------- */
+.editor .panel-heading {
+	padding: 5px 10px;
+}
+
+.header .cogs {
+	font-size: 41px;
+}
+
+.editor {
+	min-height: 580px;
+	background-color: rgb(240, 240, 240);
+}
+
+.toggle_step:hover {
+	opacity:0.6;
+}
+
+.step.panel {
+	margin-bottom: 5px;
+}
+
+.node-bootstrap {
+	margin-bottom: 15px;
+	text-align: right;
+}
+
+.node-bootstrap textarea {
+	margin-top: 10px;
+	height: 170px;
+}
+
+.collapse-button {
+	font-size: 21px;
+	font-weight: bold;
+}
+
+.container {
+	margin-top: 85px;
+	/*min-height: 500px;*/
+}
+
+.panel-rvdstep > .panel-heading {
+	background-color: #f0f0f0;
+}
+
+.panel-rvdstep {
+	/*border: none;*/
+	box-shadow: 1px 1px 1px 1px #ccc;
+}
+
+.editor .nav > li > a {
+	padding: 7px 15px;
+	margin-right:5px;
+}
+
+.editor .nav .caret {
+	border-top-color: white;
+}
+
+.editor .top-menu .btn-primary:hover {
+	background-color: #428BCA;
+	opacity: 0.8;
+}
+
+.editor .top-menu .btn-primary:focus {
+	background-color: #428BCA;
+	opacity: 0.8;
+}
+
+
 /* ------------------ #/packaging/ view -------------------- */
 .rvd-packaging .col-md-4 .rvd-appversion {
 	width: 200px;
@@ -574,7 +566,17 @@ textarea.medium {
     text-align: center;
     width: 100%;
     z-index: 2000;
-    top: 60px;
+    top: 51px;
+}
+
+/* ------------------ index.html - top menu ---------------- */
+.rvd-phone-image {
+	margin-top: -6px;
+	height: 25px;
+}
+
+.rvd-telestax-image {
+	margin-top: -9px;
 }
 
 /* ------------------ global formatting -------------------- */

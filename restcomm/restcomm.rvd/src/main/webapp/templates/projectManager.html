@@ -51,7 +51,7 @@
 			<br />
 			<h3 class="text-center">Create new project</h3>
 			<br />
-			<form name="form" novalidate>	
+			<form ng-submit="createNewProject(newProjectName, projectKind)" name="form" novalidate>	
 				<div class="row">
 					<div class="col-md-12">
 						<input name="newProjectName" type="text" class="form-control" ng-model="newProjectName" ng-pattern="projectNameValidator" required />
@@ -60,15 +60,17 @@
 				<br />
 				<div class="row form-group">
 					<div class="col-md-12">
-						<button type="button" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid"  ng-click="createNewProject(newProjectName, projectKind)"
+						<button type="submit" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid" 
 							class="btn btn-primary form-control">Create</button>
 					</div>
 				</div>
+				<!-- 
 				<div class="row">
 					<div ng-repeat="notification in notifications">
 						<div class="error-message text-center">{{notification.message}}</div>
 					</div>
 				</div>
+				-->
 			</form>
 			<br/>
 		</div>

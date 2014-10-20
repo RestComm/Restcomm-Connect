@@ -228,6 +228,7 @@ public class ProjectService {
      * @return
      * @throws RvdException
      */
+    /*
     public String validateProject(HttpServletRequest request) throws RvdException {
         String stateData;
         try {
@@ -235,8 +236,21 @@ public class ProjectService {
             ProjectValidator validator = new ProjectValidator();
             ValidationResult result = validator.validate(stateData);
             if (!result.isSuccess())
-                throw new ValidationException(result);
+                throw new ValidationException(result,stateData);
             return stateData;
+        } catch (IOException e) {
+            throw new RvdException("Internal error while validating raw project",e);
+        } catch (ProcessingException e) {
+            throw new ValidationFrameworkException("Error while validating raw project",e);
+        }
+    }
+    */
+
+    public ValidationResult validateProject(String stateData) throws RvdException {
+        try {
+            ProjectValidator validator = new ProjectValidator();
+            ValidationResult result = validator.validate(stateData);
+            return result;
         } catch (IOException e) {
             throw new RvdException("Internal error while validating raw project",e);
         } catch (ProcessingException e) {
@@ -245,7 +259,14 @@ public class ProjectService {
     }
 
     public void updateProject(HttpServletRequest request, String projectName, ProjectState existingProject) throws RvdException {
-        String stateData = validateProject(request);
+        String stateData = null;
+        try {
+            stateData = IOUtils.toString(request.getInputStream());
+        } catch (IOException e) {
+            throw new RvdException("Internal error while retrieving raw project",e);
+        }
+
+        ValidationResult validationResult = validateProject(stateData);
         // then save
         ProjectState state = rvdContext.getMarshaler().toModel(stateData, ProjectState.class);
         // Make sure the current RVD project version is set
@@ -254,6 +275,10 @@ public class ProjectService {
         state.getHeader().setOwner(existingProject.getHeader().getOwner());
         //projectStorage.storeProject(projectName, state, false);
         FsProjectStorage.storeProject(false, state, projectName, workspaceStorage);
+
+        if ( !validationResult.isSuccess() ) {
+            throw new ValidationException(validationResult);
+        }
     }
 
     public void renameProject(String projectName, String newProjectName) throws ProjectDoesNotExist, StorageException {

@@ -22,7 +22,7 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		controller : 'designerCtrl',
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
-			projectSettings: function (projectSettingsService) {return projectSettingsService.retrieve();}
+			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);}
 		}
 	})
 	.when('/packaging/:projectName', {

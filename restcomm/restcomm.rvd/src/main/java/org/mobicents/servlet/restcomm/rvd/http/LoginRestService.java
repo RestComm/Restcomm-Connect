@@ -41,10 +41,11 @@ public class LoginRestService extends RestService {
         rvdSettings = rvdSettings.getInstance(servletContext);
     }
 
+    /*
     @GET
     @Path("login")
     public Response login(@Context HttpServletRequest request) {
-        logger.debug("Running login");
+        //logger.debug("Running login");
 
         // get username/password from request and authenticate against Restcomm
         // ...
@@ -54,29 +55,30 @@ public class LoginRestService extends RestService {
 
         try {
             if ( authService.authenticate(userId, password) ) {
-                logger.debug("User " + userId + " authenticate succesfully");
+                logger.debug("User " + userId + " authenticated");
 
                 // if authentication succeeds create a ticket for this user and return its id
                 TicketRepository tickets = TicketRepository.getInstance();
                 Ticket ticket = new Ticket(userId);
                 tickets.putTicket( ticket );
 
-                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket.getTicketId()) ).build();
+                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket) ).build();
             }
             else {
-                logger.debug("Authentication error for user " + userId);
-                return Response.status(Status.UNAUTHORIZED).cookie( SecurityUtils.createTicketCookie("") ).build();
+                logger.debug("Authentication failed for user " + userId);
+                return Response.status(Status.UNAUTHORIZED).cookie( SecurityUtils.createTicketCookie(null) ).build();
             }
         } catch (RvdSecurityException e) {
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, null);
         }
     }
+    */
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("login")
     public Response postLogin(@Context HttpServletRequest request) throws IOException { // TODO make sure IOException is handled properly!
-        logger.debug("Running login");
+        //logger.debug("Running login");
 
         String data = IOUtils.toString(request.getInputStream());
         Gson gson = new Gson();
@@ -85,7 +87,7 @@ public class LoginRestService extends RestService {
 
         try {
             if ( authService.authenticate(credentials.getUsername(), credentials.getPassword()) ) {
-                logger.debug("User " + credentials.getUsername() + " authenticate succesfully");
+                logger.debug("User " + credentials.getUsername() + " authenticated");
 
                 // if authentication succeeds create a ticket for this user and return its id
                 TicketRepository tickets = TicketRepository.getInstance();
@@ -93,10 +95,10 @@ public class LoginRestService extends RestService {
                 tickets.putTicket( ticket );
 
                 //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();
-                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket.getTicketId()) ).build();
+                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket) ).build();
             }
             else {
-                logger.debug("Authentication error for user " + credentials.getUsername());
+                logger.debug("Authentication failed for user " + credentials.getUsername());
                 return Response.status(Status.UNAUTHORIZED).build();
             }
         } catch (RvdSecurityException e) {
@@ -111,10 +113,8 @@ public class LoginRestService extends RestService {
         TicketRepository tickets = TicketRepository.getInstance();
         logger.debug("Invalidating ticket " + ticketCookieValue);
         tickets.invalidateTicket(ticketCookieValue);
-
         // removing the cookie by setting the max-age to 0
-        //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, "", "/restcomm-rvd/services", null, null,0, false ) ).build();
-        return Response.ok().cookie( SecurityUtils.createTicketCookie("") ).build();
+        return Response.ok().cookie( SecurityUtils.createTicketCookie(null) ).build();
     }
 
 

@@ -23,13 +23,13 @@ public class AuthenticationService {
     HttpServletRequest request; // used to calculate Restcomm's IP
 
     public AuthenticationService(RvdConfiguration rvdSettings, HttpServletRequest request) {
-        logger.debug("Created RVD authentication service");
+        //logger.debug("Created RVD authentication service");
         this.rvdSettings = rvdSettings;
         this.request = request;
     }
 
     public boolean authenticate( String username, String password ) throws RvdSecurityException {
-        logger.debug("Authenticating " + username + "/" + password);
+        logger.debug("Authenticating " + username + " on Restcomm");
         String restcommIp = rvdSettings.getEffectiveRestcommIp(request);
         String restcommAuthUrl = "http://" + restcommIp + ":8080";
 
