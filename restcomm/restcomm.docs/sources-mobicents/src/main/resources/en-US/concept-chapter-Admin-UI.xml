@@ -1,0 +1,462 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "RestComm_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<!-- chapter id nickname: adminUi -->
+<chapter>
+	<title>Restcomm Admin User Interface</title>
+<para>
+The admin user interface is a great way to perform repetive Restcomm task in a orderly manner. Care has been taken to make the user experience intuitive for those new to the platform. In this chapter, you will learn how to use some of the features available to create Clients, Phone Numbers, Check Call Logs, Get Speech-to-Text Transcription and many more
+</para>
+
+<para>Please also visit the official Telestax documentation page for more usage tutorials:<ulink url="http://www.telestax.com/docs">http://www.telestax.com/docs</ulink></para>
+
+
+<section>
+<title>Login Interface</title>
+<para>
+You need to make sure Restcomm is running before you can use the Admin User Interface. When you are running on a local install, open your web browser and go to this url
+ <ulink url="http://127.0.0.1:8080/restcomm-management">http://127.0.0.1:8080/restcomm-management </ulink>. You will see a screenshot similar to the one below
+</para>
+
+
+<para> 
+Please see the <xref linkend="change-default-login"/> for more information about changing the default password.
+</para>
+
+
+
+</section>
+
+<section>
+<title>Passwords, Sub Accounts Settings</title>
+<para>
+When you click on the Administrators Account at the top right corner of the window, as shown in the screenshot below, you will be able to change your Administrators passwords and create Sub Accounts. 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-12.png"/>
+	</imageobject>
+</mediaobject>
+
+<table frame='all'>
+			<title>Account Settings</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Number</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>1</entry>
+						<entry>Shows the current Acount profile</entry>
+					</row>
+					<row>
+						<entry>2</entry>
+						<entry>You can create new Sub Accounts</entry>
+					</row>
+			<row>
+						<entry>3</entry>
+						<entry>Descriptive name of the user account</entry>
+					</row>
+								<row>
+						<entry>4</entry>
+						<entry>New password of the current logged in account</entry>
+					</row>
+			<row>
+						<entry>5</entry>
+						<entry>You can activate or suspend an account</entry>
+					</row>
+<row>
+						<entry>6</entry>
+						<entry>There are three options, Trial, Basic and Full(default)</entry>
+					</row>
+<row>
+						<entry>7</entry>
+						<entry>List of Sub Accounts</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+
+
+</section>
+
+
+
+<section>
+<title>Dashboard</title>
+<para>
+This is the default page where you can get an overview of your Restcomm Installation.
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui6.png"/>
+	</imageobject>
+</mediaobject>
+<table frame='all'>
+			<title>Dashboard</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Number</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>1</entry>
+						<entry>Account SID is the default used by the Administrator's account</entry>
+					</row>
+					<row>
+						<entry>2</entry>
+						<entry>The Auth Token is the password that is required for any Restcomm operation. You can click on the hidden button to reveal the hashed password.</entry>
+					</row>
+			<row>
+						<entry>3</entry>
+						<entry>The Debugger lets you troubleshoot any issues you might encounter using Restcomm</entry>
+					</row>
+<row>
+						<entry>4</entry>
+						<entry>A quick way to get all the API exposed by Restcomm</entry>
+					</row>
+<row>
+						<entry>5</entry>
+						<entry>Additional information about Calls parsed by Restcomm</entry>
+					</row>
+<row>
+						<entry>6</entry>
+						<entry>Additional information about SMS parsed by Restcomm</entry>
+					</row>
+
+<row>
+						<entry>7</entry>
+						<entry>This will take you to the Restcomm Visual Designer (RVD) page located a <ulink url="http://127.0.0.1:8080/restcomm-rvd"/> </entry>
+					</row>
+					
+				</tbody>
+			</tgroup>
+		</table>
+
+
+</section>
+
+<section>
+<title>Restcomm Numbers</title>
+<para>
+This will show the default demo applications that come with Restcomm. When you start creating applications and attaching numbers, they will also be displayed on this page.
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-3.png"/>
+	</imageobject>
+</mediaobject>
+<table frame='all'>
+			<title>Restcomm Numbers</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Number</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>1</entry>
+						<entry>The number 1235 is attached to the hello-world.xml application. You must have configured VoiceRSS text-to-speech to use this application</entry>
+					</row>
+					<row>
+						<entry>2</entry>
+						<entry>The number 1236 is attached to a the Gather verb. It will ask you to enter a number and you can hear the number you enter. You must have configured VoiceRSS text-to-speech to use this application</entry>
+					</row>
+			<row>
+						<entry>3</entry>
+						<entry>The number 1234 plays a pre-recorded file.</entry>
+					</row>
+			<row>
+						<entry>4</entry>
+						<entry>This icon lets you edit the Name of the entry to a more descriptive one.</entry>
+					</row>
+	<row>
+						<entry>5</entry>
+						<entry>This button lets you create a new number that can be attached to a RCML</entry>
+					</row>
+
+					
+				</tbody>
+			</tgroup>
+		</table>
+
+
+
+<section>
+<title>Register Number</title>
+
+<para>
+When you click on the Register Number button, you will see a screenshot similar to the one below. This will allow you to create a new phone number that can be attached to a Restcomm application. 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui5.png"/>
+	</imageobject>
+</mediaobject>
+<table frame='all'>
+			<title>Restcomm Numbers</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Number</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>1</entry>
+						<entry>The field to enter the phone number.</entry>
+					</row>
+					<row>
+						<entry>2</entry>
+						<entry>This button will show the Area Code. You must have Voip Innovations API account configured in the restcomm.xml file to use this feature. It will search for DID in the area code specified. At the moment, only US DIDs are available.</entry>
+					</row>
+
+<row>
+						<entry>3</entry>
+						<entry>This button will show advanced options if you want to add more features to the phone number like the VoiceUrl</entry>
+					</row>
+			<row>
+						<entry>4</entry>
+						<entry>See the Rest API <xref linkend="restful-api" />  for more information</entry>
+					</row>
+			<row>
+						<entry>5</entry>
+						<entry>This button will show available Restcomm Visual Designer (RVD) applications that can be linked to a phone number.</entry>
+					</row>
+	<row>
+						<entry>6</entry>
+						<entry>See the Rest API <xref linkend="restful-api" />  for more information</entry>
+					</row>
+
+
+					
+				</tbody>
+			</tgroup>
+		</table>
+</section>
+<section>
+<title>Edit Update Number</title>
+
+<para>
+Editing a phone number can be done by clicking on the number, the screenshot below shows how you can edit the number 1235. You can change the VoiceUrl to which the number is attached.  
+</para>
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-5.png"/>
+	</imageobject>
+</mediaobject>
+
+<table frame='all'>
+			<title>Edit Update Numbers</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Number</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>1</entry>
+						<entry>You can link the phone number to a VoiceUrl application. See the REST API for more details.</entry>
+					</row>
+					<row>
+						<entry>2</entry>
+						<entry>You can link the phone number to a SMS application. See the REST API for more details</entry>
+					</row>
+			<row>
+						<entry>3</entry>
+						<entry>You can link the phone number to a USSD application. See the REST API for more details</entry>
+					</row>
+			<row>
+						<entry>4</entry>
+						<entry>Caller Id lookup requires a CNAM provier</entry>
+					</row>
+	<row>
+						<entry>5</entry>
+						<entry>You can save your changes or press close to discard the changes</entry>
+					</row>
+
+					
+				</tbody>
+			</tgroup>
+		</table>
+
+</section>
+</section>
+
+
+<section>
+<title>SIP Clients</title>
+<para>
+SIP Client is a feature that allows you to create a Restcomm profile that can be used for P2P or B2BUA calls. This will be empty until you create a new client. You can create a new client by clicking on the Resgister SIP Clent button.
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-6.png"/>
+	</imageobject>
+</mediaobject>
+<table frame='all'>
+			<title>SIP Clients</title>
+			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' />
+				<colspec colname='c2' />
+				<thead>
+					<row>
+						<entry align="center">Number</entry>
+						<entry align="center">Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>1</entry>
+						<entry>The client name. (ex. alice or bob)</entry>
+					</row>
+					<row>
+						<entry>2</entry>
+						<entry>The password that will be used to when you want to register the client with restcomm</entry>
+					</row>
+			<row>
+						<entry>3</entry>
+						<entry>Use to open optional parameters windows</entry>
+					</row>
+			<row>
+						<entry>4</entry>
+						<entry>This can be the full name of the client (ex.Alice Wilkinson) or any descriptive name</entry>
+					</row>
+	<row>
+						<entry>5</entry>
+						<entry>This is where you specify the VoiceUrl that is automatically invoked when the client is called. See the REST API for more details.</entry>
+					</row>
+	<row>
+						<entry>6</entry>
+						<entry>See the REST API for more details.</entry>
+					</row>
+	<row>
+						<entry>7</entry>
+						<entry>This will validate your changes and create the client.</entry>
+					</row>
+					
+				</tbody>
+			</tgroup>
+		</table>
+
+
+
+</section>
+<section>
+<title>Outgoing CallerId</title>
+<para>
+Will be available in future release
+</para>
+</section>
+
+<section>
+<title>Logs</title>
+<para>
+The log section gives you an overview of current Restcomm system information.
+</para>
+
+
+<section>
+<title>Logs - Calls</title>
+
+
+<para>
+A list of all calls that have been processed by Restcomm 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-7.png"/>
+	</imageobject>
+</mediaobject>
+</section>
+
+<section>
+<title>Logs - Messages</title>
+
+
+<para>
+A list of all SMS messages that have been processed by Restcomm 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-8.png"/>
+	</imageobject>
+</mediaobject>
+
+</section>
+
+<section>
+<title>Logs - Recordings</title>
+
+<para>
+A list of all Recordings (using the Record Verb) that have been processed by Restcomm 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-9.png"/>
+	</imageobject>
+</mediaobject>
+</section>
+
+<section>
+<title>Logs - Transcriptions</title>
+
+<para>
+A list of all Transcriptions that have (using the Transcribe parameters of the Record Verb) that have been processed by Restcomm. See the <xref linkend="restful-api" /> 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-10.png"/>
+	</imageobject>
+</mediaobject>
+</section>
+
+<section>
+<title>Logs - Notifications</title>
+
+<para>
+A list of all Notifications received by Restcomm. 
+</para>
+
+<mediaobject>
+	<imageobject>
+	<imagedata align="center" fileref="images/restcomm-admin-ui-11.png"/>
+	</imageobject>
+</mediaobject>
+</section>
+
+</section>
+
+</chapter>
