@@ -14,13 +14,13 @@
 startRestcomm() {
 	run_mode="$1"
 	bind_address="$2"
-	
+
 	# Check if RestComm is already running
 	if screen -list | grep -q 'restcomm'; then
 		echo 'TelScale RestComm is already running on screen session "restcomm"!'
 		exit 1;
 	fi
-	
+
 	case $run_mode in
 		'standalone'*)
 			# start restcomm on standalone mode
@@ -94,7 +94,7 @@ fi
 # set environment variables for execution
 BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 RESTCOMM_HOME=$(cd $BASEDIR/../../ && pwd)
-MMS_HOME=$RESTCOMM_HOME/telscale-media/telscale-media-server
+MMS_HOME=$RESTCOMM_HOME/mobicents-media/mobicents-media-server
 LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 
 echo BASEDIR: $BASEDIR
