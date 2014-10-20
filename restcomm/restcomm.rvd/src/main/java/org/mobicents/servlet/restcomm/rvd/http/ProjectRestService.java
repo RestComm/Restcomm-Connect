@@ -93,7 +93,6 @@ public class ProjectRestService extends RestService {
 
     @PostConstruct
     void init() {
-        logger.debug("inside init()");
         rvdContext = new RvdContext(request, servletContext);
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
@@ -132,9 +131,9 @@ public class ProjectRestService extends RestService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listProjects(@Context HttpServletRequest request) {
-        logger.debug("SecurityContext: " + securityContext);
-        logger.debug("User principal: " + securityContext.getUserPrincipal());
-        logger.debug("isSecure: " + securityContext.isSecure());
+        //logger.debug("SecurityContext: " + securityContext);
+        //logger.debug("User principal: " + securityContext.getUserPrincipal());
+        //logger.debug("isSecure: " + securityContext.isSecure());
 
         Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
@@ -165,6 +164,7 @@ public class ProjectRestService extends RestService {
     public Response createProject(@PathParam("name") String name, @QueryParam("kind") String kind) {
         Principal loggedUser = securityContext.getUserPrincipal();
 
+        logger.info("Creating project " + name);
         try {
             ProjectState projectState = projectService.createProject(name, kind, loggedUser.getName());
             BuildService buildService = new BuildService(workspaceStorage);
@@ -205,7 +205,7 @@ public class ProjectRestService extends RestService {
     @Path("{name}")
     public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) {
         if (projectName != null && !projectName.equals("")) {
-            logger.info("savingProject " + projectName);
+            logger.info("Saving project " + projectName);
             try {
                 ProjectState existingProject = FsProjectStorage.loadProject(projectName, workspaceStorage);
                 Principal loggedUser = securityContext.getUserPrincipal();

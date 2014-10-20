@@ -106,17 +106,30 @@
 									<span class="input-group-addon help-tooltip"  tooltip='Define acceptable input by using a regex pattern. Leave blank for no validation.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>
 										Validation pattern
 									</span>
-									<input ng-model='step.validation.iface.userPattern' class="form-control">
-									<input-group-select ng-model='step.validation.iface.userPatternType' options='["One of", "Regex"]' button-class='btn-default' menu-class='pull-right'></input-group-select>
+									<input ng-if='getEffectiveValidationType()=="Regex"' ng-model='step.validation.regexPattern' class="form-control">
+									<input ng-if='getEffectiveValidationType()=="One of"' ng-model='step.validation.userPattern' class="form-control">
+									<!--<input-group-select ng-model='step.validation.iface.userPatternType' options='["One of", "Regex"]' button-class='btn-default' menu-class='pull-right'>
+									</input-group-select>-->
+									<div class="input-group-btn">
+									  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+										  {{getEffectiveValidationType()}}
+										  <span class="caret"></span>
+									  </button>
+									  <ul class="dropdown-menu pull-right" role="menu">
+										<li><a ng-click='setValidationTypeOneOf()'>One of</a></li>
+										<li><a ng-click='setValidationTypeRegex()'>Regex</a></li>
+									  </ul>
+									</div>
 								</div>
 								<!--Pattern: {{step.validation.pattern}}<br/>-->
 
 								
-								<span class="help-block"><small>Effective regex: {{step.validation.pattern}}</small></span>
+								<!--<span class="help-block"><small>Effective regex: {{step.validation.pattern}}</small></span>-->
+								<!-- <span class="help-block"><small>{{step}}</small></span> -->
 							</div>
 							
 							<label>Say if invalid</label>
-							<textarea ng-model='step.validation.messageStep.phrase' type="text" class="form-control" placeholder='You typed a wrong option. Please try again'></textarea>
+							<textarea ng-model='step.invalidMessage.phrase' type="text" class="form-control" placeholder='You typed a wrong option. Please try again'></textarea>
 							<!--<div basic-droppable drop-model='step.invalidInputStep' drop-accept='.verb-button.button-say' style="width:50px; height:100px; background-color:grey;">
 							</div>-->
 						</div>

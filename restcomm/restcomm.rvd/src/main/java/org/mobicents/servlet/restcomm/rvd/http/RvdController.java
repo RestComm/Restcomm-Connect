@@ -40,13 +40,13 @@ import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.CallControlExce
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.RvdErrorParsingRestcommXml;
 import org.mobicents.servlet.restcomm.rvd.callcontrol.exceptions.UnauthorizedCallControlAccess;
-import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
+import org.mobicents.servlet.restcomm.rvd.serverapi.AccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.serverapi.CreateCallResponse;
 import org.mobicents.servlet.restcomm.rvd.serverapi.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.serverapi.RestcommClient.RestcommClientException;
@@ -97,9 +97,10 @@ public class RvdController extends RestService {
             Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams, workspaceStorage);
             rcmlResponse = interpreter.interpret();
 
-        } catch ( RvdException e ) {
+        } catch ( Exception e ) {
             logger.error(e.getMessage(), e);
-            rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
+            if ( rvdContext.getProjectSettings().getLogging() )
+                rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
             rcmlResponse = Interpreter.rcmlOnException();
         }
 
@@ -212,7 +213,7 @@ public class RvdController extends RestService {
             XPathExpression expr = xpath.compile("/restcomm/runtime-settings/recordings-uri/text()");
             String recordingsUrl = (String) expr.evaluate(doc, XPathConstants.STRING);
 
-            return recordingsUrl;
+            return recordingsUrl.trim();
         } catch (Exception e) {
             throw new CallControlException("Error parsing restcomm config file: " + file.getPath(), e);
         }
@@ -288,7 +289,7 @@ public class RvdController extends RestService {
 
 
             // Load rvd settings
-            SettingsModel settingsModel = null;
+            SettingsModel settingsModel = SettingsModel.createDefault();
             if ( workspaceStorage.entityExists(".settings", "") )
                 settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
 
@@ -350,14 +351,19 @@ public class RvdController extends RestService {
             //if ( RvdUtils.isEmpty(from) )
             //    from = guessApplicationDID(apiHost, apiPort, apiUsername, apiPort, projectName);
 
-            if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(apiUsername) || RvdUtils.isEmpty(apiPassword) || RvdUtils.isEmpty(rcmlUrl) )
+            //if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(apiUsername) || RvdUtils.isEmpty(apiPassword) || RvdUtils.isEmpty(rcmlUrl) )
+            if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(rcmlUrl) )
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             if ( RvdUtils.isEmpty(from) || RvdUtils.isEmpty(to) )
                 return Response.status(Status.BAD_REQUEST).build();
 
-
+            // Find the account sid for the apiUsername
             RestcommClient client = new RestcommClient(apiHost, apiPort, apiUsername, apiPassword);
-            CreateCallResponse response = client.post("/restcomm/2012-04-24/Accounts/" + "ACae6e420f425248d6a26948c17a9e2acf" + "/Calls.json")
+            AccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + apiUsername).done(marshaler.getGson(), AccountInfoResponse.class);
+            String accountSid = accountResponse.getSid();
+
+            // Create the call
+            CreateCallResponse response = client.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
                 .addParam("From", from)
                 .addParam("To", to)
                 .addParam("Url", rcmlUrl).done(marshaler.getGson(), CreateCallResponse.class);
