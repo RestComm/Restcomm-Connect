@@ -11,21 +11,21 @@
 	<property name="restcomm.docs.tomcat.dir" location="${release.tomcat.dir}/docs/restcomm" />
         <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm" />
         <property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
-	
+
 	<!--mobicents binaries versions-->
 	<property name="sipservlets-build" value="564"/>
         <property name="mobicents-sipservlets-as7.version" value="3.0.${sipservlets-build}" />
 	<!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
 	<property name="mobicents-media.version" value="3.0.0.FINAL" />
 	<!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
-	
-	
+
+
 	<!-- mobicents SIP Servlets 7.x on Tomcat 7 -->
         <property name="mobicents-sipservlets.tomcat.distro.version" value="${mobicents-sipservlets-as7.version}-apache-tomcat-7.0.50" />
         <property name="mobicents-sipservlets.tomcat.download.distro.file" value="mss-${mobicents-sipservlets.tomcat.distro.version}.zip" />
 	<property name="mobicents-sipservlets.tomcat.download.url" value="https://mobicents.ci.cloudbees.com/job/Mobicents-SipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.tomcat.download.distro.file}" />
         <property name="mobicents-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.tomcat.download.distro.file}" />
-			
+
 	<!-- mobicents SIP Servlets 7.x on JBoss AS7-->
         <property name="mobicents-sipservlets.as7.distro.version" value="${mobicents-sipservlets-as7.version}-jboss-as-7.2.0.Final" />
         <property name="mobicents-sipservlets.as7.download.distro.file" value="mss-${mobicents-sipservlets.as7.distro.version}.zip" />
@@ -36,11 +36,11 @@
 	<property name="hsqldb.download.distro.file" value="hsqldb_1_8_0_10.zip" />
 	<property name="hsqldb.distro.zip.path" value="${checkout.dir}/${hsqldb.download.distro.file}" />
 
-	
+
 	<property name="mobicents-media.download.distro.file" value="mobicents-media-server-${mobicents-media.version}.zip" />
 	<property name="mobicents-media.download.url" value="https://mediaserver.googlecode.com/files/3.0.0.FINAL.zip" />
 	<property name="mobicents-media.distro.zip.path" value="${checkout.dir}/${mobicents-media.download.distro.file}" />
-	
+
 	<property name="mobicents-diameter.download.distro.file" value="mobicents-diameter-${mobicents-diameter.version}.zip" />
 	<property name="mobicents-diameter.download.url" value="https://mobicents.ci.cloudbees.com/job/Mobicents-jDiameter/${mobicents-diameter.version}/${mobicents-diameter.download.distro.file}" />
 	<property name="mobicents-diameter.distro.zip.path" value="${checkout.dir}/${mobicents-diameter.download.distro.file}" />
@@ -52,42 +52,42 @@
 	<condition property="mvn.executable" value="${sys.M2_HOME}\bin\mvn.bat" else="mvn">
 		<os family="windows"/>
 	</condition>
-	
+
 	<taskdef onerror="fail" resource="net/sf/antcontrib/antlib.xml">
 		<classpath>
 			<pathelement location="${ant.file.mobicents.restcomm.release}/../ant-contrib-1.0b3.jar" />
 		</classpath>
 	</taskdef>
-	
+
 	<target name="release" depends="clean,get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" />
 	<target name="release-no-clean" depends="get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" />
-	
+
     <target name="deploy">
     	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release">
     		<property name="release.build.goals" value="${release.ts.deploy.goals}" />
     	</ant>
     </target>
-	
+
     <target name="deploy-no-clean">
     	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release-no-clean">
     		<property name="release.build.goals" value="${release.ts.deploy.goals}" />
     	</ant>
     </target>
-	
+
     <target name="release-test">
     	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release">
     		<property name="release.build.goals" value="${release.build.test.goals}" />
     	</ant>
     </target>
-	
+
     <target name="release-test-no-clean">
     	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release-no-clean">
     		<property name="release.build.goals" value="${release.build.test.goals}" />
     	</ant>
     </target>
 
-	
-	
+
+
 <!--GET mobicents-Sip=Servlets & mobicents-Media-Server & mobicents Diameter - downloads-->
 
 <target name="get-deps" depends="get-mobicents-sipservlets-tomcat,get-mobicents-sipservlets-as7,get-mobicents-media"/> <!--,get-mobicents-diameter" -->
@@ -202,12 +202,12 @@
 <target name="copy-restcomm">
 	<echo>Copy restcomm </echo>
 	<!--tomcat-->
-	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true" 
+	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true"
 		file="${basedir}/catalina.sh"/>
-	<copy tofile="${release.tomcat.dir}/bin/setenv.sh" failonerror="true" 
+	<copy tofile="${release.tomcat.dir}/bin/setenv.sh" failonerror="true"
 		file="${basedir}/setenv.sh"/>
 	<delete file="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="false" />
-	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true" 
+	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true"
 		file="${basedir}/mobicents-dar.properties"/>
 
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
@@ -215,7 +215,7 @@
 
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
 		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
-	
+
 	<!-- Copy Admin UI -->
         <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
         	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
@@ -224,12 +224,12 @@
         <!--<copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
 		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
-                </fileset> 
+                </fileset>
         </copy>-->
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm-rvd.war" failonerror="true"
 		file="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
 
-	<!--Copy Rvd ES Demo-->	
+	<!--Copy Rvd ES Demo-->
 	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo.war" failonerror="true"
 		file="${basedir}/RvdExternalServicesDemo.war"/>
 	<!-- Copy Config scripts -->
@@ -240,9 +240,9 @@
 		</fileset>
 	</copy-->
 
-	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true" 
+	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true"
 		file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
-	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx" 
+	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
        		includes="**/*.sh"/>
 
 	<!--JBoss AS7-->
@@ -250,7 +250,7 @@
 	<delete file="${release.as7.dir}/standalone/deployments/media-jsr309-servlet.war" failonerror="false" />
 	<delete file="${release.as7.dir}/standalone/deployments/click2call.war" failonerror="false" />
 	<move file="${release.as7.dir}/standalone/deployments/websockets-sip-servlet.war" tofile="${release.as7.dir}/standalone/deployments/webrtc.war" />
-	<copy tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true" 
+	<copy tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true"
 	        file="${basedir}/mobicents-dar.properties"/>
 	<!--Use exploded WAR-->
 	<copy todir="${release.as7.dir}/standalone/deployments/restcomm.war" failonerror="true">
@@ -259,9 +259,9 @@
 	        </fileset>
 	</copy>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm.war.dodeploy" />
-	
+
 	<!-- Copy Admin UI -->
-        <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true" 
+        <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true"
         	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
 
@@ -269,11 +269,11 @@
         <copy todir="${release.as7.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
 		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
-                </fileset> 
+                </fileset>
         </copy>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
 
-	<!--Copy Rvd ES Demo-->	
+	<!--Copy Rvd ES Demo-->
 	<copy tofile="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war" failonerror="true"
 		file="${basedir}/RvdExternalServicesDemo.war"/>
 	<touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy" />
@@ -285,19 +285,20 @@
 			<exclude name="as7-config-scripts/**"/>
 		</fileset>
 	</copy>
+-->
 	<copy toDir="${release.as7.dir}/bin/restcomm" failonerror="true">
 		<fileset dir="${basedir}/config-scripts/as7-config-scripts/restcomm">
 			<include name="**/*"/>
 		</fileset>
-	</copy-->
+	</copy>
 
 	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
-	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx" 
+	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx"
 		includes="**/*.sh"/>
 
-	
+
     </target>
-	
+
     <target name="copy-docs">
 		<!--docs-->
 	    <mkdir dir="${restcomm.docs.dir}"/>
@@ -339,8 +340,8 @@
 		        </fileset>
 		</copy>
     </target>
-	
-	
+
+
 	<target name="make-final-zip" depends="set-time-stamp">
 		<fixcrlf srcdir="${release.as7.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
@@ -354,15 +355,15 @@
 		        		<exclude name="*.sh" />
 		        		<exclude name="**/*.sh" />
 			       </zipfileset>
-				<zipfileset dir="${release.as7.dir}/mobicents-media/mobicents-media-server/bin" filemode="755" 
+				<zipfileset dir="${release.as7.dir}/mobicents-media/mobicents-media-server/bin" filemode="755"
 					prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 		        <include name="*.sh" />
 		    </zipfileset>
-				<zipfileset dir="${release.as7.dir}/mobicents-media/mobicents-media-server/bin" 
+				<zipfileset dir="${release.as7.dir}/mobicents-media/mobicents-media-server/bin"
 					prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 		        <exclude name="*.sh" />
 		    </zipfileset>
-		    <zipfileset dir="${release.as7.dir}" prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}" 
+		    <zipfileset dir="${release.as7.dir}" prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}"
 		    	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
 		</zip>
 		<zip destfile="${base.dir}/mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
@@ -372,11 +373,11 @@
 			<zipfileset dir="${release.tomcat.dir}/bin" prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
 				<exclude name="*.sh" />
 			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/mobicents-media/mobicents-media-server/bin" filemode="755" 
+			<zipfileset dir="${release.tomcat.dir}/mobicents-media/mobicents-media-server/bin" filemode="755"
 						prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 				<include name="*.sh" />
 			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/mobicents-media/mobicents-media-server/bin" 
+			<zipfileset dir="${release.tomcat.dir}/mobicents-media/mobicents-media-server/bin"
 						prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 				<exclude name="*.sh" />
 			</zipfileset>
@@ -384,13 +385,13 @@
 				excludes="**/bin/**"/>
 		</zip>
 	</target>
-	
+
 	<target name="set-time-stamp" unless="skip.timestamp">
 		<tstamp>
 			<format property="time.stamp" pattern="yyMMddHHmm" />
 		</tstamp>
 	</target>
-	
+
 	<target name="clean">
 	    <delete dir="${release.tomcat.dir}"/>
             <delete dir="${release.as7.dir}"/>
