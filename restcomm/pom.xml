@@ -134,6 +134,7 @@
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
+        <module>restcomm.provisioning.number.bandwidth</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
@@ -561,7 +562,7 @@
 			<version>${mobicents.checkstyle.version}</version>
 		</dependency>
 
-		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
 			<version>5.1</version> </dependency -->
 	</dependencies>
 
