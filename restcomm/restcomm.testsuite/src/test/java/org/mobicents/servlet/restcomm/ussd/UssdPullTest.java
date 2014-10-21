@@ -39,7 +39,6 @@ import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -49,7 +48,6 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -179,7 +177,7 @@ public class UssdPullTest {
     }
     
     @Test
-    public void testUssdPullWithCollect_DisconnectFromUser() throws InterruptedException, SipException, ParseException {
+    public void testUssdPullWithCollect_EarlyDisconnectFromUser() throws InterruptedException, SipException, ParseException {
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, ussdPullWithCollectDID, null, UssdPullTestMessages.ussdClientRequestBodyForCollect, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
@@ -216,53 +214,21 @@ public class UssdPullTest {
         
         bobCall.disconnect();
         bobCall.waitForAnswer(10000);
-        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == 200);
+        Thread.sleep(10000);
         
-    }
-    
-    
-    @Test @Ignore
-    public void testUssdPullWithCollect_CancelFromUser() throws InterruptedException, SipException, ParseException {
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullWithCollectDID, null, UssdPullTestMessages.ussdClientRequestBodyForCollect, "application", "vnd.3gpp.ussd+xml", null, null);
-        assertLastOperationSuccess(bobCall);
-        bobCall.waitOutgoingCallResponse(1000);
-//        Thread.sleep(1000);
-        
-        SipTransaction cancelTransaction = bobCall.sendCancel();
-        assertNotNull(cancelTransaction);
-
-        bobCall.waitForCancel(5 * 1000);
-        int lastResponseCode = bobCall.getLastReceivedResponse().getStatusCode();
-        if (lastResponseCode != Response.REQUEST_TERMINATED){
-            bobCall.waitOutgoingCallResponse(1000);
-        }
-        assertEquals(Response.REQUEST_TERMINATED, bobCall.getLastReceivedResponse().getStatusCode());
-        
-        Request ackRequest = cancelTransaction.getServerTransaction().getDialog().createRequest(Request.ACK);
-        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
-        ackRequest.setContent(null, contentTypeHeader);
-
-        assertNotNull(bobPhone.sendRequestWithTransaction(ackRequest, false, cancelTransaction.getServerTransaction().getDialog()));
-//        
-//        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-//        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
-//        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+//        Request infoResponse = requestEvent.getDialog().createRequest(Request.INFO);
+//        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
+//        infoResponse.setContent(UssdPullTestMessages.ussdClientResponseBodyToCollect.getBytes(), contentTypeHeader);
 //
-//        if (responseBob == Response.TRYING || responseBob == Response.RINGING) {
-//            SipTransaction cancelTransaction = bobCall.sendCancel();
-//            assertNotNull(cancelTransaction);
-//            
-//            bobCall.waitForAnswer(5 * 1000);
-//            assertEquals(Response.REQUEST_TERMINATED, bobCall.getLastReceivedResponse().getStatusCode());
-//            
-//            Request ackRequest = cancelTransaction.getServerTransaction().getDialog().createRequest(Request.ACK);
-//            ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
-//            ackRequest.setContent(null, contentTypeHeader);
+//        bobPhone.sendRequestWithTransaction(infoResponse, false, requestEvent.getDialog());     
 //
-//            assertNotNull(bobPhone.sendRequestWithTransaction(ackRequest, false, cancelTransaction.getServerTransaction().getDialog()));
-//        } 
-        
+//        assertTrue(bobCall.listenForDisconnect());        
+//        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+//        bobCall.respondToDisconnect();
+//        SipRequest bye = bobCall.getLastReceivedRequest();
+//        receivedUssdPayload = new String(bye.getRawContent());
+//        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
+//        bobCall.dispose();
     }
 
     @Test
