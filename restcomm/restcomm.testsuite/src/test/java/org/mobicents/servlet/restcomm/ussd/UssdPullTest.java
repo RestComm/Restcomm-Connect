@@ -214,21 +214,8 @@ public class UssdPullTest {
         
         bobCall.disconnect();
         bobCall.waitForAnswer(10000);
-        Thread.sleep(10000);
+        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == 200);
         
-//        Request infoResponse = requestEvent.getDialog().createRequest(Request.INFO);
-//        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
-//        infoResponse.setContent(UssdPullTestMessages.ussdClientResponseBodyToCollect.getBytes(), contentTypeHeader);
-//
-//        bobPhone.sendRequestWithTransaction(infoResponse, false, requestEvent.getDialog());     
-//
-//        assertTrue(bobCall.listenForDisconnect());        
-//        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-//        bobCall.respondToDisconnect();
-//        SipRequest bye = bobCall.getLastReceivedRequest();
-//        receivedUssdPayload = new String(bye.getRawContent());
-//        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
-//        bobCall.dispose();
     }
 
     @Test
