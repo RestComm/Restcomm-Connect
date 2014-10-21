@@ -97,6 +97,7 @@ public class UssdCall extends UntypedActor  {
     private final State completed;
     private final State queued;
     private final State dialing;
+    private final State disconnecting;
 
     // SIP runtime stuff.
     private final SipFactory factory;
@@ -138,6 +139,7 @@ public class UssdCall extends UntypedActor  {
         completed = new State("Completed", new Completed(source), null);
         queued = new State("queued", new Queued(source), null);
         dialing = new State("dialing", new Dialing(source), null);
+        disconnecting = new State("Disconnecting", new Disconnecting(source), null);
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -154,6 +156,7 @@ public class UssdCall extends UntypedActor  {
         transitions.add(new Transition(processingUssdMessage, completed));
         transitions.add(new Transition(processingUssdMessage, processingUssdMessage));
         transitions.add(new Transition(processingUssdMessage, dialing));
+        transitions.add(new Transition(processingUssdMessage, disconnecting));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -269,6 +272,8 @@ public class UssdCall extends UntypedActor  {
                 if (uninitialized.equals(state)) {
                     fsm.transition(message, ringing);
                 }
+            } else if ("BYE".equalsIgnoreCase(method)) {
+                fsm.transition(message, disconnecting);
             }
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
@@ -417,6 +422,42 @@ public class UssdCall extends UntypedActor  {
             request.send();
             if(ussdRequest.getIsFinalMessage())
                 fsm.transition(request, completed);
+        }
+    }
+
+    private final class Disconnecting extends AbstractAction {
+        public Disconnecting(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            logger.info("Disconnecting the call");
+            SipServletRequest bye = (SipServletRequest)message;
+            SipServletResponse response = bye.createResponse(SipServletResponse.SC_OK);
+            response.send();
+
+            if (invite != null) {
+                invite.getSession().invalidate();
+            }
+            if (outgoingInvite != null) {
+                outgoingInvite.getSession().invalidate();
+            }
+            // Notify the observers.
+            external = CallStateChanged.State.CANCELED;
+            final CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")) {
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.CANCELED.name());
+                final DateTime now = DateTime.now();
+                outgoingCallRecord = outgoingCallRecord.setEndTime(now);
+                final int seconds = 0;
+                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
+                callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
+            logger.info("Call Disconnected");
         }
     }
 
