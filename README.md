@@ -37,7 +37,7 @@ Issue Tracking and Roadmap
 
 Questions ?
 ========
-Please ask your question on our [public forum](http://groups.google.com/group/restcomm)
+Please ask your question on [StackOverflow](http://stackoverflow.com/search?q=restcomm) or the Google [public forum](http://groups.google.com/group/restcomm)
 
 License
 ========
