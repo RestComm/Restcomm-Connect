@@ -164,7 +164,6 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             logger.error(String.format("Error disconnecting number: %s : %s ", phoneNumber, e.getMessage()));
             isSucceeded = false;
         }
-
         return isSucceeded;
     }
 
@@ -177,6 +176,7 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
      */
     @Override
     public List<PhoneNumber> searchForNumbers(String country, PhoneNumberSearchFilters listFilters) {
+        List<PhoneNumber> availableNumbers = new ArrayList<PhoneNumber>();
         if(logger.isDebugEnabled()){
             logger.debug("searchPattern: " + listFilters.getFilterPattern());
         }
@@ -184,13 +184,13 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             String uri = buildSearchUri(listFilters);
             HttpGet httpGet = new HttpGet(uri);
             String response = executeRequest(httpGet);
-            List<PhoneNumber> availableNumbers = toPhoneNumbers(getSearchResultFromResponseBody(response));
+            availableNumbers = toPhoneNumbers((SearchResult)XmlUtils.fromXml(response, SearchResult.class));
             return availableNumbers;
 
         }catch(Exception e){
             logger.error("Could not execute search request: " + uri, e );
         }
-        return new ArrayList<PhoneNumber>();
+        return availableNumbers;
     }
 
     public boolean updateNumber(String number, PhoneNumberParameters parameters){
