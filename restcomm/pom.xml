@@ -587,7 +587,7 @@
 					<useProjectReferences>true</useProjectReferences>
 				</configuration>
 			</plugin>
-			<!-- Checkstyle
+			<!-- Checkstyle -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -615,7 +615,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			-->
 		</plugins>
 		<pluginManagement>
 			<plugins>
