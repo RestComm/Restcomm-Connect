@@ -177,7 +177,7 @@ public class UssdPullTest {
     }
     
     @Test
-    public void testUssdPullWithCollect_EarlyDisconnectFromUser() throws InterruptedException, SipException, ParseException {
+    public void testUssdPullWithCollect_DisconnectFromUser() throws InterruptedException, SipException, ParseException {
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, ussdPullWithCollectDID, null, UssdPullTestMessages.ussdClientRequestBodyForCollect, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
