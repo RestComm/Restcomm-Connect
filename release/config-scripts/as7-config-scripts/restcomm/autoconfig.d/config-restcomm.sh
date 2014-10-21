@@ -125,6 +125,21 @@ configFaxService() {
 	echo 'Configured Fax Service credentials'
 }
 
+## Description: Configures Sms Aggregator
+## Parameters : 1.Outbound endpoint IP
+## 
+configSmsAggregator() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	
+	sed -e "/<sms-aggregator.*>/ {
+		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>#</outbound-prefix>|
+		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1:5060</outbound-endpoint>|
+	}" $FILE > $FILE.bak
+	
+	mv $FILE.bak $FILE
+	echo 'Configured Sms Aggregator'
+}
+
 ## Description: Configures Speech Recognizer
 ## Parameters : 1.iSpeech Key
 configSpeechRecognizer() {
@@ -243,6 +258,7 @@ configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY"
 configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
+configSmsAggregator "$OUTBOUND_IP"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP"
