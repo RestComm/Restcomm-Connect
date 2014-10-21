@@ -159,6 +159,8 @@ public class UssdCallManager extends UntypedActor {
                 processRequest(request);
             } else if("CANCEL".equalsIgnoreCase(method)) {
                 processRequest(request);
+            } else if("BYE".equals(method)) {
+                processRequest(request);
             }
         } else if (message instanceof SipServletResponse) {
             response(message);

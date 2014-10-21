@@ -109,8 +109,6 @@ public class UssdInterpreter extends UntypedActor {
     final State uninitialized;
     final State observeCall;
     final State acquiringCallInfo;
-    final State disconnecting;
-    final State cancelling;
     final State finished;
 
     private final State preparingMessage;
@@ -186,17 +184,13 @@ public class UssdInterpreter extends UntypedActor {
         ready = new State("ready", new Ready(source), null);
         notFound = new State("notFound", new NotFound(source), null);
 
-        cancelling = new State("Cancelling", new Cancelling(source), null);
         disconnecting = new State("Disconnecting", new Disconnecting(source), null);
 
         finished = new State("finished", new Finished(source), null);
 
         transitions.add(new Transition(uninitialized, acquiringCallInfo));
-        transitions.add(new Transition(uninitialized, cancelling));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
-        transitions.add(new Transition(acquiringCallInfo, cancelling));
         transitions.add(new Transition(downloadingRcml, ready));
-        transitions.add(new Transition(downloadingRcml, cancelling));
         transitions.add(new Transition(downloadingRcml, notFound));
         transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
         transitions.add(new Transition(downloadingRcml, finished));
@@ -449,8 +443,6 @@ public class UssdInterpreter extends UntypedActor {
                 fsm.transition(message, downloadingRcml);
             } else if ("BYE".equalsIgnoreCase(method)) {
                 fsm.transition(message, disconnecting);
-            } else if ("CANCEL".equalsIgnoreCase(method)) {
-                fsm.transition(message, cancelling);
             }
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
@@ -900,25 +892,6 @@ public class UssdInterpreter extends UntypedActor {
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, self());
-        }
-    }
-
-    private final class Cancelling extends AbstractAction {
-        public Cancelling(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            logger.info("Cancelling state");
-            final Class<?> klass = message.getClass();
-            if (message instanceof SipServletRequest) {
-                SipServletRequest request = (SipServletRequest)message;
-                if (ussdCall != null)
-                    ussdCall.tell(request, self());
-                if (outboundCall != null)
-                    ussdCall.tell(request, self());
-            }
         }
     }
 
