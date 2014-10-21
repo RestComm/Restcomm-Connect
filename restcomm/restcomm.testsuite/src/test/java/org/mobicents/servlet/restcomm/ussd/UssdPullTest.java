@@ -175,6 +175,61 @@ public class UssdPullTest {
         assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
         bobCall.dispose();
     }
+    
+    @Test
+    public void testUssdPullWithCollect_EarlyDisconnectFromUser() throws InterruptedException, SipException, ParseException {
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, ussdPullWithCollectDID, null, UssdPullTestMessages.ussdClientRequestBodyForCollect, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+        
+        assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
+        String toTag = bobCall.getDialog().getLocalTag();
+        Address bobAddress = bobPhone.getAddress();
+        
+        assertTrue(bobPhone.listenRequestMessage());
+        RequestEvent requestEvent = bobPhone.waitRequest(30*1000);
+        
+        assertNotNull(requestEvent);  
+        assertTrue(requestEvent.getRequest().getMethod().equalsIgnoreCase("INFO"));
+        bobPhone.sendReply(requestEvent, 200, "OK", toTag, bobAddress, 0);
+        
+
+        String receivedUssdPayload = new String(requestEvent.getRequest().getRawContent());
+        System.out.println("receivedUssdPayload: \n"+receivedUssdPayload);
+        System.out.println("UssdPullTestMessages.ussdRestcommResponseWithCollect: \n"+UssdPullTestMessages.ussdRestcommResponseWithCollect);
+        assertTrue(receivedUssdPayload.equals(UssdPullTestMessages.ussdRestcommResponseWithCollect.trim()));
+        
+        bobCall.disconnect();
+        bobCall.waitForAnswer(10000);
+        Thread.sleep(10000);
+        
+//        Request infoResponse = requestEvent.getDialog().createRequest(Request.INFO);
+//        ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
+//        infoResponse.setContent(UssdPullTestMessages.ussdClientResponseBodyToCollect.getBytes(), contentTypeHeader);
+//
+//        bobPhone.sendRequestWithTransaction(infoResponse, false, requestEvent.getDialog());     
+//
+//        assertTrue(bobCall.listenForDisconnect());        
+//        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+//        bobCall.respondToDisconnect();
+//        SipRequest bye = bobCall.getLastReceivedRequest();
+//        receivedUssdPayload = new String(bye.getRawContent());
+//        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
+//        bobCall.dispose();
+    }
 
     @Test
     public void testUssdMessageLengthExceeds() {
