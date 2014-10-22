@@ -19,6 +19,7 @@
  */
 
 package org.mobicents.servlet.restcomm.provisioning.number.bandwidth;
+
 /**
  * Created by sbarstow on 9/22/14.
  */
@@ -32,7 +33,6 @@ public class TelephoneNumberSearchFilters {
     private boolean returnTelephoneNumberDetails = true;
     private String inRateCenter;
     private String inLata;
-
 
     public boolean isReturnTelephoneNumberDetails() {
         return returnTelephoneNumberDetails;

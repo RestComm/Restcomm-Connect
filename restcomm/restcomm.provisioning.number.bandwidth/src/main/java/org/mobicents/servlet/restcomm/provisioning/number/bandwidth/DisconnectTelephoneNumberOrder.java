@@ -25,13 +25,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="DisconnectTelephoneNumberOrder")
+@XmlRootElement(name = "DisconnectTelephoneNumberOrder")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DisconnectTelephoneNumberOrder {
-    @XmlElement(name="Name")
+    @XmlElement(name = "Name")
     private String name;
 
-    @XmlElement(name="DisconnectTelephoneNumberOrderType")
+    @XmlElement(name = "DisconnectTelephoneNumberOrderType")
     private DisconnectTelephoneNumberOrderType disconnectTelephoneNumberOrderType;
 
     public String getName() {

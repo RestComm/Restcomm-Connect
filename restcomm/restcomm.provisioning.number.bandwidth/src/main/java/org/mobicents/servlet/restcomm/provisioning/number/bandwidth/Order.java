@@ -20,36 +20,37 @@
 
 package org.mobicents.servlet.restcomm.provisioning.number.bandwidth;
 
-import javax.xml.bind.annotation.*;
-import java.util.ArrayList;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
-import java.util.List;
 
 @XmlRootElement(name = "Order")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Order {
-    @XmlElement(name="id")
+    @XmlElement(name = "id")
     private String id;
 
-    @XmlElement(name="BackOrderRequested")
+    @XmlElement(name = "BackOrderRequested")
     private boolean backOrderRequested;
 
-    @XmlElement(name="OrderCreateDate")
+    @XmlElement(name = "OrderCreateDate")
     private Date orderCreateDate;
 
-    @XmlElement(name="Name")
+    @XmlElement(name = "Name")
     private String name;
 
-    @XmlElement(name="SiteId")
+    @XmlElement(name = "SiteId")
     private String siteId;
 
-    @XmlElement(name="CustomerOrderId")
+    @XmlElement(name = "CustomerOrderId")
     private String customerOrderId;
 
-    @XmlElement(name="PartialAllowed")
+    @XmlElement(name = "PartialAllowed")
     private boolean partialAllowed = false;
 
-    @XmlElement(name="ExistingTelephoneNumberOrderType")
+    @XmlElement(name = "ExistingTelephoneNumberOrderType")
     private ExistingTelephoneNumberOrderType existingTelephoneNumberOrderType;
 
     public String getid() {

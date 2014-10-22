@@ -18,7 +18,6 @@
  *
  */
 
-
 package org.mobicents.servlet.restcomm.provisioning.number.bandwidth;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -29,7 +28,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -38,24 +36,21 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.mobicents.servlet.restcomm.provisioning.number.api.*;
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ContainerConfiguration;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters;
+import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
+import org.mobicents.servlet.restcomm.provisioning.number.bandwidth.utils.XmlUtils;
 
-import java.io.ByteArrayInputStream;
+import javax.xml.stream.XMLInputFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.provisioning.number.bandwidth.utils.XmlUtils;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
 /**
  * @author sbarstow@bandwidth.com
@@ -71,9 +66,8 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
     private DefaultHttpClient httpClient;
     private XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
-
-    public BandwidthNumberProvisioningManager() {}
-
+    public BandwidthNumberProvisioningManager() {
+    }
 
     /*
      * (non-Javadoc)
@@ -84,18 +78,18 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
      */
     @Override
     public void init(org.apache.commons.configuration.Configuration phoneNumberProvisioningConfiguration,
-                     org.apache.commons.configuration.Configuration telestaxProxyConfiguration, ContainerConfiguration
-            containerConfiguration){
+            org.apache.commons.configuration.Configuration telestaxProxyConfiguration, ContainerConfiguration
+            containerConfiguration) {
         this.containerConfiguration = containerConfiguration;
         telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
-        if(telestaxProxyEnabled){
+        if (telestaxProxyEnabled) {
             uri = telestaxProxyConfiguration.getString("uri");
             username = telestaxProxyConfiguration.getString("username");
             password = telestaxProxyConfiguration.getString("password");
             accountId = telestaxProxyConfiguration.getString("accountId");
             siteId = telestaxProxyConfiguration.getString("siteId");
             activeConfiguration = telestaxProxyConfiguration;
-        }else {
+        } else {
             Configuration bandwidthConfiguration = phoneNumberProvisioningConfiguration.subset("bandwidth");
             uri = bandwidthConfiguration.getString("uri");
             username = bandwidthConfiguration.getString("username");
@@ -109,15 +103,13 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY, credentials);
     }
 
-
-
     public List<String> getAvailableCountries() {
         List<String> countries = new ArrayList<String>();
         countries.add("US");
         return countries;
     }
 
-    public boolean buyNumber(String phoneNumber, PhoneNumberParameters parameters){
+    public boolean buyNumber(String phoneNumber, PhoneNumberParameters parameters) {
         boolean isSucceeded = false;
         phoneNumber = phoneNumber.substring(2); //we don't want the +1
         Order order = new Order();
@@ -131,10 +123,10 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             StringEntity entity = new StringEntity(XmlUtils.toXml(order), ContentType.APPLICATION_XML);
             post.setEntity(entity);
             OrderResponse response = (OrderResponse) XmlUtils.fromXml(executeRequest(post), OrderResponse.class);
-            if(response.getOrder().getExistingTelephoneNumberOrderType().getTelephoneNumberList().get(0).equals(phoneNumber)){
+            if (response.getOrder().getExistingTelephoneNumberOrderType().getTelephoneNumberList().get(0).equals(phoneNumber)) {
                 isSucceeded = true;
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.error("Error creating order: " + e.getMessage());
             isSucceeded = false;
         }
@@ -142,7 +134,7 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         return isSucceeded;
     }
 
-    public boolean cancelNumber(String phoneNumber){
+    public boolean cancelNumber(String phoneNumber) {
         boolean isSucceeded = false;
         phoneNumber = phoneNumber.substring(2);
         DisconnectTelephoneNumberOrder order = new DisconnectTelephoneNumberOrder();
@@ -156,11 +148,12 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             post.setEntity(entity);
             DisconnectTelephoneNumberOrderResponse response = (DisconnectTelephoneNumberOrderResponse)
                     XmlUtils.fromXml(executeRequest(post), DisconnectTelephoneNumberOrderResponse.class);
-            if(response.getErrorList().size() == 0 && response.getorderRequest().
-                    getDisconnectTelephoneNumberOrderType().getTelephoneNumberList().get(0).equals(phoneNumber))
+            if (response.getErrorList().size() == 0 && response.getorderRequest().
+                    getDisconnectTelephoneNumberOrderType().getTelephoneNumberList().get(0).equals(phoneNumber)) {
                 isSucceeded = true;
+            }
             //TODO: get order status and check it before returning.
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.error(String.format("Error disconnecting number: %s : %s ", phoneNumber, e.getMessage()));
             isSucceeded = false;
         }
@@ -177,23 +170,23 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
     @Override
     public List<PhoneNumber> searchForNumbers(String country, PhoneNumberSearchFilters listFilters) {
         List<PhoneNumber> availableNumbers = new ArrayList<PhoneNumber>();
-        if(logger.isDebugEnabled()){
+        if (logger.isDebugEnabled()) {
             logger.debug("searchPattern: " + listFilters.getFilterPattern());
         }
         try {
             String uri = buildSearchUri(listFilters);
             HttpGet httpGet = new HttpGet(uri);
             String response = executeRequest(httpGet);
-            availableNumbers = toPhoneNumbers((SearchResult)XmlUtils.fromXml(response, SearchResult.class));
+            availableNumbers = toPhoneNumbers((SearchResult) XmlUtils.fromXml(response, SearchResult.class));
             return availableNumbers;
 
-        }catch(Exception e){
-            logger.error("Could not execute search request: " + uri, e );
+        } catch (Exception e) {
+            logger.error("Could not execute search request: " + uri, e);
         }
         return availableNumbers;
     }
 
-    public boolean updateNumber(String number, PhoneNumberParameters parameters){
+    public boolean updateNumber(String number, PhoneNumberParameters parameters) {
         return true;
     }
 
@@ -209,17 +202,15 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         return builder.build().toString();
     }
 
-
-    private String buildSearchUri(PhoneNumberSearchFilters filters)throws URISyntaxException{
+    private String buildSearchUri(PhoneNumberSearchFilters filters) throws URISyntaxException {
         Pattern filterPattern = filters.getFilterPattern();
-
 
         URIBuilder builder = new URIBuilder(this.uri);
         builder.setPath("/v1.0/accounts/" + this.accountId + "/availableNumbers");
 
         //Local number type search
-        if(filters.getPhoneNumberTypeSearch().equals(PhoneNumberType.Local)) {
-           if (!StringUtils.isEmpty(filters.getAreaCode())) {
+        if (filters.getPhoneNumberTypeSearch().equals(PhoneNumberType.Local)) {
+            if (!StringUtils.isEmpty(filters.getAreaCode())) {
                 builder.addParameter("areaCode", filters.getAreaCode());
             }
             if (!StringUtils.isEmpty(filters.getInLata())) {
@@ -232,22 +223,23 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
                 builder.addParameter("rateCenter", filters.getInRateCenter());
                 builder.addParameter("state", filters.getInRegion());
             }
-        } else if(filters.getPhoneNumberTypeSearch().equals(PhoneNumberType.TollFree)){
+            builder.addParameter("enableTNDetail", String.valueOf(true));
+
+        } else if (filters.getPhoneNumberTypeSearch().equals(PhoneNumberType.TollFree)) {
             //Make some assumptions for the user
-            if(StringUtils.isEmpty(filterPattern.toString())){
+            if (filterPattern == null || StringUtils.isEmpty(filterPattern.toString())) {
                 builder.addParameter("tollFreeWildCardPattern", "8**");
-            }else {
+            } else {
                 if (filterPattern.toString().contains("*")) {
                     builder.addParameter("tollFreeWildCardPattern", filterPattern.toString());
-                }else {
+                } else {
                     builder.addParameter("tollFreeVanity", filterPattern.toString());
                 }
             }
 
-        }else {
+        } else {
             logger.error("Phone Number Type: " + filters.getPhoneNumberTypeSearch().name() + " is not supported");
         }
-        builder.addParameter("enableTNDetail", String.valueOf(true));
         builder.addParameter("quantity", String.valueOf(filters.getRangeSize() == -1 ? 5 : filters.getRangeSize()));
         logger.info("building uri: " + builder.build().toString());
         return builder.build().toString();
@@ -258,31 +250,30 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         try {
             HttpResponse httpResponse = httpClient.execute(request);
             response = httpResponse.getEntity() != null ? EntityUtils.toString(httpResponse.getEntity()) : "";
-        }catch(ClientProtocolException cpe){
+        } catch (ClientProtocolException cpe) {
             logger.error("Error in execute request: " + cpe.getMessage());
             throw new IOException(cpe);
         }
         return response;
     }
 
-    private SearchResult getSearchResultFromResponseBody(String responseBody) throws JAXBException, XMLStreamException {
-        SearchResult searchResult = null;
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(responseBody.getBytes());
-        JAXBContext jaxbContext = JAXBContext.newInstance(SearchResult.class);
-        XMLStreamReader xsr = xmlInputFactory.createXMLStreamReader(inputStream);
-        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        searchResult = (SearchResult) jaxbUnmarshaller.unmarshal(xsr);
-        return searchResult;
-    }
-
-    private List<PhoneNumber> toPhoneNumbers(final SearchResult searchResult){
+    private List<PhoneNumber> toPhoneNumbers(final SearchResult searchResult) {
         final List<PhoneNumber> numbers = new ArrayList<>();
-        for(final TelephoneNumberDetail detail : searchResult.getTelephoneNumberDetailList()){
-            String name = getFriendlyName(detail.getFullNumber(), "US");
-            final PhoneNumber phoneNumber = new PhoneNumber(name,
-                    name, Integer.parseInt(detail.getLATA()), detail.getRateCenter(),null, null,
-                    detail.getState(),null, "US", true, true, false, false, false);
-            numbers.add(phoneNumber);
+        if (searchResult.getTelephoneNumberDetailList().size() > 0) {
+            for (final TelephoneNumberDetail detail : searchResult.getTelephoneNumberDetailList()) {
+                String name = getFriendlyName(detail.getFullNumber(), "US");
+                final PhoneNumber phoneNumber = new PhoneNumber(name,
+                        name, Integer.parseInt(detail.getLATA()), detail.getRateCenter(), null, null,
+                        detail.getState(), null, "US", true, true, false, false, false);
+                numbers.add(phoneNumber);
+            }
+        } else if (searchResult.getTelephoneNumberList().size() > 0) {
+            for (final String number : searchResult.getTelephoneNumberList()) {
+                String name = getFriendlyName(number, "US");
+                final PhoneNumber phoneNumber = new PhoneNumber(name, name, null, null, null, null,
+                        null, null, "US", true, true, false, false, false);
+                numbers.add(phoneNumber);
+            }
         }
         return numbers;
     }
@@ -297,6 +288,5 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             return number;
         }
     }
-
 
 }
