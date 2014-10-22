@@ -20,18 +20,22 @@
 
 package org.mobicents.servlet.restcomm.provisioning.number.bandwidth;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by sbarstow on 10/14/14.
  */
-@XmlRootElement(name="ExistingTelephoneNumberOrderType")
+@XmlRootElement(name = "ExistingTelephoneNumberOrderType")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ExistingTelephoneNumberOrderType {
-    @XmlElementWrapper(name="TelephoneNumberList")
-    @XmlElement(name="TelephoneNumber")
+    @XmlElementWrapper(name = "TelephoneNumberList")
+    @XmlElement(name = "TelephoneNumber")
     private List<String> telephoneNumberList = new ArrayList<String>();
 
     public List<String> getTelephoneNumberList() {
