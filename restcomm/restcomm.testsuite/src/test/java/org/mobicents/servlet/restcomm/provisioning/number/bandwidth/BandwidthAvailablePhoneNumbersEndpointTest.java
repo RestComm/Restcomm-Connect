@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.provisioning.number.bandwidth;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -38,6 +39,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import wiremock.org.json.JSONObject;
 
 import java.net.URL;
 
@@ -202,10 +204,66 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
         assertTrue(jsonResponse.size() == 0);
     }
 
+    @Test
+    public void testSearchForTollFreeNumbers() {
+        stubFor(get(urlMatching("/v1.0/accounts/12345/availableNumbers.*"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text-json")
+                .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.validTollFreeSearchResult)));
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "US/TollFree.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.queryParam("RangeSize","2").accept("application/json")
+                .get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+
+        JsonParser parser = new JsonParser();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+
+        System.out.println(jsonResponse);
+
+        assertTrue(jsonResponse.size() == 2);
+        System.out.println(jsonResponse.get(0).getAsJsonObject().toString());
+        assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(BandwidthAvailablePhoneNumbersEndpointTestUtils.validTollFreeJsonResult));
+    }
+
+    @Test
+    public void testSearchForTollFreeNumbersInvalidPattern() {
+        stubFor(get(urlMatching("/v1.0/accounts/12345/availableNumbers.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text-json")
+                        .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.invalidTollFreeSearchResult)));
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "US/TollFree.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.queryParam("RangeSize","2").queryParam("Contains", "7**").accept("application/json")
+                .get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+
+        JsonParser parser = new JsonParser();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+        System.out.println(jsonResponse);
+        assertTrue(jsonResponse.size() == 0);
+    }
+
+
 
 
     @Deployment(name = "BandwidthAvailablePhoneNumbersEndpointTest", managed = true, testable = false)
-    public static WebArchive createWebArchiveNoGw() {
+        public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
