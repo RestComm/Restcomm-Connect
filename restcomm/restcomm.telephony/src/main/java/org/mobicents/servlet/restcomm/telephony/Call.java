@@ -1350,7 +1350,7 @@ public final class Call extends UntypedActor {
                 // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
                 conference.tell(new JoinComplete(bridge), source);
             }
-            if (openingRemoteConnection.equals(state)) {
+            if (openingRemoteConnection.equals(state) && !(invite.getSession().getState().equals(SipSession.State.CONFIRMED) || invite.getSession().getState().equals(SipSession.State.TERMINATED))) {
                 final ConnectionStateChanged response = (ConnectionStateChanged) message;
                 final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
                 final byte[] sdp = response.descriptor().toString().getBytes();

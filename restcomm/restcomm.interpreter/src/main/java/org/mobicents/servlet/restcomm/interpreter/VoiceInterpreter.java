@@ -330,6 +330,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(finishDialing, startDialing));
         transitions.add(new Transition(finishDialing, hangingUp));
         transitions.add(new Transition(finishDialing, finished));
+        transitions.add(new Transition(finishDialing, initializingCall));
         transitions.add(new Transition(acquiringConferenceInfo, acquiringConferenceMediaGroup));
         transitions.add(new Transition(acquiringConferenceInfo, hangingUp));
         transitions.add(new Transition(acquiringConferenceInfo, finished));
@@ -1666,8 +1667,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         callManager.tell(new DestroyCall(branch), source);
                     }
                     if (attribute != null) {
+                        callMediaGroup.tell(new Stop(), null);
                         executeDialAction(message, null);
                     } else {
+                        callMediaGroup.tell(new Stop(), null);
                         final GetNextVerb next = GetNextVerb.instance();
                         parser.tell(next, source);
                     }
