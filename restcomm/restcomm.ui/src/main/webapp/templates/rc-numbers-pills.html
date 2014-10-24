@@ -1,8 +1,8 @@
 <div class="row">
     <ul class="nav nav-pills" style="margin-bottom: 15px;">
-        <li ng-class="{'active': location.indexOf('/numbers/incoming') == 0}"><a ng-href="#/numbers/incoming">RESTCOMM NUMBERS</a></li>
-        <li ng-class="{'active': location.indexOf('/numbers/clients') == 0}"><a href="#/numbers/clients">SIP CLIENTS</a></li>
-        <li ng-class="{'active': location.indexOf('/numbers/outgoing') == 0}"><a href="#/numbers/outgoing">OUTGOING CALLER IDS</a></li>
+        <li ng-class="{'active': (location.indexOf('/numbers/incoming') === 0 || location.indexOf('/numbers/register-incoming') === 0)}"><a ng-href="#/numbers/incoming">RESTCOMM NUMBERS</a></li>
+        <li ng-class="{'active': location.indexOf('/numbers/clients') === 0}"><a href="#/numbers/clients">SIP CLIENTS</a></li>
+        <li ng-class="{'active': location.indexOf('/numbers/outgoing') === 0}"><a href="#/numbers/outgoing">OUTGOING CALLER IDS</a></li>
         <!--
             <li ng-class="{'active': location == '/numbers/shortcodes'}"><a href="#/numbers/shortcodes">SHORT CODES</a></li>
             <li ng-class="{'active': location == '/numbers/porting'}"><a href="#/numbers/porting">PORTING REQUESTS</a></li>

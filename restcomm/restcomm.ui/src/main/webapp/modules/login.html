@@ -61,7 +61,8 @@
                 <label class="col-md-4 control-label" for="newPassword">New Password</label>
                 <div class="controls">
                     <div class="input-group col-md-6">
-                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="newPassword" type="password" class="col-md-3 form-control" placeholder="Password" ng-model="newPassword" required />
+                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="newPassword" type="password" class="col-md-3 form-control" ng-class="{'password-transparent' : newPassword}" placeholder="Password" ng-model="newPassword" required />
+                        <div class="col-md-12 password-strength" ng-password-strength="newPassword" ng-show="newPassword"></div>
                     </div>
                 </div>
             </div>
@@ -69,14 +70,23 @@
                 <label class="col-md-4 control-label" for="confPassword">Confirm Password</label>
                 <div class="controls">
                     <div class="input-group col-md-6">
-                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="confPassword" type="password" class="col-md-3 form-control" placeholder="Confirm Password" ng-model="confPassword" required password-match="newPassword" />
+                        <span class="input-group-addon"><i class="fa fa-lock" style="z-index: 100;"></i> </span><input id="confPassword" type="password" class="col-md-3 form-control" placeholder="Confirm Password" ng-model="confPassword" ng-disabled="pwdStrength < 50" required password-match="newPassword" />
                     </div>
                 </div>
             </div>
 
+<!--
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="newPassword">Password Strength</label>
+                <div class="controls">
+                    <div class="col-md-6 password-strength" ng-password-strength="newPassword"></div>
+                </div>
+            </div>
+-->
+
             <div class="control-group">
                 <div class="controls pull-right">
-                    <button class="btn btn-danger" ng-disabled="updatePassForm.$invalid">Update</button>
+                    <button class="btn btn-danger" ng-disabled="pwdStrength < 50 || updatePassForm.$invalid">Update</button>
                 </div>
             </div>
             <div>
