@@ -3,9 +3,13 @@
 <rc-page-title icon="phone" title="NUMBERS" sub-title="REGISTER NUMBER"></rc-page-title>
 
 <div class="row">
-    <div class="col-md-12" style="padding-left: 5px;">
-        <tabset justified="true">
-            <tab heading="Provider Number" select="setProvider(true)" deselect="setProvider(false)">
+    <div class="col-md-12" style="padding-left: 5px;" ng-init="newNumber = {}">
+        <ul class="nav nav-tabs nav-justified" role="tablist">
+            <li ng-class="{'active' : isProvider}"><a href="" data-toggle="tab"  ng-click="setProvider(true)">Provider Number</a></li>
+            <li ng-class="{'active' : !isProvider}" ><a href="" data-toggle="tab" ng-click="setProvider(false)">SIP Number</a></li>
+        </ul>
+        <div>
+            <div id="provider" ng-show="isProvider">
                 <br>
                 <script type="text/ng-template" id="countriesTemplate.html">
                     <a class="clickable f16" style="width: 400px;">
@@ -33,26 +37,27 @@
                     </div>
                     <div class="form-group col-md-2">
                         <select class="capmultiselect" multiple="multiple" ng-model="newNumber.capabilities">
-                            <option value="voice">Voice</option>
-                            <option value="sms">SMS</option>
-                            <option value="mms">MMS</option>
-                            <!--<option value="fax">Fax</option>-->
+                            <option value="Voice">Voice</option>
+                            <option value="Sms">SMS</option>
+                            <option value="Mms" disabled>MMS</option>
+                            <option value="Fax">Fax</option>
                         </select>
                     </div>
                     <div class="form-group col-md-2">
                         <select class="typmultiselect" multiple="multiple" ng-model="newNumber.types">
-                            <option value="landline" selected>Landline</option>
-                            <option value="mobile" selected>Mobile</option>
-                            <option value="tollfree" selected>Toll-Free</option>
+                            <option value="landline">Landline</option>
+                            <option value="mobile">Mobile</option>
+                            <option value="tollfree">Toll-Free</option>
                         </select>
                     </div>
                     <div class="form-group col-md-1">
                         <button class="btn" ng-class="{'btn-primary': !searching, 'btn-default': searching}" type="button" ng-click="findNumbers(newNumber.area_code, newNumber.countryCode)" ng-disabled="!newNumber.countryCode"><i class="fa fa-search" ng-hide="searching"></i><i class="fa fa-spinner fa-spin" ng-show="searching"></i> Search<span ng-show="searching">ing</span> Numbers</button>
                     </div>
                 </form>
-            </tab>
-            <tab heading="SIP Number">
+            </div>
+            <div id="sip" ng-show="!isProvider">
                 <br>
+                <div class="alert alert-warning" role="alert"> <strong><i class="fa fa-bullhorn"></i> Attention!</strong> Any number can be registered in this mode, even existent PSTN numbers, make sure to handle SIP Traffic Routing yourself!</div>
                 <form class="form-inline" role="form">
                     <div class="form-group col-md-4" style="padding-left: 0;">
                         <div class="input-group">
@@ -70,10 +75,7 @@
                         <button class="btn" ng-class="{'btn-primary': !searching, 'btn-default': searching}" type="button" ng-click="registerIncomingNumber(newSIPNumber, true)" ng-disabled="!newSIPNumber.phone_number"><i class="fa fa-search" ng-hide="searching"></i><i class="fa fa-spinner fa-spin" ng-show="searching"></i> Register<span ng-show="searching">ing</span> Number</button>
                     </div>
                 </form>
-            </tab>
-        </tabset>
-
-
+            </div>
     </div>
 </div>
 <div class="row" ng-show="isProvider">
@@ -89,7 +91,7 @@
         -->
         <hr class="small" />
         <div ng-show="!availableNumbers" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-info-circle"></i> Search for a number. <small>{{newNumber}} Enter your search criteria and click "Search"!</small></h2>
+            <h2><i class="fa fa-info-circle"></i> Search for a number. <small>Enter your search criteria and click "Search"!</small></h2>
         </div>
 
         <div ng-show="availableNumbers.length == 0 && !searching" class="jumbotron no-records-alert">
@@ -159,7 +161,7 @@
     </div>
 </div>
  <script type="text/javascript">
-    $(document).ready(function() {
+     angular.element(document).ready(function () {
         $('.capmultiselect').multiselect({
             nonSelectedText: 'Any Capabilities',
             nSelectedText: 'All Capabilities',
