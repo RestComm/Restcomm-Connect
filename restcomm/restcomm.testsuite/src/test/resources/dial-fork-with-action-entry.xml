@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Dial timeLimit="1000" timeout="2">
+	<Dial timeLimit="1000" timeout="2" action="http://127.0.0.1:8090/test">
 	<!-- Dial PSTN Number. SipUnit should listen to +131313@restcomm_gtw_ipaddr:port (+131313@127.0.0.1:5070) -->
 	  <Number>+131313</Number>
 	<!-- Dial SIP Uri. SipUnit contact should be this but doesn't need to register to receive a call  -->
 	  <Uri>sip:henrique@127.0.0.1:5092</Uri>
 	<!-- Dial Client. Create Alice client and register to receive a call -->
 	  <Client>alice</Client>
-	</Dial>
-	<Pause length="1"/>
-	<Dial timeout="5">
-		<!-- Dial Fotini -->
-		<Uri>sip:fotini@127.0.0.1:5060</Uri>
 	</Dial>
 </Response>
