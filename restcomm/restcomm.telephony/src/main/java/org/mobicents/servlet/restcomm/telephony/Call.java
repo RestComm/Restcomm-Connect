@@ -61,6 +61,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
@@ -249,6 +250,7 @@ public final class Call extends UntypedActor {
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, queued));
         transitions.add(new Transition(uninitialized, ringing));
+        transitions.add(new Transition(uninitialized, failing));
         transitions.add(new Transition(queued, canceled));
         transitions.add(new Transition(queued, acquiringMediaGatewayInfo));
         transitions.add(new Transition(queued, closingRemoteConnection));
@@ -287,8 +289,10 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(ringing, updatingRemoteConnection));
         transitions.add(new Transition(ringing, acquiringMediaGatewayInfo));
         transitions.add(new Transition(ringing, failingBusy));
+        transitions.add(new Transition(ringing, failingNoAnswer));
         transitions.add(new Transition(ringing, closingRemoteConnection));
         transitions.add(new Transition(failingNoAnswer, noAnswer));
+        transitions.add(new Transition(failingNoAnswer, canceling));
         transitions.add(new Transition(failingBusy, busy));
         transitions.add(new Transition(canceling, canceled));
         transitions.add(new Transition(updatingRemoteConnection, inProgress));
@@ -299,6 +303,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(inProgress, closingInternalLink));
         transitions.add(new Transition(inProgress, closingRemoteConnection));
         transitions.add(new Transition(inProgress, acquiringMediaGatewayInfo));
+        transitions.add(new Transition(inProgress, failed));
         transitions.add(new Transition(acquiringInternalLink, closingRemoteConnection));
         transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
         transitions.add(new Transition(initializingInternalLink, closingRemoteConnection));
@@ -572,7 +577,7 @@ public final class Call extends UntypedActor {
                 }
             }
         } else if (Cancel.class.equals(klass)) {
-            if (openingRemoteConnection.equals(state) || dialing.equals(state) || ringing.equals(state)) {
+            if (openingRemoteConnection.equals(state) || dialing.equals(state) || ringing.equals(state) || failingNoAnswer.equals(state)) {
                 fsm.transition(message, canceling);
             }
         } else if (LinkStateChanged.class.equals(klass)) {
@@ -597,7 +602,11 @@ public final class Call extends UntypedActor {
                 }
             }
         } else if (message instanceof ReceiveTimeout) {
+            if (ringing.equals(state)) {
                 fsm.transition(message, failingNoAnswer);
+            } else {
+                logger.info("Timeout received. Sender: "+sender.path().toString()+" State: "+state+" Direction: "+direction+" From: "+from+" To: "+to);
+                }
         } else if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
@@ -1061,6 +1070,12 @@ public final class Call extends UntypedActor {
             invite.addHeader("X-RestComm-CallSid", id.toString());
             final SipSession session = invite.getSession();
             session.setHandler("CallManager");
+            //Issue: https://telestax.atlassian.net/browse/RESTCOMM-608
+            //If this is a call to Restcomm client or SIP URI bypass LB
+            if (type.equals(CreateCall.Type.CLIENT) || type.equals(CreateCall.Type.SIP)) {
+                ((SipSessionExt)session).setBypassLoadBalancer(true);
+                ((SipSessionExt)session).setBypassProxy(true);
+            }
             String offer = null;
             if (gatewayInfo.useNat()) {
                 final String externalIp = gatewayInfo.externalIP().getHostAddress();
@@ -1102,9 +1117,12 @@ public final class Call extends UntypedActor {
                     invite.getSession().setAttribute("realInetUri", initialInetUri);
 
             } else if (message instanceof SipServletResponse) {
-                final UntypedActorContext context = getContext();
-                context.setReceiveTimeout(Duration.Undefined());
-                // Check if we have to record the call
+                //Timeout still valid in case we receive a 180, we don't know if the
+                //call will be eventually answered.
+                //Issue 585: https://telestax.atlassian.net/browse/RESTCOMM-585
+
+//                final UntypedActorContext context = getContext();
+//                context.setReceiveTimeout(Duration.Undefined());
             }
             // Start recording if RecordingType.RECORD_FROM_RINGING
             // if (recordingType != null && recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING)) {
@@ -1138,8 +1156,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            if (dialing.equals(state)
-                    || (ringing.equals(state) && OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction))) {
+            if (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
                 final SipServletRequest cancel = invite.createCancel();
@@ -1200,6 +1217,11 @@ public final class Call extends UntypedActor {
     private final class FailingNoAnswer extends Failing {
         public FailingNoAnswer(final ActorRef source) {
             super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            logger.info("Call moves to failing state because no answer");
         }
     }
 
@@ -1332,7 +1354,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            if (dialing.equals(state)) {
+            if (dialing.equals(state) || ringing.equals(state)) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
             }
@@ -1385,35 +1407,35 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-//            final State state = fsm.state();
-//            if (updatingInternalLink.equals(state) && conference != null) {
-//                //If this is the outbound leg for an outbound call, conference is the initial call
-//                //Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
-//                //Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
-//                conference.tell(new JoinComplete(bridge), source);
-//            }
-//            if (openingRemoteConnection.equals(state)) {
-//                final ConnectionStateChanged response = (ConnectionStateChanged) message;
-//                final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-//                final byte[] sdp = response.descriptor().toString().getBytes();
-//                String answer = null;
-//                if (gatewayInfo.useNat()) {
-//                    final String externalIp = gatewayInfo.externalIP().getHostAddress();
-//                    answer = patch("application/sdp", sdp, externalIp);
-//                } else {
-//                    answer = response.descriptor().toString();
-//                }
-//
-//                // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-//                answer = patchSdpDescription(answer);
-//
-//                okay.setContent(answer, "application/sdp");
-//                okay.send();
-//            }
-//            if (openingRemoteConnection.equals(state) || updatingRemoteConnection.equals(state)) {
-//                // Make sure the SIP session doesn't end pre-maturely.
-//                invite.getApplicationSession().setExpires(0);
-//            }
+            final State state = fsm.state();
+            if (updatingInternalLink.equals(state) && conference != null) { // && direction != "outbound-dial") {
+                // If this is the outbound leg for an outbound call, conference is the initial call
+                // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
+                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
+                conference.tell(new JoinComplete(bridge), source);
+            }
+            if (openingRemoteConnection.equals(state) && !(invite.getSession().getState().equals(SipSession.State.CONFIRMED) || invite.getSession().getState().equals(SipSession.State.TERMINATED))) {
+                final ConnectionStateChanged response = (ConnectionStateChanged) message;
+                final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
+                final byte[] sdp = response.descriptor().toString().getBytes();
+                String answer = null;
+                if (gatewayInfo.useNat()) {
+                    final String externalIp = gatewayInfo.externalIP().getHostAddress();
+                    answer = patch("application/sdp", sdp, externalIp);
+                } else {
+                    answer = response.descriptor().toString();
+                }
+
+                // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+                answer = patchSdpDescription(answer);
+
+                okay.setContent(answer, "application/sdp");
+                okay.send();
+            }
+            if (openingRemoteConnection.equals(state) || updatingRemoteConnection.equals(state)) {
+                // Make sure the SIP session doesn't end pre-maturely.
+                invite.getApplicationSession().setExpires(0);
+            }
             // Notify the observers.
             external = CallStateChanged.State.IN_PROGRESS;
             final CallStateChanged event = new CallStateChanged(external);
