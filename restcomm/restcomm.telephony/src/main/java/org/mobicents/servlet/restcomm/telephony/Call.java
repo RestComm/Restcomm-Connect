@@ -1378,58 +1378,6 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private final class AuditingRemoteConnection extends AbstractAction {
-
-        /** Maximum number of attempts */
-        private final int MAX_ATTEMPTS = 15;
-
-        /** Waiting time (in milliseconds) between attempts */
-        private final int ATTEMPT_WAIT = 200;
-        private final FiniteDuration duration = new FiniteDuration(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
-
-        /** Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS. */
-        private int attempts = 0;
-
-        /** Contains logic to perform the MGCP AUCX */
-        private AuditWorker auditWorker;
-
-        public AuditingRemoteConnection(ActorRef source) {
-            super(source);
-            this.auditWorker = new AuditWorker();
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            this.attempts++;
-            if (attempts > this.MAX_ATTEMPTS) {
-                logger.warning("AUCX: reached max number of attempt. Closing connection.");
-                // Close remote connection if cannot audit after max number of attempts
-                fsm.transition(message, closingRemoteConnection);
-            } else {
-                // Delegate AUCX work to the remote connection
-                // The Call actor will receive the MGCP response to the AUCX
-                if (this.attempts == 1) {
-                    // First attempt - no need to wait
-                    remoteConn.tell(new InspectConnection(), self());
-                } else {
-                    // Future attempts will be spaced between them for the duration of WAIT_ATTEMPTS
-                    logger.info("AUCX: issuing attempt " + attempts + " in " + ATTEMPT_WAIT + "ms.");
-                    getContext().system().scheduler()
-                            .scheduleOnce(duration, this.auditWorker, getContext().system().dispatcher());
-                }
-            }
-        }
-
-        private class AuditWorker implements Runnable {
-
-            @Override
-            public void run() {
-                remoteConn.tell(new InspectConnection(), self());
-            }
-
-        }
-    }
-
     private final class InProgress extends AbstractAction {
         public InProgress(final ActorRef source) {
             super(source);
@@ -1697,6 +1645,58 @@ public final class Call extends UntypedActor {
                 logger.debug("Duration: " + seconds);
                 logger.debug("Just updated CDR for completed call");
             }
+        }
+    }
+
+    private final class AuditingRemoteConnection extends AbstractAction {
+
+        /** Maximum number of attempts */
+        private final int MAX_ATTEMPTS = 15;
+
+        /** Waiting time (in milliseconds) between attempts */
+        private final int ATTEMPT_WAIT = 200;
+        private final FiniteDuration duration = new FiniteDuration(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
+
+        /** Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS. */
+        private int attempts = 0;
+
+        /** Contains logic to perform the MGCP AUCX */
+        private AuditWorker auditWorker;
+
+        public AuditingRemoteConnection(ActorRef source) {
+            super(source);
+            this.auditWorker = new AuditWorker();
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            this.attempts++;
+            if (attempts > this.MAX_ATTEMPTS) {
+                logger.warning("AUCX: reached max number of attempt. Closing connection.");
+                // Close remote connection if cannot audit after max number of attempts
+                fsm.transition(message, closingRemoteConnection);
+            } else {
+                // Delegate AUCX work to the remote connection
+                // The Call actor will receive the MGCP response to the AUCX
+                if (this.attempts == 1) {
+                    // First attempt - no need to wait
+                    remoteConn.tell(new InspectConnection(), self());
+                } else {
+                    // Future attempts will be spaced between them for the duration of WAIT_ATTEMPTS
+                    logger.info("AUCX: issuing attempt " + attempts + " in " + ATTEMPT_WAIT + "ms.");
+                    getContext().system().scheduler()
+                            .scheduleOnce(duration, this.auditWorker, getContext().system().dispatcher());
+                }
+            }
+        }
+
+        private class AuditWorker implements Runnable {
+
+            @Override
+            public void run() {
+                remoteConn.tell(new InspectConnection(), self());
+            }
+
         }
     }
 }
