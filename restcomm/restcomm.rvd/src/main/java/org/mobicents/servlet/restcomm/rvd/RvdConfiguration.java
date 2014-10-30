@@ -31,6 +31,7 @@ public class RvdConfiguration {
     public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
     private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"})); // the names of the parameters supplied by restcomm request when starting an application
     public static final String PROJECT_LOG_FILENAME = "projectLog";
+    public static final String DEFAULT_APPSTORE_DOMAIN = "restcommapps.wpengine.com";
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
