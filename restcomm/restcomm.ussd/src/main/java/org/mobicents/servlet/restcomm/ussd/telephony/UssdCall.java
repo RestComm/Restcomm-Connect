@@ -193,6 +193,10 @@ public class UssdCall extends UntypedActor  {
     }
 
     private CallResponse<CallInfo> info() {
+        if (from == null)
+            from = (SipURI) invite.getFrom().getURI();
+        if (to == null)
+            to = (SipURI) invite.getTo().getURI();
         final String from = this.from.getUser();
         final String to = this.to.getUser();
         final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, lastResponse);
