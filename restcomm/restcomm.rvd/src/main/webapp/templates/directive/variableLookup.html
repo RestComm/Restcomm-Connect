@@ -1,0 +1,13 @@
+<div ng-class="{'input-group-btn':view=='input-group', 'btn-group':view=='standalone', 'variable-lookup':view=='input-group' }">
+  <button ng-if="view=='standalone'" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="insert RVD variable">
+	  Insert variable <span class="caret"></span>
+  </button>
+  <button ng-if="view=='input-group'" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="insert RVD variable">
+	  <span class="caret"></span>
+  </button>  
+  <ul class="dropdown-menu" role="menu">
+	<li ng-repeat="variable in variables | orderBy:'name'">
+		<a ng-click='selectVariable(variable)'>{{variable.name}}</a>
+	</li>
+  </ul>
+</div>

@@ -1,4 +1,4 @@
-rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications) {
+rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications, rvdSettings) {
 
 	$scope.addConfigurationOption = function(type) {
 		console.log("Adding configuration option");
@@ -36,11 +36,19 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 		});
 	}
 	
+	$scope.watchFormStatus = function (status) {
+		$scope.submitPermitted = status;
+	}
+	
 	// initialization stuff
 	$scope.projectName = $routeParams.projectName;
 	$scope.rapp = rappWrap.rapp;
 	$scope.isNewRapp = !rappWrap.exists;
+	//if ( !rappWrap.exists ) {
+	//	$scope.rapp.info.name = $scope.projectName;
+	//}
 	$scope.showErrors = false; // show validation messages
+	$scope.effectiveSettings = rvdSettings.getEffectiveSettings();
 });
 
 var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function ($scope, binaryInfo, $routeParams) {
@@ -120,7 +128,7 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 }])
 .factory('RappInfo', ['rvdModel', function (rvdModel) {
 	function RappInfo() {
-		this.appVersion = 1;
+		//this.appVersion = 1;
 	};
 	RappInfo.prototype = new rvdModel();
 	RappInfo.prototype.constructor = RappInfo;

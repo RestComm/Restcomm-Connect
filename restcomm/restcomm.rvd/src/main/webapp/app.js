@@ -30,7 +30,8 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		controller : 'packagingCtrl',
 		resolve: {
 			rappWrap: function(RappService) {return RappService.getRapp();},
-			authInfo: function (authentication) {return authentication.authResolver();}
+			authInfo: function (authentication) {return authentication.authResolver();},
+			rvdSettingsResolver: function (rvdSettings) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
 		}
 	})
 	.when('/packaging/:projectName/download', {

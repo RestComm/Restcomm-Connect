@@ -332,3 +332,120 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	
 	return service;
 }]); 
+
+angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q) {
+	var service = {data:{}};
+	var defaultSettings = {appStoreDomain:"restcommapps.wpengine.com"};
+	var effectiveSettings = {};
+	
+	function updateEffectiveSettings (retrievedSettings) {
+		angular.copy(defaultSettings,effectiveSettings);
+		angular.extend(effectiveSettings,retrievedSettings);		
+	}
+	
+	service.saveSettings = function (settings) {
+		var deferred = $q.defer();
+		$http.post("services/settings", settings, {headers: {'Content-Type': 'application/data'}}).success( function () {
+			service.data = settings; // since this is a successfull save, update the internal settings data structure
+			updateEffectiveSettings(settings);
+			deferred.resolve();
+		}).error(function () {
+			dererred.reject();
+		});
+		return deferred.promise;
+	}
+	
+	/* retrieves the settings from the server and updates stores them in an internal service object */
+	service.refresh = function () {
+		var deferred = $q.defer();
+		$http.get("services/settings")
+		.then(function (response) {
+			service.data = response.data;
+			updateEffectiveSettings(service.data);
+			deferred.resolve(service.data);
+		}, function (response) {
+			if ( response.status == 404 ) {
+				angular.copy(defaultSettings,effectiveSettings);
+				service.data = {};
+				deferred.resolve(service.data);
+			}
+			else {
+				deferred.reject();
+			}
+		});
+		return deferred.promise;		
+	}
+	
+	service.getEffectiveSettings = function () {
+		return effectiveSettings;
+	}
+	service.getDefaultSettings = function () {
+		return defaultSettings;
+	}
+	
+	return service;
+}]);
+
+angular.module('Rvd').service('variableRegistry', [function () {
+	var service = {
+		lastVariableId: 0,
+		variables: []
+	};
+	
+	service.newId = function () {
+		service.lastVariableId ++;
+		return service.lastVariableId;
+	}
+	
+	service.addVariable = function (varInfo) {
+		console.log('adding variable' + varInfo.id)
+		service.variables.push(varInfo);
+	}
+	
+	service.removeVariable = function (varInfo) {
+		console.log('removing variable' + varInfo.id);
+		service.variables.splice(service.variables.indexOf(varInfo), 1);
+	}
+	
+	function registerVariable(name) {
+		var newid = service.newId();
+		service.addVariable({id:newid, name:name});
+	}
+
+	service.listUserDefined = function () {
+		return variables;
+	}
+	service.listAll = function () {
+		return service.variables;
+	}	
+	
+	registerVariable("core_To");
+	registerVariable("core_From");
+	registerVariable("core_CallSid");
+	registerVariable("core_AccountSid");
+	registerVariable("core_CallStatus");
+	registerVariable("core_ApiVersion");
+	registerVariable("core_Direction");
+	registerVariable("core_CallerName");
+	// after collect, record, ussdcollect
+	registerVariable("core_Digits");
+	// after dial
+	registerVariable("core_DialCallStatus");
+	registerVariable("core_DialCallSid");
+	registerVariable("core_DialCallDuration");
+	registerVariable("core_RecordingUrl");
+	// after record
+	registerVariable("core_RecordingUrl");
+	registerVariable("core_RecordingDuration");
+	// after dial or record
+	registerVariable("core_PublicRecordingUrl");
+	// after sms
+	registerVariable("core_SmsSid");
+	registerVariable("core_SmsStatus");
+	// after fax
+	registerVariable("core_FaxSid");
+	registerVariable("core_FaxStatus");
+	 
+	
+	return service;
+}]);
