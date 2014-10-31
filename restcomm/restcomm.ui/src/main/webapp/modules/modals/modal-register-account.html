@@ -3,7 +3,7 @@
     <h3 class="no-margins"><i class="fa fa-user"></i> Create New Account</h3>
 </div>
 <div class="modal-body">
-    <form name="myForm" class="form-horizontal">
+    <form name="newAccountForm" class="form-horizontal">
         <dl class="dl-horizontal form-dl">
             <!--<dt>Account SID</dt>-->
             <!--<dd><input type="text" class="input-xlarge" id="new-number-account-sid" ng-model="sid" placeholder="Account SID" disabled /></dd>-->
@@ -18,7 +18,8 @@
             </dd>
             <dt>Password</dt>
             <dd>
-                <input id="new-account-password" class="form-control" name="new-account-password" ng-model="newAccount.password" equals="{{newAccount.passwordConfirmation}}" type="password" placeholder="mySafeP@ssw0rD!" required />
+                <div class="col-md-12 password-strength-modal" ng-password-strength="newAccount.password" ng-show="newAccount.password"></div>
+                <input id="new-account-password" class="form-control" ng-class="{'password-transparent' : newAccount.password}" name="new-account-password" ng-model="newAccount.password" equals="{{newAccount.passwordConfirmation}}" type="password" placeholder="mySafeP@ssw0rD!" required />
             </dd>
             <dt>Confirm Password</dt>
             <dd>
@@ -42,5 +43,5 @@
 </div>
 <div class="modal-footer">
     <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-click="createAccount(newAccount)">Register</button>
+    <button class="btn btn-primary" ng-disabled="pwdStrength < 50 || newAccountForm.$invalid" ng-click="createAccount(newAccount)">Register</button>
 </div>
