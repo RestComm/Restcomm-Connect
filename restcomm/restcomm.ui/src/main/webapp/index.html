@@ -6,7 +6,9 @@
         <link rel="icon" type="image/png" href="resources/img/favicon.png">
         <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css" />
         <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css" />
+        <link rel="stylesheet" href="lib/bootstrap-multiselect/css/bootstrap-multiselect.css" />
         <link rel="stylesheet" href="lib/animate/animate.css" />
+        <link rel="stylesheet" href="lib/world-flags/stylesheets/flags16.css" />
         <link rel="stylesheet" href="resources/css/restcomm.css" />
         <style type="text/css">
 
@@ -89,11 +91,17 @@
 
         <!-- Angular does some things with CSS so it's good to load this in the head -->
         <script type="text/javascript" src="lib/jquery/jquery.js"></script>
+        <script type="text/javascript" src="lib/file-upload/angular-file-upload-shim.min.js"></script>
         <script type="text/javascript" src="lib/angular/angular.min.js"></script>
+        <script type="text/javascript" src="lib/file-upload/angular-file-upload.min.js"></script>
         <script type="text/javascript" src="lib/angular-route/angular-route.min.js"></script>
         <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
+        <script type="text/javascript" src="lib/underscore/underscore.js"></script>
+        <script type="text/javascript" src="lib/underscore/underscore.string.js"></script>
         <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="lib/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
         <script type="text/javascript" src="lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+        <script type="text/javascript" src="lib/ng-password-strength/js/ng-password-strength.js"></script>
         <script type="text/javascript" src="lib/http-auth-interceptor/http-auth-interceptor.js"></script>
 
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
@@ -110,6 +118,7 @@
         <script type="text/javascript" src="resources/js/controllers/numbers-incoming.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-outgoing.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/rappmanager.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
         <script type="text/javascript" src="resources/js/directives.js"></script>
@@ -147,6 +156,10 @@
                                 <!--<li class="divider-vertical"></li>-->
                                 <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="fa fa-pencil"></i> Visual Designer</a></li>
                                 <li class="divider-vertical"></li>
+                                <!-- 
+                                <li><a ng-href="#/ras/" ><i class="fa fa-shopping-cart"></i> Restcomm Apps</a></li>
+                                <li class="divider-vertical"></li>  
+                                -->                              
                                 <!--<li><a ng-href="#/providers"><i class="fa fa-cogs"></i> Providers</a></li>-->
                                 <!--<li class="divider-vertical"></li>-->
                                 <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
