@@ -2,6 +2,13 @@
 
 	<rc-page-title icon="shopping-cart" title="Restcomm Apps" sub-title=""></rc-page-title>
 	<div class="row">
+		<div class="col-md-12">
+			<div class="form-group">
+				&nbsp;<a  class="pull-right" target="_blank" href="http://{{rappManagerConfig.rasHost}}/how-to/#import-application">Help</a>
+			</div>
+		</div>
+	</div>
+	<div class="row">
 		<div class="form-group">
 			<div class='drop-area' ng-file-drop="onFileSelect($files)"
 				ng-file-drag-over-class="dropping" ng-show="dropSupported">
@@ -12,11 +19,11 @@
 		</div>
 	</div>
 	
-	<div class="row">
+	<div class="row rapp-list">
 		<table class="table">
 			<thead>
-				<tr>
-					<th>Title</th>
+				<tr class="text-muted">
+					<th class="text-center">Title</th>
 					<th>Status</th>
 					<th>Categories</th>
 					<th>Description</th>
@@ -24,29 +31,56 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="product in products">
-					<td>{{product.info.title}}
-						<div class="text-muted">{{product.info.appId}}</div>
-					</td>
-					<td>
-						{{buildStatusMessage(product.localApp.status)}}
-						<div>
-							<a href="#/ras/config/{{product.localApp.projectName}}" ng-show="product.localApp && product.localApp.status.indexOf('Installed')!==-1 && product.localApp.status.indexOf('Unconfigured') !== -1">Configure</a>
+				<tr ng-repeat="app in apps" class="rapp-item">
+					<!-- Title -->
+					<td ng-show="selectedListItemView(app) == 'online'" class="rapp-title">
+						<div class="rapp-title-cell">
+							<a href="{{app.online.info.link}}" target="_blank"><img class="img-thumbnail thumbnail" src="{{app.online.info.thumbnail}}"></a>
+							<a href="{{app.online.info.link}}" target="_blank"><h4 class="text-center">{{app.online.info.title}}</h4></a>
+							<div class="text-center text-muted" title="application unique id">{{app.online.info.appId}}</div>
 						</div>
 					</td>
-					<td>
-						<span ng-repeat="(catid, category) in product.info.category" class="label label-default category-tag">{{category.name}}</span>
+					<td ng-show="selectedListItemView(app) == 'local'">
+						<div class="text-center">{{app.local.rappInfo.name}}</div>
+						<div class="text-center text-muted">{{app.local.rappInfo.id}}</div>
+					</td>			
+					
+					<!-- Status -->
+					<td class="status-col">
+						<div>
+						{{buildStatusMessage(app)}}
+						</div>
 					</td>
-					<td >{{product.info.excerpt}}</td>
+					
+					<!-- Categories -->
 					<td>
-						<a ng-show="!product.localApp" href="{{product.info.link}}" target="_blank" type="button" class="btn btn-primary">Get application</a>
-						<a ng-show="product.localApp" href="{{product.info.link}}" target="_blank">View in AppStore</a>
+						<span ng-show="selectedListItemView(app) == 'online'" ng-repeat="(catid, category) in product.info.category" class="label label-default category-tag">{{category.name}}</span>
+					</td>
+					
+					<!-- Summary -->
+					<td ng-show="selectedListItemView(app) == 'online'">
+						<div class="rapp-summary-cell">
+							{{app.online.info.excerpt}}
+						</div>
+					</td>
+					<td ng-show="selectedListItemView(app) == 'local'">{{app.local.rappInfo.description}}</td>
+					
+					<!-- Actions -->
+					<td class="action-col">
+						<a ng-show="!app.local" href="{{app.online.info.link}}" target="_blank" type="button" class="btn btn-primary">Get application</a>
+						<a ng-show="app.local && app.online" href="{{app.online.info.link}}" target="_blank">View in AppStore</a>
+						<div ng-show="app.local && app.local.status.indexOf('Installed')!==-1">
+							<a href="#/ras/config/{{app.local.projectName}}" ng-class="{'ras-bold': app.local.status.indexOf('Unconfigured') !== -1}">Configure</a>
+						</div>
+						<div ng-show="app.local && app.local.status.indexOf('Installed')!==-1">
+							<a href="/restcomm-rvd/#/designer/{{app.local.projectName}}" target="_blank">Design</a>
+						</div>						
 					</td>
 				</tr>
 			</tbody>
 			<tfoot>
 				<tr>
-					<th colspan="5">Displaying {{products.length}} applications</th>
+					<th colspan="5">Displaying {{apps.length}} applications</th>
 				</tr>
 			</tfoot>
 		</table>
