@@ -1,26 +1,40 @@
-<div class="row">
-	<h2>{{projectName}}</h2>
-	<h4>Configure application parameters</h4>
-	
-	<div class="form-group" ng-repeat="option in rappConfig.options">
-		<label>{{option.label}}</label>
-		<input ng-model="option.value" type="text" class="form-control">
-		<span class="help-block">{{option.description}}</span>
+<div class="ras row">
+	<div class="col-md-12">
+		<h1 class="page-header">{{projectName}} <small>configuration</small><i class="fa fa-cog pull-right"></i></h1>
+		<p class="lead">
+			Adjust this application to your local environment.  
+		</p>
+		<div ng-show='shouldShowHowToConfigure()' class="how-to-configure" >
+			<h4>Vendor guidelines</h4>
+			<p>
+				{{rappConfig.howTo}}
+			</p>
+			<div class="spacer10"></div>
+		</div>
 		
+		<form name="optionsForm">
+			<h4>Application parameters</h4>
+			
+			<p ng-show="!rappConfig.options.length" class="text-muted">
+				<em>No parameters were defined for this app</em>
+			</p>
+			
+				<div class="form-group" ng-repeat="option in rappConfig.options">
+					<label>{{option.label}}</label><abbr title="RVD variable syntax"><code>${{option.name}}</code></abbr> <small ng-show="option.required" class="text-muted">(required)</small>
+					<input ng-model="option.value" type="text" class="form-control" ng-required="option.required">
+					<span class="help-block">{{option.description}}</span>
+				</div>
+
+			
+			<br/>
+			<div class="form-group">
+				<button ng-disabled="!optionsForm.$valid" ng-click="enableConfiguration(rappConfig)" type="button" class="btn btn-primary">Apply configuration</button>
+			</div>
+		</form>
+					
+		<br/>
+		<div class="form-group">
+			Back to <a href="#/ras">Restcomm Apps</a>
+		</div>
 	</div>
-	
-	<!--
-	<div>
-	config: {{rappConfig}}
-	</div>
-	-->
-	<br/>
-	<div class="form-group">
-		<button ng-click="enableConfiguration(rappConfig)" type="button" class="btn btn-primary">Enable configuration</button>
-	</div>
-	<br/>
-	<div class="form-group">
-		Back to <a href="#/ras">Restcomm Apps</a>
-	</div>
-	
 </div>
