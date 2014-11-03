@@ -111,6 +111,14 @@ public class RvdConfiguration {
         return ip;
     }
 
+    // Always returns the destination port in the request. When the configuration/settings scheme clears
+    // out a proper implementation should be done.
+    // TODO
+    public String getEffectiveRestcommPort(HttpServletRequest request) {
+        int port = request.getLocalPort();
+        return "" + port;
+    }
+
     /**
      * Returns the IP rvd listens to for internal use. This address can be used by restcomm to access applications.
      * A request object is required to get it. Even when this request comes from a browser, this function should report
