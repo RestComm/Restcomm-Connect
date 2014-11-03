@@ -96,7 +96,7 @@ public class ConferenceDialNoun extends DialNoun {
         rcmlNoun.setStartConferenceOnEnter(getStartConferenceOnEnter());
         rcmlNoun.setMaxParticipants(getMaxParticipants());
         rcmlNoun.setWaitMethod(getWaitMethod());
-        rcmlNoun.setDestination(getDestination());
+        rcmlNoun.setDestination( interpreter.populateVariables(getDestination() ));
 
         return rcmlNoun;
     }

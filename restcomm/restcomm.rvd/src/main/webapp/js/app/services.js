@@ -332,3 +332,68 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	
 	return service;
 }]); 
+
+angular.module('Rvd').service('variableRegistry', [function () {
+	var service = {
+		lastVariableId: 0,
+		variables: []
+	};
+	
+	service.newId = function () {
+		service.lastVariableId ++;
+		return service.lastVariableId;
+	}
+	
+	service.addVariable = function (varInfo) {
+		//console.log('adding variable' + varInfo.id)
+		service.variables.push(varInfo);
+	}
+	
+	service.removeVariable = function (varInfo) {
+		//console.log('removing variable' + varInfo.id);
+		service.variables.splice(service.variables.indexOf(varInfo), 1);
+	}
+	
+	function registerVariable(name) {
+		var newid = service.newId();
+		service.addVariable({id:newid, name:name});
+	}
+
+	service.listUserDefined = function () {
+		return variables;
+	}
+	service.listAll = function () {
+		return service.variables;
+	}	
+	
+	registerVariable("core_To");
+	registerVariable("core_From");
+	registerVariable("core_CallSid");
+	registerVariable("core_AccountSid");
+	registerVariable("core_CallStatus");
+	registerVariable("core_ApiVersion");
+	registerVariable("core_Direction");
+	registerVariable("core_CallerName");
+	// after collect, record, ussdcollect
+	registerVariable("core_Digits");
+	// after dial
+	registerVariable("core_DialCallStatus");
+	registerVariable("core_DialCallSid");
+	registerVariable("core_DialCallDuration");
+	registerVariable("core_RecordingUrl");
+	// after record
+	registerVariable("core_RecordingUrl");
+	registerVariable("core_RecordingDuration");
+	// after dial or record
+	registerVariable("core_PublicRecordingUrl");
+	// after sms
+	registerVariable("core_SmsSid");
+	registerVariable("core_SmsStatus");
+	// after fax
+	registerVariable("core_FaxSid");
+	registerVariable("core_FaxStatus");
+	 
+	
+	return service;
+}]);
+
