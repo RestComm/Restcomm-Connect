@@ -108,7 +108,7 @@ angular.module('Rvd').directive('lookupTarget', [function () {
 				var selStart = element[0].selectionStart;
 				var selEnd = element[0].selectionEnd;
 				
-				console.log("lookupTarget received event");
+				//console.log("lookupTarget received event");
 			});
 		} 
 	}
