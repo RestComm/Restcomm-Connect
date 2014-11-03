@@ -437,9 +437,10 @@ public class Interpreter {
                 URI url;
                 try {
                     URIBuilder uri_builder = new URIBuilder(populateVariables(esStep.getUrl()) ); // supports RVD variable expansion
+
+                    // if this is a relative url fill in missing fields from the request
                     if (uri_builder.getHost() == null ) {
                         logger.debug("External Service: Relative url is used. Will override from http request to RVD controller");
-                        // if this is a relative url fill in missing fields from the request
                         uri_builder.setScheme(httpRequest.getScheme());
                         uri_builder.setHost(httpRequest.getServerName());
                         uri_builder.setPort(httpRequest.getServerPort());
@@ -447,6 +448,7 @@ public class Interpreter {
                             uri_builder.setPath("/" + uri_builder.getPath());
                     }
 
+                    // Add url parameters for GET requests
                     if ( esStep.getMethod() == null || "GET".equals(esStep.getMethod()) )
                         for ( UrlParam urlParam : esStep.getUrlParams() )
                             uri_builder.addParameter(urlParam.getName(), populateVariables(urlParam.getValue()) );
@@ -472,7 +474,7 @@ public class Interpreter {
                     HttpPost post = new HttpPost(url);
                     List <NameValuePair> values = new ArrayList <NameValuePair>();
                     for ( UrlParam urlParam : esStep.getUrlParams() )
-                        values.add(new BasicNameValuePair(urlParam.getName(), urlParam.getValue()));
+                        values.add(new BasicNameValuePair(urlParam.getName(), populateVariables(urlParam.getValue()) ));
                     post.setEntity(new UrlEncodedFormEntity(values));
                     post.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(), esStep.getPassword()));
                     response = client.execute( post );
@@ -537,10 +539,6 @@ public class Interpreter {
                     // if no next route has been found throw an error
                     if ( "fixed".equals(esStep.getNextType()) && RvdUtils.isEmpty(next) ) {
                         throw new InterpreterException("No valid module could be found for ES routing"); // use a general exception for now.
-                        //next = esStep.getDefaultNext();
-                        //if ( RvdUtils.isEmpty(next) )
-                        //    throw new ReferencedModuleDoesNotExist("No module specified for ES routing and no default route exists either");
-                        //logger.debug("No valid route returned. Will use default route: " + next );
                     }
                     logger.info( "Routing enabled. Chosen target: " + next);
                 }
