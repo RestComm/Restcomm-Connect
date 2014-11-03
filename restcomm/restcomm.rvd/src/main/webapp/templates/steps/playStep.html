@@ -6,7 +6,7 @@
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<form name="form" novalidate>
 			<div class='form-group row'>
-				<div class="col-md-12">
+				<div lookup-context class="col-md-12">
 					<span class="help-block">Type the URL resource of the .wav file</span>
 					<div class="input-group">
 						<span class='input-group-addon'>Audio resource</span>
@@ -18,7 +18,8 @@
 							<span>remote &nbsp;</span>
 							<input ng-model='step.playType' value='remote' type="radio">
 						</span>		
-						<input name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' type='text' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
+						<input  name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' lookup-target type='text' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
+						<variable-lookup variable="step.remote.wavUrl" view="input-group" ng-show='step.playType=="remote"'></variable-lookup>
 						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.local.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control" required></select>
 					</div>
 					<div class="validation-error" ng-show="step.playType=='remote' && form.wavUrl.$invalid">Type a valid .wav resource URL</div>

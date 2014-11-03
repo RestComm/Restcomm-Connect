@@ -33,11 +33,12 @@
                         
                         <div class='row'>
                             <div ng-repeat='urlParam in step.urlParams' class="col-md-5">
-                                <div  class="input-group input-group-sm form-group">
+                                <div lookup-context class="input-group input-group-sm form-group">
                                     <span class="input-group-addon">Name</span>
                                     <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
                                     <span class="input-group-addon">Value</span>
-                                    <input ng-model='urlParam.value' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
+                                    <input ng-model='urlParam.value' lookup-target class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
+                                    <variable-lookup variable="urlParam.value" view="input-group"></variable-lookup>
                                     <span ng-click='removeUrlParam(step,urlParam)' class="input-group-addon fa fa-times rvd-clickable"></span>
                                 </div>
                             </div>
@@ -78,7 +79,7 @@
 							<div class="col-md-5">
 								<div class="input-group input-group-sm form-group">
 									<span class="input-group-addon">Assign to</span>
-									<input ng-model='assignment.destVariable' type="text" class="form-control" placeholder='type variable name' required></input>
+									<input ng-model='assignment.destVariable' rvd-variable='assignment.destVariable' type="text" class="form-control" placeholder='type variable name' required></input>
 									<span class="input-group-addon">Scope</span>
 									<select ng-model='assignment.scope' class="form-control">
 										<option value='module'>module</option>
