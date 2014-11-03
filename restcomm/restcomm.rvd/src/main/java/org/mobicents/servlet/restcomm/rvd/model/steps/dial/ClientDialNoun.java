@@ -17,7 +17,7 @@ public class ClientDialNoun extends DialNoun {
     @Override
     public RcmlNoun render(Interpreter interpreter) throws InterpreterException {
         RcmlClientNoun rcmlNoun = new RcmlClientNoun();
-        rcmlNoun.setDestination(getDestination());
+        rcmlNoun.setDestination( interpreter.populateVariables(getDestination()) );
         return rcmlNoun;
     }
 }
