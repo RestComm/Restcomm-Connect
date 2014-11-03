@@ -398,12 +398,12 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	}
 	
 	service.addVariable = function (varInfo) {
-		console.log('adding variable' + varInfo.id)
+		//console.log('adding variable' + varInfo.id)
 		service.variables.push(varInfo);
 	}
 	
 	service.removeVariable = function (varInfo) {
-		console.log('removing variable' + varInfo.id);
+		//console.log('removing variable' + varInfo.id);
 		service.variables.splice(service.variables.indexOf(varInfo), 1);
 	}
 	

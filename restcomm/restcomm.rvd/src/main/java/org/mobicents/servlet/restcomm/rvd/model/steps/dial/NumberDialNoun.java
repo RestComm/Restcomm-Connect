@@ -41,7 +41,7 @@ public class NumberDialNoun extends DialNoun {
         }
 
         rcmlNoun.setSendDigits( getSendDigits() );
-        rcmlNoun.setDestination(getDestination());
+        rcmlNoun.setDestination( interpreter.populateVariables( getDestination() ));
 
         return rcmlNoun;
     }
