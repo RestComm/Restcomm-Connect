@@ -539,7 +539,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
-                    if(outboundCall == null)
+                    if(outboundCall == null || !sender.equals(call))
                         outboundCall = sender;
                     fsm.transition(message, acquiringOutboundCallInfo);
                 } else if (joiningCalls.equals(state)) {
@@ -571,6 +571,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 //                }
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 fsm.transition(message, finishDialing);
+            } else if (CallStateChanged.State.CANCELED == event.state()) {
+                callManager.tell(new DestroyCall(sender), self());
             }
         } else if (CallManagerResponse.class.equals(klass)) {
             final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>) message;
@@ -1408,7 +1410,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 dialBranches.remove(outboundCall);
                 for (final ActorRef branch : dialBranches) {
                     branch.tell(new Cancel(), source);
-                    callManager.tell(new DestroyCall(branch), source);
+                    //Race condition here. Correct way is to ask Call to Cancel and when done Call will notify Observer with CallStateChanged.Cancelled then
+                    //ask CallManager to destroy the call.
+//                    callManager.tell(new DestroyCall(branch), source);
                 }
                 dialBranches = null;
             }
@@ -1426,7 +1430,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
             outboundCallInfo = response.get();
-
+            logger.info("About to join call from:"+callInfo.from()+ " to: "+callInfo.to()+" with outboundCall from: "+outboundCallInfo.from()+" to: "+outboundCallInfo.to());
             // Check for any Dial verbs with url attributes (call screening url)
             logger.info("Checking for Dial verbs with url attributes for this outboundcall");
             Tag child = dialChildrenWithAttributes.get(outboundCall);
