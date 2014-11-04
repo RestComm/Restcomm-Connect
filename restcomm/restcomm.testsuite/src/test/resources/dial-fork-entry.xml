@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Dial timeLimit="1000" timeout="2">
+	<Dial timeLimit="1000" timeout="5">
 	<!-- Dial PSTN Number. SipUnit should listen to +131313@restcomm_gtw_ipaddr:port (+131313@127.0.0.1:5070) -->
 	  <Number>+131313</Number>
 	<!-- Dial SIP Uri. SipUnit contact should be this but doesn't need to register to receive a call  -->
