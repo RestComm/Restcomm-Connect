@@ -1,15 +1,20 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+
 public class SettingsModel {
 
     private String apiServerHost;
     private Integer apiServerRestPort; // null values should be allowed too
     private String apiServerUsername;
     private String apiServerPass;
+    private String appStoreDomain;
 
 
     public static SettingsModel createDefault() {
-        return new SettingsModel(null, null);
+        SettingsModel settingsModel = new SettingsModel(null, null);
+        settingsModel.appStoreDomain = RvdConfiguration.DEFAULT_APPSTORE_DOMAIN;
+        return settingsModel;
     }
 
     public SettingsModel(String apiServerHost, Integer apiServerRestPort) {
@@ -62,6 +67,14 @@ public class SettingsModel {
 
     public void setApiServerPass(String apiServerPass) {
         this.apiServerPass = apiServerPass;
+    }
+
+    public String getAppStoreDomain() {
+        return appStoreDomain;
+    }
+
+    public void setAppStoreDomain(String appStoreDomain) {
+        this.appStoreDomain = appStoreDomain;
     }
 
 }
