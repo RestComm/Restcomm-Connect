@@ -648,6 +648,7 @@ public final class Call extends UntypedActor {
                         SipServletRequest challengeRequest = response.getSession().createRequest(
                                 response.getRequest().getMethod());
                         challengeRequest.addAuthHeader(response, authInfo);
+                        challengeRequest.setContent(invite.getContent(), invite.getContentType());
                         invite = challengeRequest;
                         challengeRequest.send();
                     }
