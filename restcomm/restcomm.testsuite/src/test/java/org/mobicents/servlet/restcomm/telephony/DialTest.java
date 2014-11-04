@@ -857,7 +857,181 @@ public class DialTest {
             exception.printStackTrace();
         }
     }
+    
+    //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
+    @Test
+    public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
 
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, dialFork, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 600));
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying-Henrique", 600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 600));
+
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        
+        Thread.sleep(2000);
+        
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(georgeCall.waitForAck(50 * 1000));
+        
+        assertTrue(henriqueCall.listenForCancel());
+        assertTrue(aliceCall.listenForCancel());
+
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30 * 1000);
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(30 * 1000);
+        assertNotNull(aliceCancelTransaction);
+        assertNotNull(henriqueCancelTransaction);
+        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
+        
+        georgeCall.listenForDisconnect();
+
+        Thread.sleep(8000);
+
+        // hangup.
+
+        bobCall.disconnect();
+
+        assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
+    @Test
+    public synchronized void testDialForkNoAnswerButFromAliceClient() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, dialFork, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 600));
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying-Henrique", 600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 600));
+
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        
+        Thread.sleep(2000);
+        
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+        
+        assertTrue(henriqueCall.listenForCancel());
+        assertTrue(georgeCall.listenForCancel());
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(30 * 1000);
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(30 * 1000);
+        assertNotNull(georgeCancelTransaction);
+        assertNotNull(henriqueCancelTransaction);
+        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+        aliceCall.respondToCancel(georgeCancelTransaction, 200, "OK - Alice", 600);
+        
+        aliceCall.listenForDisconnect();
+
+        Thread.sleep(8000);
+
+        // hangup.
+
+        bobCall.disconnect();
+
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+    
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test
     public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() throws InterruptedException, ParseException {
@@ -1028,8 +1202,8 @@ public class DialTest {
         assertTrue(henriqueCall.listenForCancel());
         
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
-        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
         SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
         assertNotNull(georgeCancelTransaction);
         assertNotNull(aliceCancelTransaction);
         assertNotNull(henriqueCancelTransaction);
