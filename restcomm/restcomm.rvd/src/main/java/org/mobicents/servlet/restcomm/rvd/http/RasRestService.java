@@ -39,6 +39,7 @@ import org.mobicents.servlet.restcomm.rvd.packaging.model.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
 import org.mobicents.servlet.restcomm.rvd.ras.RasService;
+import org.mobicents.servlet.restcomm.rvd.ras.exceptions.InvalidRestcommAppPackage;
 import org.mobicents.servlet.restcomm.rvd.ras.exceptions.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
@@ -291,6 +292,9 @@ public class RasRestService extends RestService {
             logger.warn(e);
             logger.debug(e,e);
             return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
+        } catch (InvalidRestcommAppPackage e ) {
+            logger.error(e.getMessage(), e);
+            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -340,11 +344,14 @@ public class RasRestService extends RestService {
     @Path("apps/{name}/bootstrap")
     public Response getBootstrap(@PathParam("name") String projectName) {
         try {
+            if ( ! FsProjectStorage.hasBootstrapInfo(projectName, workspaceStorage) )
+                return Response.status(Status.NOT_FOUND).build();
+
             String bootstrapInfo = FsProjectStorage.loadBootstrapInfo(projectName, workspaceStorage);
             return Response.ok(bootstrapInfo, MediaType.APPLICATION_JSON).build();
         } catch (StorageException e) {
             logger.error(e,e);
-            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 

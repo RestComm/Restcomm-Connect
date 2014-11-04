@@ -333,6 +333,59 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	return service;
 }]); 
 
+angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q) {
+	var service = {data:{}};
+	var defaultSettings = {appStoreDomain:"restcommapps.wpengine.com"};
+	var effectiveSettings = {};
+	
+	function updateEffectiveSettings (retrievedSettings) {
+		angular.copy(defaultSettings,effectiveSettings);
+		angular.extend(effectiveSettings,retrievedSettings);		
+	}
+	
+	service.saveSettings = function (settings) {
+		var deferred = $q.defer();
+		$http.post("services/settings", settings, {headers: {'Content-Type': 'application/data'}}).success( function () {
+			service.data = settings; // since this is a successfull save, update the internal settings data structure
+			updateEffectiveSettings(settings);
+			deferred.resolve();
+		}).error(function () {
+			dererred.reject();
+		});
+		return deferred.promise;
+	}
+	
+	/* retrieves the settings from the server and updates stores them in an internal service object */
+	service.refresh = function () {
+		var deferred = $q.defer();
+		$http.get("services/settings")
+		.then(function (response) {
+			service.data = response.data;
+			updateEffectiveSettings(service.data);
+			deferred.resolve(service.data);
+		}, function (response) {
+			if ( response.status == 404 ) {
+				angular.copy(defaultSettings,effectiveSettings);
+				service.data = {};
+				deferred.resolve(service.data);
+			}
+			else {
+				deferred.reject();
+			}
+		});
+		return deferred.promise;		
+	}
+	
+	service.getEffectiveSettings = function () {
+		return effectiveSettings;
+	}
+	service.getDefaultSettings = function () {
+		return defaultSettings;
+	}
+	
+	return service;
+}]);
+
 angular.module('Rvd').service('variableRegistry', [function () {
 	var service = {
 		lastVariableId: 0,
@@ -396,4 +449,3 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	
 	return service;
 }]);
-

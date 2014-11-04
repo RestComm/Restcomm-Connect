@@ -34,7 +34,6 @@ import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationExc
 import com.google.gson.Gson;
 import com.thoughtworks.xstream.XStream;
 
-
 import java.util.List;
 import java.util.UUID;
 /**
@@ -153,10 +152,14 @@ public class RasService {
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
 
-        //String infoPath = tempDir.getPath() + "/app/" + "info";
-        //RappInfo info = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "info", RappInfo.class );
         RappInfo info = storageBase.loadModelFromXMLFile( tempDir.getPath() + "/app/" + "info.xml", RappInfo.class );
         RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
+
+        // Reject applications with no unique id.
+        // TODO At some point control this check using a flag
+        //if ( RvdUtils.isEmpty(info.getId()) ) {
+        //    throw new InvalidRestcommAppPackage("No unique id specified");
+        //}
 
         // Make sure no such restcomm app already exists (single instance limitation)
         //List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
@@ -229,7 +232,7 @@ public class RasService {
         if ( ! report.isOk() )
             throw new RvdValidationException("Cannot validate rapp", report);
 
-        rapp.getInfo().setId(generateAppId(projectName));
+        // rapp.getInfo().setId(generateAppId(projectName)); // Let the RAS administrator choose an id for the app after submission
         packagingStorage.storeRapp(rapp, projectName);
     }
 

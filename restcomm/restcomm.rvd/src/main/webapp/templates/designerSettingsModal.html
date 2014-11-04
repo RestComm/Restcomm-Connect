@@ -5,7 +5,7 @@
 	
 	<p class="lead">Restcomm API</p>
 	
-	<form name="settingsForm">
+	<form name="settingsForm" novalidate>
 		<div class="help-block">Override default host and port when contacting Restcomm API Server. Leave blank if RVD is on the same machine as Restcomm.</div>
 		<div class="row form-group">
 			<div class="col-md-6 input-group">
@@ -29,7 +29,16 @@
 				<input ng-model="settings.apiServerPass" type="text" class="form-control">
 			</div>			
 		</div>
-		
+	<!-- 
+		<br/>
+		<p class="lead">Application Store</p>
+		<div class="row form-group">
+			<div class="col-md-12 input-group">
+				<span class="input-group-addon">Domain</span>
+				<input ng-model="settings.appStoreDomain" type="text" class="form-control" placeholder="{{defaultSettings.appStoreDomain}}">
+			</div>		
+		</div>
+-->
 		{{watchForm(settingsForm.$valid)}}
 		
 	</form>
