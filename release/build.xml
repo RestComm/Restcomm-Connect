@@ -569,7 +569,12 @@
 			<include name="**/*"/>
 		</fileset>
 	</copy>
-
+<copy tofile="${release.as7.dir}/standalone.conf" failonerror="true" overwrite="true"
+	file="${basedir}/as7-standalone.conf"/>
+<copy tofile="${release.as7.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
+	file="${basedir}/mss-sip-stack.properties"/>
+<copy tofile="${release.as7.dir}/telscale-media/telscale-media-server/bin/run.sh" failonerror="true" overwrite="true"
+		file="${basedir}/mms-run.sh"/>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.as7.dir}/Telestax-EULA.pdf" failonerror="true"
@@ -627,7 +632,12 @@
 			<include name="**/*"/>
 		</fileset>
 	</copy>
-
+<copy tofile="${release.as7.nolce.dir}/standalone.conf" failonerror="true" overwrite="true"
+	file="${basedir}/as7-standalone.conf"/>
+<copy tofile="${release.as7.nolce.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
+	file="${basedir}/mss-sip-stack.properties"/>
+<copy tofile="${release.as7.nolce.dir}/telscale-media/telscale-media-server/bin/run.sh" failonerror="true" overwrite="true"
+		file="${basedir}/mms-run.sh"/>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.as7.nolce.dir}/Telestax-EULA.pdf" failonerror="true"
@@ -639,7 +649,7 @@
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>-->
-	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx"
+	<chmod dir="${release.as7.nolce.dir}/bin" perm="ugo+rx"
 		includes="**/*.sh"/>
 
 	<!--JBoss EAP6-->
@@ -684,6 +694,12 @@
 			<include name="**/*"/>
 		</fileset>
 	</copy>
+<copy tofile="${release.eap6.dir}/standalone.conf" failonerror="true" overwrite="true"
+	file="${basedir}/as7-standalone.conf"/>
+<copy tofile="${release.eap6.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
+	file="${basedir}/mss-sip-stack.properties"/>
+<copy tofile="${release.eap6.dir}/telscale-media/telscale-media-server/bin/run.sh" failonerror="true" overwrite="true"
+		file="${basedir}/mms-run.sh"/>
 
 	<!-- Copy EULA -->
         <copy tofile="${release.eap6.dir}/Telestax-EULA.pdf" failonerror="true"
@@ -696,7 +712,7 @@
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>-->
 	<!--<copy file="${release.eap6.dir}/modules/system/layers/base/org/mobicents/libs/main/jain-sip-ri-**.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" failonerror="true"/>-->
-        <copy file="${basedir}/telestax-license.xml" todir="${release.as7.dir}" failonerror="true" />
+        <copy file="${basedir}/telestax-license.xml" todir="${release.eap6.dir}" failonerror="true" />
 	<chmod dir="${release.eap6.dir}/bin" perm="ugo+rx"
      		includes="**/*.sh"/>
     </target>
