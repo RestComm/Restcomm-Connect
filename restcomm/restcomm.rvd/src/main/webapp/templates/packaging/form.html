@@ -12,14 +12,14 @@
 			</h1>
 			
 			<p class="lead">
-				Create a package from your application to submit it to the <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}">Restcomm Application Store</a>
+				Package your application to submit it to the <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}">Restcomm Application Store</a>
 			</p>
 			<p> 
 				Provide configuration options for plugging this application into the customer's environment.
 			</p>
 			
-			<form name="packagingForm">
-<!-- 
+			<form name="packagingForm" novalidate>
+<!-- -->
 				<div class="rvd-appinfo" name="appinfoForm">
 					<h3>General information</h3>
 					<div class="row">
@@ -48,7 +48,7 @@
 						</div>
 					</div>
 				</div>
- -->				
+ <!-- -->				
 				
 				<div class="rvd-appconfig">
 				<h3>Configuration</h3>
@@ -57,49 +57,68 @@
 				<textarea ng-model='rapp.config.howTo' class="form-control"></textarea>
 				<span class="help-block">Type a small text describing general configuration guidelines</span>
 				
-				<h4>Options</h4>
-				<span class="help-block">Customize you app by adding options. Add an option for any piece of information you need to be adjusted by the end user. Users of this application will have the opportunity to fill in these options in order to customize their installation.</span>
+				<h4>Application parameters</h4>
+				<span class="help-block">Customize your app by adding parameters. Add a parameter for any piece of information you need to be adjusted by the end user. Users of this application will have the opportunity to fill in these options in order to customize their installation.</span>				
 				
 				<div basic-sortable list-model='rapp.config.options'>
 					<div ng-repeat="configOption in rapp.config.options" class='form-group'>
-						<rvd-panel on-close='removeConfigurationOption(configOption)'>
+						<rvd-panel on-close='removeConfigurationOption(configOption)' panel-title="configOption.label">
 							<div class="row">
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name *</label>
-									<input ng-model='configOption.name' class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}">
+									<label >Name *</label>
+									<input ng-model='configOption.name' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">
 								</div>
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">Label *</label>
-									<input ng-model='configOption.label' class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}">
+									<label>Label *</label>
+									<input ng-model='configOption.label' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">
 								</div>	
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">Default value</label>
-									<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}">
+									<label>Default value</label>
+									<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">
 								</div>	
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">Required</label>
+									<label>Required</label>
 									<div>
-										<input type='checkbox' ng-model='configOption.required'>
+										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.required'  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">
 									</div>
 								</div>									
 							</div>
 							<div class="row">
 								<div class="form-group col-md-6">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed">Description *</label>
-									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"></textarea>
+									<label>Description *</label>
+									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed"></textarea>
 								</div>
-						</div>				
+							</div>				
 						</rvd-panel>
 					</div>
 				</div>
 				
+				<button class="btn btn-primary" ng-click="addConfigurationOption('value')">Add parameter</button>
+		
+				<div class="rvd-spacer10">&nbsp;</div>
+				
+				<h4>Application services parameters</h4>
+				<p>If your application relies on additional services you will need to specify <em>instanceToken</em> and <em>backendRootURL</em> parameters. For more information on custom application services and multitenancy please see <a href="#">Writing multitenant application for the application store</a>.
+				<ul>
+					<li><strong>instanceToken</strong> - Used to identify each individual instance of this application to the backend. It also works as an authentication token.</li>
+					<li><strong>backendRootURL</strong> - The root url for the REST services. Place all custom scripts under this URL.</li>
+				</ul>
+				
+				
+				
+				<button ng-show="!optionExists('instanceToken')" class="btn btn-primary" ng-click="addConfigurationOption('instanceToken')">Add <em>Instance Token</em> parameter</button>
+				&nbsp;<button ng-show="!optionExists('backendRootURL')" class="btn btn-primary" ng-click="addConfigurationOption('backendRootURL')">Add <em>Backend root URL</em> parameter</button>
+	
+				<div>
+					<br/>
+					Allow user to create new instance on the backend &nbsp;&nbsp; <input type='checkbox'  ng-model='rapp.config.allowInstanceCreation'>
+				</div>
+
 			</div>
 				{{watchFormStatus(packagingForm.$valid)}}
 			</form>
 		</div>
 
-		<multibutton ng-click='addConfigurationOption(selectedOption)' options="['Add value']" button-class="btn-primary"></multibutton>
-		
 	<!-- </div> -->
 
 

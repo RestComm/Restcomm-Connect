@@ -113,9 +113,6 @@ var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $uplo
 rappManagerCtrl.getProducts = function ($q, $http, rappManagerConfig) {
 	var deferred = $q.defer();
 	
-	//var apikey = "f837224433386cbc24e647f6292c12a7"; // rasdevel
-	//var token = "bcdcd32f1e860cdca3d1f674e204dd0f";  // rasdevel
-	
 	console.log("retrieving products from AppStore");
 	$http({
 		method:"GET", 
@@ -198,7 +195,52 @@ var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($
 			return true;
 		return false;
 	}
-		
+	
+	$scope.filterUserOptions = function(option) {
+		if ( option.name == 'instanceToken' || option.name == 'backendRootURL' )
+			return false
+		return true;
+	}
+
+	$scope.filterESOptions = function(option) {
+		if ( option.name == 'instanceToken' || option.name == 'backendRootURL' )
+			return true
+		return false;
+	}	
+	
+	function generateUUID(){
+	    var d = new Date().getTime();
+	    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+	        var r = (d + Math.random()*16)%16 | 0;
+	        d = Math.floor(d/16);
+	        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+	    });
+	    return uuid;
+	};
+	$scope.generateNewInstanceToken = function (option) {
+		option.value = generateUUID();
+	}
+	function getOptionByName(name, options) {
+		for (var i = 0; i < options.length; i++)
+			if (options[i].name == name)
+				return options[i];
+	}
+	$scope.getOptionByName = getOptionByName;
+	$scope.createNewInstance = function() {
+		console.log("creating new instance");
+		var instanceToken = getOptionByName("instanceToken", rappConfig.options).value;
+		var backendRootURL = getOptionByName("backendRootURL", rappConfig.options).value;
+		$http({ url:backendRootURL + "/provisioning/spawnInstance.php?instanceToken=" + instanceToken, method:"PUT" })
+		.success(function () {
+			console.log("created new instance");
+			Notifications.success("New instance created");
+		})
+		.error(function () {
+			console.log("error creating new instance");
+			Notifications.success("Error creating new instance");
+		});
+	}	
+	
 	$scope.projectName = $routeParams.projectName;
 	$scope.rappConfig = rappConfig;
 	

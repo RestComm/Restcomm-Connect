@@ -1,12 +1,15 @@
 rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications, rvdSettings) {
 
 	$scope.addConfigurationOption = function(type) {
-		console.log("Adding configuration option");
-		$scope.rapp.config.addOption( ConfigOption.getTypeByLabel(type));
+		$scope.rapp.config.addOption(type);
 	}
 	
 	$scope.removeConfigurationOption = function (option) {
 		$scope.rapp.config.removeOption(option);
+	}
+	
+	$scope.optionExists = function (name) {
+		return $scope.rapp.config.optionExists(name);
 	}
 	
 	$scope.saveRapp = function (projectName,rapp) {
@@ -99,11 +102,24 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 	return serviceFunctions;
 }])
 .factory('ConfigOption', ['rvdModel', function (rvdModel) {
-	var types = ['value'];
-	var typesByLabel = {'Add value': 'value'};
+
+	//var types = ['value'];
 	
-	function ConfigOption() {
+	function ConfigOption(type) {
 		// {name:'', label:'', type:'value', description:'', defaultValue:'', required: true }
+		//this.type = type;
+		if ( type == 'instanceToken') {
+			this.name = 'instanceToken';
+			this.label = 'Instance token';
+			this.description = 'An instance token your application needs to access the multitenant backend';
+			this.required = true;
+		} else
+		if ( type == 'backendRootURL') {
+			this.name = 'backendRootURL';
+			this.label = 'Backend root URL';
+			this.description = 'Root URL of application backend. Storage, UI are hosted under this URL. Do not change this unless the application Vendor asks you to.';
+			this.required = true;
+		}		
 	};
 	ConfigOption.prototype = new rvdModel();
 	ConfigOption.prototype.constructor = ConfigOption;
@@ -122,7 +138,12 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 		this.options.push( new ConfigOption(type) );
 	}
 	RappConfig.prototype.removeOption = function (option) {
-		this.options.splice(this.options.indexOf(option,1));
+		this.options.splice(this.options.indexOf(option),1);
+	}
+	RappConfig.prototype.optionExists = function (name) {
+		for (var i=0; i<this.options.length; i++) 
+			if (this.options[i].name == name) return true;
+		return false;
 	}
 	return RappConfig;
 }])

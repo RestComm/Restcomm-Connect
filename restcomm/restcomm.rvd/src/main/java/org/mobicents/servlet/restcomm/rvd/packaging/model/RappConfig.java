@@ -16,6 +16,8 @@ public class RappConfig extends ValidatableModel {
     }
 
     public String howTo;
+    public Boolean allowInstanceCreation;
+
     public List<ConfigOption> options = new ArrayList<ConfigOption>();
 
     public RappConfig() {
