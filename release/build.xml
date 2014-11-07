@@ -569,7 +569,7 @@
 			<include name="**/*"/>
 		</fileset>
 	</copy>
-<copy tofile="${release.as7.dir}/standalone.conf" failonerror="true" overwrite="true"
+<copy tofile="${release.as7.dir}/bin/standalone.conf" failonerror="true" overwrite="true"
 	file="${basedir}/as7-standalone.conf"/>
 <copy tofile="${release.as7.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
 	file="${basedir}/mss-sip-stack.properties"/>
@@ -632,7 +632,7 @@
 			<include name="**/*"/>
 		</fileset>
 	</copy>
-<copy tofile="${release.as7.nolce.dir}/standalone.conf" failonerror="true" overwrite="true"
+<copy tofile="${release.as7.nolce.dir}/bin/standalone.conf" failonerror="true" overwrite="true"
 	file="${basedir}/as7-standalone.conf"/>
 <copy tofile="${release.as7.nolce.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
 	file="${basedir}/mss-sip-stack.properties"/>
@@ -694,7 +694,7 @@
 			<include name="**/*"/>
 		</fileset>
 	</copy>
-<copy tofile="${release.eap6.dir}/standalone.conf" failonerror="true" overwrite="true"
+<copy tofile="${release.eap6.dir}/bin/standalone.conf" failonerror="true" overwrite="true"
 	file="${basedir}/as7-standalone.conf"/>
 <copy tofile="${release.eap6.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
 	file="${basedir}/mss-sip-stack.properties"/>
