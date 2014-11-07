@@ -138,7 +138,7 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 		this.options.push( new ConfigOption(type) );
 	}
 	RappConfig.prototype.removeOption = function (option) {
-		this.options.splice(this.options.indexOf(option,1));
+		this.options.splice(this.options.indexOf(option),1);
 	}
 	RappConfig.prototype.optionExists = function (name) {
 		for (var i=0; i<this.options.length; i++) 
