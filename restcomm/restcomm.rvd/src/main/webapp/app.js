@@ -334,7 +334,7 @@ App.directive('rvdPanel', function () {
 		transclude: true,
 		restrict: 'E',
 		scope: {
-			title:'=title',
+			title:'=panelTitle',
 			closePanel:'&onClose',
 		},
 		templateUrl: 'templates/directive/rvdPanel.html',

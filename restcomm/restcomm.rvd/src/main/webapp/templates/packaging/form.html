@@ -18,7 +18,7 @@
 				Provide configuration options for plugging this application into the customer's environment.
 			</p>
 			
-			<form name="packagingForm">
+			<form name="packagingForm" novalidate>
 <!-- -->
 				<div class="rvd-appinfo" name="appinfoForm">
 					<h3>General information</h3>
@@ -62,31 +62,31 @@
 				
 				<div basic-sortable list-model='rapp.config.options'>
 					<div ng-repeat="configOption in rapp.config.options" class='form-group'>
-						<rvd-panel on-close='removeConfigurationOption(configOption)' title="configOption.label">
+						<rvd-panel on-close='removeConfigurationOption(configOption)' panel-title="configOption.label">
 							<div class="row">
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">Name *</label>
-									<input ng-model='configOption.name' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}">
+									<label >Name *</label>
+									<input ng-model='configOption.name' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">
 								</div>
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">Label *</label>
-									<input ng-model='configOption.label' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}">
+									<label>Label *</label>
+									<input ng-model='configOption.label' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">
 								</div>	
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">Default value</label>
-									<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}">
+									<label>Default value</label>
+									<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">
 								</div>	
 								<div class="form-group col-md-3">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">Required</label>
+									<label>Required</label>
 									<div>
-										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.required'>
+										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.required'  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">
 									</div>
 								</div>									
 							</div>
 							<div class="row">
 								<div class="form-group col-md-6">
-									<label tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed">Description *</label>
-									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"></textarea>
+									<label>Description *</label>
+									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed"></textarea>
 								</div>
 							</div>				
 						</rvd-panel>
@@ -110,6 +110,7 @@
 				&nbsp;<button ng-show="!optionExists('backendRootURL')" class="btn btn-primary" ng-click="addConfigurationOption('backendRootURL')">Add <em>Backend root URL</em> parameter</button>
 	
 				<div>
+					<br/>
 					Allow user to create new instance on the backend &nbsp;&nbsp; <input type='checkbox'  ng-model='rapp.config.allowInstanceCreation'>
 				</div>
 
