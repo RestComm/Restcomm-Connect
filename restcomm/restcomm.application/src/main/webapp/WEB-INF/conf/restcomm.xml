@@ -109,6 +109,36 @@
 		</security-roles>
 	</runtime-settings>
 
+    <!--Bandwidth Provisioning API Configuration
+        username - The username assigned to you at account setup for the Bandwidth Provisioning Portal (https://webui.inetwork.com)
+        password - Password used to login to the Bandwidth Provisioning portal (https://webui.inetwork.com)
+        accountId - Account ID assigned to you by Bandwidth at account setup
+        siteId - The Site ID within your Bandwidth account where numbers should be provisioned. The site is called Location in
+            the portal.  You can find the site Id in the url string by navigating to Account/Configuration/Locations and selecting
+            the proper location.  Given the url:
+            https://webui.inetwork.com/report/#editlocation:%7B%22a%22:5555111,%22s%22:1234,%22p%22:507567%7D
+            The site Id will be 1234, that is the characters after the s%22:
+            You can also get the site Id by querying the Sites REST API directly.
+        uri - Should always be https://api.inetwork.com/v1.0 for production traffic and numbers.
+    -->
+    <!--
+  <phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager">
+      <callback-urls>
+          <voice url="" method="SIP"/>
+          <sms url="" method="SIP"/>
+          <fax url="" method="SIP"/>
+          <ussd url="" method="SIP"/>
+      </callback-urls>
+      <bandwidth>
+          <username></username>
+          <password></password>
+          <accountId></accountId>
+          <siteId></siteId>
+          <uri>https://api.inetwork.com/v1.0</uri>
+      </bandwidth>
+  </phone-number-provisioning>
+    -->
+
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
 	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<callback-urls>
