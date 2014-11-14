@@ -23,7 +23,7 @@ public class RedirectStep extends Step {
 
     public RcmlRedirectStep render(Interpreter interpreter ) {
         RcmlRedirectStep rcmlStep = new RcmlRedirectStep();
-        rcmlStep.setUrl(getUrl());
+        rcmlStep.setUrl(interpreter.populateVariables(getUrl()));
         if ( getMethod() != null && !"".equals(getMethod()) )
             rcmlStep.setMethod(getMethod());
         return rcmlStep;
