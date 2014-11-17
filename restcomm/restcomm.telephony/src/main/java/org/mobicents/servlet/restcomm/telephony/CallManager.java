@@ -129,6 +129,8 @@ public final class CallManager extends UntypedActor {
     private String fallBackProxyUsername, fallBackProxyPassword;
     private String activeProxy;
     private String activeProxyUsername, activeProxyPassword;
+    private String mediaExternalIp;
+    private String myHostIp;
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private CreateCall createCallRequest;
@@ -148,6 +150,13 @@ public final class CallManager extends UntypedActor {
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
+        SipURI outboundIntf = outboundInterface("udp");
+        myHostIp = ((SipURI)outboundIntf).getHost().toString();
+        Configuration mediaConf = configuration.subset("media-server-manager");
+        mediaExternalIp = mediaConf.getString("mgcp-server.external-address");
+        if(mediaExternalIp == null || mediaExternalIp.isEmpty())
+            mediaExternalIp = myHostIp;
+
         this.useTo = runtime.getBoolean("use-to");
 
         this.primaryProxyUri = outboundProxyConfig.getString("outbound-proxy-uri");
@@ -254,9 +263,9 @@ public final class CallManager extends UntypedActor {
         final String toPort = String.valueOf(((SipURI)request.getTo().getURI()).getPort()).equalsIgnoreCase("-1")?"5060":String.valueOf(((SipURI)request.getTo().getURI()).getHost());
         final String transport = ((SipURI)request.getTo().getURI()).getTransportParam()==null?"udp":((SipURI)request.getTo().getURI()).getTransportParam();
         SipURI outboundIntf = outboundInterface(transport);
-        final String myHost = ((SipURI)outboundIntf).getHost().toString();
+
         // Try to see if the request is destined for an application we are hosting.
-        if ((myHost.equalsIgnoreCase(toHost)) &&redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+        if ((myHostIp.equalsIgnoreCase(toHost)) &&redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
             return;
             // Next try to see if the request is destined to another registered client
         } else {
@@ -277,8 +286,8 @@ public final class CallManager extends UntypedActor {
                     SipURI from = null;
                     SipURI to = null;
                     if (proxyURI!=null) {
-                        if (myHost.equalsIgnoreCase(toHost)){
-                            logger.info("Call to NUMBER");
+                        if (myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)){
+                            logger.info("Call to NUMBER.  myHostIp: "+myHostIp+" mediaExternalIp: "+mediaExternalIp+" toHost: "+toHost+" proxyUri: "+proxyURI);
                             try {
                                 from = sipFactory.createSipURI(((SipURI)request.getFrom().getURI()).getUser(), proxyURI);
                                 to = sipFactory.createSipURI(((SipURI)request.getTo().getURI()).getUser(), proxyURI);
@@ -286,7 +295,7 @@ public final class CallManager extends UntypedActor {
                                 logger.info("Exception: "+exception);
                             }
                         } else {
-                            logger.info("Call to SIP URI");
+                            logger.info("Call to SIP URI. myHostIp: "+myHostIp+" mediaExternalIp: "+mediaExternalIp+" toHost: "+toHost+" proxyUri: "+proxyURI);
                             from = sipFactory.createSipURI(((SipURI)request.getFrom().getURI()).getUser(), outboundIntf.getHost()+":"+outboundIntf.getPort());
                             to = sipFactory.createSipURI(toUser, toHost+":"+toPort);
                         }
