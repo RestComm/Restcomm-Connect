@@ -109,10 +109,12 @@
 				<button ng-show="!optionExists('instanceToken')" class="btn btn-primary" ng-click="addConfigurationOption('instanceToken')">Add <em>Instance Token</em> parameter</button>
 				&nbsp;<button ng-show="!optionExists('backendRootURL')" class="btn btn-primary" ng-click="addConfigurationOption('backendRootURL')">Add <em>Backend root URL</em> parameter</button>
 	
+	<!--
 				<div>
 					<br/>
 					Allow user to create new instance on the backend &nbsp;&nbsp; <input type='checkbox'  ng-model='rapp.config.allowInstanceCreation'>
 				</div>
+	-->
 
 			</div>
 				{{watchFormStatus(packagingForm.$valid)}}
