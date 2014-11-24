@@ -24,7 +24,7 @@ Downloads
 [Get the latest release!](https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/) or [TRY IT NOW](https://aws.amazon.com/marketplace/pp/B00FFHJ6SU) on Amazon Marketplace. It only takes a few minutes to set it up and running.
 
 Click on the image below for a video tutorial on setting up RestComm on the Amazon Marketplace 
-[![Quick start with Restcomm on AWS Marketplace](https://i.ytimg.com/vi_webp/MsUp7PyMzc0/default.webp)]( https://www.youtube.com/watch?v=MsUp7PyMzc0)
+[![Quick start with Restcomm on AWS Marketplace](http://img.youtube.com/vi/MsUp7PyMzc0/0.jpg)]( https://www.youtube.com/watch?v=MsUp7PyMzc0)
 
 Documentation
 ========
