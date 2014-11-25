@@ -666,6 +666,7 @@ public final class Call extends UntypedActor {
                         SipServletRequest challengeRequest = response.getSession().createRequest(
                                 response.getRequest().getMethod());
                         challengeRequest.addAuthHeader(response, authInfo);
+                        challengeRequest.setContent(invite.getContent(), invite.getContentType());
                         invite = challengeRequest;
                         challengeRequest.send();
                     }
@@ -1368,8 +1369,9 @@ public final class Call extends UntypedActor {
 
                 SipServletRequest originalInvite = response.getRequest();
                 SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
 
-                if (realInetUri != null) {
+                if (realInetUri != null && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
                     logger.info("Using the real ip address of the sip client " + realInetUri.toString()
                             + " as a request uri of the ACK");
                     ack.setRequestURI(realInetUri);
@@ -1589,7 +1591,9 @@ public final class Call extends UntypedActor {
                 final SipServletRequest bye = session.createRequest("BYE");
 
                 SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
-                if (realInetUri != null) {
+                InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+
+                if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
                     logger.info("Using the real ip address of the sip client " + realInetUri.toString()
                             + " as a request uri of the BYE request");
                     bye.setRequestURI(realInetUri);

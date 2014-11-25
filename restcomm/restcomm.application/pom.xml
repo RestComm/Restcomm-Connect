@@ -147,6 +147,12 @@
 			<version>${project.version}</version>
 		</dependency>
 
+        <dependency>
+            <groupId>com.telestax.servlet</groupId>
+            <artifactId>restcomm.provisioning.number.bandwidth</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.telephony</artifactId>
@@ -206,7 +212,6 @@
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>1.8.0.10</version>
-			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>
