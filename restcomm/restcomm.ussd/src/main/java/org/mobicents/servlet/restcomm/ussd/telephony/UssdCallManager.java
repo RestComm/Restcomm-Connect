@@ -246,9 +246,9 @@ public class UssdCallManager extends UntypedActor {
                 }
                 final ActorRef ussdInterpreter = builder.build();
                 final ActorRef ussdCall = ussdCall();
+                ussdCall.tell(request, self);
 
                 ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
-                ussdCall.tell(request, self);
 
                 SipApplicationSession applicationSession = request.getApplicationSession();
                 applicationSession.setAttribute("UssdCall","true");

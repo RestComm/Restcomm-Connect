@@ -114,7 +114,7 @@ configSmsAggregator() {
 	}" $FILE > $FILE.bak
 	
 	mv $FILE.bak $FILE
-	echo 'Configured Sms Aggregator'
+	echo "Configured Sms Aggregator using OUTBOUND PROXY $1"
 }
 
 ## Description: Configures Speech Recognizer
@@ -185,7 +185,7 @@ configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_IP"
 configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
-configSmsAggregator "$OUTBOUND_IP"
+configSmsAggregator "$OUTBOUND_PROXY"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 echo 'Configured RestComm!'

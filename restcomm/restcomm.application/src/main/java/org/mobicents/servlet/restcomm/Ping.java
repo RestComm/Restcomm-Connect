@@ -52,10 +52,12 @@ public class Ping {
     private Timer subsequentTimer;
     private boolean subsequentTimerIsSet = false;
     private PingTask ping;
+    private final String provider;
 
     Ping(Configuration configuration, ServletContext context){
         this.configuration = configuration;
         this.context = context;
+        this.provider = configuration.getString("phone-number-provisioning[@class]");
     }
 
     public void sendPing(){
@@ -91,6 +93,7 @@ public class Ping {
                 buffer.append("<requesttype>").append("ping").append("</requesttype>");
                 buffer.append("<item>");
                 buffer.append("<endpointgroup>").append(endpoint).append("</endpointgroup>");
+                buffer.append("<provider>").append(provider).append("</provider>");
                 buffer.append("</item>");
                 buffer.append("</body>");
                 buffer.append("</request>");

@@ -209,6 +209,7 @@ public class UssdInterpreter extends UntypedActor {
         transitions.add(new Transition(processingInfoRequest, preparingMessage));
         transitions.add(new Transition(processingInfoRequest, ready));
         transitions.add(new Transition(processingInfoRequest, finished));
+        transitions.add(new Transition(disconnecting, finished));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);

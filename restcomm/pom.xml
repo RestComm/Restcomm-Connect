@@ -134,6 +134,7 @@
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
+		<module>restcomm.provisioning.number.bandwidth</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
@@ -241,7 +242,7 @@
 				<scope>provided</scope>
 			</dependency>
 
-			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
+			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
 				<version>${servlet-api.version}</version> </dependency -->
 
 			<dependency>
@@ -561,7 +562,7 @@
 			<version>${mobicents.checkstyle.version}</version>
 		</dependency>
 
-		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
 			<version>5.1</version> </dependency -->
 	</dependencies>
 
@@ -785,7 +786,7 @@
 		</repository>
 
 		<!-- Local repository for the ATT TTS Java wrapper library -->
-		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
 			</repository> -->
 	</repositories>
 
