@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
@@ -48,4 +50,7 @@ public abstract class Step {
     public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
         throw new RVDUnsupportedHandlerVerb();
     }
+
+    // a placeholder function for steps that don't have an actual imlpementation
+    public String process(Interpreter interpreter, HttpServletRequest httpRequest ) throws InterpreterException { return null; }
 }
