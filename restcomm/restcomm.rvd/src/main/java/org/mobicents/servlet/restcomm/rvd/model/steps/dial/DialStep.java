@@ -10,6 +10,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
@@ -49,7 +50,8 @@ public class DialStep extends Step {
         return rcmlStep;
     }
 
-    public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
+    @Override
+    public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
         logger.info("handling dial action");
         if ( RvdUtils.isEmpty(nextModule) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
@@ -81,7 +83,7 @@ public class DialStep extends Step {
         if ( DialCallDuration != null )
             interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "DialCallDuration", DialCallDuration);
 
-        interpreter.interpret( nextModule, null, null );
+        interpreter.interpret( nextModule, null, null, originTarget );
     }
 
 }

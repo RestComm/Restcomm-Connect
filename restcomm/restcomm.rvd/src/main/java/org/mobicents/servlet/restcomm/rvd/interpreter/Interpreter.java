@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.rvd.interpreter;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -8,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -73,6 +73,8 @@ import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -277,7 +279,7 @@ public class Interpreter {
         processRequestParameters();
         //handleStickyParameters(); // create local copies of sticky_* parameters
 
-        response = interpret(targetParam, null, null);
+        response = interpret(targetParam, null, null, null);
         return response;
     }
 
@@ -300,19 +302,24 @@ public class Interpreter {
     }
 
 
-    public String interpret(String targetParam, RcmlResponse rcmlModel, Step prependStep ) throws InterpreterException, StorageException {
+    public String interpret(String targetParam, RcmlResponse rcmlModel, Step prependStep, Target originTarget ) throws InterpreterException, StorageException {
 
         logger.debug("starting interpeter for " + targetParam);
         if ( rvdContext.getProjectSettings().getLogging() )
             projectLogger.log("Running target: " + targetParam).tag("app",appName).done();
 
         target = Interpreter.parseTarget(targetParam);
+        // if we are switching modules, remove module-scoped variables
+        if ( originTarget != null  &&  ! RvdUtils.safeEquals(target.getNodename(), originTarget.getNodename() ) ) {
+            clearModuleVariables();
+        }
+
 
         // TODO make sure all the required components of the target are available here
 
         if (target.action != null) {
             // Event handling
-            loadStep(target.stepname).handleAction(this);
+            loadStep(target.stepname).handleAction(this, target);
         } else {
             // RCML Generation
 
@@ -343,7 +350,7 @@ public class Interpreter {
                     String rerouteTo = step.process(this, httpRequest); // is meaningful only for some of the steps like ExternalService steps
                     // check if we have to break the currently rendered module
                     if ( rerouteTo != null )
-                        return interpret(rerouteTo, rcmlModel, null);
+                        return interpret(rerouteTo, rcmlModel, null, target);
                     // otherwise continue rendering the current module
                     RcmlStep rcmlStep = step.render(this);
                     if ( rcmlStep != null)
@@ -458,6 +465,12 @@ public class Interpreter {
             String replaceValue = "";
             if (variables.containsKey(v.variableName))
                 replaceValue = variables.get(v.variableName);
+            else
+            if (variables.containsKey(RvdConfiguration.MODULE_PREFIX + v.variableName) )
+                replaceValue = variables.get(RvdConfiguration.MODULE_PREFIX + v.variableName);
+            else
+            if (variables.containsKey(RvdConfiguration.STICKY_PREFIX + v.variableName) )
+                replaceValue = variables.get(RvdConfiguration.STICKY_PREFIX + v.variableName);
 
             buffer.replace(v.position, v.position + v.variableName.length() + 1, replaceValue == null ? "" : replaceValue); // +1 is for the $ character
         }
@@ -485,9 +498,9 @@ public class Interpreter {
             query += key + "=" + encodedValue;
         }
 
-        // append sticky parameters
+        // append sticky parameters and module-scoped variables
         for ( String variableName : variables.keySet() ) {
-            if( variableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
+            if( variableName.startsWith(RvdConfiguration.STICKY_PREFIX) || variableName.startsWith(RvdConfiguration.MODULE_PREFIX) ) {
                 if ("".equals(query))
                     query += "?";
                 else
@@ -646,15 +659,15 @@ public class Interpreter {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
             } else
-            if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) ) {
+            if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) || anyVariableName.startsWith(RvdConfiguration.MODULE_PREFIX) ) {
                 // set up sticky variables
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(anyVariableName, variableValue );
 
                 // make local copies
                 // First, rip off the sticky_prefix
-                String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
-                getVariables().put(localVariableName, variableValue);
+                //String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
+                //getVariables().put(localVariableName, variableValue);
             } else {
                 //for the rest of the parameters simply create a variable with the same name
                 String variableValue = getRequestParams().getFirst(anyVariableName);
@@ -694,23 +707,16 @@ public class Interpreter {
         }
     }
 
-    /*
-     *  JsonParser parser = new JsonParser();
-
-                try {
-                    HttpEntity entity = response.getEntity();
-                    if ( entity != null ) {
-                        String entity_string = EntityUtils.toString(entity);
-                        logger.info("ES: Received " + entity_string.length() + " bytes");
-                        logger.debug("ES Response: " + entity_string);
-                        JsonElement response_element = parser.parse(entity_string);
-
-                        String nextModuleName = null;
-                        //boolean dynamicRouting = false;
-                        if ( esStep.getDoRouting() && "responseBased".equals(esStep.getNextType()) ) {
-                            //dynamicRouting = true;
-                            String moduleLabel = evaluateExtractorExpression(esStep.getNextValueExtractor(), response_element);
-                            nextModuleNam
-                         */
-
+    /**
+     * When switching from one module to the next clears module-scoped variables.
+     */
+    public void clearModuleVariables() {
+        Iterator<String> it = variables.keySet().iterator();
+        while (it.hasNext()) {
+          String variableName = it.next();
+          if( variableName.startsWith(RvdConfiguration.MODULE_PREFIX) ) {
+              it.remove();
+          }
+        }
+    }
 }
