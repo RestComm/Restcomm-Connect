@@ -290,7 +290,10 @@ public class ExternalServiceStep extends Step {
 
                             if ( "application".equals(assignment.getScope()) )
                                 interpreter.putStickyVariable(assignment.getDestVariable(), value);
-                            interpreter.putVariable(assignment.getDestVariable(), value );
+                            if ( "module".equals(assignment.getScope()) )
+                                interpreter.putModuleVariable(assignment.getDestVariable(), value);
+
+                            //interpreter.putVariable(assignment.getDestVariable(), value );
                         } else
                             logger.debug("skipped assignment to " + assignment.getDestVariable() );
                     }
@@ -307,8 +310,10 @@ public class ExternalServiceStep extends Step {
 
                         if ( "application".equals(assignment.getScope()) )
                             interpreter.putStickyVariable(assignment.getDestVariable(), value);
+                        if ( "module".equals(assignment.getScope()) )
+                            interpreter.putModuleVariable(assignment.getDestVariable(), value);
 
-                        interpreter.putVariable(assignment.getDestVariable(), value );
+                        //interpreter.putVariable(assignment.getDestVariable(), value );
                     }
                 }
                 logger.debug("variables after processing ExternalService step: " + interpreter.getVariables().toString() );

@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
 import org.mobicents.servlet.restcomm.rvd.model.rcml.RcmlStep;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -47,7 +48,7 @@ public abstract class Step {
         this.name = name;
     }
     public abstract RcmlStep render(Interpreter interpreter) throws InterpreterException;
-    public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
+    public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
         throw new RVDUnsupportedHandlerVerb();
     }
 

@@ -40,6 +40,10 @@ public class RvdUtils {
         return false;
     }
 
+    public static boolean safeEquals(String value1, String value2) {
+        return value1 == null ? (value1 == value2) : (value1.equals(value2));
+    }
+
     /**
      * Reduces Map<String,String[]> HttpServletRequest.getParameters() map multivalue parameters to
      * single value ones. It does this by keeping only the first array item.

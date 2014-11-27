@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
@@ -66,7 +67,7 @@ public class GatherStep extends Step {
         return rcmlStep;
     }
 
-    public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
+    public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
         logger.info("handling gather action");
 
         String digitsString = interpreter.getRequestParams().getFirst("Digits");
@@ -84,7 +85,7 @@ public class GatherStep extends Step {
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
                     // seems we found out menu selection
                     logger.debug("seems we found out menu selection");
-                    interpreter.interpret(mapping.next,null, null);
+                    interpreter.interpret(mapping.next,null, null, originTarget);
                     handled = true;
                 }
             }
@@ -105,11 +106,15 @@ public class GatherStep extends Step {
             if ( validation != null ) {
             //if ( validation.pattern != null && !validation.pattern.trim().equals("")) {
                 String effectivePattern = null;
-                if ( validation.userPattern != null )
-                    effectivePattern = "^[" + validation.userPattern + "]$";
+                if ( validation.userPattern != null ) {
+                    String expandedUserPattern = interpreter.populateVariables(validation.userPattern);
+                    effectivePattern = "^[" + expandedUserPattern + "]$";
+                }
                 else
-                if (validation.regexPattern != null )
-                    effectivePattern = validation.regexPattern;
+                if (validation.regexPattern != null ) {
+                    String expandedRegexPattern = interpreter.populateVariables(validation.regexPattern);
+                    effectivePattern = expandedRegexPattern;
+                }
                 else
                     logger.warn("Invalid validation information in gather. Validation object exists while oth patterns are null");
 
@@ -128,17 +133,21 @@ public class GatherStep extends Step {
                 if ( "application".equals(collectdigits.scope) ) {
                     logger.debug("'" + variableName + "' is application scoped");
                     interpreter.putStickyVariable(variableName, variableValue);
+                } else
+                if ( "module".equals(collectdigits.scope) ) {
+                    logger.debug("'" + variableName + "' is module scoped");
+                    interpreter.putModuleVariable(variableName, variableValue);
                 }
 
                 // in any case initialize the module-scoped variable
                 interpreter.getVariables().put(variableName, variableValue);
 
-                interpreter.interpret(collectdigits.next,null,null);
+                interpreter.interpret(collectdigits.next,null,null, originTarget);
             }
         }
 
         if ( !valid ) { // this should always be true
-            interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null, ( invalidMessage != null ) ? invalidMessage : null);
+            interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null, ( invalidMessage != null ) ? invalidMessage : null, originTarget);
         }
     }
 }

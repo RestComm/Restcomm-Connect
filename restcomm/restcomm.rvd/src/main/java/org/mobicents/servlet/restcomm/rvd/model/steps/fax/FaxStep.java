@@ -9,6 +9,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
@@ -78,7 +79,9 @@ public class FaxStep extends Step {
 
         return rcmlStep;
     }
-    public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
+
+    @Override
+    public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
         logger.info("handling fax action");
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
@@ -91,6 +94,6 @@ public class FaxStep extends Step {
         if (FaxStatus != null )
             interpreter.getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + "FaxStatus", FaxStatus);
 
-        interpreter.interpret( getNext(), null, null );
+        interpreter.interpret( getNext(), null, null, originTarget );
     }
 }
