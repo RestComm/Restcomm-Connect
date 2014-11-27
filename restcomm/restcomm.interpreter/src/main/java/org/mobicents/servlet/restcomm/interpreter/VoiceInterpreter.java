@@ -2044,10 +2044,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Cleanup the outbound call if necessary.
             final State state = fsm.state();
-            if (bridged.equals(state)) {
+            if (bridged.equals(state) || forking.equals(state)) {
                 if (outboundCall != null) {
-                    outboundCall.tell(new StopObserving(source), source);
-                    outboundCall.tell(new Hangup(), source);
+                    outboundCall.tell(new StopObserving(source), null);
+                    outboundCall.tell(new Hangup(), null);
                 }
             }
             // If we still have a conference media group release it.
@@ -2072,8 +2072,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Destroy the Call(s).
             callManager.tell(new DestroyCall(call), source);
-            if (outboundCall != null)
+            if (outboundCall != null) {
                 callManager.tell(new DestroyCall(outboundCall), source);
+            }
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
             context.stop(mailer);

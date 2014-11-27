@@ -221,7 +221,13 @@ public final class CallManager extends UntypedActor {
         }
     }
 
-    private void destroy(final Object message) {
+    private void destroy(final Object message) throws Exception {
+//        final DestroyCall destroy = (DestroyCall) message;
+//        ActorRef call = destroy.call();
+//        Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
+//        Future<Object> future = (Future<Object>) ask(call, new Hangup(), expires);
+//        Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
+
         final UntypedActorContext context = getContext();
         final DestroyCall request = (DestroyCall) message;
         context.stop(request.call());
@@ -289,10 +295,16 @@ public final class CallManager extends UntypedActor {
                     SipURI from = null;
                     SipURI to = null;
                     if (proxyURI!=null) {
+                        final Configuration runtime = configuration.subset("runtime-settings");
+                        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address");
                         if (myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)){
                             logger.info("Call to NUMBER.  myHostIp: "+myHostIp+" mediaExternalIp: "+mediaExternalIp+" toHost: "+toHost+" proxyUri: "+proxyURI);
                             try {
-                                from = sipFactory.createSipURI(((SipURI)request.getFrom().getURI()).getUser(), proxyURI);
+                                if (useLocalAddressAtFromHeader) {
+                                    from = sipFactory.createSipURI(((SipURI)request.getFrom().getURI()).getUser(), mediaExternalIp+":"+outboundIntf.getPort());
+                                } else {
+                                    from = sipFactory.createSipURI(((SipURI)request.getFrom().getURI()).getUser(), proxyURI);
+                                }
                                 to = sipFactory.createSipURI(((SipURI)request.getTo().getURI()).getUser(), proxyURI);
                             } catch (Exception exception) {
                                 logger.info("Exception: "+exception);
@@ -589,6 +601,7 @@ public final class CallManager extends UntypedActor {
     private ActorRef outbound(final Object message) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
         final Configuration runtime = configuration.subset("runtime-settings");
+        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address");
         // final String uri = runtime.getString("outbound-proxy-uri");
         final String uri = activeProxy;
         final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
@@ -609,8 +622,14 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case PSTN: {
-                from = sipFactory.createSipURI(request.from(), uri);
                 to = sipFactory.createSipURI(request.to(), uri);
+                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+                SipURI outboundIntf = outboundInterface(transport);
+                if(useLocalAddressAtFromHeader) {
+                    from = sipFactory.createSipURI(request.from(), mediaExternalIp+":"+outboundIntf.getPort());
+                } else {
+                    from = sipFactory.createSipURI(request.from(), uri);
+                }
                 break;
             }
             case SIP: {
