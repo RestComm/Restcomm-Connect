@@ -303,7 +303,7 @@ public final class CallManager extends UntypedActor {
                     boolean callToSipUri = false;
                     if (proxyURI!=null) {
                         final Configuration runtime = configuration.subset("runtime-settings");
-                        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address");
+                        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
                         if (myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)){
                             logger.info("Call to NUMBER.  myHostIp: "+myHostIp+" mediaExternalIp: "+mediaExternalIp+" toHost: "+toHost+" proxyUri: "+proxyURI);
                             try {
@@ -616,7 +616,7 @@ public final class CallManager extends UntypedActor {
     private ActorRef outbound(final Object message) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
         final Configuration runtime = configuration.subset("runtime-settings");
-        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address");
+        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
         // final String uri = runtime.getString("outbound-proxy-uri");
         final String uri = activeProxy;
         final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
