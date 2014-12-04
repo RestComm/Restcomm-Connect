@@ -20,9 +20,18 @@
 
 package org.mobicents.servlet.restcomm.provisioning.number.bandwidth;
 
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import javax.servlet.sip.SipURI;
+import javax.xml.stream.XMLInputFactory;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -45,12 +54,7 @@ import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchF
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
 import org.mobicents.servlet.restcomm.provisioning.number.bandwidth.utils.XmlUtils;
 
-import javax.xml.stream.XMLInputFactory;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 /**
  * @author sbarstow@bandwidth.com
@@ -122,6 +126,8 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             HttpPost post = new HttpPost(buildOrdersUri());
             StringEntity entity = new StringEntity(XmlUtils.toXml(order), ContentType.APPLICATION_XML);
             post.setEntity(entity);
+            if (telestaxProxyEnabled)
+                addTelestaxProxyHeaders(post, "assignDid");
             OrderResponse response = (OrderResponse) XmlUtils.fromXml(executeRequest(post), OrderResponse.class);
             if (response.getOrder().getExistingTelephoneNumberOrderType().getTelephoneNumberList().get(0).equals(phoneNumber)) {
                 isSucceeded = true;
@@ -176,6 +182,8 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         try {
             String uri = buildSearchUri(listFilters);
             HttpGet httpGet = new HttpGet(uri);
+            if (telestaxProxyEnabled)
+                addTelestaxProxyHeaders(httpGet, "getDIDs");
             String response = executeRequest(httpGet);
             availableNumbers = toPhoneNumbers((SearchResult) XmlUtils.fromXml(response, SearchResult.class));
             return availableNumbers;
@@ -286,6 +294,20 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             return friendlyName;
         } catch (final Exception ignored) {
             return number;
+        }
+    }
+
+    private void addTelestaxProxyHeaders(HttpRequest httpRequest, String requestType) {
+        //This will work as a flag for LB that this request will need to be modified and proxied to VI
+        httpRequest.addHeader("TelestaxProxy", "true");
+        //Adds the Provision provider class name
+        httpRequest.addHeader("Provider", BandwidthNumberProvisioningManager.class.getCanonicalName());
+        //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+        httpRequest.addHeader("RequestType", requestType);
+        //This will let LB match the DID to a node based on the node host+port
+        List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
+        for (SipURI uri: uris) {
+            httpRequest.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
         }
     }
 
