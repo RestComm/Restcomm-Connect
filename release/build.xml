@@ -209,6 +209,8 @@
 	<delete file="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="false" />
 	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true"
 		file="${basedir}/mobicents-dar.properties"/>
+	<copy tofile="${release.tomcat.dir}/conf/mss-sip-stack.properties" failonerror="true" overwrite="true"
+		file="${basedir}/mss-sip-stack.properties"/>
 
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
 		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
@@ -252,6 +254,8 @@
 	<move file="${release.as7.dir}/standalone/deployments/websockets-sip-servlet.war" tofile="${release.as7.dir}/standalone/deployments/webrtc.war" />
 	<copy tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true"
 	        file="${basedir}/mobicents-dar.properties"/>
+	<copy tofile="${release.as7.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
+					file="${basedir}/mss-sip-stack.properties"/>
 	<!--Use exploded WAR-->
 	<copy todir="${release.as7.dir}/standalone/deployments/restcomm.war" failonerror="true">
 	        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
