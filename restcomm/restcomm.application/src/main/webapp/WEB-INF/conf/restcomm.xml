@@ -51,6 +51,9 @@
 			is TRUE Restcomm will pass callerId A to the created call -->
 		<from-address-to-proxied-calls>true</from-address-to-proxied-calls>
 
+		<!-- If set, Restcomm will use this when trying to register with Gateways -->
+		<user-agent></user-agent>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
