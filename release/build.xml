@@ -23,13 +23,13 @@
 	<!-- mobicents SIP Servlets 7.x on Tomcat 7 -->
         <property name="mobicents-sipservlets.tomcat.distro.version" value="${mobicents-sipservlets-as7.version}-apache-tomcat-7.0.50" />
         <property name="mobicents-sipservlets.tomcat.download.distro.file" value="mss-${mobicents-sipservlets.tomcat.distro.version}.zip" />
-	<property name="mobicents-sipservlets.tomcat.download.url" value="https://mobicents.ci.cloudbees.com/job/Mobicents-SipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.tomcat.download.distro.file}" />
+	<property name="mobicents-sipservlets.tomcat.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.tomcat.download.distro.file}" />
         <property name="mobicents-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.tomcat.download.distro.file}" />
 
 	<!-- mobicents SIP Servlets 7.x on JBoss AS7-->
         <property name="mobicents-sipservlets.as7.distro.version" value="${mobicents-sipservlets-as7.version}-jboss-as-7.2.0.Final" />
         <property name="mobicents-sipservlets.as7.download.distro.file" value="mss-${mobicents-sipservlets.as7.distro.version}.zip" />
-        <property name="mobicents-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/Mobicents-SipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.as7.download.distro.file}" />
+        <property name="mobicents-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.as7.download.distro.file}" />
         <property name="mobicents-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.as7.download.distro.file}" />
 
 	<property name="hsqldb.download.url" value="http://downloads.sourceforge.net/project/hsqldb/hsqldb/hsqldb_1_8_0/hsqldb_1_8_0_10.zip" />
