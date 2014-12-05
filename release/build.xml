@@ -481,6 +481,8 @@
 	<delete file="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="false" />
 	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true"
         	file="${basedir}/mobicents-dar.properties"/>
+	<copy tofile="${release.tomcat.dir}/conf/mss-sip-stack.properties" failonerror="true" overwrite="true"
+					file="${basedir}/mss-sip-stack.properties"/>
 	<!--copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
 	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
