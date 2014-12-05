@@ -186,6 +186,7 @@ public class DialTest {
             fotiniSipStack.dispose();
         }
         deployer.undeploy("DialTest");
+        Thread.sleep(1000);
     }
 
     @Test
