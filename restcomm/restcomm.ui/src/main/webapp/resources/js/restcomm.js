@@ -47,7 +47,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
     when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
     when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
     when('/ras', {templateUrl: 'modules/rappmanager.html', controller: 'RappManagerCtrl', resolve: {products: rappManagerCtrl.getProducts, localApps: rappManagerCtrl.getLocalApps} }).
-    when('/ras/config/:projectName', {templateUrl: 'modules/rappmanager-config.html', controller: 'RappManagerConfigCtrl', resolve: { rappConfig : rappManagerConfigCtrl.loadRappConfig }}).
+    when('/ras/config/:projectName', {templateUrl: 'modules/rappmanager-config.html', controller: 'RappManagerConfigCtrl', resolve: { rappConfig : rappManagerConfigCtrl.loadRappConfig, bootstrapObject : rappManagerConfigCtrl.loadBootstapObject }}).    	
     otherwise({redirectTo: '/dashboard'});
 
   // $locationProvider.html5Mode(true);
