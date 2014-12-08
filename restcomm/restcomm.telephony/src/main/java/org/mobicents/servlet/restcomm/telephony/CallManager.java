@@ -133,6 +133,7 @@ public final class CallManager extends UntypedActor {
     private String activeProxyUsername, activeProxyPassword;
     private String mediaExternalIp;
     private String myHostIp;
+    private String proxyIp;
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private CreateCall createCallRequest;
@@ -156,8 +157,13 @@ public final class CallManager extends UntypedActor {
         myHostIp = ((SipURI)outboundIntf).getHost().toString();
         Configuration mediaConf = configuration.subset("media-server-manager");
         mediaExternalIp = mediaConf.getString("mgcp-server.external-address");
+        proxyIp = runtime.subset("telestax-proxy").getString("uri").replaceAll("http://", "").replaceAll(":2080", "");
+
         if(mediaExternalIp == null || mediaExternalIp.isEmpty())
             mediaExternalIp = myHostIp;
+
+        if(proxyIp == null || proxyIp.isEmpty())
+            proxyIp = myHostIp;
 
         this.useTo = runtime.getBoolean("use-to");
         this.authenticateUsers = runtime.getBoolean("authenticate");
@@ -275,7 +281,8 @@ public final class CallManager extends UntypedActor {
         SipURI outboundIntf = outboundInterface(transport);
 
         // Try to see if the request is destined for an application we are hosting.
-        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) && redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(toHost))
+                && redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
             return;
             // Next try to see if the request is destined to another registered client
         } else {
