@@ -103,6 +103,8 @@ public final class ProxyManager extends UntypedActor {
         } else {
             outboundInterface = outboundInterface();
         }
+        if (outboundInterface == null)
+            outboundInterface = (SipURI) factory.createSipURI(null, address);
         final String user = gateway.getUserName();
         final String host = outboundInterface.getHost();
         final int port = outboundInterface.getPort();
