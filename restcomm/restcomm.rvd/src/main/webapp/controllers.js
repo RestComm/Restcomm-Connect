@@ -79,15 +79,15 @@ App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal
 	}
 	$scope.logout = logout;
 	
-	function settingsModalCtrl ($scope, $timeout, $modalInstance, settings) {
+	function settingsModalCtrl ($scope, $timeout, $modalInstance, settings, rvdSettings) {
 		$scope.settings = settings;
-
+		$scope.rvdSettings = rvdSettings;
+		$scope.defaultSettings = rvdSettings.getDefaultSettings();
+		
 		$scope.ok = function () {
-			$http.post("services/settings", settings, {headers: {'Content-Type': 'application/data'}})
-			.success( function () { 
-				$modalInstance.close(settings);
-			})
-			.error( function () {
+			rvdSettings.saveSettings($scope.settings).then(function () {
+				$modalInstance.close($scope.settings);
+			}, function () {
 				notifications.put("Cannot save settings");
 			});
 		};
@@ -109,26 +109,11 @@ App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal
 		  controller: settingsModalCtrl,
 		  size: 'lg',
 		  resolve: {
-			settings: function () {
-				var deferred = $q.defer()
-				$http.get("services/settings")
-				.then(function (response) {
-					deferred.resolve(response.data);
-				}, function (response) {
-					if ( response.status == 404 )
-						deferred.resolve({});
-					else {
-						// console.log("BEFORE reject");
-						deferred.reject();
-						// console.log("AFTER reject");
-					}
-				});
-				return deferred.promise;
-			}
+			settings: function (rvdSettings) {	return rvdSettings.refresh();}
 		  }
 		});
 
-		modalInstance.result.then(function (settings) {
+		modalInstance.result.then(function (rvdSettings) {
 			//console.log(settings);
 			// $scope.settings
 		}, function () {

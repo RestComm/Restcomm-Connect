@@ -8,10 +8,6 @@ import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
-/*<<<<<<< HEAD
-=======
-import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
->>>>>>> ts720_rvd_issue419_application_logging*/
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 

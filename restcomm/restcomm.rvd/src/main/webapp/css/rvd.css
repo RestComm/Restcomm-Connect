@@ -362,6 +362,7 @@ li.verb {
 .navbar-header {
 	float: none;
 }
+*/
 
 .ussd-letter-counter {
 	margin-bottom: 13px;
@@ -548,9 +549,26 @@ textarea.medium {
 	width: 200px;
 }
 
+.packaging-config-option {
+	box-shadow: rgb(136, 136, 136) 0px 0px 3px;
+	padding-left: 12px;
+	padding-top: 1px;
+	border-radius: 2px;
+	background-color: white;
+}
+
+.packaging-config-option .close-button {
+	position: absolute;
+	right: 26px;
+	top: 9px;
+}
+
 /* ----------------- #/project-manager/* view */
 .rvd-project-manager .rvd-project-item i {
 	color: #333;
+}
+.packaging-menu {
+	margin-right: 15px;
 }
 
 /* ----------------- #/login view -------------------------- */
@@ -592,6 +610,27 @@ textarea.medium {
 	margin-top: 20px;
 }
 
+.rvd-grey {
+	color: #888;
+}
+
+/* ------------------ directives -------------------- */
+/*.variable-lookup button {
+	border-radius: 0 4px 4px 0;
+}
+
+.input-group-sm>.variable-lookup.input-group-btn>.btn {
+	border-radius: 0;
+}
+*/
+
+.input-group-btn.variable-lookup:not(:first-child):not(:last-child) button {
+	border-radius: 0;
+}
+
+.input-group-btn.variable-lookup:not(:first-child):last-child button {
+	border-radius: 0 4px 4px;
+}
 
 
 
