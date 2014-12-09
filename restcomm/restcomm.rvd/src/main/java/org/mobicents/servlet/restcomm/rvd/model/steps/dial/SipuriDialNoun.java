@@ -17,7 +17,7 @@ public class SipuriDialNoun extends DialNoun {
     @Override
     public RcmlNoun render(Interpreter interpreter) throws InterpreterException {
         RcmlSipuriNoun rcmlNoun = new RcmlSipuriNoun();
-        rcmlNoun.setDestination(getDestination());
+        rcmlNoun.setDestination( interpreter.populateVariables(getDestination() ));
         return rcmlNoun;
     }
 }

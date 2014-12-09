@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InterpreterException;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.Target;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStep;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -55,7 +56,9 @@ public class UssdCollectStep extends Step {
 
         return rcml;
     }
-    public void handleAction(Interpreter interpreter) throws InterpreterException, StorageException {
+
+    @Override
+    public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
         logger.info("UssdCollect handler");
         if ("menu".equals(gatherType)) {
 
@@ -69,12 +72,12 @@ public class UssdCollectStep extends Step {
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
                     // seems we found out menu selection
                     logger.debug("seems we found our menu selection");
-                    interpreter.interpret(mapping.next,null,null);
+                    interpreter.interpret(mapping.next,null,null, originTarget);
                     handled = true;
                 }
             }
             if (!handled) {
-                interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null,null);
+                interpreter.interpret(interpreter.getTarget().getNodename() + "." + interpreter.getTarget().getStepname(),null,null, originTarget);
             }
         }
         if ("collectdigits".equals(gatherType)) {
@@ -94,7 +97,7 @@ public class UssdCollectStep extends Step {
             // in any case initialize the module-scoped variable
             interpreter.getVariables().put(variableName, variableValue);
 
-            interpreter.interpret(collectdigits.next,null,null);
+            interpreter.interpret(collectdigits.next,null,null, originTarget);
         }
     }
 }

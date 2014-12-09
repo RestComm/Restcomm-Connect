@@ -26,11 +26,13 @@ public class RvdConfiguration {
     private static final String RVD_PROJECT_VERSION = "1.1"; // version for rvd project syntax
     private static final String PACKAGING_VERSION = "1.0";
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
+    public static final String MODULE_PREFIX = "module_"; // a  prefix for rvd module-scoped variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
     public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
     private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"})); // the names of the parameters supplied by restcomm request when starting an application
     public static final String PROJECT_LOG_FILENAME = "projectLog";
+    public static final String DEFAULT_APPSTORE_DOMAIN = "apps.restcomm.com";
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
@@ -108,6 +110,14 @@ public class RvdConfiguration {
             ip = ipFromXml;
         }
         return ip;
+    }
+
+    // Always returns the destination port in the request. When the configuration/settings scheme clears
+    // out a proper implementation should be done.
+    // TODO
+    public String getEffectiveRestcommPort(HttpServletRequest request) {
+        int port = request.getLocalPort();
+        return "" + port;
     }
 
     /**
