@@ -254,6 +254,35 @@ public class CreateCallsTest {
         assertTrue(aliceCall.respondToDisconnect());
     }
 
+    @Test
+    public void createCallNumberTestWith500ErrorResponse() throws InterruptedException, ParseException {
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "131313";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+
+        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.SERVER_INTERNAL_ERROR, "Service Unavailable", 3600));
+
+        assertTrue(georgeCall.waitForAck(5000));
+    }
+    
     @Deployment(name = "CreateCallsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

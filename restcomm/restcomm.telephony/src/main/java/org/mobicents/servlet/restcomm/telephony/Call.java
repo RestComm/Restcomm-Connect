@@ -1260,8 +1260,8 @@ public final class Call extends UntypedActor {
                 gateway.tell(new DestroyConnection(remoteConn), source);
                 remoteConn = null;
             }
-
-            invite.createResponse(503, "Problem to setup services").send();
+            if (direction.equalsIgnoreCase(INBOUND))
+                invite.createResponse(503, "Problem to setup services").send();
             // Explicitly invalidate the application session.
             if (invite.getSession().isValid()) {
                 invite.getSession().setInvalidateWhenReady(true);
