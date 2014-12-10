@@ -37,8 +37,7 @@
 				"sendDigits": { "type": "string", "minLength":1 },
 				"beforeConnectModule":{ "type": "string", "minLength":1 }
 			},
-			"required":["dialType","destination"],
-			"additionalProperties": false
+			"required":["dialType","destination"]
 		},
 		"clientNoun": {
 			"type":"object",
@@ -46,8 +45,7 @@
 				"dialType": {"enum":["client"]},
 				"destination":{"type":"string"}
 			},
-			"required": ["dialType","destination"],
-			"additionalProperties": false
+			"required": ["dialType","destination"]
 		},	
 		"conferenceNoun": {
 			"type":"object",
@@ -64,8 +62,7 @@
 				"waitMethod": {"enum":["GET","POST"]},
 				"maxParticipants": {"type":"integer"}
 			},
-			"required": ["dialType","destination"],
-			"additionalProperties": false
+			"required": ["dialType","destination"]
 		},	
 		"sipuriNoun": {
 			"type":"object",
@@ -73,8 +70,7 @@
 				"dialType": {"enum":["sipuri"]},
 				"destination":{"type":"string"}
 			},
-			"required": ["dialType","destination"],
-			"additionalProperties": false
+			"required": ["dialType","destination"]
 		}	
 	}
 }
