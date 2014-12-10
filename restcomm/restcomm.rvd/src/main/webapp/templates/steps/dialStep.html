@@ -26,11 +26,11 @@
 						</div>
 					
 						<div ng-repeat='dialnoun in step.dialNouns'>
-							<div ng-switch on="dialnoun.dialType">
-								<div ng-switch-when="number">
-									<div  class="input-group input-group-sm form-group">
+								<div ng-if="dialnoun.dialType=='number'">
+									<div lookup-context class="input-group input-group-sm form-group">
 										<span class="input-group-addon rvd-handle"><i class='fa fa-phone'></i></span>
-										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
+										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>
 																			
 										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Send these DTMF tones after dialing the number">Send digits</span>
 										<input ng-model='dialnoun.sendDigits' auto-clear ng-show='dialnoun.iface.advancedShown'  type='text' class='form-control' placeholder='wwww1234' >
@@ -46,18 +46,19 @@
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 								</div>
-								<div ng-switch-when="client">
-									<div  class="input-group input-group-sm form-group">
+								<div ng-if="dialnoun.dialType=='client'">								
+									<div lookup-context class="input-group input-group-sm form-group">
 										<span class="input-group-addon rvd-handle"><i class='fa fa-user'></i></span>
-										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='thomas' tooltip="Dial to client">
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='thomas' tooltip="Dial to client">
+										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>										
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 								</div>	
-								<div ng-switch-when="conference" class='form-group conference-noun'>
-									<div  class="input-group input-group-sm">
+								<div ng-if="dialnoun.dialType=='conference'" class='form-group conference-noun'>
+									<div lookup-context class="input-group input-group-sm">
 										<span class="input-group-addon rvd-handle"><i class='fa fa-group'></i></span>
-										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='1234' tooltip="Dial to conference">
-
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='1234' tooltip="Dial to conference">
+										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>
 										<!-- 
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="'">After hangup</span>
 										<select sync-model name='nextModule' ng-model='dialnoun.nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
@@ -99,21 +100,21 @@
 										<input ng-model='dialnoun.maxParticipants' auto-clear style="width:50px;" type='number' class='form-control' placeholder='3'>
 									</div>
 								</div>		
-								<div ng-switch-when="sipuri">
-									<div  class="input-group input-group-sm form-group">
+								<div ng-if="dialnoun.dialType=='sipuri'">								
+									<div lookup-context class="input-group input-group-sm form-group">
 										<span class="input-group-addon rvd-handle">sip:</span>
-										<input ng-model='dialnoun.destination' type='text' class='form-control' placeholder='sip:thomas@127.0.0.1:5080' tooltip="Dial to SIP URI">
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='sip:thomas@127.0.0.1:5080' tooltip="Dial to SIP URI">
+										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 								</div>																								
-							</div>	
 						</div>	
 					</div>
 				</div>
 			</div>
 		
 			<div class='row'>	
-				<div  class="col-md-12 input-group form-group">
+				<div lookup-context class="col-md-12 input-group form-group">
 					<span class="input-group-addon help-tooltip"  tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Choose the module to continue to after the end of the call. "core_DialCallStatus", "core_DialCallSid", "core_DialCallDuration" and "core_RecordingUrl" (if Recording is enabled) variables will be available.'>Continue to</span>
 					<select auto-clear ng-model='step.nextModule' sync-modules name='nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control"  style="min-width:140px;">
 						<option value=""></option>
@@ -127,7 +128,8 @@
 					<input ng-show='step.iface.advancedShown' ng-model='step.timeLimit' auto-clear type='number' class='form-control small-input' placeholder='14400'>
 	
 					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The caller ID that will appear to the called party when RestComm calls">Caller ID</span>
-					<input ng-show='step.iface.advancedShown' ng-model='step.callerId' auto-clear type='text' class='form-control'>
+					<input ng-show='step.iface.advancedShown' ng-model='step.callerId' lookup-target auto-clear type='text' class='form-control'>
+					<variable-lookup ng-show='step.iface.advancedShown' variable="step.callerId" view="input-group"></variable-lookup>
 					
 					<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>
 				</div>
