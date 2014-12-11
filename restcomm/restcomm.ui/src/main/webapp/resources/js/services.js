@@ -496,6 +496,9 @@ rcServices.factory('RCommJMX', function($resource) {
 /* 
  * RAS Services
  */
-// RAS related configuration options. At some point this this should be returned from the server 
-rcServices.value("rappManagerConfig", {rasHost: "apps.restcomm.com", rasApiKey:"d45ab83248c717a1620cc28962a2b3c2", rasToken:"2b08048f57dc7ad6129ea5c49561fe8f"});
+// RAS related configuration options. At some point this this should be returned from the server
+// rasApiKey: the Public key
+// rasToken: the Token
+rcServices.value("rappManagerConfig", {rasHost: "apps.restcomm.com", rasApiKey:"dae21e48184703e41ec0e42929800ed3", rasToken:"c7ba2a69395eb7b05a291f58bb75402f"});
+
 
