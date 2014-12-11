@@ -335,7 +335,7 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 
 angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q) {
 	var service = {data:{}};
-	var defaultSettings = {appStoreDomain:"restcommapps.wpengine.com"};
+	var defaultSettings = {appStoreDomain:"apps.restcomm.com"};
 	var effectiveSettings = {};
 	
 	function updateEffectiveSettings (retrievedSettings) {
