@@ -137,4 +137,25 @@ public class Version {
         }
         return null;
     }
+
+    public static String getRevision() {
+        Properties releaseProperties = new Properties();
+        try {
+            InputStream in = Version.class
+                    .getResourceAsStream("release.properties");
+            if (in != null) {
+                releaseProperties.load(in);
+                in.close();
+                String releaseRevision = releaseProperties
+                        .getProperty("release.revision");
+
+                return releaseRevision;
+            }
+        } catch (Exception e) {
+            logger.warn(
+                    "Unable to extract the version of Mobicents Sip Servlets currently running",
+                    e);
+        }
+        return null;
+    }
 }

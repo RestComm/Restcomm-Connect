@@ -19,37 +19,39 @@
  */package org.mobicents.servlet.restcomm.telephony.util;
 
  import java.io.IOException;
- import java.math.BigDecimal;
- import java.net.InetAddress;
- import java.net.URI;
- import java.net.UnknownHostException;
- import java.util.Currency;
- import java.util.Vector;
+import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.Currency;
+import java.util.Vector;
 
- import javax.sdp.Connection;
- import javax.sdp.MediaDescription;
- import javax.sdp.SdpException;
- import javax.sdp.SdpFactory;
- import javax.sdp.SessionDescription;
- import javax.sdp.SessionName;
- import javax.servlet.sip.ServletParseException;
- import javax.servlet.sip.SipFactory;
- import javax.servlet.sip.SipServletMessage;
- import javax.servlet.sip.SipServletRequest;
- import javax.servlet.sip.SipServletResponse;
- import javax.servlet.sip.SipSession;
- import javax.servlet.sip.SipURI;
+import javax.sdp.Connection;
+import javax.sdp.MediaDescription;
+import javax.sdp.SdpException;
+import javax.sdp.SdpFactory;
+import javax.sdp.SessionDescription;
+import javax.sdp.SessionName;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
 
- import org.apache.log4j.Logger;
- import org.joda.time.DateTime;
- import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
- import org.mobicents.servlet.restcomm.dao.DaoManager;
- import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
- import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
- import org.mobicents.servlet.restcomm.entities.Client;
- import org.mobicents.servlet.restcomm.entities.Registration;
- import org.mobicents.servlet.restcomm.entities.Sid;
- import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.mobicents.javax.servlet.sip.SipSessionExt;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.Client;
+import org.mobicents.servlet.restcomm.entities.Registration;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 
  /**
   * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode
@@ -77,12 +79,13 @@
       * @param toClient
       * @throws IOException
       */
+     //This is used for redirect calls to Restcomm clients from Restcomm Clients
      public static boolean redirectToB2BUA(final SipServletRequest request, final Client client, Client toClient,
              DaoManager storage, SipFactory sipFactory) throws IOException {
          request.getSession().setAttribute("lastRequest", request);
          if (logger.isInfoEnabled()) {
              logger.info("B2BUA (p2p proxy): Got request:\n" + request.getMethod());
-             logger.info(String.format("B2BUA: Proxying a session between %s and %s", client.getUri(), toClient.getUri()));
+             logger.info(String.format("B2BUA: Proxying a session between %s and %s", client.getLogin(), toClient.getLogin()));
          }
 
          if (daoManager == null) {
@@ -100,7 +103,6 @@
              try {
                  to = (SipURI) sipFactory.createURI(location);
                  from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin())).getLocation());
-
                  final SipSession incomingSession = request.getSession();
                  // create and send the outgoing invite and do the session linking
                  incomingSession.setAttribute(B2BUA_LAST_REQUEST, request);
@@ -142,6 +144,8 @@
                  request.createResponse(100).send();
                  // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                  request.getSession().setAttribute("toInetUri", to);
+                 ((SipSessionExt)outRequest.getSession()).setBypassLoadBalancer(true);
+                 ((SipSessionExt)outRequest.getSession()).setBypassProxy(true);
                  outRequest.send();
                  outRequest.getSession().setAttribute("fromInetUri", from);
 
@@ -191,11 +195,12 @@
       * @throws IOException
       */
      //https://telestax.atlassian.net/browse/RESTCOMM-335
+     //This is used for redirect calls to PSTN Numbers and SIP URIs from Restcomm Clients
      public static boolean redirectToB2BUA(final SipServletRequest request, final Client fromClient, final SipURI from, SipURI to, String proxyUsername, String proxyPassword,
-             DaoManager storage, SipFactory sipFactory) {
+             DaoManager storage, SipFactory sipFactory, boolean callToSipUri) {
          request.getSession().setAttribute("lastRequest", request);
          if (logger.isInfoEnabled()) {
-             logger.info("B2BUA (p2p proxy): Got request:\n" + request.getMethod());
+             logger.info("B2BUA (p2p proxy for DID and SIP URIs) - : Got request:\n" + request.getMethod());
              logger.info(String.format("B2BUA: Proxying a session from %s to %s", from, to));
          }
 
@@ -210,6 +215,8 @@
              SipServletRequest outRequest = sipFactory.createRequest(request.getApplicationSession(), request.getMethod(),
                      from, to);
              outRequest.setRequestURI(to);
+
+             logger.info("Request: "+request.getMethod()+" content exists: "+request.getContent()!=null+" content type: "+request.getContentType());
 
              if (request.getContent() != null) {
                  final byte[] sdp = request.getRawContent();
@@ -229,6 +236,7 @@
                          logger.error("Unexpected exception while patching sdp ", e);
                      }
                  }
+                 logger.info("Offer is: "+offer);
                  if (offer != null) {
                      outRequest.setContent(offer, request.getContentType());
                  } else {
@@ -245,8 +253,14 @@
              request.createResponse(100).send();
              // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
              request.getSession().setAttribute("toInetUri", to);
+             if(callToSipUri){
+                 ((SipSessionExt)outRequest.getSession()).setBypassLoadBalancer(true);
+                 ((SipSessionExt)outRequest.getSession()).setBypassProxy(true);
+             }
              outRequest.send();
-             outRequest.getSession().setAttribute("fromInetUri", from);
+             Address originalFromAddress = request.getFrom();
+             SipURI originalFromUri = (SipURI)originalFromAddress.getURI();
+             outRequest.getSession().setAttribute("fromInetUri", originalFromUri);
 
              final CallDetailRecord.Builder builder = CallDetailRecord.builder();
              builder.setSid(Sid.generate(Sid.Type.CALL));
@@ -291,6 +305,9 @@
      @SuppressWarnings("unchecked")
      private static String patch(final byte[] data, final String externalIp) throws UnknownHostException, SdpException {
          final String text = new String(data);
+         logger.info("About to patch ");
+         logger.info("SDP :"+text);
+         logger.info("Using externalIP: "+externalIp);
          final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
          SessionName sessionName = SdpFactory.getInstance().createSessionName("Restcomm B2BUA");
          sdp.setSessionName(sessionName);
@@ -311,7 +328,7 @@
              if (Connection.IN.equals(connection.getNetworkType())) {
                  if (Connection.IP4.equals(connection.getAddressType())) {
                      final InetAddress address = InetAddress.getByName(connection.getAddress());
-                     if (address.isAnyLocalAddress() || address.isLinkLocalAddress() || address.isLoopbackAddress()) {
+                     if (address.isSiteLocalAddress() || address.isAnyLocalAddress() || address.isLoopbackAddress()) {
                          final String ip = address.getHostAddress();
                          connection.setAddress(externalIp);
                      }

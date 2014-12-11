@@ -1530,14 +1530,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (outboundCall != null) {
             try {
                 logger.info("Trying to get outboundCall Info");
-                final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                final Timeout expires = new Timeout(Duration.create(10, TimeUnit.SECONDS));
                 Future<Object> future = (Future<Object>) ask(outboundCall, new GetCallInfo(), expires);
-                CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
-                        Duration.create(10, TimeUnit.SECONDS));
+                CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
                 outboundCallInfo = callResponse.get();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Timeout waiting for outbound call info: \n"+e);
             }
+        } else {
+            System.out.println("OutboundCall is null");
         }
 
         // Handle Failed Calls
@@ -1667,14 +1668,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
                     for (final ActorRef branch : dialBranches) {
+                        if (branch == outboundCall) {
+                            if (attribute != null) {
+                                executeDialAction(message, outboundCall);
+                            }
+                        }
                         branch.tell(new Cancel(), source);
                         callManager.tell(new DestroyCall(branch), source);
                     }
-                    if (attribute != null) {
-                        callMediaGroup.tell(new Stop(), null);
-                        executeDialAction(message, null);
-                    } else {
-                        callMediaGroup.tell(new Stop(), null);
+                    callMediaGroup.tell(new Stop(), null);
+                    if (attribute == null) {
                         final GetNextVerb next = GetNextVerb.instance();
                         parser.tell(next, source);
                     }
@@ -2044,10 +2047,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Cleanup the outbound call if necessary.
             final State state = fsm.state();
-            if (bridged.equals(state)) {
+            if (bridged.equals(state) || forking.equals(state)) {
                 if (outboundCall != null) {
-                    outboundCall.tell(new StopObserving(source), source);
-                    outboundCall.tell(new Hangup(), source);
+                    outboundCall.tell(new StopObserving(source), null);
+                    outboundCall.tell(new Hangup(), null);
                 }
             }
             // If we still have a conference media group release it.
@@ -2072,8 +2075,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Destroy the Call(s).
             callManager.tell(new DestroyCall(call), source);
-            if (outboundCall != null)
+            if (outboundCall != null) {
                 callManager.tell(new DestroyCall(outboundCall), source);
+            }
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
             context.stop(mailer);
