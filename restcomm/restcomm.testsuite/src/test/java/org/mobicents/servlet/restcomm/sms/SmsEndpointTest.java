@@ -104,6 +104,7 @@ public class SmsEndpointTest {
                 adminAuthToken, from, to, body, null);
         assertNotNull(callResult);
         
+//        bobPhone.setLoopback(true);
         assertTrue(bobCall.waitForMessage(5000));
         Request messageRequest = bobCall.getLastReceivedMessageRequest();
         assertTrue(bobCall.sendMessageResponse(202, "Accepted", 3600));

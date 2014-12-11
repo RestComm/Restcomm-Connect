@@ -165,6 +165,8 @@ public class DialActionTest {
         }
 
         DialActionResources.resetData();
+        
+        Thread.sleep(2000);
     }
 
     @Test
