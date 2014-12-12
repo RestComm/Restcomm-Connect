@@ -489,6 +489,10 @@ public final class MediaGroup extends UntypedActor {
 
     @Override
     public void postStop() {
+        if (link != null) {
+            link.tell(new CloseLink(), null);
+            link = null;
+        }
         if (internalLinkEndpoint != null) {
             gateway.tell(new DestroyEndpoint(internalLinkEndpoint), null);
             internalLinkEndpoint = null;
