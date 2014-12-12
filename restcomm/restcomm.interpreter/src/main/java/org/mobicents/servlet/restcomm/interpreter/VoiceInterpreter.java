@@ -2127,7 +2127,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             getContext().stop(callMediaGroup);
             callMediaGroup = null;
         }
-
         postCleanup();
         super.postStop();
     }
