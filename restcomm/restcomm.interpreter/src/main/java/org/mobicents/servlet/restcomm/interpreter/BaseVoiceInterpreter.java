@@ -609,8 +609,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final ActorRef session = smsSessions.remove(record.getSid());
             final DestroySmsSession destroy = new DestroySmsSession(session);
             smsService.tell(destroy, self);
-            // Try to stop the interpreter.
-            postCleanup();
         }
     }
 
