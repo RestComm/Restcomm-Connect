@@ -618,8 +618,7 @@ public final class Call extends UntypedActor {
                     forwarding(message);
                     break;
                 }
-                case SipServletResponse.SC_RINGING:
-                case SipServletResponse.SC_SESSION_PROGRESS: {
+                case SipServletResponse.SC_RINGING: {
                     if (!state.equals(ringing))
                         fsm.transition(message, ringing);
                     break;
@@ -660,6 +659,8 @@ public final class Call extends UntypedActor {
                     }
                     break;
                 }
+                // https://github.com/Mobicents/RestComm/issues/148 Session in Progress Response should trigger MMS to start the Media Session
+                case SipServletResponse.SC_SESSION_PROGRESS:
                 case SipServletResponse.SC_OK: {
                     if (dialing.equals(state) || (ringing.equals(state) && !direction.equals("inbound"))) {
                         fsm.transition(message, updatingRemoteConnection);
