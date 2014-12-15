@@ -654,6 +654,8 @@ public final class Call extends UntypedActor {
                         challengeRequest.addAuthHeader(response, authInfo);
                         challengeRequest.setContent(invite.getContent(), invite.getContentType());
                         invite = challengeRequest;
+                        // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
+                        invite.setContent(response.getRequest().getContent(), "application/sdp");
                         challengeRequest.send();
                     }
                     break;
