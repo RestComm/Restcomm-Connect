@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Redirect step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["redirect"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"url": {"type": "string", "minLength": 1},
+		"method": {
+			"oneOf": [
+				{"type":"null"},
+				{"enum":["GET","POST"]}
+			]
+		}
+	},
+	"required": ["name","kind","label","title","url","method"]
+}
