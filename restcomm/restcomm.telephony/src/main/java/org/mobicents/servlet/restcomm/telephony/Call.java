@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
+import javax.sdp.Origin;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
@@ -618,8 +619,7 @@ public final class Call extends UntypedActor {
                     forwarding(message);
                     break;
                 }
-                case SipServletResponse.SC_RINGING:
-                case SipServletResponse.SC_SESSION_PROGRESS: {
+                case SipServletResponse.SC_RINGING: {
                     if (!state.equals(ringing))
                         fsm.transition(message, ringing);
                     break;
@@ -654,10 +654,14 @@ public final class Call extends UntypedActor {
                         challengeRequest.addAuthHeader(response, authInfo);
                         challengeRequest.setContent(invite.getContent(), invite.getContentType());
                         invite = challengeRequest;
+                        // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
+                        invite.setContent(response.getRequest().getContent(), "application/sdp");
                         challengeRequest.send();
                     }
                     break;
                 }
+                // https://github.com/Mobicents/RestComm/issues/148 Session in Progress Response should trigger MMS to start the Media Session
+                case SipServletResponse.SC_SESSION_PROGRESS:
                 case SipServletResponse.SC_OK: {
                     if (dialing.equals(state) || (ringing.equals(state) && !direction.equals("inbound"))) {
                         fsm.transition(message, updatingRemoteConnection);
@@ -727,6 +731,8 @@ public final class Call extends UntypedActor {
             final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
             // Handle the connection at the session level.
             fix(sdp.getConnection(), externalIp);
+            // https://github.com/Mobicents/RestComm/issues/149
+            fix(sdp.getOrigin(), externalIp);
             // Handle the connections at the media description level.
             final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
             for (final MediaDescription description : descriptions) {
@@ -744,6 +750,8 @@ public final class Call extends UntypedActor {
             }
             final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(sdpText);
             fix(sdp.getConnection(), externalIp);
+            // https://github.com/Mobicents/RestComm/issues/149
+            fix(sdp.getOrigin(), externalIp);
             // Handle the connections at the media description level.
             final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
             for (final MediaDescription description : descriptions) {
@@ -752,6 +760,20 @@ public final class Call extends UntypedActor {
             patchedSdp = sdp.toString();
         }
         return patchedSdp;
+    }
+
+    private void fix(final Origin origin, final String externalIp) throws UnknownHostException, SdpException {
+        if (origin != null) {
+            if (Connection.IN.equals(origin.getNetworkType())) {
+                if (Connection.IP4.equals(origin.getAddressType())) {
+                    final InetAddress address = InetAddress.getByName(origin.getAddress());
+                    final String ip = address.getHostAddress();
+                    if (!IPUtils.isRoutableAddress(ip)) {
+                        origin.setAddress(externalIp);
+                    }
+                }
+            }
+        }
     }
 
     private void fix(final Connection connection, final String externalIp) throws UnknownHostException, SdpException {
