@@ -32,8 +32,8 @@
         <property name="mobicents-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.as7.download.distro.file}" />
         <property name="mobicents-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.as7.download.distro.file}" />
 
-	<property name="hsqldb.download.url" value="http://downloads.sourceforge.net/project/hsqldb/hsqldb/hsqldb_1_8_0/hsqldb_1_8_0_10.zip" />
-	<property name="hsqldb.download.distro.file" value="hsqldb_1_8_0_10.zip" />
+	<property name="hsqldb.download.url" value="http://sourceforge.net/projects/hsqldb/files/hsqldb/hsqldb_2_3/hsqldb-2.3.2.zip" />
+	<property name="hsqldb.download.distro.file" value="hsqldb-2.3.2.zip" />
 	<property name="hsqldb.distro.zip.path" value="${checkout.dir}/${hsqldb.download.distro.file}" />
 
 
@@ -243,7 +243,7 @@
 	</copy-->
 
 	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true"
-		file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
+		file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar"/>
 	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
        		includes="**/*.sh"/>
 
@@ -296,7 +296,7 @@
 		</fileset>
 	</copy>
 
-	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+	<copy file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
 	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx"
 		includes="**/*.sh"/>
 
