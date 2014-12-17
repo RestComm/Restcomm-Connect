@@ -46,6 +46,7 @@ import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.restcomm.dao.UsageDao;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
@@ -67,6 +68,7 @@ public final class MybatisDaoManager implements DaoManager {
     private RecordingsDao recordingsDao;
     private ShortCodesDao shortCodesDao;
     private SmsMessagesDao smsMessagesDao;
+    private UsageDao usageDao;
     private TranscriptionsDao transcriptionsDao;
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
@@ -151,6 +153,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public UsageDao getUsageDao() {
+        return usageDao;
+    }
+
+    @Override
     public TranscriptionsDao getTranscriptionsDao() {
         return transcriptionsDao;
     }
@@ -203,6 +210,7 @@ public final class MybatisDaoManager implements DaoManager {
         recordingsDao = new MybatisRecordingsDao(sessions);
         shortCodesDao = new MybatisShortCodesDao(sessions);
         smsMessagesDao = new MybatisSmsMessagesDao(sessions);
+        usageDao = new MybatisUsageDao(sessions);
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
     }
