@@ -22,7 +22,8 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		controller : 'designerCtrl',
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
-			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);}
+			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
+			project: function(designerService, $route) {return designerService.openProject($route.current.params.projectName);}
 		}
 	})
 	.when('/packaging/:projectName', {
@@ -107,6 +108,7 @@ App.factory( 'dragService', [function () {
 	return serviceInstance;
 }]);
 
+/*
 App.factory('protos', function () {
 	var protoInstance = { 
 		nodes: {
@@ -117,6 +119,7 @@ App.factory('protos', function () {
 	};
 	return protoInstance;
 });
+*/
 
 
 /*
@@ -334,7 +337,8 @@ App.directive('rvdPanel', function () {
 		transclude: true,
 		restrict: 'E',
 		scope: {
-			title:'=panelTitle',
+			//title:'=panelTitle',
+			title:'=title',
 			closePanel:'&onClose',
 		},
 		templateUrl: 'templates/directive/rvdPanel.html',

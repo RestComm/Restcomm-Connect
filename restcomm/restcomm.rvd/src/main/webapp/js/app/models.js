@@ -47,3 +47,27 @@ angular.module('Rvd').factory('CcInfo', ['rvdModel', function(rvdModel) {
 	*/
 	return CcInfo;
 }]);
+
+angular.module('Rvd').factory('nodeModel', ['rvdModel', 'nodeRegistry', 'stepPacker', function (rvdModel, nodeRegistry, stepPacker) {
+	function NodeModel() {
+			this.id = undefined;
+			this.name = 'module';
+			this.label = 'Untitled module';
+			this.steps = [];
+			this.iface = {edited:false,editLabel:false};
+	}
+	NodeModel.prototype = new rvdModel();
+	NodeModel.prototype.constructor = NodeModel;
+	NodeModel.prototype.setId = function (newid) {
+		this.id = newid;
+	}
+	NodeModel.prototype.init = function(from) {
+		angular.extend(this, from);
+		for (var j=0; j<this.steps.length; j++) {
+			var step = stepPacker.unpack(this.steps[j]);
+			this.steps[j] = step;
+		}
+		return this;
+	}
+	return NodeModel;
+}])

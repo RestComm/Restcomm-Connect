@@ -449,3 +449,51 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	
 	return service;
 }]);
+
+
+angular.module('Rvd').service('nodeRegistry', 'protos', [function (nodeRegistry,protos) {
+	var service = {
+		lastNodeId: 0,
+		nodes: []
+	};
+	// put an existing node. Update lastNodeId if needed. Usefull when loadina a project
+	//function putNode(node) {
+	//	
+	//}
+	
+	function newId() {
+		return ++lastNodeId;
+	}
+	
+	/*function newNode(kind) {
+		var newnode = angular.copy(protos.nodes[kind]);
+		newnode.name += ++lastNodeId;
+		return newnode;
+	}
+	*/
+	// Pushes a new node in the registry If it doesn't have an id it assigns one to it
+	function addNode(node) {
+		if (node.id) {
+			// Node already has an id. Update lastNodeId if required
+			if (lastNodeId < node.id)
+				lastNodeId = node.id;
+			// it is dangerous to add a node with an id less that lastNodeId
+			// else ...
+		} else {
+			var id = newId();
+			node.setId(id);	
+		}
+		nodes.push(node);
+	}
+	function removeNode(node) {
+		service.nodes.splice(service.nodes.indexOf(node), 1);
+	}
+	
+	// public interface
+	//service.newNode = newNode;
+	service.addNode = addNode;
+	service.removeNode = removeNode;
+	
+	return service;
+}]);
+

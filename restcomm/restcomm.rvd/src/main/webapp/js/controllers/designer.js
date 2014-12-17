@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -50,10 +50,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.projectName = $routeParams.projectName;
 	$scope.startNodeName = 'start';
 	
-	$scope.nodes = [];		
+	//$scope.nodes = [];		
 	$scope.activeNode = 0 	// contains the currently active node for all kinds
 							// of nodes
 	$scope.lastNodesId = 0	// id generators for all kinds of nodes
+	$scope.visibleNodes = [];
 	$scope.wavList = [];
 		
 	// Some constants to be moved elsewhere = TODO
@@ -63,6 +64,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 	$scope.loseFocus = function () {
 		// console.log('lost focus');
+	}
+	
+	$scope.addNodeClicked = function(kind) {
+		var newnode = ModelBuilder.build( packedState.nodes[i]+"Node" );
+		nodeRegistry.addNode(newnode);
+		
 	}
 		
 	// nodes
@@ -111,15 +118,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 				$scope.setActiveNode( node); // TODO : focus too!
 				break;
 			}
-	};
-	$scope.addNode = function( name, kind ) { // kind is based on project kind
-		$newnode = angular.copy(protos.nodes[kind]);
-		if ( typeof(name) === 'undefined' )
-			$newnode.name += ++$scope.lastNodesId;
-		else
-			$newnode.name = name;
-		$scope.nodes.push( $newnode );
-		return $newnode;
 	};
 	$scope.removeNode = function( index) {
 		if ( index < $scope.nodes.length ) {
@@ -222,23 +220,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		return deferred.promise;
 	}
 
-	$scope.openProject = function(name) {
-		$http({url: 'services/projects/' + name,
-				method: "GET"
-		})
-		.success(function (data, status, headers, config) {
-			$scope.projectName = name;			
-			$scope.unpackState(data);
-			if ( $scope.projectKind == 'voice' )
-				$scope.refreshWavList(name);
-			// maybe override .error() also to display a message?
-		 }).error(function (data, status, headers, config) {
-			 if ( data.serverError && (data.serverError.className == 'IncompatibleProjectVersion') )
-				 $location.path("/upgrade/" + name)
-			 else
-				 $scope.projectError = data.serverError;
-		 });
-	}
 	
 	$scope.refreshWavList = function(projectName) {
 		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
@@ -508,27 +489,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		return state;
 	}
 	
-	$scope.unpackState = function (packedState) {
-		stepRegistry.reset(packedState.lastStepId);
-		for ( var i=0; i < packedState.nodes.length; i++) {
-			var node = packedState.nodes[i];
-			node.iface = {};
-			for (var j=0; j<node.steps.length; j++) {
-				var step = stepPacker.unpack(node.steps[j]);
-				node.steps[j] = step;
-			}
-		}
 
-		$scope.nodes = packedState.nodes;
-		$scope.lastNodesId = packedState.lastNodeId;
-		$scope.startNodeName = packedState.header.startNodeName;	
-		$scope.projectKind = packedState.header.projectKind;
-		$scope.version = packedState.header.version;
-		$scope.exceptionHandlingInfo = ModelBuilder.build('ExceptionHandlingInfo').init(packedState.exceptionHadlingInfo);
-		
-	}
-	
-	
 	// Exception controller & functionality
 	
 	var exceptionConfigCtrl = function ($scope, $modalInstance, projectModules) {
@@ -583,8 +544,8 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		
 	// Run the following after all initialization are complete
 	
-	console.log( "opening project " + $scope.projectName);
-	$scope.openProject( $scope.projectName );
+	//console.log( "opening project " + $scope.projectName);
+	//$scope.openProject( $scope.projectName );
 		
      
      // UNSORTED
@@ -597,5 +558,74 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		}
 	}	
 });
+
+angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http', 'stepPacker', 'ModelBuilder', 'nodeRegistry', function (stepRegistry, $q, $http, stepPacker, ModelBuilder, nodeRegistry) {
+	var service = {};
+	
+	service.openProject = function (name) {
+		var deferred = $q.defer();
+		
+		$http({url: 'services/projects/' + name,
+			method: "GET"
+		})
+		.success(function (data, status, headers, config) {
+			var project = {};
+			project.projectName = name;			
+			unpackState(project, data);
+			if ( project.projectKind == 'voice' ) {
+				refreshWavList(name).then(function (wavList) {
+					project.wavList = wavList;
+					deferred.resolve(project);
+				}, function (error) {
+					deferred.reject(error);
+				});
+			} else {
+				deferred.resolve(project);
+			}
+			// maybe override .error() also to display a message?
+		 }).error(function (data, status, headers, config) {
+			 deferred.reject("IncompatibleProjectVersion")
+			 //if ( data.serverError && (data.serverError.className == 'IncompatibleProjectVersion') )
+			//	 $location.path("/upgrade/" + name)
+			// else
+			//	 $scope.projectError = data.serverError;
+		 });
+		return deferred.promise;
+	}
+	
+	function unpackState(project, packedState) {
+		stepRegistry.reset(packedState.lastStepId);
+		for ( var i=0; i < packedState.nodes.length; i++) {
+			var node = ModelBuilder.build( packedState.nodes[i]+"Node" ).init( packedState.nodes[i] );
+			nodeRegistry.addNode(node);
+		}
+		//project.nodes = packedState.nodes;
+		//project.lastNodesId = packedState.lastNodeId;
+		project.startNodeName = packedState.header.startNodeName;	
+		project.projectKind = packedState.header.projectKind;
+		project.version = packedState.header.version;
+		project.exceptionHandlingInfo = ModelBuilder.build('ExceptionHandlingInfo').init(packedState.exceptionHadlingInfo);
+	}	
+	
+	function refreshWavList(projectName) {
+		var deferred = $q.defer();
+		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
+		.success(function (data, status, headers, config) {
+			//$scope.wavList = data;
+			deferred.resolve(data);
+		})
+		.error(function (data, status, headers, config) {
+			deferred.reject("wav-error");
+		});
+		return deferred.promise;
+	}
+	service.refreshWavList = refreshWavList;
+	
+	return service;
+	
+}]);
+
+
+
 
 
