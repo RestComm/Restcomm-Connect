@@ -35,5 +35,6 @@
     <mapper url="file://${sql}/transcriptions.xml"/>
     <mapper url="file://${sql}/gateways.xml"/>
     <mapper url="file://${sql}/announcements.xml"/>
+    <mapper url="file://${sql}/usage.xml"/>
   </mappers>
 </configuration>
