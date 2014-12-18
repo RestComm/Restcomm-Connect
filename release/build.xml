@@ -242,8 +242,8 @@
 		</fileset>
 	</copy-->
 
-	<!--<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true"
-		file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar"/>-->
+	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true"
+		file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar"/>
 	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
        		includes="**/*.sh"/>
 
@@ -296,7 +296,7 @@
 		</fileset>
 	</copy>
 
-	<!--<copy file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>-->
+	<copy file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
 	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx"
 		includes="**/*.sh"/>
 

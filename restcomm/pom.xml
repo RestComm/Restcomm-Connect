@@ -103,7 +103,7 @@
 		<libphonenumber.version>4.3</libphonenumber.version>
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
-		<hsqldb.version>2.3.2</hsqldb.version>
+		<hsqldb.version>1.8.0.10</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
 		<sip-ri.version>1.2.228</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
@@ -390,9 +390,10 @@
 			</dependency>
 
 			<dependency>
-				<groupId>org.hsqldb</groupId>
+				<groupId>hsqldb</groupId>
 				<artifactId>hsqldb</artifactId>
 				<version>${hsqldb.version}</version>
+				<scope>test</scope>
 			</dependency>
 
 			<dependency>
@@ -515,9 +516,10 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.hsqldb</groupId>
+			<groupId>hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>${hsqldb.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
