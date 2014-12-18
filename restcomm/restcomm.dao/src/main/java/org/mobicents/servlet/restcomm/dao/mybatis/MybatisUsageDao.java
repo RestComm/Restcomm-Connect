@@ -120,7 +120,6 @@ public final class MybatisUsageDao implements UsageDao {
       return usageRecords;
     } finally {
       session.close();
-      System.out.println("Query '" + queryName + "' took " + (System.currentTimeMillis()-startTime) +  "ms to complete.");
     }
   }
 
