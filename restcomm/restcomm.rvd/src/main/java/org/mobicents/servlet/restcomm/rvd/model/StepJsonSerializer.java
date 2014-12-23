@@ -8,6 +8,7 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.gather.GatherStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.hangup.HungupStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.log.LogStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.pause.PauseStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.play.PlayStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.record.RecordStep;
@@ -40,6 +41,8 @@ public class StepJsonSerializer implements JsonSerializer<Step> {
             resultElement = gson.toJsonTree((GatherStep) step);
         } else if (step.getClass().equals(ExternalServiceStep.class)) {
             resultElement = gson.toJsonTree((ExternalServiceStep) step);
+        } else if (step.getClass().equals(LogStep.class)) {
+            resultElement = gson.toJsonTree((LogStep) step);
         } else if (step.getClass().equals(DialStep.class)) {
             resultElement = gson.toJsonTree((DialStep) step);
         } else if (step.getClass().equals(HungupStep.class)) {

@@ -186,6 +186,7 @@ public class DialTest {
             fotiniSipStack.dispose();
         }
         deployer.undeploy("DialTest");
+        Thread.sleep(1000);
     }
 
     @Test
@@ -1169,7 +1170,7 @@ public class DialTest {
         
         fotiniCall.listenForDisconnect();
 
-        Thread.sleep(2000);
+        Thread.sleep(4000);
 
         // hangup.
 
