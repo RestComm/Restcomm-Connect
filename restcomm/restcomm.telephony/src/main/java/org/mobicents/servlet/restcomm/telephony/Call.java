@@ -19,8 +19,10 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import jain.protocol.ip.mgcp.message.AuditConnectionResponse;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -84,6 +86,7 @@ import org.mobicents.servlet.restcomm.mgcp.DestroyLink;
 import org.mobicents.servlet.restcomm.mgcp.GetMediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
+import org.mobicents.servlet.restcomm.mgcp.InspectConnection;
 import org.mobicents.servlet.restcomm.mgcp.LinkStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
@@ -99,6 +102,7 @@ import org.mobicents.servlet.restcomm.util.IPUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
@@ -153,6 +157,7 @@ public final class Call extends UntypedActor {
     private final State updatingInternalLink;
     private final State closingInternalLink;
     private final State closingRemoteConnection;
+    private final State auditingRemoteConnection;
     // FSM.
     private final FiniteStateMachine fsm;
     // SIP runtime stuff.
@@ -241,6 +246,7 @@ public final class Call extends UntypedActor {
         muting = new State("muting", new Muting(source), null);
         unmuting = new State("unmuting", new Unmuting(source), null);
         closingRemoteConnection = new State("closing remote connection", new ClosingRemoteConnection(source), null);
+        auditingRemoteConnection = new State("auditing remote connection", new AuditingRemoteConnection(source), null);
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, queued));
@@ -262,7 +268,12 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(openingRemoteConnection, canceling));
         transitions.add(new Transition(openingRemoteConnection, dialing));
         transitions.add(new Transition(openingRemoteConnection, failed));
-        transitions.add(new Transition(openingRemoteConnection, inProgress));
+//        transitions.add(new Transition(openingRemoteConnection, inProgress));
+        transitions.add(new Transition(openingRemoteConnection, auditingRemoteConnection));
+        transitions.add(new Transition(auditingRemoteConnection, inProgress));
+        transitions.add(new Transition(auditingRemoteConnection, noAnswer));
+        transitions.add(new Transition(auditingRemoteConnection, auditingRemoteConnection));
+        transitions.add(new Transition(auditingRemoteConnection, closingRemoteConnection));
         transitions.add(new Transition(dialing, busy));
         // transitions.add(new Transition(dialing, failingBusy));
         transitions.add(new Transition(dialing, canceling));
@@ -559,7 +570,14 @@ public final class Call extends UntypedActor {
             } else if (ConnectionStateChanged.State.HALF_OPEN == event.state()) {
                 fsm.transition(message, dialing);
             } else if (ConnectionStateChanged.State.OPEN == event.state()) {
-                fsm.transition(message, inProgress);
+                // handle open connection state
+                onConnectionOpened((ConnectionStateChanged) message, self());
+                // state transition
+                if(openingRemoteConnection.equals(state)) {
+                    fsm.transition(message, auditingRemoteConnection);
+                } else {
+                    fsm.transition(message, inProgress);
+                }
             }
         } else if (Cancel.class.equals(klass)) {
             if (openingRemoteConnection.equals(state) || dialing.equals(state) || ringing.equals(state)
@@ -720,6 +738,52 @@ public final class Call extends UntypedActor {
             }
             group = getMediaGroup(message);
             sender.tell(new CallResponse<ActorRef>(group), self);
+        } else if(AuditConnectionResponse.class.equals(klass)) {
+            AuditConnectionResponse response = (AuditConnectionResponse) message;
+            int returnCode = response.getReturnCode().getValue();
+            if(returnCode == ReturnCode.TRANSACTION_EXECUTED_NORMALLY) {
+                // Connection was audited successfully and call can proceed
+                fsm.transition(response, inProgress);
+            } else if(returnCode == ReturnCode.INSUFFICIENT_RESOURCES_NOW) {
+                // Connection is auditable but is still unavailable
+                // Perform another attempt
+                fsm.transition(response, auditingRemoteConnection);
+            } else {
+                // An error must have occurred
+                // Close connection and abort call
+                fsm.transition(response, closingRemoteConnection);
+            }
+        }
+    }
+
+    private void onConnectionOpened(ConnectionStateChanged message, ActorRef source) throws Exception {
+        final State state = fsm.state();
+        if (updatingInternalLink.equals(state) && conference != null) {
+            //If this is the outbound leg for an outbound call, conference is the initial call
+            //Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
+            //Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
+            conference.tell(new JoinComplete(bridge), source);
+        }
+        if (openingRemoteConnection.equals(state)) {
+            final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
+            final byte[] sdp = message.descriptor().toString().getBytes();
+            String answer = null;
+            if (gatewayInfo.useNat()) {
+                final String externalIp = gatewayInfo.externalIP().getHostAddress();
+                answer = patch("application/sdp", sdp, externalIp);
+            } else {
+                answer = message.descriptor().toString();
+            }
+
+            // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+            answer = patchSdpDescription(answer);
+
+            okay.setContent(answer, "application/sdp");
+            okay.send();
+        }
+        if (openingRemoteConnection.equals(state) || updatingRemoteConnection.equals(state)) {
+            // Make sure the SIP session doesn't end pre-maturely.
+            invite.getApplicationSession().setExpires(0);
         }
     }
 
@@ -1550,7 +1614,11 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            if (Hangup.class.equals(klass)) {
+            /*
+             * Send BYE is a hangup indication is received OR in case of MGCP AUCX error response or
+             * when the maximum number of MGCP AUCX queries is reached.
+             */
+            if (Hangup.class.equals(klass) || AuditConnectionResponse.class.equals(klass)) {
                 final SipSession session = invite.getSession();
                 final SipServletRequest bye = session.createRequest("BYE");
 
@@ -1636,6 +1704,58 @@ public final class Call extends UntypedActor {
                 logger.debug("Duration: " + seconds);
                 logger.debug("Just updated CDR for completed call");
             }
+        }
+    }
+
+    private final class AuditingRemoteConnection extends AbstractAction {
+
+        /** Maximum number of attempts */
+        private final int MAX_ATTEMPTS = 15;
+
+        /** Waiting time (in milliseconds) between attempts */
+        private final int ATTEMPT_WAIT = 200;
+        private final FiniteDuration duration = new FiniteDuration(ATTEMPT_WAIT, TimeUnit.MILLISECONDS);
+
+        /** Number of current attempts between calls. Cannot be greater than MAX_ATTEMPTS. */
+        private int attempts = 0;
+
+        /** Contains logic to perform the MGCP AUCX */
+        private AuditWorker auditWorker;
+
+        public AuditingRemoteConnection(ActorRef source) {
+            super(source);
+            this.auditWorker = new AuditWorker();
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            this.attempts++;
+            if (attempts > this.MAX_ATTEMPTS) {
+                logger.warning("AUCX: reached max number of attempt. Closing connection.");
+                // Close remote connection if cannot audit after max number of attempts
+                fsm.transition(message, closingRemoteConnection);
+            } else {
+                // Delegate AUCX work to the remote connection
+                // The Call actor will receive the MGCP response to the AUCX
+                if (this.attempts == 1) {
+                    // First attempt - no need to wait
+                    remoteConn.tell(new InspectConnection(), self());
+                } else {
+                    // Future attempts will be spaced between them for the duration of WAIT_ATTEMPTS
+                    logger.info("AUCX: issuing attempt " + attempts + " in " + ATTEMPT_WAIT + "ms.");
+                    getContext().system().scheduler()
+                            .scheduleOnce(duration, this.auditWorker, getContext().system().dispatcher());
+                }
+            }
+        }
+
+        private class AuditWorker implements Runnable {
+
+            @Override
+            public void run() {
+                remoteConn.tell(new InspectConnection(), self());
+            }
+
         }
     }
 }
