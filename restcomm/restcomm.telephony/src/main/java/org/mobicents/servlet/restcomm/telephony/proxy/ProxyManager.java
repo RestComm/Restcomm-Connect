@@ -19,20 +19,16 @@
  */
 package org.mobicents.servlet.restcomm.telephony.proxy;
 
-import akka.actor.ActorContext;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-
-import static javax.servlet.sip.SipServlet.*;
-
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.ServletParseException;
@@ -40,9 +36,6 @@ import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-
-import static javax.servlet.sip.SipServletResponse.*;
-
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
@@ -53,6 +46,11 @@ import org.mobicents.servlet.restcomm.entities.Gateway;
 import org.mobicents.servlet.restcomm.telephony.RegisterGateway;
 
 import scala.concurrent.duration.Duration;
+import akka.actor.ActorContext;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -61,8 +59,6 @@ import scala.concurrent.duration.Duration;
 public final class ProxyManager extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private static final String version = org.mobicents.servlet.restcomm.Version.getFullVersion();
-    private static final String ua = "RestComm/" + version;
     private static final int ttl = 1800;
 
     private final ServletConfig configuration;
@@ -107,6 +103,8 @@ public final class ProxyManager extends UntypedActor {
         } else {
             outboundInterface = outboundInterface();
         }
+        if (outboundInterface == null)
+            outboundInterface = (SipURI) factory.createSipURI(null, address);
         final String user = gateway.getUserName();
         final String host = outboundInterface.getHost();
         final int port = outboundInterface.getPort();
@@ -216,7 +214,6 @@ public final class ProxyManager extends UntypedActor {
                 register.addAuthHeader(response, authentication);
             }
             register.addAddressHeader("Contact", contact, false);
-            register.addHeader("User-Agent", ua);
             final SipURI uri = factory.createSipURI(null, proxy);
             register.pushRoute(uri);
             register.setRequestURI(uri);

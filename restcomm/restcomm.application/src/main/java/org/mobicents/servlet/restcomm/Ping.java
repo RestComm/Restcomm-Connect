@@ -93,7 +93,7 @@ public class Ping {
                 buffer.append("<requesttype>").append("ping").append("</requesttype>");
                 buffer.append("<item>");
                 buffer.append("<endpointgroup>").append(endpoint).append("</endpointgroup>");
-                buffer.append("<provider>").append(provider).append("</provider>");
+//                buffer.append("<provider>").append(provider).append("</provider>");
                 buffer.append("</item>");
                 buffer.append("</body>");
                 buffer.append("</request>");
@@ -107,6 +107,8 @@ public class Ping {
 
                     //This will work as a flag for LB that this request will need to be modified and proxied to VI
                     post.addHeader("TelestaxProxy", String.valueOf(proxyEnabled));
+                    //Adds the Provision provider class name
+                    post.addHeader("Provider", provider);
                     //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
                     post.addHeader("RequestType", "Ping");
                     //This will let LB match the DID to a node based on the node host+port
