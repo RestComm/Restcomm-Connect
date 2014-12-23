@@ -308,8 +308,8 @@
 		<delete file="${release.as7.dir}/standalone/deployments/webrtc.war" failonerror="false" />
 		<copy tofile="${release.as7.dir}/standalone/deployments/" failonerror="true"
 			file="${basedir}/olympus.war"/>
-    </target>
 		<touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy" />
+	</target>
 
     <target name="copy-docs">
 		<!--docs-->
