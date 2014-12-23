@@ -132,6 +132,8 @@ public class DialActionTest {
 
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+
+        DialActionResources.resetData();
     }
 
     @After
@@ -163,8 +165,6 @@ public class DialActionTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-
-        DialActionResources.resetData();
         
         Thread.sleep(2000);
     }
