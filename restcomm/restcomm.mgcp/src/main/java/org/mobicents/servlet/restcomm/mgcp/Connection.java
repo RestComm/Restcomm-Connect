@@ -27,6 +27,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
+import jain.protocol.ip.mgcp.message.AuditConnection;
 import jain.protocol.ip.mgcp.message.CreateConnection;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
 import jain.protocol.ip.mgcp.message.DeleteConnection;
@@ -37,6 +38,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
+import jain.protocol.ip.mgcp.message.parms.InfoCode;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 
@@ -177,6 +179,8 @@ public final class Connection extends UntypedActor {
             fsm.transition(message, modifying);
         } else if (CloseConnection.class.equals(klass)) {
             fsm.transition(message, closing);
+        } else if (InspectConnection.class.equals(klass)) {
+            auditConnection(message, sender());
         } else if (message instanceof JainMgcpResponseEvent) {
             final JainMgcpResponseEvent response = (JainMgcpResponseEvent) message;
             final int code = response.getReturnCode().getValue();
@@ -202,6 +206,12 @@ public final class Connection extends UntypedActor {
         } else if (message instanceof ReceiveTimeout) {
             fsm.transition(message, closed);
         }
+    }
+
+    private void auditConnection(Object message, ActorRef source) {
+        InfoCode[] requestedInfo = new InfoCode[] { InfoCode.ConnectionMode };
+        AuditConnection aucx = new AuditConnection(source, endpointId, connId, requestedInfo);
+        gateway.tell(aucx, source);
     }
 
     private void stopObserving(final Object message) {

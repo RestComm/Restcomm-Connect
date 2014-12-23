@@ -47,7 +47,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
     when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
     when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
     when('/ras', {templateUrl: 'modules/rappmanager.html', controller: 'RappManagerCtrl', resolve: {products: rappManagerCtrl.getProducts, localApps: rappManagerCtrl.getLocalApps} }).
-    when('/ras/config/:projectName', {templateUrl: 'modules/rappmanager-config.html', controller: 'RappManagerConfigCtrl', resolve: { rappConfig : rappManagerConfigCtrl.loadRappConfig, bootstrapObject : rappManagerConfigCtrl.loadBootstapObject }}).
+    when('/ras/config/:projectName', {templateUrl: 'modules/rappmanager-config.html', controller: 'RappManagerConfigCtrl', resolve: { rappConfig : rappManagerConfigCtrl.loadRappConfig, bootstrapObject : rappManagerConfigCtrl.loadBootstapObject }}).    	
     otherwise({redirectTo: '/dashboard'});
 
   // $locationProvider.html5Mode(true);
@@ -112,29 +112,7 @@ angular
   });
 */
 
-rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location',function($q,$location){
-    return {
-      response: function(response){
-        if (response.status === 401) {
-          $location.path('/login').search('returnTo', $location.path());
-        }
-        return response || $q.when(response);
-      },
-      responseError: function(rejection) {
-        if (rejection.status === 401) {
-          $location.path('/login').search('returnTo', $location.path());
-        }
-        return $q.reject(rejection);
-      }
-    }
-  }])
-  .config(['$httpProvider',function($httpProvider) {
-    // http Intercpetor to check auth failures for xhr requests
-    $httpProvider.interceptors.push('authHttpResponseInterceptor');
-  }]);
 
-/*
 var interceptor = ['$rootScope', '$q', '$location', function (scope, $q, $location) {
 
   function success(response) {
@@ -159,7 +137,7 @@ var interceptor = ['$rootScope', '$q', '$location', function (scope, $q, $locati
   }
 
 }];
-*/
+
 
 // MD5
 angular.module('angular-md5', []).factory('md5', [function() {
