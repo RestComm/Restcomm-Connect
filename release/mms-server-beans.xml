@@ -51,6 +51,8 @@
                 <value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Decoder</value>
                 <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Encoder</value>
                 <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Decoder</value>
+                <value>org.mobicents.media.server.impl.dsp.audio.gsm.Encoder</value>
+                <value>org.mobicents.media.server.impl.dsp.audio.gsm.Decoder</value>
             </list>
         </property>
     </bean>
