@@ -29,7 +29,7 @@
 						</ul>
 					</li>
 					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; Save</a></li>
-					<li class='rvd-appurl' ng-show="startNodeSet()"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
+					<li class='rvd-appurl' ng-show="startNodeSet(project)"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
 					<li><a href="#/project-manager/{{project.projectKind ? project.projectKind : 'voice'}}" title="Close {{projectName}}"><i class='fa fa-power-off'></i>&nbsp;</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Settings"><i class="fa fa-cog"></i> <b class="caret"></b></a>
@@ -122,54 +122,74 @@
 						
 						</ul>-->
 						<div class="row">
-							<div class="col-md-12 form-group">
+							<div class="col-md-9 form-group">
 								<ul class="top-menu nav nav-pills">
 									<li class="dropdown">
-										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown">Startup module - <strong>{{nodeNamed(startNodeName).label}}</strong>	 <span class="caret"></span></a>
+										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="Select the module your application will start with">Startup module - <strong>{{nodeNamed(project.startNodeName).label}}</strong>	 <span class="caret"></span></a>
 										<ul class="dropdown-menu">
-											<li ng-repeat='node in nodes'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+											<li ng-repeat='node in getAllTargets()'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
 										</ul>
 									</li>
-									<li><a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text"><i class='fa fa-plus'></i>&nbsp; New Module</a></li>
+									<li><a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="Create a blank module"><i class='fa fa-plus'></i>&nbsp; New Module</a></li>
 									<!--
 									<li>
 										<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
 									</li>
 									-->
 								</ul>
-				<div ng-show="nodeNamed(startNodeName)==null" class='rvd-subheader-message'>
-					<span class="validation-error">No <em>Startup module</em> is set</span>
-				</div>
+								<div ng-show="!startNodeSet(project)" class='rvd-subheader-message'>
+									<span class="validation-error">No <em>Startup module</em> is set</span>
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-search" title="Search modules by label"></i></span>
+									<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="Type the module label to search for or simply filter the list of modules. Regex syntax supported" >
+									<div class="input-group-btn" ng-class='{open:showNodesDropdown}' >
+									  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+										  <span class="caret"></span>
+									  </button>
+									  <ul class="dropdown-menu pull-right" role="menu">
+										<li ng-repeat="node in getAllTargets() | filterNodesByLabel:searchToken"><a ng-mousedown="editNode(node.name)" class="rvd-clickable-text">{{node.label}}</a></li>
+										<li role="presentation" class="divider"></li>
+										<li><a ng-mousedown="editFilteredNodes(getAllTargets(),searchToken)" title="Open listed modules for editing"><span class="text-muted rvd-clickable-text">Edit listed</span></a></li>
+										<li><a ng-mousedown="hideAllButStartNode(getAllTargets(),project.startNodeName)" title="Hide all modules except startup"><span class="text-muted rvd-clickable-text">Hide all</span></a></li>
+									  </ul>
+									</div>
+								</div>
 							</div>
 						</div>
 						
 						
 						<ul class="nav nav-tabs">
 							<!-- tabs -->
-							<li ng-repeat='node in nodes'
-								ng-class="{active:isActiveNode(node)}"><span
-								ng-click='setActiveNode(node)' href="#" class='navtab'
-								tooltip='{{node.name}}'> <span
-									ng-show='!node.iface.editLabel'> <!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
-										<a ng-click='editLabelIfSelected(node)'>{{node.label}}</a>
-										&nbsp;&nbsp;&nbsp;<i ng-click='removeNode($index)'
-										ng-show="isActiveNode(node)"
-										class='fa fa-trash-o rvd-clickable'></i>
+							<li ng-repeat='nodeSummary in getEditedNodeNames()'
+								ng-class="{active:isNodeActive(nodeSummary.name)}">
+								<span ng-click='setActiveNode(nodeSummary.name)' href="#" class='navtab'
+								tooltip='{{nodeSummary.name}}' ng-init="view={editLabel:false,label:getNodeLabel(nodeSummary.name)}"> <span
+									ng-show='!view.editLabel'> <!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
+										<a ng-click='onEditNodeLabel(view,nodeSummary.name)' class="rvd-clickable-text">{{getNodeLabel(nodeSummary.name)}}</a>
+										&nbsp;&nbsp;&nbsp;
+										<i ng-click='removeNode(nodeSummary.name)' ng-show="isNodeActive(nodeSummary.name)" class='fa fa-trash-o rvd-clickable' title="Remove module"></i>
+										&nbsp;&nbsp;
+										<i ng-click='hideNode(nodeSummary.name)' ng-show="isNodeActive(nodeSummary.name)" class='fa fa-sort-desc rvd-clickable' title="Hide module"></i>
+
 								</span>
-									<div ng-show='node.iface.editLabel'>
-										<input type='text' ng-model='node.label'
-											ng-focus='node.iface.editLabel'
-											ng-focus-lost="node.iface.editLabel=!node.iface.editLabel" />
+									<div ng-show='view.editLabel'>
+										<input type='text' ng-model='view.label'
+											ng-focus='view.editLabel'
+											ng-focus-lost="onEditLabelFinished(view,nodeSummary.name)" />
 										&nbsp;
 									</div>
 							</span></li>
 						</ul>
-	
-						<div class="rvd-node" ng-repeat="node in nodes"
-							ng-show="isActiveNode(node)">
+						
+
+						<div class="rvd-node" ng-repeat="nodeSummary in getEditedNodeNames()" ng-show="isNodeActive(nodeSummary.name)">
 							
-							<ng-include src="'templates/modules/' + node.kind + 'Module.html'"></ng-include>
-							
+							<div ng-controller="nodeController">
+								<ng-include src="'templates/modules/' + node.kind + 'Module.html'"></ng-include>							
+							</div>
 						</div>
 	
 					</div>
