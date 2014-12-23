@@ -1,3 +1,4 @@
+/*
 angular.module('Rvd').directive('rvdModule', function (projectModules) {
 	return {
 		restrict: "A",
@@ -14,6 +15,7 @@ angular.module('Rvd').directive('rvdModule', function (projectModules) {
 		}
 	}
 });
+*/
 
 angular.module('Rvd').directive('stepHeading', function () {
 	return {

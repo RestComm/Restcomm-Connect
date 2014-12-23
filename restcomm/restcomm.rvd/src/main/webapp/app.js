@@ -23,7 +23,9 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
 			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
-			project: function(designerService, $route) {return designerService.openProject($route.current.params.projectName);}
+			project: function(designerService, $route) {
+				return designerService.openProject($route.current.params.projectName);
+			}
 		}
 	})
 	.when('/packaging/:projectName', {
@@ -62,20 +64,6 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		redirectTo : '/home'
 	});
 
-}]);
-
-
-App.factory('stepService', ['protos', function(protos) {
-	var stepService = {
-		serviceName: 'stepService',
-		lastStepId: 0,
-			 
-		newStepName: function () {
-			return 'step' + (++this.lastStepId);
-		}		 
-	};
-	
-	return stepService;
 }]);
 
 App.factory( 'dragService', [function () {
@@ -186,7 +174,7 @@ App.directive('autoClear', [function() {
   }]
 );
 
-App.directive('valueExtractor', ['protos','accessOperationKinds','objectActions','arrayActions', function (protos,accessOperationKinds,objectActions,arrayActions) {
+App.directive('valueExtractor', ['accessOperationKinds','objectActions','arrayActions', function (accessOperationKinds,objectActions,arrayActions) {
 	return {
 		restrict: 'E',
 		templateUrl: 'templates/directive/valueExtractor.html',
