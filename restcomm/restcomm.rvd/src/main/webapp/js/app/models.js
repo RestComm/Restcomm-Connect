@@ -2,7 +2,7 @@ angular.module('Rvd').service('ModelBuilder', ['$injector', function ($injector)
 	var modelBuilder = {};
 	modelBuilder.build = function (modelName) {
 		var builtModel = $injector.invoke([modelName, function(model) {
-			var newInstance = new model();
+			var newInstance = new model;
 			return newInstance;
 		}]);
 		return builtModel;
@@ -11,6 +11,7 @@ angular.module('Rvd').service('ModelBuilder', ['$injector', function ($injector)
 	return modelBuilder;
 }]);
 
+/*
 angular.module('Rvd').factory('ExceptionHandlingInfo', ['rvdModel', function(rvdModel) {
 	function ExceptionHandlingInfo() {
 		this.exceptionMappings = [];
@@ -24,10 +25,10 @@ angular.module('Rvd').factory('ExceptionHandlingInfo', ['rvdModel', function(rvd
 		else
 			return angular.copy(this);
 	}
-
+ 
 	return ExceptionHandlingInfo;
 }]);
-
+*/
 
 angular.module('Rvd').factory('CcInfo', ['rvdModel', function(rvdModel) {
 	function CcInfo() {
@@ -37,29 +38,17 @@ angular.module('Rvd').factory('CcInfo', ['rvdModel', function(rvdModel) {
 	}
 	CcInfo.prototype = new rvdModel();
 	CcInfo.prototype.constructor = CcInfo;
-	/*
-	CcInfo.prototype.pack = function () {
-		if ( this.defaultNext === undefined && this.exceptionMappings.length == 0 )
-			return undefined;
-		else
-			return angular.copy(this);
-	}
-	*/
 	return CcInfo;
 }]);
 
 angular.module('Rvd').factory('nodeModel', ['rvdModel', 'nodeRegistry', 'stepPacker', function (rvdModel, nodeRegistry, stepPacker) {
 	function NodeModel() {
-			this.id = undefined;
-			this.name = 'module';
-			this.label = 'Untitled module';
-			this.steps = [];
-			this.iface = {edited:false,editLabel:false};
-	}
+			NodeModel.NodeModel(this);
+	}	
 	NodeModel.prototype = new rvdModel();
 	NodeModel.prototype.constructor = NodeModel;
-	NodeModel.prototype.setId = function (newid) {
-		this.id = newid;
+	NodeModel.prototype.setName = function (newname) {
+		this.name = newname;
 	}
 	NodeModel.prototype.init = function(from) {
 		angular.extend(this, from);
@@ -69,5 +58,47 @@ angular.module('Rvd').factory('nodeModel', ['rvdModel', 'nodeRegistry', 'stepPac
 		}
 		return this;
 	}
+	NodeModel.NodeModel = function (o) {
+		o.name = undefined;
+		o.label = 'Untitled module';
+		o.steps = [];
+		o.iface = {edited:false,editLabel:false};
+	}
 	return NodeModel;
-}])
+}]);
+
+angular.module('Rvd').factory('voiceNodeModel', ['nodeModel', function (nodeModel) {
+	function VoiceNodeModel() {
+		nodeModel.NodeModel(this);
+		this.kind = "voice";
+			
+	}
+	VoiceNodeModel.prototype = new nodeModel();
+	VoiceNodeModel.prototype.constructor = VoiceNodeModel;
+	
+	return VoiceNodeModel;
+}]);
+
+angular.module('Rvd').factory('smsNodeModel', ['nodeModel', function (nodeModel) {
+	function SmsNodeModel() {
+		nodeModel.NodeModel(this);
+		this.kind = "sms";
+			
+	}
+	SmsNodeModel.prototype = new nodeModel();
+	SmsNodeModel.prototype.constructor = SmsNodeModel;
+	
+	return SmsNodeModel;
+}]);
+
+angular.module('Rvd').factory('ussdNodeModel', ['nodeModel', function (nodeModel) {
+	function UssdNodeModel() {
+		nodeModel.NodeModel(this);
+		this.kind = "ussd";
+			
+	}
+	UssdNodeModel.prototype = new nodeModel();
+	UssdNodeModel.prototype.constructor = UssdNodeModel;
+	
+	return UssdNodeModel;
+}]);
