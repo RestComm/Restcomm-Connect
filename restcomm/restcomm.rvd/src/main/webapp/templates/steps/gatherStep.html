@@ -37,7 +37,7 @@
 								<input type="radio" ng-model="step.gatherType" value="collectdigits"> Collect digits
 								<!-- <input type="radio" ng-model="step.gatherType" value="custom"> Custom -->						
 						</div>
-						<div ng-show="step.gatherType=='menu'">
+						<div ng-if="step.gatherType=='menu'">
 							<div ng-repeat="mapping in step.menu.mappings" class='form-group row'>
 								<form name="form" novalidate>
 									<div class='col-md-4'>
@@ -68,13 +68,13 @@
 								<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>Add mapping</span></button>
 							</div>	
 						</div>
-						<div ng-show="step.gatherType=='collectdigits'">
+						<div ng-if="step.gatherType=='collectdigits'">
 							<form name="form" novalidate>
 								<div class='form-group row'>
 									<div class='col-md-12'>
 										<div class="input-group">
 											<span class="input-group-addon">Assign to</span>
-											<input name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
+											<input rvd-variable='step.collectdigits.collectVariable' ng-model="step.collectdigits.collectVariable" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name"   required></input>
 											<span class="input-group-addon">Scope</span>
 											<select ng-model='step.collectdigits.scope' class="form-control">
 												<option value='module'>module</option>
