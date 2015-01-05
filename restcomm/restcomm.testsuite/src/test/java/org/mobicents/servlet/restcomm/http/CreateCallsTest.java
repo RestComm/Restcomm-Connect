@@ -1,12 +1,14 @@
 package org.mobicents.servlet.restcomm.http;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.text.ParseException;
 
 import javax.sip.address.SipURI;
+import javax.sip.header.FromHeader;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
@@ -153,6 +155,56 @@ public class CreateCallsTest {
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
     }
+    
+    @Test
+    // Create a call to a SIP URI. Non-regression test for issue https://github.com/Mobicents/RestComm/issues/150
+    // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
+    // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
+    // that the call created successfully)
+    public void createCallSipUriAllowFromModificationTest() throws InterruptedException {
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "sip:+15126002188@mobicents.org";
+        String to = bobContact;
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+
+        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        FromHeader fromHeader = (FromHeader) bobCall.getLastReceivedRequest().getRequestEvent().getRequest().getHeader(FromHeader.NAME);
+        assertNotNull(fromHeader);
+//        System.out.println(fromHeader);
+        assertEquals(from, fromHeader.getAddress().getURI().toString().trim());
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(3000);
+
+        bobCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+    }
 
     @Test
     // Create a call to a Restcomm Client. Non-regression test for issue
@@ -254,6 +306,35 @@ public class CreateCallsTest {
         assertTrue(aliceCall.respondToDisconnect());
     }
 
+    @Test
+    public void createCallNumberTestWith500ErrorResponse() throws InterruptedException, ParseException {
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "131313";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+
+        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.SERVER_INTERNAL_ERROR, "Service Unavailable", 3600));
+
+        assertTrue(georgeCall.waitForAck(5000));
+    }
+    
     @Deployment(name = "CreateCallsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
