@@ -2,15 +2,151 @@
 
 var rcMod = angular.module('rcApp');
 
-var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route, Notifications, rappManagerConfig) {	
-	function getLocalApp (appId, localApps) {
-		if ( appId )
-			for ( var i=0; i<localApps.length; i++ ) {
-				if (localApps[i].rappInfo.id == appId)
-					return localApps[i];
+var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route, Notifications, rappManagerConfig, $filter) {	
+	
+	/* Sample list item
+	{
+		title: "ABCauto",
+		projectName: "project ABCauto",
+		description: "bla bla bla",
+		wasImported: true,
+		hasPackaging: true,
+		hasBootstrap: false,
+		appId: [may exist or not],
+		status: ??
+		isOnline: true/false
+		isLocal: true/false
+		onlineApp: {} [may exist or not]
+		localApp: {} [may exist or not]
+		link: [exist only in onlineApp]
+	}
+	*/
+	
+	/*
+	Application Classification:
+	 * project
+	 * local app (under development)
+	 * local app (installed from package)
+	 * remote app (available from application store)
+	 * remote app (purchased by user and available for download and installation)
+	
+	applications created locally without packaging info:
+	 - returned by getLocalApps()
+	 - wasImported = false
+	 - hasPackaging = false
+	 - no .rappInfo member (not returned although it may exist)
+	 - display project name as title
+	 - no uniqueId
+	  
+	applications created locally with packaging info
+	 - returned by getLocalApps()
+	 - wasImported = false
+	 - hasPackaging = true
+	 - .rappInfo does not exist
+	 - no uniqueId
+	 
+	application downloaded from RAS or imported from package:
+	 - returned by getLocalApps()
+	 - wasImported = true
+	 - hasPackaging = false
+	 - .rappInfo exists
+	 - unieuqId should be present
+	 
+	uninstalled applications only available on RAS
+	 - returned by getProducts()
+	 - 
+	 
+	 Resolving conflicts
+	 
+	 - When a RAS/packaged application with uniqueID is installed and there 
+	   is already an existing application with the same ID, the application
+	   should be updated (under confirmation of course).
+	 - When an application package is imported that does not contain an ID
+	   (such packages are the packages that are under development or acquired
+	   through non-RAS means such as directly through email etc.)
+	   a new project should be created. In case of project name collision
+	   an indexed name (project 1,2...) should be created
+	 
+	 Populating application list
+	 
+	 All available projects should be displayed. Those that have a uniqueID
+	 that also exist in the remote products list should be populated with
+	 information from the store and ordered in the stores app order.
+	  */
+	
+	
+	function populateAppList(onlineApps,localApps) {
+		var appList = [];
+		var installedOnlineApps = []; // keep these separately
+		// go through local apps
+		for (var i=0; i<localApps.length; i++) {
+			var localApp = localApps[i];
+			var app = {};
+			app.title = localApp.projectName;
+			app.projectName = localApp.projectName;
+			app.isLocal = true;
+			app.isOnline = false;  // assume it is not online
+			// app.description = ""
+			app.wasImported = localApp.wasImported;
+			app.hasPackaging = localApp.hasPackaging;
+			app.hasBootstrap = localApp.hasBootstrap;
+			app.localApp = localApp;
+			if (localApp.rappInfo) {
+				app.appId = localApp.rappInfo.id;
 			}
-		// return undefined;
-	}	
+			
+			// try to find a matching online application
+			if (app.appId) {
+				app.onlineApp = getOnlineApp(app.appId, onlineApps);
+				if (app.onlineApp)
+					app.isOnline = true;
+			}
+			
+			if (app.isOnline)
+				installedOnlineApps.push(app); // keep these separately and add it to the end of the appList later
+			else
+				appList.push(app);
+		}
+		
+		// go through remote apps
+		for (var j=0; j<onlineApps.length; j++) {
+			var onlineApp = onlineApps[j];
+			var app = {}; // assume there is no local app for this onlineApp (based on the appId)
+			app.title = onlineApp.info.title;
+			app.description = onlineApp.info.excerpt;
+			app.wasImported = false;
+			app.hasPackaging = false;
+			app.appId = onlineApp.info.appId;
+			app.isOnline = true;
+			app.isLocal = false;
+			app.onlineApp = onlineApp;
+			app.link = onlineApp.info.link;
+			app.thumbnail = onlineApp.info.thumbnail;
+			app.category = onlineApp.info.category;
+			// app.localApp = undefined;
+			
+			// try to find a matching local application
+			var foundLocal = false;
+			for (var k=0; k<installedOnlineApps.length; k++) {
+				var processedApp = installedOnlineApps[k];
+				if ( processedApp.isOnline && processedApp.appId == onlineApp.info.appId ) {
+					// This is an installed online app. Override its properties from online data and push into appList in the right position.
+					processedApp.title = app.title;
+					processedApp.description = app.description;
+					processedApp.link = app.link;
+					processedApp.thumbnail = app.thumbnail;
+					app.category = app.category;
+					appList.push(processedApp);
+					foundLocal = true;
+					break;
+				}
+			}
+			if (!foundLocal)
+				appList.push(app);
+		}
+		return appList;
+	}
+	
 	function getOnlineApp (appId, onlineApps) {
 		if ( appId )
 			for ( var i=0; i<onlineApps.length; i++ ) {
@@ -19,36 +155,22 @@ var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $uplo
 			}
 		// return undefined
 	}
+	/*
 	function selectedListItemView (app) {
 		if ( app.local && !app.online )
 			return "local";
 		return "online";
 	}
-	$scope.selectedListItemView = selectedListItemView;
+	*/
+	//$scope.selectedListItemView = selectedListItemView;
 	
-	function mergeOnlineWithLocalApps(onlineApps, localApps) {
-		var mergedApps = [];
-		// first iterate over localApps
-		for ( var i=0; i<localApps.length; i++ ) {
-			var appId = localApps[i].rappInfo.id;
-			if ( getOnlineApp(appId, onlineApps) )
-				continue; // will populate the list when processing online apps
-			var app = {online: undefined, local: localApps[i]};
-			mergedApps.push(app);
-		}
-		// then iterate over onlineApps
-		for ( i=0; i<onlineApps.length; i++ ) {
-			var appId = onlineApps[i].info.appId;
-			var app = {online: onlineApps[i], local: getLocalApp(appId, localApps)};
-			mergedApps.push(app);
-		}
-		
-		return mergedApps;
-	}
+
 	
-	$scope.apps = mergeOnlineWithLocalApps( products, localApps );
+	//$scope.apps = mergeOnlineWithLocalApps( products, localApps );
 	
 	
+	
+	/*
 	$scope.buildStatusMessage = function(app) {
 		if ( !(app.local && app.local.status) )
 			return "Not installed";
@@ -68,11 +190,14 @@ var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $uplo
 		
 		return displayedStatus;
 	}
+	*/
 		
 	// merge AppStore and local information
+	/*
 	for ( var i=0; i<products.length; i++ ) {
 		products[i].localApp = getLocalApp(products[i].info.appId, localApps);
 	}
+	*/
 
 	$scope.onFileSelect = function($files) {
 	    for (var i = 0; i < $files.length; i++) {
@@ -103,9 +228,24 @@ var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $uplo
 	    }
 	};
 	
+	function filterApplications (apps, filter) {
+		return $filter("appsFilter")(apps,filter);
+	}
+
+	$scope.setFilter = function (newFilter) {
+		$scope.filter = newFilter;
+		$scope.filteredApps = filterApplications($scope.appList, newFilter);
+	}
+
 	$scope.formatHtml = function (markup) {
 		return $sce.trustAsHtml(markup);
 	}
+
+	
+	$scope.appList = populateAppList(products,localApps);
+	$scope.filter = "all";
+	$scope.setFilter($scope.filter);
+		
 	$scope.rappManagerConfig = rappManagerConfig;
 	
 });
@@ -123,7 +263,8 @@ rappManagerCtrl.getProducts = function ($q, $http, rappManagerConfig) {
 		deferred.resolve(data.products);
 	}).error(function () {
 		console.log("http error while retrieving products from AppStore");
-		deferred.reject("http error");
+		//deferred.reject("http error");
+		deferred.resolve([]);
 	});
 	
 	return deferred.promise;
@@ -310,3 +451,30 @@ rappManagerConfigCtrl.loadBootstapObject = function ($q, $http, $route) {
 	
 	return deferred.promise;
 }
+
+rcMod.filter('appsFilter', function() {
+  return function(appsList, filterType) {
+	  filterType = filterType || "all";
+	  var filteredList = [];
+	  for (var i=0; i<appsList.length; i++) {
+		  var app = appsList[i];
+		  if (filterType == "all") {
+		      filteredList.push(app);
+		  }
+		  else
+		  if (filterType == "local") {
+			  if (app.isLocal)
+				filteredList.push(app);
+		  }
+		  else
+		  if (filterType == "remote") {
+			  if (app.isOnline )
+				filteredList.push(app);
+		  }
+		 
+	  }
+	  return filteredList;
+  };
+})
+
+

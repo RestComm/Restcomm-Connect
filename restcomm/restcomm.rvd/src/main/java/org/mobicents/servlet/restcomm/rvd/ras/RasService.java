@@ -165,7 +165,7 @@ public class RasService {
         //List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
         List<RappItem> rappItems = FsProjectStorage.listRapps( FsProjectStorage.listProjectNames(workspaceStorage), workspaceStorage );
         for ( RappItem rappItem : rappItems )
-            if ( rappItem.rappInfo.getId() != null && rappItem.rappInfo.getId().equals(info.getId()) )
+            if ( rappItem.rappInfo != null && rappItem.rappInfo.getId() != null && rappItem.rappInfo.getId().equals(info.getId()) )
                 throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.rappInfo.getId() + "  already exists. Cannot import " + info.getName() + " app");
 
         // create a project placeholder with the application name specified in the package. This should be a default. The user should be able to override it
