@@ -1,8 +1,4 @@
-'use strict';
-
-var rcMod = angular.module('rcApp');
-
-var rappManagerCtrl = rcMod.controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route, Notifications, rappManagerConfig, $filter) {	
+var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route, Notifications, rappManagerConfig, $filter) {	
 	
 	/* Sample list item
 	{
@@ -286,6 +282,7 @@ rappManagerCtrl.getLocalApps = function ($q, $http) {
 	return deferred.promise;
 }
 
+<<<<<<< HEAD:restcomm/restcomm.ui/src/main/webapp/resources/js/controllers/rappmanager.js
 // Will need this controller when resolving its dependencies. 
 var rappManagerConfigCtrl = rcMod.controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, bootstrapObject, $http, Notifications, $window) {
 	
@@ -452,6 +449,8 @@ rappManagerConfigCtrl.loadBootstapObject = function ($q, $http, $route) {
 	return deferred.promise;
 }
 
+=======
+>>>>>>> 45ec11b... Fixes #165. Moved RestcommApps related functionality to a sub-module and better organized it in files:restcomm/restcomm.ui/src/main/webapp/resources/js/restcommApps/appManager.js
 rcMod.filter('appsFilter', function() {
   return function(appsList, filterType) {
 	  filterType = filterType || "all";
