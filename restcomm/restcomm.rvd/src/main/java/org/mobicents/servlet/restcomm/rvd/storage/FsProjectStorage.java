@@ -417,6 +417,10 @@ public class FsProjectStorage implements ProjectStorage {
         return storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
     }
 
+    public static Rapp loadRappFromPackaging(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        return workspaceStorage.loadEntity("rapp", projectName+"/packaging", Rapp.class);
+    }
+
     /**
      * Is this projoct a ras application. Checks for the existence "ras" directory
      * @param projectName

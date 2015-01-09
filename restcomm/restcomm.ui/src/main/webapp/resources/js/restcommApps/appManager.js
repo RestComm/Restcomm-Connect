@@ -20,6 +20,11 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	
 	/*
 	Application Classification:
+	 * local
+	 * local (exported)
+	 * imported 
+	 * imported (RAS)
+	 * 
 	 * project
 	 * local app (under development)
 	 * local app (installed from package)
@@ -89,6 +94,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 			app.localApp = localApp;
 			if (localApp.rappInfo) {
 				app.appId = localApp.rappInfo.id;
+				app.description = localApp.rappInfo.description;
 			}
 			
 			// try to find a matching online application
@@ -140,6 +146,13 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 			if (!foundLocal)
 				appList.push(app);
 		}
+		
+		// re-scan and finalize the appList
+		for (i=0; i<appList.length; i++) {
+			var app = appList[i];
+			app.type = getTypeForApp(app);
+			app.status = getStatusForApp(app);
+		}
 		return appList;
 	}
 	
@@ -150,51 +163,36 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 					return onlineApps[i];
 			}
 		// return undefined
-	}
-	/*
-	function selectedListItemView (app) {
-		if ( app.local && !app.online )
+	}	
+	
+	
+	function getTypeForApp (app) {
+		if (app.isLocal && !app.wasImported)
 			return "local";
-		return "online";
-	}
-	*/
-	//$scope.selectedListItemView = selectedListItemView;
-	
-
-	
-	//$scope.apps = mergeOnlineWithLocalApps( products, localApps );
-	
-	
-	
-	/*
-	$scope.buildStatusMessage = function(app) {
-		if ( !(app.local && app.local.status) )
-			return "Not installed";
+		
+		if (app.isLocal && app.hasPackaging )
+			return "local (packaged)";
 			
-		var statuses = app.local.status;
-		var displayedStatus = "";
-		if ( statuses.indexOf('Unconfigured') != -1 )
-			displayedStatus = "Installed, Needs configuration";
-		else
-		if ( statuses.indexOf('Active') != -1 )
-			displayedStatus = "Active";
-		else
-			displayedStatus = statuses;
-		
-		if ( ! app.online )
-			displayedStatus = "Local, " + displayedStatus;
-		
-		return displayedStatus;
+		if (app.wasImported && app.isOnline)
+			return "imported (RAS)";
+			
+		if (app.isOnline && !app.isLocal)
+			return "available online (RAS)";
+			
+		if (app.wasImported && !app.isOnline)
+			return "imported";
 	}
-	*/
-		
-	// merge AppStore and local information
-	/*
-	for ( var i=0; i<products.length; i++ ) {
-		products[i].localApp = getLocalApp(products[i].info.appId, localApps);
+	
+	
+	function getStatusForApp(app) {
+		if (app.isLocal) { 
+			if (app.hasPackaging && !app.hasBootstrap)
+				return "needs configuration";
+			else
+				return "OK";
+		}
 	}
-	*/
-
+	
 	$scope.onFileSelect = function($files) {
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
@@ -224,23 +222,39 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	    }
 	};
 	
-	function filterApplications (apps, filter) {
-		return $filter("appsFilter")(apps,filter);
+	function filterApplications (apps, filter, searchText) {
+		return $filter("appsFilter")(apps,filter, searchText);
 	}
 
-	$scope.setFilter = function (newFilter) {
+	$scope.setFilter = function (newFilter, searchFilterText) {
 		$scope.filter = newFilter;
-		$scope.filteredApps = filterApplications($scope.appList, newFilter);
+		$scope.filteredApps = filterApplications($scope.appList, newFilter, searchFilterText);
+	}
+	
+	$scope.searchTextClicked = function (searchFilterText) {
+		$scope.filteredApps = filterApplications($scope.appList, $scope.filter, searchFilterText);
 	}
 
 	$scope.formatHtml = function (markup) {
 		return $sce.trustAsHtml(markup);
 	}
+	
+	$scope.switchOrder = function(field, sortPredicate ) {
+		var newPredicate = field;
+		if (newPredicate == sortPredicate)
+			newPredicate = "-"+sortPredicate;
+		return newPredicate;
+	}
+	
+	$scope.getTypeForApp = getTypeForApp;
+	$scope.getStatusForApp = getStatusForApp;
 
 	
 	$scope.appList = populateAppList(products,localApps);
+	$scope.filterText = "";
 	$scope.filter = "all";
 	$scope.setFilter($scope.filter);
+	$scope.sortPredicate = "title";
 		
 	$scope.rappManagerConfig = rappManagerConfig;
 	
@@ -283,21 +297,47 @@ rappManagerCtrl.getLocalApps = function ($q, $http) {
 }
 
 rcMod.filter('appsFilter', function() {
-  return function(appsList, filterType) {
+  return function(appsList, filterType, searchFilterText) {
 	  filterType = filterType || "all";
 	  var filteredList = [];
+	  
+	  var nameRegex;
+	  if ( searchFilterText )
+	  		nameRegex = new RegExp(searchFilterText, "i");
+
 	  for (var i=0; i<appsList.length; i++) {
 		  var app = appsList[i];
+		  // first search by text filter and drop application that do not match
+		  if (nameRegex) {
+			  var matched = false;
+			  if ( nameRegex.exec(app.projectName) != null )
+				  matched = true;
+			  if ( nameRegex.exec(app.title) != null )
+				  matched = true;				
+			  if (!matched)
+				  continue;
+		  }
+		  		  
 		  if (filterType == "all") {
 		      filteredList.push(app);
 		  }
 		  else
 		  if (filterType == "local") {
-			  if (app.isLocal)
+			  if (app.isLocal && !app.wasImported)
 				filteredList.push(app);
 		  }
 		  else
-		  if (filterType == "remote") {
+		  if (filterType == "imported") {
+			  if (app.wasImported )
+				filteredList.push(app);
+		  }		
+		  else
+		  if (filterType == "packaged") {
+			  if (app.isLocal && app.hasPackaging )
+				filteredList.push(app);
+		  }			    
+		  else
+		  if (filterType == "ras") {
 			  if (app.isOnline )
 				filteredList.push(app);
 		  }
