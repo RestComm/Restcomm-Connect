@@ -401,7 +401,13 @@ public class FsProjectStorage implements ProjectStorage {
         return workspaceStorage.entityExists("bootstrap", projectName);
     }
 
+    public static boolean hasRasInfo(String projectName, WorkspaceStorage workspaceStorage) {
+        return workspaceStorage.entityExists("ras", projectName);
+    }
 
+    public static boolean hasPackagingInfo(String projectName, WorkspaceStorage workspaceStorage) {
+        return workspaceStorage.entityExists("packaging", projectName);
+    }
 
     public void storeRapp(Rapp rapp, String projectName) throws StorageException {
         storageBase.storeFileToProject(rapp, rapp.getClass(), projectName, "ras", "rapp");
@@ -409,6 +415,10 @@ public class FsProjectStorage implements ProjectStorage {
 
     public Rapp loadRapp(String projectName) throws StorageException {
         return storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
+    }
+
+    public static Rapp loadRappFromPackaging(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
+        return workspaceStorage.loadEntity("rapp", projectName+"/packaging", Rapp.class);
     }
 
     /**
@@ -428,16 +438,15 @@ public class FsProjectStorage implements ProjectStorage {
      * @throws StorageException
      */
     public static List<RappItem> listRapps(List<String> projectNames, WorkspaceStorage workspaceStorage) throws StorageException {
-        //List<String> projectNames = storageBase.listProjectNames();
         List<RappItem> rapps = new ArrayList<RappItem>();
         for (String projectName : projectNames) {
-            //if ( storageBase.projectFileExists(projectName, "ras", "rapp") ) {
-            if ( workspaceStorage.entityExists("rapp", projectName + "/ras") ) {
-                RappItem item = new RappItem();
-                item.setProjectName(projectName);
+            RappItem item = new RappItem();
+            item.setProjectName(projectName);
+
+            if ( FsProjectStorage.hasRasInfo(projectName, workspaceStorage) ) {
+                item.setWasImported(true);
 
                 // load info from rapp file
-                //Rapp rapp = storageBase.loadModelFromProjectFile(projectName, "ras", "rapp", Rapp.class);
                 Rapp rapp = workspaceStorage.loadEntity("rapp", projectName+"/ras", Rapp.class);
                 item.setRappInfo(rapp.getInfo());
 
@@ -450,9 +459,32 @@ public class FsProjectStorage implements ProjectStorage {
                 statuses[1] = configuredStatus ? RappStatus.Configured : RappStatus.Unconfigured;
                 statuses[2] = activeStatus ? RappStatus.Active : RappStatus.Inactive;
                 item.setStatus(statuses);
+            } else
+                item.setWasImported(false);
 
-                rapps.add(item);
-            }
+            if ( FsProjectStorage.hasPackagingInfo(projectName, workspaceStorage) ) {
+                item.setHasPackaging(true);
+
+                // load info from rapp file
+                Rapp rapp = workspaceStorage.loadEntity("rapp", projectName+"/packaging", Rapp.class);
+                item.setRappInfo(rapp.getInfo());
+
+                // app status
+                /*boolean installedStatus = true;
+                boolean configuredStatus = FsProjectStorage.hasBootstrapInfo(projectName, workspaceStorage);
+                boolean activeStatus = installedStatus && configuredStatus;
+                RappStatus[] statuses = new RappStatus[3];
+                statuses[0] = RappStatus.Installed; // always set
+                statuses[1] = configuredStatus ? RappStatus.Configured : RappStatus.Unconfigured;
+                statuses[2] = activeStatus ? RappStatus.Active : RappStatus.Inactive;
+                item.setStatus(statuses);
+                */
+            } else
+                item.setHasPackaging(false);
+
+            item.setHasBootstrap(FsProjectStorage.hasBootstrapInfo(projectName, workspaceStorage));
+
+            rapps.add(item);
         }
         return rapps;
     }
