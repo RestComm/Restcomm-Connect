@@ -317,6 +317,21 @@ public class RasRestService extends RestService {
         }
     }
 
+
+    @GET
+    @Path("apps/{name}/config/dev")
+    public Response getConfigFromPackaging(@PathParam("name") String projectName) {
+        logger.info("getting configuration options for " + projectName);
+       try {
+            Rapp rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
+            return buildOkResponse(rapp.getConfig());
+        } catch (StorageException e) {
+            logger.error(e.getMessage(), e);
+            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        }
+    }
+
+
     /**
      * Sets bootstrap parameters for the application.
      * @param request
