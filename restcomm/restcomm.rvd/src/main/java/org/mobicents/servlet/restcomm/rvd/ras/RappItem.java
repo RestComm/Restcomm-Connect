@@ -15,6 +15,9 @@ public class RappItem {
     RappInfo rappInfo;
     RappStatus[] status;
     String projectName;
+    Boolean wasImported;
+    Boolean hasPackaging;
+    Boolean hasBootstrap;
     public RappInfo getRappInfo() {
         return rappInfo;
     }
@@ -32,5 +35,23 @@ public class RappItem {
     }
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+    public Boolean getWasImported() {
+        return wasImported;
+    }
+    public void setWasImported(Boolean wasImported) {
+        this.wasImported = wasImported;
+    }
+    public Boolean getHasPackaging() {
+        return hasPackaging;
+    }
+    public void setHasPackaging(Boolean hasPackaging) {
+        this.hasPackaging = hasPackaging;
+    }
+    public Boolean getHasBootstrap() {
+        return hasBootstrap;
+    }
+    public void setHasBootstrap(Boolean hasBootstrap) {
+        this.hasBootstrap = hasBootstrap;
     }
 }

@@ -215,7 +215,23 @@ ul#rightMenu > li i {
     margin-top: 5px;
 }
 
-/* Rapp Manager classes ---------------------------------------------------------- */
+
+
+/* App manager styles ----------------------------- */
+
+/* app list filter buttons */
+.btn.btn-default.filter.active:focus {
+	background-color: #ebebeb;
+	border-color: #adadad;	
+}
+.btn.btn-default.filter:focus {
+	background-color: #fff;
+	border-color: #ccc;
+}
+
+.rappmanager .app-title-wrap:not(:first-child) {
+	margin-top: 10px;
+}
 
 .drop-area {
 	background: none repeat scroll 0% 0% rgb(248, 248, 248);
@@ -275,6 +291,7 @@ ul#rightMenu > li i {
 .rapp-title .thumbnail:hover {
 	opacity: 0.6;
 }
+
 
 /* Providers classes -------------------------------------------------------- */
 
