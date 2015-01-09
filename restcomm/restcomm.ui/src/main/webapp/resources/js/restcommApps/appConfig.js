@@ -99,6 +99,7 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 	$scope.initRappConfig($scope.rappConfig);
 });
 
+/*
 rappManagerConfigCtrl.loadRappConfig = function ($q, $http, $route) {
 	var defer = $q.defer();
 	
@@ -118,6 +119,9 @@ rappManagerConfigCtrl.loadRappConfig = function ($q, $http, $route) {
 	
 	return defer.promise;
 };
+*/
+
+/*
 rappManagerConfigCtrl.loadBootstapObject = function ($q, $http, $route) {
 	var deferred = $q.defer();
 	$http.get('/restcomm-rvd/services/ras/apps/' + $route.current.params.projectName + '/bootstrap' )
@@ -133,3 +137,4 @@ rappManagerConfigCtrl.loadBootstapObject = function ($q, $http, $route) {
 	
 	return deferred.promise;
 }
+*/
