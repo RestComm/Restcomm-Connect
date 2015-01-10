@@ -50,8 +50,8 @@ public final class SmsSessionTest {
 
     @Before
     public void before() throws Exception {
-        receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:+17778889999@127.0.0.1:5070");
+        receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
+        phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:+17778889999@127.0.0.1:5091");
     }
 
     @After
@@ -65,14 +65,14 @@ public final class SmsSessionTest {
         deployer.undeploy("SmsSessionTest");
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void testSendSmsRedirectReceiveSms() throws ParseException {
         deployer.deploy("SmsSessionTest");
         // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":5080;lr/udp";
-        final String to = "sip:+12223334444@127.0.0.1:5080";
-        final String body = "Hello World!";
+        final String to = "sip:+12223334450@127.0.0.1:5080";
+        final String body = "Hello, waiting your response!";
         final SipCall call = phone.createSipCall();
         call.initiateOutgoingMessage(to, proxy, body);
         assertLastOperationSuccess(call);
@@ -86,6 +86,46 @@ public final class SmsSessionTest {
         assertTrue(messages.get(0).equals("Hello World!"));
     }
 
+    @Test
+    public void testSendSmsRedirectReceiveSms2() throws ParseException {
+        deployer.deploy("SmsSessionTest");
+        // Send restcomm an sms.
+        final String proxy = phone.getStackAddress() + ":5080;lr/udp";
+        final String to = "sip:2001@127.0.0.1:5080";
+        final String body = "Hello, waiting your response!";
+        final SipCall call = phone.createSipCall();
+        call.initiateOutgoingMessage(to, proxy, body);
+        assertLastOperationSuccess(call);
+        // Wait for a response sms.
+        phone.setLoopback(true);
+        phone.listenRequestMessage();
+        assertTrue(call.waitForMessage(60 * 1000));
+        call.sendMessageResponse(202, "Accepted", -1);
+        final List<String> messages = call.getAllReceivedMessagesContent();
+        assertTrue(messages.size() > 0);
+        assertTrue(messages.get(0).equals("Hello World!"));
+    }
+    
+    @Test
+    public void testSendSmsRedirectReceiveSms3() throws ParseException {
+        deployer.deploy("SmsSessionTest");
+        // Send restcomm an sms.
+        final String proxy = phone.getStackAddress() + ":5080;lr/udp";
+        final String to = "sip:2001@127.0.0.1:5080";
+        final String body = "Hello, waiting your response!";
+        final SipCall call = phone.createSipCall();
+        call.initiateOutgoingMessage(to, proxy, body);
+        assertLastOperationSuccess(call);
+        // Wait for a response sms.
+        phone.setLoopback(true);
+        phone.listenRequestMessage();
+        assertTrue(call.waitForMessage(60 * 1000));
+        call.sendMessageResponse(202, "Accepted", -1);
+        final List<String> messages = call.getAllReceivedMessagesContent();
+        assertTrue(messages.size() > 0);
+        assertTrue(messages.get(0).equals("Hello World!"));
+    }
+    
     @Deployment(name = "SmsSessionTest", managed = false, testable = false)
     public static WebArchive createWebArchive() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
@@ -97,8 +137,8 @@ public final class SmsSessionTest {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm_SmsTest.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm.script_SmsTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("entry.xml");
         archive.addAsWebResource("sms.xml");
         return archive;
