@@ -7,7 +7,7 @@ import java.util.List;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
+import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 

@@ -22,7 +22,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
 import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
@@ -348,10 +348,12 @@ public class ProjectService {
      * @return
      * @throws RvdException
      */
+
     public RvdProject load(String projectName) throws RvdException {
         String projectJson = projectStorage.loadProjectState(projectName);
         RvdProject project = RvdProject.fromJson(projectName, projectJson);
         return project;
     }
+
 
 }

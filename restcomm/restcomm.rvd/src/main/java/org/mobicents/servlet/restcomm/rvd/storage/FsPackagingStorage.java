@@ -8,8 +8,8 @@ import java.io.InputStream;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
-import org.mobicents.servlet.restcomm.rvd.packaging.exception.AppPackageDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
+import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.AppPackageDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 public class FsPackagingStorage implements PackagingStorage {
