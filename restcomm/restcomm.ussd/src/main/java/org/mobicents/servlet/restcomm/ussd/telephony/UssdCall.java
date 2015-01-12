@@ -97,6 +97,8 @@ public class UssdCall extends UntypedActor  {
     private final State completed;
     private final State queued;
     private final State dialing;
+    private final State disconnecting;
+    private final State cancelling;
 
     // SIP runtime stuff.
     private final SipFactory factory;
@@ -138,22 +140,29 @@ public class UssdCall extends UntypedActor  {
         completed = new State("Completed", new Completed(source), null);
         queued = new State("queued", new Queued(source), null);
         dialing = new State("dialing", new Dialing(source), null);
+        disconnecting = new State("Disconnecting", new Disconnecting(source), null);
+        cancelling = new State("Cancelling", new Cancelling(source), null);
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, ringing));
+        transitions.add(new Transition(uninitialized, cancelling));
         transitions.add(new Transition(uninitialized, queued));
         transitions.add(new Transition(queued, dialing));
+        transitions.add(new Transition(queued, cancelling));
         transitions.add(new Transition(dialing, processingUssdMessage));
         transitions.add(new Transition(dialing, completed));
         transitions.add(new Transition(ringing, inProgress));
+        transitions.add(new Transition(ringing, cancelling));
         transitions.add(new Transition(inProgress, processingUssdMessage));
+        transitions.add(new Transition(inProgress, disconnecting));
         transitions.add(new Transition(inProgress, completed));
         transitions.add(new Transition(processingUssdMessage, ready));
         transitions.add(new Transition(processingUssdMessage, inProgress));
         transitions.add(new Transition(processingUssdMessage, completed));
         transitions.add(new Transition(processingUssdMessage, processingUssdMessage));
         transitions.add(new Transition(processingUssdMessage, dialing));
+        transitions.add(new Transition(processingUssdMessage, disconnecting));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -184,6 +193,10 @@ public class UssdCall extends UntypedActor  {
     }
 
     private CallResponse<CallInfo> info() {
+        if (from == null)
+            from = (SipURI) invite.getFrom().getURI();
+        if (to == null)
+            to = (SipURI) invite.getTo().getURI();
         final String from = this.from.getUser();
         final String to = this.to.getUser();
         final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, lastResponse);
@@ -269,6 +282,11 @@ public class UssdCall extends UntypedActor  {
                 if (uninitialized.equals(state)) {
                     fsm.transition(message, ringing);
                 }
+            } else if ("BYE".equalsIgnoreCase(method)) {
+                fsm.transition(message, disconnecting);
+            } else if("CANCEL".equalsIgnoreCase(method)) {
+                if (!request.getSession().getState().equals(SipSession.State.CONFIRMED) || !request.getSession().getState().equals(SipSession.State.TERMINATED))
+                    fsm.transition(message, cancelling);
             }
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
@@ -417,6 +435,79 @@ public class UssdCall extends UntypedActor  {
             request.send();
             if(ussdRequest.getIsFinalMessage())
                 fsm.transition(request, completed);
+        }
+    }
+
+    private final class Cancelling extends AbstractAction {
+        public Cancelling(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            logger.info("Cancelling the call");
+            SipServletRequest cancel = (SipServletRequest)message;
+            SipServletResponse requestTerminated = invite.createResponse(SipServletResponse.SC_REQUEST_TERMINATED);
+//            SipServletResponse requestTerminated = cancel.createResponse(SipServletResponse.SC_REQUEST_TERMINATED);
+            requestTerminated.send();
+
+            if (invite != null) {
+                invite.getSession().invalidate();
+            }
+            if (outgoingInvite != null) {
+                outgoingInvite.getSession().invalidate();
+            }
+            // Notify the observers.
+            external = CallStateChanged.State.CANCELED;
+            final CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")) {
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.CANCELED.name());
+                final DateTime now = DateTime.now();
+                outgoingCallRecord = outgoingCallRecord.setEndTime(now);
+                final int seconds = 0;
+                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
+                callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
+            logger.info("Call Cancelled");
+        }
+    }
+
+    private final class Disconnecting extends AbstractAction {
+        public Disconnecting(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            logger.info("Disconnecting the call");
+            SipServletRequest bye = (SipServletRequest)message;
+            SipServletResponse response = bye.createResponse(SipServletResponse.SC_OK);
+            response.send();
+
+            if (invite != null) {
+                invite.getSession().invalidate();
+            }
+            if (outgoingInvite != null) {
+                outgoingInvite.getSession().invalidate();
+            }
+            // Notify the observers.
+            external = CallStateChanged.State.CANCELED;
+            final CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
+            if (outgoingCallRecord != null && direction.contains("outbound")) {
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.CANCELED.name());
+                final DateTime now = DateTime.now();
+                outgoingCallRecord = outgoingCallRecord.setEndTime(now);
+                final int seconds = 0;
+                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
+                callDetailrecordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
+            logger.info("Call Disconnected");
         }
     }
 

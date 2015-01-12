@@ -15,7 +15,7 @@
 				Package your application to submit it to the <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}">Restcomm Application Store</a>
 			</p>
 			<p> 
-				Provide configuration options for plugging this application into the customer's environment.
+				Provide configuration options for plugging this application into the end user's environment.
 			</p>
 			
 			<form name="packagingForm" novalidate>
@@ -101,8 +101,8 @@
 		
 				<div class="rvd-spacer10">&nbsp;</div>
 				
-				<h4>Application services parameters</h4>
-				<p>If your application relies on additional services you will need to specify <em>instanceToken</em> and <em>backendRootURL</em> parameters. For more information on custom application services and multitenancy please see <a href="#">Writing multitenant application for the application store</a>.
+				<h4>Application services and multitenancy</h4>
+				<p>If your application relies on multitenant external services you will need to specify <em>instanceToken</em> and <em>backendRootURL</em> parameters. For more information on this topic please see <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}/how-to/writing-multitenant-applications">Writing multitenant applications for the application store</a>.
 				<ul>
 					<li><strong>instanceToken</strong> - Used to identify each individual instance of this application to the backend. It also works as an authentication token.</li>
 					<li><strong>backendRootURL</strong> - The root url for the REST services. Place all custom scripts under this URL.</li>

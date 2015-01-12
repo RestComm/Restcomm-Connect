@@ -5,7 +5,7 @@
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>7.2.0-SNAPSHOT</version>
+	<version>7.2.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -133,6 +133,7 @@
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
+        <module>restcomm.provisioning.number.bandwidth</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
@@ -142,7 +143,7 @@
 		<module>restcomm.ussd</module>
 		<module>restcomm.ui</module>
 		<module>restcomm.rvd</module>
-	</modules>
+    </modules>
 
 	<dependencyManagement>
 		<dependencies>

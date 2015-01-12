@@ -212,11 +212,14 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         final String from = data.getFirst("From");
-        data.remove("From");
-        try {
-            data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
-        } catch (final NumberParseException exception) {
-            throw new IllegalArgumentException(exception);
+        if (!from.contains("@")) {
+            // https://github.com/Mobicents/RestComm/issues/150 Don't complain in case of URIs in the From header
+            data.remove("From");
+            try {
+                data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
+            } catch (final NumberParseException exception) {
+                throw new IllegalArgumentException(exception);
+            }
         }
         final String to = data.getFirst("To");
         // Only try to normalize phone numbers.
