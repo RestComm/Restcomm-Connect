@@ -16,13 +16,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.model.RappItem.RappStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.Rapp;
-import org.mobicents.servlet.restcomm.rvd.ras.RappItem;
-import org.mobicents.servlet.restcomm.rvd.ras.RappItem.RappStatus;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExists;
@@ -32,6 +30,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist
 import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
 import org.mobicents.servlet.restcomm.rvd.utils.exceptions.ZipperException;
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
+import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.model.server.ProjectOptions;
 
 import com.google.common.reflect.TypeToken;
@@ -41,6 +40,7 @@ import com.google.gson.JsonParser;
 
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
+import org.mobicents.servlet.restcomm.rvd.model.RappItem;
 
 public class FsProjectStorage implements ProjectStorage {
     static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
