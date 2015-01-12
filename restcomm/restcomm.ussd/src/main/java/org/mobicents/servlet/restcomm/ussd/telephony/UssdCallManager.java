@@ -153,7 +153,11 @@ public class UssdCallManager extends UntypedActor {
                 invite(request);
             } else if ("INFO".equalsIgnoreCase(method)) {
                 processRequest(request);
-            } else if ("ACK".equals(method)) {
+            } else if ("ACK".equalsIgnoreCase(method)) {
+                processRequest(request);
+            } else if("BYE".equalsIgnoreCase(method)) {
+                processRequest(request);
+            } else if("CANCEL".equalsIgnoreCase(method)) {
                 processRequest(request);
             }
         } else if (message instanceof SipServletResponse) {
@@ -242,9 +246,9 @@ public class UssdCallManager extends UntypedActor {
                 }
                 final ActorRef ussdInterpreter = builder.build();
                 final ActorRef ussdCall = ussdCall();
+                ussdCall.tell(request, self);
 
                 ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
-                ussdCall.tell(request, self);
 
                 SipApplicationSession applicationSession = request.getApplicationSession();
                 applicationSession.setAttribute("UssdCall","true");

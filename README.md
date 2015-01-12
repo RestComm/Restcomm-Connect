@@ -23,6 +23,9 @@ Downloads
 
 [Get the latest release!](https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/) or [TRY IT NOW](https://aws.amazon.com/marketplace/pp/B00FFHJ6SU) on Amazon Marketplace. It only takes a few minutes to set it up and running.
 
+Click on the image below for a video tutorial on setting up RestComm on the Amazon Marketplace 
+[![Quick start with Restcomm on AWS Marketplace](http://img.youtube.com/vi/MsUp7PyMzc0/0.jpg)]( https://www.youtube.com/watch?v=MsUp7PyMzc0)
+
 Documentation
 ========
 Read the [Online RestComm Documentation](http://docs.telestax.com/) or it is also contained in the download binary
@@ -37,7 +40,7 @@ Issue Tracking and Roadmap
 
 Questions ?
 ========
-Please ask your question on our [public forum](http://groups.google.com/group/restcomm)
+Please ask your question on [StackOverflow](http://stackoverflow.com/search?q=restcomm) or the Google [public forum](http://groups.google.com/group/restcomm)
 
 License
 ========

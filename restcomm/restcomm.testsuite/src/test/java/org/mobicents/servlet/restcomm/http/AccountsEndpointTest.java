@@ -13,6 +13,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -42,6 +43,11 @@ public class AccountsEndpointTest {
     private String newAdminAuthToken = "8e70383c69f7a3b7ea3f71b02f3e9731";
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
+    
+    @After
+    public void after() throws InterruptedException {
+        Thread.sleep(1000);
+    }
     
     @Test
     public void testGetAccount() {

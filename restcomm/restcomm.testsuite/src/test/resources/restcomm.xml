@@ -23,12 +23,10 @@
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings
-		</recordings-uri>
+		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors
-		</error-dictionary-uri>
+		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -37,6 +35,14 @@
 		<!-- If set to true RestComm will use the To header to determine the destination. 
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
+
+		<!-- If set to true Restcomm will use the Local Address (or external address if available) 
+		     in the host part of the From header for calls to the outbound proxy. 
+		     Default is False, which means that Restcomm will use outbound proxy for the host part of From header -->
+		<use-local-address>false</use-local-address>
+
+		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
+		<authenticate>true</authenticate>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
