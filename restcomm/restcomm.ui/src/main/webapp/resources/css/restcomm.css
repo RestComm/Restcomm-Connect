@@ -133,6 +133,10 @@ input.ng-dirty.ng-invalid {
     margin-top: 5px;
 }
 
+.hover-underline:hover {
+	text-decoration: underline;
+}
+
 /* Index.html classes ------------------------------------------------------- */
 
 ul#rightMenu > li i {
@@ -229,6 +233,18 @@ ul#rightMenu > li i {
 	border-color: #ccc;
 }
 
+.rappmanager .rapp-list thead th.status-col {
+	min-width:80px;
+}
+
+.rappmanager .rapp-list thead th.type-col {
+	min-width:80px;
+}
+
+.rappmanager .rapp-list thead th.title-col {
+	min-width:150px;
+}
+
 .rappmanager .app-title-wrap:not(:first-child) {
 	margin-top: 10px;
 }
@@ -282,10 +298,6 @@ ul#rightMenu > li i {
 
 .rapp-summary-cell {
 	margin-top: 7px;
-}
-
-.rappmanager .rapp-list thead th {
-	padding: 18px 20px 18px 0;
 }
 
 .rapp-title .thumbnail:hover {

@@ -186,7 +186,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	
 	function getStatusForApp(app) {
 		if (app.isLocal) { 
-			if (app.hasPackaging && !app.hasBootstrap)
+			if ((app.hasPackaging || app.isOnline) && !app.hasBootstrap )
 				return "needs configuration";
 			else
 				return "OK";

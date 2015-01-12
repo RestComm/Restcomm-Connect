@@ -21,7 +21,7 @@
 		</div>
 		<div class="col-md-5">
 			<div class="btn-group" role="group">
-			  <button ng-click="setFilter('all',filterText)" type="button" ng-class="{'active': filter=='all'}" class="filter btn btn-default" title="Display all applications. Installed or available from RAS">All</button>
+			  <button ng-click="setFilter('all',filterText)" type="button" ng-class="{'active': filter=='all'}" class="filter btn btn-default" title="Display all applications, either locally installed or available from RAS">All</button>
 			  <button ng-click="setFilter('local',filterText)" type="button" ng-class="{'active': filter=='local'}" class="filter btn btn-default" title="Display applications created in this instance">Local</button>
 			  <button ng-click="setFilter('imported',filterText)" type="button" ng-class="{'active': filter=='imported'}" class="filter btn btn-default" title="Display applications imported as packages from RAS or other means">Imported</button>
 			  <button ng-click="setFilter('packaged',filterText)" type="button" ng-class="{'active': filter=='packaged'}" class="filter btn btn-default" title="Display packaged applications to be exported">Packaged</button>
@@ -44,57 +44,58 @@
 		<table class="table">
 			<thead>
 				<tr class="text-muted">
-					<th class="text-center clickable" ng-click="sortPredicate = switchOrder('title',sortPredicate)">Title &nbsp;<i ng-show="sortPredicate=='title'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-title'" class="fa fa-sort-desc"></i></th>
-					<th class="text-center clickable" ng-click="sortPredicate = switchOrder('type',sortPredicate)">Type &nbsp;<i ng-show="sortPredicate=='type'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-type'" class="fa fa-sort-desc"></i></th>
-					<th class="text-center clickable" ng-click="sortPredicate = switchOrder('status',sortPredicate)">Status  &nbsp;<i ng-show="sortPredicate=='status'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-status'" class="fa fa-sort-desc"></i></th>
-					<th>Categories</th>
-					<th>Description</th>
+					<th class="title-col text-center clickable" ng-click="sortPredicate = switchOrder('title',sortPredicate)"><span class="hover-underline">Title</span> &nbsp;<i ng-show="sortPredicate=='title'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-title'" class="fa fa-sort-desc"></i></th>
+					<th class="type-col text-center clickable" ng-click="sortPredicate = switchOrder('type',sortPredicate)"><span class="hover-underline">Type</span> &nbsp;<i ng-show="sortPredicate=='type'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-type'" class="fa fa-sort-desc"></i></th>
+					<th class="status-col text-center clickable" ng-click="sortPredicate = switchOrder('status',sortPredicate)"><span class="hover-underline">Status</span>  &nbsp;<i ng-show="sortPredicate=='status'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-status'" class="fa fa-sort-desc"></i></th>
+					<th class="categories-col">Categories</th>
+					<th class="description-col">Description</th>
 					<th></th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr ng-repeat="app in filteredApps | orderBy:sortPredicate" class="rapp-item">
 					<!-- Title -->
-					<td ng-show="app.isOnline" class="rapp-title">
+					<td class="title-col" ng-show="app.isOnline" class="rapp-title">
 						<div class="rapp-title-cell">
 							<a href="{{app.link}}" target="_blank"><img class="img-thumbnail thumbnail" src="{{app.thumbnail}}"></a>
 							<div class="text-center app-title-wrap app-ras">
-								<a href="{{app.link}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
+								<a ng-show="app.isLocal" href="/restcomm-rvd/#/designer/{{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
+								<span ng-show="!app.isLocal">{{app.title}}</span>
 							</div>
 							<!--<div class="text-center text-muted" title="application unique id">{{app.appId}}</div>-->
 						</div>
 					</td>
-					<td ng-show="!app.isOnline" class="status-col">
+					<td class="title-col" ng-show="!app.isOnline" class="status-col">
 						<div class="text-center app-title-wrap">
 							<a href="/restcomm-rvd/#/designer/{{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
 						</div>
 						<!--<div class="text-center text-muted">{{app.appId}}</div>-->
 					</td>	
 					
-					<td class="status-col text-muted">
+					<td class="status-col text-center text-muted">
 						{{getTypeForApp(app)}}
 					</td>
 							
 					
 					<!-- Status -->
-					<td class="status-col text-muted">
+					<td class="app-status status-col text-center text-muted">
 						<div>
 						{{getStatusForApp(app)}}
 						</div>
 					</td>
 					
 					<!-- Categories -->
-					<td>
+					<td class="categories-col">
 						<span ng-show="app.isOnline" ng-repeat="(catid, category) in app.category" class="label label-default category-tag">{{category.name}}</span>
 					</td>
 					
 					<!-- Summary -->
-					<td ng-show="app.isOnline">
+					<td class="description-col" ng-show="app.isOnline">
 						<div class="rapp-summary-cell">
 							{{app.description}}
 						</div>
 					</td>
-					<td ng-show="!app.isOnline">{{app.description}}</td>
+					<td class="description-col" ng-show="!app.isOnline">{{app.description}}</td>
 					
 					<!-- Actions -->
 					<td class="action-col">
