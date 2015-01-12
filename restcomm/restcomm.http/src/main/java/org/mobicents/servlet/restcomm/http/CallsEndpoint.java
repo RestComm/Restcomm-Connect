@@ -65,6 +65,7 @@ import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.GetCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
 
@@ -359,14 +360,30 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(callSid));
 
+        final String url = data.getFirst("Url");
+        String method = data.getFirst("Method");
+        final String status = data.getFirst("Status");
+        final String fallBackUrl = data.getFirst("FallbackUrl");
+        String fallBackMethod = data.getFirst("FallbackMethod");
+        final String statusCallBack = data.getFirst("StatusCallback");
+        String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
+        //Restcomm-  Move connected call leg (if exists) to the new URL
+        Boolean moveConnectedCallLeg = Boolean.valueOf(data.getFirst("MoveConnectedCallLeg"));
+
         String callPath = null;
         final ActorRef call;
+        ActorRef outboundCall = null;
         final CallInfo callInfo;
 
         try {
             callPath = cdr.getCallPath();
             Future<Object> future = (Future<Object>) ask(callManager, new GetCall(callPath), expires);
             call = (ActorRef) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+
+            if(moveConnectedCallLeg) {
+                future = (Future<Object>) ask(call, new GetOutboundCall(), expires);
+                outboundCall = (ActorRef) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+            }
 
             future = (Future<Object>) ask(call, new GetCallInfo(), expires);
             CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
@@ -375,14 +392,6 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         } catch (Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
-
-        final String url = data.getFirst("Url");
-        String method = data.getFirst("Method");
-        final String status = data.getFirst("Status");
-        final String fallBackUrl = data.getFirst("FallbackUrl");
-        String fallBackMethod = data.getFirst("FallbackMethod");
-        final String statusCallBack = data.getFirst("StatusCallback");
-        String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
 
         if (method == null)
             method = "POST";
@@ -424,7 +433,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                 statusCallbackMethod = (statusCallbackMethod == null) ? "POST" : statusCallbackMethod;
 
                 final UpdateCallScript update = new UpdateCallScript(call, accountSid, version, uri, method, fallbackUri,
-                        fallBackMethod, callbackUri, statusCallbackMethod);
+                        fallBackMethod, callbackUri, statusCallbackMethod, moveConnectedCallLeg, outboundCall);
                 callManager.tell(update, null);
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();

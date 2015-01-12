@@ -473,8 +473,8 @@ public final class Call extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         final State state = fsm.state();
-        logger.info("********** Call's Current State: \"" + state.toString());
-        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        logger.info("********** Call's "+ self().path() +" Current State: \"" + state.toString());
+        logger.info("********** Call "+ self().path() +" Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             observe(message);
@@ -484,6 +484,8 @@ public final class Call extends UntypedActor {
             sender.tell(new CallResponse<List<ActorRef>>(observers), self);
         } else if (GetCallInfo.class.equals(klass)) {
             sender.tell(info(), self);
+        } else if (GetOutboundCall.class.equals(klass)) {
+            sender.tell(outboundCall, self);
         } else if (InitializeOutbound.class.equals(klass)) {
             fsm.transition(message, queued);
         } else if (Answer.class.equals(klass) || Dial.class.equals(klass)) {
@@ -591,7 +593,7 @@ public final class Call extends UntypedActor {
             if (ringing.equals(state)) {
                 fsm.transition(message, failingNoAnswer);
             } else {
-                logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + state + " Direction: "
+                logger.info("Call "+ self().path() +" Timeout received. Sender: " + sender.path().toString() + " State: " + state + " Direction: "
                         + direction + " From: " + from + " To: " + to);
             }
         } else if (message instanceof SipServletRequest) {
@@ -1463,6 +1465,22 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
+            if (self().path().toString().equalsIgnoreCase("akka://RestComm/user/$j")){
+                System.out.println("Initializing Internal Link for the Outbound call");
+            }
+            if (bridge != null) {
+                System.out.println("##################### $$ Bridge for Call "+self().path()+" is terminated: "+bridge.isTerminated());
+                if (bridge.isTerminated()) {
+                    System.out.println("Call :"+self().path()+ " bridge is terminated");
+//                    final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+//                    Future<Object> future = (Future<Object>) ask(gateway, new CreateBridgeEndpoint(session), expires);
+//                    MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+//                    bridge = futureResponse.get();
+                }
+            }
+//            if (bridge == null || bridge.isTerminated()) {
+//                System.out.println("##################### $$ Bridge for Call "+self().path()+" is null or terminated: "+bridge.isTerminated());
+//            }
             internalLink = response.get();
             internalLink.tell(new Observe(source), source);
             internalLink.tell(new InitializeLink(bridge, internalLinkEndpoint), source);
@@ -1602,18 +1620,21 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Completing Call");
+            logger.info("Completing Call: "+self().path());
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
                 remoteConn = null;
+                logger.info("Completing Call: "+self().path()+" RemoteConn destroyed.");
             }
             if (internalLink != null) {
                 gateway.tell(new DestroyLink(internalLink), source);
                 internalLink = null;
+                logger.info("Completing Call: "+self().path()+" InternalLink destroyed.");
             }
             if (bridge != null) {
                 gateway.tell(new DestroyEndpoint(bridge), source);
                 bridge = null;
+                logger.info("Completing Call: "+self().path()+" Bridge destroyed.");
             }
             // Explicitly invalidate the application session.
             invite.getSession().invalidate();

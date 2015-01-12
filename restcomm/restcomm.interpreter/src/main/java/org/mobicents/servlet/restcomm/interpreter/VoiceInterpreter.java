@@ -106,6 +106,7 @@ import org.mobicents.servlet.restcomm.telephony.Mute;
 import org.mobicents.servlet.restcomm.telephony.Play;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
+import org.mobicents.servlet.restcomm.telephony.RetainOutboundCall;
 import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.StartRecordingCall;
 import org.mobicents.servlet.restcomm.telephony.Stop;
@@ -181,6 +182,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
     private ActorRef sender;
+    private boolean retainOutboundCall = false;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -469,11 +471,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final State state = fsm.state();
         sender = sender();
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** VoiceInterpreter's Current State: " + state.toString());
-            logger.info(" ********** VoiceInterpreter's Processing Message: " + klass.getName());
+            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Current State: " + state.toString());
+            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Processing Message: " + klass.getName());
         }
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
+        } else if (RetainOutboundCall.class.equals(klass)) {
+            this.retainOutboundCall = ((RetainOutboundCall)message).retainOutboundCall();
+            sender.tell(this.retainOutboundCall, self());
         } else if (AsrResponse.class.equals(klass)) {
             if (outstandingAsrRequests > 0) {
                 asrResponse(message);
@@ -2129,9 +2134,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     @Override
     public void postStop() {
         if (!fsm.state().equals(uninitialized)) {
-            logger.info("At the postStop() method. Will clean up Voice Interpreter.");
-            if (fsm.state().equals(bridged) && outboundCall != null) {
-                outboundCall.tell(new Hangup(), null);
+            logger.info("VoiceInterpreter "+self().path()+" At the postStop() method. Will clean up Voice Interpreter. Will retain outbound call: "+retainOutboundCall);
+            if (!retainOutboundCall) {
+                if (fsm.state().equals(bridged) && outboundCall != null) {
+                    outboundCall.tell(new Hangup(), null);
+                }
             }
 
             // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/

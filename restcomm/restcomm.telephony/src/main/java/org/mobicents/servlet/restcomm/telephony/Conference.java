@@ -201,8 +201,8 @@ public final class Conference extends UntypedActor {
         final State state = fsm.state();
 
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** Conference Current State: " + state.toString());
-            logger.info(" ********** Conference Processing Message: " + klass.getName());
+            logger.info(" ********** Conference "+self().path()+" Current State: " + state.toString());
+            logger.info(" ********** Conference "+self().path()+" Processing Message: " + klass.getName());
         }
 
         if (Observe.class.equals(klass)) {
