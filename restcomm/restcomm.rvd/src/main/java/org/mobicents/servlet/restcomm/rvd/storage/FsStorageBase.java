@@ -12,8 +12,8 @@ import org.apache.commons.io.FileUtils;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
-import org.mobicents.servlet.restcomm.rvd.packaging.exception.PackagingException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 

@@ -11,7 +11,7 @@ import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication;
-import org.mobicents.servlet.restcomm.rvd.http.ProjectRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.ProjectRestService;
 
 //@RunWith(Arquillian.class)
 public class RvdManagerTest {
