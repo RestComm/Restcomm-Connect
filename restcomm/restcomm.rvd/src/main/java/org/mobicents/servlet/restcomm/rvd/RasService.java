@@ -21,8 +21,6 @@ import org.mobicents.servlet.restcomm.rvd.model.packaging.RappInfo;
 import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -45,30 +43,13 @@ public class RasService {
 
     static final Logger logger = Logger.getLogger(RasService.class.getName());
 
-    ProjectStorage projectStorage;
-    FsPackagingStorage packagingStorage;
-    FsStorageBase storageBase;
-
     ModelMarshaler marshaler;
     WorkspaceStorage workspaceStorage;
 
-
     public RasService(RvdContext rvdContext, WorkspaceStorage workspaceStorage) {
-        this.storageBase = rvdContext.getStorageBase();
         this.marshaler = rvdContext.getMarshaler();
-        this.projectStorage = rvdContext.getProjectStorage();
-        this.packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
-
         this.workspaceStorage = workspaceStorage;
-
     }
-
-    /*
-    public void saveRappConfig(RappConfig rappConfig, String projectName) throws RvdException {
-        // validate here...
-        storage.storeRappConfig(rappConfig, projectName);
-    }
-    */
 
     /**
      * Builds a RappConfig object out of its JSON representation
@@ -91,7 +72,7 @@ public class RasService {
         XStream xstream = marshaler.getXStream();
         xstream.alias("restcommApplication", RappInfo.class);
 
-        Rapp rapp = packagingStorage.loadRapp(projectName);
+        Rapp rapp = FsPackagingStorage.loadRapp(projectName, workspaceStorage);
         String configData = gson.toJson(rapp.getConfig());
         //String infoData = gson.toJson(rapp.getInfo());
         String infoData = xstream.toXML(rapp.getInfo());
@@ -110,8 +91,8 @@ public class RasService {
 
                 if ( project.supportsWavs() ) {
                     zipper.addDirectory("/app/rvd/wavs/");
-                    for ( WavItem wavItem : projectStorage.listWavs(projectName) ) {
-                        InputStream wavStream = projectStorage.getWav(projectName, wavItem.getFilename());
+                    for ( WavItem wavItem : FsProjectStorage.listWavs(projectName, workspaceStorage) ) {
+                        InputStream wavStream = FsProjectStorage.getWav(projectName, wavItem.getFilename(), workspaceStorage);
                         try {
                             zipper.addFile("app/rvd/wavs/" + wavItem.getFilename(), wavStream );
                         } finally {
@@ -125,12 +106,12 @@ public class RasService {
                 zipper.finish();
             }
 
-            packagingStorage.storeRappBinary(tempFile, projectName);
+            FsPackagingStorage.storeRappBinary(tempFile, projectName, workspaceStorage);
             // TODO - if FsProjectStorage  is not used, the temporaty file should still be removed (in this case it is not moved) !!!
 
             logger.debug("Zip package created for project " + projectName);
 
-            return packagingStorage.getRappBinary(projectName);
+            return FsPackagingStorage.getRappBinary(projectName, workspaceStorage);
         } catch (IOException e) {
             throw new PackagingException("Error creating temporaty zip file ", e);
         }
@@ -152,8 +133,9 @@ public class RasService {
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
 
-        RappInfo info = storageBase.loadModelFromXMLFile( tempDir.getPath() + "/app/" + "info.xml", RappInfo.class );
-        RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
+        RappInfo info = workspaceStorage.loadModelFromXMLFile( tempDir.getPath() + "/app/" + "info.xml", RappInfo.class );
+        //RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
+        RappConfig config = workspaceStorage.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
 
         // Reject applications with no unique id.
         // TODO At some point control this check using a flag
@@ -169,11 +151,11 @@ public class RasService {
                 throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.getRappInfo().getId() + "  already exists. Cannot import " + info.getName() + " app");
 
         // create a project placeholder with the application name specified in the package. This should be a default. The user should be able to override it
-        String newProjectName = projectStorage.getAvailableProjectName(info.getName());
-        projectStorage.createProjectSlot(newProjectName);
+        String newProjectName = FsProjectStorage.getAvailableProjectName(info.getName(), workspaceStorage);
+        FsProjectStorage.createProjectSlot(newProjectName, workspaceStorage);
 
         // add project state
-        ProjectState projectState = storageBase.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
+        ProjectState projectState = workspaceStorage.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
         projectState.getHeader().setOwner(null); // RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
         FsProjectStorage.storeProject(true, projectState, newProjectName,workspaceStorage);
         //projectStorage.storeProject(newProjectName, projectState, true);
@@ -183,13 +165,13 @@ public class RasService {
         if ( wavDir.exists() ) {
             File[] wavFiles = wavDir.listFiles();
             for ( File wavFile : wavFiles ) {
-                projectStorage.storeWav(newProjectName, wavFile.getName(), wavFile);
+                FsProjectStorage.storeWav(newProjectName, wavFile.getName(), wavFile, workspaceStorage);
             }
         }
 
         // Store rapp for later usage
         Rapp rapp = new Rapp(info, config);
-        projectStorage.storeRapp(rapp, newProjectName);
+        FsProjectStorage.storeRapp(rapp, newProjectName, workspaceStorage);
 
         // now remove temporary directory
         try {
@@ -214,10 +196,10 @@ public class RasService {
             throw new RvdValidationException("Cannot validate rapp", report);
 
         // preserve the app's id
-        Rapp existingRapp = packagingStorage.loadRapp(projectName);
+        Rapp existingRapp = FsPackagingStorage.loadRapp(projectName,workspaceStorage);
         rapp.getInfo().setId( existingRapp.getInfo().getId() );
 
-        packagingStorage.storeRapp(rapp, projectName);
+        FsPackagingStorage.storeRapp(rapp, projectName, workspaceStorage);
     }
 
     /**
@@ -233,21 +215,21 @@ public class RasService {
             throw new RvdValidationException("Cannot validate rapp", report);
 
         // rapp.getInfo().setId(generateAppId(projectName)); // Let the RAS administrator choose an id for the app after submission
-        packagingStorage.storeRapp(rapp, projectName);
+        FsPackagingStorage.storeRapp(rapp, projectName, workspaceStorage);
     }
 
     public Rapp getApp(String projectName) throws StorageException {
-        return packagingStorage.loadRapp(projectName);
+        return FsPackagingStorage.loadRapp(projectName, workspaceStorage);
     }
 
     public RappConfig getRappConfig(String projectName) throws StorageException {
-        Rapp rapp = projectStorage.loadRapp(projectName);
+        Rapp rapp = FsProjectStorage.loadRapp(projectName, workspaceStorage);
         return rapp.getConfig();
     }
 
     public RappBinaryInfo getBinaryInfo(String projectName) {
         RappBinaryInfo binaryInfo = new RappBinaryInfo();
-        binaryInfo.setExists( packagingStorage.binaryAvailable(projectName) );
+        binaryInfo.setExists( FsPackagingStorage.binaryAvailable(projectName, workspaceStorage) );
 
         return binaryInfo;
     }
