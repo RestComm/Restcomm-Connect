@@ -83,7 +83,7 @@
 		<commons-io.version>2.4</commons-io.version>
 		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
-		<mobicents.mgcp.impl.version>3.0.0.Final</mobicents.mgcp.impl.version>
+		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
@@ -242,7 +242,7 @@
 				<scope>provided</scope>
 			</dependency>
 
-			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
+			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
 				<version>${servlet-api.version}</version> </dependency -->
 
 			<dependency>
@@ -562,7 +562,7 @@
 			<version>${mobicents.checkstyle.version}</version>
 		</dependency>
 
-		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>
 			<version>5.1</version> </dependency -->
 	</dependencies>
 
@@ -760,7 +760,7 @@
 		</repository>
 
 		<!-- Local repository for the ATT TTS Java wrapper library -->
-		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
 			</repository> -->
 	</repositories>
 

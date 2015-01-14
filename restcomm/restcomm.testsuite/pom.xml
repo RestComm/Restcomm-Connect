@@ -1,392 +1,495 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<parent>
-		<artifactId>restcomm</artifactId>
-		<groupId>com.telestax.servlet</groupId>
-		<version>7.2.1-SNAPSHOT</version>
-	</parent>
-	<modelVersion>4.0.0</modelVersion>
+<?xml version="1.0" encoding="UTF-8" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>restcomm</artifactId>
+    <groupId>com.telestax.servlet</groupId>
+    <version>7.2.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
 
-	<artifactId>restcomm.testsuite</artifactId>
+  <artifactId>restcomm.testsuite</artifactId>
 
-	<dependencies>
-		<!-- Testing -->
-		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.dao</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
+  <dependencies>
+    <!-- Testing -->
+    <dependency>
+      <groupId>com.telestax.servlet</groupId>
+      <artifactId>restcomm.dao</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.commons</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
+    <dependency>
+      <groupId>com.telestax.servlet</groupId>
+      <artifactId>restcomm.commons</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
 
-		<!-- <dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.application</artifactId> 
-			<version>${project.version}</version> <type>war</type> <scope>test</scope> 
-			</dependency> <dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.commons</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
-			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.dao</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
-			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.mgcp</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
-			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.sms</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
-			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.http</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
-			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.telephony</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
-			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.telephony.api</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
-			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.interpreter</artifactId> 
+    <!-- <dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.application</artifactId>
+			<version>${project.version}</version> <type>war</type> <scope>test</scope>
+			</dependency> <dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
+			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
+			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.mgcp</artifactId>
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
+			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.sms</artifactId>
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
+			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.http</artifactId>
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
+			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.telephony</artifactId>
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
+			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.telephony.api</artifactId>
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
+			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.interpreter</artifactId>
 			<version>${project.version}</version> <scope>test</scope> </dependency> -->
 
-		<dependency>
-			<groupId>org.scala-lang</groupId>
-			<artifactId>scala-library</artifactId>
-			<version>${scala-lang.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala-lang.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-actor_2.10</artifactId>
-			<version>${akka.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-slf4j_2.10</artifactId>
-			<version>${akka.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_2.10</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-slf4j_2.10</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
 
 
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
-			<scope>provided</scope>
-		</dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>${log4j.version}</version>
+      <scope>provided</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
 
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.shiro</groupId>
-			<artifactId>shiro-core</artifactId>
-			<version>${shirocore.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+      <version>${shirocore.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.shiro</groupId>
-			<artifactId>shiro-web</artifactId>
-			<version>${shiroweb.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-web</artifactId>
+      <version>${shiroweb.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-server</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-client</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>stax</groupId>
-			<artifactId>stax-api</artifactId>
-			<version>${staxapi.version}</version>
-			<scope>provided</scope>
-		</dependency>
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax-api</artifactId>
+      <version>${staxapi.version}</version>
+      <scope>provided</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>stax</groupId>
-			<artifactId>stax</artifactId>
-			<version>${staximpl.version}</version>
-			<scope>provided</scope>
-		</dependency>
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax</artifactId>
+      <version>${staximpl.version}</version>
+      <scope>provided</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>com.thoughtworks.xstream</groupId>
-			<artifactId>xstream</artifactId>
-			<version>${xstream.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>com.thoughtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>${xstream.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>javax.sip</groupId>
-			<artifactId>jain-sip-ri</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>javax.sip</groupId>
+      <artifactId>jain-sip-ri</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-		<!--Dependencies for Tomcat-7 -->
-		<dependency>
-			<groupId>org.mobicents.servlet.sip.containers</groupId>
-			<artifactId>sip-servlets-catalina-7</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mobicents.servlet.sip.containers</groupId>
-			<artifactId>sip-servlets-tomcat-7</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mobicents.arquillian.container</groupId>
-			<artifactId>mss-tomcat-embedded-7</artifactId>
-			<version>${mss.arquillian.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <!--Dependencies for Tomcat-7 -->
+    <dependency>
+      <groupId>org.mobicents.servlet.sip.containers</groupId>
+      <artifactId>sip-servlets-catalina-7</artifactId>
+      <version>${sipservletapi.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.servlet.sip.containers</groupId>
+      <artifactId>sip-servlets-tomcat-7</artifactId>
+      <version>${sipservletapi.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.arquillian.container</groupId>
+      <artifactId>mss-tomcat-embedded-7</artifactId>
+      <version>${mss.arquillian.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<!--Dependencies for Tomcat-7 -->
+    <!--Dependencies for Tomcat-7 -->
 
-		<!--Dependencies for Tomcat-6 -->
-		<!-- <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId> 
-			<artifactId>sip-servlets-catalina-6</artifactId> <version>${sipservletapi.version}</version> 
-			<scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId> 
-			<artifactId>sip-servlets-tomcat-jboss4</artifactId> <version>${sipservletapi.version}</version> 
-			<scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.arquillian.container</groupId> 
-			<artifactId>mss-tomcat-embedded-6</artifactId> <version>${mss.arquillian.version}</version> 
+    <!--Dependencies for Tomcat-6 -->
+    <!-- <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-6</artifactId> <version>${sipservletapi.version}</version>
+			<scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-tomcat-jboss4</artifactId> <version>${sipservletapi.version}</version>
+			<scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.arquillian.container</groupId>
+			<artifactId>mss-tomcat-embedded-6</artifactId> <version>${mss.arquillian.version}</version>
 			<scope>test</scope> </dependency> -->
 
-		<!--Dependencies for Tomcat-6 -->
+    <!--Dependencies for Tomcat-6 -->
 
 
 
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>sip-servlets-core-api</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.mobicents.servlet.sip</groupId>
+      <artifactId>sip-servlets-core-api</artifactId>
+      <version>${sipservletapi.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>sip-servlets-spec</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.mobicents.servlet.sip</groupId>
+      <artifactId>sip-servlets-spec</artifactId>
+      <version>${sipservletapi.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>sip-servlets-impl</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.mobicents.servlet.sip</groupId>
+      <artifactId>sip-servlets-impl</artifactId>
+      <version>${sipservletapi.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>sip-servlets-client</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.mobicents.servlet.sip</groupId>
+      <artifactId>sip-servlets-client</artifactId>
+      <version>${sipservletapi.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>javax.sip</groupId>
-			<artifactId>jain-sip-api</artifactId>
-			<version>1.2</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>javax.sip</groupId>
+      <artifactId>jain-sip-api</artifactId>
+      <version>1.2</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
-			<version>1.4</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>commons-configuration</groupId>
+      <artifactId>commons-configuration</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.mobicents.servlet.sip</groupId>
-			<artifactId>sip-servlets-application-router</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.mobicents.servlet.sip</groupId>
+      <artifactId>sip-servlets-application-router</artifactId>
+      <version>${sipservletapi.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-coyote</artifactId>
-			<version>${tomcat7.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-coyote</artifactId>
+      <version>${tomcat7.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-jasper</artifactId>
-			<version>${tomcat7.version}</version>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-jasper</artifactId>
+      <version>${tomcat7.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>com.github.tomakehurst</groupId>
-			<artifactId>wiremock</artifactId>
-			<version>1.47</version>
-			<!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson 
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <version>1.47</version>
+      <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson
 				or Apache HTTP Client -->
-			<classifier>standalone</classifier>
-			<scope>test</scope>
-		</dependency>
+      <classifier>standalone</classifier>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-catalina</artifactId>
-			<version>${tomcat7.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-catalina</artifactId>
+      <version>${tomcat7.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>org.mobicents.commtesting</groupId>
-			<artifactId>mgcpUnit</artifactId>
-			<version>${mgcpunit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mobicents.arquillian.container</groupId>
-			<artifactId>mss-arquillian-mediaserver-api</artifactId>
-			<version>${mss.arquillian.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mobicents.arquillian.container</groupId>
-			<artifactId>mss-arquillian-mediaserver-extension</artifactId>
-			<version>${mss.arquillian.version}</version>
-		</dependency>
-	</dependencies>
+    <dependency>
+      <groupId>org.mobicents.commtesting</groupId>
+      <artifactId>mgcpUnit</artifactId>
+      <version>${mgcpunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.arquillian.container</groupId>
+      <artifactId>mss-arquillian-mediaserver-api</artifactId>
+      <version>${mss.arquillian.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mobicents.arquillian.container</groupId>
+      <artifactId>mss-arquillian-mediaserver-extension</artifactId>
+      <version>${mss.arquillian.version}</version>
+    </dependency>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<compilerArguments>
-						<g />
-					</compilerArguments>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.8</version>
-				<configuration>
-					<useProjectReferences>false</useProjectReferences>
-				</configuration>
-			</plugin>
-		</plugins>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.17</version>
-					<configuration>
-						<argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
-						<!-- <excludes> <exclude>**/SmsSessionTest.java</exclude> </excludes> -->
-						<forkCount>1</forkCount>
-						<reuseForks>false</reuseForks>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
+    <!--Override MMS transitive dependencies -->
 
-	<repositories>
-		<repository>
-			<id>mobicents-public-repository-group</id>
-			<name>Mobicens Public Maven Repository Group</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>jboss-public-repository-group</id>
-			<name>JBoss Public Maven Repository Group</name>
-			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>mobicents-public-repository-group</id>
-			<name>Mobicens Public Maven Repository Group</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>jboss-public-repository-group</id>
-			<name>JBoss Public Maven Repository Group</name>
-			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
+    <dependency>
+      <groupId>org.mobicents.media.controls</groupId>
+      <artifactId>mgcp</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media</groupId>
+      <artifactId>concurrent</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.resources</groupId>
+      <artifactId>tones</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.io</groupId>
+      <artifactId>network</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media</groupId>
+      <artifactId>spi</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media</groupId>
+      <artifactId>scheduler</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media</groupId>
+      <artifactId>core</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.io</groupId>
+      <artifactId>ss7</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.hardware</groupId>
+      <artifactId>mobicents-dahdi</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.resources</groupId>
+      <artifactId>recorder</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.codecs</groupId>
+      <artifactId>g729</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.codecs</groupId>
+      <artifactId>gsm</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.resources</groupId>
+      <artifactId>player</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.resources</groupId>
+      <artifactId>dtmf</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media</groupId>
+      <artifactId>components</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.codecs</groupId>
+      <artifactId>g711</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mobicents.media.io</groupId>
+      <artifactId>rtp</artifactId>
+      <version>${mobicents.mgcp.impl.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArguments>
+            <g />
+          </compilerArguments>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <version>2.8</version>
+        <configuration>
+          <useProjectReferences>false</useProjectReferences>
+        </configuration>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.17</version>
+          <configuration>
+            <argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
+            <!-- <excludes> <exclude>**/SmsSessionTest.java</exclude> </excludes> -->
+            <forkCount>1</forkCount>
+            <reuseForks>false</reuseForks>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>mobicents-public-repository-group</id>
+      <name>Mobicens Public Maven Repository Group</name>
+      <url>https://oss.sonatype.org/content/groups/public</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Maven Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>mobicents-public-repository-group</id>
+      <name>Mobicens Public Maven Repository Group</name>
+      <url>https://oss.sonatype.org/content/groups/public</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Maven Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 </project>
