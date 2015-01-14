@@ -46,7 +46,6 @@ import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
@@ -67,8 +66,6 @@ public class RasRestService extends RestService {
     HttpServletRequest request;
 
     private RvdConfiguration settings;
-    private ProjectStorage projectStorage;
-    private FsPackagingStorage packagingStorage;
     private RasService rasService;
     private ProjectService projectService;
     private RvdContext rvdContext;
@@ -79,14 +76,8 @@ public class RasRestService extends RestService {
     void init() {
         rvdContext = new RvdContext(request, servletContext);
         settings = rvdContext.getSettings();
-
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
-
-
-        projectStorage = rvdContext.getProjectStorage();
-        packagingStorage = new FsPackagingStorage(rvdContext.getStorageBase());
-
         rasService = new RasService(rvdContext, workspaceStorage);
         projectService = new ProjectService(rvdContext,workspaceStorage);
     }
@@ -105,22 +96,13 @@ public class RasRestService extends RestService {
     public Response getAppConfig(@QueryParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
         logger.debug("retrieving app package for project " + projectName);
 
-        //try {
+        if (! FsPackagingStorage.hasPackaging(projectName, workspaceStorage) )
+            return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
 
-            if (! packagingStorage.hasPackaging(projectName) )
-                return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
+        Rapp rapp = rasService.getApp(projectName);
+        Gson gson = new Gson();
 
-            Rapp rapp = rasService.getApp(projectName);
-            Gson gson = new Gson();
-
-            return Response.ok().entity(gson.toJson(rapp)).build();
-
-        //} catch (StorageException e) {
-        //    logger.error(e, e);
-        //    return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        //} catch (RvdException e){
-        //    return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        //}
+        return Response.ok().entity(gson.toJson(rapp)).build();
     }
 
 
@@ -141,7 +123,7 @@ public class RasRestService extends RestService {
 
             Gson gson = new Gson();
             Rapp rapp = gson.fromJson(rappData, Rapp.class);
-            if ( !packagingStorage.hasPackaging(projectName) ) {
+            if ( !FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
                 rasService.createApp(rapp, projectName);
             } else {
                 rasService.saveApp(rapp, projectName);
@@ -171,7 +153,7 @@ public class RasRestService extends RestService {
         logger.debug("preparig app zip for project " + projectName);
 
         try {
-            if (packagingStorage.hasPackaging(projectName) ) {
+            if (FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
                 RvdProject project = projectService.load(projectName);
                 project.getState().getHeader().setOwner(null); //  no owner should in the exported project
                 rasService.createZipPackage(project);
@@ -208,9 +190,9 @@ public class RasRestService extends RestService {
         logger.debug("downloading app zip for project " + projectName);
 
         try {
-            if (packagingStorage.hasPackaging(projectName) ) {
+            if (FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
                 //Validator validator = new RappConfigValidator();
-                InputStream zipStream = packagingStorage.getRappBinary(projectName);
+                InputStream zipStream = FsPackagingStorage.getRappBinary(projectName, workspaceStorage);
                 return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename = rapp.zip").build();
             } else {
                 return null;

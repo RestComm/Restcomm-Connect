@@ -24,8 +24,6 @@ import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.FsStorageBase;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
@@ -54,7 +52,7 @@ public class ProjectService {
 
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
 
-    ProjectStorage projectStorage;
+    //ProjectStorage projectStorage;
     RvdConfiguration settings;
     RvdContext rvdContext;
     WorkspaceStorage workspaceStorage;
@@ -62,7 +60,7 @@ public class ProjectService {
     public ProjectService(RvdContext rvdContext, WorkspaceStorage workspaceStorage) {
         this.rvdContext = rvdContext;
         this.servletContext = rvdContext.getServletContext();
-        this.projectStorage = rvdContext.getProjectStorage();
+        //this.projectStorage = rvdContext.getProjectStorage();
         this.settings = rvdContext.getSettings();
         this.workspaceStorage = workspaceStorage;
     }
@@ -111,19 +109,21 @@ public class ProjectService {
      * 'voice' if it does not exist.
      * @throws StorageException
      */
-    public List<ProjectItem> getAvailableProjects() throws StorageException {
+    public static List<ProjectItem> getAvailableProjects(WorkspaceStorage workspaceStorage) throws StorageException {
 
         List<ProjectItem> items = new ArrayList<ProjectItem>();
         for (String entry : FsProjectStorage.listProjectNames(workspaceStorage) ) {
 
             String kind = "voice";
             try {
-                StateHeader header = projectStorage.loadStateHeader(entry);
+                //StateHeader header = projectStorage.loadStateHeader(entry);
+                StateHeader header = FsProjectStorage.loadStateHeader(entry, workspaceStorage);
                 kind = header.getProjectKind();
             } catch ( BadProjectHeader e ) {
                 // for old projects
                 JsonParser parser = new JsonParser();
-                JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                //JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                JsonObject root_element = parser.parse(FsProjectStorage.loadProjectString(entry,  workspaceStorage)).getAsJsonObject();
                 JsonElement projectKind_element = root_element.get("projectKind");
                 if ( projectKind_element != null ) {
                     kind = projectKind_element.getAsString();
@@ -152,13 +152,15 @@ public class ProjectService {
             String kind = "voice";
             String owner = null;
             try {
-                StateHeader header = projectStorage.loadStateHeader(entry);
+                //StateHeader header = projectStorage.loadStateHeader(entry);
+                StateHeader header = FsProjectStorage.loadStateHeader(entry, workspaceStorage);
                 kind = header.getProjectKind();
                 owner = header.getOwner();
             } catch ( BadProjectHeader e ) {
                 // for old projects
                 JsonParser parser = new JsonParser();
-                JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                //JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                JsonObject root_element = parser.parse(FsProjectStorage.loadProjectString(entry, workspaceStorage)).getAsJsonObject();
                 JsonElement projectKind_element = root_element.get("projectKind");
                 if ( projectKind_element != null ) {
                     kind = projectKind_element.getAsString();
@@ -187,7 +189,8 @@ public class ProjectService {
             throw new ProjectDoesNotExist();
 
         try {
-            StateHeader header = projectStorage.loadStateHeader(projectName);
+            //StateHeader header = projectStorage.loadStateHeader(projectName);
+            StateHeader header = FsProjectStorage.loadStateHeader(projectName, workspaceStorage);
             //if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
             if ( ! UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(),header.getVersion() )  )
                 throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdConfiguration.getRvdProjectVersion() );
@@ -195,11 +198,13 @@ public class ProjectService {
             throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
         }
 
-        return projectStorage.loadProjectState(projectName);
+        //return projectStorage.loadProjectState(projectName);
+        return FsProjectStorage.loadProjectString(projectName, workspaceStorage);
     }
 
     public boolean projectExists(String projectName) throws BadWorkspaceDirectoryStructure {
-        return projectStorage.projectExists(projectName);
+        //return projectStorage.projectExists(projectName);
+        return FsProjectStorage.projectExists(projectName, workspaceStorage);
     }
 
     public ProjectState createProject(String projectName, String kind, String owner) throws StorageException, InvalidServiceParameters {
@@ -216,8 +221,9 @@ public class ProjectService {
         if ( "sms".equals(kind) )
             state = ProjectState.createEmptySms(owner);
 
-        projectStorage.createProjectSlot(projectName);
-        //projectStorage.storeProject(projectName, state, true);
+        //projectStorage.createProjectSlot(projectName);
+        FsProjectStorage.createProjectSlot(projectName, workspaceStorage);
+
         FsProjectStorage.storeProject(true, state, projectName, workspaceStorage);
         return state;
     }
@@ -282,22 +288,23 @@ public class ProjectService {
     }
 
     public void renameProject(String projectName, String newProjectName) throws ProjectDoesNotExist, StorageException {
-        if (  ! projectStorage.projectExists(projectName) ) {
+        if (  ! FsProjectStorage.projectExists(projectName, workspaceStorage) ) {
             throw new ProjectDoesNotExist();
-        } else if ( projectStorage.projectExists(newProjectName) ) {
+        } else if ( FsProjectStorage.projectExists(newProjectName,workspaceStorage) ) {
             throw new ProjectDirectoryAlreadyExists();
         }
-        projectStorage.renameProject(projectName, newProjectName);
+        //projectStorage.renameProject(projectName, newProjectName);
+        FsProjectStorage.renameProject(projectName, newProjectName, workspaceStorage);
     }
 
     public void deleteProject(String projectName) throws ProjectDoesNotExist, StorageException {
-        if (! projectStorage.projectExists(projectName))
+        if (! FsProjectStorage.projectExists(projectName,workspaceStorage))
             throw new ProjectDoesNotExist();
-        projectStorage.deleteProject(projectName);
+        FsProjectStorage.deleteProject(projectName,workspaceStorage);
     }
 
     public InputStream archiveProject(String projectName) throws StorageException {
-        return projectStorage.archiveProject(projectName);
+        return FsProjectStorage.archiveProject(projectName,workspaceStorage);
     }
 
     public String importProjectFromArchive(InputStream archiveStream, String archiveFilename) throws StorageException {
@@ -314,33 +321,38 @@ public class ProjectService {
         Unzipper unzipper = new Unzipper(tempProjectDir);
         unzipper.unzip(archiveStream);
 
+
         // Then try to load in case we got garbage
-        FsStorageBase storageBase = new FsStorageBase(tempProjectDir.getParent(), projectStorage.getMarshaler());
-        ProjectState state = storageBase.loadModelFromFile(tempProjectDir.getPath() + File.separator + "state", ProjectState.class);
+        //FsStorageBase storageBase = new FsStorageBase(tempProjectDir.getParent(), rvdContext.getMarshaler());
+        //ProjectState state = storageBase.loadModelFromFile(tempProjectDir.getPath() + File.separator + "state", ProjectState.class);
+
+        // CAUTION! make sure that the temp workspace thing works!
+        // Create a temporary workspace storage
+        WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
+        ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getPath(), tempStorage);
+
 
         // TODO Make these an atomic action!
-        projectName = projectStorage.getAvailableProjectName(projectName);
-        projectStorage.createProjectSlot(projectName);
+        //projectName = projectStorage.getAvailableProjectName(projectName);
+        projectName = FsProjectStorage.getAvailableProjectName(projectName, workspaceStorage);
+        FsProjectStorage.createProjectSlot(projectName, workspaceStorage );
 
-        projectStorage.importProjectFromDirectory(tempProjectDir, projectName, true);
+        FsProjectStorage.importProjectFromDirectory(tempProjectDir, projectName, true, workspaceStorage);
 
         return projectName;
     }
 
     public void addWavToProject(String projectName, String wavName, InputStream wavStream) throws StorageException {
-        projectStorage.storeWav(projectName, wavName, wavStream);
+        FsProjectStorage.storeWav(projectName, wavName, wavStream, workspaceStorage);
     }
 
     public List<WavItem> getWavs(String appName) throws StorageException {
-        return projectStorage.listWavs(appName);
+        return FsProjectStorage.listWavs(appName, workspaceStorage);
     }
 
     public void removeWavFromProject(String projectName, String wavName) throws WavItemDoesNotExist {
-        projectStorage.deleteWav(projectName, wavName);
+        FsProjectStorage.deleteWav(projectName, wavName,workspaceStorage);
     }
-
-
-
 
     /**
      * Loads the project specified into an rvd project object
@@ -350,7 +362,7 @@ public class ProjectService {
      */
 
     public RvdProject load(String projectName) throws RvdException {
-        String projectJson = projectStorage.loadProjectState(projectName);
+        String projectJson = FsProjectStorage.loadProjectString(projectName, workspaceStorage);
         RvdProject project = RvdProject.fromJson(projectName, projectJson);
         return project;
     }
