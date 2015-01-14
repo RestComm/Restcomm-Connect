@@ -9,7 +9,6 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -22,11 +21,9 @@ import com.google.gson.JsonParser;
 public class UpgradeService {
     static final Logger logger = Logger.getLogger(UpgradeService.class.getName());
 
-    private ProjectStorage projectStorage;
     private WorkspaceStorage workspaceStorage;
 
-    public UpgradeService(ProjectStorage projectStorage, WorkspaceStorage workspaceStorage) {
-        this.projectStorage = projectStorage;
+    public UpgradeService(WorkspaceStorage workspaceStorage) {
         this.workspaceStorage = workspaceStorage;
     }
 
@@ -73,7 +70,7 @@ public class UpgradeService {
         StateHeader header = null;
         String startVersion = null;
         try {
-            header = projectStorage.loadStateHeader(projectName);
+            header = FsProjectStorage.loadStateHeader(projectName,workspaceStorage);
             startVersion = header.getVersion();
         } catch (BadProjectHeader e) {
             // it looks like this is an old project.
@@ -90,7 +87,7 @@ public class UpgradeService {
         logger.info("Upgrading '" + projectName + "' from version " + startVersion);
 
         String version = startVersion;
-        String source = projectStorage.loadProjectState(projectName);
+        String source = FsProjectStorage.loadProjectString(projectName, workspaceStorage);
         JsonParser parser = new JsonParser();
         JsonElement root = parser.parse(source);
 
@@ -112,8 +109,8 @@ public class UpgradeService {
             throw new NoUpgradePathException("No upgrade path for project " + projectName + "Best effort from version: " + startVersion + " - to version: " + version);
         }
 
-        projectStorage.backupProjectState(projectName);
-        projectStorage.updateProjectState(projectName, root.toString());
+        FsProjectStorage.backupProjectState(projectName,workspaceStorage);
+        FsProjectStorage.updateProjectState(projectName, root.toString(), workspaceStorage);
         return true;
     }
     /**

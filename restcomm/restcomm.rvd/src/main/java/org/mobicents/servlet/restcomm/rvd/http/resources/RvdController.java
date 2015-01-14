@@ -73,7 +73,6 @@ public class RvdController extends RestService {
     HttpServletRequest request;
 
     private RvdConfiguration rvdSettings;
-    private ProjectService projectService;
     private RvdContext rvdContext;
 
     private WorkspaceStorage workspaceStorage;
@@ -85,7 +84,6 @@ public class RvdController extends RestService {
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = rvdContext.getWorkspaceStorage();
-        projectService = new ProjectService(rvdContext, workspaceStorage);
     }
 
     private Response runInterpreter( ProjectAwareRvdContext rvdContext, String appname, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams ) {
@@ -117,7 +115,7 @@ public class RvdController extends RestService {
         init(rvdContext);
         List<ProjectItem> items;
         try {
-            items = projectService.getAvailableProjects(); // there has to be a user in the context. Only logged users are allowed to to run project manager services
+            items = ProjectService.getAvailableProjects(workspaceStorage); // there has to be a user in the context. Only logged users are allowed to to run project manager services
             ProjectService.fillStartUrlsForProjects(items, request);
 
         } catch (BadWorkspaceDirectoryStructure e) {
