@@ -70,7 +70,6 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageR
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -88,7 +87,6 @@ public class Interpreter {
     static final Logger logger = Logger.getLogger(Interpreter.class.getName());
 
     private RvdConfiguration rvdSettings;
-    private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
     private ProjectLogger projectLogger;
     private ProjectAwareRvdContext rvdContext;
@@ -107,10 +105,6 @@ public class Interpreter {
 
     public void setRvdSettings(RvdConfiguration rvdSettings) {
         this.rvdSettings = rvdSettings;
-    }
-
-    public void setProjectStorage(ProjectStorage projectStorage) {
-        this.projectStorage = projectStorage;
     }
 
     private WorkspaceStorage workspaceStorage;
@@ -137,7 +131,6 @@ public class Interpreter {
     public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
         this.rvdContext = rvdContext;
         this.rvdSettings = rvdContext.getSettings();
-        this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
         this.targetParam = requestParams.getFirst("target");
         //this.targetParam = targetParam;
@@ -365,9 +358,7 @@ public class Interpreter {
     }
 
     private Step loadStep(String stepname) throws StorageException  {
-        //String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
-        //        + target.getNodename() + "." + stepname));
-        String stepfile_json = projectStorage.loadStep(appName, target.getNodename(), stepname);
+        String stepfile_json = FsProjectStorage.loadStep(appName, target.getNodename(), stepname, workspaceStorage);
         Step step = gson.fromJson(stepfile_json, Step.class);
 
         return step;

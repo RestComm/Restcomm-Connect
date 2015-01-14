@@ -57,7 +57,6 @@ import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectAlreadyExists;
@@ -86,7 +85,6 @@ public class ProjectRestService extends RestService {
 
     private ProjectService projectService;
     private RvdConfiguration rvdSettings;
-    private ProjectStorage projectStorage;
     private ProjectState activeProject;
     private ModelMarshaler marshaler;
     private WorkspaceStorage workspaceStorage;
@@ -98,7 +96,6 @@ public class ProjectRestService extends RestService {
         rvdContext = new RvdContext(request, servletContext);
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
-        projectStorage = rvdContext.getProjectStorage();
         workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
         projectService = new ProjectService(rvdContext,workspaceStorage);
     }
@@ -112,7 +109,7 @@ public class ProjectRestService extends RestService {
      * @throws ProjectDoesNotExist
      */
     void assertProjectAvailable(String projectName) throws StorageException, ProjectDoesNotExist {
-        if (! projectStorage.projectExists(projectName))
+        if (! FsProjectStorage.projectExists(projectName,workspaceStorage))
             throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
         ProjectState project = FsProjectStorage.loadProject(projectName, workspaceStorage);
         if ( project.getHeader().getOwner() != null ) {
@@ -305,7 +302,7 @@ public class ProjectRestService extends RestService {
         // TODO IMPORTANT!!! sanitize the project name!!
         if ( !RvdUtils.isEmpty(projectName) ) {
             try {
-                UpgradeService upgradeService = new UpgradeService(projectStorage,workspaceStorage);
+                UpgradeService upgradeService = new UpgradeService(workspaceStorage);
                 upgradeService.upgradeProject(projectName);
                 logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                 // re-build project
@@ -518,7 +515,7 @@ public class ProjectRestService extends RestService {
     public Response getWavNoQueryParams(@PathParam("name") String projectName, @PathParam("filename") String filename ) {
        InputStream wavStream;
         try {
-            wavStream = projectStorage.getWav(projectName, filename + ".wav" );
+            wavStream = FsProjectStorage.getWav(projectName, filename + ".wav", workspaceStorage );
             return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename).build();
         } catch (WavItemDoesNotExist e) {
             return Response.status(Status.NOT_FOUND).build(); // ordinary error page is returned since this will be consumed either from restcomm or directly from user
@@ -541,7 +538,6 @@ public class ProjectRestService extends RestService {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
-
     }
 
     @RvdAuth
