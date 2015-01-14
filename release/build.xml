@@ -147,8 +147,8 @@
 	<exec failonerror="true" executable="wget">
 	    <arg value="${mobicents-media.download.url}" />
 	</exec>
-	<move file="${base.dir}/mms-server-3.0.1.FINAL.zip" todir="${checkout.dir}"/>
-	<move file="${checkout.dir}/mms-server-3.0.1.FINAL.zip" tofile="${checkout.dir}/${mobicents-media.download.distro.file}"/>
+	<move file="${base.dir}/mms-server-3.0.2.Final.zip" todir="${checkout.dir}"/>
+	<move file="${checkout.dir}/mms-server-3.0.2.Final.zip" tofile="${checkout.dir}/${mobicents-media.download.distro.file}"/>
 </target>
 
 <target name="extract-mobicents-media" depends="get-mobicents-media">
