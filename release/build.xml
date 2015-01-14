@@ -37,7 +37,7 @@
 	<property name="hsqldb.distro.zip.path" value="${checkout.dir}/${hsqldb.download.distro.file}" />
 
 	<property name="mobicents-media.download.distro.file" value="mobicents-media-server-${mobicents-media.version}.zip" />
-	<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/${mobicents-media.version}/mms-server-${mobicents-media.version}.zip" />
+	<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />
 	<property name="mobicents-media.distro.zip.path" value="${checkout.dir}/${mobicents-media.download.distro.file}" />
 
 	<property name="mobicents-diameter.download.distro.file" value="mobicents-diameter-${mobicents-diameter.version}.zip" />
