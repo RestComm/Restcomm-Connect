@@ -19,13 +19,9 @@
  */
 package org.mobicents.servlet.restcomm.mscontrol;
 
-import org.mobicents.servlet.restcomm.fsm.TransitionFailedException;
-import org.mobicents.servlet.restcomm.fsm.TransitionNotFoundException;
-import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
-
-import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * Controls the flow of media sessions.
@@ -34,29 +30,11 @@ import akka.actor.UntypedActorContext;
  *
  */
 public abstract class MediaSessionController extends UntypedActor {
+    
+    protected final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    @Override
-    public void onReceive(Object message) throws Exception {
-        final UntypedActorContext context = getContext();
-        final Class<?> klass = message.getClass();
-        final ActorRef self = self();
-        final ActorRef sender = sender();
-
-        if (CreateMediaSession.class.equals(klass)) {
-            onCreateMediaSession((CreateMediaSession) message, self, sender);
-        }
+    protected MediaSessionController() {
+        super();
     }
-
-    /**
-     * Creates a new Media Session based on a session description.
-     * 
-     * @param message The message that wraps the Session Description.
-     * @param self A reference to the MS controller itself
-     * @param sender A reference to the sender of the message
-     * @throws TransitionRollbackException 
-     * @throws TransitionNotFoundException 
-     * @throws TransitionFailedException 
-     */
-    protected abstract void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException;
-
+    
 }
