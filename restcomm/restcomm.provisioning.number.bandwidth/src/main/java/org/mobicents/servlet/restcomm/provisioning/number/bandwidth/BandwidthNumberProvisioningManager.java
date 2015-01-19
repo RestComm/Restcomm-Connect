@@ -305,7 +305,7 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         //This will work as a flag for LB that this request will need to be modified and proxied to VI
         httpRequest.addHeader("TelestaxProxy", "true");
         //Adds the Provision provider class name
-        httpRequest.addHeader("Provider", ProvisionProvider.PROVIDER.BANDWIDTH.name());
+        httpRequest.addHeader("Provider", ProvisionProvider.bandiwidthClass);
         //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
         httpRequest.addHeader("RequestType", requestType);
         //This is will add the instance id for the CancelNumber request that is missing SiteId from the request body
