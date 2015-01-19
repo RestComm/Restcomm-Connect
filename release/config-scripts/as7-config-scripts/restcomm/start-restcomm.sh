@@ -159,6 +159,10 @@ if [[ -z "$STATIC_ADDRESS" ]]; then
 	STATIC_ADDRESS=$BIND_ADDRESS
 fi
 
+if [[ -z "$PUBLIC_IP" ]]; then
+	PUBLIC_IP=$STATIC_ADDRESS
+fi
+
 # configure restcomm installation
 source $BASEDIR/autoconfigure.sh
 

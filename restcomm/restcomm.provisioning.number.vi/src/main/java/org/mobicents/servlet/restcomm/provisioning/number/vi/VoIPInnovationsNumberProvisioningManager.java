@@ -393,7 +393,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         //This will work as a flag for LB that this request will need to be modified and proxied to VI
         post.addHeader("TelestaxProxy", "true");
         //Adds the Provision provider class name
-        post.addHeader("Provider", ProvisionProvider.PROVIDER.VOIPINNOVATIONS.name());
+        post.addHeader("Provider", ProvisionProvider.voipinnovationsClass);
         //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
         post.addHeader("RequestType", requestType);
         //This will let LB match the DID to a node based on the node host+port
