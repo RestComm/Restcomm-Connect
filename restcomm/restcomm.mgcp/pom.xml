@@ -1,35 +1,36 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.telestax.servlet</groupId>
-    <artifactId>restcomm</artifactId>
-    <version>7.2.2-SNAPSHOT</version>
-  </parent>
-  
-  <artifactId>restcomm.mgcp</artifactId>
-  <name>restcomm.mgcp</name>
-  
-  <properties>
-	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  
-  <dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm</artifactId>
+		<version>7.2.2-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>restcomm.mgcp</artifactId>
+	<name>restcomm.mgcp</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
 		</dependency>
-		
+
 		<dependency>
-  			<groupId>com.typesafe.akka</groupId>
-  			<artifactId>akka-actor_2.10</artifactId>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor_2.10</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-slf4j_2.10</artifactId>
@@ -79,17 +80,24 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.scalatest</groupId>
 			<artifactId>scalatest_2.9.1</artifactId>
 			<scope>test</scope>
 		</dependency>
-			
+
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-testkit_2.10</artifactId>
