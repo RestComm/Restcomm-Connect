@@ -21,6 +21,7 @@
 
 package org.mobicents.servlet.restcomm.mgcp.mscontrol;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.util.HashSet;
@@ -30,20 +31,35 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.mgcp.CloseConnection;
+import org.mobicents.servlet.restcomm.mgcp.CloseLink;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
+import org.mobicents.servlet.restcomm.mgcp.CreateLink;
+import org.mobicents.servlet.restcomm.mgcp.DestroyConnection;
+import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
+import org.mobicents.servlet.restcomm.mgcp.DestroyLink;
 import org.mobicents.servlet.restcomm.mgcp.GetMediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
+import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
 import org.mobicents.servlet.restcomm.mgcp.LinkStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
+import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
+import org.mobicents.servlet.restcomm.mgcp.OpenLink;
+import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
+import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mscontrol.MediaSessionController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerError;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
+import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 
 import akka.actor.ActorRef;
@@ -86,6 +102,13 @@ public class MgcpMediaSessionController extends MediaSessionController {
     private final State unmuting;
     private final State pending;
 
+    // Call runtime stuff
+    private final ActorRef call;
+    private String sessionDescription;
+    private String connectionMode;
+    private boolean callOutbound;
+    private String callDirection;
+
     // MGCP runtime stuff.
     private final ActorRef mediaGateway;
     private MediaGatewayInfo gatewayInfo;
@@ -96,33 +119,35 @@ public class MgcpMediaSessionController extends MediaSessionController {
     private ActorRef internalLinkEndpoint;
     private ConnectionMode internalLinkMode;
 
-    public MgcpMediaSessionController(final ActorRef mediaGateway) {
+    public MgcpMediaSessionController(final ActorRef call, final ActorRef mediaGateway) {
         super();
         final ActorRef source = self();
 
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
-        this.active = new State("active", null, null);
-        this.inactive = new State("inactive", null, null);
-        this.failed = new State("failed", null, null);
+        this.active = new State("active", new Active(source), null);
+        this.inactive = new State("inactive", new Inactive(source), null);
+        this.failed = new State("failed", new Failed(source), null);
 
         // Intermediate states
-        this.acquiringMediaGatewayInfo = new State("acquiring media gateway info", null, null);
-        this.acquiringMediaSession = new State("acquiring media session", null, null);
-        this.acquiringBridge = new State("acquiring media bridge", null, null);
-        this.acquiringRemoteConnection = new State("acquiring remote connection", null, null);
-        this.initializingRemoteConnection = new State("initializing remote connection", null, null);
-        this.openingRemoteConnection = new State("opening remote connection", null, null);
-        this.updatingRemoteConnection = new State("updating remote connection", null, null);
-        this.closingRemoteConnection = new State("closing remote connection", null, null);
-        this.acquiringInternalLink = new State("acquiring internal link", null, null);
-        this.initializingInternalLink = new State("initializing internal link", null, null);
-        this.openingInternalLink = new State("opening internal link", null, null);
-        this.updatingInternalLink = new State("updating internal link", null, null);
-        this.closingInternalLink = new State("closing internal link", null, null);
-        this.muting = new State("muting", null, null);
-        this.unmuting = new State("unmuting", null, null);
-        this.pending = new State("pending", null, null);
+        this.acquiringMediaGatewayInfo = new State("acquiring media gateway info", new AcquiringMediaGatewayInfo(source), null);
+        this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
+        this.acquiringBridge = new State("acquiring media bridge", new AcquiringBridge(source), null);
+        this.acquiringRemoteConnection = new State("acquiring remote connection", new AcquiringRemoteConnection(source), null);
+        this.initializingRemoteConnection = new State("initializing remote connection",
+                new InitializingRemoteConnection(source), null);
+        this.openingRemoteConnection = new State("opening remote connection", new OpeningRemoteConnection(source), null);
+        this.updatingRemoteConnection = new State("updating remote connection", new UpdatingRemoteConnection(source), null);
+        this.closingRemoteConnection = new State("closing remote connection", new ClosingRemoteConnection(source), null);
+        this.acquiringInternalLink = new State("acquiring internal link", new AcquiringInternalLink(source), null);
+        this.initializingInternalLink = new State("initializing internal link", new InitializingInternalLink(source), null);
+        this.openingInternalLink = new State("opening internal link", new OpeningInternalLink(source), null);
+        this.updatingInternalLink = new State("updating internal link", new UpdatingInternalLink(source), null);
+        this.closingInternalLink = new State("closing internal link", new EnteringClosingInternalLink(source),
+                new ExitingClosingInternalLink(source));
+        this.muting = new State("muting", new Muting(source), null);
+        this.unmuting = new State("unmuting", new Unmuting(source), null);
+        this.pending = new State("pending", new Pending(source), null);
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -166,6 +191,12 @@ public class MgcpMediaSessionController extends MediaSessionController {
 
         // MGCP runtime stuff
         this.mediaGateway = mediaGateway;
+
+        // Call runtime stuff
+        this.call = call;
+        this.sessionDescription = "";
+        this.callOutbound = false;
+        this.callDirection = "sendrecv";
     }
 
     /**
@@ -193,6 +224,8 @@ public class MgcpMediaSessionController extends MediaSessionController {
 
         if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
+        } else if (CloseMediaSession.class.equals(klass)) {
+            onCloseMediaSession((CloseMediaSession) message, self, sender);
         } else if (MediaGatewayResponse.class.equals(klass)) {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
@@ -200,19 +233,20 @@ public class MgcpMediaSessionController extends MediaSessionController {
         } else if (LinkStateChanged.class.equals(klass)) {
             onLinkStateChanged((LinkStateChanged) message, self, sender);
         } else if (Mute.class.equals(klass)) {
-            onMute((Mute)message, self, sender);
+            onMute((Mute) message, self, sender);
         } else if (Unmute.class.equals(klass)) {
-            onUnmute((Unmute)message, self, sender);
-        } else if (CloseMediaSession.class.equals(klass)) {
-            onCloseMediaSession((CloseMediaSession) message, self, sender);
+            onUnmute((Unmute) message, self, sender);
         }
-
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
+        this.connectionMode = message.getConnectionMode();
+        this.sessionDescription = message.getSessionDescription();
+        this.callOutbound = message.isOutbound();
+
         fsm.transition(message, acquiringMediaGatewayInfo);
     }
-    
+
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         fsm.transition(message, closingRemoteConnection);
     }
@@ -291,7 +325,7 @@ public class MgcpMediaSessionController extends MediaSessionController {
                 break;
         }
     }
-    
+
     private void onMute(Mute message, ActorRef self, ActorRef sender) throws Exception {
         fsm.transition(message, muting);
     }
@@ -384,6 +418,250 @@ public class MgcpMediaSessionController extends MediaSessionController {
             remoteConn.tell(new Observe(source), source);
             remoteConn.tell(new InitializeConnection(bridge), source);
         }
+    }
+
+    private final class OpeningRemoteConnection extends AbstractAction {
+        public OpeningRemoteConnection(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            OpenConnection open = null;
+            if (callOutbound) {
+                open = new OpenConnection(ConnectionMode.SendRecv);
+            } else {
+                final ConnectionDescriptor descriptor = new ConnectionDescriptor(sessionDescription);
+                open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+            }
+            remoteConn.tell(open, source);
+        }
+    }
+
+    private final class UpdatingRemoteConnection extends AbstractAction {
+        public UpdatingRemoteConnection(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final UpdateMediaSession response = (UpdateMediaSession) message;
+            final String answer = response.getSessionDescription();
+            final ConnectionDescriptor descriptor = new ConnectionDescriptor(answer);
+            final UpdateConnection update = new UpdateConnection(descriptor);
+            remoteConn.tell(update, source);
+        }
+    }
+
+    private final class Active extends AbstractAction {
+
+        public Active(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            // XXX implement conferencing
+//            if (is(updatingInternalLink) && conference != null) {
+//                // If this is the outbound leg for an outbound call, conference is the initial call
+//                // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
+//                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
+//                conference.tell(new JoinComplete(bridge), source);
+//            }
+
+            final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
+                    new MediaSessionInfo());
+            call.tell(response, self());
+        }
+    }
+
+    private final class Pending extends AbstractAction {
+
+        public Pending(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
+                    new MediaSessionInfo());
+            call.tell(response, self());
+        }
+
+    }
+
+    private final class AcquiringInternalLink extends AbstractAction {
+
+        public AcquiringInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            // XXX implement Join
+//            if (Join.class.equals(message.getClass())) {
+//                final Join request = (Join) message;
+//                internalLinkEndpoint = request.endpoint();
+//                internalLinkMode = request.mode();
+//            }
+            mediaGateway.tell(new CreateLink(session), source);
+        }
+
+    }
+
+    private final class InitializingInternalLink extends AbstractAction {
+
+        public InitializingInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void execute(Object message) throws Exception {
+            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
+            internalLink = response.get();
+            internalLink.tell(new Observe(source), source);
+            internalLink.tell(new InitializeLink(bridge, internalLinkEndpoint), source);
+        }
+
+    }
+
+    private final class OpeningInternalLink extends AbstractAction {
+
+        public OpeningInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            internalLink.tell(new OpenLink(internalLinkMode), source);
+        }
+
+    }
+
+    private final class UpdatingInternalLink extends AbstractAction {
+
+        public UpdatingInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final UpdateLink update = new UpdateLink(ConnectionMode.SendRecv, UpdateLink.Type.PRIMARY);
+            internalLink.tell(update, source);
+        }
+
+    }
+
+    private final class Muting extends AbstractAction {
+
+        public Muting(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final UpdateConnection update = new UpdateConnection(ConnectionMode.SendOnly);
+            remoteConn.tell(update, source);
+        }
+
+    }
+
+    private final class Unmuting extends AbstractAction {
+
+        public Unmuting(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            final UpdateConnection update = new UpdateConnection(ConnectionMode.SendRecv);
+            remoteConn.tell(update, source);
+        }
+
+    }
+
+    private final class EnteringClosingInternalLink extends AbstractAction {
+
+        public EnteringClosingInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            internalLink.tell(new CloseLink(), source);
+        }
+
+    }
+
+    private final class ExitingClosingInternalLink extends AbstractAction {
+
+        public ExitingClosingInternalLink(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            mediaGateway.tell(new DestroyLink(internalLink), source);
+            internalLink = null;
+            internalLinkEndpoint = null;
+            internalLinkMode = null;
+        }
+
+    }
+
+    private class ClosingRemoteConnection extends AbstractAction {
+
+        public ClosingRemoteConnection(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            if (remoteConn != null) {
+                remoteConn.tell(new CloseConnection(), source);
+            }
+        }
+    }
+
+    private final class Inactive extends AbstractAction {
+
+        public Inactive(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            if (remoteConn != null) {
+                mediaGateway.tell(new DestroyConnection(remoteConn), source);
+                remoteConn = null;
+            }
+
+            if (internalLink != null) {
+                mediaGateway.tell(new DestroyLink(internalLink), source);
+                internalLink = null;
+            }
+
+            if (bridge != null) {
+                mediaGateway.tell(new DestroyEndpoint(bridge), source);
+                bridge = null;
+            }
+        }
+
+    }
+
+    private final class Failed extends AbstractAction {
+        
+        public Failed(final ActorRef source) {
+            super(source);
+        }
+        
+        @Override
+        public void execute(final Object message) throws Exception {
+            final MediaSessionControllerError error = new MediaSessionControllerError();
+            call.tell(error, self());
+        }
+        
     }
 
 }

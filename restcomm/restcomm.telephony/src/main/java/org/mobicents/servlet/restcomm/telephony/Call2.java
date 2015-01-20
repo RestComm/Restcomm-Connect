@@ -978,12 +978,12 @@ public final class Call2 extends UntypedActor {
         public void execute(final Object message) throws Exception {
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv");
+                command = new CreateMediaSession("sendrecv", "", true);
             } else {
                 final String externalIp = invite.getInitialRemoteAddr();
                 final byte[] sdp = invite.getRawContent();
                 final String offer = SdpUtils.patch(invite.getContentType(), sdp, externalIp);
-                command = new CreateMediaSession("sendrecv", offer);
+                command = new CreateMediaSession("sendrecv", offer, false);
             }
             msController.tell(command, source);
         }

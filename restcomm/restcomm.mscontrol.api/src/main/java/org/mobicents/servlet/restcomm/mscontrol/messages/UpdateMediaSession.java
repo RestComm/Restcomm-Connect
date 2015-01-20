@@ -21,11 +21,14 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class UpdateMediaSession {
+@Immutable
+public final class UpdateMediaSession {
 
     private final String sessionDescription;
 
