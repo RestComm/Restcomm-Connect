@@ -35,15 +35,18 @@ import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
 import org.mobicents.servlet.restcomm.mgcp.GetMediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
+import org.mobicents.servlet.restcomm.mgcp.LinkStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaSessionController;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -180,7 +183,6 @@ public class MgcpMediaSessionController extends MediaSessionController {
      */
     @Override
     public void onReceive(Object message) throws Exception {
-        final UntypedActorContext context = getContext();
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
@@ -195,6 +197,14 @@ public class MgcpMediaSessionController extends MediaSessionController {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
+        } else if (LinkStateChanged.class.equals(klass)) {
+            onLinkStateChanged((LinkStateChanged) message, self, sender);
+        } else if (Mute.class.equals(klass)) {
+            onMute((Mute)message, self, sender);
+        } else if (Unmute.class.equals(klass)) {
+            onUnmute((Unmute)message, self, sender);
+        } else if (CloseMediaSession.class.equals(klass)) {
+            onCloseMediaSession((CloseMediaSession) message, self, sender);
         }
 
     }
@@ -202,8 +212,12 @@ public class MgcpMediaSessionController extends MediaSessionController {
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         fsm.transition(message, acquiringMediaGatewayInfo);
     }
+    
+    private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, closingRemoteConnection);
+    }
 
-    private void onMediaGatewayResponse(MediaGatewayResponse message, ActorRef self, ActorRef sender) throws Exception {
+    private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         if (is(acquiringMediaGatewayInfo)) {
             fsm.transition(message, acquiringMediaSession);
         } else if (is(acquiringMediaSession)) {
@@ -216,7 +230,7 @@ public class MgcpMediaSessionController extends MediaSessionController {
             fsm.transition(message, initializingInternalLink);
         }
     }
-    
+
     private void onConnectionStateChanged(ConnectionStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         switch (message.state()) {
             case CLOSED:
@@ -231,15 +245,15 @@ public class MgcpMediaSessionController extends MediaSessionController {
                     if (this.internalLink != null) {
                         fsm.transition(message, closingInternalLink);
                     } else {
-                        fsm.transition(message, active);
+                        fsm.transition(message, inactive);
                     }
                 }
                 break;
-                
+
             case HALF_OPEN:
                 fsm.transition(message, pending);
                 break;
-                
+
             case OPEN:
                 fsm.transition(message, active);
                 break;
@@ -247,6 +261,43 @@ public class MgcpMediaSessionController extends MediaSessionController {
             default:
                 break;
         }
+    }
+
+    private void onLinkStateChanged(LinkStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        switch (message.state()) {
+            case CLOSED:
+                if (is(initializingInternalLink)) {
+                    fsm.transition(message, openingInternalLink);
+                } else if (is(openingInternalLink)) {
+                    fsm.transition(message, closingRemoteConnection);
+                } else if (is(closingInternalLink)) {
+                    if (remoteConn != null) {
+                        fsm.transition(message, active);
+                    } else {
+                        fsm.transition(message, inactive);
+                    }
+                }
+                break;
+
+            case OPEN:
+                if (is(openingInternalLink)) {
+                    fsm.transition(message, updatingInternalLink);
+                } else if (is(updatingInternalLink)) {
+                    fsm.transition(message, active);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+    
+    private void onMute(Mute message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, muting);
+    }
+
+    private void onUnmute(Unmute message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, unmuting);
     }
 
     /*
@@ -318,9 +369,9 @@ public class MgcpMediaSessionController extends MediaSessionController {
             mediaGateway.tell(new CreateConnection(session), source);
         }
     }
-    
+
     private final class InitializingRemoteConnection extends AbstractAction {
-        
+
         public InitializingRemoteConnection(ActorRef source) {
             super(source);
         }
