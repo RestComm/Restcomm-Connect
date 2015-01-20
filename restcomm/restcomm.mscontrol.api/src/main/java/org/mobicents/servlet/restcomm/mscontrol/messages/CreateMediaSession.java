@@ -30,17 +30,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public final class CreateMediaSession {
 
+    private final boolean outbound;
     private final String connectionMode;
     private final String sessionDescription;
 
-    public CreateMediaSession(String connectionMode, String sessionDescription) {
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound) {
         super();
         this.connectionMode = connectionMode;
         this.sessionDescription = sessionDescription;
+        this.outbound = outbound;
     }
 
     public CreateMediaSession(String connectionMode) {
-        this("sendrecv", "");
+        this("sendrecv", "", false);
     }
 
     public String getConnectionMode() {
@@ -49,6 +51,10 @@ public final class CreateMediaSession {
 
     public String getSessionDescription() {
         return sessionDescription;
+    }
+    
+    public boolean isOutbound() {
+        return outbound;
     }
 
 }
