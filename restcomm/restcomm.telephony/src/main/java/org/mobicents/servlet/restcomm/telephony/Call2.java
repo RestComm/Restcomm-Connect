@@ -61,10 +61,10 @@ import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionDestroyed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -360,12 +360,12 @@ public final class Call2 extends UntypedActor {
             onMediaSessionControllerResponse((MediaSessionControllerResponse<?>) message, self, sender);
         } else if (MediaSessionControllerError.class.equals(klass)) {
             onMediaSessionControllerError((MediaSessionControllerError) message, self, sender);
-        } else if (MediaSessionDestroyed.class.equals(klass)) {
-            onMediaSessionDestroyed((MediaSessionDestroyed) message, self, sender);
+        } else if (MediaSessionClosed.class.equals(klass)) {
+            onMediaSessionDestroyed((MediaSessionClosed) message, self, sender);
         }
     }
 
-    private void onMediaSessionDestroyed(MediaSessionDestroyed message, ActorRef self, ActorRef sender) throws Exception {
+    private void onMediaSessionDestroyed(MediaSessionClosed message, ActorRef self, ActorRef sender) throws Exception {
         if (is(completing)) {
             fsm.transition(message, completed);
         } else if (is(failing)) {
@@ -768,7 +768,7 @@ public final class Call2 extends UntypedActor {
                 final SipServletRequest cancel = invite.createCancel();
                 cancel.send();
             }
-            msController.tell(new DestroyMediaSession(), source);
+            msController.tell(new CloseMediaSession(), source);
         }
     }
 
@@ -809,7 +809,7 @@ public final class Call2 extends UntypedActor {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
             }
-            msController.tell(new DestroyMediaSession(), source);
+            msController.tell(new CloseMediaSession(), source);
         }
     }
 
@@ -1118,7 +1118,7 @@ public final class Call2 extends UntypedActor {
             }
 
             // Destroy current media session
-            msController.tell(new DestroyMediaSession(), source);
+            msController.tell(new CloseMediaSession(), source);
         }
     }
 

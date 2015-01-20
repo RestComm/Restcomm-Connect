@@ -28,9 +28,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  *
  */
 @Immutable
-public final class MediaSessionDestroyed {
+public final class MediaSessionClosed {
 
-    public MediaSessionDestroyed() {
+    public MediaSessionClosed() {
         super();
     }
     
