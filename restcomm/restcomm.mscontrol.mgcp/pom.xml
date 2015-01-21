@@ -1,18 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
 		<version>7.2.2-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm.mgcp</artifactId>
-	<name>restcomm.mgcp</name>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+	<artifactId>restcomm.mscontrol.mgcp</artifactId>
+	<name>restcomm.mscontrol.mgcp</name>
 
 	<dependencies>
 		<dependency>
@@ -37,33 +34,17 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.sdp</groupId>
-			<artifactId>nist-sdp</artifactId>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>jain</groupId>
-			<artifactId>jain-mgcp-ri</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mobicents.media.client</groupId>
-			<artifactId>mgcp-driver</artifactId>
-			<version>${mobicents.mgcp.impl.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>apache-xerces</groupId>
-					<artifactId>xml-apis</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>apache-xerces</groupId>
-					<artifactId>xercesImpl</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>sun-jaxb</groupId>
-					<artifactId>jaxb-api</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -74,7 +55,14 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.commons</artifactId>
+			<artifactId>restcomm.mscontrol.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mgcp</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

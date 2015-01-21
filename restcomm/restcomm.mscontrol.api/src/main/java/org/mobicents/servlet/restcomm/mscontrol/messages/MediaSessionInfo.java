@@ -1,7 +1,7 @@
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag. 
+ * by the @authors tag.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-        
+
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import java.net.InetAddress;
@@ -34,17 +34,19 @@ public final class MediaSessionInfo {
 
     private boolean useNat;
     private InetAddress externalAddress;
-    
-    public MediaSessionInfo() {
+
+    public MediaSessionInfo(boolean useNat, InetAddress externalAddress) {
         super();
+        this.useNat = useNat;
+        this.externalAddress = externalAddress;
     }
-    
+
     public boolean usesNat() {
         return this.useNat;
     }
-    
+
     public InetAddress getExternalAddress() {
         return externalAddress;
     }
-    
+
 }

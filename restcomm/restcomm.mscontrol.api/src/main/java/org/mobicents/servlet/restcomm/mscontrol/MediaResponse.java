@@ -1,7 +1,7 @@
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag. 
+ * by the @authors tag.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -26,9 +26,7 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 
 /**
  * Generic response to a request made to the {@link MediaSessionController}.
- * 
  * @author Henrique Rosa (henrique.rosa@telestax.com)
- * 
  * @param <T> The type of the object wrapped in the response.
  */
 @NotThreadSafe

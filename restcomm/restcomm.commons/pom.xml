@@ -20,6 +20,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>javax.sdp</groupId>
+			<artifactId>nist-sdp</artifactId>
+		</dependency>
+		
+		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<scope>provided</scope>

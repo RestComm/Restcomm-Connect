@@ -21,16 +21,38 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
 @Immutable
-public final class Unmute {
+public final class StopRecording {
 
-    public Unmute() {
-        super();
+    private final Sid accountId;
+    private final Configuration runtimeSetting;
+    private final DaoManager daoManager;
+
+    public StopRecording(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager) {
+        this.accountId = accountId;
+        this.runtimeSetting = runtimeSettings;
+        this.daoManager = daoManager;
     }
+
+    public Sid getAccountId() {
+        return accountId;
+    }
+
+    public Configuration getRuntimeSetting() {
+        return runtimeSetting;
+    }
+
+    public DaoManager getDaoManager() {
+        return daoManager;
+    }
+
 }

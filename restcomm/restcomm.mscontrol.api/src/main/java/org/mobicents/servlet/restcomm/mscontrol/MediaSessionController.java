@@ -25,16 +25,14 @@ import akka.event.LoggingAdapter;
 
 /**
  * Controls the flow of media sessions.
- * 
  * @author Henrique Rosa (henrique.rosa@telestax.com)
- *
  */
 public abstract class MediaSessionController extends UntypedActor {
-    
+
     protected final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     protected MediaSessionController() {
         super();
     }
-    
+
 }

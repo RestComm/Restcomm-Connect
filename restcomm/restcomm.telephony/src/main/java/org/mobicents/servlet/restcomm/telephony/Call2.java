@@ -1,7 +1,7 @@
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag. 
+ * by the @authors tag.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -158,7 +158,6 @@ public final class Call2 extends UntypedActor {
     private CallDetailRecord outgoingCallRecord;
     private CallDetailRecordsDao recordsDao;
     private DaoManager daoManager;
-    private ActorRef initialCall;
     private static Boolean recording = false;
     private ActorRef outboundCall;
     private ActorRef outboundCallBridgeEndpoint;
@@ -239,7 +238,7 @@ public final class Call2 extends UntypedActor {
     }
 
     private boolean isInbound() {
-        return "inbound".equals(this.direction);
+        return INBOUND.equals(this.direction);
     }
 
     private boolean isOutbound() {
@@ -967,9 +966,9 @@ public final class Call2 extends UntypedActor {
             }
         }
     }
-    
+
     private final class CreatingMediaSession extends AbstractAction {
-        
+
         public CreatingMediaSession(final ActorRef source) {
             super(source);
         }
@@ -1123,6 +1122,7 @@ public final class Call2 extends UntypedActor {
     }
 
     private final class Completed extends AbstractAction {
+
         public Completed(final ActorRef source) {
             super(source);
         }
