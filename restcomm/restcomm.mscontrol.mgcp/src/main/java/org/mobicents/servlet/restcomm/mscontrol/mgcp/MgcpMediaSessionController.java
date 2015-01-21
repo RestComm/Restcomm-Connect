@@ -1,7 +1,7 @@
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag. 
+ * by the @authors tag.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -19,7 +19,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mgcp.mscontrol;
+package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
@@ -27,6 +27,8 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -109,7 +111,7 @@ public class MgcpMediaSessionController extends MediaSessionController {
     private boolean callOutbound;
     private String callDirection;
 
-    // MGCP runtime stuff.
+    // MGCP runtime stuff
     private final ActorRef mediaGateway;
     private MediaGatewayInfo gatewayInfo;
     private MediaSession session;
@@ -118,6 +120,10 @@ public class MgcpMediaSessionController extends MediaSessionController {
     private ActorRef internalLink;
     private ActorRef internalLinkEndpoint;
     private ConnectionMode internalLinkMode;
+
+    // Media runtime stuff
+    private Sid recordingSid;
+    private DateTime recordStarted;
 
     public MgcpMediaSessionController(final ActorRef call, final ActorRef mediaGateway) {
         super();
@@ -201,7 +207,7 @@ public class MgcpMediaSessionController extends MediaSessionController {
 
     /**
      * Checks whether the actor is currently in a certain state.
-     * 
+     *
      * @param state The state to be checked
      * @return Returns true if the actor is currently in the state. Returns false otherwise.
      */
@@ -462,15 +468,15 @@ public class MgcpMediaSessionController extends MediaSessionController {
         @Override
         public void execute(final Object message) throws Exception {
             // XXX implement conferencing
-//            if (is(updatingInternalLink) && conference != null) {
-//                // If this is the outbound leg for an outbound call, conference is the initial call
-//                // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
-//                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
-//                conference.tell(new JoinComplete(bridge), source);
-//            }
+            // if (is(updatingInternalLink) && conference != null) {
+            // // If this is the outbound leg for an outbound call, conference is the initial call
+            // // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
+            // // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
+            // conference.tell(new JoinComplete(bridge), source);
+            // }
 
             final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
-                    new MediaSessionInfo());
+                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP()));
             call.tell(response, self());
         }
     }
@@ -484,7 +490,7 @@ public class MgcpMediaSessionController extends MediaSessionController {
         @Override
         public void execute(final Object message) throws Exception {
             final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
-                    new MediaSessionInfo());
+                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP()));
             call.tell(response, self());
         }
 
@@ -499,11 +505,11 @@ public class MgcpMediaSessionController extends MediaSessionController {
         @Override
         public void execute(final Object message) throws Exception {
             // XXX implement Join
-//            if (Join.class.equals(message.getClass())) {
-//                final Join request = (Join) message;
-//                internalLinkEndpoint = request.endpoint();
-//                internalLinkMode = request.mode();
-//            }
+            // if (Join.class.equals(message.getClass())) {
+            // final Join request = (Join) message;
+            // internalLinkEndpoint = request.endpoint();
+            // internalLinkMode = request.mode();
+            // }
             mediaGateway.tell(new CreateLink(session), source);
         }
 
@@ -651,17 +657,17 @@ public class MgcpMediaSessionController extends MediaSessionController {
     }
 
     private final class Failed extends AbstractAction {
-        
+
         public Failed(final ActorRef source) {
             super(source);
         }
-        
+
         @Override
         public void execute(final Object message) throws Exception {
             final MediaSessionControllerError error = new MediaSessionControllerError();
             call.tell(error, self());
         }
-        
+
     }
 
 }

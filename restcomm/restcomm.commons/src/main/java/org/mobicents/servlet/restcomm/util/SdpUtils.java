@@ -14,13 +14,11 @@ import javax.sdp.SessionDescription;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
- * 
  * @author Henrique Rosa (henrique.rosa@telestax.com)
- *
  */
 @ThreadSafe
 public class SdpUtils {
-    
+
     /**
      * Patches an SDP description by trimming and making sure it ends with a new line.
      *
@@ -36,8 +34,8 @@ public class SdpUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static String patch(final String contentType, final byte[] data, final String externalIp) throws UnknownHostException,
-            SdpException {
+    public static String patch(final String contentType, final byte[] data, final String externalIp)
+            throws UnknownHostException, SdpException {
         final String text = new String(data);
         String patchedSdp = null;
         if (contentType.equalsIgnoreCase("application/sdp")) {
