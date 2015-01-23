@@ -576,6 +576,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 fsm.transition(message, finishDialing);
             } else if (CallStateChanged.State.CANCELED == event.state()) {
+                //Temporarly commented it
                 callManager.tell(new DestroyCall(sender), self());
             }
         } else if (CallManagerResponse.class.equals(klass)) {
@@ -1556,7 +1557,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         Duration.create(10, TimeUnit.SECONDS));
                 callInfo = callResponse.get();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Timeout waiting for inbound call info: \n" + e);
             }
         }
 
@@ -1571,8 +1572,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } catch (Exception e) {
                 logger.error("Timeout waiting for outbound call info: \n" + e);
             }
-        } else {
-            System.out.println("OutboundCall is null");
         }
 
         // Handle Failed Calls
@@ -1709,7 +1708,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                         branch.tell(new Cancel(), source);
-                        callManager.tell(new DestroyCall(branch), source);
+                        //Temporary commented it
+//                        callManager.tell(new DestroyCall(branch), source);
                     }
                     callMediaGroup.tell(new Stop(), null);
                     if (attribute == null) {
@@ -2132,6 +2132,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             logger.info("At the postStop() method. Will clean up Voice Interpreter.");
             if (fsm.state().equals(bridged) && outboundCall != null) {
                 outboundCall.tell(new Hangup(), null);
+                callManager.tell(new DestroyCall(outboundCall), null);
             }
 
             // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
@@ -2165,6 +2166,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callMediaGroup = null;
             }
             postCleanup();
+
+            callManager.tell(new DestroyCall(call), null);
         }
         super.postStop();
     }
