@@ -958,7 +958,6 @@ public final class CallManager extends UntypedActor {
         @SuppressWarnings("unchecked")
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
-            logger.info("SipURI: "+uri.toString());
             final String interfaceTransport = uri.getTransportParam();
             if (transport.equalsIgnoreCase(interfaceTransport)) {
                 result = uri;
