@@ -36,6 +36,12 @@ label {
 	font-style: italic;
 }
 
+.validation-warning, .error-message {
+	font-size: 85%;
+	color: #FFA500;
+	font-style: italic;
+}
+
 
 .navbar-rvd-centered {
 	float: none;
