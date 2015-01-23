@@ -111,6 +111,16 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.addUssdCollectMapping = function (collectStep) {
 		collectStep.menu.mappings.push({digits:"", next:""});
 	}	
+	// returns the number of conference nounds contained in the dial
+	$scope.dialContainsConference = function (dialstep) {
+		var count = 0;
+		for (var i=0; i<dialstep.dialNouns.length; i++) {
+			var noun = dialstep.dialNouns[i];
+			if (noun.dialType == "conference")
+				count ++;
+		}
+		return count;
+	}
 	
 
 	
@@ -406,8 +416,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	
 	$scope.removeNestedMessage = function (step,nested) {
 		step.messages.splice( step.messages.indexOf(nested), 1 );
-	}
-	
+	}	
 
 	
 
