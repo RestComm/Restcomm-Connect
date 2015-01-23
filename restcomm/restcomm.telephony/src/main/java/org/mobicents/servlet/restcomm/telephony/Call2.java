@@ -21,6 +21,8 @@
 
 package org.mobicents.servlet.restcomm.telephony;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
@@ -52,7 +54,6 @@ import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
@@ -60,12 +61,15 @@ import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -140,10 +144,6 @@ public final class Call2 extends UntypedActor {
     private SipServletRequest invite;
     private SipServletResponse lastResponse;
 
-    // Media Session Control runtime stuff
-    private final ActorRef msController;
-    private MediaSessionInfo mediaSessionInfo;
-
     // Call runtime stuff.
     private final Sid id;
     private CallStateChanged.State external;
@@ -151,16 +151,15 @@ public final class Call2 extends UntypedActor {
     private String forwardedFrom;
     private DateTime created;
     private final List<ActorRef> observers;
+    
+    // Media Session Control runtime stuff
+    private final ActorRef msController;
+    private MediaSessionInfo mediaSessionInfo;
 
     // Media Group runtime stuff
-    private ActorRef group;
-    private ActorRef conference;
-    private CallDetailRecord outgoingCallRecord;
     private CallDetailRecordsDao recordsDao;
-    private DaoManager daoManager;
-    private static Boolean recording = false;
+    private CallDetailRecord outgoingCallRecord;
     private ActorRef outboundCall;
-    private ActorRef outboundCallBridgeEndpoint;
 
     public Call2(final SipFactory factory, final ActorRef mediaSessionController) {
         super();
@@ -285,14 +284,9 @@ public final class Call2 extends UntypedActor {
         InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
         InetAddress inetAddress = InetAddress.getByName(realIP);
 
-        int remotePort = message.getRemotePort();
-        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
-        String remoteAddress = message.getRemoteAddr();
-
         // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
         final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
-        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
 
         SipURI uri = null;
 
@@ -361,6 +355,16 @@ public final class Call2 extends UntypedActor {
             onMediaSessionControllerError((MediaSessionControllerError) message, self, sender);
         } else if (MediaSessionClosed.class.equals(klass)) {
             onMediaSessionDestroyed((MediaSessionClosed) message, self, sender);
+        } else if (AddParticipant.class.equals(klass)) {
+            onAddParticipant((AddParticipant) message, self, sender);
+        } else if (RemoveParticipant.class.equals(klass)) {
+            onRemoveParticipant((RemoveParticipant) message, self, sender);
+        } else if (Join.class.equals(klass)) {
+            onJoin((Join) message, self, sender);
+        } else if (StartRecordingCall.class.equals(klass)) {
+            onStartRecordingCall((StartRecordingCall) message, self, sender);
+        } else if (StopRecordingCall.class.equals(klass)) {
+            onStopRecordingCall((StopRecordingCall) message, self, sender);
         }
     }
 
@@ -555,6 +559,31 @@ public final class Call2 extends UntypedActor {
             fsm.transition(message, dialing);
         }
         // XXX else -> transition error ?
+    }
+    
+    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
+        this.outboundCall = message.call();
+        final Join join = new Join(this.msController, ConnectionMode.SendRecv);
+        this.outboundCall.tell(join, self);
+    }
+
+    private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
+        
+    }
+    
+    private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
+        this.msController.tell(message, self);
+    }
+    
+    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        // Forward message for Media Session Controller to handle
+        message.setCallId(this.id);
+        this.msController.tell(message, sender);
+    }
+
+    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        // Forward message for Media Session Controller to handle
+        this.msController.tell(message, sender);
     }
 
     /*
@@ -841,7 +870,6 @@ public final class Call2 extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            final State state = fsm.state();
 
             // Send SIP BUSY to remote peer
             if (Reject.class.equals(klass) && is(ringing) && isInbound()) {
@@ -1035,7 +1063,7 @@ public final class Call2 extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            javax.servlet.sip.SipSession.State sessionState = invite.getSession().getState();
+            SipSession.State sessionState = invite.getSession().getState();
             if (is(creatingMediaSession)
                     && !(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
                 final ConnectionStateChanged response = (ConnectionStateChanged) message;

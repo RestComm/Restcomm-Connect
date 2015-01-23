@@ -25,5 +25,10 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>jain</groupId>
+			<artifactId>jain-mgcp-ri</artifactId>
+		</dependency>
 	</dependencies>
 </project>

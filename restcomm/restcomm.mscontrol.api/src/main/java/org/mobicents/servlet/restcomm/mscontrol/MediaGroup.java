@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
@@ -46,6 +46,16 @@ import org.mobicents.servlet.restcomm.mgcp.PlayCollect;
 import org.mobicents.servlet.restcomm.mgcp.PlayRecord;
 import org.mobicents.servlet.restcomm.mgcp.StopEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStatus;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.Join;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
