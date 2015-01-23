@@ -17,16 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
+import akka.actor.ActorRef;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class Leave {
-    public Leave() {
-        super();
+public final class JoinComplete {
+
+    private final ActorRef endpoint;
+
+    public JoinComplete(final ActorRef endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public ActorRef endpoint() {
+        return endpoint;
     }
 }

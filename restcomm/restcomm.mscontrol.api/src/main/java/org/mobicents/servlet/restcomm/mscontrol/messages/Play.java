@@ -17,24 +17,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-
-import akka.actor.ActorRef;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class JoinComplete {
-    private final ActorRef endpoint;
+public final class Play {
+    private final List<URI> uris;
+    private final int iterations;
 
-    public JoinComplete(final ActorRef endpoint) {
-        this.endpoint = endpoint;
+    public Play(final List<URI> uris, final int iterations) {
+        super();
+        this.uris = uris;
+        this.iterations = iterations;
     }
 
-    public ActorRef endpoint(){
-        return endpoint;
+    public Play(final URI uri, final int iterations) {
+        super();
+        this.uris = new ArrayList<URI>();
+        uris.add(uri);
+        this.iterations = iterations;
+    }
+
+    public List<URI> uris() {
+        return uris;
+    }
+
+    public int iterations() {
+        return iterations;
     }
 }

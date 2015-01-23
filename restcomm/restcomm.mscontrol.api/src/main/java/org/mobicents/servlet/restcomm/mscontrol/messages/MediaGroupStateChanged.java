@@ -17,23 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
 
-import org.mobicents.servlet.restcomm.patterns.StandardResponse;
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class MediaGroupResponse<T> extends StandardResponse<T> {
-    public MediaGroupResponse(final T object) {
-        super(object);
+@Immutable
+public final class MediaGroupStateChanged {
+    public static enum State {
+        ACTIVE, INACTIVE
+    };
+
+    private final State state;
+
+    public MediaGroupStateChanged(final State state) {
+        super();
+        this.state = state;
     }
 
-    public MediaGroupResponse(final Throwable cause) {
-        super(cause);
-    }
-
-    public MediaGroupResponse(final Throwable cause, final String message) {
-        super(cause, message);
+    public State state() {
+        return state;
     }
 }

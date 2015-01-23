@@ -17,16 +17,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
+
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
+import akka.actor.ActorRef;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class CreateMediaGroup {
-    public CreateMediaGroup() {
+public final class Join {
+
+    private final ActorRef endpoint;
+    private final ConnectionMode mode;
+
+    public Join(final ActorRef endpoint, final ConnectionMode mode) {
         super();
+        this.endpoint = endpoint;
+        this.mode = mode;
+    }
+
+    public ActorRef endpoint() {
+        return endpoint;
+    }
+
+    public ConnectionMode mode() {
+        return mode;
     }
 }

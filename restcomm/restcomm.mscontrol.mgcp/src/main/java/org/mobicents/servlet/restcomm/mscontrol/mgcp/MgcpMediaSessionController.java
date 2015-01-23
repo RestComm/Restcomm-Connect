@@ -24,10 +24,16 @@ package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -56,13 +62,23 @@ import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mscontrol.MediaSessionController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.BridgeEndpointInfo;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryBridgeEndpoint;
 import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -106,10 +122,16 @@ public class MgcpMediaSessionController extends MediaSessionController {
 
     // Call runtime stuff
     private final ActorRef call;
+    private Sid callId;
     private String sessionDescription;
     private String connectionMode;
     private boolean callOutbound;
     private String callDirection;
+
+    // CallMediaGroup
+    private ActorRef mediaGroup;
+    private ActorRef outboundMediaSessionController;
+    private ActorRef outboundCallBridgeEndpoint;
 
     // MGCP runtime stuff
     private final ActorRef mediaGateway;
@@ -121,9 +143,17 @@ public class MgcpMediaSessionController extends MediaSessionController {
     private ActorRef internalLinkEndpoint;
     private ConnectionMode internalLinkMode;
 
-    // Media runtime stuff
+    // Call Recording
+    private Sid accountId;
     private Sid recordingSid;
+    private URI recordingUri;
+    private Boolean recording;
     private DateTime recordStarted;
+    private DaoManager daoManager;
+    private CallDetailRecordsDao recordsDao;
+
+    // Runtime Setting
+    private Configuration runtimeSettings;
 
     public MgcpMediaSessionController(final ActorRef call, final ActorRef mediaGateway) {
         super();
@@ -215,6 +245,50 @@ public class MgcpMediaSessionController extends MediaSessionController {
         return this.fsm.state().equals(state);
     }
 
+    private void startRecordingCall() throws Exception {
+        logger.info("Start recording call");
+        String finishOnKey = "1234567890*#";
+        int maxLength = 3600;
+        int timeout = 5;
+
+        this.recordStarted = DateTime.now();
+        this.recording = true;
+
+        // Tell media group to start recording
+        Record record = new Record(recordingUri, timeout, maxLength, finishOnKey);
+        this.mediaGroup.tell(record, null);
+    }
+
+    private void stopRecordingCall() throws Exception {
+        logger.info("Stop recording call");
+        if (this.mediaGroup != null) {
+            // Tell media group to stop recording
+            mediaGroup.tell(new Stop(), null);
+            this.recording = false;
+            Double duration = WavUtils.getAudioDuration(this.recordingUri);
+            if (duration.equals(0.0)) {
+                final DateTime end = DateTime.now();
+                duration = new Double((end.getMillis() - this.recordStarted.getMillis()) / 1000);
+            }
+            final Recording.Builder builder = Recording.builder();
+            builder.setSid(this.recordingSid);
+            builder.setAccountSid(this.accountId);
+            builder.setCallSid(this.callId);
+            builder.setDuration(duration);
+            builder.setApiVersion(this.runtimeSettings.getString("api-version"));
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(this.runtimeSettings.getString("api-version")).append("/Accounts/")
+                    .append(accountId.toString());
+            buffer.append("/Recordings/").append(this.recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+            final Recording recording = builder.build();
+            RecordingsDao recordsDao = this.daoManager.getRecordingsDao();
+            recordsDao.addRecording(recording);
+        } else {
+            logger.info("Tried to stop recording but group was null.");
+        }
+    }
+
     /*
      * EVENTS
      */
@@ -238,10 +312,22 @@ public class MgcpMediaSessionController extends MediaSessionController {
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
         } else if (LinkStateChanged.class.equals(klass)) {
             onLinkStateChanged((LinkStateChanged) message, self, sender);
+        } else if (Leave.class.equals(klass)) {
+            onLeave((Leave) message, self, sender);
         } else if (Mute.class.equals(klass)) {
             onMute((Mute) message, self, sender);
         } else if (Unmute.class.equals(klass)) {
             onUnmute((Unmute) message, self, sender);
+        } else if (StartRecordingCall.class.equals(klass)) {
+            onStartRecordingCall((StartRecordingCall) message, self, sender);
+        } else if (StopRecordingCall.class.equals(klass)) {
+            onStopRecordingCall((StopRecordingCall) message, self, sender);
+        } else if (Join.class.equals(klass)) {
+            onJoin((Join) message, self, sender);
+        } else if (JoinComplete.class.equals(klass)) {
+            onJoinComplete((JoinComplete) message, self, sender);
+        } else if (MediaSessionControllerResponse.class.equals(klass)) {
+            onMediaSessionControllerResponse((MediaSessionControllerResponse<?>) message, self, sender);
         }
     }
 
@@ -332,12 +418,79 @@ public class MgcpMediaSessionController extends MediaSessionController {
         }
     }
 
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, closingInternalLink);
+    }
+
     private void onMute(Mute message, ActorRef self, ActorRef sender) throws Exception {
         fsm.transition(message, muting);
     }
 
     private void onUnmute(Unmute message, ActorRef self, ActorRef sender) throws Exception {
         fsm.transition(message, unmuting);
+    }
+
+    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        if (runtimeSettings == null) {
+            this.runtimeSettings = message.getRuntimeSetting();
+        }
+
+        if (daoManager == null) {
+            daoManager = message.getDaoManager();
+        }
+
+        if (accountId == null) {
+            accountId = message.getAccountId();
+        }
+        
+        this.callId = message.getCallId();
+        this.recordingSid = message.getRecordingSid();
+        this.recordingUri = message.getRecordingUri();
+        this.recording = true;
+        startRecordingCall();
+    }
+
+    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        if (this.recording) {
+            if (runtimeSettings == null) {
+                this.runtimeSettings = message.getRuntimeSetting();
+            }
+            if (daoManager == null) {
+                this.daoManager = message.getDaoManager();
+            }
+            if (accountId == null) {
+                this.accountId = message.getAccountId();
+            }
+            stopRecordingCall();
+        }
+    }
+
+    private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
+        // Ask the remote media session controller for the bridge endpoint
+        this.outboundMediaSessionController = message.endpoint();
+        this.outboundMediaSessionController.tell(new QueryBridgeEndpoint(), self);
+    }
+
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+        if (sender.equals(this.outboundMediaSessionController)) {
+            this.outboundCallBridgeEndpoint = message.endpoint();
+            final Join join = new Join(outboundCallBridgeEndpoint, ConnectionMode.SendRecv);
+            this.mediaGroup.tell(join, null);
+        }
+    }
+
+    private void onMediaSessionControllerResponse(MediaSessionControllerResponse<?> message, ActorRef self, ActorRef sender)
+            throws Exception {
+        Object obj = message.get();
+        if (BridgeEndpointInfo.class.equals(obj.getClass())) {
+            // Obtaining remote Bridge Endpoint for Join operation
+            BridgeEndpointInfo endpointInfo = (BridgeEndpointInfo) obj;
+            this.internalLinkEndpoint = endpointInfo.getEndpoint();
+            this.internalLinkMode = endpointInfo.getConnectionMode();
+
+            // Start joining
+            this.fsm.transition(message, acquiringInternalLink);
+        }
     }
 
     /*
@@ -467,13 +620,12 @@ public class MgcpMediaSessionController extends MediaSessionController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            // XXX implement conferencing
-            // if (is(updatingInternalLink) && conference != null) {
-            // // If this is the outbound leg for an outbound call, conference is the initial call
-            // // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
-            // // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
-            // conference.tell(new JoinComplete(bridge), source);
-            // }
+            if (is(updatingInternalLink) && outboundMediaSessionController != null) {
+                // If this is the outbound leg for an outbound call, conference is the initial call
+                // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
+                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
+                outboundMediaSessionController.tell(new JoinComplete(bridge), source);
+            }
 
             final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
                     new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP()));
@@ -504,12 +656,6 @@ public class MgcpMediaSessionController extends MediaSessionController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            // XXX implement Join
-            // if (Join.class.equals(message.getClass())) {
-            // final Join request = (Join) message;
-            // internalLinkEndpoint = request.endpoint();
-            // internalLinkMode = request.mode();
-            // }
             mediaGateway.tell(new CreateLink(session), source);
         }
 

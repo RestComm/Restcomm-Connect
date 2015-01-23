@@ -17,40 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Immutable
-public final class Play {
-    private final List<URI> uris;
-    private final int iterations;
-
-    public Play(final List<URI> uris, final int iterations) {
-        super();
-        this.uris = uris;
-        this.iterations = iterations;
+public final class MediaGroupResponse<T> extends StandardResponse<T> {
+    public MediaGroupResponse(final T object) {
+        super(object);
     }
 
-    public Play(final URI uri, final int iterations) {
-        super();
-        this.uris = new ArrayList<URI>();
-        uris.add(uri);
-        this.iterations = iterations;
+    public MediaGroupResponse(final Throwable cause) {
+        super(cause);
     }
 
-    public List<URI> uris() {
-        return uris;
-    }
-
-    public int iterations() {
-        return iterations;
+    public MediaGroupResponse(final Throwable cause, final String message) {
+        super(cause, message);
     }
 }

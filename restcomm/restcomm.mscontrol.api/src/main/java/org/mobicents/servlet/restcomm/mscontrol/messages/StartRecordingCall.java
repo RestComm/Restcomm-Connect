@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import java.net.URI;
 
@@ -27,6 +27,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * Use this to notify a Call object that needs to Record
+ * 
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public class StartRecordingCall {
@@ -56,13 +57,15 @@ public class StartRecordingCall {
         }
     };
 
+    private Sid callId;
     private Sid accountId;
     private Configuration runtimeSetting;
     private DaoManager daoManager;
     private Sid recordingSid;
     private URI recordingUri;
 
-    public StartRecordingCall(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager, final Sid recordingSid, final URI recordingUri) {
+    public StartRecordingCall(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager,
+            final Sid recordingSid, final URI recordingUri) {
         this.accountId = accountId;
         this.runtimeSetting = runtimeSettings;
         this.daoManager = daoManager;
@@ -89,4 +92,13 @@ public class StartRecordingCall {
     public URI getRecordingUri() {
         return recordingUri;
     }
+
+    public void setCallId(Sid callId) {
+        this.callId = callId;
+    }
+
+    public Sid getCallId() {
+        return callId;
+    }
+
 }

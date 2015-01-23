@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;

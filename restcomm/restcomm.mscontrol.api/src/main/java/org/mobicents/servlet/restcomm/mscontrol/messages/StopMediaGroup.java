@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
@@ -25,8 +25,8 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class StartMediaGroup {
-    public StartMediaGroup() {
+public final class StopMediaGroup {
+    public StopMediaGroup() {
         super();
     }
 }

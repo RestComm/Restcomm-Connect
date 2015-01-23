@@ -19,40 +19,19 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mscontrol.messages;
+package org.mobicents.servlet.restcomm.mscontrol.mgcp.messages;
 
-import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
 @Immutable
-public final class StopRecording {
+public final class QueryBridgeEndpoint {
 
-    private final Sid accountId;
-    private final Configuration runtimeSetting;
-    private final DaoManager daoManager;
-
-    public StopRecording(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager) {
-        this.accountId = accountId;
-        this.runtimeSetting = runtimeSettings;
-        this.daoManager = daoManager;
-    }
-
-    public Sid getAccountId() {
-        return accountId;
-    }
-
-    public Configuration getRuntimeSetting() {
-        return runtimeSetting;
-    }
-
-    public DaoManager getDaoManager() {
-        return daoManager;
+    public QueryBridgeEndpoint() {
+        super();
     }
 
 }

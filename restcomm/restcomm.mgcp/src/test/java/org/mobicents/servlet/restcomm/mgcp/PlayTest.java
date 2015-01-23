@@ -19,13 +19,13 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
+import static org.junit.Assert.assertTrue;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.mgcp.Play;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
