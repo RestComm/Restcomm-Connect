@@ -576,7 +576,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 fsm.transition(message, finishDialing);
             } else if (CallStateChanged.State.CANCELED == event.state()) {
-                //Temporarly commented it
                 callManager.tell(new DestroyCall(sender), self());
             }
         } else if (CallManagerResponse.class.equals(klass)) {
@@ -1708,7 +1707,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                         branch.tell(new Cancel(), source);
-                        //Temporary commented it
+                        //No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we destroy calls
 //                        callManager.tell(new DestroyCall(branch), source);
                     }
                     callMediaGroup.tell(new Stop(), null);
@@ -2133,6 +2132,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (fsm.state().equals(bridged) && outboundCall != null) {
                 outboundCall.tell(new Hangup(), null);
                 callManager.tell(new DestroyCall(outboundCall), null);
+                outboundCall = null;
             }
 
             // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
@@ -2162,12 +2162,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callMediaGroup.tell(stop, null);
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
                 call.tell(destroy, null);
+                callManager.tell(new DestroyCall(call), null);
                 getContext().stop(callMediaGroup);
                 callMediaGroup = null;
+                call = null;
             }
             postCleanup();
-
-            callManager.tell(new DestroyCall(call), null);
         }
         super.postStop();
     }

@@ -566,6 +566,7 @@ public final class Call extends UntypedActor {
                 } else if (muting.equals(state) || unmuting.equals(state)) {
                     fsm.transition(message, closingRemoteConnection);
                 } else if (closingRemoteConnection.equals(state)) {
+                    context().stop(remoteConn);
                     remoteConn = null;
                     if (internalLink != null) {
                         fsm.transition(message, closingInternalLink);
@@ -1285,6 +1286,7 @@ public final class Call extends UntypedActor {
             }
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
+                context().stop(remoteConn);
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
@@ -1364,6 +1366,7 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
+                context().stop(remoteConn);
                 remoteConn = null;
             }
             if (direction.equalsIgnoreCase(INBOUND))
@@ -1710,14 +1713,18 @@ public final class Call extends UntypedActor {
             }
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
+                context().stop(remoteConn);
                 remoteConn = null;
             }
             if (internalLink != null) {
                 gateway.tell(new DestroyLink(internalLink), source);
+                context().stop(internalLink);
+                context().stop(internalLinkEndpoint);
                 internalLink = null;
             }
             if (bridge != null) {
                 gateway.tell(new DestroyEndpoint(bridge), source);
+                context().stop(bridge);
                 bridge = null;
             }
             // Explicitly invalidate the application session.
