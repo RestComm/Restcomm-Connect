@@ -24,8 +24,6 @@ import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipApplicationSessionListener;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletContextEvent;
@@ -33,8 +31,6 @@ import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSessionEvent;
-import javax.servlet.sip.SipSessionListener;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
@@ -51,8 +47,7 @@ import akka.actor.UntypedActorFactory;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener, SipSessionListener,
-        SipServletListener {
+public final class CallManagerProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = Logger.getLogger(CallManagerProxy.class);
@@ -131,28 +126,6 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
         }));
     }
 
-    @Override
-    public void sessionCreated(final SipApplicationSessionEvent event) {
-        // Nothing to do.
-    }
-
-    @Override
-    public void sessionDestroyed(final SipApplicationSessionEvent event) {
-        // Nothing to do.
-    }
-
-    @Override
-    public void sessionExpired(final SipApplicationSessionEvent event) {
-        manager.tell(event, null);
-    }
-
-    @Override
-    public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
-        logger.info("SipApplicationSessionEvent received. Invalidating the sipApplicationSession: "
-                + event.getApplicationSession().getId());
-        event.getApplicationSession().invalidate();
-    }
-
     private boolean isUssdMessage(SipServletMessage message) {
         Boolean isUssd = false;
         String contentType = null;
@@ -168,22 +141,6 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
             }
         }
         return isUssd;
-    }
-
-    @Override
-    public void sessionCreated(SipSessionEvent se) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void sessionDestroyed(SipSessionEvent se) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void sessionReadyToInvalidate(SipSessionEvent event) {
-        logger.info("SipSessionEvent received. Invalidating the sipSession: " + event.getSession().getId());
-        event.getSession().invalidate();
     }
 
     /*
