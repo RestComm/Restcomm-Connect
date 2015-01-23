@@ -51,7 +51,8 @@ import akka.actor.UntypedActorFactory;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener, SipSessionListener, SipServletListener {
+public final class CallManagerProxy extends SipServlet implements SipApplicationSessionListener, SipSessionListener,
+        SipServletListener {
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = Logger.getLogger(CallManagerProxy.class);
@@ -75,7 +76,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
-        if(isUssdMessage(request)) {
+        if (isUssdMessage(request)) {
             ussdManager.tell(request, null);
         } else {
             manager.tell(request, null);
@@ -84,7 +85,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
-        if(isUssdMessage(response)){
+        if (isUssdMessage(response)) {
             ussdManager.tell(response, null);
         } else {
             manager.tell(response, null);
@@ -95,8 +96,8 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
     public void init(final ServletConfig config) throws ServletException {
     }
 
-    private ActorRef manager(final Configuration configuration, final ServletContext context, final ActorRef gateway, final ActorRef conferences,
-            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+    private ActorRef manager(final Configuration configuration, final ServletContext context, final ActorRef gateway,
+            final ActorRef conferences, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -107,8 +108,8 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
         }));
     }
 
-    private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef gateway, final ActorRef conferences,
-            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+    private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef gateway,
+            final ActorRef conferences, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -147,7 +148,8 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
-        logger.info("SipApplicationSessionEvent received. Invalidating the sipApplicationSession: "+event.getApplicationSession().getId());
+        logger.info("SipApplicationSessionEvent received. Invalidating the sipApplicationSession: "
+                + event.getApplicationSession().getId());
         event.getApplicationSession().invalidate();
     }
 
@@ -180,28 +182,32 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     public void sessionReadyToInvalidate(SipSessionEvent event) {
-        logger.info("SipSessionEvent received. Invalidating the sipSession: "+event.getSession().getId());
+        logger.info("SipSessionEvent received. Invalidating the sipSession: " + event.getSession().getId());
         event.getSession().invalidate();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see javax.servlet.sip.SipServletListener#servletInitialized(javax.servlet.sip.SipServletContextEvent)
      */
     @Override
     public void servletInitialized(SipServletContextEvent event) {
-        logger.info("CallManagerProxy sip servlet initialized. Will proceed to create CallManager and UssdManager");
-        context = event.getServletContext();
-        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
-        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        final ActorRef gateway = (ActorRef) context.getAttribute(MediaGateway.class.getName());
-        // Create the call manager.
-        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-        final ActorRef conferences = conferences(gateway);
-        final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
-        manager = manager(configuration, context, gateway, conferences, sms, factory, storage);
-        ussdManager = ussdManager(configuration, context, gateway, conferences, sms, factory, storage);
-        context.setAttribute(CallManager.class.getName(), manager);
-        context.setAttribute(UssdCallManager.class.getName(), ussdManager);
+        if (event.getSipServlet().getClass().equals(CallManagerProxy.class)) {
+            logger.info("CallManagerProxy sip servlet initialized. Will proceed to create CallManager and UssdManager");
+            context = event.getServletContext();
+            configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+            system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+            final ActorRef gateway = (ActorRef) context.getAttribute(MediaGateway.class.getName());
+            // Create the call manager.
+            final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+            final ActorRef conferences = conferences(gateway);
+            final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
+            manager = manager(configuration, context, gateway, conferences, sms, factory, storage);
+            ussdManager = ussdManager(configuration, context, gateway, conferences, sms, factory, storage);
+            context.setAttribute(CallManager.class.getName(), manager);
+            context.setAttribute(UssdCallManager.class.getName(), ussdManager);
+        }
     }
 }
