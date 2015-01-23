@@ -154,7 +154,13 @@ public final class CallManager extends UntypedActor {
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         SipURI outboundIntf = outboundInterface("udp");
-        myHostIp = ((SipURI) outboundIntf).getHost().toString();
+        if (outboundIntf != null) {
+            myHostIp = ((SipURI) outboundIntf).getHost().toString();
+        } else {
+            logger.error("outboundIntf is null");
+            if (context == null)
+                logger.error("context is null");
+        }
         Configuration mediaConf = configuration.subset("media-server-manager");
         mediaExternalIp = mediaConf.getString("mgcp-server.external-address");
         proxyIp = runtime.subset("telestax-proxy").getString("uri").replaceAll("http://", "").replaceAll(":2080", "");
@@ -952,6 +958,7 @@ public final class CallManager extends UntypedActor {
         @SuppressWarnings("unchecked")
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
+            logger.info("SipURI: "+uri.toString());
             final String interfaceTransport = uri.getTransportParam();
             if (transport.equalsIgnoreCase(interfaceTransport)) {
                 result = uri;
