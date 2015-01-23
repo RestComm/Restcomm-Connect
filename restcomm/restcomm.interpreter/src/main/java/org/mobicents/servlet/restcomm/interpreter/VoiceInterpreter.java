@@ -561,6 +561,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // Ask callMediaGroup to stop recording so we have the recording file available
                     // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
                     callMediaGroup.tell(new Stop(), null);
+                    context().stop(callMediaGroup);
                     fsm.transition(message, finishRecording);
                 } else if (bridged.equals(state) && call == sender()) {
                     if (!dialActionExecuted) {
@@ -2105,6 +2106,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callMediaGroup.tell(stop, source);
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
                 call.tell(destroy, source);
+                context().stop(callMediaGroup);
                 callMediaGroup = null;
             }
             // Destroy the Call(s).
@@ -2160,13 +2162,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Destroy the media group(s).
             if (callMediaGroup != null) {
                 callMediaGroup.tell(stop, null);
+                getContext().stop(callMediaGroup);
+                callMediaGroup = null;
+            }
+
+            if (call != null) {
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
                 call.tell(destroy, null);
                 callManager.tell(new DestroyCall(call), null);
-                getContext().stop(callMediaGroup);
-                callMediaGroup = null;
                 call = null;
             }
+
             postCleanup();
         }
         super.postStop();
