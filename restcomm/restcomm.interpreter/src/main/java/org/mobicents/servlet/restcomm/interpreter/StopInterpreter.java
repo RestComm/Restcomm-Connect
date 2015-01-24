@@ -26,6 +26,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class StopInterpreter {
+
     private static final class Singleton {
         private static final StopInterpreter instance = new StopInterpreter();
     }

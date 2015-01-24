@@ -88,7 +88,7 @@ import akka.event.LoggingAdapter;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class MgcpMediaSessionController extends MediaSessionController {
+public class MgcpCallMediaSessionController extends MediaSessionController {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -155,7 +155,7 @@ public class MgcpMediaSessionController extends MediaSessionController {
     // Runtime Setting
     private Configuration runtimeSettings;
 
-    public MgcpMediaSessionController(final ActorRef call, final ActorRef mediaGateway) {
+    public MgcpCallMediaSessionController(final ActorRef call, final ActorRef mediaGateway) {
         super();
         final ActorRef source = self();
 

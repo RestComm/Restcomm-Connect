@@ -357,8 +357,6 @@ public final class Call2 extends UntypedActor {
             onMediaSessionDestroyed((MediaSessionClosed) message, self, sender);
         } else if (AddParticipant.class.equals(klass)) {
             onAddParticipant((AddParticipant) message, self, sender);
-        } else if (RemoveParticipant.class.equals(klass)) {
-            onRemoveParticipant((RemoveParticipant) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
         } else if (StartRecordingCall.class.equals(klass)) {
@@ -565,10 +563,6 @@ public final class Call2 extends UntypedActor {
         this.outboundCall = message.call();
         final Join join = new Join(this.msController, ConnectionMode.SendRecv);
         this.outboundCall.tell(join, self);
-    }
-
-    private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
-        
     }
     
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
