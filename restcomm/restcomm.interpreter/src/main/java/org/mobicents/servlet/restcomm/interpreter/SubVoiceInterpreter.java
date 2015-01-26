@@ -63,13 +63,13 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Verbs;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStatus;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.StartMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.StopMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.CreateMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.DestroyMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
@@ -610,7 +610,6 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
@@ -634,7 +633,6 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
             if (CallResponse.class.equals(klass)) {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
                 callInfo = response.get();
@@ -654,8 +652,6 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final UntypedActorContext context = getContext();
-            final State state = fsm.state();
             if (parser == null) {
                 response = downloaderResponse.get();
 
@@ -685,7 +681,6 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
@@ -758,7 +753,6 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
             }
             // Cleanup the outbound call if necessary.
-            final State state = fsm.state();
             final StopMediaGroup stop = new StopMediaGroup();
             // Destroy the media group(s).
             if (callMediaGroup != null) {

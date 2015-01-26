@@ -74,17 +74,17 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.StartMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.StopMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.CreateMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
@@ -1127,7 +1127,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
@@ -1540,6 +1539,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         call.tell(new StartRecordingCall(accountId, runtimeSettings, storage, recordingSid, recordingUri), null);
     }
 
+    @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
         logger.info("Proceeding to execute Dial Action attribute");
         this.dialActionExecuted = true;
@@ -1587,7 +1587,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         else if (message instanceof ReceiveTimeout) {
             if (outboundCallInfo != null) {
                 final String dialCallSid = this.outboundCallInfo.sid().toString();
-                final CallStateChanged.State dialCallStatus = this.outboundCallInfo.state();
                 final long dialCallDuration = new Interval(this.outboundCallInfo.dateCreated(), DateTime.now()).toDuration()
                         .getStandardSeconds();
                 final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
