@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm-docs</artifactId>
-		<version>7.2.1-SNAPSHOT</version>
+		<version>7.2.1.GA</version>
 	</parent>
 
 	<artifactId>restcomm-docs-sources-telscale</artifactId>

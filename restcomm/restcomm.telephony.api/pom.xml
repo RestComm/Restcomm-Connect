@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.2.1-SNAPSHOT</version>
+		<version>7.2.1.GA</version>
 	</parent>
 	<artifactId>restcomm.telephony.api</artifactId>
 	<name>restcomm.telephony.api</name>

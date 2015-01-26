@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.2.1-SNAPSHOT</version>
+		<version>7.2.1.GA</version>
 	</parent>
 
 	<!-- <groupId>com.telestax.servlet</groupId> <version>7.1.4-TelScale-SNAPSHOT</version> -->
