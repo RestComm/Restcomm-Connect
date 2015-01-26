@@ -561,6 +561,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // Ask callMediaGroup to stop recording so we have the recording file available
                     // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
                     callMediaGroup.tell(new Stop(), null);
+                    context().stop(callMediaGroup);
                     fsm.transition(message, finishRecording);
                 } else if (bridged.equals(state) && call == sender()) {
                     if (!dialActionExecuted) {
@@ -1556,7 +1557,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         Duration.create(10, TimeUnit.SECONDS));
                 callInfo = callResponse.get();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Timeout waiting for inbound call info: \n" + e);
             }
         }
 
@@ -1571,8 +1572,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } catch (Exception e) {
                 logger.error("Timeout waiting for outbound call info: \n" + e);
             }
-        } else {
-            System.out.println("OutboundCall is null");
         }
 
         // Handle Failed Calls
@@ -1709,7 +1708,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                         branch.tell(new Cancel(), source);
-                        callManager.tell(new DestroyCall(branch), source);
+                        //No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we destroy calls
+//                        callManager.tell(new DestroyCall(branch), source);
                     }
                     callMediaGroup.tell(new Stop(), null);
                     if (attribute == null) {
@@ -2106,6 +2106,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callMediaGroup.tell(stop, source);
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
                 call.tell(destroy, source);
+                context().stop(callMediaGroup);
                 callMediaGroup = null;
             }
             // Destroy the Call(s).
@@ -2132,6 +2133,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             logger.info("At the postStop() method. Will clean up Voice Interpreter.");
             if (fsm.state().equals(bridged) && outboundCall != null) {
                 outboundCall.tell(new Hangup(), null);
+                callManager.tell(new DestroyCall(outboundCall), null);
+                outboundCall = null;
             }
 
             // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
@@ -2159,11 +2162,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Destroy the media group(s).
             if (callMediaGroup != null) {
                 callMediaGroup.tell(stop, null);
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
-                call.tell(destroy, null);
                 getContext().stop(callMediaGroup);
                 callMediaGroup = null;
             }
+
+            if (call != null) {
+                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
+                call.tell(destroy, null);
+                callManager.tell(new DestroyCall(call), null);
+                call = null;
+            }
+
             postCleanup();
         }
         super.postStop();
