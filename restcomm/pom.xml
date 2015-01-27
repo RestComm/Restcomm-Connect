@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
@@ -143,7 +142,8 @@
 		<module>restcomm.rvd</module>
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
-	</modules>
+    <module>restcomm.routing</module>
+  </modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -573,7 +573,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g />
+						<g/>
 					</compilerArguments>
 					<source>1.7</source>
 					<target>1.7</target>
@@ -596,7 +596,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile />
+					<useFile/>
 				</configuration>
 				<dependencies>
 					<dependency>

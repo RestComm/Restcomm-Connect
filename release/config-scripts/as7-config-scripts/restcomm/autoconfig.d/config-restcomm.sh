@@ -50,7 +50,7 @@ configRestcomm() {
 		recording_address=$static_address
 	fi
 
-	if [ "$ACTIVE_PROXY" == "true" || "$ACTIVE_PROXY" == "TRUE" ]; then
+	if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
@@ -249,7 +249,7 @@ configMobicentsProperties() {
 configTelestaxProxy() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	enabled="$1"
-	if [ "$enabled" == "true" || "$enabled" == "TRUE" ]; then
+	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
 		sed -e "/<telestax-proxy>/ {
 			N; s|<enabled>.*</enabled>|<enabled>$1</enabled>|
 		N; s|<login>.*</login>|<login>$2</login>|
@@ -288,7 +288,7 @@ configMediaServerManager() {
 	bind_address="$2"
 	public_ip="$3"
 
-	if [ "$enabled" == "true" || "$enabled" == "TRUE" ]; then
+	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
 		sed -e "/<mgcp-server class=\"org.mobicents.servlet.restcomm.mgcp.MediaGateway\">/ {
 			N
 			N; s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|
