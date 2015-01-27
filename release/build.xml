@@ -16,7 +16,7 @@
 	<property name="sipservlets-build" value="564"/>
         <property name="mobicents-sipservlets-as7.version" value="3.0.${sipservlets-build}" />
 	<!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-	<property name="mobicents-media.version" value="3.0.1.FINAL" />
+	<property name="mobicents-media.version" value="3.0.2.Final" />
 	<!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
 
@@ -37,7 +37,7 @@
 	<property name="hsqldb.distro.zip.path" value="${checkout.dir}/${hsqldb.download.distro.file}" />
 
 	<property name="mobicents-media.download.distro.file" value="mobicents-media-server-${mobicents-media.version}.zip" />
-	<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.1.FINAL/mms-server-3.0.1.FINAL.zip" />
+	<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />
 	<property name="mobicents-media.distro.zip.path" value="${checkout.dir}/${mobicents-media.download.distro.file}" />
 
 	<property name="mobicents-diameter.download.distro.file" value="mobicents-diameter-${mobicents-diameter.version}.zip" />
@@ -147,8 +147,8 @@
 	<exec failonerror="true" executable="wget">
 	    <arg value="${mobicents-media.download.url}" />
 	</exec>
-	<move file="${base.dir}/mms-server-3.0.1.FINAL.zip" todir="${checkout.dir}"/>
-	<move file="${checkout.dir}/mms-server-3.0.1.FINAL.zip" tofile="${checkout.dir}/${mobicents-media.download.distro.file}"/>
+	<move file="${base.dir}/mms-server-3.0.2.Final.zip" todir="${checkout.dir}"/>
+	<move file="${checkout.dir}/mms-server-3.0.2.Final.zip" tofile="${checkout.dir}/${mobicents-media.download.distro.file}"/>
 </target>
 
 <target name="extract-mobicents-media" depends="get-mobicents-media">
@@ -306,7 +306,7 @@
 
 		<!-- Replace webrtc.war with Olympus.war -->
 		<delete file="${release.as7.dir}/standalone/deployments/webrtc.war" failonerror="false" />
-		<copy tofile="${release.as7.dir}/standalone/deployments/" failonerror="true"
+		<copy tofile="${release.as7.dir}/standalone/deployments/olympus.war" failonerror="true"
 			file="${basedir}/olympus.war"/>
 		<touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy" />
 	</target>

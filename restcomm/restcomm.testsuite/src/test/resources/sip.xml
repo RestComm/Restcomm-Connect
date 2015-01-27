@@ -52,7 +52,7 @@
 			</pattern>
 		</servlet-mapping>
 	</servlet-selection>
-	
+
 	<servlet>
 		<servlet-name>RestComm</servlet-name>
 		<display-name>RestComm</display-name>
@@ -62,7 +62,7 @@
 		</servlet-class>
 		<load-on-startup>0</load-on-startup>
 	</servlet>
-	
+
 	<servlet>
 		<servlet-name>SmsService</servlet-name>
 		<display-name>SmsService</display-name>
@@ -92,7 +92,7 @@
 		</servlet-class>
 		<load-on-startup>3</load-on-startup>
 	</servlet>
-	
+
 	<servlet>
 		<servlet-name>ProxyManager</servlet-name>
 		<display-name>ProxyManager</display-name>
@@ -102,4 +102,10 @@
 		</servlet-class>
 		<load-on-startup>4</load-on-startup>
 	</servlet>
+
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+		</listener-class>
+	</listener>
 </sip-app>
