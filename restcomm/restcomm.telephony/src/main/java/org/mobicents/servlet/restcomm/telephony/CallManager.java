@@ -298,7 +298,7 @@ public final class CallManager extends UntypedActor {
         logger.info("proxyIp: "+proxyIp);
 
         // Try to see if the request is destined for an application we are hosting.
-        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(ruri))
+        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(ruri) || myHostIp.equalsIgnoreCase(ruri))
                 && redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
             return;
             // Next try to see if the request is destined to another registered client
