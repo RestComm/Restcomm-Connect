@@ -30,7 +30,6 @@ import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -123,10 +122,10 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
     // Call runtime stuff
     private final ActorRef call;
     private Sid callId;
-    private String sessionDescription;
+    private String localSdp;
+    private String remoteSdp;
     private String connectionMode;
     private boolean callOutbound;
-    private String callDirection;
 
     // CallMediaGroup
     private ActorRef mediaGroup;
@@ -150,7 +149,6 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
     private Boolean recording;
     private DateTime recordStarted;
     private DaoManager daoManager;
-    private CallDetailRecordsDao recordsDao;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -230,9 +228,10 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
 
         // Call runtime stuff
         this.call = call;
-        this.sessionDescription = "";
+        this.localSdp = "";
+        this.remoteSdp = "";
         this.callOutbound = false;
-        this.callDirection = "sendrecv";
+        this.connectionMode = "inactive";
     }
 
     /**
@@ -333,7 +332,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         this.connectionMode = message.getConnectionMode();
-        this.sessionDescription = message.getSessionDescription();
+        this.localSdp = message.getSessionDescription();
         this.callOutbound = message.isOutbound();
 
         fsm.transition(message, acquiringMediaGatewayInfo);
@@ -590,7 +589,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
             if (callOutbound) {
                 open = new OpenConnection(ConnectionMode.SendRecv);
             } else {
-                final ConnectionDescriptor descriptor = new ConnectionDescriptor(sessionDescription);
+                final ConnectionDescriptor descriptor = new ConnectionDescriptor(localSdp);
                 open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
             }
             remoteConn.tell(open, source);
@@ -605,8 +604,8 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
         @Override
         public void execute(final Object message) throws Exception {
             final UpdateMediaSession response = (UpdateMediaSession) message;
-            final String answer = response.getSessionDescription();
-            final ConnectionDescriptor descriptor = new ConnectionDescriptor(answer);
+            localSdp = response.getSessionDescription();
+            final ConnectionDescriptor descriptor = new ConnectionDescriptor(localSdp);
             final UpdateConnection update = new UpdateConnection(descriptor);
             remoteConn.tell(update, source);
         }
@@ -628,7 +627,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
             }
 
             final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
-                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP()));
+                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
             call.tell(response, self());
         }
     }
@@ -642,7 +641,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
         @Override
         public void execute(final Object message) throws Exception {
             final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
-                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP()));
+                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
             call.tell(response, self());
         }
 

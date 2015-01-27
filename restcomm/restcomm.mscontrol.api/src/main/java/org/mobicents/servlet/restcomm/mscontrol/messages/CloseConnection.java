@@ -18,46 +18,20 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
+        
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ *
  */
 @Immutable
-public final class CreateMediaSession {
-
-    private final boolean outbound;
-    private final String connectionMode;
-    private final String sessionDescription;
-
-    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound) {
+public final class CloseConnection {
+    
+    public CloseConnection() {
         super();
-        this.connectionMode = connectionMode;
-        this.sessionDescription = sessionDescription;
-        this.outbound = outbound;
-    }
-
-    public CreateMediaSession(String connectionMode) {
-        this("sendrecv", "", false);
-    }
-
-    public CreateMediaSession() {
-        this("", "", false);
-    }
-
-    public String getConnectionMode() {
-        return connectionMode;
-    }
-
-    public String getSessionDescription() {
-        return sessionDescription;
-    }
-
-    public boolean isOutbound() {
-        return outbound;
     }
 
 }

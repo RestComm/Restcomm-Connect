@@ -32,13 +32,18 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public final class MediaSessionInfo {
 
-    private boolean useNat;
-    private InetAddress externalAddress;
+    private final boolean useNat;
+    private final InetAddress externalAddress;
+    private final String localSdp;
+    private final String remoteSdp;
+    
 
-    public MediaSessionInfo(boolean useNat, InetAddress externalAddress) {
+    public MediaSessionInfo(boolean useNat, InetAddress externalAddress, String localSdp, String remoteSdp) {
         super();
         this.useNat = useNat;
         this.externalAddress = externalAddress;
+        this.localSdp = localSdp;
+        this.remoteSdp = remoteSdp;
     }
 
     public boolean usesNat() {
@@ -47,6 +52,14 @@ public final class MediaSessionInfo {
 
     public InetAddress getExternalAddress() {
         return externalAddress;
+    }
+    
+    public String getLocalSdp() {
+        return localSdp;
+    }
+    
+    public String getRemoteSdp() {
+        return remoteSdp;
     }
 
 }
