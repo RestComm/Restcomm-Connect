@@ -41,7 +41,6 @@ import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
-import org.mobicents.servlet.restcomm.mscontrol.MediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.MediaSessionController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
@@ -53,7 +52,6 @@ import org.mobicents.servlet.restcomm.patterns.Observe;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -92,19 +90,19 @@ public final class MgcpConferenceMediaSessionController extends MediaSessionCont
     public MgcpConferenceMediaSessionController(ActorRef mediaGateway) {
         super();
         final ActorRef source = self();
-        
+
         // Finite States
         this.uninitialized = new State("uninitialized", null, null);
         this.active = new State("active", new Active(source), null);
         this.inactive = new State("inactive", new Inactive(source), null);
 
         // Intermediate states
-        this.acquiringMediaSession = new State("acquiring media session", null, null);
-        this.acquiringConferenceEndpoint = new State("acquiring conferenceEndpoint", null, null);
-        this.acquiringConnection = new State("acquiring connection", null, null);
-        this.initializingConnection = new State("initializing connection", null, null);
-        this.openingConnection = new State("opening connection", null, null);
-        this.closingConnection = new State("closing connection", null, null);
+        this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
+        this.acquiringConferenceEndpoint = new State("acquiring conferenceEndpoint", new AcquiringCnf(source), null);
+        this.acquiringConnection = new State("acquiring connection", new AcquiringConnection(source), null);
+        this.initializingConnection = new State("initializing connection", new InitializingConnection(source), null);
+        this.openingConnection = new State("opening connection", new OpeningConnection(source), null);
+        this.closingConnection = new State("closing connection", new ClosingConnection(source), null);
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -139,7 +137,7 @@ public final class MgcpConferenceMediaSessionController extends MediaSessionCont
 
             @Override
             public UntypedActor create() throws Exception {
-                return new MediaGroup(mediaGateway, mediaSession, cnfEndpoint);
+                return new MgcpMediaGroup(mediaGateway, mediaSession, cnfEndpoint);
             }
         }));
     }
@@ -149,7 +147,6 @@ public final class MgcpConferenceMediaSessionController extends MediaSessionCont
      */
     @Override
     public void onReceive(Object message) throws Exception {
-        final UntypedActorContext context = getContext();
         final Class<?> klass = message.getClass();
         final ActorRef sender = sender();
         final ActorRef self = self();
@@ -172,8 +169,9 @@ public final class MgcpConferenceMediaSessionController extends MediaSessionCont
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection.class.equals(klass)) {
+            onCloseConnection((org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection) message, self, sender);
         }
-
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
@@ -234,6 +232,12 @@ public final class MgcpConferenceMediaSessionController extends MediaSessionCont
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         getContext().stop(message.group());
+    }
+
+    private void onCloseConnection(org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection message, ActorRef self,
+            ActorRef sender) {
+        mediaGateway.tell(new DestroyConnection(connection), self);
+        connection = null;
     }
 
     /*

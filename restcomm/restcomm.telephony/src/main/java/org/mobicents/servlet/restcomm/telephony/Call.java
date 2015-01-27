@@ -1,28 +1,28 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2014, Telestax Inc and individual contributors
+ * Copyright 2011-2013, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This program is free software: you can redistribute it and/or modify
- * under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation; either version 3 of
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+
 package org.mobicents.servlet.restcomm.telephony;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
@@ -37,15 +37,8 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
-import javax.sdp.Connection;
-import javax.sdp.MediaDescription;
-import javax.sdp.Origin;
-import javax.sdp.SdpException;
-import javax.sdp.SdpFactory;
-import javax.sdp.SessionDescription;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.ServletParseException;
@@ -56,84 +49,60 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
-import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
-import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.mgcp.CloseConnection;
-import org.mobicents.servlet.restcomm.mgcp.CloseLink;
-import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
-import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
-import org.mobicents.servlet.restcomm.mgcp.CreateLink;
-import org.mobicents.servlet.restcomm.mgcp.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mgcp.DestroyConnection;
-import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.DestroyLink;
-import org.mobicents.servlet.restcomm.mgcp.GetMediaGatewayInfo;
-import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
-import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
-import org.mobicents.servlet.restcomm.mgcp.LinkStateChanged;
-import org.mobicents.servlet.restcomm.mgcp.MediaGatewayInfo;
-import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
-import org.mobicents.servlet.restcomm.mgcp.MediaSession;
-import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
-import org.mobicents.servlet.restcomm.mgcp.OpenLink;
-import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
-import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
-import org.mobicents.servlet.restcomm.mscontrol.MediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
-import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerError;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
+import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
-import org.mobicents.servlet.restcomm.util.IPUtils;
-import org.mobicents.servlet.restcomm.util.WavUtils;
+import org.mobicents.servlet.restcomm.util.SdpUtils;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
- * @author jean.deruelle@telestax.com
+ * @author jean.deruelle@telestax.com (Jean Deruelle)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author gvagenas@telestax.com (George Vagenas)
+ * @author henrique.rosa@telestax.com (Henrique Rosa)
+ *
  */
+@Immutable
 public final class Call extends UntypedActor {
+
+    // Logging
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
     // Define possible directions.
     private static final String INBOUND = "inbound";
     private static final String OUTBOUND_API = "outbound-api";
     private static final String OUTBOUND_DIAL = "outbound-dial";
-    // Logging
-    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    // States for the FSM.
+
+    // States for the FSM
     private final State uninitialized;
     private final State queued;
     private final State ringing;
@@ -144,30 +113,21 @@ public final class Call extends UntypedActor {
     private final State inProgress;
     private final State completed;
     private final State failed;
-    // Intermediate states.
+
+    // Intermediate states
     private final State canceling;
-    private final State acquiringMediaGatewayInfo;
-    private final State acquiringMediaSession;
-    private final State acquiringBridge;
-    private final State acquiringRemoteConnection;
-    private final State initializingRemoteConnection;
-    private final State openingRemoteConnection;
-    private final State updatingRemoteConnection;
     private final State dialing;
+    private final State completing;
     private final State failing;
     private final State failingBusy;
     private final State failingNoAnswer;
-    private final State muting;
-    private final State unmuting;
-    private final State acquiringInternalLink;
-    private final State initializingInternalLink;
-    private final State openingInternalLink;
-    private final State updatingInternalLink;
-    private final State closingInternalLink;
-    private final State closingRemoteConnection;
+    private final State creatingMediaSession;
+    private final State updatingMediaSession;
+
     // FSM.
     private final FiniteStateMachine fsm;
-    // SIP runtime stuff.
+
+    // SIP runtime stuff
     private final SipFactory factory;
     private String apiVersion;
     private Sid accountId;
@@ -179,22 +139,11 @@ public final class Call extends UntypedActor {
     private String username;
     private String password;
     private CreateCall.Type type;
-    private URI recordingUri;
-    private Sid recordingSid;
-    private DateTime recordStarted;
     private long timeout;
     private SipServletRequest invite;
     private SipServletResponse lastResponse;
-    // MGCP runtime stuff.
-    private final ActorRef gateway;
-    private MediaGatewayInfo gatewayInfo;
-    private MediaSession session;
-    private ActorRef bridge;
-    private ActorRef remoteConn;
-    private ActorRef internalLink;
-    private ActorRef internalLinkEndpoint;
-    private ConnectionMode internalLinkMode;
-    // Runtime stuff.
+
+    // Call runtime stuff.
     private final Sid id;
     private CallStateChanged.State external;
     private String direction;
@@ -202,153 +151,96 @@ public final class Call extends UntypedActor {
     private DateTime created;
     private final List<ActorRef> observers;
 
-    // CallMediaGroup
-    private ActorRef group;
-    private ActorRef conference;
-    private CallDetailRecord outgoingCallRecord;
+    // Media Session Control runtime stuff
+    private final ActorRef msController;
+    private MediaSessionInfo mediaSessionInfo;
+
+    // Media Group runtime stuff
     private CallDetailRecordsDao recordsDao;
-    private DaoManager daoManager;
-    private ActorRef initialCall;
-    private static Boolean recording = false;
+    private CallDetailRecord outgoingCallRecord;
     private ActorRef outboundCall;
-    private ActorRef outboundCallBridgeEndpoint;
 
-    // Runtime Setting
-    private Configuration runtimeSettings;
-
-    public Call(final SipFactory factory, final ActorRef gateway) {
+    public Call(final SipFactory factory, final ActorRef mediaSessionController) {
         super();
         final ActorRef source = self();
-        // Initialize the states for the FSM.
-        uninitialized = new State("uninitialized", null, null);
-        queued = new State("queued", new Queued(source), null);
-        ringing = new State("ringing", new Ringing(source), null);
-        busy = new State("busy", new Busy(source), null);
-        notFound = new State("not found", new NotFound(source), null);
-        canceled = new State("canceled", new Canceled(source), null);
-        noAnswer = new State("no answer", new NoAnswer(source), null);
-        inProgress = new State("in progress", new InProgress(source), null);
-        completed = new State("completed", new Completed(source), null);
-        failed = new State("failed", new Failed(source), null);
-        // Initialize the intermediate states for the FSM.
-        canceling = new State("canceling", new Canceling(source), null);
-        acquiringMediaGatewayInfo = new State("acquiring media gateway info", new AcquiringMediaGatewayInfo(source), null);
-        acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
-        acquiringBridge = new State("acquiring bridge", new AcquiringBridge(source), null);
-        acquiringRemoteConnection = new State("acquiring remote connection", new AcquiringRemoteConnection(source), null);
-        initializingRemoteConnection = new State("initializing remote connection", new InitializingRemoteConnection(source),
-                null);
-        openingRemoteConnection = new State("opening remote connection", new OpeningRemoteConnection(source), null);
-        updatingRemoteConnection = new State("updating remote connection", new UpdatingRemoteConnection(source), null);
-        dialing = new State("dialing", new Dialing(source), null);
-        failing = new State("failing", new Failing(source), null);
-        failingBusy = new State("failing busy", new FailingBusy(source), null);
-        failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
-        acquiringInternalLink = new State("acquiring internal link", new AcquiringInternalLink(source), null);
-        initializingInternalLink = new State("initializing internal link", new InitializingInternalLink(source), null);
-        openingInternalLink = new State("opening internal link", new OpeningInternalLink(source), null);
-        updatingInternalLink = new State("updating internal link", new UpdatingInternalLink(source), null);
-        closingInternalLink = new State("closing internal link", new EnteringClosingInternalLink(source),
-                new ExitingClosingInternalLink(source));
-        muting = new State("muting", new Muting(source), null);
-        unmuting = new State("unmuting", new Unmuting(source), null);
-        closingRemoteConnection = new State("closing remote connection", new ClosingRemoteConnection(source), null);
-        // Initialize the transitions for the FSM.
+
+        // States for the FSM.
+        this.uninitialized = new State("uninitialized", null, null);
+        this.queued = new State("queued", new Queued(source), null);
+        this.ringing = new State("ringing", new Ringing(source), null);
+        this.busy = new State("busy", new Busy(source), null);
+        this.notFound = new State("not found", new NotFound(source), null);
+        this.canceled = new State("canceled", new Canceled(source), null);
+        this.noAnswer = new State("no answer", new NoAnswer(source), null);
+        this.inProgress = new State("in progress", new InProgress(source), null);
+        this.completed = new State("completed", new Completed(source), null);
+        this.failed = new State("failed", new Failed(source), null);
+
+        // Intermediate states
+        this.canceling = new State("canceling", new Canceling(source), null);
+        this.dialing = new State("dialing", new Dialing(source), null);
+        this.completing = new State("completing", new Completing(source), null);
+        this.failing = new State("failing", new Failing(source), null);
+        this.failingBusy = new State("failing busy", new FailingBusy(source), null);
+        this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
+        this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
+        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
+
+        // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, queued));
-        transitions.add(new Transition(uninitialized, ringing));
-        transitions.add(new Transition(uninitialized, failing));
-        transitions.add(new Transition(queued, canceled));
-        transitions.add(new Transition(queued, acquiringMediaGatewayInfo));
-        transitions.add(new Transition(queued, closingRemoteConnection));
-        transitions.add(new Transition(acquiringMediaGatewayInfo, canceled));
-        transitions.add(new Transition(acquiringMediaGatewayInfo, acquiringMediaSession));
-        transitions.add(new Transition(acquiringMediaSession, canceled));
-        transitions.add(new Transition(acquiringMediaSession, acquiringBridge));
-        transitions.add(new Transition(acquiringBridge, canceled));
-        transitions.add(new Transition(acquiringBridge, acquiringRemoteConnection));
-        transitions.add(new Transition(acquiringRemoteConnection, canceled));
-        transitions.add(new Transition(acquiringRemoteConnection, initializingRemoteConnection));
-        transitions.add(new Transition(initializingRemoteConnection, canceled));
-        transitions.add(new Transition(initializingRemoteConnection, openingRemoteConnection));
-        transitions.add(new Transition(openingRemoteConnection, canceling));
-        transitions.add(new Transition(openingRemoteConnection, dialing));
-        transitions.add(new Transition(openingRemoteConnection, failed));
-        transitions.add(new Transition(openingRemoteConnection, inProgress));
-        transitions.add(new Transition(dialing, busy));
-        // transitions.add(new Transition(dialing, failingBusy));
-        transitions.add(new Transition(dialing, canceling));
-        transitions.add(new Transition(dialing, failingNoAnswer));
-        transitions.add(new Transition(dialing, ringing));
-        transitions.add(new Transition(dialing, failed));
-        transitions.add(new Transition(dialing, updatingRemoteConnection));
-        transitions.add(new Transition(ringing, canceled));
-        transitions.add(new Transition(ringing, busy));
-        transitions.add(new Transition(ringing, notFound));
-        transitions.add(new Transition(ringing, canceling));
-        transitions.add(new Transition(ringing, noAnswer));
-        transitions.add(new Transition(ringing, failed));
-        transitions.add(new Transition(ringing, updatingRemoteConnection));
-        transitions.add(new Transition(ringing, acquiringMediaGatewayInfo));
-        transitions.add(new Transition(ringing, failingBusy));
-        transitions.add(new Transition(ringing, failingNoAnswer));
-        transitions.add(new Transition(ringing, closingRemoteConnection));
-        transitions.add(new Transition(failingNoAnswer, noAnswer));
-        transitions.add(new Transition(failingNoAnswer, canceling));
-        transitions.add(new Transition(failingBusy, busy));
-        transitions.add(new Transition(canceling, canceled));
-        transitions.add(new Transition(updatingRemoteConnection, inProgress));
-        transitions.add(new Transition(updatingRemoteConnection, closingRemoteConnection));
-        transitions.add(new Transition(inProgress, muting));
-        transitions.add(new Transition(inProgress, unmuting));
-        transitions.add(new Transition(inProgress, acquiringInternalLink));
-        transitions.add(new Transition(inProgress, closingInternalLink));
-        transitions.add(new Transition(inProgress, closingRemoteConnection));
-        transitions.add(new Transition(inProgress, acquiringMediaGatewayInfo));
-        transitions.add(new Transition(inProgress, failed));
-        transitions.add(new Transition(acquiringInternalLink, closingRemoteConnection));
-        transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
-        transitions.add(new Transition(initializingInternalLink, closingRemoteConnection));
-        transitions.add(new Transition(initializingInternalLink, openingInternalLink));
-        transitions.add(new Transition(openingInternalLink, closingInternalLink));
-        transitions.add(new Transition(openingInternalLink, closingRemoteConnection));
-        transitions.add(new Transition(openingInternalLink, updatingInternalLink));
-        transitions.add(new Transition(updatingInternalLink, closingInternalLink));
-        transitions.add(new Transition(updatingInternalLink, closingRemoteConnection));
-        transitions.add(new Transition(updatingInternalLink, inProgress));
-        transitions.add(new Transition(closingInternalLink, inProgress));
-        transitions.add(new Transition(closingInternalLink, completed));
-        transitions.add(new Transition(muting, inProgress));
-        transitions.add(new Transition(muting, closingRemoteConnection));
-        transitions.add(new Transition(unmuting, inProgress));
-        transitions.add(new Transition(unmuting, closingRemoteConnection));
-        transitions.add(new Transition(closingRemoteConnection, closingInternalLink));
-        transitions.add(new Transition(closingRemoteConnection, completed));
-        // Initialize the FSM.
-        this.fsm = new FiniteStateMachine(uninitialized, transitions);
-        // Initialize the SIP runtime stuff.
+        transitions.add(new Transition(this.uninitialized, this.ringing));
+        transitions.add(new Transition(this.uninitialized, this.queued));
+        transitions.add(new Transition(this.queued, this.canceled));
+        transitions.add(new Transition(this.queued, this.creatingMediaSession));
+        transitions.add(new Transition(this.ringing, this.busy));
+        transitions.add(new Transition(this.ringing, this.notFound));
+        transitions.add(new Transition(this.ringing, this.canceled));
+        transitions.add(new Transition(this.ringing, this.creatingMediaSession));
+        transitions.add(new Transition(this.ringing, this.updatingMediaSession));
+        transitions.add(new Transition(this.creatingMediaSession, this.canceling));
+        transitions.add(new Transition(this.creatingMediaSession, this.dialing));
+        transitions.add(new Transition(this.creatingMediaSession, this.failed));
+        transitions.add(new Transition(this.creatingMediaSession, this.inProgress));
+        transitions.add(new Transition(this.dialing, this.canceling));
+        transitions.add(new Transition(this.dialing, this.failing));
+        transitions.add(new Transition(this.dialing, this.failingBusy));
+        transitions.add(new Transition(this.dialing, this.failingNoAnswer));
+        transitions.add(new Transition(this.dialing, this.ringing));
+        transitions.add(new Transition(this.dialing, this.updatingMediaSession));
+        transitions.add(new Transition(this.inProgress, this.completing));
+        transitions.add(new Transition(this.canceling, this.canceled));
+        transitions.add(new Transition(this.failing, this.failed));
+        transitions.add(new Transition(this.failingBusy, this.busy));
+        transitions.add(new Transition(this.failingNoAnswer, this.noAnswer));
+        transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
+        transitions.add(new Transition(this.updatingMediaSession, this.completing));
+        transitions.add(new Transition(this.completing, this.completed));
+
+        // FSM
+        this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
+
+        // SIP runtime stuff.
         this.factory = factory;
-        // Initialize the MGCP runtime stuff.
-        this.gateway = gateway;
+
+        // Media Session Control runtime stuff.
+        this.msController = mediaSessionController;
+
         // Initialize the runtime stuff.
         this.id = Sid.generate(Sid.Type.CALL);
         this.created = DateTime.now();
         this.observers = Collections.synchronizedList(new ArrayList<ActorRef>());
     }
 
-    private ActorRef getMediaGroup(final Object message) {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new MediaGroup(gateway, session, bridge);
-            }
-        }));
+    private boolean is(State state) {
+        return this.fsm.state().equals(state);
     }
 
-    private void forwarding(final Object message) {
+    private boolean isInbound() {
+        return INBOUND.equals(this.direction);
+    }
 
+    private boolean isOutbound() {
+        return !isInbound();
     }
 
     private CallResponse<CallInfo> info() {
@@ -358,12 +250,17 @@ public final class Call extends UntypedActor {
         return new CallResponse<CallInfo>(info);
     }
 
-    private void invite(final Object message) throws Exception {
-        final AddParticipant request = (AddParticipant) message;
-        final Join join = new Join(bridge, ConnectionMode.SendRecv);
-        outboundCall = request.call();
-        final ActorRef self = self();
-        outboundCall.tell(join, self);
+    private void forwarding(final Object message) {
+        // XXX does nothing
+    }
+
+    // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+    // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
+    // received
+    private void sendCallInfoToObservers() {
+        for (final ActorRef observer : this.observers) {
+            observer.tell(info(), self());
+        }
     }
 
     private SipURI getInitialIpAddressPort(SipServletMessage message) throws ServletParseException, UnknownHostException {
@@ -386,14 +283,9 @@ public final class Call extends UntypedActor {
         InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
         InetAddress inetAddress = InetAddress.getByName(realIP);
 
-        int remotePort = message.getRemotePort();
-        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
-        String remoteAddress = message.getRemoteAddr();
-
         // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
         final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
-        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
 
         SipURI uri = null;
 
@@ -412,428 +304,281 @@ public final class Call extends UntypedActor {
             realIP = realIP + ":" + realPort;
             uri = factory.createSipURI(null, realIP);
         }
-        // //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
-        // //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
-        // //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
-        // else if(remotePort != contactPort) {
-        // logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
-        // + remoteAddress+":"+remotePort);
-        // realIP = remoteAddress+":"+remotePort;
-        // uri = factory.createSipURI(null, realIP);
-        // }
         return uri;
     }
 
-    private void observe(final Object message) {
+    /*
+     * Events
+     */
+    @Override
+    public void onReceive(Object message) throws Exception {
+        final Class<?> klass = message.getClass();
         final ActorRef self = self();
-        final Observe request = (Observe) message;
-        final ActorRef observer = request.observer();
+        final ActorRef sender = sender();
+        final State state = fsm.state();
+
+        logger.info("********** Call's Current State: \"" + state.toString());
+        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+
+        if (Observe.class.equals(klass)) {
+            onObserve((Observe) message, self, sender);
+        } else if (StopObserving.class.equals(klass)) {
+            onStopObserving((StopObserving) message, self, sender);
+        } else if (GetCallObservers.class.equals(klass)) {
+            onGetCallObservers((GetCallObservers) message, self, sender);
+        } else if (GetCallInfo.class.equals(klass)) {
+            onGetCallInfo((GetCallInfo) message, self, sender);
+        } else if (InitializeOutbound.class.equals(klass)) {
+            onInitializeOutbound((InitializeOutbound) message, self, sender);
+        } else if (Answer.class.equals(klass)) {
+            onAnswer((Answer) message, self, sender);
+        } else if (Dial.class.equals(klass)) {
+            onDial((Dial) message, self, sender);
+        } else if (Reject.class.equals(klass)) {
+            onReject((Reject) message, self, sender);
+        } else if (Cancel.class.equals(klass)) {
+            onCancel((Cancel) message, self, sender);
+        } else if (message instanceof ReceiveTimeout) {
+            onReceiveTimeout((ReceiveTimeout) message, self, sender);
+        } else if (message instanceof SipServletRequest) {
+            onSipServletRequest((SipServletRequest) message, self, sender);
+        } else if (message instanceof SipServletResponse) {
+            onSipServletResponse((SipServletResponse) message, self, sender);
+        } else if (Hangup.class.equals(klass)) {
+            onHangup((Hangup) message, self, sender);
+        } else if (NotFound.class.equals(klass)) {
+            onNotFound((NotFound) message, self, sender);
+        } else if (MediaSessionControllerResponse.class.equals(klass)) {
+            onMediaSessionControllerResponse((MediaSessionControllerResponse<?>) message, self, sender);
+        } else if (MediaSessionControllerError.class.equals(klass)) {
+            onMediaSessionControllerError((MediaSessionControllerError) message, self, sender);
+        } else if (MediaSessionClosed.class.equals(klass)) {
+            onMediaSessionDestroyed((MediaSessionClosed) message, self, sender);
+        } else if (AddParticipant.class.equals(klass)) {
+            onAddParticipant((AddParticipant) message, self, sender);
+        } else if (Join.class.equals(klass)) {
+            onJoin((Join) message, self, sender);
+        } else if (StartRecordingCall.class.equals(klass)) {
+            onStartRecordingCall((StartRecordingCall) message, self, sender);
+        } else if (StopRecordingCall.class.equals(klass)) {
+            onStopRecordingCall((StopRecordingCall) message, self, sender);
+        }
+    }
+
+    private void onMediaSessionDestroyed(MediaSessionClosed message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(completing)) {
+            fsm.transition(message, completed);
+        } else if (is(failing)) {
+            fsm.transition(message, failed);
+        } else if (is(failingBusy)) {
+            fsm.transition(message, busy);
+        } else if (is(failingNoAnswer)) {
+            fsm.transition(message, noAnswer);
+        }
+    }
+
+    private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
+        final ActorRef observer = message.observer();
         if (observer != null) {
-            synchronized (observers) {
-                observers.add(observer);
+            synchronized (this.observers) {
+                this.observers.add(observer);
                 observer.tell(new Observing(self), self);
             }
         }
     }
 
-    private void startRecordingCall() throws Exception {
-        logger.info("Start recording call");
-        boolean playBeep = false;
-        String finishOnKey = "1234567890*#";
-        int maxLength = 3600;
-        int timeout = 5;
-        recordStarted = DateTime.now();
-        Record record = null;
-        record = new Record(recordingUri, timeout, maxLength, finishOnKey);
-        group.tell(record, null);
-        recording = true;
-    }
-
-    private void stopRecordingCall() throws UnsupportedAudioFileException, IOException {
-        logger.info("Stop recording call");
-        if (group != null) {
-            recording = false;
-            group.tell(new Stop(), null);
-            Double duration = WavUtils.getAudioDuration(recordingUri);
-            if (duration.equals(0.0)) {
-                final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-            }
-            final Recording.Builder builder = Recording.builder();
-            builder.setSid(recordingSid);
-            builder.setAccountSid(accountId);
-            builder.setCallSid(id);
-            builder.setDuration(duration);
-            builder.setApiVersion(runtimeSettings.getString("api-version"));
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
-            buffer.append("/Recordings/").append(recordingSid.toString());
-            builder.setUri(URI.create(buffer.toString()));
-            final Recording recording = builder.build();
-            RecordingsDao recordsDao = daoManager.getRecordingsDao();
-            recordsDao.addRecording(recording);
+    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
+        final ActorRef observer = message.observer();
+        if (observer != null) {
+            this.observers.remove(observer);
         } else {
-            logger.info("Tried to stop recording but group was null.");
+            this.observers.clear();
         }
     }
 
-    @Override
-    public void onReceive(final Object message) throws Exception {
-        final UntypedActorContext context = getContext();
-        final Class<?> klass = message.getClass();
-        final ActorRef self = self();
-        final ActorRef sender = sender();
-        final State state = fsm.state();
-        logger.info("********** Call's Current State: \"" + state.toString());
-        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+    private void onGetCallObservers(GetCallObservers message, ActorRef self, ActorRef sender) throws Exception {
+        sender.tell(new CallResponse<List<ActorRef>>(this.observers), self);
+    }
 
-        if (Observe.class.equals(klass)) {
-            observe(message);
-        } else if (StopObserving.class.equals(klass)) {
-            stopObserving(message);
-        } else if (GetCallObservers.class.equals(klass)) {
-            sender.tell(new CallResponse<List<ActorRef>>(observers), self);
-        } else if (GetCallInfo.class.equals(klass)) {
-            sender.tell(info(), self);
-        } else if (InitializeOutbound.class.equals(klass)) {
-            fsm.transition(message, queued);
-        } else if (Answer.class.equals(klass) || Dial.class.equals(klass)) {
-            fsm.transition(message, acquiringMediaGatewayInfo);
-        } else if (Reject.class.equals(klass)) {
-            fsm.transition(message, busy);
-        } else if (JoinComplete.class.equals(klass)) {
-            if (sender.equals(outboundCall)) {
-                JoinComplete joinComplete = (JoinComplete) message;
-                outboundCallBridgeEndpoint = joinComplete.endpoint();
-                final Join join = new Join(outboundCallBridgeEndpoint, ConnectionMode.SendRecv);
-                group.tell(join, null);
-            }
-        } else if (StartRecordingCall.class.equals(klass)) {
-            StartRecordingCall startRecordingCall = (StartRecordingCall) message;
-            if (runtimeSettings == null)
-                this.runtimeSettings = startRecordingCall.getRuntimeSetting();
-            if (daoManager == null)
-                daoManager = startRecordingCall.getDaoManager();
-            if (accountId == null)
-                accountId = startRecordingCall.getAccountId();
-            recordingSid = startRecordingCall.getRecordingSid();
-            recordingUri = startRecordingCall.getRecordingUri();
-            recording = true;
-            startRecordingCall();
-        } else if (StopRecordingCall.class.equals(klass)) {
-            if (recording) {
-                StopRecordingCall stopRecoringdCall = (StopRecordingCall) message;
-                if (runtimeSettings == null)
-                    this.runtimeSettings = stopRecoringdCall.getRuntimeSetting();
-                if (daoManager == null)
-                    daoManager = stopRecoringdCall.getDaoManager();
-                if (accountId == null)
-                    accountId = stopRecoringdCall.getAccountId();
-                stopRecordingCall();
-            }
-        } else if (MediaGatewayResponse.class.equals(klass)) {
-            if (acquiringMediaGatewayInfo.equals(state)) {
-                fsm.transition(message, acquiringMediaSession);
-            } else if (acquiringMediaSession.equals(state)) {
-                fsm.transition(message, acquiringBridge);
-            } else if (acquiringBridge.equals(state)) {
-                fsm.transition(message, acquiringRemoteConnection);
-            } else if (acquiringRemoteConnection.equals(state)) {
-                fsm.transition(message, initializingRemoteConnection);
-            } else if (acquiringInternalLink.equals(state)) {
-                fsm.transition(message, initializingInternalLink);
-            }
-        } else if (ConnectionStateChanged.class.equals(klass)) {
-            final ConnectionStateChanged event = (ConnectionStateChanged) message;
+    private void onGetCallInfo(GetCallInfo message, ActorRef self, ActorRef sender) throws Exception {
+        sender.tell(info(), self);
+    }
 
-            if (ConnectionStateChanged.State.CLOSED == event.state()) {
-                if (initializingRemoteConnection.equals(state)) {
-                    fsm.transition(message, openingRemoteConnection);
-                } else if (openingRemoteConnection.equals(state)) {
-                    fsm.transition(message, failed);
-                } else if (failing.equals(state)) {
-                    fsm.transition(message, failed);
-                } else if (failingBusy.equals(state)) {
-                    fsm.transition(message, busy);
-                } else if (failingNoAnswer.equals(state)) {
-                    fsm.transition(message, noAnswer);
-                } else if (muting.equals(state) || unmuting.equals(state)) {
-                    fsm.transition(message, closingRemoteConnection);
-                } else if (closingRemoteConnection.equals(state)) {
-                    remoteConn = null;
-                    if (internalLink != null) {
-                        fsm.transition(message, closingInternalLink);
-                    } else {
-                        fsm.transition(message, completed);
-                    }
-                }
-            } else if (ConnectionStateChanged.State.HALF_OPEN == event.state()) {
-                fsm.transition(message, dialing);
-            } else if (ConnectionStateChanged.State.OPEN == event.state()) {
-                fsm.transition(message, inProgress);
+    private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, queued);
+    }
+
+    private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, creatingMediaSession);
+    }
+
+    private void onDial(Dial message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, creatingMediaSession);
+    }
+
+    private void onReject(Reject message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, busy);
+    }
+
+    private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(creatingMediaSession) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
+            fsm.transition(message, canceling);
+        }
+    }
+
+    private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(ringing)) {
+            fsm.transition(message, failingNoAnswer);
+        } else {
+            logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+                    + " Direction: " + direction + " From: " + from + " To: " + to);
+        }
+    }
+
+    private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
+        final String method = message.getMethod();
+        if ("INVITE".equalsIgnoreCase(method)) {
+            if (is(uninitialized)) {
+                fsm.transition(message, ringing);
             }
-        } else if (Cancel.class.equals(klass)) {
-            if (openingRemoteConnection.equals(state) || dialing.equals(state) || ringing.equals(state)
-                    || failingNoAnswer.equals(state)) {
+        } else if ("CANCEL".equalsIgnoreCase(method)) {
+            if (is(creatingMediaSession)) {
                 fsm.transition(message, canceling);
-            }
-        } else if (LinkStateChanged.class.equals(klass)) {
-            final LinkStateChanged event = (LinkStateChanged) message;
-            if (LinkStateChanged.State.CLOSED == event.state()) {
-                if (initializingInternalLink.equals(state)) {
-                    fsm.transition(message, openingInternalLink);
-                } else if (openingInternalLink.equals(state)) {
-                    fsm.transition(message, closingRemoteConnection);
-                } else if (closingInternalLink.equals(state)) {
-                    if (remoteConn != null) {
-                        fsm.transition(message, inProgress);
-                    } else {
-                        fsm.transition(message, completed);
-                    }
-                }
-            } else if (LinkStateChanged.State.OPEN == event.state()) {
-                if (openingInternalLink.equals(state)) {
-                    fsm.transition(message, updatingInternalLink);
-                } else if (updatingInternalLink.equals(state)) {
-                    fsm.transition(message, inProgress);
-                }
-            }
-        } else if (message instanceof ReceiveTimeout) {
-            if (ringing.equals(state)) {
-                fsm.transition(message, failingNoAnswer);
             } else {
-                logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + state + " Direction: "
-                        + direction + " From: " + from + " To: " + to);
+                fsm.transition(message, canceled);
             }
-        } else if (message instanceof SipServletRequest) {
-            final SipServletRequest request = (SipServletRequest) message;
-            final String method = request.getMethod();
-            if ("INVITE".equalsIgnoreCase(method)) {
-                if (uninitialized.equals(state)) {
+        } else if ("BYE".equalsIgnoreCase(method)) {
+            fsm.transition(message, completing);
+        }
+    }
+
+    private void onSipServletResponse(SipServletResponse message, ActorRef self, ActorRef sender) throws Exception {
+        this.lastResponse = message;
+
+        final int code = message.getStatus();
+        switch (code) {
+            case SipServletResponse.SC_CALL_BEING_FORWARDED: {
+                forwarding(message);
+                break;
+            }
+            case SipServletResponse.SC_RINGING:
+            case SipServletResponse.SC_SESSION_PROGRESS: {
+                if (!is(ringing)) {
                     fsm.transition(message, ringing);
                 }
-            } else if ("CANCEL".equalsIgnoreCase(method)) {
-                if (openingRemoteConnection.equals(state)) {
-                    fsm.transition(message, canceling);
+                break;
+            }
+            case SipServletResponse.SC_BUSY_HERE:
+            case SipServletResponse.SC_BUSY_EVERYWHERE: {
+                sendCallInfoToObservers();
+                if (is(dialing)) {
+                    break;
                 } else {
-                    fsm.transition(message, canceled);
+                    fsm.transition(message, failingBusy);
                 }
-            } else if ("BYE".equalsIgnoreCase(method)) {
-                fsm.transition(message, closingRemoteConnection);
+                break;
             }
-        } else if (message instanceof SipServletResponse) {
-            final SipServletResponse response = (SipServletResponse) message;
-            lastResponse = response;
-            final int code = response.getStatus();
-            switch (code) {
-                case SipServletResponse.SC_CALL_BEING_FORWARDED: {
-                    forwarding(message);
-                    break;
-                }
-                case SipServletResponse.SC_RINGING:
-                case SipServletResponse.SC_SESSION_PROGRESS: {
-                    if (!state.equals(ringing))
-                        fsm.transition(message, ringing);
-                    break;
-                }
-                case SipServletResponse.SC_BUSY_HERE:
-                case SipServletResponse.SC_BUSY_EVERYWHERE: {
+            case SipServletResponse.SC_UNAUTHORIZED:
+            case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
+                // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                if (this.username == null || this.password == null) {
                     sendCallInfoToObservers();
-                    if (dialing.equals(state)) {
-                        break;
-                    } else {
-                        fsm.transition(message, failingBusy);
+                    fsm.transition(message, failed);
+                } else {
+                    AuthInfo authInfo = this.factory.createAuthInfo();
+                    String authHeader = message.getHeader("Proxy-Authenticate");
+                    if (authHeader == null) {
+                        authHeader = message.getHeader("WWW-Authenticate");
                     }
-                    break;
+                    String tempRealm = authHeader.substring(authHeader.indexOf("realm=\"") + "realm=\"".length());
+                    String realm = tempRealm.substring(0, tempRealm.indexOf("\""));
+                    authInfo.addAuthInfo(message.getStatus(), realm, this.username, this.password);
+                    SipServletRequest challengeRequest = message.getSession().createRequest(message.getRequest().getMethod());
+                    challengeRequest.addAuthHeader(message, authInfo);
+                    challengeRequest.setContent(this.invite.getContent(), this.invite.getContentType());
+                    this.invite = challengeRequest;
+                    // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
+                    this.invite.setContent(message.getRequest().getContent(), "application/sdp");
+                    challengeRequest.send();
                 }
-                case SipServletResponse.SC_UNAUTHORIZED:
-                case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
-                    // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-                    if (username == null || password == null) {
-                        sendCallInfoToObservers();
-                        fsm.transition(message, failed);
-                    } else {
-                        AuthInfo authInfo = factory.createAuthInfo();
-                        String authHeader = response.getHeader("Proxy-Authenticate");
-                        if (authHeader == null) {
-                            authHeader = response.getHeader("WWW-Authenticate");
-                        }
-                        String tempRealm = authHeader.substring(authHeader.indexOf("realm=\"") + "realm=\"".length());
-                        String realm = tempRealm.substring(0, tempRealm.indexOf("\""));
-                        authInfo.addAuthInfo(response.getStatus(), realm, username, password);
-                        SipServletRequest challengeRequest = response.getSession().createRequest(
-                                response.getRequest().getMethod());
-                        challengeRequest.addAuthHeader(response, authInfo);
-                        challengeRequest.setContent(invite.getContent(), invite.getContentType());
-                        invite = challengeRequest;
-                        // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
-                        invite.setContent(response.getRequest().getContent(), "application/sdp");
-                        challengeRequest.send();
-                    }
-                    break;
+                break;
+            }
+            // https://github.com/Mobicents/RestComm/issues/148
+            // Session in Progress Response should trigger MMS to start the Media Session
+            // case SipServletResponse.SC_SESSION_PROGRESS:
+            case SipServletResponse.SC_OK: {
+                if (is(dialing) || (is(ringing) && !"inbound".equals(direction))) {
+                    fsm.transition(message, updatingMediaSession);
                 }
-//                // https://github.com/Mobicents/RestComm/issues/148 Session in Progress Response should trigger MMS to start the Media Session
-//                case SipServletResponse.SC_SESSION_PROGRESS:
-                case SipServletResponse.SC_OK: {
-                    if (dialing.equals(state) || (ringing.equals(state) && !direction.equals("inbound"))) {
-                        fsm.transition(message, updatingRemoteConnection);
-                    }
-                    break;
-                }
-                default: {
-                    if (code >= 400 && code != 487) {
-                        sendCallInfoToObservers();
-                        fsm.transition(message, failed);
-                    }
+                break;
+            }
+            default: {
+                if (code >= 400 && code != 487) {
+                    sendCallInfoToObservers();
+                    fsm.transition(message, failed);
                 }
             }
-        } else if (inProgress.equals(state)) {
-            if (CreateMediaGroup.class.equals(klass)) {
-                if (group != null) {
-                    context.stop(group);
-                }
-                group = getMediaGroup(message);
-                sender.tell(new CallResponse<ActorRef>(group), self);
-            } else if (DestroyMediaGroup.class.equals(klass)) {
-                final DestroyMediaGroup request = (DestroyMediaGroup) message;
-                // context.stop(request.group());
-                if (group != null && !group.isTerminated()) {
-                    context.stop(group);
-                    group = null;
-                }
-            } else if (AddParticipant.class.equals(klass)) {
-                invite(message);
-            } else if (RemoveParticipant.class.equals(klass)) {
-                remove(message);
-            } else if (Join.class.equals(klass)) {
-                conference = sender;
-                fsm.transition(message, acquiringInternalLink);
-            } else if (Leave.class.equals(klass)) {
-                fsm.transition(message, closingInternalLink);
-            } else if (Mute.class.equals(klass)) {
-                fsm.transition(message, muting);
-            } else if (Unmute.class.equals(klass)) {
-                fsm.transition(message, unmuting);
-            } else if (Hangup.class.equals(klass)) {
-                fsm.transition(message, closingRemoteConnection);
-            }
-        } else if (Hangup.class.equals(klass)) {
-            if (queued.equals(state) || ringing.equals(state)) {
-                fsm.transition(message, closingRemoteConnection);
-            }
-        } else if (ringing.equals(state)) {
-            if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass)) {
-                fsm.transition(message, notFound);
-            }
-        } else if (CreateMediaGroup.class.equals(klass)) {
-            if (group != null) {
-                context.stop(group);
-            }
-            group = getMediaGroup(message);
-            sender.tell(new CallResponse<ActorRef>(group), self);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private String patch(final String contentType, final byte[] data, final String externalIp) throws UnknownHostException,
-            SdpException {
-        final String text = new String(data);
-        String patchedSdp = null;
-        if (contentType.equalsIgnoreCase("application/sdp")) {
-            final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
-            // Handle the connection at the session level.
-            fix(sdp.getConnection(), externalIp);
-            // https://github.com/Mobicents/RestComm/issues/149
-            fix(sdp.getOrigin(), externalIp);
-            // Handle the connections at the media description level.
-            final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
-            for (final MediaDescription description : descriptions) {
-                fix(description.getConnection(), externalIp);
-            }
-            patchedSdp = sdp.toString();
+    private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(inProgress) || is(updatingMediaSession) || (is(ringing) && isOutbound())) {
+            fsm.transition(message, completing);
+        } else if (is(queued) || (is(ringing) && isInbound())) {
+            fsm.transition(message, completed);
+        }
+    }
+
+    private void onNotFound(NotFound message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(ringing)) {
+            fsm.transition(message, notFound);
+        }
+    }
+
+    private void onMediaSessionControllerError(MediaSessionControllerError message, ActorRef self, ActorRef sender)
+            throws Exception {
+        if (is(creatingMediaSession)) {
+            fsm.transition(message, failed);
+        } else if (is(updatingMediaSession)) {
+            fsm.transition(message, failing);
+        }
+    }
+
+    private void onMediaSessionControllerResponse(MediaSessionControllerResponse<?> message, ActorRef self, ActorRef sender)
+            throws Exception {
+        if (isInbound() || is(updatingMediaSession)) {
+            fsm.transition(message, inProgress);
         } else {
-            String boundary = contentType.split(";")[1].split("=")[1];
-            String[] parts = text.split(boundary);
-            String sdpText = null;
-            for (String part : parts) {
-                if (part.contains("application/sdp")) {
-                    sdpText = part.replaceAll("Content.*", "").replaceAll("--", "").trim();
-                }
-            }
-            final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(sdpText);
-            fix(sdp.getConnection(), externalIp);
-            // https://github.com/Mobicents/RestComm/issues/149
-            fix(sdp.getOrigin(), externalIp);
-            // Handle the connections at the media description level.
-            final Vector<MediaDescription> descriptions = sdp.getMediaDescriptions(false);
-            for (final MediaDescription description : descriptions) {
-                fix(description.getConnection(), externalIp);
-            }
-            patchedSdp = sdp.toString();
-        }
-        return patchedSdp;
-    }
-
-    private void fix(final Origin origin, final String externalIp) throws UnknownHostException, SdpException {
-        if (origin != null) {
-            if (Connection.IN.equals(origin.getNetworkType())) {
-                if (Connection.IP4.equals(origin.getAddressType())) {
-                    final InetAddress address = InetAddress.getByName(origin.getAddress());
-                    final String ip = address.getHostAddress();
-                    if (!IPUtils.isRoutableAddress(ip)) {
-                        origin.setAddress(externalIp);
-                    }
-                }
-            }
+            fsm.transition(message, dialing);
         }
     }
 
-    private void fix(final Connection connection, final String externalIp) throws UnknownHostException, SdpException {
-        if (connection != null) {
-            if (Connection.IN.equals(connection.getNetworkType())) {
-                if (Connection.IP4.equals(connection.getAddressType())) {
-                    final InetAddress address = InetAddress.getByName(connection.getAddress());
-                    final String ip = address.getHostAddress();
-                    if (!IPUtils.isRoutableAddress(ip)) {
-                        connection.setAddress(externalIp);
-                    }
-                }
-            }
-        }
+    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
+        this.outboundCall = message.call();
+        final Join join = new Join(this.msController, ConnectionMode.SendRecv);
+        this.outboundCall.tell(join, self);
     }
 
-    private void remove(final Object message) {
-        final RemoveParticipant request = (RemoveParticipant) message;
-        final ActorRef call = request.call();
-        final ActorRef self = self();
-        final Leave leave = new Leave();
-        call.tell(leave, self);
+    private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
+        this.msController.tell(message, self);
     }
 
-    private void stopObserving(final Object message) {
-        final StopObserving request = (StopObserving) message;
-        final ActorRef observer = request.observer();
-        if (observer != null) {
-            observers.remove(observer);
-        } else {
-            observers.clear();
-        }
+    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        // Forward message for Media Session Controller to handle
+        message.setCallId(this.id);
+        this.msController.tell(message, sender);
     }
 
-    // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
-    // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
-    // received
-    private void sendCallInfoToObservers() {
-        // logger.info("Send Call Info type " + type + " lastResponse " + lastResponse);
-        for (final ActorRef observer : observers) {
-            // logger.info("Send Call Info to " + observer + " from " + from + " type " + type + " lastResponse " +
-            // lastResponse);
-            observer.tell(info(), self());
-        }
+    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        // Forward message for Media Session Controller to handle
+        this.msController.tell(message, sender);
     }
 
+    /*
+     * ACTIONS
+     */
     private abstract class AbstractAction implements Action {
+
         protected final ActorRef source;
 
         public AbstractAction(final ActorRef source) {
@@ -843,6 +588,7 @@ public final class Call extends UntypedActor {
     }
 
     private final class Queued extends AbstractAction {
+
         public Queued(final ActorRef source) {
             super(source);
         }
@@ -876,11 +622,8 @@ public final class Call extends UntypedActor {
                 }
             }
             timeout = request.timeout();
-            if (request.isFromApi()) {
-                direction = OUTBOUND_API;
-            } else {
-                direction = OUTBOUND_DIAL;
-            }
+            direction = request.isFromApi() ? OUTBOUND_API : OUTBOUND_DIAL;
+
             // Notify the observers.
             external = CallStateChanged.State.QUEUED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -920,109 +663,20 @@ public final class Call extends UntypedActor {
                     cdr.setStatus(external.name());
                 }
             }
-
-        }
-    }
-
-    private final class AcquiringMediaGatewayInfo extends AbstractAction {
-        public AcquiringMediaGatewayInfo(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final ActorRef self = self();
-            gateway.tell(new GetMediaGatewayInfo(), self);
-        }
-    }
-
-    private final class AcquiringMediaSession extends AbstractAction {
-        public AcquiringMediaSession(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<MediaGatewayInfo> response = (MediaGatewayResponse<MediaGatewayInfo>) message;
-            gatewayInfo = response.get();
-            gateway.tell(new CreateMediaSession(), source);
-        }
-    }
-
-    public final class AcquiringBridge extends AbstractAction {
-        public AcquiringBridge(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<MediaSession> response = (MediaGatewayResponse<MediaSession>) message;
-            session = response.get();
-            gateway.tell(new CreateBridgeEndpoint(session), source);
-        }
-    }
-
-    private final class AcquiringRemoteConnection extends AbstractAction {
-        public AcquiringRemoteConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-            bridge = response.get();
-            gateway.tell(new CreateConnection(session), source);
-        }
-    }
-
-    private final class InitializingRemoteConnection extends AbstractAction {
-        public InitializingRemoteConnection(ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-            remoteConn = response.get();
-            remoteConn.tell(new Observe(source), source);
-            remoteConn.tell(new InitializeConnection(bridge), source);
-        }
-    }
-
-    private final class OpeningRemoteConnection extends AbstractAction {
-        public OpeningRemoteConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            OpenConnection open = null;
-            if (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) {
-                open = new OpenConnection(ConnectionMode.SendRecv);
-            } else {
-                final String externalIp = invite.getInitialRemoteAddr();
-                final byte[] sdp = invite.getRawContent();
-                final String offer = patch(invite.getContentType(), sdp, externalIp);
-                final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
-                open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
-            }
-            remoteConn.tell(open, source);
         }
     }
 
     private final class Dialing extends AbstractAction {
+
         public Dialing(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(Object message) throws Exception {
-            final ConnectionStateChanged response = (ConnectionStateChanged) message;
+            final MediaSessionInfo response = (MediaSessionInfo) message;
             final ActorRef self = self();
+
             // Create a SIP invite to initiate a new session.
             final StringBuilder buffer = new StringBuilder();
             buffer.append(to.getHost());
@@ -1055,14 +709,14 @@ public final class Call extends UntypedActor {
                 ((SipSessionExt) session).setBypassProxy(true);
             }
             String offer = null;
-            if (gatewayInfo.useNat()) {
-                final String externalIp = gatewayInfo.externalIP().getHostAddress();
-                final byte[] sdp = response.descriptor().toString().getBytes();
-                offer = patch("application/sdp", sdp, externalIp);
+            if (mediaSessionInfo.usesNat()) {
+                final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                final byte[] sdp = response.getLocalSdp().getBytes();
+                offer = SdpUtils.patch("application/sdp", sdp, externalIp);
             } else {
-                offer = response.descriptor().toString();
+                offer = response.getLocalSdp();
             }
-            offer = patchSdpDescription(offer);
+            offer = SdpUtils.endWithNewLine(offer);
             invite.setContent(offer, "application/sdp");
             // Send the invite.
             invite.send();
@@ -1073,6 +727,7 @@ public final class Call extends UntypedActor {
     }
 
     private final class Ringing extends AbstractAction {
+
         public Ringing(final ActorRef source) {
             super(source);
         }
@@ -1091,9 +746,9 @@ public final class Call extends UntypedActor {
 
                 SipURI initialInetUri = getInitialIpAddressPort(invite);
 
-                if (initialInetUri != null)
+                if (initialInetUri != null) {
                     invite.getSession().setAttribute("realInetUri", initialInetUri);
-
+                }
             } else if (message instanceof SipServletResponse) {
                 // Timeout still valid in case we receive a 180, we don't know if the
                 // call will be eventually answered.
@@ -1102,24 +757,14 @@ public final class Call extends UntypedActor {
                 // final UntypedActorContext context = getContext();
                 // context.setReceiveTimeout(Duration.Undefined());
             }
-            // Start recording if RecordingType.RECORD_FROM_RINGING
-            // if (recordingType != null && recordingType.equals(CreateCall.RecordingType.RECORD_FROM_RINGING)) {
-            // if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
-            // logger.info("Starting recording call with recording type: " + recordingType.toString());
-            // logger.info("Telling initial call to start recording");
-            // initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
-            // } else {
-            // logger.info("Starting recording call with recording type: " + recordingType.toString());
-            // startRecordingCall();
-            // }
-            // }
+
             // Notify the observers.
             external = CallStateChanged.State.RINGING;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+            if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1133,14 +778,13 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final State state = fsm.state();
-            if (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) {
+            if (isOutbound()) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
                 final SipServletRequest cancel = invite.createCancel();
                 cancel.send();
             }
-            remoteConn.tell(new CloseConnection(), source);
+            msController.tell(new CloseMediaSession(), source);
         }
     }
 
@@ -1151,27 +795,26 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (remoteConn != null) {
-                gateway.tell(new DestroyConnection(remoteConn), source);
-                remoteConn = null;
-            }
             // Explicitly invalidate the application session.
             invite.getSession().invalidate();
             invite.getApplicationSession().invalidate();
+
             // Notify the observers.
             external = CallStateChanged.State.CANCELED;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+
+            // Record call data
+            if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
 
-    private class Failing extends ClosingRemoteConnection {
+    private class Failing extends AbstractAction {
         public Failing(final ActorRef source) {
             super(source);
         }
@@ -1182,17 +825,19 @@ public final class Call extends UntypedActor {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
             }
-            super.execute(message);
+            msController.tell(new CloseMediaSession(), source);
         }
     }
 
     private final class FailingBusy extends Failing {
+
         public FailingBusy(final ActorRef source) {
             super(source);
         }
     }
 
     private final class FailingNoAnswer extends Failing {
+
         public FailingNoAnswer(final ActorRef source) {
             super(source);
         }
@@ -1200,10 +845,12 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             logger.info("Call moves to failing state because no answer");
+            super.execute(message);
         }
     }
 
     private final class Busy extends AbstractAction {
+
         public Busy(final ActorRef source) {
             super(source);
         }
@@ -1211,25 +858,26 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            final State state = fsm.state();
-            if (Reject.class.equals(klass) && ringing.equals(state) && INBOUND.equals(direction)) {
+
+            // Send SIP BUSY to remote peer
+            if (Reject.class.equals(klass) && is(ringing) && isInbound()) {
                 final SipServletResponse busy = invite.createResponse(SipServletResponse.SC_BUSY_HERE);
                 busy.send();
             }
-            if (remoteConn != null) {
-                gateway.tell(new DestroyConnection(remoteConn), source);
-                remoteConn = null;
-            }
+
             // Explicitly invalidate the application session.
             invite.getSession().invalidate();
             invite.getApplicationSession().invalidate();
+
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+
+            // Record call data
+            if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1237,6 +885,7 @@ public final class Call extends UntypedActor {
     }
 
     private final class NotFound extends AbstractAction {
+
         public NotFound(final ActorRef source) {
             super(source);
         }
@@ -1244,17 +893,22 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass) && INBOUND.equals(direction)) {
+
+            // Send SIP NOT_FOUND to remote peer
+            if (NotFound.class.equals(klass) && isInbound()) {
                 final SipServletResponse notFound = invite.createResponse(SipServletResponse.SC_NOT_FOUND);
                 notFound.send();
             }
+
             // Notify the observers.
             external = CallStateChanged.State.NOT_FOUND;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+
+            // Record call data
+            if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1262,28 +916,31 @@ public final class Call extends UntypedActor {
     }
 
     private final class NoAnswer extends AbstractAction {
+
         public NoAnswer(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (remoteConn != null) {
-                gateway.tell(new DestroyConnection(remoteConn), source);
-                remoteConn = null;
-            }
             // Explicitly invalidate the application session.
-            if (invite.getSession().isValid())
+            if (invite.getSession().isValid()) {
                 invite.getSession().invalidate();
-            if (invite.getApplicationSession().isValid())
+            }
+
+            if (invite.getApplicationSession().isValid()) {
                 invite.getApplicationSession().invalidate();
+            }
+
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+
+            // Record call data
+            if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1291,22 +948,22 @@ public final class Call extends UntypedActor {
     }
 
     private final class Failed extends AbstractAction {
+
         public Failed(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (remoteConn != null) {
-                gateway.tell(new DestroyConnection(remoteConn), source);
-                remoteConn = null;
-            }
-            if (direction.equalsIgnoreCase(INBOUND))
+            if (isInbound()) {
                 invite.createResponse(503, "Problem to setup services").send();
+            }
+
             // Explicitly invalidate the application session.
             if (invite.getSession().isValid()) {
                 invite.getSession().setInvalidateWhenReady(true);
             }
+
             if (invite.getApplicationSession().isValid()) {
                 invite.getApplicationSession().setInvalidateWhenReady(true);
             }
@@ -1317,36 +974,56 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+
+            // Record call data
+            if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
 
-    private final class UpdatingRemoteConnection extends AbstractAction {
-        public UpdatingRemoteConnection(final ActorRef source) {
+    private final class CreatingMediaSession extends AbstractAction {
+
+        public CreatingMediaSession(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            final State state = fsm.state();
-            if (dialing.equals(state) || ringing.equals(state)) {
+            CreateMediaSession command = null;
+            if (isOutbound()) {
+                command = new CreateMediaSession("sendrecv", "", true);
+            } else {
+                final String externalIp = invite.getInitialRemoteAddr();
+                final byte[] sdp = invite.getRawContent();
+                final String offer = SdpUtils.patch(invite.getContentType(), sdp, externalIp);
+                command = new CreateMediaSession("sendrecv", offer, false);
+            }
+            msController.tell(command, source);
+        }
+    }
+
+    private final class UpdatingMediaSession extends AbstractAction {
+
+        public UpdatingMediaSession(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            if (is(dialing) || is(ringing)) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
             }
-            final SipServletResponse response = (SipServletResponse) message;
-            // Issue 99:
-            // http://www.google.com/url?q=https://bitbucket.org/telestax/telscale-restcomm/issue/99/dial-uri-fails&usd=2&usg=ALhdy29vtLfDNXNpjTxYYp08YRatKfV9Aw
-            if (response.getStatus() == SipServletResponse.SC_OK
-                    && (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction))) {
-                SipServletRequest ack = response.createAck();
-                SipSession session = response.getSession();
 
-                SipServletRequest originalInvite = response.getRequest();
-                SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
-                InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+            final SipServletResponse response = (SipServletResponse) message;
+            // Issue 99: https://bitbucket.org/telestax/telscale-restcomm/issue/99
+            if (response.getStatus() == SipServletResponse.SC_OK && isOutbound()) {
+                final SipServletRequest ack = response.createAck();
+                final SipServletRequest originalInvite = response.getRequest();
+                final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
 
                 if (realInetUri != null
                         && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
@@ -1354,208 +1031,70 @@ public final class Call extends UntypedActor {
                             + " as a request uri of the ACK");
                     ack.setRequestURI(realInetUri);
                 }
-
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
-
-                // // Check if we have to record the call
-                // if (recordingType.equals(CreateCall.RecordingType.RECORD_FROM_ANSWER)) {
-                // if ((OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) && initialCall != null) {
-                // logger.info("Starting recording call with recording type: " + recordingType.toString());
-                // logger.info("Telling initial call to start recording");
-                // initialCall.tell(new StartRecordingCall(accountId, recordingType, runtimeSettings, daoManager), null);
-                // } else {
-                // logger.info("Starting recording call with recording type: " + recordingType.toString());
-                // startRecordingCall();
-                // }
-                // }
             }
 
             final String externalIp = response.getInitialRemoteAddr();
             final byte[] sdp = response.getRawContent();
-            final String answer = patch(response.getContentType(), sdp, externalIp);
-            final ConnectionDescriptor descriptor = new ConnectionDescriptor(answer);
-            final UpdateConnection update = new UpdateConnection(descriptor);
-            remoteConn.tell(update, source);
+            final String answer = SdpUtils.patch(response.getContentType(), sdp, externalIp);
+            final UpdateMediaSession update = new UpdateMediaSession(answer);
+            msController.tell(update, source);
         }
     }
 
     private final class InProgress extends AbstractAction {
+
         public InProgress(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            final State state = fsm.state();
-            if (updatingInternalLink.equals(state) && conference != null) { // && direction != "outbound-dial") {
-                // If this is the outbound leg for an outbound call, conference is the initial call
-                // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
-                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
-                conference.tell(new JoinComplete(bridge), source);
-            }
-            if (openingRemoteConnection.equals(state)
-                    && !(invite.getSession().getState().equals(SipSession.State.CONFIRMED) || invite.getSession().getState()
-                            .equals(SipSession.State.TERMINATED))) {
-                final ConnectionStateChanged response = (ConnectionStateChanged) message;
+            SipSession.State sessionState = invite.getSession().getState();
+            if (is(creatingMediaSession)
+                    && !(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
+                final MediaSessionInfo response = (MediaSessionInfo) message;
                 final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-                final byte[] sdp = response.descriptor().toString().getBytes();
+                final byte[] sdp = response.getLocalSdp().getBytes();
                 String answer = null;
-                if (gatewayInfo.useNat()) {
-                    final String externalIp = gatewayInfo.externalIP().getHostAddress();
-                    answer = patch("application/sdp", sdp, externalIp);
+                if (mediaSessionInfo.usesNat()) {
+                    final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                    answer = SdpUtils.patch("application/sdp", sdp, externalIp);
                 } else {
-                    answer = response.descriptor().toString();
+                    answer = response.getLocalSdp().toString();
                 }
-
                 // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-                answer = patchSdpDescription(answer);
-
+                answer = SdpUtils.endWithNewLine(answer);
                 okay.setContent(answer, "application/sdp");
                 okay.send();
             }
-            if (openingRemoteConnection.equals(state) || updatingRemoteConnection.equals(state)) {
+
+            if (is(creatingMediaSession)) {
                 // Make sure the SIP session doesn't end pre-maturely.
                 invite.getApplicationSession().setExpires(0);
             }
+
             // Notify the observers.
             external = CallStateChanged.State.IN_PROGRESS;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")
-                    && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
+
+            // Record call data
+            if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                final DateTime now = DateTime.now();
-                outgoingCallRecord = outgoingCallRecord.setStartTime(now);
+                outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
                 outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
 
-    /**
-     * Patches an SDP description by trimming and making sure it ends with a new line.
-     *
-     * @param sdpDescription The SDP description to be patched.
-     * @return The patched SDP description
-     * @author hrosa
-     */
-    private String patchSdpDescription(String sdpDescription) {
-        if (sdpDescription == null || sdpDescription.isEmpty()) {
-            throw new IllegalArgumentException("The SDP description cannot be null or empty");
-        }
-        return sdpDescription.trim().concat("\n");
-    }
+    private final class Completing extends AbstractAction {
 
-    private final class AcquiringInternalLink extends AbstractAction {
-        public AcquiringInternalLink(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
-            if (Join.class.equals(klass)) {
-                final Join request = (Join) message;
-                internalLinkEndpoint = request.endpoint();
-                internalLinkMode = request.mode();
-            }
-            gateway.tell(new CreateLink(session), source);
-        }
-    }
-
-    private final class InitializingInternalLink extends AbstractAction {
-        public InitializingInternalLink(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(Object message) throws Exception {
-            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-            internalLink = response.get();
-            internalLink.tell(new Observe(source), source);
-            internalLink.tell(new InitializeLink(bridge, internalLinkEndpoint), source);
-        }
-    }
-
-    private final class OpeningInternalLink extends AbstractAction {
-        public OpeningInternalLink(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            internalLink.tell(new OpenLink(internalLinkMode), source);
-        }
-    }
-
-    private final class UpdatingInternalLink extends AbstractAction {
-        public UpdatingInternalLink(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final UpdateLink update = new UpdateLink(ConnectionMode.SendRecv, UpdateLink.Type.PRIMARY);
-            internalLink.tell(update, source);
-        }
-    }
-
-    private final class Muting extends AbstractAction {
-        public Muting(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final UpdateConnection update = new UpdateConnection(ConnectionMode.SendOnly);
-            remoteConn.tell(update, source);
-
-        }
-    }
-
-    private final class Unmuting extends AbstractAction {
-        public Unmuting(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            final UpdateConnection update = new UpdateConnection(ConnectionMode.SendRecv);
-            remoteConn.tell(update, source);
-        }
-    }
-
-    private final class EnteringClosingInternalLink extends AbstractAction {
-        public EnteringClosingInternalLink(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            internalLink.tell(new CloseLink(), source);
-        }
-    }
-
-    private final class ExitingClosingInternalLink extends AbstractAction {
-        public ExitingClosingInternalLink(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            gateway.tell(new DestroyLink(internalLink), source);
-            internalLink = null;
-            internalLinkEndpoint = null;
-            internalLinkMode = null;
-        }
-    }
-
-    private class ClosingRemoteConnection extends AbstractAction {
-        public ClosingRemoteConnection(final ActorRef source) {
+        public Completing(final ActorRef source) {
             super(source);
         }
 
@@ -1563,11 +1102,11 @@ public final class Call extends UntypedActor {
         public void execute(Object message) throws Exception {
             final Class<?> klass = message.getClass();
             if (Hangup.class.equals(klass)) {
+                // Send SIP BYE to remote peer
                 final SipSession session = invite.getSession();
                 final SipServletRequest bye = session.createRequest("BYE");
-
-                SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
-                InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+                final SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
+                final InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
 
                 if (realInetUri != null
                         && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
@@ -1575,21 +1114,12 @@ public final class Call extends UntypedActor {
                             + " as a request uri of the BYE request");
                     bye.setRequestURI(realInetUri);
                 }
-
                 bye.send();
-
-                if (recording) {
-                    logger.info("Call - Will stop recording now");
-                    stopRecordingCall();
-                }
             } else if (message instanceof SipServletRequest) {
+                // Send SIP OK to remote peer
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
                 okay.send();
-                if (recording) {
-                    logger.info("Call - Will stop recording now");
-                    stopRecordingCall();
-                }
             } else if (message instanceof SipServletResponse) {
                 final SipServletResponse resp = (SipServletResponse) message;
                 if (resp.equals(SipServletResponse.SC_BUSY_HERE) || resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)) {
@@ -1601,13 +1131,14 @@ public final class Call extends UntypedActor {
                     }
                 }
             }
-            if (remoteConn != null) {
-                remoteConn.tell(new CloseConnection(), source);
-            }
+
+            // Destroy current media session
+            msController.tell(new CloseMediaSession(), source);
         }
     }
 
     private final class Completed extends AbstractAction {
+
         public Completed(final ActorRef source) {
             super(source);
         }
@@ -1615,32 +1146,24 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("Completing Call");
-            if (remoteConn != null) {
-                gateway.tell(new DestroyConnection(remoteConn), source);
-                remoteConn = null;
-            }
-            if (internalLink != null) {
-                gateway.tell(new DestroyLink(internalLink), source);
-                internalLink = null;
-            }
-            if (bridge != null) {
-                gateway.tell(new DestroyEndpoint(bridge), source);
-                bridge = null;
-            }
+
             // Explicitly invalidate the application session.
             invite.getSession().invalidate();
             invite.getApplicationSession().invalidate();
+
             // Notify the observers.
             external = CallStateChanged.State.COMPLETED;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-            if (outgoingCallRecord != null && direction.contains("outbound")) {
+
+            // Record call data
+            if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
-                final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
                 outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 logger.debug("Start: " + outgoingCallRecord.getStartTime());
@@ -1650,4 +1173,5 @@ public final class Call extends UntypedActor {
             }
         }
     }
+
 }

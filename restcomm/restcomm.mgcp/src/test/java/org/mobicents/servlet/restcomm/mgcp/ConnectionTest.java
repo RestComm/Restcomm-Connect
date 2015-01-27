@@ -19,11 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.testkit.JavaTestKit;
-
+import static org.junit.Assert.assertTrue;
 import jain.protocol.ip.mgcp.JainMgcpEvent;
 import jain.protocol.ip.mgcp.message.CreateConnection;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
@@ -40,27 +36,21 @@ import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import org.mobicents.servlet.restcomm.mgcp.CloseConnection;
-import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
-import org.mobicents.servlet.restcomm.mgcp.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mgcp.CreatePacketRelayEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
-import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
-import org.mobicents.servlet.restcomm.mgcp.MediaSession;
-import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
-import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
-import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.patterns.Observing;
-import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.patterns.Observing;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.testkit.JavaTestKit;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)

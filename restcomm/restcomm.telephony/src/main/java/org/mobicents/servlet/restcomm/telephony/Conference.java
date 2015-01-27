@@ -1,22 +1,24 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2014, Telestax Inc and individual contributors
+ * Copyright 2011-2013, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This program is free software: you can redistribute it and/or modify
- * under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation; either version 3 of
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+
 package org.mobicents.servlet.restcomm.telephony;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
@@ -26,184 +28,125 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.fsm.TransitionFailedException;
-import org.mobicents.servlet.restcomm.fsm.TransitionNotFoundException;
-import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
-import org.mobicents.servlet.restcomm.mgcp.CloseConnection;
-import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
-import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
-import org.mobicents.servlet.restcomm.mgcp.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mgcp.DestroyConnection;
-import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
-import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
-import org.mobicents.servlet.restcomm.mgcp.MediaSession;
-import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
-import org.mobicents.servlet.restcomm.mscontrol.MediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
+ * @author henrique.rosa@telestax.com (Henrique Rosa)
+ *
  */
+@Immutable
 public final class Conference extends UntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    // Finite state machine stuff.
+    // Finite state machine
+    private final FiniteStateMachine fsm;
+
+    // Finite States
     private final State uninitialized;
-    // private final State running;
     private final State runningModeratorAbsent;
     private final State runningModeratorPresent;
-    private final State completed;
-    // Special intermediate states.
-    private final State acquiringMediaSession;
-    private final State acquiringCnf;
-    private final State acquiringConnection;
-    private final State initializingConnection;
-    private final State openingConnection;
-    private final State closingConnection;
-    private final State stopping;
-    // FSM.
-    private final FiniteStateMachine fsm;
-    // MGCP runtime stuff.
-    private final String name;
-    private final ActorRef gateway;
-    private MediaSession session;
-    private ActorRef cnf;
-    private ActorRef connection;
+    private final State stopped;
 
+    // Intermediate states
+    private final State creatingMediaSession;
+    private final State stopping;
+
+    // Runtime stuff
+    private final String name;
     private ActorRef confVoiceInterpreter;
-    // Runtime stuff.
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
 
-    public Conference(final String name, final ActorRef gateway) {
+    // Media Session Controller
+    // XXX initialize mscontroller for conference
+    private ActorRef mscontroller;
+
+    public Conference(final String name) {
         super();
         final ActorRef source = self();
-        // Initialize the states for the FSM.
-        uninitialized = new State("uninitialized", null, null);
-        // running = new State("running", new Running(source), null);
 
-        runningModeratorAbsent = new State("running moderator absent", new RunningModeratorAbsent(source), null);
-        runningModeratorPresent = new State("running moderator present", new RunningModeratorPresent(source), null);
+        // Finite states
+        this.uninitialized = new State("uninitialized", null, null);
+        this.runningModeratorAbsent = new State("running moderator absent", new RunningModeratorAbsent(source), null);
+        this.runningModeratorPresent = new State("running moderator present", new RunningModeratorPresent(source), null);
+        this.stopped = new State("completed", new Stopped(source), null);
 
-        completed = new State("completed", new Completed(source), null);
-        acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
-        acquiringCnf = new State("acquiring cnf", new AcquiringCnf(source), null);
-        acquiringConnection = new State("acquiring connection", new AcquiringConnection(source), null);
-        initializingConnection = new State("initializing connection", new InitializingConnection(source), null);
-        openingConnection = new State("opening connection", new OpeningConnection(source), null);
-        closingConnection = new State("closing connection", new ClosingConnection(source), null);
-        stopping = new State("stopping", new Stopping(source), null);
-        // Initialize the transitions for the FSM.
+        // Intermediate states
+        this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
+        this.stopping = new State("stopping", new Stopping(source), null);
+
+        // State transitions
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, acquiringMediaSession));
-        transitions.add(new Transition(acquiringMediaSession, completed));
-        transitions.add(new Transition(acquiringMediaSession, acquiringCnf));
-        transitions.add(new Transition(acquiringCnf, completed));
-        transitions.add(new Transition(acquiringCnf, acquiringConnection));
-        transitions.add(new Transition(acquiringConnection, completed));
-        transitions.add(new Transition(acquiringConnection, initializingConnection));
-        transitions.add(new Transition(initializingConnection, completed));
-        transitions.add(new Transition(initializingConnection, openingConnection));
-        transitions.add(new Transition(openingConnection, closingConnection));
-        transitions.add(new Transition(openingConnection, completed));
-        transitions.add(new Transition(openingConnection, stopping));
-        transitions.add(new Transition(closingConnection, stopping));
-
-        transitions.add(new Transition(closingConnection, runningModeratorAbsent));
-        transitions.add(new Transition(runningModeratorAbsent, runningModeratorPresent));
-
-        transitions.add(new Transition(runningModeratorPresent, completed));
+        transitions.add(new Transition(uninitialized, creatingMediaSession));
+        transitions.add(new Transition(creatingMediaSession, runningModeratorPresent));
+        transitions.add(new Transition(creatingMediaSession, runningModeratorAbsent));
+        transitions.add(new Transition(creatingMediaSession, stopped));
+        transitions.add(new Transition(runningModeratorPresent, stopping));
         transitions.add(new Transition(runningModeratorPresent, runningModeratorAbsent));
-        transitions.add(new Transition(runningModeratorAbsent, completed));
+        transitions.add(new Transition(runningModeratorAbsent, stopping));
+        transitions.add(new Transition(runningModeratorAbsent, runningModeratorPresent));
+        transitions.add(new Transition(stopping, stopped));
 
-        transitions.add(new Transition(stopping, completed));
-        // Initialize the FSM.
+        // Finite state machine
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
-        // Initialize the rest of the conference state.
+
+        // Runtime stuff
         this.name = name;
-        this.gateway = gateway;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
     }
 
-    private void add(final Object message, final ActorRef sender) {
-        calls.add(sender);
+    private boolean is(State state) {
+        return this.fsm.state().equals(state);
     }
 
-    private ActorRef getMediaGroup(final Object message) {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new MediaGroup(gateway, session, cnf);
-            }
-        }));
+    private boolean isRunning() {
+        return is(runningModeratorAbsent) || is(runningModeratorPresent);
     }
 
-    private void info(final Object message, final ActorRef sender) {
-        ConferenceInfo information = null;
-        final State state = fsm.state();
-        if (runningModeratorAbsent.equals(state)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
-        } else if (runningModeratorPresent.equals(state)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
-        } else if (completed.equals(state)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED);
-        }
-        final ActorRef self = self();
-        sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
-    }
-
-    private void invite(final Object message) {
-        final AddParticipant request = (AddParticipant) message;
-        final Join join = new Join(cnf, ConnectionMode.Confrnce);
-        final ActorRef call = request.call();
-        final ActorRef self = self();
-        call.tell(join, self);
-    }
-
-    private void observe(final Object message) {
-        final ActorRef self = self();
-        final Observe request = (Observe) message;
-        final ActorRef observer = request.observer();
-        if (observer != null) {
-            observers.add(observer);
-            observer.tell(new Observing(self), self);
+    private void stopAndCleanConfVoiceInter(final ActorRef source) {
+        if (this.confVoiceInterpreter != null) {
+            StopInterpreter stopInterpreter = StopInterpreter.instance();
+            this.confVoiceInterpreter.tell(stopInterpreter, source);
+            this.confVoiceInterpreter = null;
         }
     }
 
-    // FSM Logic.
+    /*
+     * EVENTS
+     */
     @Override
-    public void onReceive(final Object message) throws Exception {
-        final UntypedActorContext context = getContext();
+    public void onReceive(Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final ActorRef sender = sender();
+        ActorRef self = self();
         final State state = fsm.state();
 
         if (logger.isInfoEnabled()) {
@@ -212,120 +155,162 @@ public final class Conference extends UntypedActor {
         }
 
         if (Observe.class.equals(klass)) {
-            observe(message);
+            onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
-            stopObserving(message);
+            onStopObserving((StopObserving) message, self, sender);
+        } else if (GetConferenceInfo.class.equals(klass)) {
+            onGetConferenceInfo((GetConferenceInfo) message, self, sender);
         } else if (StartConference.class.equals(klass)) {
-            fsm.transition(message, acquiringMediaSession);
-        } else if (MediaGatewayResponse.class.equals(klass)) {
-            if (acquiringMediaSession.equals(state)) {
-                fsm.transition(message, acquiringCnf);
-            } else if (acquiringCnf.equals(state)) {
-                fsm.transition(message, acquiringConnection);
-            } else if (acquiringConnection.equals(state)) {
-                fsm.transition(message, initializingConnection);
-            }
-        } else if (ConnectionStateChanged.class.equals(klass)) {
-            final ConnectionStateChanged response = (ConnectionStateChanged) message;
-            if (initializingConnection.equals(state)) {
-                fsm.transition(message, openingConnection);
-            } else if (openingConnection.equals(state)) {
-                if (ConnectionStateChanged.State.HALF_OPEN == response.state()) {
-                    fsm.transition(message, closingConnection);
-                } else if (ConnectionStateChanged.State.CLOSED == response.state()) {
-                    fsm.transition(message, completed);
-                }
-            } else if (closingConnection.equals(state)) {
-
-                fsm.transition(message, runningModeratorAbsent);
-
-            } else if (stopping.equals(state)) {
-                fsm.transition(message, completed);
-            }
+            onStartConference((StartConference) message, self, sender);
         } else if (StopConference.class.equals(klass)) {
-            if (openingConnection.equals(state) || closingConnection.equals(state)) {
-                fsm.transition(message, stopping);
-            } else {
-                fsm.transition(message, completed);
-            }
-        } else if (runningModeratorAbsent.equals(state) || runningModeratorPresent.equals(state)) {
-            if (CreateWaitUrlConfMediaGroup.class.equals(klass)) {
-                handleCreateWaitUrlConfMediaGroup(message);
-            } else if (CreateMediaGroup.class.equals(klass)) {
-                final ActorRef group = getMediaGroup(message);
-                sender.tell(new ConferenceResponse<ActorRef>(group), sender);
-            } else if (DestroyMediaGroup.class.equals(klass)) {
-                final DestroyMediaGroup request = (DestroyMediaGroup) message;
-                context.stop(request.group());
-            } else if (DestroyWaitUrlConfMediaGroup.class.equals(klass)) {
-                final DestroyWaitUrlConfMediaGroup request = (DestroyWaitUrlConfMediaGroup) message;
-                ActorRef waitUrlMediaGroup = request.getWaitUrlConfMediaGroup();
-                if(waitUrlMediaGroup != null && !waitUrlMediaGroup.isTerminated())
-                    context.stop(waitUrlMediaGroup);
-
-                // ConferenceVoiceInterpreter is dead now. Set it to null
-                this.confVoiceInterpreter = null;
-            } else if (AddParticipant.class.equals(klass)) {
-                invite(message);
-            } else if (JoinComplete.class.equals(klass)) {
-                add(message, sender);
-            } else if (RemoveParticipant.class.equals(klass)) {
-                remove(message);
-            } else if (GetConferenceInfo.class.equals(klass)) {
-                info(message, sender);
-            } else if (ConferenceModeratorPresent.class.equals(klass)) {
-                if (runningModeratorAbsent.equals(state)) {
-                    fsm.transition(message, runningModeratorPresent);
-                }
-            }
+            onStopConference((StopConference) message, self, sender);
+        } else if (MediaSessionControllerResponse.class.equals(klass)) {
+            onMediaSessionControllerResponse((MediaSessionControllerResponse<?>) message, self, sender);
+        } else if (ConferenceModeratorPresent.class.equals(klass)) {
+            onConferenceModeratorPresent((ConferenceModeratorPresent) message, self, sender);
+        } else if (CreateWaitUrlConfMediaGroup.class.equals(klass)) {
+            onCreateWaitUrlConfMediaGroup((CreateWaitUrlConfMediaGroup) message, self, sender);
+        } else if (DestroyWaitUrlConfMediaGroup.class.equals(klass)) {
+            onDestroyWaitUrlConfMediaGroup((DestroyWaitUrlConfMediaGroup) message, self, sender);
+        } else if (AddParticipant.class.equals(klass)) {
+            onAddParticipant((AddParticipant) message, self, sender);
+        } else if (RemoveParticipant.class.equals(klass)) {
+            onRemoveParticipant((RemoveParticipant) message, self, sender);
+        } else if (JoinComplete.class.equals(klass)) {
+            onJoinComplete((JoinComplete) message, self, sender);
+        } else if (CreateMediaGroup.class.equals(klass)) {
+            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
+        } else if (DestroyMediaGroup.class.equals(klass)) {
+            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         }
     }
 
-    private void handleCreateWaitUrlConfMediaGroup(final Object message) {
-        CreateWaitUrlConfMediaGroup createWaitUrlConfMediaGroup = (CreateWaitUrlConfMediaGroup) message;
-        ActorRef confVoiceInterpreterTmp = createWaitUrlConfMediaGroup.getConfVoiceInterpreter();
-        if (confVoiceInterpreter == null) {
-            this.confVoiceInterpreter = confVoiceInterpreterTmp;
-
-            StartInterpreter startInterpreter = new StartInterpreter(getSelf());
-            this.confVoiceInterpreter.tell(startInterpreter, getSelf());
-
-        } else {
-            final ActorRef self = self();
-            StopInterpreter stopInterpreter = StopInterpreter.instance();
-            confVoiceInterpreterTmp.tell(stopInterpreter, self);
+    private void onObserve(Observe message, ActorRef self, ActorRef sender) {
+        final ActorRef observer = message.observer();
+        if (observer != null) {
+            this.observers.add(observer);
+            observer.tell(new Observing(self), self);
         }
     }
 
-    private void remove(final Object message) throws TransitionFailedException, TransitionNotFoundException,
-            TransitionRollbackException {
-        final RemoveParticipant request = (RemoveParticipant) message;
-        final ActorRef call = request.call();
-        final ActorRef self = self();
-        if (calls.remove(call)) {
-            final Leave leave = new Leave();
-            call.tell(leave, self);
-        }
-
-        if (calls.size() == 0) {
-            // If no more participants and back ground music was on, we should stop it now.
-            logger.info("calls size is zero in conference " + name);
-            this.stopAndCleanConfVoiceInter(self);
-            if (runningModeratorPresent.equals(fsm.state())) {
-                fsm.transition(message, runningModeratorAbsent);
-            }
-        }
-    }
-
-    private void stopObserving(final Object message) {
-        final StopObserving request = (StopObserving) message;
-        final ActorRef observer = request.observer();
+    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) {
+        final ActorRef observer = message.observer();
         if (observer != null) {
             observers.remove(observer);
         }
     }
 
+    private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
+        ConferenceInfo information = null;
+        if (is(runningModeratorAbsent)) {
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+        } else if (is(runningModeratorPresent)) {
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
+        } else if (is(stopped)) {
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED);
+        }
+        sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
+    }
+
+    private void onStartConference(StartConference message, ActorRef self, ActorRef sender) throws Exception {
+        this.fsm.transition(message, creatingMediaSession);
+    }
+
+    private void onStopConference(StopConference message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(creatingMediaSession)) {
+            this.fsm.transition(message, stopped);
+        } else if (is(runningModeratorAbsent) || is(runningModeratorPresent)) {
+            this.fsm.transition(message, stopping);
+        }
+    }
+
+    private void onConferenceModeratorPresent(ConferenceModeratorPresent message, ActorRef self, ActorRef sender)
+            throws Exception {
+        if (is(runningModeratorAbsent)) {
+            this.fsm.transition(message, runningModeratorPresent);
+        }
+    }
+
+    private void onCreateWaitUrlConfMediaGroup(CreateWaitUrlConfMediaGroup message, ActorRef self, ActorRef sender) {
+        if (isRunning()) {
+            ActorRef confVoiceInterpreterTmp = message.getConfVoiceInterpreter();
+            if (this.confVoiceInterpreter == null) {
+                this.confVoiceInterpreter = confVoiceInterpreterTmp;
+                final StartInterpreter startInterpreter = new StartInterpreter(self);
+                this.confVoiceInterpreter.tell(startInterpreter, self);
+            } else {
+                StopInterpreter stopInterpreter = StopInterpreter.instance();
+                confVoiceInterpreterTmp.tell(stopInterpreter, self);
+            }
+        }
+    }
+
+    private void onDestroyWaitUrlConfMediaGroup(DestroyWaitUrlConfMediaGroup message, ActorRef self, ActorRef sender) {
+        if (isRunning()) {
+            ActorRef waitUrlMediaGroup = message.getWaitUrlConfMediaGroup();
+            if (waitUrlMediaGroup != null && !waitUrlMediaGroup.isTerminated()) {
+                final UntypedActorContext context = getContext();
+                context.stop(waitUrlMediaGroup);
+            }
+
+            // ConferenceVoiceInterpreter is dead now. Set it to null
+            this.confVoiceInterpreter = null;
+        }
+    }
+
+    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
+        if (isRunning()) {
+            final Join join = new Join(this.mscontroller, ConnectionMode.Confrnce);
+            final ActorRef call = message.call();
+            call.tell(join, self);
+        }
+    }
+
+    private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
+        if (isRunning()) {
+            final ActorRef call = message.call();
+            if (calls.remove(call)) {
+                final Leave leave = new Leave();
+                call.tell(leave, self);
+            }
+
+            if (calls.size() == 0) {
+                // If no more participants and back ground music was on, we should stop it now.
+                logger.info("calls size is zero in conference " + name);
+                stopAndCleanConfVoiceInter(self);
+                if (is(runningModeratorPresent)) {
+                    fsm.transition(message, runningModeratorAbsent);
+                }
+            }
+        }
+    }
+
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+        this.calls.add(sender);
+    }
+
+    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
+        if (isRunning()) {
+            this.mscontroller.tell(message, sender);
+        }
+    }
+
+    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
+        if (isRunning()) {
+            this.mscontroller.tell(message, sender);
+        }
+    }
+
+    private void onMediaSessionControllerResponse(MediaSessionControllerResponse<?> message, ActorRef self, ActorRef sender) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /*
+     * ACTIONS
+     */
     private abstract class AbstractAction implements Action {
+
         protected final ActorRef source;
 
         public AbstractAction(final ActorRef source) {
@@ -334,80 +319,17 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private final class AcquiringMediaSession extends AbstractAction {
-        public AcquiringMediaSession(final ActorRef source) {
-            super(source);
-        }
+    private final class CreatingMediaSession extends AbstractAction {
 
-        @Override
-        public void execute(final Object message) throws Exception {
-            gateway.tell(new CreateMediaSession(), source);
-        }
-    }
-
-    private final class AcquiringCnf extends AbstractAction {
-        public AcquiringCnf(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<MediaSession> response = (MediaGatewayResponse<MediaSession>) message;
-            session = response.get();
-            gateway.tell(new CreateConferenceEndpoint(session), source);
-        }
-    }
-
-    private final class AcquiringConnection extends AbstractAction {
-        public AcquiringConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-            cnf = response.get();
-            gateway.tell(new CreateConnection(session), source);
-        }
-    }
-
-    private final class InitializingConnection extends AbstractAction {
-        public InitializingConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-            connection = response.get();
-            connection.tell(new Observe(source), source);
-            connection.tell(new InitializeConnection(cnf), source);
-        }
-    }
-
-    private final class OpeningConnection extends AbstractAction {
-        public OpeningConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            connection.tell(new OpenConnection(ConnectionMode.SendRecv), source);
-        }
-    }
-
-    private final class ClosingConnection extends AbstractAction {
-        public ClosingConnection(final ActorRef source) {
+        public CreatingMediaSession(ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(Object message) throws Exception {
-            connection.tell(new CloseConnection(), source);
+            mscontroller.tell(new CreateMediaSession(), super.source);
         }
+
     }
 
     private final class RunningModeratorAbsent extends AbstractAction {
@@ -417,13 +339,15 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            gateway.tell(new DestroyConnection(connection), source);
-            connection = null;
+            // Tell MSController that moderator is absent
+            // causing it to close the connection
+            mscontroller.tell(new CloseConnection(), super.source);
+
             // Notify the observers.
             final ConferenceStateChanged event = new ConferenceStateChanged(name,
                     ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
             for (final ActorRef observer : observers) {
-                observer.tell(event, source);
+                observer.tell(event, super.source);
             }
         }
     }
@@ -436,13 +360,13 @@ public final class Conference extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             // Stop the background music if present
-            stopAndCleanConfVoiceInter(source);
+            stopAndCleanConfVoiceInter(super.source);
 
             // Notify the observers.
             final ConferenceStateChanged event = new ConferenceStateChanged(name,
                     ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
             for (final ActorRef observer : observers) {
-                observer.tell(event, source);
+                observer.tell(event, super.source);
             }
         }
     }
@@ -454,15 +378,14 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final State state = fsm.state();
-            if (openingConnection.equals(state)) {
-                connection.tell(new CloseConnection(), source);
-            }
+            // Close Media Session
+            mscontroller.tell(new CloseMediaSession(), super.source);
         }
     }
 
-    private final class Completed extends AbstractAction {
-        public Completed(final ActorRef source) {
+    private final class Stopped extends AbstractAction {
+
+        public Stopped(final ActorRef source) {
             super(source);
         }
 
@@ -474,18 +397,14 @@ public final class Conference extends UntypedActor {
                 call.tell(leave, source);
             }
             calls.clear();
-            // Clean up resources
-            final ActorRef self = self();
-            if (connection != null) {
-                gateway.tell(new DestroyConnection(connection), self);
-                connection = null;
-            }
-            if (cnf != null) {
-                gateway.tell(new DestroyEndpoint(cnf), self);
-                cnf = null;
-            }
 
+            // XXX necessary? already done in "stopping" state
+            // Close Media Session
+            mscontroller.tell(new CloseMediaSession(), super.source);
+
+            // Clean up resources
             stopAndCleanConfVoiceInter(source);
+
             // Notify the observers.
             final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.COMPLETED);
             for (final ActorRef observer : observers) {
@@ -495,11 +414,4 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void stopAndCleanConfVoiceInter(final ActorRef source) {
-        if (this.confVoiceInterpreter != null) {
-            StopInterpreter stopInterpreter = StopInterpreter.instance();
-            this.confVoiceInterpreter.tell(stopInterpreter, source);
-            this.confVoiceInterpreter = null;
-        }
-    }
 }
