@@ -21,7 +21,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" >= #{startDate} AND
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			CAST(YEAR("date_created") AS VARCHAR(4)) + '-' + CAST(MONTH("date_created") AS VARCHAR(2)) + '-' + CAST(DAY("date_created") AS VARCHAR(2)), "account_sid", "api_version"
 		ORDER BY
@@ -44,7 +44,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" >= #{startDate} AND
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			CAST(YEAR("date_created") AS VARCHAR(4)) + '-' + CAST(MONTH("date_created") AS VARCHAR(2)), "account_sid", "api_version"
 		ORDER BY
@@ -67,7 +67,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" >= #{startDate} AND
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			CAST(YEAR("date_created") AS VARCHAR(4)), "account_sid", "api_version"
 		ORDER BY
@@ -90,7 +90,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" >= #{startDate} AND
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			EXTRACT (MONTH FROM "date_created"), "account_sid", "api_version"
 		ORDER BY
