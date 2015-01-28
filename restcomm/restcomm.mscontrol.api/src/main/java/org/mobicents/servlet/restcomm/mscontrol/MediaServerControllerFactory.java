@@ -29,14 +29,14 @@ public interface MediaServerControllerFactory {
 
     /**
      * Provides a new Media Server Controller for a Call.
-     * 
+     *
      * @return The media server controller
      */
     MediaServerController provideCallController();
 
     /**
      * Provides a new Media Server Controller for a Conference.
-     * 
+     *
      * @return The media server controller
      */
     MediaServerController provideConferenceController();

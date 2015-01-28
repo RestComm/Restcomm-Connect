@@ -678,11 +678,6 @@ public class UssdCall extends UntypedActor {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see akka.actor.UntypedActor#postStop()
-     */
     @Override
     public void postStop() {
         super.postStop();

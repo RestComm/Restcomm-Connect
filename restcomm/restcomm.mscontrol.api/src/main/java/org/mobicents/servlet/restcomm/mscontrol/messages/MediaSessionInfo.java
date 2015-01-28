@@ -36,7 +36,6 @@ public final class MediaSessionInfo {
     private final InetAddress externalAddress;
     private final String localSdp;
     private final String remoteSdp;
-    
 
     public MediaSessionInfo(boolean useNat, InetAddress externalAddress, String localSdp, String remoteSdp) {
         super();
@@ -53,11 +52,11 @@ public final class MediaSessionInfo {
     public InetAddress getExternalAddress() {
         return externalAddress;
     }
-    
+
     public String getLocalSdp() {
         return localSdp;
     }
-    
+
     public String getRemoteSdp() {
         return remoteSdp;
     }
