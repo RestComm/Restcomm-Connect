@@ -59,7 +59,7 @@ public final class Bootstrapper extends SipServlet {
                 ActorRef gateway;
                 try {
                     gateway = gateway(configuration, loader);
-                    factory = new MmsControllerFactory(gateway);
+                    factory = new MmsControllerFactory(this.system, gateway);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }

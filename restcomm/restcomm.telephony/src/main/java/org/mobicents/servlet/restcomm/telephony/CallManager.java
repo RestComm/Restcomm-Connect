@@ -141,8 +141,8 @@ public final class CallManager extends UntypedActor {
     private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
-            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef sms, final SipFactory factory,
-            final DaoManager storage) {
+            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef sms,
+            final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
@@ -214,7 +214,7 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, msControllerFactory.provideCallController().getSelf());
+                return new Call(sipFactory, msControllerFactory.provideCallController());
             }
         }));
     }
@@ -663,8 +663,9 @@ public final class CallManager extends UntypedActor {
                 to = sipFactory.createSipURI(request.to(), uri);
                 String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
                 SipURI outboundIntf = outboundInterface(transport);
-                if(request.from() != null && request.from().contains("@")) {
-                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow to use it directly
+                if (request.from() != null && request.from().contains("@")) {
+                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
+                    // to use it directly
                     from = (SipURI) sipFactory.createURI(request.from());
                 } else if (useLocalAddressAtFromHeader) {
                     from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
@@ -680,8 +681,9 @@ public final class CallManager extends UntypedActor {
                 if (request.from() == null) {
                     from = outboundInterface(transport);
                 } else {
-                    if(request.from() != null && request.from().contains("@")) {
-                        // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow to use it directly
+                    if (request.from() != null && request.from().contains("@")) {
+                        // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we
+                        // allow to use it directly
                         from = (SipURI) sipFactory.createURI(request.from());
                     } else {
                         from = sipFactory.createSipURI(request.from(), outboundIntf.getHost() + ":" + outboundIntf.getPort());

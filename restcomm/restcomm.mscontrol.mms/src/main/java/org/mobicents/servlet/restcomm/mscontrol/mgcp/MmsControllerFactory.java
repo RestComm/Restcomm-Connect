@@ -21,10 +21,13 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
-import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActorFactory;
 
 /**
  * Provides controllers for Mobicents Media Server.
@@ -34,20 +37,48 @@ import akka.actor.ActorRef;
  */
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
+    private final ActorSystem system;
     private final ActorRef mediaGateway;
+    private final CallControllerFactory callControllerFactory;
+    private final ConferenceControllerFactory conferenceControllerFactory;
 
-    public MmsControllerFactory(ActorRef mediaGateway) {
+    public MmsControllerFactory(ActorSystem system, ActorRef mediaGateway) {
         super();
+        this.system = system;
         this.mediaGateway = mediaGateway;
+        this.callControllerFactory = new CallControllerFactory();
+        this.conferenceControllerFactory = new ConferenceControllerFactory();
     }
 
     @Override
-    public MediaServerController provideCallController() {
-        return new MmsCallController(this.mediaGateway);
+    public ActorRef provideCallController() {
+        return system.actorOf(new Props(this.callControllerFactory));
     }
 
     @Override
-    public MediaServerController provideConferenceController() {
-        return new MmsConferenceController(this.mediaGateway);
+    public ActorRef provideConferenceController() {
+        return system.actorOf(new Props(this.conferenceControllerFactory));
+    }
+
+    private final class CallControllerFactory implements UntypedActorFactory {
+
+        private static final long serialVersionUID = -4649683839304615853L;
+
+        @Override
+        public Actor create() throws Exception {
+            return new MmsCallController(mediaGateway);
+        }
+
+    }
+
+    private final class ConferenceControllerFactory implements UntypedActorFactory {
+
+        private static final long serialVersionUID = -919317656354678281L;
+
+        @Override
+        public Actor create() throws Exception {
+            return new MmsConferenceController(mediaGateway);
+        }
+
     }
 }

@@ -21,6 +21,8 @@
 
 package org.mobicents.servlet.restcomm.mscontrol;
 
+import akka.actor.ActorRef;
+
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
@@ -32,13 +34,13 @@ public interface MediaServerControllerFactory {
      *
      * @return The media server controller
      */
-    MediaServerController provideCallController();
+    ActorRef provideCallController();
 
     /**
      * Provides a new Media Server Controller for a Conference.
      *
      * @return The media server controller
      */
-    MediaServerController provideConferenceController();
+    ActorRef provideConferenceController();
 
 }

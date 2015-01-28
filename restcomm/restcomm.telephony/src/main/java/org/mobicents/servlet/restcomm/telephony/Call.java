@@ -61,11 +61,13 @@ import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerError;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
@@ -318,7 +320,7 @@ public final class Call extends UntypedActor {
         final State state = fsm.state();
 
         logger.info("********** Call's Current State: \"" + state.toString());
-        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : " + sender.toString());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -348,10 +350,10 @@ public final class Call extends UntypedActor {
             onHangup((Hangup) message, self, sender);
         } else if (NotFound.class.equals(klass)) {
             onNotFound((NotFound) message, self, sender);
-        } else if (MediaSessionControllerResponse.class.equals(klass)) {
-            onMediaSessionControllerResponse((MediaSessionControllerResponse<?>) message, self, sender);
-        } else if (MediaSessionControllerError.class.equals(klass)) {
-            onMediaSessionControllerError((MediaSessionControllerError) message, self, sender);
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
+            onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
+        } else if (MediaServerControllerError.class.equals(klass)) {
+            onMediaServerControllerError((MediaServerControllerError) message, self, sender);
         } else if (MediaSessionClosed.class.equals(klass)) {
             onMediaSessionDestroyed((MediaSessionClosed) message, self, sender);
         } else if (AddParticipant.class.equals(klass)) {
@@ -362,19 +364,19 @@ public final class Call extends UntypedActor {
             onStartRecordingCall((StartRecordingCall) message, self, sender);
         } else if (StopRecordingCall.class.equals(klass)) {
             onStopRecordingCall((StopRecordingCall) message, self, sender);
+        } else if (CreateMediaGroup.class.equals(klass)) {
+            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
+        } else if (DestroyMediaGroup.class.equals(klass)) {
+            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         }
     }
 
-    private void onMediaSessionDestroyed(MediaSessionClosed message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(completing)) {
-            fsm.transition(message, completed);
-        } else if (is(failing)) {
-            fsm.transition(message, failed);
-        } else if (is(failingBusy)) {
-            fsm.transition(message, busy);
-        } else if (is(failingNoAnswer)) {
-            fsm.transition(message, noAnswer);
-        }
+    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
+        this.msController.tell(message, sender);
+    }
+
+    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
+        this.msController.tell(message, sender);
     }
 
     private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
@@ -535,7 +537,7 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onMediaSessionControllerError(MediaSessionControllerError message, ActorRef self, ActorRef sender)
+    private void onMediaServerControllerError(MediaServerControllerError message, ActorRef self, ActorRef sender)
             throws Exception {
         if (is(creatingMediaSession)) {
             fsm.transition(message, failed);
@@ -544,12 +546,24 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onMediaSessionControllerResponse(MediaSessionControllerResponse<?> message, ActorRef self, ActorRef sender)
+    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
         if (isInbound() || is(updatingMediaSession)) {
             fsm.transition(message, inProgress);
         } else {
             fsm.transition(message, dialing);
+        }
+    }
+
+    private void onMediaSessionDestroyed(MediaSessionClosed message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(completing)) {
+            fsm.transition(message, completed);
+        } else if (is(failing)) {
+            fsm.transition(message, failed);
+        } else if (is(failingBusy)) {
+            fsm.transition(message, busy);
+        } else if (is(failingNoAnswer)) {
+            fsm.transition(message, noAnswer);
         }
     }
 
@@ -1049,20 +1063,23 @@ public final class Call extends UntypedActor {
             super(source);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+            MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
             SipSession.State sessionState = invite.getSession().getState();
+
             if (is(creatingMediaSession)
                     && !(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
-                final MediaSessionInfo response = (MediaSessionInfo) message;
+                mediaSessionInfo = response.get();
                 final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-                final byte[] sdp = response.getLocalSdp().getBytes();
+                final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
                 String answer = null;
                 if (mediaSessionInfo.usesNat()) {
                     final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
                     answer = SdpUtils.patch("application/sdp", sdp, externalIp);
                 } else {
-                    answer = response.getLocalSdp().toString();
+                    answer = mediaSessionInfo.getLocalSdp().toString();
                 }
                 // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
                 answer = SdpUtils.endWithNewLine(answer);

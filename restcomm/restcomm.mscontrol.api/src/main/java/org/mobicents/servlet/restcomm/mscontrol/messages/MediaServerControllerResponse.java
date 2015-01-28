@@ -22,15 +22,24 @@
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  */
 @Immutable
-public final class MediaSessionControllerError {
+public final class MediaServerControllerResponse<T> extends StandardResponse<T> {
 
-    public MediaSessionControllerError() {
-        super();
+    public MediaServerControllerResponse(T object) {
+        super(object);
+    }
+
+    public MediaServerControllerResponse(Throwable cause, String message) {
+        super(cause, message);
+    }
+
+    public MediaServerControllerResponse(Throwable cause) {
+        super(cause);
     }
 
 }
