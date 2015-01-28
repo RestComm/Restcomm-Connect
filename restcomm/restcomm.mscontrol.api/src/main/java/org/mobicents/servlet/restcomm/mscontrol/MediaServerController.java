@@ -20,18 +20,14 @@
 package org.mobicents.servlet.restcomm.mscontrol;
 
 import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 
 /**
  * Controls the flow of media sessions.
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  */
-public abstract class MediaSessionController extends UntypedActor {
+public abstract class MediaServerController extends UntypedActor {
 
-    protected final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-
-    protected MediaSessionController() {
+    protected MediaServerController() {
         super();
     }
 

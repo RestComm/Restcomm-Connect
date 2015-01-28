@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
@@ -38,13 +39,13 @@ import akka.actor.UntypedActorFactory;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class ConferenceCenter extends UntypedActor {
-    private final ActorRef gateway;
+    private final MediaServerControllerFactory factory;
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
 
-    public ConferenceCenter(final ActorRef gateway) {
+    public ConferenceCenter(final MediaServerControllerFactory factory) {
         super();
-        this.gateway = gateway;
+        this.factory = factory;
         this.conferences = new HashMap<String, ActorRef>();
         this.initializing = new HashMap<String, List<ActorRef>>();
     }
@@ -55,7 +56,7 @@ public final class ConferenceCenter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Conference(name, gateway);
+                return new Conference(name, factory.provideConferenceController().getSelf());
             }
         }));
     }

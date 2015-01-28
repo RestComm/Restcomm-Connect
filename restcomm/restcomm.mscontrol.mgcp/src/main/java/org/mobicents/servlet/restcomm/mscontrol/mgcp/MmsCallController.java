@@ -58,7 +58,7 @@ import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
-import org.mobicents.servlet.restcomm.mscontrol.MediaSessionController;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
@@ -87,7 +87,7 @@ import akka.event.LoggingAdapter;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class MgcpCallMediaSessionController extends MediaSessionController {
+public class MmsCallController extends MediaServerController {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -120,7 +120,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
     private final State pending;
 
     // Call runtime stuff
-    private final ActorRef call;
+    private ActorRef call;
     private Sid callId;
     private String localSdp;
     private String remoteSdp;
@@ -153,7 +153,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
     // Runtime Setting
     private Configuration runtimeSettings;
 
-    public MgcpCallMediaSessionController(final ActorRef call, final ActorRef mediaGateway) {
+    public MmsCallController(final ActorRef mediaGateway) {
         super();
         final ActorRef source = self();
 
@@ -227,7 +227,6 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
         this.mediaGateway = mediaGateway;
 
         // Call runtime stuff
-        this.call = call;
         this.localSdp = "";
         this.remoteSdp = "";
         this.callOutbound = false;
@@ -331,6 +330,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
+        this.call = sender;
         this.connectionMode = message.getConnectionMode();
         this.localSdp = message.getSessionDescription();
         this.callOutbound = message.isOutbound();
@@ -441,7 +441,7 @@ public class MgcpCallMediaSessionController extends MediaSessionController {
         if (accountId == null) {
             accountId = message.getAccountId();
         }
-        
+
         this.callId = message.getCallId();
         this.recordingSid = message.getRecordingSid();
         this.recordingUri = message.getRecordingUri();

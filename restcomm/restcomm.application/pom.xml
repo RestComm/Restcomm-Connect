@@ -147,11 +147,11 @@
 			<version>${project.version}</version>
 		</dependency>
 
-        <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.provisioning.number.bandwidth</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.number.bandwidth</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
@@ -198,6 +198,18 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.ussd</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.mms</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

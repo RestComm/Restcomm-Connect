@@ -19,28 +19,35 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mscontrol;
+package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.patterns.StandardResponse;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
+
+import akka.actor.ActorRef;
 
 /**
- * Generic response to a request made to the {@link MediaServerController}.
+ * Provides controllers for Mobicents Media Server.
+ * 
  * @author Henrique Rosa (henrique.rosa@telestax.com)
- * @param <T> The type of the object wrapped in the response.
+ *
  */
-@NotThreadSafe
-public class MediaResponse<T> extends StandardResponse<T> {
+public class MmsControllerFactory implements MediaServerControllerFactory {
 
-    public MediaResponse(T object) {
-        super(object);
+    private final ActorRef mediaGateway;
+
+    public MmsControllerFactory(ActorRef mediaGateway) {
+        super();
+        this.mediaGateway = mediaGateway;
     }
 
-    public MediaResponse(final Throwable cause) {
-        super(cause);
+    @Override
+    public MediaServerController provideCallController() {
+        return new MmsCallController(this.mediaGateway);
     }
 
-    public MediaResponse(final Throwable cause, final String message) {
-        super(cause, message);
+    @Override
+    public MediaServerController provideConferenceController() {
+        return new MmsConferenceController(this.mediaGateway);
     }
 }
