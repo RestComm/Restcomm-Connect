@@ -12,13 +12,15 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
-import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
 import akka.actor.ActorRef;
@@ -44,6 +46,32 @@ public final class Bootstrapper extends SipServlet {
     public void destroy() {
         system.shutdown();
         system.awaitTermination();
+    }
+
+    private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader)
+            throws ServletException {
+        Configuration settings = configuration.subset("mscontrol");
+        String compatibility = settings.getString("compatibility");
+
+        MediaServerControllerFactory factory;
+        switch (compatibility) {
+            case "mms":
+                ActorRef gateway;
+                try {
+                    gateway = gateway(configuration, loader);
+                    factory = new MmsControllerFactory(gateway);
+                } catch (UnknownHostException e) {
+                    throw new ServletException(e);
+                }
+                break;
+
+            case "xms":
+                throw new NotImplementedException("Dialogic XMS compatibility not yet implemented");
+
+            default:
+                throw new IllegalArgumentException("MSControl unknown compatibility mode: " + compatibility);
+        }
+        return factory;
     }
 
     private ActorRef gateway(final Configuration configuration, final ClassLoader loader) throws UnknownHostException {
@@ -127,19 +155,15 @@ public final class Bootstrapper extends SipServlet {
         context.setAttribute(DaoManager.class.getName(), storage);
         ShiroResources.getInstance().set(DaoManager.class, storage);
         ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
-        // Create the media gateway.
-        ActorRef gateway = null;
-        try {
-            gateway = gateway(xml, loader);
-        } catch (final UnknownHostException exception) {
-            throw new ServletException(exception);
-        }
-        context.setAttribute(MediaGateway.class.getName(), gateway);
+
+        // Create the media server controller factory
+        MediaServerControllerFactory mscontrollerFactory = mediaServerControllerFactory(xml, loader);
+        context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
+
         Version.printVersion();
         Ping ping = new Ping(xml, context);
         ping.sendPing();
     }
-
 
     private DaoManager storage(final Configuration configuration, final ClassLoader loader) throws ObjectInstantiationException {
         final String classpath = configuration.getString("dao-manager[@class]");

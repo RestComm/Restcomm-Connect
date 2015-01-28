@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
@@ -88,7 +89,7 @@ public final class Conference extends UntypedActor {
     // XXX initialize mscontroller for conference
     private ActorRef mscontroller;
 
-    public Conference(final String name) {
+    public Conference(final String name, final ActorRef msController) {
         super();
         final ActorRef source = self();
 
@@ -119,6 +120,7 @@ public final class Conference extends UntypedActor {
 
         // Runtime stuff
         this.name = name;
+        this.mscontroller = msController;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
     }

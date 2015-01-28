@@ -37,7 +37,7 @@ import javax.servlet.sip.SipSessionListener;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.ussd.telephony.UssdCallManager;
 
 import akka.actor.ActorRef;
@@ -72,7 +72,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
-        if(isUssdMessage(request)) {
+        if (isUssdMessage(request)) {
             ussdManager.tell(request, null);
         } else {
             manager.tell(request, null);
@@ -81,7 +81,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
-        if(isUssdMessage(response)){
+        if (isUssdMessage(response)) {
             ussdManager.tell(response, null);
         } else {
             manager.tell(response, null);
@@ -93,49 +93,51 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
         final ServletContext context = config.getServletContext();
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        final ActorRef gateway = (ActorRef) context.getAttribute(MediaGateway.class.getName());
+        final MediaServerControllerFactory msControllerfactory = (MediaServerControllerFactory) context
+                .getAttribute(MediaServerControllerFactory.class.getName());
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         // Create the call manager.
         final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-        final ActorRef conferences = conferences(gateway);
+        final ActorRef conferences = conferences(msControllerfactory);
         final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
-        manager = manager(configuration, context, gateway, conferences, sms, factory, storage);
-        ussdManager = ussdManager(configuration, context, gateway, conferences, sms, factory, storage);
+        manager = manager(configuration, context, msControllerfactory, conferences, sms, factory, storage);
+        ussdManager = ussdManager(configuration, context, conferences, sms, factory, storage);
         context.setAttribute(CallManager.class.getName(), manager);
         context.setAttribute(UssdCallManager.class.getName(), ussdManager);
     }
 
-    private ActorRef manager(final Configuration configuration, final ServletContext context, final ActorRef gateway, final ActorRef conferences,
+    private ActorRef manager(final Configuration configuration, final ServletContext context,
+            final MediaServerControllerFactory msControllerfactory, final ActorRef conferences, final ActorRef sms,
+            final SipFactory factory, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new CallManager(configuration, context, system, msControllerfactory, conferences, sms, factory, storage);
+            }
+        }));
+    }
+
+    private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef conferences,
             final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new CallManager(configuration, context, system, gateway, conferences, sms, factory, storage);
+                return new UssdCallManager(configuration, context, system, conferences, sms, factory, storage);
             }
         }));
     }
 
-    private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef gateway, final ActorRef conferences,
-            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+    private ActorRef conferences(final MediaServerControllerFactory factory) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new UssdCallManager(configuration, context, system, gateway, conferences, sms, factory, storage);
-            }
-        }));
-    }
-
-    private ActorRef conferences(final ActorRef gateway) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new ConferenceCenter(gateway);
+                return new ConferenceCenter(factory);
             }
         }));
     }
@@ -157,7 +159,8 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     public void sessionReadyToInvalidate(final SipApplicationSessionEvent event) {
-        logger.info("SipApplicationSessionEvent received. Invalidating the sipApplicationSession: "+event.getApplicationSession().getId());
+        logger.info("SipApplicationSessionEvent received. Invalidating the sipApplicationSession: "
+                + event.getApplicationSession().getId());
         event.getApplicationSession().invalidate();
     }
 
@@ -190,7 +193,7 @@ public final class CallManagerProxy extends SipServlet implements SipApplication
 
     @Override
     public void sessionReadyToInvalidate(SipSessionEvent event) {
-        logger.info("SipSessionEvent received. Invalidating the sipSession: "+event.getSession().getId());
+        logger.info("SipSessionEvent received. Invalidating the sipSession: " + event.getSession().getId());
         event.getSession().invalidate();
     }
 }

@@ -68,6 +68,7 @@ import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
@@ -108,8 +109,8 @@ public final class CallManager extends UntypedActor {
     private final ActorSystem system;
     private final Configuration configuration;
     private final ServletContext context;
+    private final MediaServerControllerFactory msControllerFactory;
     private final ActorRef conferences;
-    private final ActorRef gateway;
     private final ActorRef sms;
     private final SipFactory sipFactory;
     private final DaoManager storage;
@@ -140,13 +141,13 @@ public final class CallManager extends UntypedActor {
     private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
-            final ActorRef gateway, final ActorRef conferences, final ActorRef sms, final SipFactory factory,
+            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef sms, final SipFactory factory,
             final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
         this.context = context;
-        this.gateway = gateway;
+        this.msControllerFactory = msControllerFactory;
         this.conferences = conferences;
         this.sms = sms;
         this.sipFactory = factory;
@@ -213,7 +214,7 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, gateway);
+                return new Call(sipFactory, msControllerFactory.provideCallController().getSelf());
             }
         }));
     }

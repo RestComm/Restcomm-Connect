@@ -21,26 +21,24 @@
 
 package org.mobicents.servlet.restcomm.mscontrol;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.patterns.StandardResponse;
-
 /**
- * Generic response to a request made to the {@link MediaServerController}.
  * @author Henrique Rosa (henrique.rosa@telestax.com)
- * @param <T> The type of the object wrapped in the response.
+ *
  */
-@NotThreadSafe
-public class MediaResponse<T> extends StandardResponse<T> {
+public interface MediaServerControllerFactory {
 
-    public MediaResponse(T object) {
-        super(object);
-    }
+    /**
+     * Provides a new Media Server Controller for a Call.
+     * 
+     * @return The media server controller
+     */
+    MediaServerController provideCallController();
 
-    public MediaResponse(final Throwable cause) {
-        super(cause);
-    }
+    /**
+     * Provides a new Media Server Controller for a Conference.
+     * 
+     * @return The media server controller
+     */
+    MediaServerController provideConferenceController();
 
-    public MediaResponse(final Throwable cause, final String message) {
-        super(cause, message);
-    }
 }

@@ -8,8 +8,8 @@
 		<version>7.2.2-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm.mscontrol.mgcp</artifactId>
-	<name>restcomm.mscontrol.mgcp</name>
+	<artifactId>restcomm.mscontrol.mms</artifactId>
+	<name>restcomm.mscontrol.mms</name>
 
 	<dependencies>
 		<dependency>

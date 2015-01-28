@@ -41,7 +41,7 @@ import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
-import org.mobicents.servlet.restcomm.mscontrol.MediaSessionController;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
@@ -60,7 +60,7 @@ import akka.event.LoggingAdapter;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  */
 @Immutable
-public final class MgcpConferenceMediaSessionController extends MediaSessionController {
+public final class MmsConferenceController extends MediaServerController {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -87,7 +87,7 @@ public final class MgcpConferenceMediaSessionController extends MediaSessionCont
     private ActorRef cnfEndpoint;
     private ActorRef connection;
 
-    public MgcpConferenceMediaSessionController(ActorRef mediaGateway) {
+    public MmsConferenceController(ActorRef mediaGateway) {
         super();
         final ActorRef source = self();
 
