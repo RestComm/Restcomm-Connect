@@ -60,12 +60,14 @@ import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerError;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
@@ -80,6 +82,9 @@ import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -188,8 +193,7 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.uninitialized, this.acquiringMediaGatewayInfo));
         transitions.add(new Transition(this.acquiringMediaGatewayInfo, this.acquiringMediaSession));
         transitions.add(new Transition(this.acquiringMediaSession, this.acquiringBridge));
-        transitions.add(new Transition(this.acquiringBridge, this.acquiringMediaSession));
-        transitions.add(new Transition(this.acquiringMediaSession, this.acquiringRemoteConnection));
+        transitions.add(new Transition(this.acquiringBridge, this.acquiringRemoteConnection));
         transitions.add(new Transition(this.acquiringRemoteConnection, this.initializingRemoteConnection));
         transitions.add(new Transition(this.initializingRemoteConnection, this.openingRemoteConnection));
         transitions.add(new Transition(this.openingRemoteConnection, this.active));
@@ -241,6 +245,17 @@ public class MmsCallController extends MediaServerController {
      */
     private boolean is(State state) {
         return this.fsm.state().equals(state);
+    }
+
+    private ActorRef createMediaGroup(final Object message) {
+        return getContext().actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new MgcpMediaGroup(mediaGateway, session, bridge);
+            }
+        }));
     }
 
     private void startRecordingCall() throws Exception {
@@ -324,16 +339,20 @@ public class MmsCallController extends MediaServerController {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        } else if (MediaSessionControllerResponse.class.equals(klass)) {
-            onMediaSessionControllerResponse((MediaSessionControllerResponse<?>) message, self, sender);
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
+            onMediaSessionControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
+        } else if (CreateMediaGroup.class.equals(klass)) {
+            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
+        } else if (DestroyMediaGroup.class.equals(klass)) {
+            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         }
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         this.call = sender;
         this.connectionMode = message.getConnectionMode();
-        this.localSdp = message.getSessionDescription();
         this.callOutbound = message.isOutbound();
+        this.remoteSdp = message.getSessionDescription();
 
         fsm.transition(message, acquiringMediaGatewayInfo);
     }
@@ -478,7 +497,7 @@ public class MmsCallController extends MediaServerController {
         }
     }
 
-    private void onMediaSessionControllerResponse(MediaSessionControllerResponse<?> message, ActorRef self, ActorRef sender)
+    private void onMediaSessionControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
         Object obj = message.get();
         if (BridgeEndpointInfo.class.equals(obj.getClass())) {
@@ -489,6 +508,21 @@ public class MmsCallController extends MediaServerController {
 
             // Start joining
             this.fsm.transition(message, acquiringInternalLink);
+        }
+    }
+
+    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
+        if (this.mediaGroup != null) {
+            getContext().stop(this.mediaGroup);
+        }
+        this.mediaGroup = createMediaGroup(message);
+        sender.tell(new MediaServerControllerResponse<ActorRef>(this.mediaGroup), self);
+    }
+
+    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
+        if (this.mediaGroup != null && !this.mediaGroup.isTerminated()) {
+            getContext().stop(this.mediaGroup);
+            this.mediaGroup = null;
         }
     }
 
@@ -589,7 +623,7 @@ public class MmsCallController extends MediaServerController {
             if (callOutbound) {
                 open = new OpenConnection(ConnectionMode.SendRecv);
             } else {
-                final ConnectionDescriptor descriptor = new ConnectionDescriptor(localSdp);
+                final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
                 open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
             }
             remoteConn.tell(open, source);
@@ -604,8 +638,8 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             final UpdateMediaSession response = (UpdateMediaSession) message;
-            localSdp = response.getSessionDescription();
-            final ConnectionDescriptor descriptor = new ConnectionDescriptor(localSdp);
+            remoteSdp = response.getSessionDescription();
+            final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
             final UpdateConnection update = new UpdateConnection(descriptor);
             remoteConn.tell(update, source);
         }
@@ -626,7 +660,10 @@ public class MmsCallController extends MediaServerController {
                 outboundMediaSessionController.tell(new JoinComplete(bridge), source);
             }
 
-            final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
+            ConnectionStateChanged connState = (ConnectionStateChanged) message;
+            localSdp = connState.descriptor().toString();
+
+            final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
                     new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
             call.tell(response, self());
         }
@@ -640,7 +677,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final MediaSessionControllerResponse<MediaSessionInfo> response = new MediaSessionControllerResponse<MediaSessionInfo>(
+            final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
                     new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
             call.tell(response, self());
         }
@@ -809,7 +846,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final MediaSessionControllerError error = new MediaSessionControllerError();
+            final MediaServerControllerError error = new MediaServerControllerError();
             call.tell(error, self());
         }
 

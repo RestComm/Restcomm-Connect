@@ -56,7 +56,7 @@ public final class ConferenceCenter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Conference(name, factory.provideConferenceController().getSelf());
+                return new Conference(name, factory.provideConferenceController());
             }
         }));
     }

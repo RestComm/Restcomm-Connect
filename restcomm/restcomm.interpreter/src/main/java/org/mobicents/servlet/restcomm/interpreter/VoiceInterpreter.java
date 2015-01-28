@@ -78,6 +78,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
@@ -524,10 +525,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else {
                     fsm.transition(message, initializingCall);
                 }
-            } else if (acquiringCallMediaGroup.equals(state) || downloadingRcml.equals(state)) {
-                fsm.transition(message, initializingCallMediaGroup);
             } else if (acquiringOutboundCallInfo.equals(state)) {
                 fsm.transition(message, joiningCalls);
+            }
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
+            if (acquiringCallMediaGroup.equals(state) || downloadingRcml.equals(state)) {
+                fsm.transition(message, initializingCallMediaGroup);
             }
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
@@ -951,8 +954,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            if (CallResponse.class.equals(klass)) {
-                final CallResponse<ActorRef> response = (CallResponse<ActorRef>) message;
+            if (MediaServerControllerResponse.class.equals(klass)) {
+                final MediaServerControllerResponse<ActorRef> response = (MediaServerControllerResponse<ActorRef>) message;
                 callMediaGroup = response.get();
                 callMediaGroup.tell(new Observe(source), source);
                 callMediaGroup.tell(new StartMediaGroup(), source);

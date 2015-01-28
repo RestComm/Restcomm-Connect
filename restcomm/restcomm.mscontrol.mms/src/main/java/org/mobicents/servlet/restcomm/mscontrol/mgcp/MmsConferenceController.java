@@ -46,7 +46,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 
 import akka.actor.ActorRef;
@@ -227,7 +227,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         final ActorRef group = createMediaGroup(message);
-        sender.tell(new MediaSessionControllerResponse<ActorRef>(group), sender);
+        sender.tell(new MediaServerControllerResponse<ActorRef>(group), sender);
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {

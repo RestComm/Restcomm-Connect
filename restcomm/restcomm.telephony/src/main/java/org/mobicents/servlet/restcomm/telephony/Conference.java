@@ -43,7 +43,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -165,8 +165,8 @@ public final class Conference extends UntypedActor {
             onStartConference((StartConference) message, self, sender);
         } else if (StopConference.class.equals(klass)) {
             onStopConference((StopConference) message, self, sender);
-        } else if (MediaSessionControllerResponse.class.equals(klass)) {
-            onMediaSessionControllerResponse((MediaSessionControllerResponse<?>) message, self, sender);
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
+            onMediaSessionControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (ConferenceModeratorPresent.class.equals(klass)) {
             onConferenceModeratorPresent((ConferenceModeratorPresent) message, self, sender);
         } else if (CreateWaitUrlConfMediaGroup.class.equals(klass)) {
@@ -302,7 +302,7 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onMediaSessionControllerResponse(MediaSessionControllerResponse<?> message, ActorRef self, ActorRef sender) {
+    private void onMediaSessionControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender) {
         // TODO Auto-generated method stub
 
     }
