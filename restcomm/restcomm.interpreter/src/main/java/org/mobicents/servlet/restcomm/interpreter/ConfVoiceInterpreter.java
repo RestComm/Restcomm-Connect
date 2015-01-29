@@ -45,13 +45,13 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Verbs;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
-import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
 import org.mobicents.servlet.restcomm.telephony.DestroyWaitUrlConfMediaGroup;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
@@ -386,7 +386,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                     fsm.transition(message, finished);
                 }
             }
-        } else if (ConferenceResponse.class.equals(klass)) {
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
             if (acquiringConfMediaGroup.equals(state)) {
                 fsm.transition(message, initializingConfMediaGroup);
             }
@@ -618,7 +618,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final ConferenceResponse<ActorRef> response = (ConferenceResponse<ActorRef>) message;
+            final MediaServerControllerResponse<ActorRef> response = (MediaServerControllerResponse<ActorRef>) message;
             conferenceMediaGroup = response.get();
             conferenceMediaGroup.tell(new Observe(source), source);
             final StartMediaGroup request = new StartMediaGroup();

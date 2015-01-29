@@ -85,8 +85,7 @@ public final class Conference extends UntypedActor {
     private final List<ActorRef> observers;
 
     // Media Session Controller
-    // XXX initialize mscontroller for conference
-    private ActorRef mscontroller;
+    private final ActorRef mscontroller;
 
     public Conference(final String name, final ActorRef msController) {
         super();
@@ -150,10 +149,8 @@ public final class Conference extends UntypedActor {
         ActorRef self = self();
         final State state = fsm.state();
 
-        if (logger.isInfoEnabled()) {
-            logger.info(" ********** Conference Current State: " + state.toString());
-            logger.info(" ********** Conference Processing Message: " + klass.getName());
-        }
+        logger.info(" ********** Conference Current State: " + state.toString());
+        logger.info(" ********** Conference Processing Message: " + klass.getName());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -166,7 +163,7 @@ public final class Conference extends UntypedActor {
         } else if (StopConference.class.equals(klass)) {
             onStopConference((StopConference) message, self, sender);
         } else if (MediaServerControllerResponse.class.equals(klass)) {
-            onMediaSessionControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
+            onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (ConferenceModeratorPresent.class.equals(klass)) {
             onConferenceModeratorPresent((ConferenceModeratorPresent) message, self, sender);
         } else if (CreateWaitUrlConfMediaGroup.class.equals(klass)) {
@@ -261,7 +258,7 @@ public final class Conference extends UntypedActor {
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
-            final Join join = new Join(this.mscontroller, ConnectionMode.Confrnce);
+            final Join join = new Join(self, this.mscontroller, ConnectionMode.Confrnce);
             final ActorRef call = message.call();
             call.tell(join, self);
         }
@@ -302,9 +299,11 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onMediaSessionControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender) {
-        // TODO Auto-generated method stub
-
+    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
+            throws Exception {
+        if (is(creatingMediaSession)) {
+            this.fsm.transition(message, runningModeratorAbsent);
+        }
     }
 
     /*

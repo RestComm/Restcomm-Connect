@@ -47,6 +47,9 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.EndpointInfo;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryEndpoint;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 
 import akka.actor.ActorRef;
@@ -80,12 +83,16 @@ public final class MmsConferenceController extends MediaServerController {
     private final State initializingConnection;
     private final State openingConnection;
     private final State closingConnection;
+    private final State stopping;
 
     // MGCP runtime stuff.
     private final ActorRef mediaGateway;
     private MediaSession mediaSession;
     private ActorRef cnfEndpoint;
     private ActorRef connection;
+
+    // Conference runtime stuff
+    private ActorRef conference;
 
     public MmsConferenceController(ActorRef mediaGateway) {
         super();
@@ -103,6 +110,7 @@ public final class MmsConferenceController extends MediaServerController {
         this.initializingConnection = new State("initializing connection", new InitializingConnection(source), null);
         this.openingConnection = new State("opening connection", new OpeningConnection(source), null);
         this.closingConnection = new State("closing connection", new ClosingConnection(source), null);
+        this.stopping = new State("stopping", new Stopping(source), null);
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -117,8 +125,11 @@ public final class MmsConferenceController extends MediaServerController {
         transitions.add(new Transition(initializingConnection, inactive));
         transitions.add(new Transition(openingConnection, closingConnection));
         transitions.add(new Transition(openingConnection, inactive));
-        transitions.add(new Transition(closingConnection, inactive));
+        transitions.add(new Transition(openingConnection, stopping));
+        transitions.add(new Transition(closingConnection, stopping));
         transitions.add(new Transition(closingConnection, active));
+        transitions.add(new Transition(active, inactive));
+        transitions.add(new Transition(stopping, inactive));
 
         // Finite State Machine
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -152,10 +163,8 @@ public final class MmsConferenceController extends MediaServerController {
         final ActorRef self = self();
         final State state = fsm.state();
 
-        if (logger.isInfoEnabled()) {
-            logger.info(" ********** Conference Controller Current State: " + state.toString());
-            logger.info(" ********** Conference Controller Processing Message: " + klass.getName());
-        }
+        logger.info(" ********** Conference Controller Current State: " + state.toString());
+        logger.info(" ********** Conference Controller Processing Message: " + klass.getName());
 
         if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
@@ -171,18 +180,26 @@ public final class MmsConferenceController extends MediaServerController {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         } else if (org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection.class.equals(klass)) {
             onCloseConnection((org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection) message, self, sender);
+        } else if (QueryEndpoint.class.equals(klass)) {
+            onQueryEndpoint((QueryEndpoint) message, self, sender);
         }
     }
 
+    private void onQueryEndpoint(QueryEndpoint message, ActorRef self, ActorRef sender) {
+        final EndpointInfo endpointInfo = new EndpointInfo(cnfEndpoint, ConnectionMode.Confrnce);
+        sender.tell(new MediaServerControllerResponse<EndpointInfo>(endpointInfo), self);
+    }
+
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
+        this.conference = sender;
         fsm.transition(message, acquiringMediaSession);
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active)) {
-            fsm.transition(message, closingConnection);
-        } else {
             fsm.transition(message, inactive);
+        } else {
+            fsm.transition(message, stopping);
         }
     }
 
@@ -198,30 +215,43 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onConnectionStateChanged(ConnectionStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         ConnectionStateChanged.State connState = message.state();
-        switch (connState) {
-            case HALF_OPEN:
-                if (is(openingConnection)) {
-                    fsm.transition(message, closingConnection);
-                }
-                break;
-
-            case OPEN:
-                if (is(closingConnection)) {
-                    fsm.transition(message, active);
-                }
-                break;
-
-            case CLOSED:
-                if (is(initializingConnection)) {
-                    fsm.transition(message, openingConnection);
-                } else if (is(openingConnection) || is(closingConnection)) {
-                    fsm.transition(message, inactive);
-                }
-                break;
-
-            default:
-                logger.warning("Received unknown connection state event!");
-                break;
+        // switch (connState) {
+        // case HALF_OPEN:
+        // if (is(openingConnection)) {
+        // fsm.transition(message, closingConnection);
+        // }
+        // break;
+        //
+        // case OPEN:
+        // if (is(closingConnection)) {
+        // fsm.transition(message, active);
+        // }
+        // break;
+        //
+        // case CLOSED:
+        // if (is(initializingConnection)) {
+        // fsm.transition(message, openingConnection);
+        // } else if (is(openingConnection) || is(closingConnection)) {
+        // fsm.transition(message, inactive);
+        // }
+        // break;
+        //
+        // default:
+        // logger.warning("Received unknown connection state event!");
+        // break;
+        // }
+        if (is(initializingConnection)) {
+            fsm.transition(message, openingConnection);
+        } else if (is(openingConnection)) {
+            if (ConnectionStateChanged.State.HALF_OPEN == connState) {
+                fsm.transition(message, closingConnection);
+            } else if (ConnectionStateChanged.State.CLOSED == connState) {
+                fsm.transition(message, inactive);
+            }
+        } else if (is(closingConnection)) {
+            fsm.transition(message, active);
+        } else if (is(stopping)) {
+            fsm.transition(message, inactive);
         }
     }
 
@@ -259,7 +289,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
+            mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
         }
     }
 
@@ -273,7 +303,7 @@ public final class MmsConferenceController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<MediaSession> response = (MediaGatewayResponse<MediaSession>) message;
             mediaSession = response.get();
-            mediaGateway.tell(new CreateConferenceEndpoint(mediaSession), source);
+            mediaGateway.tell(new CreateConferenceEndpoint(mediaSession), super.source);
         }
     }
 
@@ -287,7 +317,7 @@ public final class MmsConferenceController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             cnfEndpoint = response.get();
-            mediaGateway.tell(new CreateConnection(mediaSession), source);
+            mediaGateway.tell(new CreateConnection(mediaSession), super.source);
         }
     }
 
@@ -301,8 +331,8 @@ public final class MmsConferenceController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             connection = response.get();
-            connection.tell(new Observe(source), source);
-            connection.tell(new InitializeConnection(cnfEndpoint), source);
+            connection.tell(new Observe(super.source), super.source);
+            connection.tell(new InitializeConnection(cnfEndpoint), super.source);
         }
     }
 
@@ -313,36 +343,50 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            connection.tell(new OpenConnection(ConnectionMode.SendRecv), source);
+            connection.tell(new OpenConnection(ConnectionMode.SendRecv), super.source);
         }
     }
 
     private final class ClosingConnection extends AbstractAction {
+
         public ClosingConnection(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(Object message) throws Exception {
-            connection.tell(new CloseConnection(), source);
+            connection.tell(new CloseConnection(), super.source);
+        }
+    }
+
+    private final class Stopping extends AbstractAction {
+
+        public Stopping(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            if (is(openingConnection)) {
+                connection.tell(new CloseConnection(), super.source);
+            }
         }
     }
 
     private final class Inactive extends AbstractAction {
+
         public Inactive(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            // Clean up resources
-            final ActorRef self = self();
             if (connection != null) {
-                mediaGateway.tell(new DestroyConnection(connection), self);
+                mediaGateway.tell(new DestroyConnection(connection), super.source);
                 connection = null;
             }
             if (cnfEndpoint != null) {
-                mediaGateway.tell(new DestroyEndpoint(cnfEndpoint), self);
+                mediaGateway.tell(new DestroyEndpoint(cnfEndpoint), super.source);
                 cnfEndpoint = null;
             }
         }
@@ -356,8 +400,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new DestroyConnection(connection), source);
-            connection = null;
+            conference.tell(new MediaServerControllerResponse<MediaSessionInfo>(new MediaSessionInfo()), super.source);
         }
     }
 

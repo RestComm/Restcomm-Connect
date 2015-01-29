@@ -37,6 +37,10 @@ public final class MediaSessionInfo {
     private final String localSdp;
     private final String remoteSdp;
 
+    public MediaSessionInfo() {
+        this(false, null, "", "");
+    }
+
     public MediaSessionInfo(boolean useNat, InetAddress externalAddress, String localSdp, String remoteSdp) {
         super();
         this.useNat = useNat;

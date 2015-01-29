@@ -65,9 +65,9 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
@@ -125,6 +125,7 @@ public final class Call extends UntypedActor {
     private final State failingNoAnswer;
     private final State creatingMediaSession;
     private final State updatingMediaSession;
+    private final State joining;
 
     // FSM.
     private final FiniteStateMachine fsm;
@@ -152,6 +153,9 @@ public final class Call extends UntypedActor {
     private String forwardedFrom;
     private DateTime created;
     private final List<ActorRef> observers;
+
+    private ActorRef conference;
+    private ActorRef conferenceController;
 
     // Media Session Control runtime stuff
     private final ActorRef msController;
@@ -187,6 +191,7 @@ public final class Call extends UntypedActor {
         this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
         this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
         this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
+        this.joining = new State("joining", new Joining(source), null);
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -210,6 +215,9 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.dialing, this.ringing));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
         transitions.add(new Transition(this.inProgress, this.completing));
+        transitions.add(new Transition(this.inProgress, this.joining));
+        transitions.add(new Transition(this.joining, this.inProgress));
+        transitions.add(new Transition(this.joining, this.completing));
         transitions.add(new Transition(this.canceling, this.canceled));
         transitions.add(new Transition(this.failing, this.failed));
         transitions.add(new Transition(this.failingBusy, this.busy));
@@ -548,10 +556,19 @@ public final class Call extends UntypedActor {
 
     private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
-        if (isInbound() || is(updatingMediaSession)) {
+        if (is(creatingMediaSession)) {
+            if (isInbound()) {
+                fsm.transition(message, inProgress);
+            } else {
+                fsm.transition(message, dialing);
+            }
+        } else if (is(updatingMediaSession)) {
             fsm.transition(message, inProgress);
-        } else {
-            fsm.transition(message, dialing);
+        } else if (is(joining)) {
+            // MSController completed join operation
+            // Inform the conference and tell observers call is in progress
+            conference.tell(message.get(), self);
+            fsm.transition(message, inProgress);
         }
     }
 
@@ -569,12 +586,14 @@ public final class Call extends UntypedActor {
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
         this.outboundCall = message.call();
-        final Join join = new Join(this.msController, ConnectionMode.SendRecv);
+        final Join join = new Join(self, this.msController, ConnectionMode.SendRecv);
         this.outboundCall.tell(join, self);
     }
 
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
-        this.msController.tell(message, self);
+        this.conference = sender;
+        this.conferenceController = message.mscontroller();
+        this.fsm.transition(message, joining);
     }
 
     private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
@@ -1066,11 +1085,11 @@ public final class Call extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
             SipSession.State sessionState = invite.getSession().getState();
 
             if (is(creatingMediaSession)
                     && !(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
+                MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
                 mediaSessionInfo = response.get();
                 final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
                 final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
@@ -1107,6 +1126,19 @@ public final class Call extends UntypedActor {
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
+    }
+
+    private final class Joining extends AbstractAction {
+
+        public Joining(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            msController.tell(message, super.source);
+        }
+
     }
 
     private final class Completing extends AbstractAction {

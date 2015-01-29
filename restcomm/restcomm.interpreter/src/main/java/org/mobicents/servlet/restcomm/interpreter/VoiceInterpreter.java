@@ -531,6 +531,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (MediaServerControllerResponse.class.equals(klass)) {
             if (acquiringCallMediaGroup.equals(state) || downloadingRcml.equals(state)) {
                 fsm.transition(message, initializingCallMediaGroup);
+            } else if(acquiringConferenceMediaGroup.equals(state)) {
+                fsm.transition(message, initializingConferenceMediaGroup);
             }
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
@@ -608,8 +610,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (ConferenceResponse.class.equals(klass)) {
             if (acquiringConferenceInfo.equals(state)) {
                 fsm.transition(message, acquiringConferenceMediaGroup);
-            } else if (acquiringConferenceMediaGroup.equals(state)) {
-                fsm.transition(message, initializingConferenceMediaGroup);
             }
         } else if (ConferenceStateChanged.class.equals(klass)) {
             final ConferenceStateChanged event = (ConferenceStateChanged) message;
@@ -1812,7 +1812,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final ConferenceResponse<ActorRef> response = (ConferenceResponse<ActorRef>) message;
+            final MediaServerControllerResponse<ActorRef> response = (MediaServerControllerResponse<ActorRef>) message;
             conferenceMediaGroup = response.get();
             conferenceMediaGroup.tell(new Observe(source), source);
             final StartMediaGroup request = new StartMediaGroup();
