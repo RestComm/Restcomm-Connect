@@ -31,17 +31,23 @@ import akka.actor.ActorRef;
 @Immutable
 public final class Join {
 
-    private final ActorRef endpoint;
+    private final ActorRef call;
+    private final ActorRef mscontroller;
     private final ConnectionMode mode;
 
-    public Join(final ActorRef endpoint, final ConnectionMode mode) {
+    public Join(final ActorRef call, final ActorRef mscontroller, final ConnectionMode mode) {
         super();
-        this.endpoint = endpoint;
+        this.call = call;
+        this.mscontroller = mscontroller;
         this.mode = mode;
     }
 
     public ActorRef endpoint() {
-        return endpoint;
+        return call;
+    }
+
+    public ActorRef mscontroller() {
+        return mscontroller;
     }
 
     public ConnectionMode mode() {

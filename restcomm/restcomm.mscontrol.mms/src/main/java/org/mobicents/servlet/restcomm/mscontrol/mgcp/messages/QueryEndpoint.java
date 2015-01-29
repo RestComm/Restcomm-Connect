@@ -28,9 +28,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  *
  */
 @Immutable
-public final class QueryBridgeEndpoint {
+public final class QueryEndpoint {
 
-    public QueryBridgeEndpoint() {
+    public QueryEndpoint() {
         super();
     }
 

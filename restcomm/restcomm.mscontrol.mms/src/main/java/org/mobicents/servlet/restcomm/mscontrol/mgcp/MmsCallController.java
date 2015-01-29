@@ -76,8 +76,8 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.BridgeEndpointInfo;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryBridgeEndpoint;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.EndpointInfo;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryEndpoint;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
@@ -134,7 +134,8 @@ public class MmsCallController extends MediaServerController {
 
     // CallMediaGroup
     private ActorRef mediaGroup;
-    private ActorRef outboundMediaSessionController;
+    private ActorRef conference;
+    private ActorRef conferenceController;
     private ActorRef outboundCallBridgeEndpoint;
 
     // MGCP runtime stuff
@@ -221,6 +222,7 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.openingInternalLink, this.updatingInternalLink));
         transitions.add(new Transition(this.updatingInternalLink, this.closingRemoteConnection));
         transitions.add(new Transition(this.updatingInternalLink, this.closingInternalLink));
+        transitions.add(new Transition(this.updatingInternalLink, this.active));
         transitions.add(new Transition(this.closingInternalLink, this.closingRemoteConnection));
         transitions.add(new Transition(this.closingInternalLink, this.inactive));
 
@@ -312,8 +314,8 @@ public class MmsCallController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** MSController's Current State: \"" + state.toString());
-        logger.info("********** MSController Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        logger.info("********** Call Controller Current State: \"" + state.toString());
+        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
 
         if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
@@ -485,14 +487,15 @@ public class MmsCallController extends MediaServerController {
 
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
         // Ask the remote media session controller for the bridge endpoint
-        this.outboundMediaSessionController = message.endpoint();
-        this.outboundMediaSessionController.tell(new QueryBridgeEndpoint(), self);
+        this.conference = message.endpoint();
+        this.conferenceController = message.mscontroller();
+        this.conferenceController.tell(new QueryEndpoint(), self);
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
-        if (sender.equals(this.outboundMediaSessionController)) {
+        if (sender.equals(this.conferenceController)) {
             this.outboundCallBridgeEndpoint = message.endpoint();
-            final Join join = new Join(outboundCallBridgeEndpoint, ConnectionMode.SendRecv);
+            final Join join = new Join(outboundCallBridgeEndpoint, self, ConnectionMode.SendRecv);
             this.mediaGroup.tell(join, null);
         }
     }
@@ -500,9 +503,9 @@ public class MmsCallController extends MediaServerController {
     private void onMediaSessionControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
         Object obj = message.get();
-        if (BridgeEndpointInfo.class.equals(obj.getClass())) {
+        if (EndpointInfo.class.equals(obj.getClass())) {
             // Obtaining remote Bridge Endpoint for Join operation
-            BridgeEndpointInfo endpointInfo = (BridgeEndpointInfo) obj;
+            EndpointInfo endpointInfo = (EndpointInfo) obj;
             this.internalLinkEndpoint = endpointInfo.getEndpoint();
             this.internalLinkMode = endpointInfo.getConnectionMode();
 
@@ -653,19 +656,21 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (is(updatingInternalLink) && outboundMediaSessionController != null) {
-                // If this is the outbound leg for an outbound call, conference is the initial call
-                // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
-                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
-                outboundMediaSessionController.tell(new JoinComplete(bridge), source);
+            if (is(updatingInternalLink)) {
+                // if (conference != null) {
+                // // If this is the outbound leg for an outbound call, conference is the initial call
+                // // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
+                // // Will ask the Ivr Endpoint to get connect to that Bridge endpoint also
+                // conference.tell(new JoinComplete(bridge), source);
+                // }
+                call.tell(new MediaServerControllerResponse<JoinComplete>(new JoinComplete(bridge)), super.source);
+            } else if (is(openingRemoteConnection)) {
+                ConnectionStateChanged connState = (ConnectionStateChanged) message;
+                localSdp = connState.descriptor().toString();
+                final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
+                        new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
+                call.tell(response, self());
             }
-
-            ConnectionStateChanged connState = (ConnectionStateChanged) message;
-            localSdp = connState.descriptor().toString();
-
-            final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
-                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
-            call.tell(response, self());
         }
     }
 

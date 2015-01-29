@@ -32,12 +32,12 @@ import akka.actor.ActorRef;
  *
  */
 @Immutable
-public final class BridgeEndpointInfo {
+public final class EndpointInfo {
 
     private final ActorRef endpoint;
     private final ConnectionMode connectionMode;
 
-    public BridgeEndpointInfo(ActorRef endpoint, ConnectionMode connectionMode) {
+    public EndpointInfo(ActorRef endpoint, ConnectionMode connectionMode) {
         super();
         this.endpoint = endpoint;
         this.connectionMode = connectionMode;
