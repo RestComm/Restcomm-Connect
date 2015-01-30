@@ -71,8 +71,19 @@ rcDirectives.directive('rcEndpointUrl', function() {
       // id: '@',
       methodVar: '=',
       urlVar: '=',
+      appVar: "=",
       apps: '='
     },
+    controller: function ($scope) {
+		$scope.setApp = function (app) {
+			$scope.urlVar = app.projectName;
+			$scope.appVar = app;
+		};
+		
+		$scope.setMethod = function(method) {
+			$scope.methodVar = method;
+		}
+	},
     templateUrl: 'templates/rc-endpoint-url.html'/*,
     link: function(scope, element, attrs) {
       scope.$watch('var', function() { console.log(scope.$parent['newNumber']['voiceURL'] = 'xxx'); });

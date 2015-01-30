@@ -1,4 +1,4 @@
-var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, bootstrapObject, $http, Notifications) {
+var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, bootstrapObject, $http, Notifications, $window) {
 	
 	$scope.initRappConfig = function (rappConfig) {
 		var i;
@@ -26,6 +26,7 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 			if ( data.rvdStatus == 'OK') {
 				console.log("successfully saved bootstrap information");
 				Notifications.success('Application configured');
+				notifyConfigurationUrl(rappConfig);
 			}
 			else
 				console.log("Rvd error while saving bootstrap information");
@@ -92,6 +93,33 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 			Notifications.success("Error creating new instance");
 		});
 	}	
+	function notifyConfigurationUrl(rappConfig) {
+		if ( rappConfig.configurationUrl ) {
+			$http({
+				url: rappConfig.configurationUrl,
+				method: 'POST',
+				data: rappConfig.options,
+				headers: {'Content-Type': 'application/data'}
+			}).success(function (data, status) {
+				if ( data.status == "ok" ) {
+					//console.log("contacted configurationUrl - " + status);
+					if (data.message)
+						Notifications.success(data.message);
+					if ( data.redirectUrl ) {
+						console.log("redirect to " + data.redirectUrl);
+						$window.open(data.redirectUrl, '_blank');
+					}
+				} else {
+					if (data.message)
+						Notifications.warn(data.message);
+				}
+			})
+			.error(function (data, status) {
+				console.log("error contacting configurationUrl - " + rappConfig.configurationUrl + " - " + status);
+				Notifications.warn("Error submitting configuration parameters to remote server");
+			});
+		}
+	}
 	
 	$scope.projectName = $routeParams.projectName;
 	$scope.rappConfig = rappConfig;
