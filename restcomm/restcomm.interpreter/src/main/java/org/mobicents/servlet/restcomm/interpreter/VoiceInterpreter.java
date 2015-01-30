@@ -1727,8 +1727,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (sender == call) {
-                if (outboundCall != null)
+                if (outboundCall != null) {
                     outboundCall.tell(new Hangup(), self());
+                }
             } else {
                 call.tell(new Hangup(), self());
             }

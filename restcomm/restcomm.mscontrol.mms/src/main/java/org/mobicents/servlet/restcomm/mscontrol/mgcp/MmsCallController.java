@@ -68,6 +68,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
@@ -353,7 +354,14 @@ public class MmsCallController extends MediaServerController {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (QueryEndpoint.class.equals(klass)) {
+            onQueryEndpoint((QueryEndpoint) message, self, sender);
         }
+    }
+
+    private void onQueryEndpoint(QueryEndpoint message, ActorRef self, ActorRef sender) {
+        final EndpointInfo endpointInfo = new EndpointInfo(bridge, ConnectionMode.SendRecv);
+        sender.tell(new MediaServerControllerResponse<EndpointInfo>(endpointInfo), self);
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
@@ -506,11 +514,9 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
-        if (sender.equals(this.conferenceController)) {
-            this.outboundCallBridgeEndpoint = message.endpoint();
-            final Join join = new Join(outboundCallBridgeEndpoint, self, ConnectionMode.SendRecv);
-            this.mediaGroup.tell(join, null);
-        }
+        this.outboundCallBridgeEndpoint = message.endpoint();
+        final Join join = new Join(this.outboundCallBridgeEndpoint, self, ConnectionMode.SendRecv);
+        this.mediaGroup.tell(join, self);
     }
 
     private void onMediaSessionControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
@@ -838,6 +844,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
+            // Close open resources
             if (remoteConn != null) {
                 mediaGateway.tell(new DestroyConnection(remoteConn), source);
                 remoteConn = null;
@@ -852,6 +859,14 @@ public class MmsCallController extends MediaServerController {
                 mediaGateway.tell(new DestroyEndpoint(bridge), source);
                 bridge = null;
             }
+
+            conference = null;
+            conferenceController = null;
+            outboundCallBridgeEndpoint = null;
+
+            // Inform call that media session has been properly closed
+            final MediaSessionClosed response = new MediaSessionClosed();
+            call.tell(new MediaServerControllerResponse<MediaSessionClosed>(response), super.source);
         }
 
     }
