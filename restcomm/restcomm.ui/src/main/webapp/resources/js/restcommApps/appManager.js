@@ -280,21 +280,6 @@ rappManagerCtrl.getProducts = function ($q, $http, rappManagerConfig) {
 	return deferred.promise;
 }
 
-rappManagerCtrl.getLocalApps = function ($q, $http) {
-	var deferred = $q.defer();
-	$http({
-		method:"GET",
-		url:"/restcomm-rvd/services/ras/apps"
-	}).success(function (data) {
-		//console.log("successfully received local apps");
-		deferred.resolve(data.payload);
-	}).error(function () {
-		console.log("Error receiving local apps");
-		deferred.reject("error");
-	});
-	
-	return deferred.promise;
-}
 
 <<<<<<< HEAD:restcomm/restcomm.ui/src/main/webapp/resources/js/controllers/rappmanager.js
 // Will need this controller when resolving its dependencies. 

@@ -2,6 +2,14 @@
 
 <rc-page-title icon="phone" title="{{ numberDetails.phone_number }}" sub-title="{{ numberDetails.friendly_name }}"></rc-page-title>
 
+availableApps
+<br><br>
+localApps
+<br><br>
+numberDetails
+<br><br>
+{{voiceApp}}
+
 <div class="well well-sm">
     <h3 class="text-muted details-header">Voice</h3>
     <fieldset>
@@ -9,7 +17,7 @@
             <h4 class="account-detail-field-name">Voice Request URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="availableApps"></rc-endpoint-url>
+            <rc-endpoint-url method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" app-var="voiceApp" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
