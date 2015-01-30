@@ -206,12 +206,16 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.active, this.closingRemoteConnection));
         transitions.add(new Transition(this.active, this.acquiringInternalLink));
         transitions.add(new Transition(this.active, this.closingInternalLink));
+        transitions.add(new Transition(this.pending, this.active));
+        transitions.add(new Transition(this.pending, this.failed));
+        transitions.add(new Transition(this.pending, this.updatingRemoteConnection));
         transitions.add(new Transition(this.muting, this.active));
         transitions.add(new Transition(this.muting, this.closingRemoteConnection));
         transitions.add(new Transition(this.unmuting, this.active));
         transitions.add(new Transition(this.unmuting, this.closingRemoteConnection));
         transitions.add(new Transition(this.updatingRemoteConnection, this.active));
         transitions.add(new Transition(this.updatingRemoteConnection, this.closingRemoteConnection));
+        transitions.add(new Transition(this.updatingRemoteConnection, this.failed));
         transitions.add(new Transition(this.closingRemoteConnection, this.inactive));
         transitions.add(new Transition(this.closingRemoteConnection, this.closingInternalLink));
         transitions.add(new Transition(this.acquiringInternalLink, this.closingRemoteConnection));
@@ -321,6 +325,8 @@ public class MmsCallController extends MediaServerController {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
         } else if (CloseMediaSession.class.equals(klass)) {
             onCloseMediaSession((CloseMediaSession) message, self, sender);
+        } else if (UpdateMediaSession.class.equals(klass)) {
+            onUpdateMediaSession((UpdateMediaSession) message, self, sender);
         } else if (MediaGatewayResponse.class.equals(klass)) {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
@@ -363,6 +369,11 @@ public class MmsCallController extends MediaServerController {
         fsm.transition(message, closingRemoteConnection);
     }
 
+    private void onUpdateMediaSession(UpdateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
+        this.remoteSdp = message.getSessionDescription();
+        this.fsm.transition(message, updatingRemoteConnection);
+    }
+
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         if (is(acquiringMediaGatewayInfo)) {
             fsm.transition(message, acquiringMediaSession);
@@ -393,6 +404,8 @@ public class MmsCallController extends MediaServerController {
                     } else {
                         fsm.transition(message, inactive);
                     }
+                } else if (is(updatingRemoteConnection)) {
+                    fsm.transition(message, failed);
                 }
                 break;
 
@@ -640,8 +653,6 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final UpdateMediaSession response = (UpdateMediaSession) message;
-            remoteSdp = response.getSessionDescription();
             final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
             final UpdateConnection update = new UpdateConnection(descriptor);
             remoteConn.tell(update, source);
@@ -664,7 +675,7 @@ public class MmsCallController extends MediaServerController {
                 // conference.tell(new JoinComplete(bridge), source);
                 // }
                 call.tell(new MediaServerControllerResponse<JoinComplete>(new JoinComplete(bridge)), super.source);
-            } else if (is(openingRemoteConnection)) {
+            } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
                 ConnectionStateChanged connState = (ConnectionStateChanged) message;
                 localSdp = connState.descriptor().toString();
                 final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
@@ -682,6 +693,8 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
+            ConnectionStateChanged connState = (ConnectionStateChanged) message;
+            localSdp = connState.descriptor().toString();
             final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
                     new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
             call.tell(response, self());
