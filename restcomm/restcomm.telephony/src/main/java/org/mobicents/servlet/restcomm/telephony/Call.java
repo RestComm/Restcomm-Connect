@@ -705,10 +705,13 @@ public final class Call extends UntypedActor {
             super(source);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void execute(Object message) throws Exception {
-            final MediaSessionInfo response = (MediaSessionInfo) message;
+            final MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
             final ActorRef self = self();
+
+            mediaSessionInfo = response.get();
 
             // Create a SIP invite to initiate a new session.
             final StringBuilder buffer = new StringBuilder();
@@ -744,10 +747,10 @@ public final class Call extends UntypedActor {
             String offer = null;
             if (mediaSessionInfo.usesNat()) {
                 final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
-                final byte[] sdp = response.getLocalSdp().getBytes();
+                final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
                 offer = SdpUtils.patch("application/sdp", sdp, externalIp);
             } else {
-                offer = response.getLocalSdp();
+                offer = mediaSessionInfo.getLocalSdp();
             }
             offer = SdpUtils.endWithNewLine(offer);
             invite.setContent(offer, "application/sdp");
