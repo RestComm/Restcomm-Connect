@@ -65,6 +65,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
@@ -362,12 +363,12 @@ public final class Call extends UntypedActor {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (MediaServerControllerError.class.equals(klass)) {
             onMediaServerControllerError((MediaServerControllerError) message, self, sender);
-        } else if (MediaSessionClosed.class.equals(klass)) {
-            onMediaSessionDestroyed((MediaSessionClosed) message, self, sender);
         } else if (AddParticipant.class.equals(klass)) {
             onAddParticipant((AddParticipant) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
+        } else if (JoinComplete.class.equals(klass)) {
+            onJoinComplete((JoinComplete) message, self, sender);
         } else if (StartRecordingCall.class.equals(klass)) {
             onStartRecordingCall((StartRecordingCall) message, self, sender);
         } else if (StopRecordingCall.class.equals(klass)) {
@@ -556,31 +557,36 @@ public final class Call extends UntypedActor {
 
     private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
-        if (is(creatingMediaSession)) {
-            if (isInbound()) {
-                fsm.transition(message, inProgress);
-            } else {
-                fsm.transition(message, dialing);
-            }
-        } else if (is(updatingMediaSession)) {
-            fsm.transition(message, inProgress);
-        } else if (is(joining)) {
-            // MSController completed join operation
-            // Inform the conference and tell observers call is in progress
-            conference.tell(message.get(), self);
-            fsm.transition(message, inProgress);
-        }
-    }
+        Object obj = message.get();
+        Class<?> klass = obj.getClass();
 
-    private void onMediaSessionDestroyed(MediaSessionClosed message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(completing)) {
-            fsm.transition(message, completed);
-        } else if (is(failing)) {
-            fsm.transition(message, failed);
-        } else if (is(failingBusy)) {
-            fsm.transition(message, busy);
-        } else if (is(failingNoAnswer)) {
-            fsm.transition(message, noAnswer);
+        if (MediaSessionInfo.class.equals(klass)) {
+            if (is(creatingMediaSession)) {
+                if (isInbound()) {
+                    fsm.transition(message, inProgress);
+                } else {
+                    fsm.transition(message, dialing);
+                }
+            } else if (is(updatingMediaSession)) {
+                fsm.transition(message, inProgress);
+            }
+        } else if (MediaSessionClosed.class.equals(klass)) {
+            if (is(completing)) {
+                fsm.transition(message, completed);
+            } else if (is(failing)) {
+                fsm.transition(message, failed);
+            } else if (is(failingBusy)) {
+                fsm.transition(message, busy);
+            } else if (is(failingNoAnswer)) {
+                fsm.transition(message, noAnswer);
+            }
+        } else if (JoinComplete.class.equals(klass)) {
+            if (is(joining)) {
+                // MSController completed join operation
+                // Inform the conference and tell observers call is in progress
+                conference.tell(message.get(), self);
+                fsm.transition(message, inProgress);
+            }
         }
     }
 
@@ -594,6 +600,13 @@ public final class Call extends UntypedActor {
         this.conference = sender;
         this.conferenceController = message.mscontroller();
         this.fsm.transition(message, joining);
+    }
+
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
+        if (sender.equals(outboundCall)) {
+            // Warn controller that outbound call successfully joined
+            this.msController.tell(message, self);
+        }
     }
 
     private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
