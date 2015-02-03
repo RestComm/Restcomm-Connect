@@ -112,8 +112,15 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 							data: {phoneNumber: phoneNumber} // the instance id should be added here as well
 						}).error(function (data, status) {
 							Notifications.warn("Number provisioning failed with status " + status + " - " + appConfig.provisioningUrl);
-						}).success(function() {
-							console.log("Succesfully provisioned number " + phoneNumber);
+						}).success(function(data) {
+							if (data) {
+								if (data.status == "ok")
+									Notifications.success("Succesfully provisioned number " + phoneNumber + (data.message ? (" - "+data.message) : ""));
+								else
+								if (data.status == "error")
+									Notifications.warn("Number provisioning failed for " + phoneNumber + (data.message ? (" - "+data.message) : ""));
+							} else
+								Notifications.success("Succesfully provisioned number ");
 						});
 					} else {
 						Notifications.warn("Cannot provision incoming number. Provisioning URL does not seem safe and has been rejected");
@@ -122,6 +129,41 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 			});
 		}
 	}
+	
+	//function notifyConfigurationUrl(rappConfig) {
+	function provisionApplicationParameters(rappConfig, bootstrapObject) {
+		if ( rappConfig.provisioningUrl && bootstrapObject && Object.keys(bootstrapObject).length > 0 ) {
+			var url = rappConfig.provisioningUrl + "/parameters";
+			$http({
+				url: url,
+				method: 'POST',
+				data: bootstrapObject,
+				headers: {'Content-Type': 'application/data'}
+			}).success(function (data, status) {
+				if ( data && data.status == "ok" ) {
+					//console.log("contacted configurationUrl - " + status);
+					console.log("Succesfully provisioned application parameters");
+					if (data.message)
+						Notifications.success(data.message);
+					if ( data.redirectUrl ) {
+						//console.log("redirect to " + data.redirectUrl);
+						$window.open(data.redirectUrl, '_blank');
+					}
+				} else 
+				if (data && data.status == "error") {
+					var message = "Error provisioning application parameters";
+					if (data.message)
+						message += " - " + data.message;
+					Notifications.warn(message);
+				}
+			})
+			.error(function (data, status) {
+				console.log("error contacting provisioning url - " + url + " - " + status);
+				Notifications.warn("Error provisioning application parameters");
+			});
+		}
+	}	
+	
 	// Makes sure the provisioningUrl is safe to call. In the future each vendor should provide something like official domain where his services will reside
 	// For now all urls are accepted
 	function validateProvisioningUrl(provisioningUrl, app) {
@@ -137,6 +179,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	service.getAppConfig = getAppConfig;
 	service.getBoostrapObject = getBoostrapObject;
 	service.notifyIncomingNumberProvisioning = notifyIncomingNumberProvisioning;
+	service.provisionApplicationParameters = provisionApplicationParameters;
 	
 	
 	return service;
