@@ -202,9 +202,13 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.queued, this.creatingMediaSession));
         transitions.add(new Transition(this.ringing, this.busy));
         transitions.add(new Transition(this.ringing, this.notFound));
-        transitions.add(new Transition(this.ringing, this.canceled));
+        transitions.add(new Transition(this.ringing, this.canceling));
+        transitions.add(new Transition(this.ringing, this.failingNoAnswer));
+        transitions.add(new Transition(this.ringing, this.failingBusy));
+        transitions.add(new Transition(this.ringing, this.noAnswer));
         transitions.add(new Transition(this.ringing, this.creatingMediaSession));
         transitions.add(new Transition(this.ringing, this.updatingMediaSession));
+        transitions.add(new Transition(this.ringing, this.completing));
         transitions.add(new Transition(this.creatingMediaSession, this.canceling));
         transitions.add(new Transition(this.creatingMediaSession, this.dialing));
         transitions.add(new Transition(this.creatingMediaSession, this.failed));
@@ -223,6 +227,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.failing, this.failed));
         transitions.add(new Transition(this.failingBusy, this.busy));
         transitions.add(new Transition(this.failingNoAnswer, this.noAnswer));
+        transitions.add(new Transition(this.failingNoAnswer, this.canceling));
         transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
         transitions.add(new Transition(this.updatingMediaSession, this.completing));
         transitions.add(new Transition(this.completing, this.completed));
@@ -357,8 +362,8 @@ public final class Call extends UntypedActor {
             onSipServletResponse((SipServletResponse) message, self, sender);
         } else if (Hangup.class.equals(klass)) {
             onHangup((Hangup) message, self, sender);
-        } else if (NotFound.class.equals(klass)) {
-            onNotFound((NotFound) message, self, sender);
+        } else if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass)) {
+            onNotFound((org.mobicents.servlet.restcomm.telephony.NotFound) message, self, sender);
         } else if (MediaServerControllerResponse.class.equals(klass)) {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (MediaServerControllerError.class.equals(klass)) {
@@ -449,6 +454,7 @@ public final class Call extends UntypedActor {
     private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
         final String method = message.getMethod();
         if ("INVITE".equalsIgnoreCase(method)) {
+            logger.info("CALL RECEIVED INVITE!!!!!!!!!!!!!!!!");
             if (is(uninitialized)) {
                 fsm.transition(message, ringing);
             }
@@ -533,14 +539,13 @@ public final class Call extends UntypedActor {
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(inProgress) || is(updatingMediaSession) || (is(ringing) && isOutbound())) {
+        if (is(inProgress) || is(updatingMediaSession) || is(ringing) || is(queued)) {
             fsm.transition(message, completing);
-        } else if (is(queued) || (is(ringing) && isInbound())) {
-            fsm.transition(message, completed);
         }
     }
 
-    private void onNotFound(NotFound message, ActorRef self, ActorRef sender) throws Exception {
+    private void onNotFound(org.mobicents.servlet.restcomm.telephony.NotFound message, ActorRef self, ActorRef sender)
+            throws Exception {
         if (is(ringing)) {
             fsm.transition(message, notFound);
         }
@@ -821,6 +826,7 @@ public final class Call extends UntypedActor {
     }
 
     private final class Canceling extends AbstractAction {
+
         public Canceling(final ActorRef source) {
             super(source);
         }
@@ -894,7 +900,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             logger.info("Call moves to failing state because no answer");
-            super.execute(message);
+            fsm.transition(message, noAnswer);
         }
     }
 
@@ -944,7 +950,7 @@ public final class Call extends UntypedActor {
             final Class<?> klass = message.getClass();
 
             // Send SIP NOT_FOUND to remote peer
-            if (NotFound.class.equals(klass) && isInbound()) {
+            if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass) && isInbound()) {
                 final SipServletResponse notFound = invite.createResponse(SipServletResponse.SC_NOT_FOUND);
                 notFound.send();
             }
@@ -1122,7 +1128,7 @@ public final class Call extends UntypedActor {
                 okay.send();
             }
 
-            if (is(creatingMediaSession)) {
+            if (is(creatingMediaSession) || is(updatingMediaSession)) {
                 // Make sure the SIP session doesn't end pre-maturely.
                 invite.getApplicationSession().setExpires(0);
             }

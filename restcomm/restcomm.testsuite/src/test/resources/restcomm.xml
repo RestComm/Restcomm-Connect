@@ -144,6 +144,10 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
+	
+	<mscontrol>
+		<compatibility>mms</compatibility>
+	</mscontrol>
 
 	<!-- The media server manager is responsible for managing the media servers 
 		in use by RestComm. The default way to control media servers is using the 
