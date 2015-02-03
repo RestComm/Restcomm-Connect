@@ -210,6 +210,7 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.pending, this.active));
         transitions.add(new Transition(this.pending, this.failed));
         transitions.add(new Transition(this.pending, this.updatingRemoteConnection));
+        transitions.add(new Transition(this.pending, this.closingRemoteConnection));
         transitions.add(new Transition(this.muting, this.active));
         transitions.add(new Transition(this.muting, this.closingRemoteConnection));
         transitions.add(new Transition(this.unmuting, this.active));

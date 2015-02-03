@@ -531,7 +531,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (MediaServerControllerResponse.class.equals(klass)) {
             if (acquiringCallMediaGroup.equals(state) || downloadingRcml.equals(state)) {
                 fsm.transition(message, initializingCallMediaGroup);
-            } else if(acquiringConferenceMediaGroup.equals(state)) {
+            } else if (acquiringConferenceMediaGroup.equals(state)) {
                 fsm.transition(message, initializingConferenceMediaGroup);
             }
         } else if (CallStateChanged.class.equals(klass)) {
@@ -548,8 +548,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
-                    if (outboundCall == null || !sender.equals(call))
+                    if (outboundCall == null || !sender.equals(call)) {
                         outboundCall = sender;
+                    }
                     fsm.transition(message, acquiringOutboundCallInfo);
                 } else if (joiningCalls.equals(state)) {
                     fsm.transition(message, bridged);
