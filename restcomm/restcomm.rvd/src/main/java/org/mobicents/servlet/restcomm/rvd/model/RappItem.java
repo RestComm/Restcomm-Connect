@@ -18,6 +18,8 @@ public class RappItem {
     Boolean wasImported;
     Boolean hasPackaging;
     Boolean hasBootstrap;
+    String startUrl;
+
     public RappInfo getRappInfo() {
         return rappInfo;
     }
@@ -53,5 +55,11 @@ public class RappItem {
     }
     public void setHasBootstrap(Boolean hasBootstrap) {
         this.hasBootstrap = hasBootstrap;
+    }
+    public String getStartUrl() {
+        return startUrl;
+    }
+    public void setStartUrl(String startUrl) {
+        this.startUrl = startUrl;
     }
 }

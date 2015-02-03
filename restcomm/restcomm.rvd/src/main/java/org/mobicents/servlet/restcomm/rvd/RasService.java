@@ -127,7 +127,7 @@ public class RasService {
      * @return The name (some sort of identifier) of the new project created
      * @throws RvdException
      */
-    public String importAppToWorkspace( InputStream packageZipStream, String loggedUser ) throws RvdException {
+    public String importAppToWorkspace( InputStream packageZipStream, String loggedUser, ProjectService projectService ) throws RvdException {
         File tempDir = RvdUtils.createTempDir();
         logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
         Unzipper unzipper = new Unzipper(tempDir);
@@ -145,7 +145,7 @@ public class RasService {
 
         // Make sure no such restcomm app already exists (single instance limitation)
         //List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
-        List<RappItem> rappItems = FsProjectStorage.listRapps( FsProjectStorage.listProjectNames(workspaceStorage), workspaceStorage );
+        List<RappItem> rappItems = FsProjectStorage.listRapps( FsProjectStorage.listProjectNames(workspaceStorage), workspaceStorage, projectService );
         for ( RappItem rappItem : rappItems )
             if ( rappItem.getRappInfo() != null && rappItem.getRappInfo().getId() != null && rappItem.getRappInfo().getId().equals(info.getId()) )
                 throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.getRappInfo().getId() + "  already exists. Cannot import " + info.getName() + " app");

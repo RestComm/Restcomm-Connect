@@ -14,6 +14,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ProjectValidator;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ValidationResult;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
@@ -52,7 +53,6 @@ public class ProjectService {
 
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
 
-    //ProjectStorage projectStorage;
     RvdConfiguration settings;
     RvdContext rvdContext;
     WorkspaceStorage workspaceStorage;
@@ -78,6 +78,7 @@ public class ProjectService {
      * @throws UnsupportedEncodingException
      * @throws URISyntaxException
      */
+    /*
     public static String getStartUrlForProject(String projectName, HttpServletRequest httpRequest) throws URISyntaxException {
         URI startURI = new URI(httpRequest.getScheme(), null, httpRequest.getServerName(),
                 (httpRequest.getServerPort() == 80 ? -1 : httpRequest.getServerPort()), httpRequest.getContextPath()
@@ -87,6 +88,25 @@ public class ProjectService {
         //logger.info("startURI.getRawPath(): " + startURI.getRawPath());
         //logger.info("startURI.toASCIIString(): " + startURI.toASCIIString());
         return startURI.getRawPath();  //toASCIIString();
+    }*/
+
+    /**
+     * Builds the start url for a project
+     * @param projectName
+     * @return
+     * @throws RvdException
+     */
+    public String buildStartUrl(String projectName) throws ProjectException {
+        //servletContext.getS
+        String path = servletContext.getContextPath() + "/" + RvdConfiguration.REST_SERVICES_PATH + "/apps/" + projectName + "/controller";
+        URI uri;
+        try {
+            uri = new URI(null, null, path, null);
+        } catch (URISyntaxException e) {
+            throw new ProjectException("Error building startUrl for project " + projectName, e);
+        }
+        return uri.getRawPath();
+
     }
 
     /**
@@ -95,12 +115,13 @@ public class ProjectService {
      * @param items
      * @param httpRequest
      * @throws URISyntaxException
+     * @throws RvdException
      * @throws UnsupportedEncodingException
      */
-    public static void fillStartUrlsForProjects(List<ProjectItem> items, HttpServletRequest httpRequest)
-            throws URISyntaxException {
+    public void fillStartUrlsForProjects(List<ProjectItem> items, HttpServletRequest httpRequest)
+            throws ProjectException {
         for (ProjectItem item : items) {
-            item.setStartUrl(getStartUrlForProject(item.getName(), httpRequest));
+            item.setStartUrl( buildStartUrl(item.getName()));
         }
     }
 

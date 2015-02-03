@@ -32,10 +32,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
         providerCountries: function(RCommAvailableNumbers, SessionService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:SessionService.get("sid")}).$promise; }
       }
     }).
-    when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},
-		localApps: function (rappService) { return rappService.getLocalApps();}
-	}
-    }).
+    when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).
     when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl'}).
     when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;} }}).
     when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl'}).
