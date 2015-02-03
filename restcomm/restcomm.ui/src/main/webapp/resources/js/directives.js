@@ -71,13 +71,11 @@ rcDirectives.directive('rcEndpointUrl', function() {
       // id: '@',
       methodVar: '=',
       urlVar: '=',
-      appVar: "=",
       apps: '='
     },
     controller: function ($scope) {
-		$scope.setApp = function (app) {
-			$scope.urlVar = app.projectName;
-			$scope.appVar = app;
+		$scope.setUrl = function (app) {
+			$scope.urlVar = app.startUrl;
 		};
 		
 		$scope.setMethod = function(method) {

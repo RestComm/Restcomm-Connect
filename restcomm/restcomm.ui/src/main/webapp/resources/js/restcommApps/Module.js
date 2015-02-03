@@ -37,17 +37,17 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 			method:"GET",
 			url:"/restcomm-rvd/services/ras/apps"
 		}).success(function (data) {
-			console.log("successfully received local apps");
+			console.log("Received apps from RVD");
 			//localApps = data.payload;
 			deferred.resolve(data.payload);
 		}).error(function () {
-			console.log("Error receiving local apps");
+			console.log("Error receiving apps from RVD");
 			deferred.reject("error");
 		});
 	}
 	// returns "a promise to return local apps"
 	function refreshLocalApps() {
-		console.log("refreshing local apps");
+		//console.log("refreshing local apps");
 		//localApps = undefined;
 		deferred = $q.defer();
 		fetchLocalApps(deferred);
@@ -69,7 +69,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		$http({url: '/restcomm-rvd/services/ras/apps/' + appName + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
-				console.log("succesfull retrieved app config");
+				//console.log("succesfull retrieved app config");
 				defer.resolve(data.payload);
 			} else {
 				defer.reject("error getting app config")
@@ -102,8 +102,8 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		if (app.wasImported) {
 			// retrieve app configuration
 			getAppConfig(app.projectName).then(function (appConfig) {
-				console.log("successfully retrieved configuration for application " + app.projectName);
-				console.log(appConfig);
+				//console.log("successfully retrieved configuration for application " + app.projectName);
+				//console.log(appConfig);
 				if (appConfig.provisioningUrl) {
 					if ( validateProvisioningUrl(appConfig.provisioningUrl, app) ) {
 						$http({ 

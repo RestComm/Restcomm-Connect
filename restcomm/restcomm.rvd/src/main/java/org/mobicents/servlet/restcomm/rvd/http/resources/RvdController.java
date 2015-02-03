@@ -36,6 +36,7 @@ import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.RvdErrorParsingRestcommXml;
@@ -112,19 +113,20 @@ public class RvdController extends RestService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response listApps(@Context HttpServletRequest request) {
         RvdContext rvdContext = new RvdContext(request, servletContext);
+        ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);
         init(rvdContext);
         List<ProjectItem> items;
         try {
             items = ProjectService.getAvailableProjects(workspaceStorage); // there has to be a user in the context. Only logged users are allowed to to run project manager services
-            ProjectService.fillStartUrlsForProjects(items, request);
+            projectService.fillStartUrlsForProjects(items, request);
 
         } catch (BadWorkspaceDirectoryStructure e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (URISyntaxException e) {
+        } catch (StorageException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (StorageException e) {
+        } catch (RvdException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
