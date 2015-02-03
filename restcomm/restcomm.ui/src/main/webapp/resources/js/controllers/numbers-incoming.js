@@ -64,7 +64,6 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     $scope.phoneSid = $routeParams.phoneSid
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
-    $scope.voiceApp = {};
     
   //} // or registering a new one ?
   //else {
@@ -79,7 +78,6 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   // query for available apps
   $scope.availableApps = RCommApps.query();
   $scope.localApps = localApps;
-  console.log(localApps);
 
   //$scope.countries = countries;
   $scope.countries = allCountries;

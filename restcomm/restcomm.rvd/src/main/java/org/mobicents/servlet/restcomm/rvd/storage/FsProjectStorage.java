@@ -15,7 +15,9 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem.RappStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
@@ -180,8 +182,9 @@ public class FsProjectStorage {
      * @param projectNames
      * @return
      * @throws StorageException
+     * @throws ProjectException
      */
-    public static List<RappItem> listRapps(List<String> projectNames, WorkspaceStorage workspaceStorage) throws StorageException {
+    public static List<RappItem> listRapps(List<String> projectNames, WorkspaceStorage workspaceStorage, ProjectService projectService) throws StorageException, ProjectException {
         List<RappItem> rapps = new ArrayList<RappItem>();
         for (String projectName : projectNames) {
             RappItem item = new RappItem();
@@ -227,6 +230,7 @@ public class FsProjectStorage {
                 item.setHasPackaging(false);
 
             item.setHasBootstrap(FsProjectStorage.hasBootstrapInfo(projectName, workspaceStorage));
+            item.setStartUrl(projectService.buildStartUrl(projectName));
 
             rapps.add(item);
         }
