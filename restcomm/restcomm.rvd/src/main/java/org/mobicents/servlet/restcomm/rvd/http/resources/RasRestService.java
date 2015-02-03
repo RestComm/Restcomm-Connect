@@ -32,6 +32,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.InvalidRestcommAppPackage;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
@@ -208,11 +209,14 @@ public class RasRestService extends RestService {
     @GET
     @Path("apps")
     public Response listRapps(@Context HttpServletRequest request) {
+        ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);
         try {
             List<String> projectNames = FsProjectStorage.listProjectNames(workspaceStorage);
-            List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage);
+            List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage, projectService);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+        } catch (ProjectException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
         }
 
@@ -250,7 +254,7 @@ public class RasRestService extends RestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
-                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser );
+                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser, projectService);
                         ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
                         buildService.buildProject(effectiveProjectName, projectState);
 

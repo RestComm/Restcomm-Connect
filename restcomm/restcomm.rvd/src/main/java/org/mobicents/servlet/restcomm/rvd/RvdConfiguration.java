@@ -21,6 +21,7 @@ public class RvdConfiguration {
 
     private static final String WORKSPACE_DIRECTORY_NAME = "workspace";
     public static final String PROTO_DIRECTORY_PREFIX = "_proto";
+    public static final String REST_SERVICES_PATH = "services"; // the "services" from the /restcomm-rvd/services/apps/... path
 
     public static final String WAVS_DIRECTORY_NAME = "wavs";
     private static final String RVD_PROJECT_VERSION = "1.3"; // version for rvd project syntax

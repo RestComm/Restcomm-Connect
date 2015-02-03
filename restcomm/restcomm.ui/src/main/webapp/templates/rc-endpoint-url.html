@@ -12,7 +12,7 @@
         <ul class="dropdown-menu">
             <li ng-repeat="app in apps">
                 <!-- <a href title="{{app.startUrl}}" ng-click="$parent.$parent.urlVar = app.startUrl">{{app.name}}</a> -->
-                <a href title="{{app.startUrl}}" ng-click="setApp(app)">{{app.projectName}}</a>
+                <a href title="{{app.startUrl}}" ng-click="setUrl(app)">{{app.projectName}}</a>
             </li>
             <li class="divider"></li>
             <li><a href="/restcomm-rvd/" target="_blank"><i class="fa fa-sitemap"></i> Create New...</a></li>

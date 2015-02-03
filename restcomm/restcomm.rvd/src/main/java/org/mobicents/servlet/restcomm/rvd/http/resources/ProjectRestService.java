@@ -2,7 +2,6 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.List;
@@ -44,6 +43,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
@@ -138,15 +138,15 @@ public class ProjectRestService extends RestService {
         List<ProjectItem> items;
         try {
             items = projectService.getAvailableProjectsByOwner(loggedUser.getName()); // there has to be a user in the context. Only logged users are allowed to to run project manager services
-            ProjectService.fillStartUrlsForProjects(items, request);
+            projectService.fillStartUrlsForProjects(items, request);
 
         } catch (BadWorkspaceDirectoryStructure e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (URISyntaxException e) {
+        } catch (StorageException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (StorageException e) {
+        } catch (ProjectException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
