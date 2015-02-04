@@ -51,14 +51,8 @@
 								<span ng-show="rappConfig.allowInstanceCreation" class="help-block">{{getOptionByName("backendRootURL",rappConfig.options).value}}/provisioning/spawnInstance.php?instanceToken={{getOptionByName("instanceToken",rappConfig.options).value}}</span>							
 							</div>
 							-->
-							<div>
-								<h5 style="margin-top:20px"><strong>Accessing instance backend</strong></h5>
-								<span class="help-block">You can access the instance backend UI in the following address (make sure you have the correct values in <em>Backend Root URL</em> and <em>Instance Token</em> parameters first): </span>
-								<a href='{{getOptionByName("backendRootURL",rappConfig.options).value}}/ui/index.php?instanceToken={{getOptionByName("instanceToken",rappConfig.options).value}}' target="_blank">{{getOptionByName("backendRootURL",rappConfig.options).value}}/ui/index.php?instanceToken={{getOptionByName("instanceToken",rappConfig.options).value}}</a>
-							</div>
-							<span class="help-block"></span>
 						</div>
-
+						
 						<div ng-switch-when="backendRootURL">
 								<label>{{option.label}}</label><abbr title="RVD variable syntax"><code>${{option.name}}</code></abbr> <small ng-show="option.required" class="text-muted">(required)</small>
 								<input ng-model="option.value" name="backendRootURL" type="text" class="form-control" ng-required="option.required">								
@@ -73,11 +67,23 @@
 				<button ng-disabled="!optionsForm.$valid" ng-click="enableConfiguration(rappConfig)" type="button" class="btn btn-primary">Apply configuration</button>
 				<!-- <button ng-disabled="!(rappConfig.allowInstanceCreation && optionsForm.instanceToken.$valid && optionsForm.backendRootURL.$valid)" ng-click="createNewInstance()" type="button" class="btn btn-danger">Create new instance</button> -->
 			</div>
+			{{watchOptionFormValidity(optionsForm.$valid)}}
 		</form>
 		
+		<div class="spacer10"></div>
+		<form target="_blank" method="POST" action="http://localhost/lawyeroffice/ui/index.php">
+		<div>
+			<h5 style="margin-top:20px"><strong>Accessing backend</strong></h5>
+			<span class="help-block">You can access the application backend UI by clicking the button below. Make sure all the required fields are set espacially <em>Backend Root URL</em> and <em>Instance Token</em> (if present) parameters.</span>
+		</div>
+		<span class="help-block"></span>
+			<input type="hidden" ng-repeat="option in rappConfig.options | filter:filterInitOptions" name="{{option.name}}" value="{{option.value}}">
+			<div class="spacer10"></div>
+			<button ng-disabled="!optionsFormValid" class="btn btn-primary" type="submit">View application UI</button>
+		</form>
 		
 					
-		<br/>
+		<br/><br>
 		<div class="form-group">
 			Back to <a href="#/ras">Restcomm Apps</a>
 		</div>
