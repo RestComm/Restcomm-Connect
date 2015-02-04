@@ -1,4 +1,4 @@
-var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, bootstrapObject, $http, Notifications, $window, rappService) {
+var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, bootstrapObject, $http, Notifications, $window, rappService, $sce) {
 	
 	$scope.initRappConfig = function (rappConfig) {
 		var i;
@@ -62,7 +62,7 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 	}	
 	
 	$scope.filterInitOptions = function(option) {
-		if (option.isInitOption || option.name == 'instanceToken' );
+		if (option.isInitOption || option.name == 'instanceToken' )
 			return true;
 		return false;
 	}
@@ -99,23 +99,12 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 			Notifications.success("Error creating new instance");
 		});
 	}	
-	$scope.startApplicationUI = function (rappConfig) {
-		//getOptionByName("backendRootURL",rappConfig.options).value}}/ui/index.php?instanceToken={{getOptionByName("instanceToken",rappConfig.options).value
-		var newWin = window.open('about:blank', '_blank');
-		var url = getOptionByName("backendRootURL",rappConfig.options).value + "/ui/index.php?instanceToken=" + getOptionByName("instanceToken",rappConfig.options).value;
-		console.log("starting application UI at " + url);
-		$http.post(url, bootstrapObject).then( function (response) {
-			newWin.location.href = response.headers('Location');
-		},
-		function (response) {
-				console.log(response);
-		});
-	}
-	$scope.submitForm = function() {
-		console.log("submitting form");
-	}
+	$scope.buildBackendBoostrapUrl = function(configOptions) {
+		var value = getOptionByName("backendRootURL",configOptions).value + "/bootstrap";
+		return $sce.trustAsResourceUrl(value);
+	}	
 	$scope.watchOptionFormValidity = function (status) {
-		console.log(status);
+		//console.log(status);
 		$scope.optionsFormValid = status;
 	}
 	
