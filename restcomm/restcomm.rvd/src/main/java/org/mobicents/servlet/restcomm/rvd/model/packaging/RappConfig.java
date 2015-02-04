@@ -13,6 +13,7 @@ public class RappConfig extends ValidatableModel {
         public String defaultValue;
         public Boolean required;
         public String description;
+        public Boolean isInitOption; // will this option be used for initializing the application ? i.e. sent to the backend scripts. Is missing it should be considered true
     }
 
     public String howTo;
