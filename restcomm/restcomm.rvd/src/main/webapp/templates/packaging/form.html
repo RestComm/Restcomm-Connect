@@ -92,6 +92,12 @@
 									<label>Description *</label>
 									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed"></textarea>
 								</div>
+								<div class="form-group col-md-6">
+									<label>Used for initialization</label>
+									<div>
+										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.isInitOption'  placeholder='true' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Should this field be transmitted to the backend whenever this is started ?">
+									</div>
+								</div>
 							</div>				
 						</rvd-panel>
 					</div>
