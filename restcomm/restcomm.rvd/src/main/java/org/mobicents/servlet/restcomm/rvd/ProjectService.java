@@ -350,7 +350,7 @@ public class ProjectService {
         // CAUTION! make sure that the temp workspace thing works!
         // Create a temporary workspace storage
         WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
-        ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getPath(), tempStorage);
+        ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getName(), tempStorage);
 
 
         // TODO Make these an atomic action!

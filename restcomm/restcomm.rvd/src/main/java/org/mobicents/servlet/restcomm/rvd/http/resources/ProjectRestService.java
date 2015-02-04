@@ -356,9 +356,9 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @POST
-    @Path("{name}/archive")
-    public Response importProjectArchive(@PathParam("name") String projectName, @Context HttpServletRequest request) {
-        logger.debug("importing project from raw archive: " + projectName);
+    //@Path("{name}/archive")
+    public Response importProjectArchive(@Context HttpServletRequest request) {
+        logger.info("Importing project from raw archive");
 
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
@@ -394,7 +394,7 @@ public class ProjectRestService extends RestService {
                 return Response.ok(json_response,MediaType.APPLICATION_JSON).build();
             }
         } catch ( StorageException e ) {
-            logger.warn(e);
+            logger.warn(e,e);
             logger.debug(e,e);
             return buildErrorResponse(Status.BAD_REQUEST, RvdResponse.Status.ERROR, e);
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
