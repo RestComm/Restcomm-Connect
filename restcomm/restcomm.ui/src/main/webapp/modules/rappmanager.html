@@ -22,7 +22,7 @@
 		<div class="col-md-5">
 			<div class="btn-group" role="group">
 			  <button ng-click="setFilter('all',filterText)" type="button" ng-class="{'active': filter=='all'}" class="filter btn btn-default" title="Display all applications, either locally installed or available from RAS">All</button>
-			  <button ng-click="setFilter('local',filterText)" type="button" ng-class="{'active': filter=='local'}" class="filter btn btn-default" title="Display applications created in this instance">Local</button>
+			  <button ng-click="setFilter('local',filterText)" type="button" ng-class="{'active': filter=='local'}" class="filter btn btn-default" title="Display local applications">Local</button>
 			  <button ng-click="setFilter('imported',filterText)" type="button" ng-class="{'active': filter=='imported'}" class="filter btn btn-default" title="Display applications imported as packages from RAS or other means">Imported</button>
 			  <button ng-click="setFilter('packaged',filterText)" type="button" ng-class="{'active': filter=='packaged'}" class="filter btn btn-default" title="Display packaged applications to be exported">Packaged</button>
 			  <button ng-click="setFilter('ras',filterText)" type="button" ng-class="{'active': filter=='ras'}" class="filter btn btn-default" title="Display applications available from RAS">RAS</button>
@@ -30,7 +30,7 @@
 		</div>
 		<div class="col-md-4">
 			<div class="form-group">
-				<div class='drop-area' ng-file-drop="onFileSelect($files)"
+				<div class='drop-area' ng-file-drop="importPackage($files)"
 					ng-file-drag-over-class="dropping" ng-show="dropSupported">
 					<div class="drop-prompt">Drop packaged apps here</div>
 				</div>

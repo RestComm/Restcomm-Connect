@@ -193,11 +193,11 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 		}
 	}
 	
-	$scope.onFileSelect = function($files) {
+	$scope.importPackage = function($files) {
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: '/restcomm-rvd/services/ras/apps' + "/testname", // upload.php
+	        url: '/restcomm-rvd/services/ras/apps',
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
@@ -206,9 +206,6 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	    		  console.log(data.exception.message);
 	    		  Notifications.warn("This application is already installed");
 	    	  } else {
-				  //console.log('Application uploaded successfully');
-				  //$location.path("/ras/apps/" + data[0].projectName + "/config");
-				  //$location.path("/ras/config/" + data[0].projectName);
 	    		  Notifications.success("Application installed");
 				  $route.reload();
 			  }
@@ -216,6 +213,8 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	      .error( function (data, status, headers) {
 	    	  if (status == 409)
 	    		  Notifications.warn("This application is already installed");
+	    	  else if (status == 500 && data && data.exception && data.exception.className == "UnsupportedRasApplicationVersion")
+				Notifications.error(data.exception.message);
 	    	  else
 	    		  Notifications.error("Cannot import application package");
 	      });
@@ -308,7 +307,7 @@ rcMod.filter('appsFilter', function() {
 		  }
 		  else
 		  if (filterType == "local") {
-			  if (app.isLocal && !app.wasImported)
+			  if (app.isLocal)
 				filteredList.push(app);
 		  }
 		  else
