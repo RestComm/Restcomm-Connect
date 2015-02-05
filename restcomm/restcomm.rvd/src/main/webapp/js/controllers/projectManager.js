@@ -83,6 +83,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	      }).success(function(data, status, headers, config) {
 	    	  console.log('Project imported successfully');
 	    	  $scope.refreshProjectList();
+	    	  notifications.put({message:"Project imported successfully", type:"success"});
 	      }).error(function(data, status, headers, config) {
 	    	  if (status == 400) {// BAD REQUEST
 	    		  console.log(data.exception.message);
