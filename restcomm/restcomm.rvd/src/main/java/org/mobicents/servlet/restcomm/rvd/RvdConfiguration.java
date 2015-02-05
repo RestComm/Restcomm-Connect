@@ -26,6 +26,7 @@ public class RvdConfiguration {
     public static final String WAVS_DIRECTORY_NAME = "wavs";
     private static final String RVD_PROJECT_VERSION = "1.3"; // version for rvd project syntax
     private static final String PACKAGING_VERSION = "1.0";
+    private static final String RAS_APPLICATION_VERSION = "2"; // version of the RAS application specification
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String MODULE_PREFIX = "module_"; // a  prefix for rvd module-scoped variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
@@ -93,6 +94,10 @@ public class RvdConfiguration {
 
     public static String getPackagingVersion() {
         return PACKAGING_VERSION;
+    }
+
+    public static String getRasApplicationVersion() {
+        return RAS_APPLICATION_VERSION;
     }
 
     public String getExternalServiceBase() {
