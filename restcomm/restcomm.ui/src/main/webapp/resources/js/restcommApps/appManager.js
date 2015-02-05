@@ -476,7 +476,7 @@ rcMod.filter('appsFilter', function() {
 		  }
 		  else
 		  if (filterType == "local") {
-			  if (app.isLocal && !app.wasImported)
+			  if (app.isLocal)
 				filteredList.push(app);
 		  }
 		  else

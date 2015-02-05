@@ -6,7 +6,7 @@ angular.module("rcApp.restcommApps", []).config([ '$routeProvider',  function($r
 		controller: 'RappManagerCtrl', 
 		resolve: {
 			products: rappManagerCtrl.getProducts, 
-			localApps: function (rappService) { return rappService.getLocalApps();}
+			localApps: function (rappService) { return rappService.refreshLocalApps();}
 		} 
 	})
 	.when('/ras/config/:projectName/:mode?', {
