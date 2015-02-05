@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingDoesNotE
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.InvalidRestcommAppPackage;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.RestcommAppAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ras.UnsupportedRasApplicationVersion;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
@@ -230,8 +231,8 @@ public class RasRestService extends RestService {
      * @return
      */
     @POST
-    @Path("apps/{name}")
-    public Response newRasApp(@PathParam("name") String projectNameOverride, @Context HttpServletRequest request) {
+    @Path("apps")
+    public Response newRasApp(@Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
         BuildService buildService = new BuildService(workspaceStorage);
@@ -282,6 +283,9 @@ public class RasRestService extends RestService {
             return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
         } catch (InvalidRestcommAppPackage e ) {
             logger.error(e.getMessage(), e);
+            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        } catch (UnsupportedRasApplicationVersion e) {
+            logger.warn(e.getMessage());
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
             logger.error(e.getMessage(), e);
