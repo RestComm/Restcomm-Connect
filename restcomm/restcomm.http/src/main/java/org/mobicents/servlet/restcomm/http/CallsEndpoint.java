@@ -272,6 +272,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                         accountId);
             }
             create.setCreateCDR(false);
+            if (callManager == null)
+                callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
             Future<Object> future = (Future<Object>) ask(callManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
