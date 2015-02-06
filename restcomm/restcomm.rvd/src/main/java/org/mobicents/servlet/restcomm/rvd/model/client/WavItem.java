@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.model.client;
 
 public class WavItem {
     private String filename;
+    private String url;
 
     public String getFilename() {
         return filename;
@@ -9,6 +10,14 @@ public class WavItem {
 
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
 }

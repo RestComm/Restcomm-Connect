@@ -9,15 +9,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem.RappStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.Node;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
@@ -472,6 +476,31 @@ public class FsProjectStorage {
         }// else
             //throw new BadWorkspaceDirectoryStructure();
 
+        return items;
+    }
+
+    /**
+     * Returns a WavItem list for all .wav files insude the /audio RVD directory. No project is involved here.
+     * @param rvdContext
+     * @return
+     */
+    public static List<WavItem> listBundledWavs( RvdContext rvdContext ) {
+        List<WavItem> items = new ArrayList<WavItem>();
+
+        String contextRealPath = rvdContext.getServletContext().getRealPath("/");
+        String audioRealPath = contextRealPath + "audio";
+        String contextPath = rvdContext.getServletContext().getContextPath();
+
+        File dir = new File(audioRealPath);
+        Collection<File> audioFiles = FileUtils.listFiles(dir, new SuffixFileFilter(".wav"), TrueFileFilter.INSTANCE );
+        for (File anyFile: audioFiles) {
+            WavItem item = new WavItem();
+            String itemRelativePath = anyFile.getPath().substring(contextRealPath.length());
+            String presentationName = anyFile.getPath().substring(contextRealPath.length() + "audio".length() );
+            item.setUrl( contextPath + "/" + itemRelativePath );
+            item.setFilename(presentationName);
+            items.add(item);
+        }
         return items;
     }
 
