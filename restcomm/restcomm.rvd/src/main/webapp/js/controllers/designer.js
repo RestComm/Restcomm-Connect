@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, bundledWavs) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -105,7 +105,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		gatherStep.menu.mappings.push({digits:max+1, next:""});
 	};
 	$scope.removeGatherMapping = function (gatherStep, mapping) {
-		gatherStep.menu.mappings.splice( gatherStep.menu.mappings.indexOf(mapping), 1 );
+		gatherStep.menu.mappings.splice( gatherStep.menu.mapwapings.indexOf(mapping), 1 );
 	}	
 	// ussd collect handles adding mappings a little differently
 	$scope.addUssdCollectMapping = function (collectStep) {
@@ -121,10 +121,13 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		}
 		return count;
 	}
+	$scope.selectBundledWav = function(playstep, wavUrl) {
+		playstep.remote.wavUrl = wavUrl;
+	}
 	
 
-	
-	//$scope.stepService = stepService;
+	$scope.bundledWavs = bundledWavs;
+
 	$scope.selectedView = 'rcml';
 	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved
 							// parameters
@@ -192,13 +195,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	});
 	
 	
-	$scope.refreshWavList = function(projectName) {
-		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
-		.success(function (data, status, headers, config) {
-			$scope.wavList = data;
+	$scope.refreshWavList = function() {
+		designerService.getWavList($scope.projectName).then(function (wavList) {
+			$scope.project.wavList = wavList;
 		});
-	}
 
+	}
 	
 	$scope.addAssignment = function(step) {
 		console.log("adding assignment");
@@ -230,15 +232,14 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		    	  console.log('file uploaded successfully');
 		        // console.log(data);
 		    	  $scope.$emit("fileupload");
-		      });
+		      }).progress(function () {});
 		      // .error(...)
 		      // .then(success, error, progress);
 		    }
 	};
 	
 	$scope.$on('fileupload', function(event, data) {
-		console.log("caught event fileupload");
-		$scope.refreshWavList($scope.projectName);
+		$scope.refreshWavList();
 	});
 	
 	$scope.deleteWav = function (wavItem) {
@@ -344,8 +345,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	}
 	
 	$scope.$on('wavfileDeleted', function (event,data) {
-		//console.log("caught event wavfileDeleted");
-		$scope.refreshWavList($scope.projectName);
+		$scope.refreshWavList();
 	});
 	
 	
@@ -504,7 +504,7 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 			project.projectName = name;			
 			unpackState(project, data);
 			if ( project.projectKind == 'voice' ) {
-				refreshWavList(name).then(function (wavList) {
+				getWavList(name).then(function (wavList) {
 					project.wavList = wavList;
 					deferred.resolve(project);
 				}, function (error) {
@@ -569,7 +569,7 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 		return state;
 	}
 	
-	function refreshWavList(projectName) {
+	function getWavList(projectName) {
 		var deferred = $q.defer();
 		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
 		.success(function (data, status, headers, config) {
@@ -616,10 +616,22 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 		return deferred.promise;
 	}
 	
+	function getBundledWavs() {
+		var deferred = $q.defer();
+		$http({url: 'services/designer/bundledWavs', method: "GET"})
+		.success(function (data, status, headers, config) {
+			deferred.resolve(data.payload);
+		 }).error(function (data, status, headers, config) {
+			 deferred.reject('Error fetching designer bundled wavs');
+		 });
+		return deferred.promise;
+	}
+	
 	service.openProject = openProject;
-	service.refreshWavList = refreshWavList;
+	service.getWavList = getWavList;
 	service.saveProject = saveProject;
 	service.buildProject = buildProject;
+	service.getBundledWavs = getBundledWavs;
 	
 	return service;
 	

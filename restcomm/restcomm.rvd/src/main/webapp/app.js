@@ -23,9 +23,8 @@ App.config([ '$routeProvider',  function($routeProvider) {
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
 			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
-			project: function(designerService, $route) {
-				return designerService.openProject($route.current.params.projectName);
-			}
+			project: function(designerService, $route) { return designerService.openProject($route.current.params.projectName); },
+			bundledWavs: function(designerService) { return designerService.getBundledWavs()}
 		}
 	})
 	.when('/packaging/:projectName', {
