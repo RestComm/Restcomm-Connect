@@ -175,11 +175,16 @@
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
 
-	<!-- Defines how RestComm communicates with the Media Server Control layer. Accepted 
-		values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents Media Server 
-		using MGCP driver) -->
+	<!-- Defines how RestComm communicates with the Media Server Control layer. 
+		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents 
+		Media Server using MGCP driver) -->
 	<mscontrol>
 		<compatibility>mms</compatibility>
+		<media-server name="Dialogic XMS">
+			<address>127.0.0.1</address>
+			<port>5060</port>
+			<response-timeout>500</response-timeout>
+		</media-server>
 	</mscontrol>
 
 	<!-- The media server manager is responsible for managing the media servers 

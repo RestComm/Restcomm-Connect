@@ -18,30 +18,27 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
-package org.mobicents.servlet.restcomm.mscontrol.messages;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+        
+package org.mobicents.servlet.restcomm.mscontrol.exceptions;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ *
  */
-@Immutable
-public final class MediaServerControllerError {
+public class MediaServerControllerException extends Exception {
 
-    private final Throwable error;
+    private static final long serialVersionUID = -3369602773575455629L;
 
-    public MediaServerControllerError(Throwable error) {
-        super();
-        this.error = error;
+    public MediaServerControllerException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public MediaServerControllerError() {
-        this(null);
+    public MediaServerControllerException(String message) {
+        super(message);
     }
 
-    public Throwable getError() {
-        return error;
+    public MediaServerControllerException(Throwable cause) {
+        super(cause);
     }
-
+    
 }

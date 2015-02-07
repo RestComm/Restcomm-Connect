@@ -3,6 +3,10 @@ package org.mobicents.servlet.restcomm;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.spi.Driver;
+import javax.media.mscontrol.spi.DriverManager;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -12,7 +16,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
@@ -20,7 +23,9 @@ import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
+import org.mobicents.servlet.restcomm.mscontrol.xms.XmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
 import akka.actor.ActorRef;
@@ -66,12 +71,31 @@ public final class Bootstrapper extends SipServlet {
                 break;
 
             case "xms":
-                throw new NotImplementedException("Dialogic XMS compatibility not yet implemented");
+                try {
+                    MediaServerInfo mediaServerInfo = mediaServerInfo(settings);
+                    MsControlFactory mscFactory = dialogicJsr309Driver().getFactory(null);
+                    factory = new XmsControllerFactory(system, mscFactory, mediaServerInfo);
+                } catch (UnknownHostException | MsControlException e) {
+                    throw new ServletException(e);
+                }
+                break;
 
             default:
                 throw new IllegalArgumentException("MSControl unknown compatibility mode: " + compatibility);
         }
         return factory;
+    }
+
+    private Driver dialogicJsr309Driver() {
+        return DriverManager.getDriver("com.dialogic.dlg309");
+    }
+
+    private MediaServerInfo mediaServerInfo(final Configuration configuration) throws UnknownHostException {
+        final String name = configuration.getString("media-server[@name]");
+        final String address = configuration.getString("media-server.address");
+        final int port = configuration.getInt("media-server.port");
+        final int timeout = configuration.getInt("media-server.timeout");
+        return new MediaServerInfo(name, InetAddress.getByName(address), port, timeout);
     }
 
     private ActorRef gateway(final Configuration configuration, final ClassLoader loader) throws UnknownHostException {
