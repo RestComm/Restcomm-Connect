@@ -19,29 +19,46 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mscontrol.messages;
+package org.mobicents.servlet.restcomm.mscontrol;
+
+import java.net.InetAddress;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ *
  */
 @Immutable
-public final class MediaServerControllerError {
+public final class MediaServerInfo {
 
-    private final Throwable error;
+    private final String name;
+    private final InetAddress address;
+    private final int port;
+    private final int timeout;
 
-    public MediaServerControllerError(Throwable error) {
+    public MediaServerInfo(String name, InetAddress address, int port, int timeout) {
         super();
-        this.error = error;
+        this.name = name;
+        this.address = address;
+        this.port = port;
+        this.timeout = timeout;
     }
 
-    public MediaServerControllerError() {
-        this(null);
+    public String getName() {
+        return name;
     }
 
-    public Throwable getError() {
-        return error;
+    public InetAddress getAddress() {
+        return address;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public int getTimeout() {
+        return timeout;
     }
 
 }

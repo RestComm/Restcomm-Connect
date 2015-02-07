@@ -19,6 +19,9 @@
  */
 package org.mobicents.servlet.restcomm.mscontrol;
 
+import org.mobicents.servlet.restcomm.fsm.Action;
+
+import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
 /**
@@ -29,6 +32,19 @@ public abstract class MediaServerController extends UntypedActor {
 
     protected MediaServerController() {
         super();
+    }
+    
+    /*
+     * ACTIONS
+     */
+    protected abstract class AbstractAction implements Action {
+
+        protected final ActorRef source;
+
+        public AbstractAction(final ActorRef source) {
+            super();
+            this.source = source;
+        }
     }
 
 }

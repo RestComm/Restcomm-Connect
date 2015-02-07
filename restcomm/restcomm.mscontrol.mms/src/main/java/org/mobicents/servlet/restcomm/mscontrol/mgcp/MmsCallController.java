@@ -34,7 +34,6 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
@@ -552,16 +551,6 @@ public class MmsCallController extends MediaServerController {
     /*
      * ACTIONS
      */
-    private abstract class AbstractAction implements Action {
-
-        protected final ActorRef source;
-
-        public AbstractAction(final ActorRef source) {
-            super();
-            this.source = source;
-        }
-    }
-
     private final class AcquiringMediaGatewayInfo extends AbstractAction {
 
         public AcquiringMediaGatewayInfo(final ActorRef source) {
