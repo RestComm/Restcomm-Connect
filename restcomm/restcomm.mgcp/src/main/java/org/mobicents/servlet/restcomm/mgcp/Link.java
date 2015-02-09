@@ -164,7 +164,8 @@ public final class Link extends UntypedActor {
         } else if (UpdateLink.class.equals(klass)) {
             fsm.transition(message, modifying);
         } else if (CloseLink.class.equals(klass)) {
-            fsm.transition(message, closingPrimary);
+            if (!closingPrimary.equals(state))
+                fsm.transition(message, closingPrimary);
         } else if (message instanceof JainMgcpResponseEvent) {
             final JainMgcpResponseEvent response = (JainMgcpResponseEvent) message;
             final int code = response.getReturnCode().getValue();
