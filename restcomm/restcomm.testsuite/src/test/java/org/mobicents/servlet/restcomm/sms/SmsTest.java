@@ -27,6 +27,7 @@ import gov.nist.javax.sip.header.SIPHeader;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
 
 import javax.sip.address.SipURI;
@@ -35,6 +36,7 @@ import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
+import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -49,6 +51,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -76,6 +79,8 @@ public class SmsTest {
     
     private static SipStackTool tool1;
     private static SipStackTool tool2;
+    private static SipStackTool tool3;
+    private static SipStackTool tool4;
     
     private SipStack bobSipStack;
     private SipPhone bobPhone;
@@ -84,6 +89,14 @@ public class SmsTest {
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5091";
+
+    private SipStack georgeSipStack;
+    private SipPhone georgePhone;
+    private String georgeContact = "sip:george@127.0.0.1:5092";
+    
+    private SipStack fotiniSipStack;
+    private SipPhone fotiniPhone;
+    private String fotiniContact = "sip:fotini@127.0.0.1:5093";
     
     private String dialSendSMS = "sip:+12223334444@127.0.0.1:5080";
     private String dialSendSMS2 = "sip:+12223334445@127.0.0.1:5080";
@@ -102,6 +115,8 @@ public class SmsTest {
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("SmsTest1");
         tool2 = new SipStackTool("SmsTest2");
+        tool3 = new SipStackTool("SmsTest3");
+        tool4 = new SipStackTool("SmsTest4");
     }
     
     @Before
@@ -111,6 +126,12 @@ public class SmsTest {
         
         aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        
+        georgeSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        
+        fotiniSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
+        fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
     }
     
     @After
@@ -127,6 +148,20 @@ public class SmsTest {
         }
         if (alicePhone != null) {
             alicePhone.dispose();
+        }
+        
+        if (georgeSipStack != null) {
+            georgeSipStack.dispose();
+        }
+        if (georgePhone != null) {
+            georgePhone.dispose();
+        }
+        
+        if (fotiniSipStack != null) {
+            fotiniSipStack.dispose();
+        }
+        if (fotiniPhone != null) {
+            fotiniPhone.dispose();
         }
     }
     
@@ -325,6 +360,36 @@ public class SmsTest {
         aliceCall.sendMessageResponse(200, "OK-From-Alice", 3600);
     }
     
+    @Test
+    public void testP2PSendSMS_GeorgeClient_ToFotiniClient() throws ParseException {
+        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        //Register George phone
+        assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 3600, 3600));
+        Credential georgeCredentials = new Credential("127.0.0.1", "george", "1234");
+        georgePhone.addUpdateCredential(georgeCredentials);
+
+        //Register Fotini phone
+        assertTrue(fotiniPhone.register(uri, "fotini", "1234", fotiniContact, 3600, 3600));
+        Credential fotiniCredentials = new Credential("127.0.0.1", "fotini", "1234");
+        fotiniPhone.addUpdateCredential(fotiniCredentials);
+        
+        //Prepare Fotini to receive message
+        SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.listenForMessage();
+
+        //Prepare George to send message
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingMessage(georgeContact, "sip:fotini@127.0.0.1:5080", null, null, null, greekHugeMessage);
+        assertLastOperationSuccess(georgeCall);
+        georgeCall.waitForAuthorisation(30 * 1000);
+        
+        assertTrue(fotiniCall.waitForMessage(30 * 1000));
+        assertTrue(fotiniCall.sendMessageResponse(200, "OK-Fotini-Mesasge-Receieved", 1800));
+        List<String> msgsFromGeorge = fotiniCall.getAllReceivedMessagesContent();
+
+        assertTrue(msgsFromGeorge.size()>0);
+        assertTrue(msgsFromGeorge.get(0).equals(greekHugeMessage));
+    }
     
     @Deployment(name = "SmsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
