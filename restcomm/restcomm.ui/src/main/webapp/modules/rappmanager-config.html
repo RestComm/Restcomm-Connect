@@ -68,17 +68,19 @@
 			{{watchOptionFormValidity(optionsForm.$valid)}}
 		</form>
 		
-		<div class="spacer10"></div>
-		<form target="_blank" method="POST" action="{{buildBackendBoostrapUrl(rappConfig)}}">
-		<div>
-			<h5 style="margin-top:20px"><strong>Accessing Web UI</strong></h5>
-			<span class="help-block">You can access the application Web UI by clicking the button below. Make sure all the required fields are set, especially <em>Instance Token</em> (if present).</span>
-		</div>
-		<span class="help-block"></span>
-			<input type="hidden" ng-repeat="option in rappConfig.options | filter:filterInitOptions" name="{{option.name}}" value="{{option.value}}">
+		<div ng-show="rappConfig.bootstrapUrl">
 			<div class="spacer10"></div>
-			<button ng-disabled="!optionsFormValid" class="btn btn-primary" type="submit">View application UI</button>
-		</form>
+			<form target="_blank" method="POST" action="{{buildBackendBoostrapUrl(rappConfig)}}">
+			<div>
+				<h5 style="margin-top:20px"><strong>Accessing Web UI</strong></h5>
+				<span class="help-block">You can access the application Web UI by clicking the button below. Make sure all the required fields are set, especially <em>Instance Token</em> (if present).</span>
+			</div>
+			<span class="help-block"></span>
+				<input type="hidden" ng-repeat="option in rappConfig.options | filter:filterInitOptions" name="{{option.name}}" value="{{option.value}}">
+				<div class="spacer10"></div>
+				<button ng-disabled="!optionsFormValid" class="btn btn-primary" type="submit">View application UI</button>
+			</form>
+		</div>
 		
 					
 		<br/><br>
