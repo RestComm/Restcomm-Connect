@@ -300,12 +300,24 @@ public class RasRestService extends RestService {
         logger.info("getting configuration options for " + projectName);
 
         RappConfig rappConfig;
-        try {
-            rappConfig = rasService.getRappConfig(projectName);
-            return buildOkResponse(rappConfig);
-        } catch (StorageException e) {
-            logger.error(e.getMessage(), e);
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        // first, try to return the 'Rapp' from the packaging directory
+        if ( FsProjectStorage.hasPackagingInfo(projectName, workspaceStorage) ) {
+            return getConfigFromPackaging(projectName);
+            /*try {
+                Rapp rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
+                return buildOkResponse(rapp.getConfig());
+            } catch (StorageException e) {
+                logger.error(e.getMessage(), e);
+                return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            }*/
+        } else {
+            try {
+                rappConfig = rasService.getRappConfig(projectName);
+                return buildOkResponse(rappConfig);
+            } catch (StorageException e) {
+                logger.error(e.getMessage(), e);
+                return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            }
         }
     }
 

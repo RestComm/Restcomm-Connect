@@ -59,9 +59,15 @@
 				
 				<label>Provisioning URL</label>
 				<input ng-model="rapp.config.provisioningUrl" type="text" class="form-control">
-				<span class="help-block">Base url for application provisioning. <em>Incoming number</em> and <em>parameters</em> callbacks are supported. Read more <a href="#">here</a> for the REST api specification.</span>
+				<span class="help-block">URL for application provisioning. <em>Incoming number</em> and <em>parameters</em> hooks are supported. Read more <a href="http://{{effectiveSettings.appStoreDomain}}/application-provisioning-api-spec" target="_blank">here</a> for the REST api specification.</span>
+
+				<label>Bootstrap URL</label>
+				<input ng-model="rapp.config.bootstrapUrl" type="text" class="form-control">
+				<span class="help-block">URL for application bootstrapping. </span>
+
 				
-				<h4>Application parameters</h4>
+				<div class="rvd-spacer10">&nbsp;</div>
+				<h4>Parameters</h4>
 				<span class="help-block">Customize your app by adding parameters. Add a parameter for any piece of information you need to be adjusted by the end user. Users of this application will have the opportunity to fill in these options in order to customize their installation.</span>				
 				
 				<div basic-sortable list-model='rapp.config.options'>
@@ -107,25 +113,12 @@
 		
 				<div class="rvd-spacer10">&nbsp;</div>
 				
-				<h4>Application services and multitenancy</h4>
-				<p>If your application relies on multitenant external services you will need to specify <em>instanceToken</em> and <em>backendRootURL</em> parameters. For more information on this topic please see <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}/how-to/writing-multitenant-applications">Writing multitenant applications for the application store</a>.
+				<h4>Multitenancy</h4>
+				<p>If your application relies on multitenant external services you will need to specify <em>instanceToken</em>.
 				<ul>
 					<li><strong>instanceToken</strong> - Used to identify each individual instance of this application to the backend. It also works as an authentication token.</li>
-					<li><strong>backendRootURL</strong> - The root url for the REST services. Place all custom scripts under this URL.</li>
-				</ul>
-				
-				
-				
+				</ul>				
 				<button ng-show="!optionExists('instanceToken')" class="btn btn-primary" ng-click="addConfigurationOption('instanceToken')">Add <em>Instance Token</em> parameter</button>
-				&nbsp;<button ng-show="!optionExists('backendRootURL')" class="btn btn-primary" ng-click="addConfigurationOption('backendRootURL')">Add <em>Backend root URL</em> parameter</button>
-	
-	<!--
-				<div>
-					<br/>
-					Allow user to create new instance on the backend &nbsp;&nbsp; <input type='checkbox'  ng-model='rapp.config.allowInstanceCreation'>
-				</div>
-	-->
-
 			</div>
 				{{watchFormStatus(packagingForm.$valid)}}
 			</form>
