@@ -12,7 +12,7 @@
 		</div>
 		
 		<form name="optionsForm" novalidate>
-			<h4>Application parameters</h4>
+			<h4>Parameters</h4>
 			
 			<p ng-show="!rappConfig.options.length" class="text-muted">
 				<em>No parameters were defined for this app</em>
@@ -26,8 +26,6 @@
 			</div>
 				
 			<div ng-show="(rappConfig.options | filter:filterESOptions).length > 0">
-				<br/>
-				<h4>External Services parameters and backend</h4>
 				<div class="form-group" ng-repeat="option in rappConfig.options | filter:filterESOptions">
 					<div ng-switch="option.name">
 						<div ng-switch-when="instanceToken">
@@ -71,10 +69,10 @@
 		</form>
 		
 		<div class="spacer10"></div>
-		<form target="_blank" method="POST" action="{{buildBackendBoostrapUrl(rappConfig.options)}}">
+		<form target="_blank" method="POST" action="{{buildBackendBoostrapUrl(rappConfig)}}">
 		<div>
-			<h5 style="margin-top:20px"><strong>Accessing backend</strong></h5>
-			<span class="help-block">You can access the application backend UI by clicking the button below. Make sure all the required fields are set espacially <em>Backend Root URL</em> and <em>Instance Token</em> (if present) parameters.</span>
+			<h5 style="margin-top:20px"><strong>Accessing Web UI</strong></h5>
+			<span class="help-block">You can access the application Web UI by clicking the button below. Make sure all the required fields are set, especially <em>Instance Token</em> (if present).</span>
 		</div>
 		<span class="help-block"></span>
 			<input type="hidden" ng-repeat="option in rappConfig.options | filter:filterInitOptions" name="{{option.name}}" value="{{option.value}}">

@@ -66,41 +66,14 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 			return true;
 		return false;
 	}
-	
-	function generateUUID(){
-	    var d = new Date().getTime();
-	    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-	        var r = (d + Math.random()*16)%16 | 0;
-	        d = Math.floor(d/16);
-	        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
-	    });
-	    return uuid;
-	};
-	$scope.generateNewInstanceToken = function (option) {
-		option.value = generateUUID();
-	}
 	function getOptionByName(name, options) {
 		for (var i = 0; i < options.length; i++)
 			if (options[i].name == name)
 				return options[i];
 	};
-	$scope.getOptionByName = getOptionByName;
-	$scope.createNewInstance = function() {
-		console.log("creating new instance");
-		var instanceToken = getOptionByName("instanceToken", rappConfig.options).value;
-		var backendRootURL = getOptionByName("backendRootURL", rappConfig.options).value;
-		$http({ url:backendRootURL + "/provisioning/spawnInstance.php?instanceToken=" + instanceToken, method:"PUT" })
-		.success(function () {
-			console.log("created new instance");
-			Notifications.success("New instance created");
-		})
-		.error(function () {
-			console.log("error creating new instance");
-			Notifications.success("Error creating new instance");
-		});
-	}	
-	$scope.buildBackendBoostrapUrl = function(configOptions) {
-		var value = getOptionByName("backendRootURL",configOptions).value + "/bootstrap";
+	$scope.getOptionByName = getOptionByName;	
+	$scope.buildBackendBoostrapUrl = function(rappConfig) {
+		var value = rappConfig.bootstrapUrl;
 		return $sce.trustAsResourceUrl(value);
 	}	
 	$scope.watchOptionFormValidity = function (status) {
