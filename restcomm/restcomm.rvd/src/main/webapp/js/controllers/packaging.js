@@ -114,7 +114,7 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 			this.description = 'An instance token your application needs to access the multitenant backend';
 			this.required = true;
 			this.isInitOption = true;
-		} else {
+		} /* else {
 			this.isInitOption = false;
 			if ( type == 'backendRootURL') {
 				this.name = 'backendRootURL';
@@ -122,7 +122,7 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 				this.description = 'Root URL of application backend. Storage, UI are hosted under this URL. Do not change this unless the application Vendor asks you to.';
 				this.required = true;
 			}
-		}
+		}*/
 	};
 	ConfigOption.prototype = new rvdModel();
 	ConfigOption.prototype.constructor = ConfigOption;
