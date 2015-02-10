@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Properties;
 
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
@@ -36,6 +37,7 @@ import akka.actor.UntypedActorFactory;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.vendor.dialogic.javax.media.mscontrol.spi.DlgcDriver;
 
 public final class Bootstrapper extends SipServlet {
     private static final long serialVersionUID = 1L;
@@ -73,7 +75,11 @@ public final class Bootstrapper extends SipServlet {
             case "xms":
                 try {
                     MediaServerInfo mediaServerInfo = mediaServerInfo(settings);
-                    MsControlFactory mscFactory = dialogicJsr309Driver().getFactory(null);
+                    Properties dlgProperties = new Properties();
+                    dlgProperties.put("mediaserver.1.sip.address", mediaServerInfo.getAddress().getHostAddress());
+                    dlgProperties.put("mediaserver.1.sip.port", mediaServerInfo.getPort());
+                    dlgProperties.put("mediaserver.count", 1);
+                    MsControlFactory mscFactory = dialogicJsr309Driver().getFactory(dlgProperties);
                     factory = new XmsControllerFactory(system, mscFactory, mediaServerInfo);
                 } catch (UnknownHostException | MsControlException e) {
                     throw new ServletException(e);
@@ -87,6 +93,7 @@ public final class Bootstrapper extends SipServlet {
     }
 
     private Driver dialogicJsr309Driver() {
+        DriverManager.registerDriver(new DlgcDriver());
         return DriverManager.getDriver("com.dialogic.dlg309");
     }
 

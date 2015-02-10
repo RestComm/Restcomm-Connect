@@ -1018,23 +1018,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, acquiringCallMediaGroup);
                             return;
                         }
-                        // call.tell(new CreateMediaGroup(), self());
-                        // return;
-                        // final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-                        // Future<Object> future1 = (Future<Object>) ask(call, new CreateMediaGroup(), expires);
-                        // CallResponse<ActorRef> callResponse = (CallResponse<ActorRef>) Await.result(future1,
-                        // Duration.create(10, TimeUnit.SECONDS));
-                        // callMediaGroup = callResponse.get();
-                        // Future<Object> future2 = (Future<Object>) ask(callMediaGroup, new Observe(self()), expires);
-                        // // Observing callMediaGroupObserving = (Observing) Await.result(future2,
-                        // // Duration.create(10, TimeUnit.SECONDS));
-                        // Future<Object> future3 = (Future<Object>) ask(callMediaGroup, new StartMediaGroup(), expires);
-                        // MediaGroupStateChanged mediaGroupStateChanged = (MediaGroupStateChanged) Await.result(future3,
-                        // Duration.create(10, TimeUnit.SECONDS));
-                        // if (!mediaGroupStateChanged.state().equals(MediaGroupStateChanged.State.ACTIVE)) {
-                        // fsm.transition(null, hangingUp);
-                        // }
-                        // }
                     }
                     // Update the application.
                     callback();

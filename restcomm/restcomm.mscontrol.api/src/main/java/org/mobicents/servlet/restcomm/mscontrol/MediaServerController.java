@@ -26,6 +26,7 @@ import akka.actor.UntypedActor;
 
 /**
  * Controls the flow of media sessions.
+ *
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  */
 public abstract class MediaServerController extends UntypedActor {
@@ -33,7 +34,7 @@ public abstract class MediaServerController extends UntypedActor {
     protected MediaServerController() {
         super();
     }
-    
+
     /*
      * ACTIONS
      */
