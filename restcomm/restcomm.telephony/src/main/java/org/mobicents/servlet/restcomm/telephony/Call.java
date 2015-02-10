@@ -407,8 +407,6 @@ public final class Call extends UntypedActor {
         final ActorRef observer = message.observer();
         if (observer != null) {
             this.observers.remove(observer);
-        } else {
-            this.observers.clear();
         }
     }
 
@@ -454,7 +452,6 @@ public final class Call extends UntypedActor {
     private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
         final String method = message.getMethod();
         if ("INVITE".equalsIgnoreCase(method)) {
-            logger.info("CALL RECEIVED INVITE!!!!!!!!!!!!!!!!");
             if (is(uninitialized)) {
                 fsm.transition(message, ringing);
             }

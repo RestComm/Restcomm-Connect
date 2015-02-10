@@ -61,4 +61,13 @@ public final class MediaServerInfo {
         return timeout;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("Media Server Information: ").append(this.name).append("\n");
+        builder.append("Address: ").append(this.address.getHostAddress()).append("\n");
+        builder.append("Port: ").append(this.port).append("\n");
+        builder.append("Timeout: ").append(this.timeout).append("\n");
+        return builder.toString();
+    }
+
 }
