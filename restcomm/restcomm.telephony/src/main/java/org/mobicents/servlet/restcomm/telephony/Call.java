@@ -56,6 +56,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sip.header.RecordRouteHeader;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
@@ -294,6 +295,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(inProgress, closingRemoteConnection));
         transitions.add(new Transition(inProgress, acquiringMediaGatewayInfo));
         transitions.add(new Transition(inProgress, failed));
+        transitions.add(new Transition(inProgress, inProgress));
         transitions.add(new Transition(acquiringInternalLink, closingRemoteConnection));
         transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
         transitions.add(new Transition(initializingInternalLink, closingRemoteConnection));
@@ -489,7 +491,12 @@ public final class Call extends UntypedActor {
         } else if (InitializeOutbound.class.equals(klass)) {
             fsm.transition(message, queued);
         } else if (Answer.class.equals(klass) || Dial.class.equals(klass)) {
-            fsm.transition(message, acquiringMediaGatewayInfo);
+            if (!inProgress.equals(state) ) {
+                fsm.transition(message, acquiringMediaGatewayInfo);
+            } else {
+                fsm.transition(message, inProgress);
+            }
+
         } else if (Reject.class.equals(klass)) {
             fsm.transition(message, busy);
         } else if (JoinComplete.class.equals(klass)) {
@@ -551,6 +558,7 @@ public final class Call extends UntypedActor {
                 } else if (muting.equals(state) || unmuting.equals(state)) {
                     fsm.transition(message, closingRemoteConnection);
                 } else if (closingRemoteConnection.equals(state)) {
+                    context().stop(remoteConn);
                     remoteConn = null;
                     if (internalLink != null) {
                         fsm.transition(message, closingInternalLink);
@@ -663,11 +671,16 @@ public final class Call extends UntypedActor {
                     }
                     break;
                 }
-//                // https://github.com/Mobicents/RestComm/issues/148 Session in Progress Response should trigger MMS to start the Media Session
-//                case SipServletResponse.SC_SESSION_PROGRESS:
+                // // https://github.com/Mobicents/RestComm/issues/148 Session in Progress Response should trigger MMS to start
+                // the Media Session
+                // case SipServletResponse.SC_SESSION_PROGRESS:
                 case SipServletResponse.SC_OK: {
                     if (dialing.equals(state) || (ringing.equals(state) && !direction.equals("inbound"))) {
                         fsm.transition(message, updatingRemoteConnection);
+                    } else if (inProgress.equals(state) && direction.equalsIgnoreCase("inbound")) {
+                        //This is a 200 OK for ReInvite we sent before at InProgress
+                        SipServletResponse ok = (SipServletResponse) message;
+                        ok.createAck().send();
                     }
                     break;
                 }
@@ -1141,13 +1154,15 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (remoteConn != null) {
-                gateway.tell(new DestroyConnection(remoteConn), source);
-                remoteConn = null;
-            }
+//            if (remoteConn != null) {
+//                gateway.tell(new DestroyConnection(remoteConn), source);
+//                remoteConn = null;
+//            }
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
+//            if (invite.getSession().isValid())
+//                invite.getSession().invalidate();
+//            if (invite.getApplicationSession().isValid())
+//                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.CANCELED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1158,6 +1173,7 @@ public final class Call extends UntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+            fsm.transition(message, completed);
         }
     }
 
@@ -1190,6 +1206,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             logger.info("Call moves to failing state because no answer");
+            fsm.transition(message, noAnswer);
         }
     }
 
@@ -1208,11 +1225,14 @@ public final class Call extends UntypedActor {
             }
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
+                context().stop(remoteConn);
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
+//            if (invite.getSession().isValid())
+//                invite.getSession().invalidate();
+//            if (invite.getApplicationSession().isValid())
+//                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1258,15 +1278,11 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (remoteConn != null) {
-                gateway.tell(new DestroyConnection(remoteConn), source);
-                remoteConn = null;
-            }
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid())
-                invite.getSession().invalidate();
-            if (invite.getApplicationSession().isValid())
-                invite.getApplicationSession().invalidate();
+//            // Explicitly invalidate the application session.
+//            if (invite.getSession().isValid())
+//                invite.getSession().invalidate();
+//            if (invite.getApplicationSession().isValid())
+//                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1289,6 +1305,7 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
+                context().stop(remoteConn);
                 remoteConn = null;
             }
             if (direction.equalsIgnoreCase(INBOUND))
@@ -1403,6 +1420,26 @@ public final class Call extends UntypedActor {
 
                 okay.setContent(answer, "application/sdp");
                 okay.send();
+            } else if (openingRemoteConnection.equals(state)
+                    && invite.getSession().getState().equals(SipSession.State.CONFIRMED)) {
+                // We have an ongoing call and Restcomm executes new RCML app on that
+                // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
+                SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
+                final ConnectionStateChanged response = (ConnectionStateChanged) message;
+                final byte[] sdp = response.descriptor().toString().getBytes();
+                String answer = null;
+                if (gatewayInfo.useNat()) {
+                    final String externalIp = gatewayInfo.externalIP().getHostAddress();
+                    answer = patch("application/sdp", sdp, externalIp);
+                } else {
+                    answer = response.descriptor().toString();
+                }
+
+                // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+                answer = patchSdpDescription(answer);
+
+                reInvite.setContent(answer, "application/sdp");
+                reInvite.send();
             }
             if (openingRemoteConnection.equals(state) || updatingRemoteConnection.equals(state)) {
                 // Make sure the SIP session doesn't end pre-maturely.
@@ -1575,8 +1612,50 @@ public final class Call extends UntypedActor {
                 SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
                 InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
 
-                if (realInetUri != null
-                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+//                INVITE sip:+12055305520@107.21.247.251 SIP/2.0
+//                Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+//                Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+//                Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
+//                Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
+//                Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
+//                Accept: application/sdp
+//                Allow: INVITE,ACK,CANCEL,BYE
+//                Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
+//                Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
+//                Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
+//                Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
+//                Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
+//                From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
+//                To: <sip:12055305520@192.168.6.219>
+//                Call-ID: 587241765_133360558@192.168.16.114
+//                CSeq: 393447729 INVITE
+//                Max-Forwards: 67
+//                Contact: <sip:+1302109762259@192.168.16.114:5060>
+//                Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
+//                Supported: replaces
+//                Content-Disposition: session;handling=required
+//                Content-Type: application/sdp
+//                Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
+//                X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
+//                X-Sip-Balancer-InitialRemotePort: 5060
+//                Route: <sip:10.13.169.214:5080;transport=udp;lr>
+//                Content-Length: 340
+
+                invite.getHeaders(RecordRouteHeader.NAME);
+
+                ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
+
+                if (invite.getHeader("X-Sip-Balancer") != null) {
+                    logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
+                    recordRouteList.next();
+                    recordRouteList.remove();
+                    recordRouteList.next();
+                    recordRouteList.remove();
+                }
+
+                if (recordRouteList.hasNext()) {
+                    logger.info("Record Route is set, wont change the Request URI");
+                } else if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
                     logger.info("Using the real ip address of the sip client " + realInetUri.toString()
                             + " as a request uri of the BYE request");
                     bye.setRequestURI(realInetUri);
@@ -1620,25 +1699,32 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Completing Call: "+self().path());
+            logger.info("Completing Call");
+            if (group != null) {
+                group.tell(new StopMediaGroup(), null);
+                context().stop(group);
+            }
             if (remoteConn != null) {
                 gateway.tell(new DestroyConnection(remoteConn), source);
+                context().stop(remoteConn);
                 remoteConn = null;
-                logger.info("Completing Call: "+self().path()+" RemoteConn destroyed.");
             }
             if (internalLink != null) {
                 gateway.tell(new DestroyLink(internalLink), source);
+                context().stop(internalLink);
+                context().stop(internalLinkEndpoint);
                 internalLink = null;
-                logger.info("Completing Call: "+self().path()+" InternalLink destroyed.");
             }
             if (bridge != null) {
                 gateway.tell(new DestroyEndpoint(bridge), source);
+                context().stop(bridge);
                 bridge = null;
-                logger.info("Completing Call: "+self().path()+" Bridge destroyed.");
             }
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
+            if (invite.getSession().isValid())
+                invite.getSession().invalidate();
+            if (invite.getApplicationSession().isValid())
+                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.COMPLETED;
             final CallStateChanged event = new CallStateChanged(external);
