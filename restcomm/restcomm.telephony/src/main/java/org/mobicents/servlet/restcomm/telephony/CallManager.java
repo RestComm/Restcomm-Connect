@@ -154,7 +154,13 @@ public final class CallManager extends UntypedActor {
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         SipURI outboundIntf = outboundInterface("udp");
-        myHostIp = ((SipURI) outboundIntf).getHost().toString();
+        if (outboundIntf != null) {
+            myHostIp = ((SipURI) outboundIntf).getHost().toString();
+        } else {
+            logger.error("outboundIntf is null");
+            if (context == null)
+                logger.error("context is null");
+        }
         Configuration mediaConf = configuration.subset("media-server-manager");
         mediaExternalIp = mediaConf.getString("mgcp-server.external-address");
         proxyIp = runtime.subset("telestax-proxy").getString("uri").replaceAll("http://", "").replaceAll(":2080", "");
@@ -277,6 +283,7 @@ public final class CallManager extends UntypedActor {
         // registered
 
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
+        final String ruri = ((SipURI)request.getRequestURI()).getHost();
         final String toHost = ((SipURI) request.getTo().getURI()).getHost();
         final String toPort = String.valueOf(((SipURI) request.getTo().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
                 : String.valueOf(((SipURI) request.getTo().getURI()).getHost());
@@ -284,8 +291,14 @@ public final class CallManager extends UntypedActor {
                 .getTo().getURI()).getTransportParam();
         SipURI outboundIntf = outboundInterface(transport);
 
+        logger.info("ToHost: "+toHost);
+        logger.info("ruri: "+ruri);
+        logger.info("myHostIp: "+myHostIp);
+        logger.info("mediaExternalIp: "+mediaExternalIp);
+        logger.info("proxyIp: "+proxyIp);
+
         // Try to see if the request is destined for an application we are hosting.
-        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(toHost))
+        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(ruri) || myHostIp.equalsIgnoreCase(ruri))
                 && redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
             return;
             // Next try to see if the request is destined to another registered client
