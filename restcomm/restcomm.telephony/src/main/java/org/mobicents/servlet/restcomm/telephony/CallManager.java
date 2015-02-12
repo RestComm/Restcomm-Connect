@@ -67,6 +67,7 @@ import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
@@ -623,7 +624,8 @@ public final class CallManager extends UntypedActor {
             outboundCall = request.outboundCall();
         logger.info("About to start Live Call Modification");
         logger.info("Initial Call path: "+call.path());
-        logger.info("Outbound Call path: "+outboundCall.path());
+        if (outboundCall != null)
+            logger.info("Outbound Call path: "+outboundCall.path());
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
@@ -638,19 +640,12 @@ public final class CallManager extends UntypedActor {
                 existingInterpreter.tell(new RetainOutboundCall(moveConnectedCallLeg),null);
                 future = (Future<Object>) ask(existingInterpreter, new RetainOutboundCall(moveConnectedCallLeg), expires);
                 boolean resp = (boolean) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                System.out.println("RetainOutboundCall set to :"+resp);
+                logger.info("RetainOutboundCall set to :"+resp);
             }
 
             call.tell(new StopObserving(null), self());
             if(outboundCall != null)
                 outboundCall.tell(new StopObserving(null), self());
-
-//            getContext().stop(existingInterpreter);
-//            while (!existingInterpreter.isTerminated()) {
-//                //Wait in the loop until existingInterpreter terminates
-//                System.out.println("!!!!!!!!!!!!!!!!!! Existing Interpreter IsTerminated: "+existingInterpreter.isTerminated());
-//            }
-
         }
 
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
@@ -676,10 +671,11 @@ public final class CallManager extends UntypedActor {
             outboundInterpreter.tell(new StartInterpreter(request.outboundCall()), self);
         }
 
-//        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-//            ActorRef existingInterpreter = (ActorRef) iterator.next();
-//            getContext().stop(existingInterpreter);
-//        }
+        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
+            ActorRef existingInterpreter = (ActorRef) iterator.next();
+            existingInterpreter.tell(StopInterpreter.instance(), null);
+            getContext().stop(existingInterpreter);
+        }
     }
 
     private ActorRef outbound(final Object message) throws ServletParseException {
