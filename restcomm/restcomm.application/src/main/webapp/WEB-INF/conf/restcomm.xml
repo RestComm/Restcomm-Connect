@@ -183,7 +183,7 @@
 		<media-server name="Dialogic XMS">
 			<address>127.0.0.1</address>
 			<port>5060</port>
-			<response-timeout>500</response-timeout>
+			<timeout>500</timeout>
 		</media-server>
 	</mscontrol>
 

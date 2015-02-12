@@ -51,8 +51,38 @@
 				</or>
 			</pattern>
 		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>DlgcMsMonitorServlet</servlet-name>
+			<pattern>
+				<and>
+					<equal>
+						<var>request.method</var>
+						<value>INVITE</value>
+					</equal>
+					<equal>
+						<var>request.to.uri.user</var>
+						<value></value>
+					</equal>
+				</and>
+			</pattern>
+		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>DlgcSipServlet</servlet-name>
+			<pattern>
+				<and>
+					<equal>
+						<var>request.method</var>
+						<value>INVITE</value>
+					</equal>
+					<equal>
+						<var>request.to.uri.user</var>
+						<value></value>
+					</equal>
+				</and>
+			</pattern>
+		</servlet-mapping>
 	</servlet-selection>
-	
+
 	<servlet>
 		<servlet-name>RestComm</servlet-name>
 		<display-name>RestComm</display-name>
@@ -60,9 +90,9 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.Bootstrapper
 		</servlet-class>
-		<load-on-startup>0</load-on-startup>
+		<load-on-startup>2</load-on-startup>
 	</servlet>
-	
+
 	<servlet>
 		<servlet-name>SmsService</servlet-name>
 		<display-name>SmsService</display-name>
@@ -70,7 +100,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
 		</servlet-class>
-		<load-on-startup>1</load-on-startup>
+		<load-on-startup>3</load-on-startup>
 	</servlet>
 
 	<servlet>
@@ -80,8 +110,13 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
 		</servlet-class>
-		<load-on-startup>2</load-on-startup>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+		</listener-class>
+	</listener>
 
 	<servlet>
 		<servlet-name>UserAgentManager</servlet-name>
@@ -90,9 +125,9 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
 		</servlet-class>
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>5</load-on-startup>
 	</servlet>
-	
+
 	<servlet>
 		<servlet-name>ProxyManager</servlet-name>
 		<display-name>ProxyManager</display-name>
@@ -100,6 +135,39 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
 		</servlet-class>
-		<load-on-startup>4</load-on-startup>
+		<load-on-startup>6</load-on-startup>
 	</servlet>
+	<servlet>
+		<description>XMS Keep Alive Monitor</description>
+		<display-name>KeepAliveMonitor</display-name>
+		<servlet-name>DlgcMsMonitorServlet</servlet-name>
+		<servlet-class>com.vendor.dialogic.javax.media.mscontrol.sip.DlgcMsMonitorServlet
+		</servlet-class>
+		<load-on-startup>7</load-on-startup>
+	</servlet>
+	<listener>
+		<listener-class>
+			com.vendor.dialogic.javax.media.mscontrol.sip.DlgcMsMonitorServlet
+		</listener-class>
+	</listener>
+
+	<servlet>
+		<description>Component receiving SIP request and response from XMS
+		</description>
+		<display-name>DlgcSipServlet</display-name>
+		<servlet-name>DlgcSipServlet</servlet-name>
+		<servlet-class>com.vendor.dialogic.javax.media.mscontrol.sip.DlgcSipServlet
+		</servlet-class>
+		<load-on-startup>8</load-on-startup>
+	</servlet>
+	<listener>
+		<listener-class>
+			com.vendor.dialogic.javax.media.mscontrol.sip.DlgcSipServlet
+		</listener-class>
+	</listener>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.mscontrol.xms.servlet.listener.XmsServletListener
+		</listener-class>
+	</listener>
 </sip-app>
