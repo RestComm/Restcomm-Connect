@@ -2164,19 +2164,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (conference != null)
                 getContext().stop(conference);
 
-            // Destroy the media group(s).
-            if (callMediaGroup != null) {
-                callMediaGroup.tell(stop, null);
-                getContext().stop(callMediaGroup);
-                callMediaGroup = null;
-            }
+//            // Destroy the media group(s).
+//            if (callMediaGroup != null) {
+//                callMediaGroup.tell(stop, null);
+//                getContext().stop(callMediaGroup);
+//                callMediaGroup = null;
+//            }
 
-            if (call != null) {
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
-                call.tell(destroy, null);
-                callManager.tell(new DestroyCall(call), null);
-                call = null;
-            }
+//            if (call != null) {
+//                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
+//                call.tell(destroy, null);
+//                callManager.tell(new DestroyCall(call), null);
+//                call = null;
+//            }
 
             postCleanup();
         }
