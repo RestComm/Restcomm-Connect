@@ -2,12 +2,7 @@ package org.mobicents.servlet.restcomm;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Properties;
 
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
-import javax.media.mscontrol.spi.DriverManager;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -37,7 +32,6 @@ import akka.actor.UntypedActorFactory;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import com.vendor.dialogic.javax.media.mscontrol.spi.DlgcDriver;
 
 public final class Bootstrapper extends SipServlet {
     private static final long serialVersionUID = 1L;
@@ -75,13 +69,8 @@ public final class Bootstrapper extends SipServlet {
             case "xms":
                 try {
                     MediaServerInfo mediaServerInfo = mediaServerInfo(settings);
-                    Properties dlgProperties = new Properties();
-                    dlgProperties.put("mediaserver.1.sip.address", mediaServerInfo.getAddress().getHostAddress());
-                    dlgProperties.put("mediaserver.1.sip.port", mediaServerInfo.getPort());
-                    dlgProperties.put("mediaserver.count", 1);
-                    MsControlFactory mscFactory = dialogicJsr309Driver().getFactory(dlgProperties);
-                    factory = new XmsControllerFactory(system, mscFactory, mediaServerInfo);
-                } catch (UnknownHostException | MsControlException e) {
+                    factory = new XmsControllerFactory(system, mediaServerInfo);
+                } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
                 break;
@@ -90,11 +79,6 @@ public final class Bootstrapper extends SipServlet {
                 throw new IllegalArgumentException("MSControl unknown compatibility mode: " + compatibility);
         }
         return factory;
-    }
-
-    private Driver dialogicJsr309Driver() {
-        DriverManager.registerDriver(new DlgcDriver());
-        return DriverManager.getDriver("com.dialogic.dlg309");
     }
 
     private MediaServerInfo mediaServerInfo(final Configuration configuration) throws UnknownHostException {

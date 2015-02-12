@@ -41,23 +41,28 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
     // Actor system
     private final ActorSystem system;
 
+    // JSR-309
+    private MsControlFactory msControlFactory;
+
     // Factories
-    private final MsControlFactory mscfactory;
     private final CallControllerFactory callControllerFactory;
 
     // Media Server Info
     private final MediaServerInfo mediaServerInfo;
 
-    public XmsControllerFactory(ActorSystem system, MsControlFactory factory, MediaServerInfo mediaServerInfo) {
+    public XmsControllerFactory(ActorSystem system, MediaServerInfo mediaServerInfo) {
         // Actor system
         this.system = system;
 
         // Factories
-        this.mscfactory = factory;
         this.callControllerFactory = new CallControllerFactory();
 
         // Media Server Info
         this.mediaServerInfo = mediaServerInfo;
+    }
+
+    public void setMsControlFactory(MsControlFactory factory) {
+        this.msControlFactory = factory;
     }
 
     @Override
@@ -77,7 +82,10 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new XmsCallController(mscfactory, mediaServerInfo);
+            if (msControlFactory == null) {
+                throw new IllegalStateException("No media server control factory has been set.");
+            }
+            return new XmsCallController(msControlFactory, mediaServerInfo);
         }
 
     }
