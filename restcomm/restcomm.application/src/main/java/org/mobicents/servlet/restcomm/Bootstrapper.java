@@ -136,6 +136,7 @@ public final class Bootstrapper extends SipServlet {
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
+        super.init(config);
         final ServletContext context = config.getServletContext();
         final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
         // Initialize the configuration interpolator.

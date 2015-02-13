@@ -40,9 +40,7 @@ import javax.media.mscontrol.mediagroup.MediaGroup;
 import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
-import javax.media.mscontrol.networkconnection.SdpPortManager;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
-import javax.media.mscontrol.networkconnection.SdpPortManagerException;
 import javax.media.mscontrol.resource.RTC;
 
 import org.apache.commons.configuration.Configuration;
@@ -168,8 +166,8 @@ public class XmsCallController extends MediaServerController {
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, openingMediaSession));
-        transitions.add(new Transition(uninitialized, failed));
-        transitions.add(new Transition(uninitialized, active));
+        transitions.add(new Transition(openingMediaSession, failed));
+        transitions.add(new Transition(openingMediaSession, active));
         transitions.add(new Transition(active, updatingMediaSession));
         transitions.add(new Transition(active, inactive));
         transitions.add(new Transition(updatingMediaSession, active));
@@ -223,18 +221,13 @@ public class XmsCallController extends MediaServerController {
             logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
             logger.info("********** Call Controller Processing Event: \"" + SdpPortManagerEvent.class.getName() + "\"");
 
-            SdpPortManager sdpManager = event.getSource();
             try {
-                if (event.getError() == null) {
+                if (event.getError() == SdpPortManagerEvent.NO_ERROR) {
                     EventType eventType = event.getEventType();
                     if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
                         if (event.isSuccessful()) {
-                            try {
-                                localSdp = sdpManager.getMediaServerSessionDescription().toString();
-                                fsm.transition(event, active);
-                            } catch (SdpPortManagerException e) {
-                                fsm.transition(event, failed);
-                            }
+                            localSdp = new String(event.getMediaServerSdp());
+                            fsm.transition(event, active);
                         } else {
                             fsm.transition(event, failed);
                         }
@@ -515,6 +508,12 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
+
+            if (message instanceof SdpPortManagerEvent) {
+                SdpPortManagerEvent event = (SdpPortManagerEvent) message;
+                logger.warning("XMS returned error: " + event.getErrorText() + ". Failing call...");
+            }
+
             // Inform call the media session could not be set up
             final MediaServerControllerError error = new MediaServerControllerError();
             call.tell(error, super.source);

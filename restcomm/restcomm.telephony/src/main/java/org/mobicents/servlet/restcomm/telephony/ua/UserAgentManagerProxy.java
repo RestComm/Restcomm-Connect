@@ -68,6 +68,7 @@ public final class UserAgentManagerProxy extends SipServlet {
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
+        super.init(config);
         final ServletContext context = config.getServletContext();
         Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration.setProperty(ServletConfig.class.getName(), config);
