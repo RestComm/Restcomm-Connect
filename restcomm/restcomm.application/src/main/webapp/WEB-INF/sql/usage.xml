@@ -34,13 +34,13 @@
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
-			COALESCE(SUM("duration"),0) as "usage",
+			${usageExpr} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
 			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
 			'/todo' AS "uri"
 		FROM
-			"restcomm_call_detail_records"
+			"${tableName}"
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" >= #{startDate} AND
@@ -57,13 +57,13 @@
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
-			COALESCE(SUM("duration"),0) as "usage",
+			${usageExpr} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
 			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
 			'/todo' AS "uri"
 		FROM
-			"restcomm_call_detail_records"
+			"${tableName}"
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" >= #{startDate} AND
@@ -80,13 +80,13 @@
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
-			COALESCE(SUM("duration"),0) as "usage",
+			${usageExpr} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
 			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
 			'/todo' AS "uri"
 		FROM
-			"restcomm_call_detail_records"
+			"${tableName}"
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" >= #{startDate} AND
