@@ -68,6 +68,7 @@ public final class ProxyManagerProxy extends SipServlet {
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
+        super.init(config);
         final ServletContext context = config.getServletContext();
         final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
         Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
