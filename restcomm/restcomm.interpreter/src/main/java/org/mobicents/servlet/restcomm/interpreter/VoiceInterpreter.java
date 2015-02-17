@@ -106,7 +106,6 @@ import org.mobicents.servlet.restcomm.telephony.Mute;
 import org.mobicents.servlet.restcomm.telephony.Play;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
-import org.mobicents.servlet.restcomm.telephony.RetainOutboundCall;
 import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.StartRecordingCall;
 import org.mobicents.servlet.restcomm.telephony.Stop;
@@ -182,7 +181,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
     private ActorRef sender;
-    private boolean retainOutboundCall = false;
+    private boolean liveCallModification = false;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -476,9 +475,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
-        } else if (RetainOutboundCall.class.equals(klass)) {
-            this.retainOutboundCall = ((RetainOutboundCall)message).retainOutboundCall();
-            sender.tell(this.retainOutboundCall, self());
         } else if (AsrResponse.class.equals(klass)) {
             if (outstandingAsrRequests > 0) {
                 asrResponse(message);
@@ -791,7 +787,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (FaxResponse.class.equals(klass)) {
             fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
-            if (CallStateChanged.State.IN_PROGRESS == callState) {
+            this.liveCallModification = ((StopInterpreter)message).isLiveCallModification();
+            if (CallStateChanged.State.IN_PROGRESS == callState && !liveCallModification) {
                 fsm.transition(message, hangingUp);
             } else {
                 fsm.transition(message, finished);
@@ -2088,7 +2085,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Cleanup the outbound call if necessary.
             final State state = fsm.state();
             if (bridged.equals(state) || forking.equals(state)) {
-                if (outboundCall != null) {
+                if (outboundCall != null && !liveCallModification) {
                     outboundCall.tell(new StopObserving(source), null);
                     outboundCall.tell(new Hangup(), null);
                 }
@@ -2114,10 +2111,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context().stop(callMediaGroup);
                 callMediaGroup = null;
             }
-            // Destroy the Call(s).
-            callManager.tell(new DestroyCall(call), source);
-            if (outboundCall != null) {
-                callManager.tell(new DestroyCall(outboundCall), source);
+            if (!liveCallModification) {
+                // Destroy the Call(s).
+                callManager.tell(new DestroyCall(call), source);
+                if (outboundCall != null) {
+                    callManager.tell(new DestroyCall(outboundCall), source);
+                }
             }
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
@@ -2135,8 +2134,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     @Override
     public void postStop() {
         if (!fsm.state().equals(uninitialized)) {
-            logger.info("At the postStop() method. Will clean up Voice Interpreter.");
-            if (fsm.state().equals(bridged) && outboundCall != null) {
+            logger.info("At the postStop() method. Will clean up Voice Interpreter. Keep calls: "+liveCallModification);
+            if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
                 outboundCall.tell(new Hangup(), null);
                 callManager.tell(new DestroyCall(outboundCall), null);
                 outboundCall = null;
@@ -2164,19 +2163,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (conference != null)
                 getContext().stop(conference);
 
-//            // Destroy the media group(s).
-//            if (callMediaGroup != null) {
-//                callMediaGroup.tell(stop, null);
-//                getContext().stop(callMediaGroup);
-//                callMediaGroup = null;
-//            }
+            // Destroy the media group(s).
+            if (callMediaGroup != null) {
+                callMediaGroup.tell(stop, null);
+                getContext().stop(callMediaGroup);
+                callMediaGroup = null;
+            }
 
-//            if (call != null) {
-//                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
-//                call.tell(destroy, null);
-//                callManager.tell(new DestroyCall(call), null);
-//                call = null;
-//            }
+            if (call != null && !liveCallModification) {
+                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
+                call.tell(destroy, null);
+                callManager.tell(new DestroyCall(call), null);
+                call = null;
+            }
+
+            getContext().stop(self());
 
             postCleanup();
         }
