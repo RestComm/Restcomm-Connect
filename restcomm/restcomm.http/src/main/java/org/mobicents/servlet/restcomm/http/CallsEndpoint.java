@@ -382,10 +382,10 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             Future<Object> future = (Future<Object>) ask(callManager, new GetCall(callPath), expires);
             call = (ActorRef) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 
-            if(moveConnectedCallLeg) {
+//            if(moveConnectedCallLeg) {
                 future = (Future<Object>) ask(call, new GetOutboundCall(), expires);
                 outboundCall = (ActorRef) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-            }
+//            }
 
             future = (Future<Object>) ask(call, new GetCallInfo(), expires);
             CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,

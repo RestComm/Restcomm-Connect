@@ -310,7 +310,7 @@ public final class CallManager extends UntypedActor {
                         + request.getRequestURI().toString());
                 Client toClient = clients.getClient(toUser);
                 if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
-                                        // the b2bua
+                    // the b2bua
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
                         logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
                                 + " toHost: " + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
@@ -619,9 +619,9 @@ public final class CallManager extends UntypedActor {
         final ActorRef self = self();
         final ActorRef call = request.call();
         final Boolean moveConnectedCallLeg = request.moveConnecteCallLeg();
-        ActorRef outboundCall = null;
-        if (moveConnectedCallLeg)
-            outboundCall = request.outboundCall();
+        ActorRef outboundCall = request.outboundCall();
+        //        if (moveConnectedCallLeg)
+        //            outboundCall =
         logger.info("About to start Live Call Modification");
         logger.info("Initial Call path: "+call.path());
         if (outboundCall != null)
@@ -635,14 +635,8 @@ public final class CallManager extends UntypedActor {
 
         for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
             ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Existing Interpreter path: "+existingInterpreter.path());
-            if(outboundCall != null) {
-                existingInterpreter.tell(new RetainOutboundCall(moveConnectedCallLeg),null);
-                future = (Future<Object>) ask(existingInterpreter, new RetainOutboundCall(moveConnectedCallLeg), expires);
-                boolean resp = (boolean) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                logger.info("RetainOutboundCall set to :"+resp);
-            }
-
+//            logger.info("Existing Interpreter path: "+existingInterpreter.path());
+            logger.info("Will tell Call actors to stop observing existing Interpreters");
             call.tell(new StopObserving(null), self());
             if(outboundCall != null)
                 outboundCall.tell(new StopObserving(null), self());
@@ -663,18 +657,27 @@ public final class CallManager extends UntypedActor {
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
         final ActorRef interpreter = builder.build();
-        logger.info("Intepreter for first call leg: "+interpreter.path());
         interpreter.tell(new StartInterpreter(request.call()), self);
+        logger.info("New Intepreter for first call leg: "+interpreter.path()+" started");
         if (outboundCall != null) {
-            final ActorRef outboundInterpreter = builder.build();
-            logger.info("Intepreter for Second call leg: "+outboundInterpreter.path());
-            outboundInterpreter.tell(new StartInterpreter(request.outboundCall()), self);
+            if (moveConnectedCallLeg) {
+                final ActorRef outboundInterpreter = builder.build();
+                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
+                logger.info("New Intepreter for Second call leg: "+outboundInterpreter.path()+" started");
+            } else {
+                logger.info("moveConnectedCallLeg is: "+moveConnectedCallLeg+" so will hangup outboundCall");
+                outboundCall.tell(new Hangup(), null);
+                getContext().stop(outboundCall);
+            }
         }
 
+        //Cleanup existing Interpreter
         for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
             ActorRef existingInterpreter = (ActorRef) iterator.next();
-            existingInterpreter.tell(StopInterpreter.instance(), null);
-            getContext().stop(existingInterpreter);
+            logger.info("Existing Interpreter path: "+existingInterpreter.path()+" will be stopped");
+            StopInterpreter stopInterpreter = StopInterpreter.instance();
+            stopInterpreter.setLiveCallModification(true);
+            existingInterpreter.tell(stopInterpreter, null);
         }
     }
 

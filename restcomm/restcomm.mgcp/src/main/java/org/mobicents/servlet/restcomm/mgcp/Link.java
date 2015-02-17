@@ -110,6 +110,7 @@ public final class Link extends UntypedActor {
         transitions.add(new Transition(open, closed));
         // Initialize the intermediate transitions for the FSM.
         transitions.add(new Transition(initializingPrimary, initializingSecondary));
+        transitions.add(new Transition(initializingPrimary, closingPrimary));
         transitions.add(new Transition(initializingSecondary, closed));
         transitions.add(new Transition(closingPrimary, closingSecondary));
         transitions.add(new Transition(closingSecondary, closed));
