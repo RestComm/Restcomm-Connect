@@ -564,7 +564,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callMediaGroup.tell(new Stop(), null);
                     context().stop(callMediaGroup);
                     fsm.transition(message, finishRecording);
-                } else if (bridged.equals(state) && call == sender()) {
+                } else if ((bridged.equals(state) || forking.equals(state)) && call == sender()) {
                     if (!dialActionExecuted) {
                         fsm.transition(message, finishDialing);
                     }
@@ -1698,7 +1698,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             Attribute attribute = verb.attribute("action");
 
-            if (message instanceof ReceiveTimeout) {
+            if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
                 logger.info("Received timeout, will cancel calls");
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
