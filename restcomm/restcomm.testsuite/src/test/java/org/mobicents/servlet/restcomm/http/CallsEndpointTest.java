@@ -155,7 +155,7 @@ public class CallsEndpointTest {
     @Test
     public void getCallsListFilteredByStartTime() {
         Map<String, String> filters = new HashMap<String, String>();
-        filters.put("StartTime", "2013-09-10");
+        filters.put("StartTime", "2013-08-23 14:30:07.820000000");
         JsonObject allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken);
 
@@ -181,7 +181,7 @@ public class CallsEndpointTest {
     @Test
     public void getCallsListFilteredUsingMultipleFilters() {
         Map<String, String> filters = new HashMap<String, String>();
-        filters.put("StartTime", "2013-09-10");
+        filters.put("StartTime", "2013-08-23 14:30:07.820000000");
         filters.put("To", "1512600%");
         filters.put("From", "3021097%");
         filters.put("Status", "in-progress");
