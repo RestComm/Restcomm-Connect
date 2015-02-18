@@ -87,7 +87,8 @@
         <property name="telscale-sipservlets.eap6.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/${sipservlets-build}/artifact/${telscale-sipservlets.eap6.download.distro.file}" />
         <property name="telscale-sipservlets.eap6.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.eap6.download.distro.file}" />
 
-	<property name="hsqldb.download.url" value="http://sourceforge.net/projects/hsqldb/files/hsqldb/hsqldb_2_3/hsqldb-2.3.2.zip" />
+	<!--<property name="hsqldb.download.url" value="http://sourceforge.net/projects/hsqldb/files/hsqldb/hsqldb_2_3/hsqldb-2.3.2.zip" />-->
+	<property name="hsqldb.download.url" value="http://ufpr.dl.sourceforge.net/project/hsqldb/hsqldb/hsqldb_2_3/hsqldb-2.3.2.zip" />
 	<property name="hsqldb.download.distro.file" value="hsqldb-2.3.2.zip" />
 	<property name="hsqldb.distro.zip.path" value="${checkout.dir}/${hsqldb.download.distro.file}" />
 
