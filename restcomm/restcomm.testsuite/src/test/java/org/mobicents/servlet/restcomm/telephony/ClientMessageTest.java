@@ -45,6 +45,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.CreateClientsTool;
@@ -55,6 +56,7 @@ import org.mobicents.servlet.restcomm.http.CreateClientsTool;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Ignore
 public class ClientMessageTest {
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
