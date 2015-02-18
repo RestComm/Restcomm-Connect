@@ -34,11 +34,14 @@ import javax.media.mscontrol.MediaEventListener;
 import javax.media.mscontrol.MediaSession;
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.Parameter;
 import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.join.Joinable.Direction;
 import javax.media.mscontrol.mediagroup.MediaGroup;
 import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
+import javax.media.mscontrol.mediagroup.signals.SignalDetector;
+import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
 import javax.media.mscontrol.resource.RTC;
@@ -57,6 +60,7 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
@@ -110,8 +114,10 @@ public class XmsCallController extends MediaServerController {
     private MediaSession mediaSession;
     private NetworkConnection networkConnection;
     private MediaGroup mediaGroup;
+
     private final SdpListener sdpListener;
     private final PlayerListener playerListener;
+    private final DtmfListener dtmfListener;
 
     // Call runtime stuff
     private ActorRef call;
@@ -149,6 +155,7 @@ public class XmsCallController extends MediaServerController {
         this.mediaServerInfo = mediaServerInfo;
         this.sdpListener = new SdpListener();
         this.playerListener = new PlayerListener();
+        this.dtmfListener = new DtmfListener();
 
         // Initialize the states for the FSM
         this.uninitialized = new State("uninitialized", null, null);
@@ -252,10 +259,41 @@ public class XmsCallController extends MediaServerController {
         public void onEvent(PlayerEvent event) {
             EventType eventType = event.getEventType();
 
+            logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+            logger.info("********** Call Controller Processing Event: \"" + PlayerEvent.class.getName() + "\" (type = "
+                    + eventType + ")");
+
             if (PlayerEvent.PLAY_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response;
                 if (event.isSuccessful()) {
-                    response = new MediaGroupResponse<String>("play_completed");
+                    response = new MediaGroupResponse<String>(eventType.toString());
+                } else {
+                    String reason = event.getErrorText();
+                    MediaServerControllerException error = new MediaServerControllerException(reason);
+                    response = new MediaGroupResponse<String>(error, reason);
+                }
+                super.remote.tell(response, self());
+            }
+        }
+
+    }
+
+    private final class DtmfListener extends MediaListener<SignalDetectorEvent> {
+
+        private static final long serialVersionUID = -96652040901361098L;
+
+        @Override
+        public void onEvent(SignalDetectorEvent event) {
+            EventType eventType = event.getEventType();
+
+            logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+            logger.info("********** Call Controller Processing Event: \"" + SignalDetectorEvent.class.getName() + "\" (type = "
+                    + eventType + ")");
+
+            if (SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED.equals(eventType)) {
+                MediaGroupResponse<String> response;
+                if (event.isSuccessful()) {
+                    response = new MediaGroupResponse<String>(eventType.toString());
                 } else {
                     String reason = event.getErrorText();
                     MediaServerControllerException error = new MediaServerControllerException(reason);
@@ -272,9 +310,13 @@ public class XmsCallController extends MediaServerController {
      */
     @Override
     public void onReceive(Object message) throws Exception {
-        Class<?> klass = message.getClass();
-        ActorRef self = getSelf();
-        ActorRef sender = getSender();
+        final Class<?> klass = message.getClass();
+        final ActorRef self = self();
+        final ActorRef sender = sender();
+        final State state = fsm.state();
+
+        logger.info("********** Call Controller Current State: \"" + state.toString());
+        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -300,6 +342,8 @@ public class XmsCallController extends MediaServerController {
             onUnmute((Unmute) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
+        } else if (Collect.class.equals(klass)) {
+            onCollect((Collect) message, self, sender);
         }
     }
 
@@ -355,6 +399,10 @@ public class XmsCallController extends MediaServerController {
         // Create new media group
         this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
 
+        // Prepare the Media Group resources
+        this.mediaGroup.getPlayer().addListener(this.playerListener);
+        this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
+
         sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
     }
 
@@ -368,7 +416,7 @@ public class XmsCallController extends MediaServerController {
     private void onStartMediaGroup(StartMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
         // Join network connection to audio media group
         if (this.mediaGroup != null) {
-            this.networkConnection.join(Direction.DUPLEX, mediaGroup);
+            this.networkConnection.join(Direction.DUPLEX, this.mediaGroup);
         }
 
         // Tell observers the media group has been created
@@ -399,9 +447,57 @@ public class XmsCallController extends MediaServerController {
         if (is(active)) {
             List<URI> uris = message.uris();
             Parameters params = this.mediaGroup.createParameters();
-            params.put(Player.REPEAT_COUNT, message.iterations());
+            params.put(Player.REPEAT_COUNT, message.iterations() - 1);
             this.playerListener.setRemote(sender);
-            this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, Parameters.NO_PARAMETER);
+            this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+        }
+    }
+
+    private void onCollect(Collect message, ActorRef self, ActorRef sender) throws MsControlException {
+        if (is(active)) {
+            Parameters optargs = this.mediaGroup.createParameters();
+
+            // Count the number of patterns to be added to the detector
+            boolean hasEndInputKey = message.hasEndInputKey();
+            int endInputKeyIndex = message.hasEndInputKey() ? 0 : -1;
+
+            boolean hasPattern = message.hasPattern();
+            int patternIndex = message.hasPattern() ? endInputKeyIndex + 1 : -1;
+
+            // Add patterns to the detector
+            RTC[] rtcs = RTC.NO_RTC;
+            if (hasEndInputKey) {
+                optargs.put(SignalDetector.PATTERN[endInputKeyIndex], message.endInputKey());
+                rtcs = new RTC[] { new RTC(SignalDetector.PATTERN_MATCH[endInputKeyIndex], SignalDetector.STOP) };
+            }
+
+            Parameter[] patterns = null;
+            if (hasPattern) {
+                optargs.put(SignalDetector.PATTERN[patternIndex], message.pattern());
+                patterns = new Parameter[] { SignalDetector.PATTERN[patternIndex] };
+            }
+
+            // Setup enabled events
+            EventType[] enabledEvents = { SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED };
+            optargs.put(SignalDetector.ENABLED_EVENTS, enabledEvents);
+
+            // Setup prompts
+            if (message.hasPrompts()) {
+                List<URI> prompts = message.prompts();
+                optargs.put(SignalDetector.PROMPT, prompts.toArray(new URI[prompts.size()]));
+            }
+
+            // Setup time out interval
+            int timeout = message.timeout();
+            optargs.put(SignalDetector.INITIAL_TIMEOUT, timeout);
+            optargs.put(SignalDetector.INTER_SIG_TIMEOUT, timeout);
+
+            // Disable buffering for performance gain
+            optargs.put(SignalDetector.BUFFERING, false);
+
+            this.dtmfListener.setRemote(sender);
+            this.mediaGroup.getSignalDetector().flushBuffer();
+            this.mediaGroup.getSignalDetector().receiveSignals(message.numberOfDigits(), patterns, rtcs, optargs);
         }
     }
 
