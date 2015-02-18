@@ -56,7 +56,6 @@ import org.mobicents.servlet.restcomm.http.CreateClientsTool;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-@Ignore
 public class ClientMessageTest {
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
