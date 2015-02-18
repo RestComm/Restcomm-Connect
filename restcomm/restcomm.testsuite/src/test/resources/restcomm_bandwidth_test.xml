@@ -43,6 +43,9 @@
 		     Default is False, which means that Restcomm will use outbound proxy for the host part of From header -->
 		<use-local-address>false</use-local-address>
 
+		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
+		<authenticate>true</authenticate>
+
         <!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1)
             when creating an outbound call -->
         <normalize-numbers-for-outbound-calls>true
