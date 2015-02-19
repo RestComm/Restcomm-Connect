@@ -635,7 +635,6 @@ public final class CallManager extends UntypedActor {
 
         for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
             ActorRef existingInterpreter = (ActorRef) iterator.next();
-//            logger.info("Existing Interpreter path: "+existingInterpreter.path());
             logger.info("Will tell Call actors to stop observing existing Interpreters");
             call.tell(new StopObserving(null), self());
             if(outboundCall != null)
@@ -661,6 +660,7 @@ public final class CallManager extends UntypedActor {
         logger.info("New Intepreter for first call leg: "+interpreter.path()+" started");
         if (outboundCall != null) {
             if (moveConnectedCallLeg) {
+                outboundCall.tell(new CreateMediaGroup(), null);
                 final ActorRef outboundInterpreter = builder.build();
                 outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
                 logger.info("New Intepreter for Second call leg: "+outboundInterpreter.path()+" started");
