@@ -3,15 +3,13 @@ package org.mobicents.servlet.restcomm.rvd.interpreter;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -270,6 +268,7 @@ public class Interpreter {
 
         processBootstrapParameters();
         processRequestParameters();
+        processRequestHeaders(httpRequest);
         //handleStickyParameters(); // create local copies of sticky_* parameters
 
         response = interpret(targetParam, null, null, null);
@@ -644,9 +643,9 @@ public class Interpreter {
      * prefix in their names. Also, sticky_* prefixed parameters have their local copied variables created as well.
      */
     private void processRequestParameters() {
-        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
+        //Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
         for ( String anyVariableName : getRequestParams().keySet() ) {
-            if ( validNames.contains(anyVariableName) ) {
+            if ( RvdConfiguration.builtinRestcommParameters.contains(anyVariableName) ) {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
             } else
@@ -663,6 +662,57 @@ public class Interpreter {
                 //for the rest of the parameters simply create a variable with the same name
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(anyVariableName, variableValue );
+            }
+        }
+    }
+
+    /**
+     * Determines whether an HTTP header is a Restcomm-added header and should be copied to a respective RVD variable.
+     * Case INSENSITIVE comparison is made.
+     *
+     * @param headerName
+     * @return
+     */
+    private boolean isCustomRestcommHttpHeader(String headerName) {
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) )
+            return true;
+        return false;
+    }
+
+    /**
+     * Sanitizes customer headers added by restcomm so that they can take a valid RVD variable name.
+     * Other headers are returned as is.
+     *
+     * @param headerName
+     * @return
+     */
+    private String normalizeHTTPHeaderName(String headerName) {
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) ) {
+            String stripedName = headerName.substring( RvdConfiguration.RESTCOMM_HEADER_PREFIX.length() ).toLowerCase();
+            return sanitizeVariableName(stripedName);
+        } else
+            return headerName;
+    }
+
+
+    private String sanitizeVariableName(String name) {
+        if (name != null)
+            return name.replaceAll("[^A-Za-z0-9_]", "_");
+        return null;
+    }
+
+    /**
+     * Go through request's HTTP headers and create RVD variables out of them
+     * @param request
+     */
+    private void processRequestHeaders(HttpServletRequest request) {
+        Enumeration<String> headerNames = (Enumeration<String>) request.getHeaderNames();
+        while ( headerNames.hasMoreElements() ) {
+            String name = headerNames.nextElement();
+            if (isCustomRestcommHttpHeader(name)) {
+                String value = request.getHeader(name);
+                name = normalizeHTTPHeaderName(name);
+                getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + name, value);
             }
         }
     }
