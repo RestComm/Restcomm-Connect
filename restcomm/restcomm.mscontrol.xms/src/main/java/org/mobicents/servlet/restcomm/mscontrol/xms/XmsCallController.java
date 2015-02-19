@@ -40,6 +40,9 @@ import javax.media.mscontrol.join.Joinable.Direction;
 import javax.media.mscontrol.mediagroup.MediaGroup;
 import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
+import javax.media.mscontrol.mediagroup.Recorder;
+import javax.media.mscontrol.mediagroup.RecorderEvent;
+import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
 import javax.media.mscontrol.mediagroup.signals.SignalDetector;
 import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
@@ -72,6 +75,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
@@ -293,7 +297,7 @@ public class XmsCallController extends MediaServerController {
             if (SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response;
                 if (event.isSuccessful()) {
-                    response = new MediaGroupResponse<String>(eventType.toString());
+                    response = new MediaGroupResponse<String>(event.getSignalString());
                 } else {
                     String reason = event.getErrorText();
                     MediaServerControllerException error = new MediaServerControllerException(reason);
@@ -301,6 +305,18 @@ public class XmsCallController extends MediaServerController {
                 }
                 super.remote.tell(response, self());
             }
+        }
+
+    }
+
+    private final class RecorderListener extends MediaListener<RecorderEvent> {
+
+        private static final long serialVersionUID = -8952464412809110917L;
+
+        @Override
+        public void onEvent(RecorderEvent event) {
+            // TODO Auto-generated method stub
+
         }
 
     }
@@ -344,6 +360,8 @@ public class XmsCallController extends MediaServerController {
             onPlay((Play) message, self, sender);
         } else if (Collect.class.equals(klass)) {
             onCollect((Collect) message, self, sender);
+        } else if (Record.class.equals(klass)) {
+            onRecord((Record) message, self, sender);
         }
     }
 
@@ -457,24 +475,22 @@ public class XmsCallController extends MediaServerController {
         if (is(active)) {
             Parameters optargs = this.mediaGroup.createParameters();
 
-            // Count the number of patterns to be added to the detector
-            boolean hasEndInputKey = message.hasEndInputKey();
-            int endInputKeyIndex = message.hasEndInputKey() ? 0 : -1;
-
-            boolean hasPattern = message.hasPattern();
-            int patternIndex = message.hasPattern() ? endInputKeyIndex + 1 : -1;
+            List<Parameter> patterns = new ArrayList<Parameter>(2);
 
             // Add patterns to the detector
-            RTC[] rtcs = RTC.NO_RTC;
-            if (hasEndInputKey) {
-                optargs.put(SignalDetector.PATTERN[endInputKeyIndex], message.endInputKey());
-                rtcs = new RTC[] { new RTC(SignalDetector.PATTERN_MATCH[endInputKeyIndex], SignalDetector.STOP) };
+            if (message.hasEndInputKey()) {
+                optargs.put(SignalDetector.PATTERN[0], message.endInputKey());
+                patterns.add(SignalDetector.PATTERN[0]);
             }
 
-            Parameter[] patterns = null;
-            if (hasPattern) {
-                optargs.put(SignalDetector.PATTERN[patternIndex], message.pattern());
-                patterns = new Parameter[] { SignalDetector.PATTERN[patternIndex] };
+            if (message.hasPattern()) {
+                optargs.put(SignalDetector.PATTERN[1], message.pattern());
+                patterns.add(SignalDetector.PATTERN[1]);
+            }
+
+            Parameter[] patternArray = null;
+            if (!patterns.isEmpty()) {
+                patternArray = patterns.toArray(new Parameter[patterns.size()]);
             }
 
             // Setup enabled events
@@ -497,7 +513,38 @@ public class XmsCallController extends MediaServerController {
 
             this.dtmfListener.setRemote(sender);
             this.mediaGroup.getSignalDetector().flushBuffer();
-            this.mediaGroup.getSignalDetector().receiveSignals(message.numberOfDigits(), patterns, rtcs, optargs);
+            this.mediaGroup.getSignalDetector().receiveSignals(message.numberOfDigits(), patternArray, RTC.NO_RTC, optargs);
+        }
+    }
+
+    private void onRecord(Record message, ActorRef self, ActorRef sender) throws MsControlException {
+        if (is(active)) {
+            Parameters params = this.mediaGroup.createParameters();
+
+            // Add prompts
+            if (message.hasPrompts()) {
+                List<URI> prompts = message.prompts();
+                params.put(Recorder.PROMPT, prompts.toArray(new URI[prompts.size()]));
+            }
+
+            // Finish on key
+            RTC[] rtcs;
+            if (message.hasEndInputKey()) {
+                params.put(SignalDetector.PATTERN[0], message.endInputKey());
+                rtcs = new RTC[] { new RTC(SignalDetector.PATTERN_MATCH[0], Recorder.STOP) };
+            } else {
+                rtcs = RTC.NO_RTC;
+            }
+
+            // Recording length
+            params.put(Recorder.MAX_DURATION, message.length());
+
+            // Recording timeout
+            int timeout = message.timeout();
+            params.put(SpeechDetectorConstants.INITIAL_TIMEOUT, timeout);
+            params.put(SpeechDetectorConstants.FINAL_TIMEOUT, timeout);
+
+            this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
         }
     }
 

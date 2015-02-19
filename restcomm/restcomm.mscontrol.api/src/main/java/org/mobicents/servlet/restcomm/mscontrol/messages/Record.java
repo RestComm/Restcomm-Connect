@@ -64,6 +64,10 @@ public final class Record {
         return prompts;
     }
 
+    public boolean hasPrompts() {
+        return (prompts != null && !prompts.isEmpty());
+    }
+
     public int timeout() {
         return timeout;
     }
@@ -74,5 +78,9 @@ public final class Record {
 
     public String endInputKey() {
         return endInputKey;
+    }
+
+    public boolean hasEndInputKey() {
+        return (endInputKey != null && !endInputKey.isEmpty());
     }
 }
