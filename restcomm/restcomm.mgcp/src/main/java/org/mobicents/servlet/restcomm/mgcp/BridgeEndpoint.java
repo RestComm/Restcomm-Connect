@@ -38,7 +38,7 @@ public final class BridgeEndpoint extends GenericEndpoint {
     @Override
     public void postStop() {
         ActorRef sender = this.sender();
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Bridge in postStop");
+//        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Bridge in postStop");
 //        super.postStop();
     }
 }

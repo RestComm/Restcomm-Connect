@@ -1011,8 +1011,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         callRecord = builder.build();
                         records.addCallDetailRecord(callRecord);
+//
+//                        if (liveCallModification) {
+//                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+//                            fsm.transition(message, acquiringCallMediaGroup);
+//                            return;
+//                        }
                     } else {
-                        if (callMediaGroup == null) {
+                        if (callMediaGroup == null ) {
                             logger.info("On going call but CallMediaGroup is null, will acquire call media group");
                             fsm.transition(message, acquiringCallMediaGroup);
                             return;
@@ -2092,14 +2098,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // If we still have a conference media group release it.
             final StopMediaGroup stop = new StopMediaGroup();
-            if (conferenceMediaGroup != null) {
+            if (conferenceMediaGroup != null && !liveCallModification) {
                 conferenceMediaGroup.tell(stop, source);
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
                 conference.tell(destroy, source);
                 conferenceMediaGroup = null;
             }
             // If the call is in a conference remove it.
-            if (conference != null) {
+            if (conference != null && !liveCallModification) {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
