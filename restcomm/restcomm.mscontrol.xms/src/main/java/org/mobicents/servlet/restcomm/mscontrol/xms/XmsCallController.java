@@ -477,87 +477,101 @@ public class XmsCallController extends MediaServerController {
         // TODO ask JSR driver to unmute
     }
 
-    private void onPlay(Play message, ActorRef self, ActorRef sender) throws MsControlException {
+    private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (is(active)) {
-            List<URI> uris = message.uris();
-            Parameters params = this.mediaGroup.createParameters();
-            params.put(Player.REPEAT_COUNT, message.iterations() - 1);
-            this.playerListener.setRemote(sender);
-            this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+            try {
+                List<URI> uris = message.uris();
+                Parameters params = this.mediaGroup.createParameters();
+                params.put(Player.REPEAT_COUNT, message.iterations() - 1);
+                this.playerListener.setRemote(sender);
+                this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+            } catch (MsControlException e) {
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
+            }
         }
     }
 
-    private void onCollect(Collect message, ActorRef self, ActorRef sender) throws MsControlException {
+    private void onCollect(Collect message, ActorRef self, ActorRef sender) {
         if (is(active)) {
-            Parameters optargs = this.mediaGroup.createParameters();
+            try {
+                Parameters optargs = this.mediaGroup.createParameters();
 
-            List<Parameter> patterns = new ArrayList<Parameter>(2);
+                // Add patterns to the detector
+                List<Parameter> patterns = new ArrayList<Parameter>(2);
+                if (message.hasEndInputKey()) {
+                    optargs.put(SignalDetector.PATTERN[0], message.endInputKey());
+                    patterns.add(SignalDetector.PATTERN[0]);
+                }
 
-            // Add patterns to the detector
-            if (message.hasEndInputKey()) {
-                optargs.put(SignalDetector.PATTERN[0], message.endInputKey());
-                patterns.add(SignalDetector.PATTERN[0]);
+                if (message.hasPattern()) {
+                    optargs.put(SignalDetector.PATTERN[1], message.pattern());
+                    patterns.add(SignalDetector.PATTERN[1]);
+                }
+
+                Parameter[] patternArray = null;
+                if (!patterns.isEmpty()) {
+                    patternArray = patterns.toArray(new Parameter[patterns.size()]);
+                }
+
+                // Setup enabled events
+                EventType[] enabledEvents = { SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED };
+                optargs.put(SignalDetector.ENABLED_EVENTS, enabledEvents);
+
+                // Setup prompts
+                if (message.hasPrompts()) {
+                    List<URI> prompts = message.prompts();
+                    optargs.put(SignalDetector.PROMPT, prompts.toArray(new URI[prompts.size()]));
+                }
+
+                // Setup time out interval
+                int timeout = message.timeout();
+                optargs.put(SignalDetector.INITIAL_TIMEOUT, timeout);
+                optargs.put(SignalDetector.INTER_SIG_TIMEOUT, timeout);
+
+                // Disable buffering for performance gain
+                optargs.put(SignalDetector.BUFFERING, false);
+
+                this.dtmfListener.setRemote(sender);
+                this.mediaGroup.getSignalDetector().flushBuffer();
+                this.mediaGroup.getSignalDetector().receiveSignals(message.numberOfDigits(), patternArray, RTC.NO_RTC, optargs);
+            } catch (MsControlException e) {
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
             }
-
-            if (message.hasPattern()) {
-                optargs.put(SignalDetector.PATTERN[1], message.pattern());
-                patterns.add(SignalDetector.PATTERN[1]);
-            }
-
-            Parameter[] patternArray = null;
-            if (!patterns.isEmpty()) {
-                patternArray = patterns.toArray(new Parameter[patterns.size()]);
-            }
-
-            // Setup enabled events
-            EventType[] enabledEvents = { SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED };
-            optargs.put(SignalDetector.ENABLED_EVENTS, enabledEvents);
-
-            // Setup prompts
-            if (message.hasPrompts()) {
-                List<URI> prompts = message.prompts();
-                optargs.put(SignalDetector.PROMPT, prompts.toArray(new URI[prompts.size()]));
-            }
-
-            // Setup time out interval
-            int timeout = message.timeout();
-            optargs.put(SignalDetector.INITIAL_TIMEOUT, timeout);
-            optargs.put(SignalDetector.INTER_SIG_TIMEOUT, timeout);
-
-            // Disable buffering for performance gain
-            optargs.put(SignalDetector.BUFFERING, false);
-
-            this.dtmfListener.setRemote(sender);
-            this.mediaGroup.getSignalDetector().flushBuffer();
-            this.mediaGroup.getSignalDetector().receiveSignals(message.numberOfDigits(), patternArray, RTC.NO_RTC, optargs);
         }
     }
 
-    private void onRecord(Record message, ActorRef self, ActorRef sender) throws MsControlException {
+    private void onRecord(Record message, ActorRef self, ActorRef sender) {
         if (is(active)) {
-            Parameters params = this.mediaGroup.createParameters();
+            try {
+                Parameters params = this.mediaGroup.createParameters();
 
-            // Add prompts
-            if (message.hasPrompts()) {
-                List<URI> prompts = message.prompts();
-                params.put(Recorder.PROMPT, prompts.get(0));
+                // Add prompts
+                if (message.hasPrompts()) {
+                    List<URI> prompts = message.prompts();
+                    params.put(Recorder.PROMPT, prompts.toArray(new URI[prompts.size()]));
+                }
+
+                // Finish on key
+                if (message.hasEndInputKey()) {
+                    params.put(SignalDetector.PATTERN[0], message.endInputKey());
+                }
+
+                // Recording length
+                params.put(Recorder.MAX_DURATION, message.length());
+
+                // Recording timeout
+                int timeout = message.timeout();
+                params.put(SpeechDetectorConstants.INITIAL_TIMEOUT, timeout);
+                params.put(SpeechDetectorConstants.FINAL_TIMEOUT, timeout);
+
+                this.recorderListener.setRemote(sender);
+                this.mediaGroup.getRecorder().record(message.destination(), RTC.NO_RTC, params);
+            } catch (MsControlException e) {
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
             }
-
-            // Finish on key
-            if (message.hasEndInputKey()) {
-                params.put(SignalDetector.PATTERN[0], message.endInputKey());
-            }
-
-            // Recording length
-            params.put(Recorder.MAX_DURATION, message.length());
-
-            // Recording timeout
-            int timeout = message.timeout();
-            params.put(SpeechDetectorConstants.INITIAL_TIMEOUT, timeout);
-            params.put(SpeechDetectorConstants.FINAL_TIMEOUT, timeout);
-
-            this.recorderListener.setRemote(sender);
-            this.mediaGroup.getRecorder().record(message.destination(), RTC.NO_RTC, params);
         }
     }
 
