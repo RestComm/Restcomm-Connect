@@ -99,6 +99,8 @@ import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.IPUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -108,6 +110,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -457,7 +460,7 @@ public final class Call extends UntypedActor {
             builder.setApiVersion(runtimeSettings.getString("api-version"));
             StringBuilder buffer = new StringBuilder();
             buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
+            .append(accountId.toString());
             buffer.append("/Recordings/").append(recordingSid.toString());
             builder.setUri(URI.create(buffer.toString()));
             final Recording recording = builder.build();
@@ -475,8 +478,8 @@ public final class Call extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         final State state = fsm.state();
-        logger.info("********** Call's Current State: \"" + state.toString());
-        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        logger.info("********** Call's "+ self().path() +" Current State: \"" + state.toString());
+        logger.info("********** Call "+ self().path() +" Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             observe(message);
@@ -486,6 +489,8 @@ public final class Call extends UntypedActor {
             sender.tell(new CallResponse<List<ActorRef>>(observers), self);
         } else if (GetCallInfo.class.equals(klass)) {
             sender.tell(info(), self);
+        } else if (GetOutboundCall.class.equals(klass)) {
+            sender.tell(outboundCall, self);
         } else if (InitializeOutbound.class.equals(klass)) {
             fsm.transition(message, queued);
         } else if (Answer.class.equals(klass) || Dial.class.equals(klass)) {
@@ -599,7 +604,7 @@ public final class Call extends UntypedActor {
             if (ringing.equals(state)) {
                 fsm.transition(message, failingNoAnswer);
             } else {
-                logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + state + " Direction: "
+                logger.info("Call "+ self().path() +" Timeout received. Sender: " + sender.path().toString() + " State: " + state + " Direction: "
                         + direction + " From: " + from + " To: " + to);
             }
         } else if (message instanceof SipServletRequest) {
@@ -738,7 +743,7 @@ public final class Call extends UntypedActor {
 
     @SuppressWarnings("unchecked")
     private String patch(final String contentType, final byte[] data, final String externalIp) throws UnknownHostException,
-            SdpException {
+    SdpException {
         final String text = new String(data);
         String patchedSdp = null;
         if (contentType.equalsIgnoreCase("application/sdp")) {
@@ -1152,15 +1157,15 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-//            if (remoteConn != null) {
-//                gateway.tell(new DestroyConnection(remoteConn), source);
-//                remoteConn = null;
-//            }
+            //            if (remoteConn != null) {
+            //                gateway.tell(new DestroyConnection(remoteConn), source);
+            //                remoteConn = null;
+            //            }
             // Explicitly invalidate the application session.
-//            if (invite.getSession().isValid())
-//                invite.getSession().invalidate();
-//            if (invite.getApplicationSession().isValid())
-//                invite.getApplicationSession().invalidate();
+            //            if (invite.getSession().isValid())
+            //                invite.getSession().invalidate();
+            //            if (invite.getApplicationSession().isValid())
+            //                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.CANCELED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1227,10 +1232,10 @@ public final class Call extends UntypedActor {
                 remoteConn = null;
             }
             // Explicitly invalidate the application session.
-//            if (invite.getSession().isValid())
-//                invite.getSession().invalidate();
-//            if (invite.getApplicationSession().isValid())
-//                invite.getApplicationSession().invalidate();
+            //            if (invite.getSession().isValid())
+            //                invite.getSession().invalidate();
+            //            if (invite.getApplicationSession().isValid())
+            //                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1276,11 +1281,11 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-//            // Explicitly invalidate the application session.
-//            if (invite.getSession().isValid())
-//                invite.getSession().invalidate();
-//            if (invite.getApplicationSession().isValid())
-//                invite.getApplicationSession().invalidate();
+            //            // Explicitly invalidate the application session.
+            //            if (invite.getSession().isValid())
+            //                invite.getSession().invalidate();
+            //            if (invite.getApplicationSession().isValid())
+            //                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1500,6 +1505,27 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
+            if (self().path().toString().equalsIgnoreCase("akka://RestComm/user/$j")){
+                System.out.println("Initializing Internal Link for the Outbound call");
+            }
+            if (bridge != null) {
+                logger.info("##################### $$ Bridge for Call "+self().path()+" is terminated: "+bridge.isTerminated());
+                if (bridge.isTerminated()) {
+                    logger.info("##################### $$ Call :"+self().path()+ " bridge is terminated. Will get a new one");
+                    final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+                    Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new CreateBridgeEndpoint(session), expires);
+                    MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                    bridge = futureResponse.get();
+                    if (!bridge.isTerminated() && bridge != null) {
+                        logger.info("Bridge for call: "+self().path()+" acquired and is not terminated");
+                    } else {
+                        logger.info("Bridge endpoint for call: "+self().path()+" is still terminated or null");
+                    }
+                }
+            }
+            //            if (bridge == null || bridge.isTerminated()) {
+            //                System.out.println("##################### $$ Bridge for Call "+self().path()+" is null or terminated: "+bridge.isTerminated());
+            //            }
             internalLink = response.get();
             internalLink.tell(new Observe(source), source);
             internalLink.tell(new InitializeLink(bridge, internalLinkEndpoint), source);
@@ -1594,34 +1620,34 @@ public final class Call extends UntypedActor {
                 SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
                 InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
 
-//                INVITE sip:+12055305520@107.21.247.251 SIP/2.0
-//                Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
-//                Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
-//                Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
-//                Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
-//                Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
-//                Accept: application/sdp
-//                Allow: INVITE,ACK,CANCEL,BYE
-//                Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
-//                Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
-//                Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
-//                Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
-//                Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
-//                From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
-//                To: <sip:12055305520@192.168.6.219>
-//                Call-ID: 587241765_133360558@192.168.16.114
-//                CSeq: 393447729 INVITE
-//                Max-Forwards: 67
-//                Contact: <sip:+1302109762259@192.168.16.114:5060>
-//                Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
-//                Supported: replaces
-//                Content-Disposition: session;handling=required
-//                Content-Type: application/sdp
-//                Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
-//                X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
-//                X-Sip-Balancer-InitialRemotePort: 5060
-//                Route: <sip:10.13.169.214:5080;transport=udp;lr>
-//                Content-Length: 340
+                //                INVITE sip:+12055305520@107.21.247.251 SIP/2.0
+                //                Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+                //                Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+                //                Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
+                //                Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
+                //                Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
+                //                Accept: application/sdp
+                //                Allow: INVITE,ACK,CANCEL,BYE
+                //                Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
+                //                Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
+                //                Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
+                //                Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
+                //                Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
+                //                From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
+                //                To: <sip:12055305520@192.168.6.219>
+                //                Call-ID: 587241765_133360558@192.168.16.114
+                //                CSeq: 393447729 INVITE
+                //                Max-Forwards: 67
+                //                Contact: <sip:+1302109762259@192.168.16.114:5060>
+                //                Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
+                //                Supported: replaces
+                //                Content-Disposition: session;handling=required
+                //                Content-Type: application/sdp
+                //                Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
+                //                X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
+                //                X-Sip-Balancer-InitialRemotePort: 5060
+                //                Route: <sip:10.13.169.214:5080;transport=udp;lr>
+                //                Content-Length: 340
 
                 invite.getHeaders(RecordRouteHeader.NAME);
 

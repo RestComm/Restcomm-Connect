@@ -67,6 +67,7 @@ import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
@@ -309,7 +310,7 @@ public final class CallManager extends UntypedActor {
                         + request.getRequestURI().toString());
                 Client toClient = clients.getClient(toUser);
                 if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
-                                        // the b2bua
+                    // the b2bua
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
                         logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
                                 + " toHost: " + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
@@ -617,6 +618,14 @@ public final class CallManager extends UntypedActor {
         final UpdateCallScript request = (UpdateCallScript) message;
         final ActorRef self = self();
         final ActorRef call = request.call();
+        final Boolean moveConnectedCallLeg = request.moveConnecteCallLeg();
+        ActorRef outboundCall = request.outboundCall();
+        //        if (moveConnectedCallLeg)
+        //            outboundCall =
+        logger.info("About to start Live Call Modification");
+        logger.info("Initial Call path: "+call.path());
+        if (outboundCall != null)
+            logger.info("Outbound Call path: "+outboundCall.path());
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
@@ -626,8 +635,10 @@ public final class CallManager extends UntypedActor {
 
         for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
             ActorRef existingInterpreter = (ActorRef) iterator.next();
-            getContext().stop(existingInterpreter);
+            logger.info("Will tell Call actors to stop observing existing Interpreters");
             call.tell(new StopObserving(null), self());
+            if(outboundCall != null)
+                outboundCall.tell(new StopObserving(null), self());
         }
 
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
@@ -646,6 +657,28 @@ public final class CallManager extends UntypedActor {
         builder.setStatusCallbackMethod(request.callbackMethod());
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);
+        logger.info("New Intepreter for first call leg: "+interpreter.path()+" started");
+        if (outboundCall != null) {
+            if (moveConnectedCallLeg) {
+                outboundCall.tell(new CreateMediaGroup(), null);
+                final ActorRef outboundInterpreter = builder.build();
+                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
+                logger.info("New Intepreter for Second call leg: "+outboundInterpreter.path()+" started");
+            } else {
+                logger.info("moveConnectedCallLeg is: "+moveConnectedCallLeg+" so will hangup outboundCall");
+                outboundCall.tell(new Hangup(), null);
+                getContext().stop(outboundCall);
+            }
+        }
+
+        //Cleanup existing Interpreter
+        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
+            ActorRef existingInterpreter = (ActorRef) iterator.next();
+            logger.info("Existing Interpreter path: "+existingInterpreter.path()+" will be stopped");
+            StopInterpreter stopInterpreter = StopInterpreter.instance();
+            stopInterpreter.setLiveCallModification(true);
+            existingInterpreter.tell(stopInterpreter, null);
+        }
     }
 
     private ActorRef outbound(final Object message) throws ServletParseException {

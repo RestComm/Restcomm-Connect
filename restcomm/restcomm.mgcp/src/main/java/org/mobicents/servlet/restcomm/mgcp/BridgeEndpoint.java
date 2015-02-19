@@ -31,4 +31,14 @@ public final class BridgeEndpoint extends GenericEndpoint {
     public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain) {
         super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain));
     }
+
+    /* (non-Javadoc)
+     * @see akka.actor.UntypedActor#postStop()
+     */
+    @Override
+    public void postStop() {
+        ActorRef sender = this.sender();
+//        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Bridge in postStop");
+//        super.postStop();
+    }
 }

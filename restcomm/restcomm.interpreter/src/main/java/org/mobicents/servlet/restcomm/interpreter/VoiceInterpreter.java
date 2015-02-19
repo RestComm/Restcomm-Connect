@@ -181,6 +181,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
     private ActorRef sender;
+    private boolean liveCallModification = false;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -469,8 +470,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final State state = fsm.state();
         sender = sender();
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** VoiceInterpreter's Current State: " + state.toString());
-            logger.info(" ********** VoiceInterpreter's Processing Message: " + klass.getName());
+            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Current State: " + state.toString());
+            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Processing Message: " + klass.getName());
         }
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
@@ -786,7 +787,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (FaxResponse.class.equals(klass)) {
             fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
-            if (CallStateChanged.State.IN_PROGRESS == callState) {
+            this.liveCallModification = ((StopInterpreter)message).isLiveCallModification();
+            if (CallStateChanged.State.IN_PROGRESS == callState && !liveCallModification) {
                 fsm.transition(message, hangingUp);
             } else {
                 fsm.transition(message, finished);
@@ -1009,8 +1011,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         callRecord = builder.build();
                         records.addCallDetailRecord(callRecord);
+//
+//                        if (liveCallModification) {
+//                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+//                            fsm.transition(message, acquiringCallMediaGroup);
+//                            return;
+//                        }
                     } else {
-                        if (callMediaGroup == null) {
+                        if (callMediaGroup == null ) {
                             logger.info("On going call but CallMediaGroup is null, will acquire call media group");
                             fsm.transition(message, acquiringCallMediaGroup);
                             return;
@@ -2083,21 +2091,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Cleanup the outbound call if necessary.
             final State state = fsm.state();
             if (bridged.equals(state) || forking.equals(state)) {
-                if (outboundCall != null) {
+                if (outboundCall != null && !liveCallModification) {
                     outboundCall.tell(new StopObserving(source), null);
                     outboundCall.tell(new Hangup(), null);
                 }
             }
             // If we still have a conference media group release it.
             final StopMediaGroup stop = new StopMediaGroup();
-            if (conferenceMediaGroup != null) {
+            if (conferenceMediaGroup != null && !liveCallModification) {
                 conferenceMediaGroup.tell(stop, source);
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
                 conference.tell(destroy, source);
                 conferenceMediaGroup = null;
             }
             // If the call is in a conference remove it.
-            if (conference != null) {
+            if (conference != null && !liveCallModification) {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
@@ -2109,10 +2117,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context().stop(callMediaGroup);
                 callMediaGroup = null;
             }
-            // Destroy the Call(s).
-            callManager.tell(new DestroyCall(call), source);
-            if (outboundCall != null) {
-                callManager.tell(new DestroyCall(outboundCall), source);
+            if (!liveCallModification) {
+                // Destroy the Call(s).
+                callManager.tell(new DestroyCall(call), source);
+                if (outboundCall != null) {
+                    callManager.tell(new DestroyCall(outboundCall), source);
+                }
             }
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
@@ -2130,8 +2140,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     @Override
     public void postStop() {
         if (!fsm.state().equals(uninitialized)) {
-            logger.info("At the postStop() method. Will clean up Voice Interpreter.");
-            if (fsm.state().equals(bridged) && outboundCall != null) {
+            logger.info("At the postStop() method. Will clean up Voice Interpreter. Keep calls: "+liveCallModification);
+            if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
                 outboundCall.tell(new Hangup(), null);
                 callManager.tell(new DestroyCall(outboundCall), null);
                 outboundCall = null;
@@ -2166,12 +2176,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callMediaGroup = null;
             }
 
-            if (call != null) {
+            if (call != null && !liveCallModification) {
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
                 call.tell(destroy, null);
                 callManager.tell(new DestroyCall(call), null);
                 call = null;
             }
+
+            getContext().stop(self());
 
             postCleanup();
         }
