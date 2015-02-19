@@ -329,6 +329,7 @@ public class XmsCallController extends MediaServerController {
             } else {
                 String reason = event.getErrorText();
                 MediaServerControllerException error = new MediaServerControllerException(reason);
+                logger.error("Recording event failed: " + reason);
                 response = new MediaGroupResponse<String>(error, reason);
             }
             super.remote.tell(response, self());
@@ -550,25 +551,38 @@ public class XmsCallController extends MediaServerController {
                 // Add prompts
                 if (message.hasPrompts()) {
                     List<URI> prompts = message.prompts();
-                    params.put(Recorder.PROMPT, prompts.toArray(new URI[prompts.size()]));
+                    // TODO JSR-309 connector still does not support multiple prompts
+                    // params.put(Recorder.PROMPT, prompts.toArray(new URI[prompts.size()]));
+                    params.put(Recorder.PROMPT, prompts.get(0));
                 }
 
                 // Finish on key
+                RTC[] rtcs;
                 if (message.hasEndInputKey()) {
                     params.put(SignalDetector.PATTERN[0], message.endInputKey());
+                    params.put(SignalDetector.INTER_SIG_TIMEOUT, new Integer(10000));
+                    rtcs = new RTC[] { MediaGroup.SIGDET_STOPPLAY };
+                } else {
+                    rtcs = RTC.NO_RTC;
                 }
 
                 // Recording length
-                params.put(Recorder.MAX_DURATION, message.length());
+                params.put(Recorder.MAX_DURATION, message.length() * 1000);
 
                 // Recording timeout
                 int timeout = message.timeout();
                 params.put(SpeechDetectorConstants.INITIAL_TIMEOUT, timeout);
                 params.put(SpeechDetectorConstants.FINAL_TIMEOUT, timeout);
 
+                // Other parameters
+                params.put(Recorder.APPEND, Boolean.FALSE);
+                // TODO set as definitive media group parameter - handled by RestComm
+                params.put(Recorder.START_BEEP, Boolean.FALSE);
+
                 this.recorderListener.setRemote(sender);
-                this.mediaGroup.getRecorder().record(message.destination(), RTC.NO_RTC, params);
+                this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
             } catch (MsControlException e) {
+                logger.error("Recording failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
                 notifyObservers(response, self);
             }
