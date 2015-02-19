@@ -122,6 +122,7 @@ public class XmsCallController extends MediaServerController {
     private final SdpListener sdpListener;
     private final PlayerListener playerListener;
     private final DtmfListener dtmfListener;
+    private final RecorderListener recorderListener;
 
     // Call runtime stuff
     private ActorRef call;
@@ -160,6 +161,7 @@ public class XmsCallController extends MediaServerController {
         this.sdpListener = new SdpListener();
         this.playerListener = new PlayerListener();
         this.dtmfListener = new DtmfListener();
+        this.recorderListener = new RecorderListener();
 
         // Initialize the states for the FSM
         this.uninitialized = new State("uninitialized", null, null);
@@ -230,7 +232,7 @@ public class XmsCallController extends MediaServerController {
         @Override
         public void onEvent(SdpPortManagerEvent event) {
             logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Call Controller Processing Event: \"" + SdpPortManagerEvent.class.getName() + "\"");
+            logger.info("********** Call Controller Processing Event: \"SdpPortManagerEvent\"");
 
             try {
                 if (event.getError() == SdpPortManagerEvent.NO_ERROR) {
@@ -264,8 +266,7 @@ public class XmsCallController extends MediaServerController {
             EventType eventType = event.getEventType();
 
             logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Call Controller Processing Event: \"" + PlayerEvent.class.getName() + "\" (type = "
-                    + eventType + ")");
+            logger.info("********** Call Controller Processing Event: \"PlayerEvent\" (type = " + eventType + ")");
 
             if (PlayerEvent.PLAY_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response;
@@ -291,8 +292,7 @@ public class XmsCallController extends MediaServerController {
             EventType eventType = event.getEventType();
 
             logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Call Controller Processing Event: \"" + SignalDetectorEvent.class.getName() + "\" (type = "
-                    + eventType + ")");
+            logger.info("********** Call Controller Processing Event: \"SignalDetectorEvent\" (type = " + eventType + ")");
 
             if (SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response;
@@ -315,8 +315,23 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void onEvent(RecorderEvent event) {
-            // TODO Auto-generated method stub
+            EventType eventType = event.getEventType();
 
+            logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+            logger.info("********** Call Controller Processing Event: \"RecorderEvent\" (type = " + eventType + ")");
+
+            MediaGroupResponse<String> response = null;
+            if (event.isSuccessful()) {
+                if (RecorderEvent.RECORD_COMPLETED.equals(eventType)) {
+                    // TODO Need a way to get Digits!!!!
+                    response = new MediaGroupResponse<String>("");
+                }
+            } else {
+                String reason = event.getErrorText();
+                MediaServerControllerException error = new MediaServerControllerException(reason);
+                response = new MediaGroupResponse<String>(error, reason);
+            }
+            super.remote.tell(response, self());
         }
 
     }
@@ -420,6 +435,7 @@ public class XmsCallController extends MediaServerController {
         // Prepare the Media Group resources
         this.mediaGroup.getPlayer().addListener(this.playerListener);
         this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
+        this.mediaGroup.getRecorder().addListener(this.recorderListener);
 
         sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
     }
@@ -524,16 +540,12 @@ public class XmsCallController extends MediaServerController {
             // Add prompts
             if (message.hasPrompts()) {
                 List<URI> prompts = message.prompts();
-                params.put(Recorder.PROMPT, prompts.toArray(new URI[prompts.size()]));
+                params.put(Recorder.PROMPT, prompts.get(0));
             }
 
             // Finish on key
-            RTC[] rtcs;
             if (message.hasEndInputKey()) {
                 params.put(SignalDetector.PATTERN[0], message.endInputKey());
-                rtcs = new RTC[] { new RTC(SignalDetector.PATTERN_MATCH[0], Recorder.STOP) };
-            } else {
-                rtcs = RTC.NO_RTC;
             }
 
             // Recording length
@@ -544,7 +556,8 @@ public class XmsCallController extends MediaServerController {
             params.put(SpeechDetectorConstants.INITIAL_TIMEOUT, timeout);
             params.put(SpeechDetectorConstants.FINAL_TIMEOUT, timeout);
 
-            this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
+            this.recorderListener.setRemote(sender);
+            this.mediaGroup.getRecorder().record(message.destination(), RTC.NO_RTC, params);
         }
     }
 
