@@ -73,7 +73,7 @@
 		<dependency>
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>dlgmsc</artifactId>
-			<version>4.0</version>
+			<version>4.0-su-1</version>
 		</dependency>
 
 		<dependency>
