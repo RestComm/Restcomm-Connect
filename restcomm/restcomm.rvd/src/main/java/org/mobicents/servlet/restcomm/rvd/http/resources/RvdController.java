@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -145,6 +146,11 @@ public class RvdController extends RestService {
 
             init(rvdContext);
             logger.info("Received Restcomm GET request");
+            Enumeration<String> headerNames = (Enumeration<String>) httpRequest.getHeaderNames();
+            while ( headerNames.hasMoreElements() ) {
+                String headerName = headerNames.nextElement();
+            }
+
             logger.debug( httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
             MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
