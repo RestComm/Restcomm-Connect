@@ -1255,9 +1255,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         }
                         String text = child.text();
                         if (text != null && !text.isEmpty()) {
-//                            final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
-//                            synthesizer.tell(synthesize, source);
-//                            break;
+                            // final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
+                            // synthesizer.tell(synthesize, source);
+                            // break;
                             String hash = hash(child);
                             DiskCacheRequest request = new DiskCacheRequest(hash);
                             cache.tell(request, source);
@@ -1369,6 +1369,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
             final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
+
+            // Stopped gathering
+            processingGather = false;
+
             // Parses "action".
             Attribute attribute = verb.attribute("action");
             String digits = response.get();
@@ -1566,7 +1570,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
             Double duration = WavUtils.getAudioDuration(recordingUri);
-            if(duration.equals(0.0)) {
+            if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
             }
