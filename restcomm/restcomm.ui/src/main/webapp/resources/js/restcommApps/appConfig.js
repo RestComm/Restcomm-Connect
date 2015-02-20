@@ -1,12 +1,12 @@
-var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, bootstrapObject, $http, Notifications, $window, rappService, $sce) {
+var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, rapp, bootstrapObject, $http, Notifications, $window, rappService, $sce) {
 	
-	$scope.initRappConfig = function (rappConfig) {
+	$scope.initRappConfig = function (rappConfig, bootstrapObj) {
 		var i;
 		
 		for ( i=0; i < rappConfig.options.length; i++ ) {
-			if ( bootstrapObject != null && bootstrapObject[ rappConfig.options[i].name ] )
-				rappConfig.options[i].value = bootstrapObject[ rappConfig.options[i].name ];
-			if ( bootstrapObject == null ) {
+			if ( bootstrapObj != null && bootstrapObj[ rappConfig.options[i].name ] )
+				rappConfig.options[i].value = bootstrapObj[ rappConfig.options[i].name ];
+			if ( bootstrapObj == null ) {
 				if ( rappConfig.options[i].defaultValue )
 					rappConfig.options[i].value = rappConfig.options[i].defaultValue;
 			}
@@ -72,19 +72,38 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 				return options[i];
 	};
 	$scope.getOptionByName = getOptionByName;	
-	$scope.buildBackendBoostrapUrl = function(rappConfig) {
-		var value = rappConfig.bootstrapUrl;
+	$scope.buildBackendBoostrapUrl = function(rappConfig, rapp) {
+		var value;
+		if ( rapp.info.rasVersion >= 2 ) {
+			value = rappConfig.bootstrapUrl;
+		} else {
+			var backendRootURLOption = getOptionByName("backendRootURL", rappConfig.options);
+			if (backendRootURLOption.value)
+				value = backendRootURLOption.value  + "/ui/index.php";
+		}
 		return $sce.trustAsResourceUrl(value);
 	}	
 	$scope.watchOptionFormValidity = function (status) {
 		//console.log(status);
 		$scope.optionsFormValid = status;
 	}
+	$scope.needsBootstrapping = function (rappConfig, rapp) {
+		if ( rapp.info.rasVersion >= 2 ) {
+			if ( rapp.config.bootstrapUrl )
+				return true;
+		} else {
+			var backendRootURLOption = getOptionByName("backendRootURL", rappConfig.options);
+			if ( backendRootURLOption.value )
+				return true;
+		}
+		return false;
+	}
 	
 	
 	
 	$scope.projectName = $routeParams.projectName;
 	$scope.rappConfig = rappConfig;
-	
-	$scope.initRappConfig($scope.rappConfig);
+	$scope.rapp = rapp;
+	$scope.bootstrapObject = bootstrapObject;
+	$scope.initRappConfig($scope.rappConfig, bootstrapObject);
 });

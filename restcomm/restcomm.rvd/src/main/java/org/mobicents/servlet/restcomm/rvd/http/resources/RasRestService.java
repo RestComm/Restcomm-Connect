@@ -49,6 +49,7 @@ import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
@@ -321,6 +322,21 @@ public class RasRestService extends RestService {
         }
     }
 
+    @GET
+    @Path("apps/{name}")
+    public Response getRapp(@PathParam("name") String projectName) throws StorageException {
+        logger.info("getting info for " + projectName);
+        try {
+            Rapp rapp;
+            if ( FsProjectStorage.hasPackagingInfo(projectName, workspaceStorage) )
+                rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
+            else
+                rapp = FsProjectStorage.loadRapp(projectName, workspaceStorage);
+            return buildOkResponse(rapp);
+        } catch (StorageEntityNotFound e) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+    }
 
     @GET
     @Path("apps/{name}/config/dev")
