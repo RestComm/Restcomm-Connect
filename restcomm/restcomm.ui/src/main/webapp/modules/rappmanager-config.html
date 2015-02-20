@@ -10,7 +10,6 @@
 			</p>
 			<div class="spacer10"></div>
 		</div>
-		
 		<form name="optionsForm" novalidate>
 			<h4>Parameters</h4>
 			
@@ -55,7 +54,8 @@
 								<label>{{option.label}}</label><abbr title="RVD variable syntax"><code>${{option.name}}</code></abbr> <small ng-show="option.required" class="text-muted">(required)</small>
 								<input ng-model="option.value" name="backendRootURL" type="text" class="form-control" ng-required="option.required">								
 								<span class="help-block">{{option.description}}</span>
-						</div>	
+						</div>
+						{{option}}	
 					</div>					
 				</div>
 			</div>	
@@ -68,9 +68,9 @@
 			{{watchOptionFormValidity(optionsForm.$valid)}}
 		</form>
 		
-		<div ng-show="rappConfig.bootstrapUrl">
+		<div ng-show="needsBootstrapping(rappConfig, rapp)">
 			<div class="spacer10"></div>
-			<form target="_blank" method="POST" action="{{buildBackendBoostrapUrl(rappConfig)}}">
+			<form target="_blank" method="POST" action="{{buildBackendBoostrapUrl(rappConfig, rapp)}}">
 			<div>
 				<h5 style="margin-top:20px"><strong>Accessing Web UI</strong></h5>
 				<span class="help-block">You can access the application Web UI by clicking the button below. Make sure all the required fields are set, especially <em>Instance Token</em> (if present).</span>

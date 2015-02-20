@@ -14,6 +14,7 @@ angular.module("rcApp.restcommApps", []).config([ '$routeProvider',  function($r
 		controller: 'RappManagerConfigCtrl', 
 		resolve: { 
 			rappConfig : function (rappService, $route) { return rappService.getAppConfig($route.current.params.projectName);}, //, $route.current.params.mode); },
+			rapp: function (rappService, $route) {return rappService.getApp($route.current.params.projectName);},
 			bootstrapObject : function (rappService, $route) { return rappService.getBoostrapObject($route.current.params.projectName); }
 		}
 	});
