@@ -61,6 +61,24 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		return defer.promise;
 	}
 	
+	function getApp(appName) {
+		var defer = $q.defer();
+		$http({url: '/restcomm-rvd/services/ras/apps/' + appName, method: "GET" })
+		.success(function (data, status, headers, config) {
+			if (data.rvdStatus == "OK") {
+				//console.log("succesfull retrieved app config");
+				defer.resolve(data.payload);
+			} else {
+				defer.reject("error getting app config")
+			}
+		})
+		.error(function () {
+			console.log("error getting app"); 
+			defer.reject("bad response");
+		});
+		return defer.promise		
+	}
+	
 	function getBoostrapObject(appName) {
 		var deferred = $q.defer();
 		$http.get('/restcomm-rvd/services/ras/apps/' + appName + '/bootstrap' )
@@ -165,6 +183,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	service.refreshLocalApps = refreshLocalApps;
 	service.getAppByUrl = getAppByUrl;
 	service.getAppConfig = getAppConfig;
+	service.getApp = getApp;
 	service.getBoostrapObject = getBoostrapObject;
 	service.notifyIncomingNumberProvisioning = notifyIncomingNumberProvisioning;
 	service.provisionApplicationParameters = provisionApplicationParameters;
