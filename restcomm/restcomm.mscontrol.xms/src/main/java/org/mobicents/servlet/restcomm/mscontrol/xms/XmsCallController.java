@@ -380,8 +380,12 @@ public class XmsCallController extends MediaServerController {
                     networkConnection.join(Direction.DUPLEX, mediaMixer);
 
                     // Notify remote peer that call can be bridged
-                    final JoinComplete response = new JoinComplete(mediaMixer);
-                    outboundController.tell(response, self());
+                    // final JoinComplete response = new JoinComplete(mediaMixer);
+                    // outboundController.tell(response, self());
+
+                    // Ask the outbound controller its network connection
+                    final QueryNetworkConnection query = new QueryNetworkConnection();
+                    outboundController.tell(query, self());
                 } catch (MsControlException e) {
                     // Notify observers that bridging failed
                     logger.error("Call bridging failed: " + e.getMessage());
@@ -409,8 +413,11 @@ public class XmsCallController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** Call Controller Current State: \"" + state.toString());
-        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        String direction = callOutbound ? "Outbound" : "Inbound";
+
+        logger.info("********** " + direction + " Call Controller Current State: \"" + state.toString());
+        logger.info("********** " + direction + " Call Controller Processing Message: \"" + klass.getName() + " sender : "
+                + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -444,6 +451,10 @@ public class XmsCallController extends MediaServerController {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
+            onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
+        } else if (QueryNetworkConnection.class.equals(klass)) {
+            onQueryNetworkConnection((QueryNetworkConnection) message, self, sender);
         }
     }
 
@@ -706,18 +717,40 @@ public class XmsCallController extends MediaServerController {
                     this.mediaGroup.join(Direction.DUPLEX, mediaMixer);
                 }
 
-                // Join call to the bridge
-                this.networkConnection.join(Direction.DUPLEX, this.mediaMixer);
-
-                // Notify the observers the media group is active
+                // Warn observers that media group is active
                 final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
-                notifyObservers(response, self());
+                notifyObservers(response, self);
             } catch (MsControlException e) {
                 logger.error("Call bridging failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
                 notifyObservers(response, self);
             }
         }
+    }
+
+    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender) {
+        Object obj = message.get();
+
+        if (obj instanceof NetworkConnection) {
+            try {
+                // Complete bridging process
+                this.outboundConnection = (NetworkConnection) obj;
+                this.outboundConnection.join(Direction.DUPLEX, this.mediaMixer);
+
+                // Warn call that bridging process completed
+                final JoinComplete joinComplete = new JoinComplete(this.mediaMixer);
+                this.call.tell(new MediaServerControllerResponse<JoinComplete>(joinComplete), self);
+            } catch (MsControlException e) {
+                logger.error("Call bridging failed: " + e.getMessage());
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
+            }
+        }
+
+    }
+
+    private void onQueryNetworkConnection(QueryNetworkConnection message, ActorRef self, ActorRef sender) {
+        sender.tell(new MediaServerControllerResponse<NetworkConnection>(this.networkConnection), self);
     }
 
     /*
