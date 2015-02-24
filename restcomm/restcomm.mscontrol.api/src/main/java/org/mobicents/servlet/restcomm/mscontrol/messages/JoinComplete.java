@@ -21,21 +21,19 @@ package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
-import akka.actor.ActorRef;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class JoinComplete {
 
-    private final ActorRef endpoint;
+    private final Object endpoint;
 
-    public JoinComplete(final ActorRef endpoint) {
+    public JoinComplete(final Object endpoint) {
         this.endpoint = endpoint;
     }
 
-    public ActorRef endpoint() {
+    public Object endpoint() {
         return endpoint;
     }
 }

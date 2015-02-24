@@ -514,7 +514,7 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
-        this.outboundCallBridgeEndpoint = message.endpoint();
+        this.outboundCallBridgeEndpoint = (ActorRef) message.endpoint();
         final Join join = new Join(this.outboundCallBridgeEndpoint, self, ConnectionMode.SendRecv);
         this.mediaGroup.tell(join, self);
     }

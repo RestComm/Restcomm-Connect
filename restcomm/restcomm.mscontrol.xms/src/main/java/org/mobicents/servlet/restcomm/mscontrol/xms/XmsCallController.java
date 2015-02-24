@@ -45,8 +45,11 @@ import javax.media.mscontrol.mediagroup.RecorderEvent;
 import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
 import javax.media.mscontrol.mediagroup.signals.SignalDetector;
 import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
+import javax.media.mscontrol.mixer.MediaMixer;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
+import javax.media.mscontrol.resource.AllocationEvent;
+import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
 
 import org.apache.commons.configuration.Configuration;
@@ -67,6 +70,8 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
@@ -118,11 +123,13 @@ public class XmsCallController extends MediaServerController {
     private MediaSession mediaSession;
     private NetworkConnection networkConnection;
     private MediaGroup mediaGroup;
+    private MediaMixer mediaMixer;
 
     private final SdpListener sdpListener;
     private final PlayerListener playerListener;
     private final DtmfListener dtmfListener;
     private final RecorderListener recorderListener;
+    private final MixerAllocationListener mixerAllocationListener;
 
     // Call runtime stuff
     private ActorRef call;
@@ -134,8 +141,8 @@ public class XmsCallController extends MediaServerController {
 
     // Conference runtime stuff
     private ActorRef conference;
-    private ActorRef conferenceController;
-    private ActorRef outboundCallBridgeEndpoint;
+    private ActorRef outboundController;
+    private NetworkConnection outboundConnection;
 
     // Call Recording
     private Sid accountId;
@@ -162,6 +169,7 @@ public class XmsCallController extends MediaServerController {
         this.playerListener = new PlayerListener();
         this.dtmfListener = new DtmfListener();
         this.recorderListener = new RecorderListener();
+        this.mixerAllocationListener = new MixerAllocationListener();
 
         // Initialize the states for the FSM
         this.uninitialized = new State("uninitialized", null, null);
@@ -231,19 +239,23 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void onEvent(SdpPortManagerEvent event) {
+            EventType eventType = event.getEventType();
+
             logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Call Controller Processing Event: \"SdpPortManagerEvent\"");
+            logger.info("********** Call Controller Processing Event: \"SdpPortManagerEvent\" (type = " + eventType + ")");
 
             try {
                 if (event.getError() == SdpPortManagerEvent.NO_ERROR) {
-                    EventType eventType = event.getEventType();
-                    if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
+                    if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)
+                            || SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
                         if (event.isSuccessful()) {
                             localSdp = new String(event.getMediaServerSdp());
                             fsm.transition(event, active);
                         } else {
                             fsm.transition(event, failed);
                         }
+                    } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
+                        fsm.transition(event, active);
                     } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
                         fsm.transition(event, failed);
                     }
@@ -313,6 +325,12 @@ public class XmsCallController extends MediaServerController {
 
         private static final long serialVersionUID = -8952464412809110917L;
 
+        private String endOnKey = "";
+
+        public void setEndOnKey(String endOnKey) {
+            this.endOnKey = endOnKey;
+        }
+
         @Override
         public void onEvent(RecorderEvent event) {
             EventType eventType = event.getEventType();
@@ -324,7 +342,11 @@ public class XmsCallController extends MediaServerController {
             if (event.isSuccessful()) {
                 if (RecorderEvent.RECORD_COMPLETED.equals(eventType)) {
                     // TODO Need a way to get Digits!!!!
-                    response = new MediaGroupResponse<String>("");
+                    String digits = "";
+                    if (RecorderEvent.STOPPED.equals(event.getQualifier())) {
+                        digits = endOnKey;
+                    }
+                    response = new MediaGroupResponse<String>(digits);
                 }
             } else {
                 String reason = event.getErrorText();
@@ -332,7 +354,47 @@ public class XmsCallController extends MediaServerController {
                 logger.error("Recording event failed: " + reason);
                 response = new MediaGroupResponse<String>(error, reason);
             }
-            super.remote.tell(response, self());
+
+            if (response != null) {
+                super.remote.tell(response, self());
+            }
+        }
+
+    }
+
+    private class MixerAllocationListener implements AllocationEventListener, Serializable {
+
+        private static final long serialVersionUID = 6579306945384115627L;
+
+        @Override
+        public void onEvent(AllocationEvent event) {
+            EventType eventType = event.getEventType();
+
+            logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+            logger.info("********** Call Controller Processing Event: \"AllocationEventListener - Mixer\" (type = " + eventType
+                    + ")");
+
+            if (AllocationEvent.ALLOCATION_CONFIRMED.equals(eventType)) {
+                try {
+                    // Can join resources safely
+                    networkConnection.join(Direction.DUPLEX, mediaMixer);
+
+                    // Notify remote peer that call can be bridged
+                    final JoinComplete response = new JoinComplete(mediaMixer);
+                    outboundController.tell(response, self());
+                } catch (MsControlException e) {
+                    // Notify observers that bridging failed
+                    logger.error("Call bridging failed: " + e.getMessage());
+                    final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                    notifyObservers(response, self());
+                } finally {
+                    // No need to be notified anymore
+                    mediaMixer.removeListener(this);
+                }
+            } else if (AllocationEvent.IRRECOVERABLE_FAILURE.equals(eventType)) {
+                // XXX treat exception
+                logger.error("Can't enter conference...IRRECOVERABLE_FAILURE ");
+            }
         }
 
     }
@@ -378,6 +440,10 @@ public class XmsCallController extends MediaServerController {
             onCollect((Collect) message, self, sender);
         } else if (Record.class.equals(klass)) {
             onRecord((Record) message, self, sender);
+        } else if (Join.class.equals(klass)) {
+            onJoin((Join) message, self, sender);
+        } else if (JoinComplete.class.equals(klass)) {
+            onJoinComplete((JoinComplete) message, self, sender);
         }
     }
 
@@ -487,6 +553,7 @@ public class XmsCallController extends MediaServerController {
                 this.playerListener.setRemote(sender);
                 this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
             } catch (MsControlException e) {
+                logger.error("Play failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
                 notifyObservers(response, self);
             }
@@ -537,6 +604,7 @@ public class XmsCallController extends MediaServerController {
                 this.mediaGroup.getSignalDetector().flushBuffer();
                 this.mediaGroup.getSignalDetector().receiveSignals(message.numberOfDigits(), patternArray, RTC.NO_RTC, optargs);
             } catch (MsControlException e) {
+                logger.error("DTMF recognition failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
                 notifyObservers(response, self);
             }
@@ -579,10 +647,73 @@ public class XmsCallController extends MediaServerController {
                 // TODO set as definitive media group parameter - handled by RestComm
                 params.put(Recorder.START_BEEP, Boolean.FALSE);
 
+                this.recorderListener.setEndOnKey(message.endInputKey());
                 this.recorderListener.setRemote(sender);
                 this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
+            }
+        }
+    }
+
+    private void onJoin(Join message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            // Ask the remote media session controller for the bridge endpoint
+            this.conference = message.endpoint();
+            this.outboundController = message.mscontroller();
+
+            try {
+                // Prepare for new call configuration
+                if (this.mediaGroup != null) {
+                    this.mediaGroup.release();
+                    this.mediaGroup = null;
+                }
+
+                if (this.mediaMixer != null) {
+                    this.mediaMixer.release();
+                }
+
+                // Create Mixer and join connection to it
+                Parameters mixerParams = this.mediaSession.createParameters();
+                // Limit number of ports for the two bridged participants and possible media group
+                // TODO Check whether recording=true so max_ports is 2 or 3
+                mixerParams.put(MediaMixer.MAX_PORTS, 3);
+                this.mediaMixer = this.mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                this.mediaMixer.addListener(this.mixerAllocationListener);
+
+                // Wait for Media Mixer to initialize
+                // Connection will join mixer on allocation event
+                this.mediaMixer.confirm();
+            } catch (MsControlException e) {
+                logger.error("Call bridging failed: " + e.getMessage());
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
+            }
+        }
+    }
+
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            try {
+                // Get the media mixer of the bridge
+                this.mediaMixer = (MediaMixer) message.endpoint();
+
+                // Release local media group (bridge already has one)
+                if (this.mediaGroup != null) {
+                    // TODO check if recording only!!
+                    this.mediaGroup.join(Direction.DUPLEX, mediaMixer);
+                }
+
+                // Join call to the bridge
+                this.networkConnection.join(Direction.DUPLEX, this.mediaMixer);
+
+                // Notify the observers the media group is active
+                final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
+                notifyObservers(response, self());
+            } catch (MsControlException e) {
+                logger.error("Call bridging failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
                 notifyObservers(response, self);
             }
@@ -630,7 +761,7 @@ public class XmsCallController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
-                networkConnection.getSdpPortManager().processSdpOffer(remoteSdp.getBytes());
+                networkConnection.getSdpPortManager().processSdpAnswer(remoteSdp.getBytes());
             } catch (MsControlException e) {
                 // XXX Move to failing state
                 final MediaServerControllerError response = new MediaServerControllerError(e);
@@ -662,16 +793,6 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
-            if (mediaGroup != null) {
-                mediaGroup.release();
-                mediaGroup = null;
-            }
-
-            if (networkConnection != null) {
-                networkConnection.release();
-                networkConnection = null;
-            }
-
             if (mediaSession != null) {
                 mediaSession.release();
                 mediaSession = null;

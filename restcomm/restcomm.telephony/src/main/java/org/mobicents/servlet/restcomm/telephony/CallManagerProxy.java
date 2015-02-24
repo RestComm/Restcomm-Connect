@@ -89,7 +89,6 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
-        logger.info("Initializing CallManagerProxy sip servlet.");
         super.init(config);
     }
 
