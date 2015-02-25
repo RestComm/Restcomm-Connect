@@ -54,8 +54,7 @@
 								<label>{{option.label}}</label><abbr title="RVD variable syntax"><code>${{option.name}}</code></abbr> <small ng-show="option.required" class="text-muted">(required)</small>
 								<input ng-model="option.value" name="backendRootURL" type="text" class="form-control" ng-required="option.required">								
 								<span class="help-block">{{option.description}}</span>
-						</div>
-						{{option}}	
+						</div>	
 					</div>					
 				</div>
 			</div>	
@@ -72,13 +71,13 @@
 			<div class="spacer10"></div>
 			<form target="_blank" method="POST" action="{{buildBackendBoostrapUrl(rappConfig, rapp)}}">
 			<div>
-				<h5 style="margin-top:20px"><strong>Accessing Web UI</strong></h5>
-				<span class="help-block">You can access the application Web UI by clicking the button below. Make sure all the required fields are set, especially <em>Instance Token</em> (if present).</span>
+				<h5 style="margin-top:20px"><strong>Web UI</strong></h5>
+				<span class="help-block">You can access the application Web UI by clicking the button below. Make sure all required fields are set and configuration changes applied.</span>
 			</div>
 			<span class="help-block"></span>
 				<input type="hidden" ng-repeat="option in rappConfig.options | filter:filterInitOptions" name="{{option.name}}" value="{{option.value}}">
 				<div class="spacer10"></div>
-				<button ng-disabled="!optionsFormValid" class="btn btn-primary" type="submit">View application UI</button>
+				<button ng-disabled="!optionsFormValid" class="btn btn-primary" type="submit">Launch Web UI</button>
 			</form>
 		</div>
 		
