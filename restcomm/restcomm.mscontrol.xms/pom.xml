@@ -79,7 +79,7 @@
 		<dependency>
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>msmltypes</artifactId>
-			<version>1.0</version>
+			<version>4.0-su1</version>
 		</dependency>
 
 		<dependency>

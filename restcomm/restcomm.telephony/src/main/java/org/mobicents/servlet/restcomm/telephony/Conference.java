@@ -43,7 +43,9 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -301,8 +303,17 @@ public final class Conference extends UntypedActor {
 
     private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
-        if (is(creatingMediaSession)) {
-            this.fsm.transition(message, runningModeratorAbsent);
+        Object obj = message.get();
+        Class<? extends Object> klass = obj.getClass();
+
+        if (MediaSessionInfo.class.equals(klass)) {
+            if (is(creatingMediaSession)) {
+                this.fsm.transition(obj, runningModeratorAbsent);
+            }
+        } else if (MediaServerControllerError.class.equals(klass)) {
+            if (is(creatingMediaSession)) {
+                this.fsm.transition(obj, stopped);
+            }
         }
     }
 

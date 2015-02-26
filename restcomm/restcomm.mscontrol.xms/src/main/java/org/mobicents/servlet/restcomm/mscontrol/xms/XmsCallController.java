@@ -189,6 +189,7 @@ public class XmsCallController extends MediaServerController {
         transitions.add(new Transition(uninitialized, openingMediaSession));
         transitions.add(new Transition(openingMediaSession, failed));
         transitions.add(new Transition(openingMediaSession, active));
+        transitions.add(new Transition(openingMediaSession, inactive));
         transitions.add(new Transition(active, updatingMediaSession));
         transitions.add(new Transition(active, inactive));
         transitions.add(new Transition(updatingMediaSession, active));
@@ -413,11 +414,8 @@ public class XmsCallController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        String direction = callOutbound ? "Outbound" : "Inbound";
-
-        logger.info("********** " + direction + " Call Controller Current State: \"" + state.toString());
-        logger.info("********** " + direction + " Call Controller Processing Message: \"" + klass.getName() + " sender : "
-                + sender.getClass());
+        logger.info("********** Call Controller Current State: \"" + state.toString());
+        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
