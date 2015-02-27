@@ -21,6 +21,8 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.xms;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
@@ -80,6 +82,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
@@ -684,17 +687,25 @@ public class XmsCallController extends MediaServerController {
                     this.mediaMixer.release();
                 }
 
-                // Create Mixer and join connection to it
-                Parameters mixerParams = this.mediaSession.createParameters();
-                // Limit number of ports for the two bridged participants and possible media group
-                // TODO Check whether recording=true so max_ports is 2 or 3
-                mixerParams.put(MediaMixer.MAX_PORTS, 3);
-                this.mediaMixer = this.mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
-                this.mediaMixer.addListener(this.mixerAllocationListener);
+                if (ConnectionMode.Confrnce.equals(message.mode())) {
+                    /* CONFERENCING - conference already owns media mixer */
+                    // Ask conference controller what is the media mixer so the call can join
+                    QueryMediaMixer query = new QueryMediaMixer();
+                    outboundController.tell(query, self);
+                } else {
+                    /* CALL BRIDGING - no media mixer has been created yet */
+                    // Create Mixer and join connection to it
+                    Parameters mixerParams = this.mediaSession.createParameters();
+                    // Limit number of ports for the two bridged participants and possible media group
+                    // TODO Check whether recording=true so max_ports is 2 or 3
+                    mixerParams.put(MediaMixer.MAX_PORTS, 3);
+                    this.mediaMixer = this.mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                    this.mediaMixer.addListener(this.mixerAllocationListener);
 
-                // Wait for Media Mixer to initialize
-                // Connection will join mixer on allocation event
-                this.mediaMixer.confirm();
+                    // Wait for Media Mixer to initialize
+                    // Connection will join mixer on allocation event
+                    this.mediaMixer.confirm();
+                }
             } catch (MsControlException e) {
                 logger.error("Call bridging failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
@@ -742,6 +753,20 @@ public class XmsCallController extends MediaServerController {
                 logger.error("Call bridging failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
                 notifyObservers(response, self);
+            }
+        } else if (obj instanceof MediaMixer) {
+            try {
+                // Complete joining process
+                this.mediaMixer = (MediaMixer) obj;
+                this.networkConnection.join(Direction.DUPLEX, this.mediaMixer);
+
+                // alert conference call has joined successfully
+                final JoinComplete joinComplete = new JoinComplete(this.networkConnection);
+                this.call.tell(new MediaServerControllerResponse<JoinComplete>(joinComplete), self);
+            } catch (MsControlException e) {
+                logger.error("Could not join call to conference: " + e.getMessage());
+                MediaServerControllerError error = new MediaServerControllerError(e);
+                call.tell(error, self);
             }
         }
 

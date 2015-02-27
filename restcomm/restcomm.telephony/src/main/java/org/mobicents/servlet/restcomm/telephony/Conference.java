@@ -45,6 +45,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -312,6 +313,10 @@ public final class Conference extends UntypedActor {
             }
         } else if (MediaServerControllerError.class.equals(klass)) {
             if (is(creatingMediaSession)) {
+                this.fsm.transition(obj, stopped);
+            }
+        } else if (MediaSessionClosed.class.equals(klass)) {
+            if (is(stopping)) {
                 this.fsm.transition(obj, stopped);
             }
         }

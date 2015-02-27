@@ -223,6 +223,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.inProgress, this.joining));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.completing));
+        transitions.add(new Transition(this.joining, this.failing));
         transitions.add(new Transition(this.canceling, this.canceled));
         transitions.add(new Transition(this.failing, this.failed));
         transitions.add(new Transition(this.failingBusy, this.busy));
@@ -552,7 +553,7 @@ public final class Call extends UntypedActor {
             throws Exception {
         if (is(creatingMediaSession)) {
             fsm.transition(message, failed);
-        } else if (is(updatingMediaSession)) {
+        } else if (is(updatingMediaSession) || is(joining)) {
             fsm.transition(message, failing);
         }
     }
