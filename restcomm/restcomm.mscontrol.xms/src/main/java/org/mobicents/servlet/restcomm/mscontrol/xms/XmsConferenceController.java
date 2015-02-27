@@ -58,14 +58,15 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
-import akka.actor.Failed;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -250,6 +251,8 @@ public class XmsConferenceController extends MediaServerController {
             onStartMediaGroup((StartMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (QueryMediaMixer.class.equals(klass)) {
+            onQueryMediaMixer((QueryMediaMixer) message, self, sender);
         }
 
     }
@@ -328,6 +331,11 @@ public class XmsConferenceController extends MediaServerController {
         }
     }
 
+    private void onQueryMediaMixer(QueryMediaMixer message, ActorRef self, ActorRef sender) {
+        MediaServerControllerResponse<MediaMixer> response = new MediaServerControllerResponse<MediaMixer>(this.mediaMixer);
+        sender.tell(response, self);
+    }
+
     /*
      * ACTIONS
      */
@@ -366,6 +374,40 @@ public class XmsConferenceController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             conference.tell(new MediaServerControllerResponse<MediaSessionInfo>(new MediaSessionInfo()), super.source);
         }
+    }
+
+    private final class Inactive extends AbstractAction {
+
+        public Inactive(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            if (mediaSession != null) {
+                mediaSession.release();
+                mediaSession = null;
+            }
+
+            // Inform conference that media session has been properly closed
+            final MediaSessionClosed response = new MediaSessionClosed();
+            conference.tell(new MediaServerControllerResponse<MediaSessionClosed>(response), super.source);
+        }
+    }
+
+    private final class Failed extends AbstractAction {
+
+        public Failed(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Inform call the media session could not be set up
+            final MediaServerControllerError error = new MediaServerControllerError();
+            conference.tell(error, super.source);
+        }
+
     }
 
 }
