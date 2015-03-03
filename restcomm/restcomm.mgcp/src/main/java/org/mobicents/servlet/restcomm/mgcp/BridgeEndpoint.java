@@ -20,7 +20,8 @@
 package org.mobicents.servlet.restcomm.mgcp;
 
 import akka.actor.ActorRef;
-
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
@@ -28,6 +29,7 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class BridgeEndpoint extends GenericEndpoint {
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain) {
         super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain));
     }
@@ -38,7 +40,6 @@ public final class BridgeEndpoint extends GenericEndpoint {
     @Override
     public void postStop() {
         ActorRef sender = this.sender();
-//        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Bridge in postStop");
-//        super.postStop();
+        logger.info("Bridge: "+self().path()+" bridge id: "+this.id+" at postStop, sender: "+sender.path());
     }
 }
